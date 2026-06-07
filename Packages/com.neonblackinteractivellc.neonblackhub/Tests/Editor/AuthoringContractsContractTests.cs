@@ -1,0 +1,559 @@
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using NeonBlack.Gameplay.Data.Profiles;
+using NeonBlack.Gameplay.Data.Definitions;
+using NeonBlack.Gameplay.Editor;
+using NeonBlack.Gameplay.Features.Enemies;
+using NeonBlack.Gameplay.Features.Feedback;
+using NeonBlack.Gameplay.Presentation.Animation;
+using NUnit.Framework;
+using UnityEngine;
+
+namespace NeonBlack.Gameplay.Tests.Editor
+{
+    public sealed class AuthoringContractsContractTests
+    {
+        private static readonly string GameplayRoot = Path.Combine(
+            Application.dataPath,
+            "..",
+            "Packages",
+            "com.neonblackinteractivellc.neonblackhub",
+            "Members",
+            "Pyralis",
+            "Gameplay");
+
+        [Test]
+        public void AuthoringContracts_DoNotContainDuplicateStableIds()
+        {
+            Assert.That(PyralisAuthoringContractRegistry.HasDuplicateStableIds(out string duplicateStableId), Is.False, duplicateStableId);
+        }
+
+        [Test]
+        public void RouteIntentFacts_CoverProjectWideWorldUpChoices()
+        {
+            string[] expectedIntentIds =
+            {
+                "intent.2d-side-view-action",
+                "intent.2d-top-down-plane",
+                "intent.2_5d-lane-arena",
+                "intent.3d-space-action",
+                "intent.tabletop-board-card",
+                "intent.ui-menu-first",
+                "intent.hybrid-custom-project"
+            };
+
+            for (int i = 0; i < expectedIntentIds.Length; i++)
+            {
+                PyralisAuthoringFact fact = PyralisAuthoringFactRegistry.Find(expectedIntentIds[i]);
+                Assert.That(fact, Is.Not.Null, expectedIntentIds[i]);
+                Assert.That(fact.Kind, Is.EqualTo(PyralisAuthoringFactKind.RouteIntent), expectedIntentIds[i]);
+                Assert.That(fact.FirstProof, Is.Not.Empty, expectedIntentIds[i]);
+            }
+        }
+
+        [Test]
+        public void IntentAdvisor_WorldAndControlShape_InfluenceProjectIntentReading()
+        {
+            PyralisAuthoringIntentModel sideView = PyralisAuthoringIntentAdvisor.Build(
+                new PyralisAuthoringIntentSelection(
+                    PyralisAuthoringWorldIntent.SideView2DGravity,
+                    PyralisAuthoringControlIntent.PawnActor,
+                    RuntimeCapabilityLaneTag.Sprite2D,
+                    new[]
+                    {
+                        RuntimeCapabilityGoalTag.Movement,
+                        RuntimeCapabilityGoalTag.JumpTraversal,
+                        RuntimeCapabilityGoalTag.Combat
+                    }));
+
+            PyralisAuthoringIntentModel topDown = PyralisAuthoringIntentAdvisor.Build(
+                new PyralisAuthoringIntentSelection(
+                    PyralisAuthoringWorldIntent.TopDown2DPlane,
+                    PyralisAuthoringControlIntent.PawnActor,
+                    RuntimeCapabilityLaneTag.Sprite2D,
+                    new[]
+                    {
+                        RuntimeCapabilityGoalTag.Movement,
+                        RuntimeCapabilityGoalTag.Input,
+                        RuntimeCapabilityGoalTag.Projectiles
+                    }));
+
+            Assert.That(sideView.Summary, Does.Contain("Project intent"));
+            Assert.That(sideView.Recommendations[0].Fact.StableId, Is.Not.EqualTo(topDown.Recommendations[0].Fact.StableId));
+            Assert.That(topDown.Recommendations.Select(row => row.Fact.StableId), Does.Contain("intent.2d-top-down-plane"));
+        }
+
+        [Test]
+        public void AuthoringContracts_CanFindContractByModuleId()
+        {
+            PyralisAuthoringContract contract = PyralisAuthoringContractRegistry.FindByModuleId("actor.traversal.topdown-hop");
+
+            Assert.That(contract, Is.Not.Null);
+            Assert.That(contract.StableId, Is.EqualTo("feature.actor.traversal.topdown-hop"));
+            Assert.That(contract.ModuleId, Is.EqualTo("actor.traversal.topdown-hop"));
+        }
+
+        [Test]
+        public void TopDownHopContract_DeclaresProfileRuntimeLanesAndProof()
+        {
+            PyralisAuthoringContract contract = PyralisAuthoringContractRegistry.FindByModuleId("actor.traversal.topdown-hop");
+
+            Assert.That(contract, Is.Not.Null);
+            Assert.That(contract.RequiredProfileType.FullName, Is.EqualTo(typeof(TopDownHopProfile).FullName));
+            Assert.That(contract.RequiredRuntimeInterfaceNames, Does.Contain("NeonBlack.Gameplay.Features.Composition.IFeatureModuleRuntime"));
+            Assert.That(contract.RequiredRuntimeInterfaceNames, Does.Contain("NeonBlack.Gameplay.Core.Contracts.IActorGameplayActionReceiver"));
+            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Sprite2D), Is.True);
+            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Billboard2_5D), Is.True);
+            Assert.That(contract.IsExplicitlyUnsupported(ActorPresentationMode.Rigged3D), Is.True);
+            Assert.That(contract.ConsumedActionRoles, Does.Contain("Jump"));
+            Assert.That(contract.FirstProofTargetId, Is.EqualTo("proof.1p-pawn-movement"));
+            Assert.That(contract.Confidence, Is.EqualTo(PyralisAuthoringConfidence.Explicit));
+        }
+
+        [Test]
+        public void TopDownHopContract_ContributesAuthoringFact()
+        {
+            PyralisAuthoringFact fact = PyralisAuthoringFactRegistry.Find("feature.actor.traversal.topdown-hop");
+
+            Assert.That(fact, Is.Not.Null);
+            Assert.That(fact.Kind, Is.EqualTo(PyralisAuthoringFactKind.FeatureContract));
+            Assert.That(fact.SourceKind, Is.EqualTo(PyralisAuthoringFactSourceKind.FeatureContract));
+            Assert.That(fact.RequiredProfiles, Does.Contain(nameof(TopDownHopProfile)));
+            Assert.That(fact.RequiredPrefabComponents, Does.Contain("IFeatureModuleRuntime"));
+            Assert.That(fact.RequiredPrefabComponents, Does.Contain("IActorGameplayActionReceiver"));
+            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Sprite2D)));
+            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Billboard2_5D)));
+            Assert.That(fact.UnsupportedLaneTags, Does.Contain(nameof(ActorPresentationMode.Rigged3D)));
+            Assert.That(fact.RelatedStableIds, Does.Contain("proof.1p-pawn-movement"));
+            Assert.That(fact.FirstProof, Is.EqualTo("proof.1p-pawn-movement"));
+        }
+
+        [Test]
+        public void Traversal3DContract_DeclaresProfileRuntimeLanesAndProof()
+        {
+            PyralisAuthoringContract contract = PyralisAuthoringContractRegistry.FindByModuleId("actor.traversal.3d");
+
+            Assert.That(contract, Is.Not.Null);
+            Assert.That(contract.RequiredProfileType.FullName, Is.EqualTo(typeof(PawnTraversalProfile).FullName));
+            Assert.That(contract.RequiredRuntimeInterfaceNames, Does.Contain("NeonBlack.Gameplay.Features.Composition.IFeatureModuleRuntime"));
+            Assert.That(contract.RequiredRuntimeInterfaceNames, Does.Contain("NeonBlack.Gameplay.Features.Traversal.IActorTraversalFeature"));
+            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Billboard2_5D), Is.True);
+            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Rigged3D), Is.True);
+            Assert.That(contract.IsExplicitlyUnsupported(ActorPresentationMode.Sprite2D), Is.True);
+            Assert.That(contract.FirstProofTargetId, Is.EqualTo("proof.npc-enemy-behavior"));
+            Assert.That(contract.Confidence, Is.EqualTo(PyralisAuthoringConfidence.Explicit));
+        }
+
+        [Test]
+        public void Traversal3DContract_ContributesAuthoringFact()
+        {
+            PyralisAuthoringFact fact = PyralisAuthoringFactRegistry.Find("feature.actor.traversal.3d");
+
+            Assert.That(fact, Is.Not.Null);
+            Assert.That(fact.Kind, Is.EqualTo(PyralisAuthoringFactKind.FeatureContract));
+            Assert.That(fact.RequiredProfiles, Does.Contain(nameof(PawnTraversalProfile)));
+            Assert.That(fact.RequiredPrefabComponents, Does.Contain("IFeatureModuleRuntime"));
+            Assert.That(fact.RequiredPrefabComponents, Does.Contain("IActorTraversalFeature"));
+            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Billboard2_5D)));
+            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Rigged3D)));
+            Assert.That(fact.UnsupportedLaneTags, Does.Contain(nameof(ActorPresentationMode.Sprite2D)));
+            Assert.That(fact.RelatedStableIds, Does.Contain("proof.npc-enemy-behavior"));
+        }
+
+        [Test]
+        public void InteractionContract_DeclaresProfileRuntimeAndProof()
+        {
+            PyralisAuthoringContract contract = PyralisAuthoringContractRegistry.FindByModuleId("actor.interaction");
+
+            Assert.That(contract, Is.Not.Null);
+            Assert.That(contract.RequiredProfileType.FullName, Is.EqualTo(typeof(InteractionFeatureProfile).FullName));
+            Assert.That(contract.RequiredRuntimeInterfaceNames, Does.Contain("NeonBlack.Gameplay.Features.Composition.IFeatureModuleRuntime"));
+            Assert.That(contract.RequiredRuntimeInterfaceNames, Does.Contain("NeonBlack.Gameplay.Features.Interaction.IActorInteractionFeature"));
+            Assert.That(contract.FirstProofTargetId, Is.EqualTo("proof.action-selection"));
+            Assert.That(contract.Confidence, Is.EqualTo(PyralisAuthoringConfidence.Explicit));
+        }
+
+        [Test]
+        public void InteractionContract_ContributesAuthoringFact()
+        {
+            PyralisAuthoringFact fact = PyralisAuthoringFactRegistry.Find("feature.actor.interaction");
+
+            Assert.That(fact, Is.Not.Null);
+            Assert.That(fact.Kind, Is.EqualTo(PyralisAuthoringFactKind.FeatureContract));
+            Assert.That(fact.RequiredProfiles, Does.Contain(nameof(InteractionFeatureProfile)));
+            Assert.That(fact.RequiredPrefabComponents, Does.Contain("IFeatureModuleRuntime"));
+            Assert.That(fact.RequiredPrefabComponents, Does.Contain("IActorInteractionFeature"));
+            Assert.That(fact.RelatedStableIds, Does.Contain("proof.action-selection"));
+        }
+
+        [Test]
+        public void EnemyReactionContract_DeclaresProfileRuntimeAndProof()
+        {
+            PyralisAuthoringContract contract = PyralisAuthoringContractRegistry.FindByModuleId("enemy.reaction");
+
+            Assert.That(contract, Is.Not.Null);
+            Assert.That(contract.RequiredProfileType.FullName, Is.EqualTo(typeof(EnemyReactionProfile).FullName));
+            Assert.That(contract.RequiredRuntimeInterfaceNames, Does.Contain("NeonBlack.Gameplay.Features.Composition.IFeatureModuleRuntime"));
+            Assert.That(contract.RequiredRuntimeInterfaceNames, Does.Contain("NeonBlack.Gameplay.Features.Enemies.IEnemyReactionState"));
+            Assert.That(contract.StableId, Is.EqualTo("feature.enemy.reaction"));
+            Assert.That(contract.FirstProofTargetId, Is.EqualTo("proof.npc-enemy-behavior"));
+            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Billboard2_5D), Is.True);
+            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Rigged3D), Is.True);
+            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Sprite2D), Is.False);
+            Assert.That(contract.Confidence, Is.EqualTo(PyralisAuthoringConfidence.Explicit));
+        }
+
+        [Test]
+        public void EnemyReactionContract_ContributesAuthoringFact()
+        {
+            PyralisAuthoringFact fact = PyralisAuthoringFactRegistry.Find("feature.enemy.reaction");
+
+            Assert.That(fact, Is.Not.Null);
+            Assert.That(fact.Kind, Is.EqualTo(PyralisAuthoringFactKind.FeatureContract));
+            Assert.That(fact.SourceKind, Is.EqualTo(PyralisAuthoringFactSourceKind.FeatureContract));
+            Assert.That(fact.RequiredProfiles, Does.Contain(nameof(EnemyReactionProfile)));
+            Assert.That(fact.RequiredPrefabComponents, Does.Contain("IFeatureModuleRuntime"));
+            Assert.That(fact.RequiredPrefabComponents, Does.Contain("IEnemyReactionState"));
+            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Billboard2_5D)));
+            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Rigged3D)));
+            Assert.That(fact.LaneTags, Does.Not.Contain(nameof(ActorPresentationMode.Sprite2D)));
+            Assert.That(fact.RelatedStableIds, Does.Contain("proof.npc-enemy-behavior"));
+            Assert.That(fact.FirstProof, Is.EqualTo("proof.npc-enemy-behavior"));
+        }
+
+        [Test]
+        public void EnemyAmbientContract_DeclaresProfileRuntimeAndProof()
+        {
+            PyralisAuthoringContract contract = PyralisAuthoringContractRegistry.FindByModuleId("enemy.ambient");
+
+            Assert.That(contract, Is.Not.Null);
+            Assert.That(contract.RequiredProfileType.FullName, Is.EqualTo(typeof(EnemyAmbientFeatureProfile).FullName));
+            Assert.That(contract.RequiredRuntimeInterfaceNames, Does.Contain("NeonBlack.Gameplay.Features.Composition.IFeatureModuleRuntime"));
+            Assert.That(contract.StableId, Is.EqualTo("feature.enemy.ambient"));
+            Assert.That(contract.FirstProofTargetId, Is.EqualTo("proof.npc-enemy-behavior"));
+            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Billboard2_5D), Is.True);
+            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Rigged3D), Is.True);
+            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Sprite2D), Is.False);
+            Assert.That(contract.Confidence, Is.EqualTo(PyralisAuthoringConfidence.Explicit));
+        }
+
+        [Test]
+        public void EnemyAmbientContract_ContributesAuthoringFact()
+        {
+            PyralisAuthoringFact fact = PyralisAuthoringFactRegistry.Find("feature.enemy.ambient");
+
+            Assert.That(fact, Is.Not.Null);
+            Assert.That(fact.Kind, Is.EqualTo(PyralisAuthoringFactKind.FeatureContract));
+            Assert.That(fact.SourceKind, Is.EqualTo(PyralisAuthoringFactSourceKind.FeatureContract));
+            Assert.That(fact.RequiredProfiles, Does.Contain(nameof(EnemyAmbientFeatureProfile)));
+            Assert.That(fact.RequiredPrefabComponents, Does.Contain("IFeatureModuleRuntime"));
+            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Billboard2_5D)));
+            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Rigged3D)));
+            Assert.That(fact.LaneTags, Does.Not.Contain(nameof(ActorPresentationMode.Sprite2D)));
+            Assert.That(fact.RelatedStableIds, Does.Contain("proof.npc-enemy-behavior"));
+            Assert.That(fact.FirstProof, Is.EqualTo("proof.npc-enemy-behavior"));
+        }
+
+        [Test]
+        public void Pickups2DContract_DeclaresProfileRuntimeLanesAndProof()
+        {
+            PyralisAuthoringContract contract = PyralisAuthoringContractRegistry.FindByModuleId("actor.pickups.2d");
+
+            Assert.That(contract, Is.Not.Null);
+            Assert.That(contract.RequiredProfileType.FullName, Is.EqualTo(typeof(PickupFeatureProfile).FullName));
+            Assert.That(contract.RequiredRuntimeInterfaceNames, Does.Contain("NeonBlack.Gameplay.Features.Composition.IFeatureModuleRuntime"));
+            Assert.That(contract.RequiredRuntimeInterfaceNames, Does.Contain("NeonBlack.Gameplay.Features.Composition.IActorInteractionHandler"));
+            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Sprite2D), Is.True);
+            Assert.That(contract.IsExplicitlyUnsupported(ActorPresentationMode.Billboard2_5D), Is.True);
+            Assert.That(contract.IsExplicitlyUnsupported(ActorPresentationMode.Rigged3D), Is.True);
+            Assert.That(contract.FirstProofTargetId, Is.EqualTo("proof.custom-object-effect"));
+            Assert.That(contract.ConsumedActionRoles, Does.Contain("Interact"));
+            Assert.That(contract.Confidence, Is.EqualTo(PyralisAuthoringConfidence.Explicit));
+        }
+
+        [Test]
+        public void Pickups2DContract_ContributesAuthoringFact()
+        {
+            PyralisAuthoringFact fact = PyralisAuthoringFactRegistry.Find("feature.actor.pickups.2d");
+
+            Assert.That(fact, Is.Not.Null);
+            Assert.That(fact.Kind, Is.EqualTo(PyralisAuthoringFactKind.FeatureContract));
+            Assert.That(fact.SourceKind, Is.EqualTo(PyralisAuthoringFactSourceKind.FeatureContract));
+            Assert.That(fact.RequiredProfiles, Does.Contain(nameof(PickupFeatureProfile)));
+            Assert.That(fact.RequiredPrefabComponents, Does.Contain("IFeatureModuleRuntime"));
+            Assert.That(fact.RequiredPrefabComponents, Does.Contain("IActorInteractionHandler"));
+            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Sprite2D)));
+            Assert.That(fact.UnsupportedLaneTags, Does.Contain(nameof(ActorPresentationMode.Billboard2_5D)));
+            Assert.That(fact.UnsupportedLaneTags, Does.Contain(nameof(ActorPresentationMode.Rigged3D)));
+            Assert.That(fact.RelatedStableIds, Does.Contain("proof.custom-object-effect"));
+            Assert.That(fact.FirstProof, Is.EqualTo("proof.custom-object-effect"));
+        }
+
+        [Test]
+        public void Pickups3DContract_DeclaresProfileRuntimeLanesAndProof()
+        {
+            PyralisAuthoringContract contract = PyralisAuthoringContractRegistry.FindByModuleId("actor.pickups.3d");
+
+            Assert.That(contract, Is.Not.Null);
+            Assert.That(contract.RequiredProfileType.FullName, Is.EqualTo(typeof(PickupFeatureProfile).FullName));
+            Assert.That(contract.RequiredRuntimeInterfaceNames, Does.Contain("NeonBlack.Gameplay.Features.Composition.IFeatureModuleRuntime"));
+            Assert.That(contract.RequiredRuntimeInterfaceNames, Does.Contain("NeonBlack.Gameplay.Features.Composition.IActorInteractionHandler"));
+            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Billboard2_5D), Is.True);
+            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Rigged3D), Is.True);
+            Assert.That(contract.IsExplicitlyUnsupported(ActorPresentationMode.Sprite2D), Is.True);
+            Assert.That(contract.FirstProofTargetId, Is.EqualTo("proof.custom-object-effect"));
+            Assert.That(contract.Confidence, Is.EqualTo(PyralisAuthoringConfidence.Explicit));
+        }
+
+        [Test]
+        public void Pickups3DContract_ContributesAuthoringFact()
+        {
+            PyralisAuthoringFact fact = PyralisAuthoringFactRegistry.Find("feature.actor.pickups.3d");
+
+            Assert.That(fact, Is.Not.Null);
+            Assert.That(fact.Kind, Is.EqualTo(PyralisAuthoringFactKind.FeatureContract));
+            Assert.That(fact.SourceKind, Is.EqualTo(PyralisAuthoringFactSourceKind.FeatureContract));
+            Assert.That(fact.RequiredProfiles, Does.Contain(nameof(PickupFeatureProfile)));
+            Assert.That(fact.RequiredPrefabComponents, Does.Contain("IFeatureModuleRuntime"));
+            Assert.That(fact.RequiredPrefabComponents, Does.Contain("IActorInteractionHandler"));
+            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Billboard2_5D)));
+            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Rigged3D)));
+            Assert.That(fact.UnsupportedLaneTags, Does.Contain(nameof(ActorPresentationMode.Sprite2D)));
+            Assert.That(fact.RelatedStableIds, Does.Contain("proof.custom-object-effect"));
+            Assert.That(fact.FirstProof, Is.EqualTo("proof.custom-object-effect"));
+        }
+
+        [Test]
+        public void CombatReactionContract_DeclaresProfileRuntimeLanesAndProof()
+        {
+            PyralisAuthoringContract contract = PyralisAuthoringContractRegistry.FindByModuleId("actor.combat.reaction");
+
+            Assert.That(contract, Is.Not.Null);
+            Assert.That(contract.RequiredProfileType.FullName, Is.EqualTo(typeof(ActorCombatReactionProfile).FullName));
+            Assert.That(contract.RequiredRuntimeInterfaceNames, Does.Contain("NeonBlack.Gameplay.Features.Composition.IFeatureModuleRuntime"));
+            Assert.That(contract.RequiredRuntimeInterfaceNames, Does.Contain("NeonBlack.Gameplay.Features.Combat.IActorGuardFeature"));
+            Assert.That(contract.RequiredRuntimeInterfaceNames, Does.Contain("NeonBlack.Gameplay.Core.Contracts.IDamageModifier"));
+            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Sprite2D), Is.True);
+            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Billboard2_5D), Is.True);
+            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Rigged3D), Is.True);
+            Assert.That(contract.ConsumedActionRoles, Does.Contain("Guard"));
+            Assert.That(contract.FirstProofTargetId, Is.EqualTo("proof.npc-enemy-behavior"));
+            Assert.That(contract.Confidence, Is.EqualTo(PyralisAuthoringConfidence.Explicit));
+        }
+
+        [Test]
+        public void CombatReactionContract_ContributesAuthoringFact()
+        {
+            PyralisAuthoringFact fact = PyralisAuthoringFactRegistry.Find("feature.actor.combat.reaction");
+
+            Assert.That(fact, Is.Not.Null);
+            Assert.That(fact.Kind, Is.EqualTo(PyralisAuthoringFactKind.FeatureContract));
+            Assert.That(fact.RequiredProfiles, Does.Contain(nameof(ActorCombatReactionProfile)));
+            Assert.That(fact.RequiredPrefabComponents, Does.Contain("IFeatureModuleRuntime"));
+            Assert.That(fact.RequiredPrefabComponents, Does.Contain("IActorGuardFeature"));
+            Assert.That(fact.RequiredPrefabComponents, Does.Contain("IDamageModifier"));
+            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Sprite2D)));
+            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Billboard2_5D)));
+            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Rigged3D)));
+            Assert.That(fact.RelatedStableIds, Does.Contain("proof.npc-enemy-behavior"));
+        }
+
+        [Test]
+        public void StatusContract_DeclaresProfileRuntimeLanesAndProof()
+        {
+            PyralisAuthoringContract contract = PyralisAuthoringContractRegistry.FindByModuleId("actor.status");
+
+            Assert.That(contract, Is.Not.Null);
+            Assert.That(contract.RequiredProfileType.FullName, Is.EqualTo(typeof(ActorStatusEffectProfile).FullName));
+            Assert.That(contract.RequiredRuntimeInterfaceNames, Does.Contain("NeonBlack.Gameplay.Features.Composition.IFeatureModuleRuntime"));
+            Assert.That(contract.RequiredRuntimeInterfaceNames, Does.Contain("NeonBlack.Gameplay.Features.Combat.IActorStatusEffectReceiver"));
+            Assert.That(contract.RequiredRuntimeInterfaceNames, Does.Contain("NeonBlack.Gameplay.Core.Contracts.IDamageModifier"));
+            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Sprite2D), Is.True);
+            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Billboard2_5D), Is.True);
+            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Rigged3D), Is.True);
+            Assert.That(contract.FirstProofTargetId, Is.EqualTo("proof.custom-object-effect"));
+            Assert.That(contract.Confidence, Is.EqualTo(PyralisAuthoringConfidence.Explicit));
+        }
+
+        [Test]
+        public void StatusContract_ContributesAuthoringFact()
+        {
+            PyralisAuthoringFact fact = PyralisAuthoringFactRegistry.Find("feature.actor.status");
+
+            Assert.That(fact, Is.Not.Null);
+            Assert.That(fact.Kind, Is.EqualTo(PyralisAuthoringFactKind.FeatureContract));
+            Assert.That(fact.RequiredProfiles, Does.Contain(nameof(ActorStatusEffectProfile)));
+            Assert.That(fact.RequiredPrefabComponents, Does.Contain("IFeatureModuleRuntime"));
+            Assert.That(fact.RequiredPrefabComponents, Does.Contain("IActorStatusEffectReceiver"));
+            Assert.That(fact.RequiredPrefabComponents, Does.Contain("IDamageModifier"));
+            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Sprite2D)));
+            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Billboard2_5D)));
+            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Rigged3D)));
+            Assert.That(fact.RelatedStableIds, Does.Contain("proof.custom-object-effect"));
+        }
+
+        [Test]
+        public void FeedbackContract_DeclaresProfileRuntimeLanesAndProof()
+        {
+            PyralisAuthoringContract contract = PyralisAuthoringContractRegistry.FindByModuleId("actor.feedback");
+
+            Assert.That(contract, Is.Not.Null);
+            Assert.That(contract.RequiredProfileType.FullName, Is.EqualTo(typeof(ActorFeedbackProfile).FullName));
+            Assert.That(contract.RequiredRuntimeInterfaceNames, Does.Contain("NeonBlack.Gameplay.Features.Composition.IFeatureModuleRuntime"));
+            Assert.That(contract.RequiredRuntimeInterfaceNames, Does.Contain("NeonBlack.Gameplay.Features.Composition.IActorFeedbackPublisher"));
+            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Sprite2D), Is.True);
+            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Billboard2_5D), Is.True);
+            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Rigged3D), Is.True);
+            Assert.That(contract.FirstProofTargetId, Is.EqualTo("proof.ui-hud-menu"));
+            Assert.That(contract.Confidence, Is.EqualTo(PyralisAuthoringConfidence.Explicit));
+        }
+
+        [Test]
+        public void FeedbackContract_ContributesAuthoringFact()
+        {
+            PyralisAuthoringFact fact = PyralisAuthoringFactRegistry.Find("feature.actor.feedback");
+
+            Assert.That(fact, Is.Not.Null);
+            Assert.That(fact.Kind, Is.EqualTo(PyralisAuthoringFactKind.FeatureContract));
+            Assert.That(fact.RequiredProfiles, Does.Contain(nameof(ActorFeedbackProfile)));
+            Assert.That(fact.RequiredPrefabComponents, Does.Contain("IFeatureModuleRuntime"));
+            Assert.That(fact.RequiredPrefabComponents, Does.Contain("IActorFeedbackPublisher"));
+            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Sprite2D)));
+            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Billboard2_5D)));
+            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Rigged3D)));
+            Assert.That(fact.RelatedStableIds, Does.Contain("proof.ui-hud-menu"));
+        }
+
+        [Test]
+        public void TopDownHopContractValidator_ReportsWrongProfileType()
+        {
+            FeatureModuleDefinition definition = ScriptableObject.CreateInstance<FeatureModuleDefinition>();
+            definition.moduleId = "actor.traversal.topdown-hop";
+            definition.profileAsset = ScriptableObject.CreateInstance<InteractionFeatureProfile>();
+
+            List<string> issues = NeonBlack.Gameplay.Editor.PyralisFeatureModuleContractValidator.GetValidationIssues(definition);
+
+            Assert.That(issues.Exists(issue => issue.Contains("TopDownHopProfile")), Is.True);
+
+            Object.DestroyImmediate(definition.profileAsset);
+            Object.DestroyImmediate(definition);
+        }
+
+        [Test]
+        public void TopDownHopContractValidator_ReportsUnsupportedRigged3DLane()
+        {
+            FeatureModuleDefinition definition = ScriptableObject.CreateInstance<FeatureModuleDefinition>();
+            definition.moduleId = "actor.traversal.topdown-hop";
+            definition.supportedPresentationModes = new[] { ActorPresentationMode.Rigged3D };
+
+            List<string> issues = NeonBlack.Gameplay.Editor.PyralisFeatureModuleContractValidator.GetValidationIssues(definition);
+
+            Assert.That(issues.Exists(issue => issue.Contains("Rigged3D actors should use the 3D traversal jump path")), Is.True);
+
+            Object.DestroyImmediate(definition);
+        }
+
+        [Test]
+        public void AuthoringContracts_RegistryUsesReflectionDiscovery()
+        {
+            string registrySource = File.ReadAllText(
+                Path.Combine(GameplayRoot, "Editor", "Authoring", "Facts", "PyralisAuthoringFactTypes.cs"));
+
+            Assert.That(registrySource.Contains("GetTypes()"), Is.True, "Registry should discover providers via assembly type scanning.");
+            Assert.That(registrySource.Contains("AppDomain.CurrentDomain.GetAssemblies()"), Is.True, "Registry should discover providers across loaded feature editor assemblies.");
+            Assert.That(registrySource.Contains("IAuthoringContractProvider"), Is.True, "Registry should discover by provider interface.");
+            Assert.That(registrySource.Contains("new TopDownHopAuthoringContractProvider"), Is.False, "Registry discovery should remain generic without a hard-coded TopDownHop provider.");
+        }
+
+        [Test]
+        public void AuthoringContracts_AllContractsCarrySetupRecipeMetadata()
+        {
+            IReadOnlyList<PyralisAuthoringContract> contracts = PyralisAuthoringContractRegistry.All;
+
+            Assert.That(contracts.Count, Is.GreaterThan(0));
+            for (int i = 0; i < contracts.Count; i++)
+            {
+                PyralisAuthoringContract contract = contracts[i];
+                Assert.That(contract.AuthoringCategory, Is.Not.Empty, contract.ModuleId);
+                Assert.That(contract.NativeSetup.Length, Is.GreaterThan(0), contract.ModuleId);
+                Assert.That(contract.AssignmentFields.Length, Is.GreaterThan(0), contract.ModuleId);
+                Assert.That(contract.CustomizationMoments.Length, Is.GreaterThan(0), contract.ModuleId);
+            }
+        }
+
+        [Test]
+        public void AuthoringContracts_AllFirstProofTargetsMapToRouteProofCards()
+        {
+            IReadOnlyList<PyralisAuthoringContract> contracts = PyralisAuthoringContractRegistry.All;
+
+            Assert.That(contracts.Count, Is.GreaterThan(0));
+            for (int i = 0; i < contracts.Count; i++)
+            {
+                PyralisAuthoringContract contract = contracts[i];
+                Assert.That(contract.FirstProofTargetId, Is.Not.Empty, contract.ModuleId);
+                Assert.That(PyralisAuthoringRouteProof.FindProofFact(contract.FirstProofTargetId), Is.Not.Null, contract.ModuleId);
+            }
+        }
+
+        [TestCase("actor.traversal.topdown-hop", "proof.1p-pawn-movement", "1P Pawn Movement Proof")]
+        [TestCase("actor.interaction", "proof.action-selection", "Action Selection Proof")]
+        [TestCase("actor.traversal.3d", "proof.npc-enemy-behavior", "NPC Enemy Behavior Proof")]
+        public void ContractProofGuidance_MapsIncludedModulesToRouteProofCards(string moduleId, string proofId, string proofLabel)
+        {
+            FeatureModuleDefinition module = ScriptableObject.CreateInstance<FeatureModuleDefinition>();
+            module.moduleId = moduleId;
+            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
+            mode.requiredFeatureModules = new[] { module };
+
+            IReadOnlyList<PyralisAuthoringContractProofGuidanceRow> rows = PyralisAuthoringContractProofGuidance.Build(mode, null);
+
+            Assert.That(rows.Count, Is.EqualTo(1));
+            Assert.That(rows[0].Contract.ModuleId, Is.EqualTo(moduleId));
+            Assert.That(rows[0].Contract.FirstProofTargetId, Is.EqualTo(proofId));
+            Assert.That(rows[0].ProofTargetExists, Is.True);
+            Assert.That(rows[0].ProofFact.DisplayName, Is.EqualTo(proofLabel));
+            Assert.That(rows[0].State, Is.EqualTo(PyralisAuthoringContractProofState.ProofNotRunInPlayMode));
+            Assert.That(rows[0].PlayModeProofRequired, Is.True);
+
+            Object.DestroyImmediate(mode);
+            Object.DestroyImmediate(module);
+        }
+
+        [Test]
+        public void ContractProofGuidance_ReportsUnsupportedPawnLaneCaution()
+        {
+            FeatureModuleDefinition module = ScriptableObject.CreateInstance<FeatureModuleDefinition>();
+            module.moduleId = "actor.traversal.3d";
+            PawnPresentationProfile presentation = ScriptableObject.CreateInstance<PawnPresentationProfile>();
+            presentation.presentationMode = ActorPresentationMode.Sprite2D;
+            PawnDefinition pawn = ScriptableObject.CreateInstance<PawnDefinition>();
+            pawn.presentationProfile = presentation;
+            pawn.featureModules = new[] { module };
+
+            IReadOnlyList<PyralisAuthoringContractProofGuidanceRow> rows = PyralisAuthoringContractProofGuidance.Build(pawn, null);
+
+            Assert.That(rows.Count, Is.EqualTo(1));
+            Assert.That(rows[0].ProofTargetExists, Is.True);
+            Assert.That(rows[0].HasUnsupportedLaneCaution, Is.True);
+            Assert.That(rows[0].ActiveLane, Is.EqualTo(ActorPresentationMode.Sprite2D));
+
+            Object.DestroyImmediate(pawn);
+            Object.DestroyImmediate(presentation);
+            Object.DestroyImmediate(module);
+        }
+
+        [Test]
+        public void FeatureModuleDefinition_DefinitionValidationNoLongerOwnsFeatureSpecificContracts()
+        {
+            string definitionSource = File.ReadAllText(
+                Path.Combine(GameplayRoot, "Data", "Definitions", "FeatureModuleDefinition.cs"));
+
+            Assert.That(definitionSource.Contains("AppendRuntimeContractIssues"), Is.False);
+            Assert.That(definitionSource.Contains("ProfileMatches"), Is.False);
+            Assert.That(definitionSource.Contains("profileAsset is not PawnTraversalProfile"), Is.False);
+            Assert.That(definitionSource.Contains("expects an ActorCombatReactionProfile profile asset"), Is.False);
+            Assert.That(definitionSource.Contains("runtime prefab should expose IActorGuardFeature"), Is.False);
+        }
+    }
+}

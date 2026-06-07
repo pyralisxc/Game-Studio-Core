@@ -1,0 +1,17 @@
+{
+    "name": "NeonBlack.Gameplay.Feature.Input.Editor",
+    "references": [
+        "NeonBlack.Gameplay",
+        "NeonBlack.Gameplay.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": []
+}

@@ -1,0 +1,16 @@
+{
+    "name": "NeonBlack.Gameplay.Feature.Combat.UI.Editor",
+    "references": [
+        "NeonBlack.Gameplay.Feature.Combat"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}

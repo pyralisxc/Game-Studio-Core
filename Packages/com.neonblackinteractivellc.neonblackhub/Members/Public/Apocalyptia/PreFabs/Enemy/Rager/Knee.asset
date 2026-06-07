@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80aded2de30b1b04589747ce729f1306, type: 3}
+  m_Name: Knee
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyAttack
+  animatorTrigger: Knee
+  hitBoxZone: Attacks
+  damage: 8
+  knockbackForce: 8
+  hitDelay: 0
+  hitDuration: 0.15
+  attackCooldown: 0.5
+  attackRange: 0
+  attackRadius: 0
+  weight: 1
+  aiPriority: 1

@@ -1,0 +1,2330 @@
+fileFormatVersion: 2
+guid: cd1cd95d03ab3d14b9ff76c6f4c81bed
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 0
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: rico animation update april 5_0
+      rect:
+        serializedVersion: 2
+        x: 13
+        y: 583
+        width: 40
+        height: 49
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f0be586cb0e94ce41839c94b0d8aa211
+      internalID: 1985235781
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_1
+      rect:
+        serializedVersion: 2
+        x: 74
+        y: 582
+        width: 45
+        height: 45
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5e32ce401423423498a008c5658d4fcc
+      internalID: 1106045059
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_2
+      rect:
+        serializedVersion: 2
+        x: 141
+        y: 577
+        width: 31
+        height: 49
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3aeb8d1e5c06f9e479d71b7676a74700
+      internalID: -763002674
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_3
+      rect:
+        serializedVersion: 2
+        x: 209
+        y: 577
+        width: 30
+        height: 49
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e73dea4193b73ec4582975aa6cd0f668
+      internalID: -1961043944
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_4
+      rect:
+        serializedVersion: 2
+        x: 279
+        y: 577
+        width: 22
+        height: 47
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ecbbebbe2ac91534fa3ee65e27072a4b
+      internalID: -32808291
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_5
+      rect:
+        serializedVersion: 2
+        x: 328
+        y: 582
+        width: 41
+        height: 44
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 25932c3d7e977ad4bbc00afed6a8b95c
+      internalID: -1365607609
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_6
+      rect:
+        serializedVersion: 2
+        x: 399
+        y: 577
+        width: 30
+        height: 49
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 947194e8c3b48744085d191f8ccf1d2e
+      internalID: -422477127
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_7
+      rect:
+        serializedVersion: 2
+        x: 150
+        y: 512
+        width: 25
+        height: 49
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 259c5540c0fe1bd45976ba73f91eafcb
+      internalID: 249398560
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_9
+      rect:
+        serializedVersion: 2
+        x: 206
+        y: 512
+        width: 41
+        height: 53
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ee0b3f3d93cf6654ebe9a5b2e766de71
+      internalID: 358778183
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_11
+      rect:
+        serializedVersion: 2
+        x: 279
+        y: 512
+        width: 25
+        height: 49
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 01a55169b5c9c80499f0f3b7c554b552
+      internalID: -1558793918
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_12
+      rect:
+        serializedVersion: 2
+        x: 327
+        y: 512
+        width: 35
+        height: 49
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ece26a25b77fe2545a9fe1c57a78d90c
+      internalID: 15229883
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_13
+      rect:
+        serializedVersion: 2
+        x: 407
+        y: 512
+        width: 26
+        height: 49
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7cc1e58548a98424ca6e05028c4a7bad
+      internalID: -1398097669
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_14
+      rect:
+        serializedVersion: 2
+        x: 458
+        y: 512
+        width: 32
+        height: 49
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7c5486d22ca34294b89f2fefa76a0374
+      internalID: -1739446708
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_15
+      rect:
+        serializedVersion: 2
+        x: 727
+        y: 514
+        width: 27
+        height: 60
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ef70270e15971c14ba0cd0574d399401
+      internalID: -347813068
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_16
+      rect:
+        serializedVersion: 2
+        x: 796
+        y: 515
+        width: 27
+        height: 57
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6ffabea7173bbb646b8752a5d2ca8dec
+      internalID: -278915620
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_17
+      rect:
+        serializedVersion: 2
+        x: 851
+        y: 513
+        width: 26
+        height: 62
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bb12bc36b94a2d14b8994f08a35cdc69
+      internalID: 727928745
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_18
+      rect:
+        serializedVersion: 2
+        x: 913
+        y: 513
+        width: 26
+        height: 62
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7370c62c7a9ddd540888f9784d8c468a
+      internalID: -593605992
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_19
+      rect:
+        serializedVersion: 2
+        x: 207
+        y: 448
+        width: 43
+        height: 52
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a48f18d2db839ef44a502d8982b337df
+      internalID: 1549856451
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_23
+      rect:
+        serializedVersion: 2
+        x: 345
+        y: 448
+        width: 22
+        height: 50
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cffa6e2847839074fa0a0ccb5bf7f593
+      internalID: -1042338114
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_24
+      rect:
+        serializedVersion: 2
+        x: 401
+        y: 448
+        width: 48
+        height: 61
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9ca61d44fad0c6d4898e1735affe53ea
+      internalID: 1536770744
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_26
+      rect:
+        serializedVersion: 2
+        x: 463
+        y: 448
+        width: 54
+        height: 59
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f8500807a72f7584d95afc70ce46bd4a
+      internalID: -698545676
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_28
+      rect:
+        serializedVersion: 2
+        x: 534
+        y: 448
+        width: 34
+        height: 49
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8c01da2590d849643a466dc7dcbac206
+      internalID: 1753932283
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_30
+      rect:
+        serializedVersion: 2
+        x: 601
+        y: 448
+        width: 22
+        height: 50
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bd9110a4c984d2f4bbf67bb6c30d3754
+      internalID: 395721296
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_31
+      rect:
+        serializedVersion: 2
+        x: 662
+        y: 448
+        width: 25
+        height: 49
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a1a0b4d72de1b114fa30df084d146466
+      internalID: 718068791
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_32
+      rect:
+        serializedVersion: 2
+        x: 719
+        y: 448
+        width: 38
+        height: 50
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2ff34f6a59f80f34ab61d56147fc1547
+      internalID: 1710231969
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_34
+      rect:
+        serializedVersion: 2
+        x: 793
+        y: 448
+        width: 22
+        height: 50
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 85d18ff3bf51feb4da532be77a38f522
+      internalID: -680555611
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_35
+      rect:
+        serializedVersion: 2
+        x: 857
+        y: 448
+        width: 20
+        height: 50
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8c94406f6534ba043821f5d1c456397f
+      internalID: 515542381
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_36
+      rect:
+        serializedVersion: 2
+        x: 921
+        y: 448
+        width: 20
+        height: 50
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 762c5d5fe3971cd48a394ba89a1e6ff6
+      internalID: 454706172
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_37
+      rect:
+        serializedVersion: 2
+        x: 281
+        y: 384
+        width: 30
+        height: 49
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7f6553b240518684498f280702794e0f
+      internalID: -937394357
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_38
+      rect:
+        serializedVersion: 2
+        x: 346
+        y: 384
+        width: 29
+        height: 49
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6c3e712cc3990b5469c8d5c6c41c8cde
+      internalID: 375857696
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_39
+      rect:
+        serializedVersion: 2
+        x: 410
+        y: 384
+        width: 30
+        height: 49
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fac9e02ab92b13a498d46dc7c75a255a
+      internalID: -608233695
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_40
+      rect:
+        serializedVersion: 2
+        x: 474
+        y: 384
+        width: 33
+        height: 48
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4c3b2d3a0b2891c45a8168ae3d510346
+      internalID: -917843762
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_42
+      rect:
+        serializedVersion: 2
+        x: 538
+        y: 384
+        width: 29
+        height: 51
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 36290dd57c8de414a8dc11dc96193626
+      internalID: -613569237
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_43
+      rect:
+        serializedVersion: 2
+        x: 602
+        y: 384
+        width: 30
+        height: 48
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5576e991af17a294ba30fba5c1e42c4f
+      internalID: -703964632
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_45
+      rect:
+        serializedVersion: 2
+        x: 666
+        y: 384
+        width: 30
+        height: 49
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b7410651753462b4c8df9291776f48a7
+      internalID: -66377725
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_46
+      rect:
+        serializedVersion: 2
+        x: 730
+        y: 384
+        width: 29
+        height: 49
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0188c8967115f0048a327bad92de5f6f
+      internalID: 632910910
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_47
+      rect:
+        serializedVersion: 2
+        x: 791
+        y: 384
+        width: 29
+        height: 49
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4145aee4e078aaa4484ce315e68f910e
+      internalID: -269665248
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_48
+      rect:
+        serializedVersion: 2
+        x: 853
+        y: 384
+        width: 26
+        height: 49
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 32f97a566cc6d5845988427c72b131a4
+      internalID: -503381089
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_49
+      rect:
+        serializedVersion: 2
+        x: 919
+        y: 384
+        width: 26
+        height: 51
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7436f74a8f50d5645be33569dd65ebb0
+      internalID: -370819881
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_50
+      rect:
+        serializedVersion: 2
+        x: 727
+        y: 320
+        width: 19
+        height: 62
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9e8bf7ff453f520439779cd93d0a6a05
+      internalID: -252159403
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_51
+      rect:
+        serializedVersion: 2
+        x: 787
+        y: 320
+        width: 28
+        height: 63
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f935b9376307cdb47bdc8f956e6ed82e
+      internalID: 1519980728
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_52
+      rect:
+        serializedVersion: 2
+        x: 853
+        y: 320
+        width: 22
+        height: 60
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d6de2182ba138b04db2a2b4e6b6d8e17
+      internalID: 1828784109
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_53
+      rect:
+        serializedVersion: 2
+        x: 912
+        y: 320
+        width: 32
+        height: 63
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b97dae45c8073944ea3ee9ac7214a34e
+      internalID: -257999006
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_54
+      rect:
+        serializedVersion: 2
+        x: 578
+        y: 256
+        width: 61
+        height: 33
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b63dbe3961cd40549aae24056465a0dd
+      internalID: 333281114
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_55
+      rect:
+        serializedVersion: 2
+        x: 647
+        y: 256
+        width: 54
+        height: 15
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5064a161efe10944ca8b992ddc54985a
+      internalID: -1575313954
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_56
+      rect:
+        serializedVersion: 2
+        x: 714
+        y: 267
+        width: 47
+        height: 26
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f15472d45408917409d2b3c1c9a44b62
+      internalID: 1373071594
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_57
+      rect:
+        serializedVersion: 2
+        x: 789
+        y: 256
+        width: 24
+        height: 49
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f7d454ad449e4324bac67407b4592764
+      internalID: 807505579
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_58
+      rect:
+        serializedVersion: 2
+        x: 850
+        y: 256
+        width: 26
+        height: 51
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bf7b88169c02e884fac8e645e70b582f
+      internalID: 814694755
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_59
+      rect:
+        serializedVersion: 2
+        x: 911
+        y: 256
+        width: 29
+        height: 51
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1591a72dd8eb70344bff1bfeb522692e
+      internalID: -1844094897
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_60
+      rect:
+        serializedVersion: 2
+        x: 143
+        y: 192
+        width: 36
+        height: 37
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e9e4699e15baf504f949102f9dba98f8
+      internalID: 1804105277
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_61
+      rect:
+        serializedVersion: 2
+        x: 208
+        y: 192
+        width: 31
+        height: 38
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9e9e1f10896359b4d822919caa6751ad
+      internalID: 548602046
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_62
+      rect:
+        serializedVersion: 2
+        x: 267
+        y: 192
+        width: 41
+        height: 38
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: be438ec7a23be674dbbb558e0ba23895
+      internalID: -948260292
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_63
+      rect:
+        serializedVersion: 2
+        x: 651
+        y: 192
+        width: 34
+        height: 49
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8c811cbbb2659a341b8ef778b10736e3
+      internalID: 2107160069
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_64
+      rect:
+        serializedVersion: 2
+        x: 717
+        y: 192
+        width: 31
+        height: 49
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a121ad9fe6946e3419fba4319d5675b0
+      internalID: 1257586592
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_65
+      rect:
+        serializedVersion: 2
+        x: 781
+        y: 192
+        width: 34
+        height: 47
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 654175e2653fdf44887501b64b218ee4
+      internalID: -59497772
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_66
+      rect:
+        serializedVersion: 2
+        x: 848
+        y: 192
+        width: 30
+        height: 47
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 47d6744a9fd73b340a33c22e4761b43d
+      internalID: 269376113
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_67
+      rect:
+        serializedVersion: 2
+        x: 899
+        y: 192
+        width: 44
+        height: 46
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: dd91c16039d941b4ba1afc9c785f9ff5
+      internalID: -262643726
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_68
+      rect:
+        serializedVersion: 2
+        x: 332
+        y: 138
+        width: 41
+        height: 44
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a5ce5424d661c264cac07035ef8a0993
+      internalID: 109233453
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_69
+      rect:
+        serializedVersion: 2
+        x: 396
+        y: 138
+        width: 45
+        height: 45
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b11570fcfdd58be459f298504c296695
+      internalID: -816511531
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_70
+      rect:
+        serializedVersion: 2
+        x: 585
+        y: 128
+        width: 46
+        height: 49
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 502aaa0247118624fb53c8309a151021
+      internalID: -2052694241
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_71
+      rect:
+        serializedVersion: 2
+        x: 657
+        y: 128
+        width: 38
+        height: 49
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 43a422fd95311d341842318d50c6215c
+      internalID: -1150605315
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_72
+      rect:
+        serializedVersion: 2
+        x: 721
+        y: 128
+        width: 31
+        height: 41
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bdd55808e8ceb3643b3cbd8adb45d621
+      internalID: -527531349
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_73
+      rect:
+        serializedVersion: 2
+        x: 776
+        y: 128
+        width: 43
+        height: 48
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d9b57d851adcd1d4081ff67bc96dbffc
+      internalID: -281502588
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_74
+      rect:
+        serializedVersion: 2
+        x: 840
+        y: 128
+        width: 41
+        height: 47
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 539d3eb35096c0647b0c983a7248cf2d
+      internalID: 1565744976
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_75
+      rect:
+        serializedVersion: 2
+        x: 12
+        y: 86
+        width: 44
+        height: 33
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 53afa2a2e91a91740aab8e75dca5bc98
+      internalID: 1188670122
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_76
+      rect:
+        serializedVersion: 2
+        x: 86
+        y: 69
+        width: 24
+        height: 53
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d93b586192d48a944a669778313e1ad5
+      internalID: -1569933513
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_77
+      rect:
+        serializedVersion: 2
+        x: 208
+        y: 75
+        width: 28
+        height: 42
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1fdb21f8948384543a07825cfa9de4a6
+      internalID: -327645900
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_78
+      rect:
+        serializedVersion: 2
+        x: 276
+        y: 71
+        width: 27
+        height: 52
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c2a2d3487cad59d46b450e0793b0095c
+      internalID: -746332596
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_79
+      rect:
+        serializedVersion: 2
+        x: 338
+        y: 73
+        width: 24
+        height: 53
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1eec4b519d46a024bba06c2a4b5d1af0
+      internalID: 7025063
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_80
+      rect:
+        serializedVersion: 2
+        x: 395
+        y: 64
+        width: 34
+        height: 54
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 98b0820a843064449b02876834f2a081
+      internalID: 886642915
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_81
+      rect:
+        serializedVersion: 2
+        x: 454
+        y: 77
+        width: 48
+        height: 37
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c2e9b6c5d23421d458da13e1262c6b35
+      internalID: 262359706
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_82
+      rect:
+        serializedVersion: 2
+        x: 514
+        y: 64
+        width: 59
+        height: 27
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 506336c7c609268409ea70bab3e8e017
+      internalID: 1281108414
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_83
+      rect:
+        serializedVersion: 2
+        x: 601
+        y: 64
+        width: 30
+        height: 49
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 16559237bb5327645b344ddd230ab927
+      internalID: -624376867
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_84
+      rect:
+        serializedVersion: 2
+        x: 657
+        y: 64
+        width: 34
+        height: 47
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 49268ff2f0b9c9f43b96440fe6d5658d
+      internalID: -2105980318
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_85
+      rect:
+        serializedVersion: 2
+        x: 725
+        y: 64
+        width: 22
+        height: 47
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: aeef43737406b3542960641770c00697
+      internalID: 1173916496
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_86
+      rect:
+        serializedVersion: 2
+        x: 783
+        y: 64
+        width: 31
+        height: 49
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 61234dc44f002404d8401715da74777a
+      internalID: -867688050
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_87
+      rect:
+        serializedVersion: 2
+        x: 841
+        y: 64
+        width: 38
+        height: 49
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c9e33cba4471b32409de2a3a24522307
+      internalID: -1230413958
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_88
+      rect:
+        serializedVersion: 2
+        x: 915
+        y: 64
+        width: 22
+        height: 47
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 43a2dcabe8062d149b07069cafef19b4
+      internalID: -423366235
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_89
+      rect:
+        serializedVersion: 2
+        x: 20
+        y: 0
+        width: 26
+        height: 49
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0f8fda6540d47df4dab9778d725341b3
+      internalID: 1177153234
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_90
+      rect:
+        serializedVersion: 2
+        x: 90
+        y: 0
+        width: 16
+        height: 50
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fa6219d2c1f7992458e8f95d820cd9df
+      internalID: -1938389290
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_91
+      rect:
+        serializedVersion: 2
+        x: 152
+        y: 0
+        width: 19
+        height: 50
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ecd530b6e9ac54f4fa274ba2999ade53
+      internalID: -814026974
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_92
+      rect:
+        serializedVersion: 2
+        x: 212
+        y: 0
+        width: 28
+        height: 49
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 564c1b28b1d505c42af8944e88ec78a3
+      internalID: -1805001192
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_93
+      rect:
+        serializedVersion: 2
+        x: 270
+        y: 0
+        width: 34
+        height: 43
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 14238afa496b0a34683daf2dedfab7a8
+      internalID: -1438693383
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_94
+      rect:
+        serializedVersion: 2
+        x: 334
+        y: 0
+        width: 34
+        height: 42
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 744e96c260ed3504abe5d90bac6bd88b
+      internalID: -1361050835
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_95
+      rect:
+        serializedVersion: 2
+        x: 393
+        y: 0
+        width: 35
+        height: 26
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bf268274c0b322440abaaa0fa0a574d2
+      internalID: -741131839
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_96
+      rect:
+        serializedVersion: 2
+        x: 465
+        y: 0
+        width: 26
+        height: 35
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 51ec10b18d7b0874194d7db5bdafb4d2
+      internalID: -1356842353
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_97
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 16
+        width: 62
+        height: 29
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ee22c4a5c5c914840a9b9987ae6f5ae7
+      internalID: 640335120
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_98
+      rect:
+        serializedVersion: 2
+        x: 597
+        y: 0
+        width: 29
+        height: 50
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1d2f71710244e90429e49ecbdbe08570
+      internalID: 1646799282
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_99
+      rect:
+        serializedVersion: 2
+        x: 661
+        y: 0
+        width: 25
+        height: 49
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d37bfbd71d3df3147b4c8bf9c8ed9422
+      internalID: -315191393
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_100
+      rect:
+        serializedVersion: 2
+        x: 724
+        y: 0
+        width: 27
+        height: 47
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f799a7a56e552364eafa4c66718512e4
+      internalID: -1643859804
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_101
+      rect:
+        serializedVersion: 2
+        x: 785
+        y: 0
+        width: 24
+        height: 48
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4076e1c67dff5b5409bc9b204a54df29
+      internalID: -2061691249
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_102
+      rect:
+        serializedVersion: 2
+        x: 847
+        y: 0
+        width: 27
+        height: 48
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 10a22b2f09f782d49a9df3df97bafee2
+      internalID: 332112489
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_103
+      rect:
+        serializedVersion: 2
+        x: 910
+        y: 0
+        width: 31
+        height: 47
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fe0e458190831204792ebaacdf97d220
+      internalID: 593828044
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rico animation update april 5_8
+      rect:
+        serializedVersion: 2
+        x: 265
+        y: 446
+        width: 52
+        height: 57
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8dd8f80f39347be4e9e9023d62b3deb6
+      internalID: -78733029
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: f56c94b05a0a47449bfaee75faabce17
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.0},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":7,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
+    nameFileIdTable:
+      rico animation update april 5_0: 1985235781
+      rico animation update april 5_1: 1106045059
+      rico animation update april 5_10: 380222008
+      rico animation update april 5_100: -1643859804
+      rico animation update april 5_101: -2061691249
+      rico animation update april 5_102: 332112489
+      rico animation update april 5_103: 593828044
+      rico animation update april 5_11: -1558793918
+      rico animation update april 5_12: 15229883
+      rico animation update april 5_13: -1398097669
+      rico animation update april 5_14: -1739446708
+      rico animation update april 5_15: -347813068
+      rico animation update april 5_16: -278915620
+      rico animation update april 5_17: 727928745
+      rico animation update april 5_18: -593605992
+      rico animation update april 5_19: 1549856451
+      rico animation update april 5_2: -763002674
+      rico animation update april 5_20: 1278724003
+      rico animation update april 5_21: 1602000798
+      rico animation update april 5_22: -825552683
+      rico animation update april 5_23: -1042338114
+      rico animation update april 5_24: 1536770744
+      rico animation update april 5_25: -2037918544
+      rico animation update april 5_26: -698545676
+      rico animation update april 5_27: -1240866895
+      rico animation update april 5_28: 1753932283
+      rico animation update april 5_29: -1488417650
+      rico animation update april 5_3: -1961043944
+      rico animation update april 5_30: 395721296
+      rico animation update april 5_31: 718068791
+      rico animation update april 5_32: 1710231969
+      rico animation update april 5_33: 740056479
+      rico animation update april 5_34: -680555611
+      rico animation update april 5_35: 515542381
+      rico animation update april 5_36: 454706172
+      rico animation update april 5_37: -937394357
+      rico animation update april 5_38: 375857696
+      rico animation update april 5_39: -608233695
+      rico animation update april 5_4: -32808291
+      rico animation update april 5_40: -917843762
+      rico animation update april 5_41: 27009143
+      rico animation update april 5_42: -613569237
+      rico animation update april 5_43: -703964632
+      rico animation update april 5_44: -215694620
+      rico animation update april 5_45: -66377725
+      rico animation update april 5_46: 632910910
+      rico animation update april 5_47: -269665248
+      rico animation update april 5_48: -503381089
+      rico animation update april 5_49: -370819881
+      rico animation update april 5_5: -1365607609
+      rico animation update april 5_50: -252159403
+      rico animation update april 5_51: 1519980728
+      rico animation update april 5_52: 1828784109
+      rico animation update april 5_53: -257999006
+      rico animation update april 5_54: 333281114
+      rico animation update april 5_55: -1575313954
+      rico animation update april 5_56: 1373071594
+      rico animation update april 5_57: 807505579
+      rico animation update april 5_58: 814694755
+      rico animation update april 5_59: -1844094897
+      rico animation update april 5_6: -422477127
+      rico animation update april 5_60: 1804105277
+      rico animation update april 5_61: 548602046
+      rico animation update april 5_62: -948260292
+      rico animation update april 5_63: 2107160069
+      rico animation update april 5_64: 1257586592
+      rico animation update april 5_65: -59497772
+      rico animation update april 5_66: 269376113
+      rico animation update april 5_67: -262643726
+      rico animation update april 5_68: 109233453
+      rico animation update april 5_69: -816511531
+      rico animation update april 5_7: 249398560
+      rico animation update april 5_70: -2052694241
+      rico animation update april 5_71: -1150605315
+      rico animation update april 5_72: -527531349
+      rico animation update april 5_73: -281502588
+      rico animation update april 5_74: 1565744976
+      rico animation update april 5_75: 1188670122
+      rico animation update april 5_76: -1569933513
+      rico animation update april 5_77: -327645900
+      rico animation update april 5_78: -746332596
+      rico animation update april 5_79: 7025063
+      rico animation update april 5_8: -78733029
+      rico animation update april 5_80: 886642915
+      rico animation update april 5_81: 262359706
+      rico animation update april 5_82: 1281108414
+      rico animation update april 5_83: -624376867
+      rico animation update april 5_84: -2105980318
+      rico animation update april 5_85: 1173916496
+      rico animation update april 5_86: -867688050
+      rico animation update april 5_87: -1230413958
+      rico animation update april 5_88: -423366235
+      rico animation update april 5_89: 1177153234
+      rico animation update april 5_9: 358778183
+      rico animation update april 5_90: -1938389290
+      rico animation update april 5_91: -814026974
+      rico animation update april 5_92: -1805001192
+      rico animation update april 5_93: -1438693383
+      rico animation update april 5_94: -1361050835
+      rico animation update april 5_95: -741131839
+      rico animation update april 5_96: -1356842353
+      rico animation update april 5_97: 640335120
+      rico animation update april 5_98: 1646799282
+      rico animation update april 5_99: -315191393
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

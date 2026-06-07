@@ -1,0 +1,31 @@
+{
+    "name": "NeonBlack.Gameplay.Editor.Tests",
+    "references": [
+        "NeonBlack.Gameplay.Characters",
+        "NeonBlack.Gameplay.Editor",
+        "NeonBlack.Gameplay",
+        "NeonBlack.Gameplay.Core",
+        "NeonBlack.Gameplay.Data",
+        "NeonBlack.Gameplay.Presentation",
+        "NeonBlack.Gameplay.Features.Composition",
+        "NeonBlack.Gameplay.Feature.Combat",
+        "NeonBlack.Gameplay.Feature.Combat.Editor",
+        "NeonBlack.Gameplay.Feature.Enemies.Editor",
+        "NeonBlack.Gameplay.Feature.Feedback",
+        "NeonBlack.Gameplay.Feature.Feedback.Editor",
+        "NeonBlack.Gameplay.Feature.Interaction",
+        "NeonBlack.Gameplay.Feature.Interaction.Editor",
+        "NeonBlack.Gameplay.Feature.Pickups.Editor",
+        "NeonBlack.Gameplay.Feature.Scoring",
+        "NeonBlack.Gameplay.Feature.Traversal",
+        "NeonBlack.Gameplay.Feature.Traversal.Editor",
+        "Unity.InputSystem"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": []
+}

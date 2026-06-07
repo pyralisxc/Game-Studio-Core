@@ -1,0 +1,4 @@
+{
+	"displayName":"Pyralis Prototype Art Sample",
+	"description": "Prototype Jim/Pyralis art and reference content for early gameplay scene experiments. Import this only when you want the included visual assets in a test project; use Members/Pyralis/Gameplay/Docs/Setup/START_HERE.md for the supported setup path."
+}

@@ -1,0 +1,29 @@
+{
+    "name": "NeonBlack.Gameplay",
+    "references": [
+        "NeonBlack.Gameplay.Core",
+        "NeonBlack.Gameplay.Characters",
+        "NeonBlack.Gameplay.Data",
+        "NeonBlack.Gameplay.Features.Composition",
+        "NeonBlack.Gameplay.Feature.Combat",
+        "NeonBlack.Gameplay.Feature.Feedback",
+        "NeonBlack.Gameplay.Feature.Interaction",
+        "NeonBlack.Gameplay.Feature.Pickups",
+        "NeonBlack.Gameplay.Feature.Scoring",
+        "NeonBlack.Gameplay.Feature.Traversal",
+        "NeonBlack.Gameplay.Presentation",
+        "Unity.TextMeshPro",
+        "Unity.InputSystem",
+        "UnityEngine.UI",
+        "Unity.Cinemachine",
+        "VContainer"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}

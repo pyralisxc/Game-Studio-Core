@@ -1,0 +1,30 @@
+{
+	"name": "com.neonblackinteractivellc.neonblackhub",
+	"displayName":"Neon Black Hub",
+	"version": "0.1.2",
+	"unity": "6000.4",
+	"unityRelease": "0f1",
+	"description": "Neon Black Hub is the shared gameplay package in this project. \n Its active game-facing toolkit is NeonBlack Gameplay, which now physically lives under Members/Pyralis/Gameplay. \n\n Read the README.md for setup instructions.",
+	"dependencies": {
+		"com.unity.addressables": "2.9.1",
+		"com.unity.cinemachine": "3.1.4",
+		"com.unity.inputsystem": "1.19.0",
+		"com.unity.localization": "1.5.8",
+		"com.unity.netcode.gameobjects": "2.10.0",
+		"com.unity.test-framework": "1.6.0",
+		"com.unity.transport": "2.6.0",
+		"jp.hadashikick.vcontainer": "1.17.0",
+		"com.unity.ugui": "2.0.0"
+	},
+	"samples": [
+		{
+			"displayName": "Pyralis Prototype Art Sample",
+			"description": "Prototype Jim/Pyralis art and reference content for early gameplay scene experiments. Import this only when you want the included visual assets in a test project.",
+			"path": "Samples~/Example"
+		}
+	],
+	"author": {
+		"name": "Neon Black Interactive LLC",
+		"email": "pyraliscameron@gmail.com"
+	}
+}

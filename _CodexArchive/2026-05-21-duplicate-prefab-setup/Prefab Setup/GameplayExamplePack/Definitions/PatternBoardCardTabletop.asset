@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b890cf0fcd3e4e1290d1b98d7425014f, type: 3}
+  m_Name: PatternBoardCardTabletop
+  m_EditorClassIdentifier: NeonBlack.Gameplay.Data::NeonBlack.Gameplay.Data.Definitions.RuntimePatternDefinition
+  patternId: pattern.board-card-tabletop
+  displayName: Board/Card/Tabletop
+  description: Seat, board, piece, hand, deck, zone, legal move, and tabletop-style
+    setup.
+  capabilityFamily: 6
+  participantEmbodiment: 3
+  supportedControlSurfaces: 04000000050000000600000002000000
+  requiredRuntimeSystems:
+  - ParticipantRosterService
+  - ActionDefinition
+  optionalRuntimeSystems:
+  - TurnOrderService
+  - BoardStateService
+  - CardZoneService
+  recommendedCompanionPatterns:
+  - {fileID: 11400000, guid: 1a0043d81aa09024fa95234e44253700, type: 2}
+  - {fileID: 11400000, guid: eb7ba1f81d95def458faab51abb95662, type: 2}
+  cautionaryCompanionPatterns: []
+  setupNotes: 

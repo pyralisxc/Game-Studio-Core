@@ -1,0 +1,39 @@
+# Unity generated files
+Library/
+Temp/
+Obj/
+Build/
+Builds/
+Logs/
+MemoryCaptures/
+
+# Visual Studio / Rider
+.vs/
+*.user
+*.suo
+*.userprefs
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.pidb
+*.booproj
+*.VC.db
+
+# OS
+.DS_Store*
+Thumbs.db
+Desktop.ini
+
+# Unity cache/locks
+/Library/PackageCache/
+/Library/ScriptAssemblies/
+
+# Studio tools backups and generated markers
+.studio-tools-backups/
+_please_delete.txt
+
+# Ignore local settings
+.vscode/
+UserSettings/

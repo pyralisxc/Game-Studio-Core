@@ -1,0 +1,10 @@
+{
+    "name": "Neonblackinteractivellc.Neonblackhub.Editor",
+    "references": [
+      "Neonblackinteractivellc.Neonblackhub"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": []
+}

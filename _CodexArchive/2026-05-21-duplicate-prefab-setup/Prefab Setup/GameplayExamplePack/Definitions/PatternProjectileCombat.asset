@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b890cf0fcd3e4e1290d1b98d7425014f, type: 3}
+  m_Name: PatternProjectileCombat
+  m_EditorClassIdentifier: NeonBlack.Gameplay.Data::NeonBlack.Gameplay.Data.Definitions.RuntimePatternDefinition
+  patternId: pattern.projectile-combat
+  displayName: Projectile Combat
+  description: Reusable projectile, hitscan, ammo, fire-mode, and impact setup usable
+    by pawns, cameras, cards, board pieces, traps, or AI.
+  capabilityFamily: 4
+  participantEmbodiment: 1
+  supportedControlSurfaces: 000000000100000002000000050000000600000008000000
+  requiredRuntimeSystems:
+  - ProjectileFirePlanner
+  - ProjectileLauncher2D or ProjectileLauncher3D
+  optionalRuntimeSystems:
+  - ProjectileMagazineState
+  - ProjectilePoolHandle
+  - ProjectileImpactEffectPlayer
+  recommendedCompanionPatterns:
+  - {fileID: 11400000, guid: f7543c0b6eed61645b8a12c146954e0f, type: 2}
+  - {fileID: 11400000, guid: 1a0043d81aa09024fa95234e44253700, type: 2}
+  - {fileID: 11400000, guid: 2ad643df259edb440a78d34694d53f86, type: 2}
+  - {fileID: 11400000, guid: eb7ba1f81d95def458faab51abb95662, type: 2}
+  cautionaryCompanionPatterns: []
+  setupNotes: 

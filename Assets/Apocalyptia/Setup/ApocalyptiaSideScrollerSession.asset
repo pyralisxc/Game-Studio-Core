@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c6ad1da800dee3246b0d0f4e0ef1b973, type: 3}
+  m_Name: ApocalyptiaSideScrollerSession
+  m_EditorClassIdentifier: NeonBlack.Gameplay.Data::NeonBlack.Gameplay.Data.Definitions.SessionDefinition
+  sessionName: NeonBlack Gameplay Session
+  networkMode: 0
+  localFirst: 1
+  autoStartHost: 1
+  allowLateJoin: 1
+  sharedCameraByDefault: 1
+  allowSplitScreen: 0
+  maxParticipants: 1
+  defaultGameMode: {fileID: 11400000, guid: 5ff5350f2b6690749a7ac7a46857aa01, type: 2}
+  defaultInputProfile: {fileID: 0}
+  settingsProfile: {fileID: 0}
+  defaultParticipants:
+  - {fileID: 11400000, guid: ec7962bdc7c3cf34fa7f6b4010c4d360, type: 2}

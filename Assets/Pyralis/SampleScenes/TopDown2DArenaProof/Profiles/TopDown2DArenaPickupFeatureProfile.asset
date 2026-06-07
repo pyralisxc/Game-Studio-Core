@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d1d862609ef5fd4586485b003893c5e, type: 3}
+  m_Name: TopDown2DArenaPickupFeatureProfile
+  m_EditorClassIdentifier: NeonBlack.Gameplay.Data::NeonBlack.Gameplay.Data.Profiles.PickupFeatureProfile
+  enableAutoCollect: 1
+  enableInteractionCollect: 1
+  interactionRadius: 1.25
+  collectibleLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  collectibleLayers3D:
+    serializedVersion: 2
+    m_Bits: 4294967291
+  overlapRadius3D: 1
+  preferNearestPickup: 1

@@ -1,0 +1,25 @@
+{
+    "name": "NeonBlack.Gameplay.Tests",
+    "references": [
+        "NeonBlack.Gameplay.Characters",
+        "NeonBlack.Gameplay",
+        "NeonBlack.Gameplay.Core",
+        "NeonBlack.Gameplay.Data",
+        "NeonBlack.Gameplay.Presentation",
+        "NeonBlack.Gameplay.Features.Composition",
+        "NeonBlack.Gameplay.Feature.Combat",
+        "NeonBlack.Gameplay.Feature.Feedback",
+        "NeonBlack.Gameplay.Feature.Interaction",
+        "NeonBlack.Gameplay.Feature.Pickups",
+        "NeonBlack.Gameplay.Feature.Traversal",
+        "NeonBlack.Gameplay.Networking",
+        "Unity.Netcode.Runtime",
+        "Unity.InputSystem",
+        "VContainer"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": []
+}

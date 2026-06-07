@@ -1,0 +1,20 @@
+{
+    "name": "NeonBlack.Gameplay.Presentation",
+    "references": [
+        "NeonBlack.Gameplay.Core",
+        "NeonBlack.Gameplay.Data",
+        "NeonBlack.Gameplay.Characters",
+        "Unity.TextMeshPro",
+        "Unity.InputSystem",
+        "Unity.Cinemachine",
+        "VContainer"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}

@@ -1,0 +1,470 @@
+fileFormatVersion: 2
+guid: 0485f4d2b5b2d454c859165e1822fce7
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -3653122590949629151
+    second: lacuarachachacha april with clothes april 9 and dancing_0
+  - first:
+      213: -2300278406390220648
+    second: lacuarachachacha april with clothes april 9 and dancing_1
+  - first:
+      213: -4511977563483633852
+    second: lacuarachachacha april with clothes april 9 and dancing_2
+  - first:
+      213: -6910433741260919574
+    second: lacuarachachacha april with clothes april 9 and dancing_3
+  - first:
+      213: 2251533496969885096
+    second: lacuarachachacha april with clothes april 9 and dancing_4
+  - first:
+      213: 2799720483190972167
+    second: lacuarachachacha april with clothes april 9 and dancing_5
+  - first:
+      213: -5701069030262220655
+    second: lacuarachachacha april with clothes april 9 and dancing_6
+  - first:
+      213: 5332997657492707130
+    second: lacuarachachacha april with clothes april 9 and dancing_7
+  - first:
+      213: -8259789983930483821
+    second: lacuarachachacha april with clothes april 9 and dancing_8
+  - first:
+      213: -8120200452250363635
+    second: lacuarachachacha april with clothes april 9 and dancing_9
+  - first:
+      213: 8205048333650934083
+    second: lacuarachachacha april with clothes april 9 and dancing_10
+  - first:
+      213: -4595854393564480117
+    second: lacuarachachacha april with clothes april 9 and dancing_11
+  - first:
+      213: 7034825716084311809
+    second: lacuarachachacha april with clothes april 9 and dancing_12
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: lacuarachachacha april with clothes april 9 and dancing_0
+      rect:
+        serializedVersion: 2
+        x: 651
+        y: 128
+        width: 42
+        height: 49
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1232e7dcb508d4dc0800000000000000
+      internalID: -3653122590949629151
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: lacuarachachacha april with clothes april 9 and dancing_1
+      rect:
+        serializedVersion: 2
+        x: 705
+        y: 128
+        width: 58
+        height: 46
+      alignment: 9
+      pivot: {x: 0.61471665, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 898fb9e0af4c310e0800000000000000
+      internalID: -2300278406390220648
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: lacuarachachacha april with clothes april 9 and dancing_2
+      rect:
+        serializedVersion: 2
+        x: 782
+        y: 128
+        width: 44
+        height: 44
+      alignment: 9
+      pivot: {x: 0.5604914, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 447860ebf4c3261c0800000000000000
+      internalID: -4511977563483633852
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: lacuarachachacha april with clothes april 9 and dancing_3
+      rect:
+        serializedVersion: 2
+        x: 849
+        y: 128
+        width: 37
+        height: 47
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aece44810253910a0800000000000000
+      internalID: -6910433741260919574
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: lacuarachachacha april with clothes april 9 and dancing_4
+      rect:
+        serializedVersion: 2
+        x: 900
+        y: 128
+        width: 53
+        height: 59
+      alignment: 9
+      pivot: {x: 0.61549693, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8a578ce49cd0f3f10800000000000000
+      internalID: 2251533496969885096
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: lacuarachachacha april with clothes april 9 and dancing_5
+      rect:
+        serializedVersion: 2
+        x: 463
+        y: 0
+        width: 40
+        height: 46
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 70f9bf622fa9ad620800000000000000
+      internalID: 2799720483190972167
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: lacuarachachacha april with clothes april 9 and dancing_6
+      rect:
+        serializedVersion: 2
+        x: 526
+        y: 0
+        width: 41
+        height: 45
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1985d3b2cebb1e0b0800000000000000
+      internalID: -5701069030262220655
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: lacuarachachacha april with clothes april 9 and dancing_7
+      rect:
+        serializedVersion: 2
+        x: 587
+        y: 0
+        width: 40
+        height: 45
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a37d7d23d1d920a40800000000000000
+      internalID: 5332997657492707130
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: lacuarachachacha april with clothes april 9 and dancing_8
+      rect:
+        serializedVersion: 2
+        x: 652
+        y: 0
+        width: 40
+        height: 45
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 39b7e7895c45f5d80800000000000000
+      internalID: -8259789983930483821
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: lacuarachachacha april with clothes april 9 and dancing_9
+      rect:
+        serializedVersion: 2
+        x: 711
+        y: 0
+        width: 40
+        height: 45
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d0996aa16b04f4f80800000000000000
+      internalID: -8120200452250363635
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: lacuarachachacha april with clothes april 9 and dancing_10
+      rect:
+        serializedVersion: 2
+        x: 780
+        y: 0
+        width: 40
+        height: 45
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 349bc2cbcff2ed170800000000000000
+      internalID: 8205048333650934083
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: lacuarachachacha april with clothes april 9 and dancing_11
+      rect:
+        serializedVersion: 2
+        x: 844
+        y: 0
+        width: 41
+        height: 45
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b8dbb2867ce3830c0800000000000000
+      internalID: -4595854393564480117
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: lacuarachachacha april with clothes april 9 and dancing_12
+      rect:
+        serializedVersion: 2
+        x: 910
+        y: 0
+        width: 39
+        height: 46
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1070df777b8b0a160800000000000000
+      internalID: 7034825716084311809
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 00ae430d6e1353a43b397106deefaaf1
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.0},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":7,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
+    nameFileIdTable:
+      lacuarachachacha april with clothes april 9 and dancing_0: -3653122590949629151
+      lacuarachachacha april with clothes april 9 and dancing_1: -2300278406390220648
+      lacuarachachacha april with clothes april 9 and dancing_10: 8205048333650934083
+      lacuarachachacha april with clothes april 9 and dancing_11: -4595854393564480117
+      lacuarachachacha april with clothes april 9 and dancing_12: 7034825716084311809
+      lacuarachachacha april with clothes april 9 and dancing_2: -4511977563483633852
+      lacuarachachacha april with clothes april 9 and dancing_3: -6910433741260919574
+      lacuarachachacha april with clothes april 9 and dancing_4: 2251533496969885096
+      lacuarachachacha april with clothes april 9 and dancing_5: 2799720483190972167
+      lacuarachachacha april with clothes april 9 and dancing_6: -5701069030262220655
+      lacuarachachacha april with clothes april 9 and dancing_7: 5332997657492707130
+      lacuarachachacha april with clothes april 9 and dancing_8: -8259789983930483821
+      lacuarachachacha april with clothes april 9 and dancing_9: -8120200452250363635
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -1,0 +1,327 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &616649763080049296
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7741439823775185613}
+  - component: {fileID: 5735145222530542089}
+  m_Layer: 0
+  m_Name: Player 1
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7741439823775185613
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 616649763080049296}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 6.02108, y: -3, z: 9.0006}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1734219035851235734}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5735145222530542089
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 616649763080049296}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68c7e57d778ba514298ff22355f93285, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: NeonBlack.Gameplay::NeonBlack.Gameplay.Characters.PawnRoot
+  pawnDefinition: {fileID: 11400000, guid: 9469f6f8685e3a14ab07206d80f30c54, type: 2}
+--- !u!1 &4838772506846360144
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1734219035851235734}
+  - component: {fileID: 2572796999432690053}
+  - component: {fileID: 8189302301276697327}
+  - component: {fileID: 7034502149445731240}
+  - component: {fileID: 9039090999874469268}
+  - component: {fileID: 1613214933495200008}
+  - component: {fileID: 2790716404527696534}
+  - component: {fileID: 3784888305518669373}
+  - component: {fileID: 2800937389753384384}
+  - component: {fileID: 5378480103451403719}
+  - component: {fileID: 1951414995025151133}
+  m_Layer: 0
+  m_Name: Sprite
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1734219035851235734
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4838772506846360144}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7741439823775185613}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!143 &2572796999432690053
+CharacterController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4838772506846360144}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Height: 2
+  m_Radius: 0.5
+  m_SlopeLimit: 45
+  m_StepOffset: 0.3
+  m_SkinWidth: 0.08
+  m_MinMoveDistance: 0.001
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &8189302301276697327
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4838772506846360144}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1c4232878120e441b769a3523ccac6d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: NeonBlack.Gameplay.Feature.Combat::NeonBlack.Gameplay.Features.Combat.HealthComponent
+  maxHealth: 100
+  destroyOnDeath: 1
+  deathDestroyDelay: 2
+  faction: 1
+  iFrameDuration: 0.15
+  regenEnabled: 0
+  regenRate: 5
+  regenDelay: 3
+  regenCapFrac: 1
+  OnDamaged:
+    m_PersistentCalls:
+      m_Calls: []
+  OnHealed:
+    m_PersistentCalls:
+      m_Calls: []
+  OnDeath:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &7034502149445731240
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4838772506846360144}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68df30257ef3cad40829b805841e111f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: NeonBlack.Gameplay.Feature.Combat::NeonBlack.Gameplay.Features.Combat.KnockbackReceiver
+  knockbackResistance: 1
+  decayRate: 10
+--- !u!114 &9039090999874469268
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4838772506846360144}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a52b7026a80f7b44f9aa407e52d30d42, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: NeonBlack.Gameplay::NeonBlack.Gameplay.Features.Characters.Pawn3DInputModule
+  inputActions: {fileID: -944628639613478452, guid: 5ef3d7006c74bc648b0815f4478e497b, type: 3}
+  inputConfig: {fileID: 0}
+--- !u!114 &1613214933495200008
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4838772506846360144}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6a3db84a2f78ffbed119554887b2b5cf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: NeonBlack.Gameplay.Characters::NeonBlack.Gameplay.Characters.Pawn3DMovementComponent
+  movementMode: 0
+  topDownAllowJump: 0
+  walkSpeed: 5
+  sprintSpeed: 10
+  crouchSpeed: 2.5
+  depthSpeedMultiplier: 0.6
+  accelerationTime: 0.08
+  decelerationTime: 0.05
+  jumpHeight: 3
+  gravity: -20
+  coyoteTime: 0.12
+  jumpBufferTime: 0.12
+  jumpCutMultiplier: 0.4
+  maxJumps: 2
+  landSquashThreshold: 5
+  landSlowDuration: 0.2
+  landSlowMultiplier: 0.3
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 51
+  groundCheckRadius: 0.2
+  groundProbeExtraDistance: 0.08
+  dodgeDistance: 3
+  dodgeDuration: 0.4
+  dodgeCooldown: 0.8
+  rollCooldown: 1.2
+  slideAngle: 45
+  slideSpeed: 8
+  slideSteering: 0.5
+  slideBlendTime: 0.3
+  powerSlideDamage: 20
+  powerSlideKnockback: 6
+  powerSlideDistance: 4
+  powerSlideDuration: 0.45
+  powerSlideCooldown: 1
+  powerSlideHitBoxZone: Kick
+  wallSlideGravityMultiplier: 0.15
+  wallSlideFallSpeedCap: -4
+  normalHeight: 2
+  crouchHeight: 1
+  normalCenter: {x: 0, y: 1, z: 0}
+  crouchCenter: {x: 0, y: 0.5, z: 0}
+--- !u!114 &2790716404527696534
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4838772506846360144}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91391d9f0e2e11c5e97d17a32c387711, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: NeonBlack.Gameplay.Feature.Traversal::NeonBlack.Gameplay.Features.Traversal.Pawn3DTraversalComponent
+  climbCooldown: 1.2
+  ledgeProbe:
+    probeHeight: 1.4
+    probeHalfExtents: {x: 0.3, y: 0.15, z: 0.3}
+    probeLayer:
+      serializedVersion: 2
+      m_Bits: 4294967291
+--- !u!114 &3784888305518669373
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4838772506846360144}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 97aef75c7ab2d554488ffce71e277378, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: NeonBlack.Gameplay.Presentation::NeonBlack.Gameplay.Presentation.Animation.ActorAnimationDriver
+  animator: {fileID: 0}
+  visualRoot: {fileID: 0}
+  billboardTarget: {fileID: 0}
+  spriteRenderer: {fileID: 0}
+  billboardFacing: {fileID: 0}
+  cameraOverride: {fileID: 0}
+  shadowDriver: {fileID: 0}
+  presentationProfile: {fileID: 0}
+  animationProfile: {fileID: 0}
+--- !u!114 &2800937389753384384
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4838772506846360144}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7cd3631da797902a0f49eca13f1852f5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: NeonBlack.Gameplay::NeonBlack.Gameplay.Characters.Pawn3DPresentationComponent
+  showDebugHUD: 0
+--- !u!114 &5378480103451403719
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4838772506846360144}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c5b46c0380b7de4c8ddf6f23f35e59c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: NeonBlack.Gameplay::NeonBlack.Gameplay.Features.Characters.Motor3D
+--- !u!114 &1951414995025151133
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4838772506846360144}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72b642b81a610673b948c9c8994f6c6c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: NeonBlack.Gameplay::NeonBlack.Gameplay.Features.Characters.PawnCombatBehaviour
+  comboResetTime: 1.5
+  hitBoxZones: []
+  projectileSpawnPoint: {fileID: 0}
+  attackWeapon: {fileID: 0}
+  kickWeapon: {fileID: 0}
+  equippedWeapons: []
+  startingWeaponIndex: 0
+  baseDamage: 10
+  baseKnockback: 5
+  hitDelay: 0.1
+  hitDuration: 0.15
+  attackCooldown: 0.5
+  kickCooldown: 0.8
+  combatWindow: 3
+  maxAerialAttacks: 2
+  attackMoveMultiplier: 0.2
+  aerialAttackMoveMultiplier: 0.5
+  aerialHitBoxZone: Aerial
+  aerialWeapon: {fileID: 0}
+  primarySequence: {fileID: 0}
+  secondarySequence: {fileID: 0}
+  aerialSequence: {fileID: 0}
+  blockDamageReduction: 0.2
+  blockFrontalAngle: 90

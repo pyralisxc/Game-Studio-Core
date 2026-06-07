@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80491116670e62d4eab9b5b91ed69b68, type: 3}
+  m_Name: TopDown2DArenaGameMode
+  m_EditorClassIdentifier: NeonBlack.Gameplay.Data::NeonBlack.Gameplay.Data.Definitions.GameModeDefinition
+  mainMenuScene: MainMenu
+  gameplayScene: TopDown2DArenaProof
+  setupProfile: {fileID: 11400000, guid: a8ff1b4c2ed0c1440a50175066b03642, type: 2}
+  playfieldProfile: {fileID: 11400000, guid: 1028be2eb04643d42a04407b9420135f, type: 2}
+  cameraRigProfile: {fileID: 11400000, guid: c3cfdb630a0d24d41b58fff53fbfe6f1, type: 2}
+  requiredFeatureModules:
+  - {fileID: 11400000, guid: 53e8731510804cc4c9e1f284364e8d9a, type: 2}
+  enableCombat: 1
+  enablePickups: 1
+  enableHazards: 0
+  enableScore: 1
+  enableRespawn: 0
+  turnOrderDefinition: {fileID: 0}
+  boardDefinition: {fileID: 0}
+  boardTerminalConditions: []
+  respawnDelay: 3
+  startingLives: 0
+  maxParticipantsOverride: 1

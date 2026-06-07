@@ -1,0 +1,3 @@
+repository "Game Studio Core/Game Studio Core@20067577636238@cloud"
+  path "/"
+    smartbranch "/main"

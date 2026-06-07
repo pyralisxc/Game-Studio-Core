@@ -1,0 +1,15 @@
+{
+    "name": "NeonBlack.Gameplay.Data",
+    "references": [
+        "NeonBlack.Gameplay.Core",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}

@@ -1,0 +1,22 @@
+{
+    "name": "NeonBlack.Gameplay.Feature.Interaction.Editor",
+    "references": [
+        "NeonBlack.Gameplay.Feature.Interaction",
+        "NeonBlack.Gameplay.Editor",
+        "NeonBlack.Gameplay",
+        "NeonBlack.Gameplay.Core",
+        "NeonBlack.Gameplay.Data",
+        "NeonBlack.Gameplay.Features.Composition",
+        "NeonBlack.Gameplay.Presentation"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": []
+}

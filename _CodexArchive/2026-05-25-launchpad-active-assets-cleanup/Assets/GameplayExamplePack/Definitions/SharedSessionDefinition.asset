@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c6ad1da800dee3246b0d0f4e0ef1b973, type: 3}
+  m_Name: SharedSessionDefinition
+  m_EditorClassIdentifier: NeonBlack.Gameplay::NeonBlack.Gameplay.Data.Definitions.SessionDefinition
+  sessionName: Local Shared Core Session
+  localFirst: 1
+  autoStartHost: 1
+  allowLateJoin: 1
+  sharedCameraByDefault: 1
+  allowSplitScreen: 0
+  maxParticipants: 4
+  defaultGameMode: {fileID: 11400000, guid: e2e47bcef07eb6540a0a5fc87d47423a, type: 2}
+  defaultInputProfile: {fileID: 11400000, guid: 31fdd5ae42fe35e4f83c3ea5c6b60b6a, type: 2}
+  settingsProfile: {fileID: 11400000, guid: e7d43f43218f3f1499bf79774d008540, type: 2}
+  defaultParticipants:
+  - {fileID: 11400000, guid: e0828a7b29df81f479970bffdd2495d1, type: 2}
+  - {fileID: 11400000, guid: a6b8f783803d472468cfee78341ff86c, type: 2}

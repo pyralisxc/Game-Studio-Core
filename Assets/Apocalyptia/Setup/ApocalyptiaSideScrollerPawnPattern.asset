@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b890cf0fcd3e4e1290d1b98d7425014f, type: 3}
+  m_Name: ApocalyptiaSideScrollerPawnPattern
+  m_EditorClassIdentifier: NeonBlack.Gameplay.Data::NeonBlack.Gameplay.Data.Definitions.RuntimePatternDefinition
+  patternId: apocalyptia.side-scroller.pawn
+  displayName: 2D Side-Scroller Pawn
+  description: A user-authored 2D side-scroller player route with side-view movement,
+    gravity, jump, attacks, camera follow, and animation hooks.
+  capabilityFamily: 1
+  participantEmbodiment: 2
+  supportedControlSurfaces: 00000000
+  requiredRuntimeSystems: []
+  optionalRuntimeSystems: []
+  presentationLanes:
+  - 1
+  firstProofRequirements: 7
+  recommendedCompanionPatterns: []
+  cautionaryCompanionPatterns: []
+  setupNotes: Create a ParticipantDefinition, assign a PawnDefinition for the default
+    pawn, assign a pawn prefab with PawnRoot and movement/presentation components,
+    add at least one Spawn Point to GameplaySessionBootstrap, then run Play Mode
+    and verify one player pawn spawns and moves.

@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9d06f1de2190c5429fed1db0d21f59e, type: 3}
+  m_Name: TopDown2DArenaParticipantDefinition
+  m_EditorClassIdentifier: NeonBlack.Gameplay.Data::NeonBlack.Gameplay.Data.Definitions.ParticipantDefinition
+  displayName: Arena Player
+  autoJoin: 1
+  teamIndex: 0
+  preferredSeatIndex: 0
+  tint: {r: 0.65, g: 0.95, b: 1, a: 1}
+  defaultPawn: {fileID: 11400000, guid: 62fe9314bad67d64391af1e4f56e93aa, type: 2}
+  inputProfile: {fileID: 11400000, guid: 8f4f0a46abc515e41941e8ef236f0abf, type: 2}

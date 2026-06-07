@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e55cd952b7b44a68b975a950a1802c7, type: 3}
+  m_Name: TopDown2DArenaSetupProfile
+  m_EditorClassIdentifier: NeonBlack.Gameplay.Data::NeonBlack.Gameplay.Data.Profiles.GameSetupProfile
+  setupName: Top-Down 2D Arena Proof
+  summary: Local Sprite2D pawn movement, top-down camera bounds, projectile firing,
+    auto-collected pickups, scoring, and a score HUD.
+  runtimeCapabilities:
+  - capabilityFamily: 1
+    patternDefinition: {fileID: 11400000, guid: eb4719ede64f07449bdd90db6d875c7e, type: 2}
+    requiredForFirstProof: 1
+    creatorNotes: First prove the pawn can spawn and move inside camera bounds.
+  - capabilityFamily: 4
+    patternDefinition: {fileID: 11400000, guid: c886c23cae665de4a985afd675bffc01, type: 2}
+    requiredForFirstProof: 1
+    creatorNotes: Then prove primary attack can fire an authored projectile prefab.
+  - capabilityFamily: 8
+    patternDefinition: {fileID: 11400000, guid: 1e93f00a018b1c74e9f1adbb998e5f67, type: 2}
+    requiredForFirstProof: 1
+    creatorNotes: Finally prove pickup awards can drive the score HUD.
+  runtimePatterns:
+  - {fileID: 11400000, guid: eb4719ede64f07449bdd90db6d875c7e, type: 2}
+  - {fileID: 11400000, guid: c886c23cae665de4a985afd675bffc01, type: 2}
+  - {fileID: 11400000, guid: 1e93f00a018b1c74e9f1adbb998e5f67, type: 2}
+  setupNotes: Open the scene, inspect the bootstrap/session assets, press Play, move
+    with WASD/arrows, fire with the Attack action, and collect gems to update score.

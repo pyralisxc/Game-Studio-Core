@@ -1,0 +1,21 @@
+{
+    "name": "NeonBlack.Gameplay.Editor",
+    "references": [
+        "NeonBlack.Gameplay.Characters",
+        "NeonBlack.Gameplay",
+        "NeonBlack.Gameplay.Core",
+        "NeonBlack.Gameplay.Data",
+        "NeonBlack.Gameplay.Presentation",
+        "NeonBlack.Gameplay.Networking"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": []
+}

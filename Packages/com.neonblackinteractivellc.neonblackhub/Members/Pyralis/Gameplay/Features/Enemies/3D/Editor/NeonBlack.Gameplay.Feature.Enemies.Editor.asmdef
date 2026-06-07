@@ -1,0 +1,21 @@
+{
+    "name": "NeonBlack.Gameplay.Feature.Enemies.Editor",
+    "references": [
+        "NeonBlack.Gameplay",
+        "NeonBlack.Gameplay.Core",
+        "NeonBlack.Gameplay.Data",
+        "NeonBlack.Gameplay.Features.Composition",
+        "NeonBlack.Gameplay.Presentation",
+        "NeonBlack.Gameplay.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": []
+}

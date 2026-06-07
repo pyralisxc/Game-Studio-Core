@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b890cf0fcd3e4e1290d1b98d7425014f, type: 3}
+  m_Name: TwoPlayer3DBrawlerPawnPattern
+  m_EditorClassIdentifier: NeonBlack.Gameplay.Data::NeonBlack.Gameplay.Data.Definitions.RuntimePatternDefinition
+  patternId: pattern.3d-brawler-pawn-npc
+  displayName: 3D Brawler Pawn And NPC
+  description: A local 2-player 3D brawler route where player participants own rigged
+    pawn bodies, a second player can join locally, and enemy or NPC actors can spawn
+    into an arena for movement, attacks, animation, camera, and proof-readiness checks.
+  capabilityFamily: 1
+  participantEmbodiment: 2
+  supportedControlSurfaces: 00000000
+  requiredRuntimeSystems: []
+  optionalRuntimeSystems: []
+  presentationLanes: 03000000
+  firstProofRequirements: 779
+  recommendedCompanionPatterns: []
+  cautionaryCompanionPatterns: []
+  setupNotes: "Create local player ParticipantDefinitions, assign PawnDefinitions
+    with rigged 3D pawn prefabs, add input profiles for local join, place spawn points
+    for each player, assign the shared camera rig and playfield profiles, add PlayerInputManager
+    evidence only when local join is part of the proof, add enemy or NPC spawn evidence,
+    then enter Play Mode after prefab, animator, movement, attack, and camera fields
+    are assigned.\t"
