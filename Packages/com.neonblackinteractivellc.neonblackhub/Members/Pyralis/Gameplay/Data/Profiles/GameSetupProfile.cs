@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Definitions;
+using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Data.Profiles
@@ -26,6 +27,14 @@ namespace NeonBlack.Gameplay.Data.Profiles
     /// <summary>
      /// Describes one composed game setup by selecting compatible runtime pattern recipes.
      /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Setup | AuthoringCapability.Session, 
+        Relevance = "Project-window creation path for the runtime pattern setup profile.",
+        AssignmentFields = new[] { nameof(setupName), nameof(runtimeCapabilities), nameof(runtimePatterns) },
+        FirstProof = "Validate that the selected runtime patterns correctly bootstrap the game session.",
+        ExpertAdvice = "GameSetupProfile is your 'Recipe' for a specific route. Use it to select high-level capability families and the specific RuntimePatternDefinitions that implement them.",
+        NativeSetup = new[] { "Create Asset" }
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Game Setup Profile", fileName = "GameSetupProfile", order = -100)]
     public class GameSetupProfile : ScriptableObject
     {

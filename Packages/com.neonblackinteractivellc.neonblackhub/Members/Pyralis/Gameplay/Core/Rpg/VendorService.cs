@@ -1,10 +1,25 @@
+using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Core.Contracts.Rpg;
+
 namespace NeonBlack.Gameplay.Core.Rpg
 {
-    public sealed class VendorService
-    {
-        private readonly InventoryService _inventory;
+    [AuthoringContract(
+        Capability = AuthoringCapability.Inventory,
+        Lane = "RPG",
+        RequiredInterfaces = new[] { typeof(IVendorDefinition) },
+        FirstProof = "Verify that TryBuy correctly subtracts currency and adds the item to the owner's inventory.",
+        NativeSetup = new[]
+        {
+            "create VendorDefinitions",
+            "assign ItemCatalog to vendor",
+            "link vendor to Hub interactable"
+        }
+    )]
+    public sealed class VendorService : IVendorService
+{
+        private readonly IInventoryService _inventory;
 
-        public VendorService(InventoryService inventory = null)
+        public VendorService(IInventoryService inventory = null)
         {
             _inventory = inventory;
         }

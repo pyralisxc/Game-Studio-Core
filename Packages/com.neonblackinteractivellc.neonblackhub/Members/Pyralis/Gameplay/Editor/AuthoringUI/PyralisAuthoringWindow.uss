@@ -1,0 +1,135 @@
+/*
+2026-06-09 AI-Tag
+This was created with the help of Assistant, a Unity Artificial Intelligence product.
+*/
+:root {
+    --spacing-xs: 2px;
+    --spacing-sm: 4px;
+    --spacing-md: 8px;
+    --spacing-lg: 16px;
+}
+
+.root-container {
+    flex-grow: 1;
+}
+
+.header {
+    height: 32px;
+    flex-direction: row;
+    align-items: center;
+    padding-left: var(--spacing-md);
+    border-bottom-width: 1px;
+    border-bottom-color: var(--unity-colors-border-standard);
+}
+
+.header-title {
+    -unity-font-style: bold;
+    margin-right: var(--spacing-lg);
+}
+
+.mode-toolbar {
+    flex-direction: row;
+    flex-grow: 1;
+}
+
+.mode-tab {
+    padding: 0 var(--spacing-md);
+    height: 100%;
+    justify-content: center;
+    border-right-width: 1px;
+    border-right-color: var(--unity-colors-border-standard);
+}
+
+.mode-tab:hover {
+    background-color: var(--unity-colors-button-background-hover);
+}
+
+.mode-tab--active {
+    background-color: var(--unity-colors-button-background-pressed);
+}
+
+.content-area {
+    flex-grow: 1;
+}
+
+.section {
+    margin: var(--spacing-md);
+    padding: var(--spacing-md);
+    border-width: 1px;
+    border-color: var(--unity-colors-border-standard);
+    background-color: var(--unity-colors-window-background);
+}
+
+.section-title {
+    -unity-font-style: bold;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--unity-colors-border-standard);
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+}
+
+/* Intent Tab Specifics */
+.intent-container {
+    flex-direction: row;
+    flex-grow: 1;
+}
+
+.intent-sidebar {
+    width: 250px;
+    border-right-width: 1px;
+    border-right-color: var(--unity-colors-border-standard);
+    padding: var(--spacing-md);
+}
+
+.intent-main {
+    flex-grow: 1;
+    padding: var(--spacing-md);
+}
+
+.capability-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.capability-group {
+    width: 48%;
+    margin-bottom: var(--spacing-md);
+    margin-right: var(--spacing-md);
+    padding: var(--spacing-sm);
+    border-width: 1px;
+    border-color: var(--unity-colors-border-standard);
+    background-color: var(--unity-colors-box-background);
+}
+
+.capability-group-title {
+    -unity-font-style: bold;
+    margin-bottom: var(--spacing-sm);
+}
+
+.intent-card {
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-md);
+    border-width: 1px;
+    border-color: var(--unity-colors-border-standard);
+    background-color: var(--unity-colors-box-background);
+}
+
+.intent-card--caution {
+    border-left-width: 4px;
+    border-left-color: #ffaa00;
+}
+
+.intent-card-title {
+    -unity-font-style: bold;
+    margin-bottom: var(--spacing-xs);
+}
+
+.intent-card-reason {
+    font-size: 11px;
+    color: var(--unity-colors-label-text-focus);
+    margin-bottom: var(--spacing-sm);
+}
+
+.intent-card-summary {
+    white-space: normal;
+}

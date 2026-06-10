@@ -1,3 +1,4 @@
+using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Presentation.Animation;
@@ -7,8 +8,33 @@ using UnityEngine;
 namespace NeonBlack.Gameplay.Features.Interaction
 {
     [AddComponentMenu("NeonBlack/Gameplay/Interaction/Actor Interaction Feature Runtime")]
+    [AuthoringContract(
+        Capability = AuthoringCapability.Puzzle | AuthoringCapability.Input,
+        ModuleId = "actor.interaction",
+        Lane = "Interaction",
+        ProfileType = typeof(InteractionFeatureProfile),
+        RequiredInterfaces = new[] { typeof(IFeatureModuleRuntime), typeof(IActorInteractionFeature) },
+        RequiredInterfaceNames = new[] { "NeonBlack.Gameplay.Features.Characters.IActorInteractionInputReceiver2D" }, // Required for Sprite2D lane
+        AssignmentFields = new[] { nameof(interactionProfile) },
+        FirstProof = "Verify that TryHandleInteraction triggers one of the attached IActorInteractionHandlers.",
+        NativeSetup = new[]
+        {
+            "create InteractionFeatureProfile",
+            "create FeatureModuleDefinition",
+            "assign runtime prefab with ActorInteractionFeatureRuntime",
+            "assign profile asset",
+            "add module to PawnDefinition.featureModules"
+        },
+        CustomizationMoments = new[]
+        {
+            "InteractionFeatureProfile.enableInteraction",
+            "interactionCooldown",
+            "triggerInteractAnimationWhenUnhandled"
+        },
+        ConsumedRoles = new[] { "Interact" }
+    )]
     public class ActorInteractionFeatureRuntime : MonoBehaviour, IFeatureModuleRuntime, IActorInteractionFeature
-    {
+{
         [SerializeField] private InteractionFeatureProfile interactionProfile;
         private ActorFeatureContext _context;
         private IActorInteractionHandler[] _handlers;

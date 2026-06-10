@@ -1,3 +1,4 @@
+using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
 
 namespace NeonBlack.Gameplay.Core.Rules.Board
@@ -5,11 +6,18 @@ namespace NeonBlack.Gameplay.Core.Rules.Board
     /// <summary>
     /// Authoritative logical board state for tabletop-style games.
     /// </summary>
-    public sealed class BoardRuntimeState
+    [AuthoringContract(
+        Capability = AuthoringCapability.Tabletop | AuthoringCapability.Grid,
+        Relevance = "Authoritative logical board state for tabletop-style games.",
+        FirstProof = "Board state correctly tracks piece occupancy and coordinate mapping at runtime."
+    )]
+    public sealed class BoardRuntimeState : IBoardStateService
     {
         private readonly Dictionary<BoardCoordinate, BoardSpaceState> _spacesByCoordinate;
         private readonly Dictionary<string, BoardPieceState> _piecesById;
         private readonly Dictionary<BoardCoordinate, string> _occupancyByCoordinate;
+
+        public BoardRuntimeState BoardState => this;
 
         private BoardRuntimeState(int width, int height)
         {

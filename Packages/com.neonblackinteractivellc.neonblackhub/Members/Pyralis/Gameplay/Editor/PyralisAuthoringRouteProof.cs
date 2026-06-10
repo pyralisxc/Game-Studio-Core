@@ -1,3 +1,4 @@
+using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Data.Definitions;
@@ -235,7 +236,7 @@ namespace NeonBlack.Gameplay.Editor
                 "Run one local pawn-backed movement proof before adding combat, HUD, enemies, scoring, or networking.",
                 "2D pawn movement route",
                 "One participant spawns one pawn, the selected InputProfile reaches a pawn input module, movement is visibly responsive, and the Game view follows the runtime shared camera focus.",
-                new[] { RuntimeCapabilityGoalTag.Movement },
+                new[] { "Movement" },
                 new[] { RuntimeCapabilityLaneTag.Sprite2D },
                 System.Array.Empty<RuntimeCapabilityLaneTag>(),
                 new[] { "SessionDefinition", "ParticipantDefinition", "PawnDefinition" },
@@ -283,7 +284,7 @@ namespace NeonBlack.Gameplay.Editor
                 "Run one rules-backed tabletop selection before adding card UX, AI turns, campaign flow, or networking.",
                 "tabletop board/card route",
                 "One board space, card, seat command, or turn action is selected; Pyralis accepts or rejects it through rules; and board/card/turn state visibly or inspectably changes.",
-                new[] { RuntimeCapabilityGoalTag.Tabletop, RuntimeCapabilityGoalTag.Interaction },
+                new[] { "Tabletop", "Interaction" },
                 new[] { RuntimeCapabilityLaneTag.TabletopNoPawn, RuntimeCapabilityLaneTag.UiMenu, RuntimeCapabilityLaneTag.CameraCursor },
                 new[] { RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Rigged3D },
                 new[] { "BoardDefinition", "BoardMovePolicyDefinition", "TurnOrderDefinition", "ActionDefinition" },
@@ -304,7 +305,7 @@ namespace NeonBlack.Gameplay.Editor
                 "Run one selected command before expanding menus, cards, ability lists, animation polish, or AI.",
                 "action/menu/cursor route",
                 "One command reaches its resolver and reports accepted, rejected, completed, or failed.",
-                new[] { RuntimeCapabilityGoalTag.Interaction, RuntimeCapabilityGoalTag.Tabletop },
+                new[] { "Interaction", "Tabletop" },
                 new[] { RuntimeCapabilityLaneTag.UiMenu, RuntimeCapabilityLaneTag.TabletopNoPawn, RuntimeCapabilityLaneTag.CameraCursor, RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Rigged3D },
                 System.Array.Empty<RuntimeCapabilityLaneTag>(),
                 new[] { "ActionDefinition" },
@@ -325,7 +326,7 @@ namespace NeonBlack.Gameplay.Editor
                 "Run one NPC or enemy behavior proof before building encounter waves, boss phases, vendors, or broad AI systems.",
                 "NPC/enemy actor route",
                 "One NPC or enemy appears, is detected or interacted with, and performs one authored behavior or combat reaction.",
-                new[] { RuntimeCapabilityGoalTag.NpcsEnemies, RuntimeCapabilityGoalTag.Combat, RuntimeCapabilityGoalTag.Interaction },
+                new[] { "NpcsEnemies", "Combat", "Interaction" },
                 new[] { RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Billboard2_5D, RuntimeCapabilityLaneTag.Rigged3D },
                 new[] { RuntimeCapabilityLaneTag.UiMenu },
                 new[] { "NpcDefinition", "ParticipantDefinition or enemy actor definition", "FeatureModuleDefinition" },
@@ -346,7 +347,7 @@ namespace NeonBlack.Gameplay.Editor
                 "Run one custom object, feature, trigger, pickup, hazard, turret, trap, or service effect before treating it as a full system.",
                 "custom object/feature route",
                 "One authored scene object or feature produces a visible accepted, rejected, completed, damaged, collected, triggered, or scored effect.",
-                new[] { RuntimeCapabilityGoalTag.Interaction, RuntimeCapabilityGoalTag.Combat, RuntimeCapabilityGoalTag.Scoring },
+                new[] { "Interaction", "Combat", "Scoring" },
                 new[] { RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Billboard2_5D, RuntimeCapabilityLaneTag.Rigged3D, RuntimeCapabilityLaneTag.TabletopNoPawn },
                 System.Array.Empty<RuntimeCapabilityLaneTag>(),
                 new[] { "FeatureModuleDefinition", "ActionDefinition or feature-specific definition when commands are involved" },
@@ -367,7 +368,7 @@ namespace NeonBlack.Gameplay.Editor
                 "Run one UI, HUD, prompt, score, health, feedback, or menu event before building full navigation or result screens.",
                 "UI/HUD/menu route",
                 "One UI event changes visible state or sends one command to a resolver.",
-                new[] { RuntimeCapabilityGoalTag.UiHud, RuntimeCapabilityGoalTag.Scoring, RuntimeCapabilityGoalTag.Interaction },
+                new[] { "UiHud", "Scoring", "Interaction" },
                 new[] { RuntimeCapabilityLaneTag.UiMenu, RuntimeCapabilityLaneTag.TabletopNoPawn, RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Rigged3D },
                 System.Array.Empty<RuntimeCapabilityLaneTag>(),
                 new[] { "ActionDefinition when UI triggers gameplay commands" },
@@ -388,7 +389,7 @@ namespace NeonBlack.Gameplay.Editor
                 "Run one camera, cursor, bounds, or world-surface proof before adding multi-target framing or cinematic polish.",
                 "world/camera route",
                 "One input or selected target changes camera, cursor, framing, bounds, highlighted surface, or scene visibility as authored.",
-                new[] { RuntimeCapabilityGoalTag.Camera, RuntimeCapabilityGoalTag.Movement, RuntimeCapabilityGoalTag.Interaction },
+                new[] { "Camera", "Movement", "Interaction" },
                 new[] { RuntimeCapabilityLaneTag.CameraCursor, RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Billboard2_5D, RuntimeCapabilityLaneTag.Rigged3D, RuntimeCapabilityLaneTag.TabletopNoPawn },
                 System.Array.Empty<RuntimeCapabilityLaneTag>(),
                 System.Array.Empty<string>(),
@@ -409,7 +410,7 @@ namespace NeonBlack.Gameplay.Editor
                 "Generate one inspectable output before making generated content required for progression.",
                 "procedural/generated-content route",
                 "One generated output is deterministic enough to inspect in the scene or logs and does not block the route if generation is disabled.",
-                new[] { RuntimeCapabilityGoalTag.Interaction, RuntimeCapabilityGoalTag.Scoring },
+                new[] { "Interaction", "Scoring" },
                 new[] { RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.TabletopNoPawn, RuntimeCapabilityLaneTag.CameraCursor },
                 System.Array.Empty<RuntimeCapabilityLaneTag>(),
                 new[] { "segment, chunk, board layout, spawn table, or feature-specific generation definition" },
@@ -430,7 +431,7 @@ namespace NeonBlack.Gameplay.Editor
                 "Confirm the local proof first, then prove one host/client ownership path before expanding replication.",
                 "networking authority route",
                 "Host/client can connect, the owned participant controls the expected surface, and one replicated state change is visible without breaking the local proof.",
-                new[] { RuntimeCapabilityGoalTag.Networking, RuntimeCapabilityGoalTag.Movement, RuntimeCapabilityGoalTag.Combat },
+                new[] { "Networking", "Movement", "Combat" },
                 new[] { RuntimeCapabilityLaneTag.Networked, RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Rigged3D },
                 new[] { RuntimeCapabilityLaneTag.TabletopNoPawn },
                 new[] { "SessionDefinition" },
@@ -469,7 +470,7 @@ namespace NeonBlack.Gameplay.Editor
             string summary,
             string routeRelevance,
             string firstProof,
-            RuntimeCapabilityGoalTag[] goalTags,
+            string[] goalTags,
             RuntimeCapabilityLaneTag[] laneTags,
             RuntimeCapabilityLaneTag[] unsupportedLaneTags,
             string[] requiredDefinitions,
@@ -493,10 +494,10 @@ namespace NeonBlack.Gameplay.Editor
                 summary,
                 routeRelevance,
                 firstProof,
-                ToStrings(goalTags),
-                ToStrings(laneTags),
-                ToStrings(unsupportedLaneTags),
-                requiredDefinitions: requiredDefinitions,
+                goalTags,
+                laneTags: ToStrings(laneTags),
+                unsupportedLaneTags: ToStrings(unsupportedLaneTags),
+requiredDefinitions: requiredDefinitions,
                 requiredProfiles: requiredProfiles,
                 requiredSceneComponents: requiredSceneComponents,
                 requiredPrefabComponents: requiredPrefabComponents,
@@ -516,14 +517,7 @@ namespace NeonBlack.Gameplay.Editor
                 relatedStableIds: relatedStableIds);
         }
 
-        private static string[] ToStrings(RuntimeCapabilityGoalTag[] tags)
-        {
-            string[] values = new string[tags.Length];
-            for (int i = 0; i < tags.Length; i++)
-                values[i] = tags[i].ToString();
-
-            return values;
-        }
+        
 
         private static string[] ToStrings(RuntimeCapabilityLaneTag[] tags)
         {

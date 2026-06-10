@@ -39,6 +39,20 @@ namespace NeonBlack.Gameplay.Features.Hazards
 /// from the root OR from child GameObjects. All are enabled / disabled together as a group.
 /// </summary>
 [AddComponentMenu("NeonBlack/Gameplay/Hazards/2D Hazard")]
+[AuthoringContract(
+    Capability = AuthoringCapability.Combat,
+    Relevance = "Primary controller for 2D hazards, handling movement, targeting, and impact sequences.",
+    Axioms = AuthoringWorldAxiom.Dimensions2D,
+    NativeSetup = new[]
+    {
+        "Attach Hazard script to a GameObject.",
+        "Wire child SpriteRenderers for Shadow, Outline, and Lane.",
+        "Add Collider2Ds to the Hit Colliders list.",
+        "Assign a HazardData ScriptableObject."
+    },
+    FirstProof = "Place a hazard in the scene and verify it executes its sequence (Slam, Crossing, etc.) on start.",
+    AssignmentFields = new[] { "_data", "_hitColliders", "_shadowRenderer" }
+)]
 public partial class Hazard : MonoBehaviour
 {
     [Header("Child Renderers")]

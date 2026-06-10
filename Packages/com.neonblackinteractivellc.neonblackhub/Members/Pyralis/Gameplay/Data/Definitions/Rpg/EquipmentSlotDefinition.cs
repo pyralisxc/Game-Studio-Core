@@ -1,12 +1,20 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Rpg;
+using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rpg
 {
+    [AuthoringContract(
+        ModuleId = "rpg.equipment.slot",
+        Capability = AuthoringCapability.Inventory,
+        Lane = "RPG",
+        AssignmentFields = new[] { nameof(slotId), nameof(displayName), nameof(slotFamily) },
+        FirstProof = "Proof that the equipment slot has a valid id and display properties."
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Equipment Slot", fileName = "EquipmentSlotDefinition")]
     public class EquipmentSlotDefinition : ScriptableObject, IEquipmentSlot
-    {
+{
         public string slotId = "slot.new";
         public string displayName = "New Slot";
         public string slotFamily = "General";

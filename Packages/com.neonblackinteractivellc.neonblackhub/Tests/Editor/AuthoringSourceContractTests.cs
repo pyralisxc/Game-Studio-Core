@@ -1,4 +1,5 @@
-﻿using NeonBlack.Gameplay.Data.Definitions;
+using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Actions;
 using NeonBlack.Gameplay.Presentation.Animation;
@@ -724,44 +725,49 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 "Gameplay",
                 "Editor");
 
-            string monitorPath = Path.Combine(editorRoot, "PyralisSetupFlowMonitor.cs");
+            string typesPath = Path.Combine(editorRoot, "PyralisSetupFlowTypes.cs");
+            string guidancePath = Path.Combine(editorRoot, "PyralisSetupFlowGuidance.cs");
+            string validatorPath = Path.Combine(editorRoot, "PyralisSetupFlowValidator.cs");
             string resolverPath = Path.Combine(editorRoot, "PyralisRuntimeSystemClaimResolver.cs");
             string sceneReadinessPath = Path.Combine(editorRoot, "PyralisSceneReadinessValidator.cs");
             string bootstrapEditorPath = Path.Combine(editorRoot, "GameplaySessionBootstrapEditor.cs");
             string authoringWindowPath = Path.Combine(editorRoot, "PyralisAuthoringWindow.cs");
             string routeReportPath = Path.Combine(editorRoot, "PyralisAuthoringRouteReport.cs");
 
-            Assert.That(File.Exists(monitorPath), Is.True);
+            Assert.That(File.Exists(typesPath), Is.True);
+            Assert.That(File.Exists(guidancePath), Is.True);
+            Assert.That(File.Exists(validatorPath), Is.True);
             Assert.That(File.Exists(resolverPath), Is.True);
             Assert.That(File.Exists(sceneReadinessPath), Is.True);
 
-            string monitorSource = File.ReadAllText(monitorPath);
+            string typesSource = File.ReadAllText(typesPath);
+            string guidanceSource = File.ReadAllText(guidancePath);
+            string validatorSource = File.ReadAllText(validatorPath);
             string resolverSource = File.ReadAllText(resolverPath);
             string sceneReadinessSource = File.ReadAllText(sceneReadinessPath);
             string bootstrapEditorSource = File.ReadAllText(bootstrapEditorPath);
             string authoringWindowSource = File.ReadAllText(authoringWindowPath);
             string routeReportSource = File.ReadAllText(routeReportPath);
 
-            Assert.That(monitorSource.Contains("public enum PyralisSetupFlowStepStatus"), Is.True);
-            Assert.That(monitorSource.Contains("PyralisSetupFlowValidator"), Is.True);
-            Assert.That(monitorSource.Contains("PyralisSetupFlowDrawer"), Is.True);
-            Assert.That(monitorSource.Contains("Undo.AddComponent<PyralisGameplayLifetimeScope>"), Is.True);
-            Assert.That(monitorSource.Contains("RestoreFirstSceneDefaults"), Is.True);
-            Assert.That(monitorSource.Contains("Assign Score Service"), Is.True);
-            Assert.That(monitorSource.Contains("ISessionScoreService"), Is.True);
-            Assert.That(monitorSource.Contains("Assign Projectile Launcher"), Is.True);
-            Assert.That(monitorSource.Contains("ProjectileLauncherBase"), Is.True);
-            Assert.That(monitorSource.Contains("Tabletop Runtime Contract"), Is.True);
-            Assert.That(monitorSource.Contains("Assign Tabletop Selection Surface"), Is.True);
-            Assert.That(monitorSource.Contains("TabletopBoardGridPresenter"), Is.True);
-            Assert.That(monitorSource.Contains("TabletopBoardSelectionBridge"), Is.True);
-            Assert.That(monitorSource.Contains("Resolve Runtime System Claims"), Is.True);
-            Assert.That(monitorSource.Contains("Required Runtime Systems"), Is.True);
-            Assert.That(monitorSource.Contains("PyralisRuntimeSystemClaimResolver.BuildReport"), Is.True);
-            Assert.That(monitorSource.Contains("Scene And Prefab Readiness"), Is.True);
-            Assert.That(monitorSource.Contains("PyralisSceneReadinessValidator.BuildReport"), Is.True);
-            Assert.That(monitorSource.Contains("AssetDatabase.CreateAsset"), Is.False);
-            Assert.That(monitorSource.Contains("PrefabUtility"), Is.False);
+            Assert.That(typesSource.Contains("public enum PyralisSetupFlowStepStatus"), Is.True);
+            Assert.That(validatorSource.Contains("PyralisSetupFlowValidator"), Is.True);
+            Assert.That(guidanceSource.Contains("Undo.AddComponent<PyralisGameplayLifetimeScope>"), Is.True);
+            Assert.That(guidanceSource.Contains("RestoreFirstSceneDefaults"), Is.True);
+            Assert.That(validatorSource.Contains("Assign Score Service"), Is.True);
+            Assert.That(guidanceSource.Contains("ISessionScoreService"), Is.True);
+            Assert.That(validatorSource.Contains("Assign Projectile Launcher"), Is.True);
+            Assert.That(guidanceSource.Contains("ProjectileLauncherBase"), Is.True);
+            Assert.That(validatorSource.Contains("Tabletop Runtime Contract"), Is.True);
+            Assert.That(validatorSource.Contains("Assign Tabletop Selection Surface"), Is.True);
+            Assert.That(guidanceSource.Contains("TabletopBoardGridPresenter"), Is.True);
+            Assert.That(guidanceSource.Contains("TabletopBoardSelectionBridge"), Is.True);
+            Assert.That(validatorSource.Contains("Resolve Runtime System Claims"), Is.True);
+            Assert.That(validatorSource.Contains("Required Runtime Systems"), Is.True);
+            Assert.That(validatorSource.Contains("PyralisRuntimeSystemClaimResolver.BuildReport"), Is.True);
+            Assert.That(validatorSource.Contains("Scene And Prefab Readiness"), Is.True);
+            Assert.That(validatorSource.Contains("PyralisSceneReadinessValidator.BuildReport"), Is.True);
+            Assert.That(validatorSource.Contains("AssetDatabase.CreateAsset"), Is.False);
+            Assert.That(validatorSource.Contains("PrefabUtility"), Is.False);
             Assert.That(resolverSource.Contains("public static class PyralisRuntimeSystemClaimResolver"), Is.True);
             Assert.That(resolverSource.Contains("ParticipantScoreService"), Is.True);
             Assert.That(resolverSource.Contains("ProjectileLauncher"), Is.True);
@@ -2067,9 +2073,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(factTypesSource.Contains("public sealed class PyralisAuthoringIssue"), Is.True);
             Assert.That(catalogSource.Contains("PyralisAuthoringNativeAction"), Is.True);
             Assert.That(catalogSource.Contains("PyralisAuthoringFactSourceKind.HandAuthoredGuideCard"), Is.True);
-            Assert.That(catalogSource.Contains("RuntimeCapabilityGoalTag"), Is.True);
             Assert.That(catalogSource.Contains("RuntimeCapabilityLaneTag"), Is.True);
-            Assert.That(catalogSource.Contains("GetByGoal"), Is.True);
+Assert.That(catalogSource.Contains("GetByGoal"), Is.True);
             Assert.That(catalogSource.Contains("GetByLane"), Is.True);
             Assert.That(catalogSource.Contains("CustomizationMoments"), Is.True);
             Assert.That(catalogSource.Contains("FirstProof"), Is.True);
@@ -2336,9 +2341,9 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
         private static bool SourceContainsAuthoringExportSpine(string source)
         {
-            return source.Contains("IAuthoringContractProvider")
+            return source.Contains("AuthoringContractAttribute")
                 || source.Contains("IAuthoringConventionFactProvider")
-                || source.Contains("PyralisAuthoringContractRegistry")
+|| source.Contains("PyralisAuthoringContractRegistry")
                 || source.Contains("PyralisAuthoringConventionFactRegistry")
                 || source.Contains("PyralisAuthoringFactRegistry")
                 || source.Contains("PyralisAuthoringFactKind")

@@ -110,6 +110,7 @@ These were major refactor blockers and are now resolved or intentionally stabili
 - clean-break pre-scene readiness now has the final authoring blockers closed for this phase: NGO participant spawning assigns ownership with `SpawnWithOwnership`, network authority compares the resolved owner client to the local client instead of treating every client as local, scene/prefab readiness scans bootstrap-referenced scene roots and key same-scene services instead of only the bootstrap hierarchy, and the package exposes its sample through `Samples~`/Package Manager metadata
 - fresh Unity batch validation on 2026-05-24 passed EditMode `199/199` and PlayMode `74/74` after those changes; `dotnet restore` plus `dotnet build "Game Studio Core.slnx" --no-restore` also passed, with remaining warnings coming from Unity Test Framework and VContainer package code
 - fresh Unity batch validation on 2026-05-25 passed EditMode `211/211` and PlayMode `90/90`; the tabletop starter now generates board, pieces, move policy, turn order, terminal conditions, and a board-move action, while malformed generated starter content remains archived outside the package import path
+- the 2026-06-09 hardening pass unified runtime service ownership by bridging VContainer resolution into the legacy `PlatformServiceRegistry`, refactored `CameraOcclusionFader` and `DamageZone` (2D/3D) for zero-allocation ticking, normalized 2D input through `Motor2DInputAdapter` and `PlayerInputHandler`, and hardened `GameplaySessionBootstrap` teardown to prevent context leaking during scene transitions; `SettingsManager` now registers with the platform context for unified dependency injection.
 - launch-pad cleanup on 2026-05-25 archived stale active `Assets/GameplayExamplePack`, Unity `InitTestScene*.unity` scratch scenes, `Assets/Temp`, and empty package ownership folders under `_CodexArchive/2026-05-25-launchpad-active-assets-cleanup`; source contracts now keep those generated/test surfaces out of the active import path
 - authoring-first tabletop readiness now separates core rule assets from Unity-playable interaction: Setup Flow names the concrete tabletop core (`BoardDefinition`, `BoardMovePolicyDefinition`, `TurnOrderDefinition`, `ActionQueueService`, `BoardMoveActionResolver`, and terminal conditions), adds a recommended `Assign Tabletop Selection Surface` step, and keeps `project-owned` runtime claims visible instead of silently marking them ready when paired with a known service name
 - setup flow now has an explicit `Runtime Service Ownership` row so Unity users see that `GameplaySessionBootstrap` owns `PlatformServiceRegistry` setup and builds `PyralisGameplayLifetimeScope`; remaining static `Instance` surfaces are compatibility/persistence affordances, not the path for new service dependencies
@@ -136,32 +137,15 @@ Current focus:
 - treat `dotnet test` as a smoke check only unless Unity Test Runner summaries are present
 - after Unity batch tests, rerun `dotnet restore` before the final solution build because Unity can clear generated `Temp/obj` assets
 
-### 2. Runtime Service Ownership Is Still Split
+### 2. Finalize Service Transition
 
-The package now has a real `VContainer` composition root, registry entries are bridged into that root for transition consumers, local-first defaults no longer require the Networking assembly, and compatibility singleton teardown has lifecycle coverage. Service ownership is still split between the VContainer lifetime scope, bootstrap-created persistent services, and migration support registries.
-
-Current examples:
-
-- `Core/Runtime/PlatformServiceRegistry.cs`
-- `Core/Runtime/GameplayPlatformContext.cs`
-- `Features/Platform/Composition/PyralisGameplayLifetimeScope.cs`
-- `Features/Characters/GameplaySessionBootstrap.cs`
-- persistent service implementations such as `SceneLoader`, `TimeManager`, `CameraShake`, `GameManager`, `SettingsManager`, and `DamageNumberSpawner`
-
-Why it matters:
-
-- there are still multiple setup-time places where a runtime dependency can be created
-- scene reloads and multi-session tests are safer after lifecycle cleanup, but new services can still reintroduce hidden global state if they bypass the lifetime scope
-- feature modules can accidentally depend on whichever service path happens to be initialized first
-- the DI root is harder to reason about than it should be
+The 2026-06-09 pass bridged the legacy registry to the `VContainer` graph, but a few persistent services (e.g., `TimeManager`, `SceneLoader`) still use local singleton lookups alongside DI.
 
 Current focus:
+- continue migrating persistent service implementations to full DI ownership.
+- remove the bridged registry once transition consumers are fully migrated to `IObjectResolver`.
 
-- keep `GameplaySessionBootstrap` as the scene entrypoint, but make `PyralisGameplayLifetimeScope` the single durable service ownership path
-- keep feature code behind the `GameplayPlatformContext` resolver helpers while shrinking `PlatformServiceRegistry` toward lifetime-scope-backed migration support
-- keep protected static singleton reads out of Gameplay runtime code and migrate persistent service ownership toward the lifetime scope when touching nearby systems
-
-### 3. Setup Validation Is MVP-Ready; Keep Deepening Lane-Specific Checks
+### 3. Setup Validation Is Production-Ready; Keep Deepening Lane-Specific Checks
 
 The setup lane is now explicit enough to start prefab/scene setup without pretending every route is complete runtime gameplay. The supported readiness gate covers selected runtime patterns, session/mode/setup-profile links, participant seats, pawn prefab runtime interfaces, feature-module prefab validation, projectile prefab/runtime-body compatibility, scoring services, projectile launchers, referenced scene roots, missing scripts, and networking MVP wiring.
 

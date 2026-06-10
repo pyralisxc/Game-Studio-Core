@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+using NeonBlack.Gameplay.Core.Contracts;
+using UnityEngine;
 
 namespace NeonBlack.Gameplay.Core.Navigation
 {
@@ -7,6 +8,12 @@ namespace NeonBlack.Gameplay.Core.Navigation
     /// Create one of these in your project: Assets -> Create -> NeonBlack -> Scene Flow -> Level Registry
     /// </summary>
     [CreateAssetMenu(menuName = "NeonBlack/Scene Flow/Level Registry", fileName = "LevelRegistry")]
+    [AuthoringContract(
+        Capability = AuthoringCapability.Setup,
+        Relevance = "Ordered list of all playable worlds. Referenced by menu and session flow.",
+        AssignmentFields = new[] { nameof(LevelRegistry.levels) },
+        FirstProof = "The Level Registry is correctly discovered by the Session and Menu services."
+    )]
     public class LevelRegistry : ScriptableObject
     {
         [Tooltip("All playable worlds in display order.")]

@@ -10,6 +10,13 @@ using VContainer;
 
 namespace NeonBlack.Gameplay.Features.Characters
 {
+    [AuthoringContract(
+        Capability = AuthoringCapability.Movement, 
+        Relevance = "Tunable 2D movement module supporting top-down and platformer (side-view) modes.",
+        NativeSetup = new[] { "Add Rigidbody2D and Collider2D", "Configure LayerMasks for ground check if Jump is enabled" },
+        AssignmentFields = new[] { nameof(moveSpeed), nameof(acceleration), nameof(jumpEnabled), nameof(groundLayer) },
+        FirstProof = "Pawn moves at the specified speed in the scene."
+    )]
     [AddComponentMenu("NeonBlack/Gameplay/Characters/2D/Pawn 2D Movement Component")]
     [RequireComponent(typeof(Rigidbody2D))]
     [RequireComponent(typeof(PolygonCollider2D))]

@@ -8,8 +8,38 @@ using UnityEngine;
 namespace NeonBlack.Gameplay.Features.Feedback
 {
     [AddComponentMenu("NeonBlack/Gameplay/Feedback/Actor Feedback Feature Runtime")]
+    [AuthoringContract(
+        ModuleId = "actor.feedback",
+        Capability = AuthoringCapability.VFX,
+        Relevance = "Runtime implementation for actor feedback events, bridging health state to visual receivers.",
+        Lane = "Feedback",
+        ProfileType = typeof(ActorFeedbackProfile),
+        RequiredInterfaces = new[] { typeof(IFeatureModuleRuntime), typeof(IActorFeedbackPublisher) },
+        RequiredInterfaceNames = new[] { "NeonBlack.Gameplay.Features.Feedback.IActorFeedbackReceiver" },
+        RequiredComponentNames = new[] { "NeonBlack.Gameplay.Features.Combat.HealthComponent" },
+        NativeSetup = new[]
+        {
+            "create ActorFeedbackProfile",
+            "create FeatureModuleDefinition",
+            "assign runtime prefab with ActorFeedbackFeatureRuntime",
+            "assign profile asset",
+            "add module to PawnDefinition.featureModules"
+        },
+        FirstProof = "Trigger a damage event and verify visual feedback (flash, popup) occurs.",
+        AssignmentFields = new[]
+        {
+            "FeatureModuleDefinition.moduleId",
+            "FeatureModuleDefinition.runtimePrefab",
+            "FeatureModuleDefinition.profileAsset"
+        },
+        CustomizationMoments = new[]
+        {
+            "ActorFeedbackProfile.publishDamageEvents",
+            "ActorFeedbackProfile.publishScoreEvents"
+        }
+    )]
     public class ActorFeedbackFeatureRuntime : MonoBehaviour, IFeatureModuleRuntime, IActorFeedbackPublisher
-    {
+{
         [SerializeField] private ActorFeedbackProfile feedbackProfile;
         private ActorFeatureContext _context;
         private IActorHealthState _health;

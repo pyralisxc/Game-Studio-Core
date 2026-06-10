@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Core.Runtime;
+using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -10,6 +11,13 @@ namespace NeonBlack.Gameplay.Features.Composition
     /// <summary>
     /// Installs and manages authored feature runtimes for an actor.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Setup | AuthoringCapability.Session, 
+        Relevance = "Inspector Add Component path for installing custom feature modules on an actor.",
+        AssignmentFields = new[] { "InstalledModules" },
+        FirstProof = "Assign feature module definitions and verify they are instantiated at runtime.",
+        NativeSetup = new[] { "Add Component" }
+    )]
     [AddComponentMenu("NeonBlack/Gameplay/Features/Actor Feature Host")]
     public class ActorFeatureHost : MonoBehaviour
     {
@@ -27,6 +35,10 @@ namespace NeonBlack.Gameplay.Features.Composition
             FeatureModuleDefinition[] orderedDefinitions = (FeatureModuleDefinition[])definitions.Clone();
             System.Array.Sort(orderedDefinitions, CompareDefinitions);
 
+            IObjectResolver resolver = null;
+            if (initializationContext.Services != null)
+                initializationContext.Services.TryResolve(out resolver);
+
             foreach (FeatureModuleDefinition definition in orderedDefinitions)
             {
                 if (definition == null || !definition.enabledByDefault || definition.runtimePrefab == null)
@@ -37,9 +49,8 @@ namespace NeonBlack.Gameplay.Features.Composition
 
                 GameObject instance = Instantiate(definition.runtimePrefab, transform);
                 _featureInstances.Add(instance);
-                if (initializationContext.Services != null
-                    && initializationContext.Services.TryResolve(out IObjectResolver resolver)
-                    && resolver != null)
+                
+                if (resolver != null)
                 {
                     resolver.InjectGameObject(instance);
                 }
@@ -53,7 +64,7 @@ namespace NeonBlack.Gameplay.Features.Composition
                     featureRuntime.InitializeFeature(new FeatureRuntimeInitializationContext(
                         initializationContext.ActorContext,
                         definition,
-                        initializationContext.Services));
+                        resolver));
                     _featureModules.Add(featureRuntime);
                 }
             }
@@ -61,8 +72,11 @@ namespace NeonBlack.Gameplay.Features.Composition
 
         public void InitializeFeatures(ActorFeatureContext context, FeatureModuleDefinition[] definitions)
         {
-            GameplayPlatformContext.TryGetServices(out PlatformServiceRegistry services);
-            InitializeFeatures(new FeatureHostInitializationContext(context, services), definitions);
+            IObjectResolver resolver = null;
+            if (GameplayPlatformContext.TryResolve(out IObjectResolver currentResolver))
+                resolver = currentResolver;
+
+            InitializeFeatures(new FeatureHostInitializationContext(context, resolver), definitions);
         }
 
         public bool TryGetInstalledFeature<T>(out T feature) where T : class

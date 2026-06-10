@@ -1,4 +1,6 @@
-﻿using NeonBlack.Gameplay.Core.Enums;
+using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Core.Enums;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Data.Profiles
@@ -6,6 +8,16 @@ namespace NeonBlack.Gameplay.Data.Profiles
     /// <summary>
     /// Shared movement authoring profile for pawn composition.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Movement, 
+        Priority = 10,
+        Relevance = "Project-window creation path for pawn movement feel, speed, acceleration, dash, and jump tuning.",
+        AssignmentFields = new[] { nameof(walkSpeed), nameof(acceleration), nameof(dashSpeed) },
+        FirstProof = "Move the pawn in play mode and verify speed feel.",
+        ExpertAdvice = "The movement profile is your 'steering wheel'. It defines the responsiveness and agility of your actor. Different profiles should be created for different character classes.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/movement",
+        NativeSetup = new[] { "Create Asset" }
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Pawn Movement Profile", fileName = "PawnMovementProfile", order = -60)]
     public class PawnMovementProfile : ScriptableObject
     {

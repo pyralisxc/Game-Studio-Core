@@ -16,6 +16,7 @@ using NeonBlack.Gameplay.Core.Runtime;
 using NeonBlack.Gameplay.Features.Composition;
 using NeonBlack.Gameplay.Features.Characters;
 using NeonBlack.Gameplay.Characters;
+using VContainer;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -463,7 +464,7 @@ namespace NeonBlack.Gameplay.Tests.Runtime
                 presentationMode: ActorPresentationMode.Billboard2_5D,
                 authoredProfiles: new ScriptableObject[] { reactionProfile });
 
-            runtime.InitializeFeature(new FeatureRuntimeInitializationContext(context, definition, new PlatformServiceRegistry()));
+            runtime.InitializeFeature(new FeatureRuntimeInitializationContext(context, definition, (IObjectResolver)null));
 
             GameObject attacker = new GameObject("Attacker");
             attacker.AddComponent<HealthComponent>();
@@ -497,7 +498,7 @@ namespace NeonBlack.Gameplay.Tests.Runtime
                 presentationMode: ActorPresentationMode.Sprite2D,
                 authoredProfiles: new ScriptableObject[] { profile });
 
-            runtime.InitializeFeature(new FeatureRuntimeInitializationContext(context, definition, new PlatformServiceRegistry()));
+            runtime.InitializeFeature(new FeatureRuntimeInitializationContext(context, definition, (IObjectResolver)null));
 
             bool handled = runtime.TryHandleInteraction();
 
@@ -531,7 +532,7 @@ namespace NeonBlack.Gameplay.Tests.Runtime
                 presentationMode: ActorPresentationMode.Sprite2D,
                 authoredProfiles: new ScriptableObject[] { profile });
 
-            runtime.InitializeFeature(new FeatureRuntimeInitializationContext(context, definition, new PlatformServiceRegistry()));
+            runtime.InitializeFeature(new FeatureRuntimeInitializationContext(context, definition, (IObjectResolver)null));
 
             bool firstHandled = runtime.TryHandleInteraction();
             handler.ShouldHandle = true;
@@ -623,7 +624,7 @@ namespace NeonBlack.Gameplay.Tests.Runtime
                 presentationMode: ActorPresentationMode.Sprite2D,
                 authoredProfiles: new ScriptableObject[] { profile });
 
-            runtime.InitializeFeature(new FeatureRuntimeInitializationContext(context, definition, new PlatformServiceRegistry()));
+            runtime.InitializeFeature(new FeatureRuntimeInitializationContext(context, definition, (IObjectResolver)null));
             runtime.SendMessage("Update");
 
             Assert.That(pickup.activeSelf, Is.False);
@@ -685,7 +686,7 @@ namespace NeonBlack.Gameplay.Tests.Runtime
                 presentationMode: ActorPresentationMode.Billboard2_5D,
                 authoredProfiles: new ScriptableObject[] { profile });
 
-            runtime.InitializeFeature(new FeatureRuntimeInitializationContext(context, definition, new PlatformServiceRegistry()));
+            runtime.InitializeFeature(new FeatureRuntimeInitializationContext(context, definition, (IObjectResolver)null));
             runtime.SendMessage("Update");
 
             Assert.That(pickup.activeSelf, Is.False);
@@ -766,7 +767,7 @@ namespace NeonBlack.Gameplay.Tests.Runtime
                 presentationMode: ActorPresentationMode.Rigged3D,
                 authoredProfiles: new ScriptableObject[] { profile });
 
-            runtime.InitializeFeature(new FeatureRuntimeInitializationContext(context, definition, new PlatformServiceRegistry()));
+            runtime.InitializeFeature(new FeatureRuntimeInitializationContext(context, definition, (IObjectResolver)null));
             runtime.ApplyStatusEffect(slow);
             runtime.ApplyStatusEffect(stun);
             runtime.ApplyStatusEffect(shield);
@@ -818,7 +819,7 @@ namespace NeonBlack.Gameplay.Tests.Runtime
                 presentationMode: ActorPresentationMode.Sprite2D,
                 authoredProfiles: new ScriptableObject[] { profile });
 
-            runtime.InitializeFeature(new FeatureRuntimeInitializationContext(context, definition, new PlatformServiceRegistry()));
+            runtime.InitializeFeature(new FeatureRuntimeInitializationContext(context, definition, (IObjectResolver)null));
 
             GameObject attacker = new GameObject("Attacker");
             attacker.AddComponent<HealthComponent>();
@@ -858,7 +859,7 @@ namespace NeonBlack.Gameplay.Tests.Runtime
                 presentationMode: ActorPresentationMode.Billboard2_5D,
                 authoredProfiles: new ScriptableObject[] { profile });
 
-            runtime.InitializeFeature(new FeatureRuntimeInitializationContext(context, definition, new PlatformServiceRegistry()));
+            runtime.InitializeFeature(new FeatureRuntimeInitializationContext(context, definition, (IObjectResolver)null));
 
             StatusEffectDefinition speedBoost = ScriptableObject.CreateInstance<StatusEffectDefinition>();
             speedBoost.effectId = "speed";
@@ -1048,7 +1049,7 @@ namespace NeonBlack.Gameplay.Tests.Runtime
                 presentationMode: ActorPresentationMode.Sprite2D,
                 authoredProfiles: new ScriptableObject[] { profile });
 
-            runtime.InitializeFeature(new FeatureRuntimeInitializationContext(context, definition, new PlatformServiceRegistry()));
+            runtime.InitializeFeature(new FeatureRuntimeInitializationContext(context, definition, (IObjectResolver)null));
             runtime.BeginGuard();
 
             GameObject attacker = new GameObject("Attacker");
@@ -1085,7 +1086,7 @@ namespace NeonBlack.Gameplay.Tests.Runtime
             feedbackRuntime.InitializeFeature(new FeatureRuntimeInitializationContext(
                 new ActorFeatureContext(actor, health: actorHealth, presentationMode: ActorPresentationMode.Sprite2D),
                 feedbackDefinition,
-                new PlatformServiceRegistry()));
+                (IObjectResolver)null));
 
             ActorCombatReactionProfile profile = ScriptableObject.CreateInstance<ActorCombatReactionProfile>();
             profile.enableParry = true;
@@ -1145,7 +1146,7 @@ namespace NeonBlack.Gameplay.Tests.Runtime
                 presentationMode: ActorPresentationMode.Rigged3D,
                 authoredProfiles: new ScriptableObject[] { profile });
 
-            runtime.InitializeFeature(new FeatureRuntimeInitializationContext(context, definition, new PlatformServiceRegistry()));
+            runtime.InitializeFeature(new FeatureRuntimeInitializationContext(context, definition, (IObjectResolver)null));
 
             StatusEffectDefinition armor = ScriptableObject.CreateInstance<StatusEffectDefinition>();
             armor.effectId = "armor";
@@ -1186,7 +1187,7 @@ namespace NeonBlack.Gameplay.Tests.Runtime
                 presentationMode: ActorPresentationMode.Rigged3D,
                 authoredProfiles: new ScriptableObject[] { profile });
 
-            runtime.InitializeFeature(new FeatureRuntimeInitializationContext(context, definition, new PlatformServiceRegistry()));
+            runtime.InitializeFeature(new FeatureRuntimeInitializationContext(context, definition, (IObjectResolver)null));
 
             StatusEffectDefinition armor = ScriptableObject.CreateInstance<StatusEffectDefinition>();
             armor.effectId = "stacked.armor";
@@ -1232,7 +1233,7 @@ namespace NeonBlack.Gameplay.Tests.Runtime
                     presentationMode: ActorPresentationMode.Sprite2D,
                     authoredProfiles: new ScriptableObject[] { statusProfile }),
                 statusDefinition,
-                new PlatformServiceRegistry()));
+                (IObjectResolver)null));
 
             StatusEffectDefinition slow = ScriptableObject.CreateInstance<StatusEffectDefinition>();
             slow.effectId = "hazard.slow";

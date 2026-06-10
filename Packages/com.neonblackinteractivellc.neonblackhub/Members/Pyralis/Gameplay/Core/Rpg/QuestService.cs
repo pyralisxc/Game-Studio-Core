@@ -1,10 +1,25 @@
 using System;
 using System.Collections.Generic;
+using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Core.Contracts.Rpg;
 
 namespace NeonBlack.Gameplay.Core.Rpg
 {
-    public sealed class QuestService
-    {
+    [AuthoringContract(
+        ModuleId = "rpg.quest",
+        Capability = AuthoringCapability.Dialogue,
+        Lane = "RPG",
+        NativeSetup = new[]
+        {
+            "create QuestDefinitions",
+            "define QuestObjectives",
+            "link quest start/end to Dialogue or Hub interaction"
+        },
+        AssignmentFields = new[] { "_progression", "_inventory" },
+        FirstProof = "Quests can be started and objectives can be progressed."
+    )]
+    public sealed class QuestService : IQuestService
+{
         private readonly ProgressionService _progression;
         private readonly InventoryService _inventory;
         private readonly Dictionary<RpgOwnerKey, Dictionary<string, QuestProgressRecord>> _progress =

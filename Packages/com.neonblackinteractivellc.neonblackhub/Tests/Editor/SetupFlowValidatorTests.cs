@@ -1,4 +1,5 @@
-﻿using NeonBlack.Gameplay.Data.Definitions;
+using NeonBlack.Gameplay.Data.Definitions;
+using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Data.Definitions.Rules;
 using NeonBlack.Gameplay.Core.Actions;
@@ -1714,18 +1715,18 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(sideView.Kind, Is.EqualTo(PyralisAuthoringFactKind.RouteIntent));
             Assert.That(sideView.SourceKind, Is.EqualTo(PyralisAuthoringFactSourceKind.Convention));
             Assert.That(sideView.LaneTags, Does.Contain(RuntimeCapabilityLaneTag.Sprite2D.ToString()));
-            Assert.That(sideView.GoalTags, Does.Contain(RuntimeCapabilityGoalTag.JumpTraversal.ToString()));
-            Assert.That(sideView.GoalTags, Does.Contain(RuntimeCapabilityGoalTag.Input.ToString()));
-            Assert.That(sideView.GoalTags, Does.Contain(RuntimeCapabilityGoalTag.AnimationPresentation.ToString()));
-            Assert.That(sideView.RelatedStableIds, Does.Contain("capability.2d-pawn-movement"));
+            Assert.That(sideView.GoalTags, Does.Contain("JumpTraversal"));
+            Assert.That(sideView.GoalTags, Does.Contain("Input"));
+            Assert.That(sideView.GoalTags, Does.Contain("AnimationPresentation"));
+Assert.That(sideView.RelatedStableIds, Does.Contain("capability.2d-pawn-movement"));
 
             PyralisAuthoringFact brawler = PyralisAuthoringFactRegistry.Find("intent.pawn-brawler");
             Assert.That(brawler, Is.Not.Null);
-            Assert.That(brawler.GoalTags, Does.Contain(RuntimeCapabilityGoalTag.Combat.ToString()));
-            Assert.That(brawler.GoalTags, Does.Contain(RuntimeCapabilityGoalTag.JumpTraversal.ToString()));
-            Assert.That(brawler.GoalTags, Does.Contain(RuntimeCapabilityGoalTag.Input.ToString()));
-            Assert.That(brawler.GoalTags, Does.Contain(RuntimeCapabilityGoalTag.AnimationPresentation.ToString()));
-            Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile-proof"));
+            Assert.That(brawler.GoalTags, Does.Contain("Combat"));
+            Assert.That(brawler.GoalTags, Does.Contain("JumpTraversal"));
+            Assert.That(brawler.GoalTags, Does.Contain("Input"));
+            Assert.That(brawler.GoalTags, Does.Contain("AnimationPresentation"));
+Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile-proof"));
 
             PyralisAuthoringFact topDown = PyralisAuthoringFactRegistry.Find("intent.2d-top-down-plane");
             Assert.That(topDown, Is.Not.Null);
@@ -1737,24 +1738,13 @@ namespace NeonBlack.Gameplay.Tests.Editor
         public void PyralisAuthoringIntentAdvisor_Sprite2DBrawlerIntent_RanksRouteCapabilitiesWithoutCreatingPreset()
         {
             PyralisAuthoringIntentSelection selection = new PyralisAuthoringIntentSelection(
-                PyralisAuthoringWorldIntent.SideView2DGravity,
-                PyralisAuthoringControlIntent.PawnActor,
                 RuntimeCapabilityLaneTag.Sprite2D,
-                new[]
-                {
-                    RuntimeCapabilityGoalTag.Movement,
-                    RuntimeCapabilityGoalTag.JumpTraversal,
-                    RuntimeCapabilityGoalTag.Combat,
-                    RuntimeCapabilityGoalTag.Input,
-                    RuntimeCapabilityGoalTag.AnimationPresentation,
-                    RuntimeCapabilityGoalTag.Camera
-                });
+                AuthoringCapability.Movement | AuthoringCapability.Combat | AuthoringCapability.Input | AuthoringCapability.Animation | AuthoringCapability.Camera,
+                AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityVertical);
 
             PyralisAuthoringIntentModel model = PyralisAuthoringIntentAdvisor.Build(selection);
 
-            Assert.That(model.Summary, Does.Contain("Project intent"));
-            Assert.That(model.Summary, Does.Contain("2D Side-View Action"));
-            Assert.That(model.Summary, Does.Contain("Pawn Brawler"));
+            Assert.That(model.Summary, Does.Contain("Active focus"));
             Assert.That(model.MatchingIntents.Select(fact => fact.StableId), Does.Contain("intent.2d-side-view-action"));
             Assert.That(model.MatchingIntents.Select(fact => fact.StableId), Does.Contain("intent.pawn-brawler"));
 
@@ -1787,12 +1777,11 @@ namespace NeonBlack.Gameplay.Tests.Editor
         {
             PyralisAuthoringIntentModel tabletop = PyralisAuthoringIntentAdvisor.Build(
                 new PyralisAuthoringIntentSelection(
-                    PyralisAuthoringWorldIntent.BoardGridTabletop,
-                    PyralisAuthoringControlIntent.BoardSeat,
                     RuntimeCapabilityLaneTag.TabletopNoPawn,
-                    new[] { RuntimeCapabilityGoalTag.Tabletop, RuntimeCapabilityGoalTag.Camera }));
+                    AuthoringCapability.Tabletop | AuthoringCapability.Camera,
+                    AuthoringWorldAxiom.TurnBased));
 
-            Assert.That(tabletop.Summary, Does.Contain("Tabletop"));
+            Assert.That(tabletop.Summary, Does.Contain("DNA Axioms"));
             Assert.That(tabletop.MatchingIntents.Select(fact => fact.StableId), Does.Contain("intent.tabletop-board-card"));
             Assert.That(
                 tabletop.Recommendations.Any(row => row.Fact.StableId.Contains("board") || row.Fact.StableId.Contains("tabletop")),
@@ -1800,10 +1789,9 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             PyralisAuthoringIntentModel networking = PyralisAuthoringIntentAdvisor.Build(
                 new PyralisAuthoringIntentSelection(
-                    PyralisAuthoringWorldIntent.HybridUnsure,
-                    PyralisAuthoringControlIntent.Mixed,
                     RuntimeCapabilityLaneTag.Networked,
-                    new[] { RuntimeCapabilityGoalTag.Networking }));
+                    AuthoringCapability.Networking,
+                    AuthoringWorldAxiom.None));
 
             Assert.That(
                 networking.Recommendations.Any(row => row.Fact.StableId.Contains("network")),
@@ -1822,9 +1810,10 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 "Sprite-only test fact.",
                 "Used to prove lane cautions.",
                 "Proof",
-                goalTags: new[] { RuntimeCapabilityGoalTag.Movement.ToString() },
+                goalTags: new[] { "Movement" },
                 laneTags: new[] { RuntimeCapabilityLaneTag.Sprite2D.ToString() },
-                unsupportedLaneTags: new[] { RuntimeCapabilityLaneTag.Rigged3D.ToString() });
+                unsupportedLaneTags: new[] { RuntimeCapabilityLaneTag.Rigged3D.ToString() },
+                capability: AuthoringCapability.Movement);
             PyralisAuthoringFact rigged = new PyralisAuthoringFact(
                 "test.rigged-capability",
                 "Rigged Capability",
@@ -1834,11 +1823,12 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 "Rigged test fact.",
                 "Used to prove lane ranking.",
                 "Proof",
-                goalTags: new[] { RuntimeCapabilityGoalTag.Movement.ToString() },
-                laneTags: new[] { RuntimeCapabilityLaneTag.Rigged3D.ToString() });
+                goalTags: new[] { "Movement" },
+                laneTags: new[] { RuntimeCapabilityLaneTag.Rigged3D.ToString() },
+                capability: AuthoringCapability.Movement);
 
             PyralisAuthoringIntentModel model = PyralisAuthoringIntentAdvisor.Build(
-                new PyralisAuthoringIntentSelection(RuntimeCapabilityLaneTag.Rigged3D, new[] { RuntimeCapabilityGoalTag.Movement }),
+                new PyralisAuthoringIntentSelection(RuntimeCapabilityLaneTag.Rigged3D, AuthoringCapability.Movement, AuthoringWorldAxiom.None),
                 new[] { spriteOnly, rigged });
 
             Assert.That(FindIntentRow(model.Recommendations, "test.rigged-capability"), Is.Not.Null);

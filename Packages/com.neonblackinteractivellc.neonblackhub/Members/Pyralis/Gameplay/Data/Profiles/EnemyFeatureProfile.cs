@@ -1,6 +1,7 @@
-﻿using NeonBlack.Gameplay.Data.Definitions;
+using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Features.Combat;
 using NeonBlack.Gameplay.Presentation.Animation;
+using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,6 +10,13 @@ namespace NeonBlack.Gameplay.Data.Profiles
     /// <summary>
     /// Actor-level feature composition profile for enemies.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Combat | AuthoringCapability.Setup, 
+        Relevance = "Project-window creation path for enemy feature setup.",
+        AssignmentFields = new[] { nameof(combatProfile), nameof(reactionProfile), nameof(featureModules) },
+        FirstProof = "Assign this profile to an enemy and verify its combat modules are initialized.",
+        NativeSetup = new[] { "Create Asset" }
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Enemy Feature Profile", fileName = "EnemyFeatureProfile")]
     public class EnemyFeatureProfile : ScriptableObject
     {

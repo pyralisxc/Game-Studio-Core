@@ -1,14 +1,31 @@
 using System;
 using System.Collections.Generic;
+using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Core.Contracts.Rpg;
 
 namespace NeonBlack.Gameplay.Core.Rpg
 {
-    public sealed class DialogueService
-    {
-        private readonly ProgressionService _progression;
-        private readonly InventoryService _inventory;
-        private readonly QuestService _quests;
-        private readonly SkillTreeService _skills;
+    [AuthoringContract(
+        Capability = AuthoringCapability.Dialogue,
+        Lane = "RPG",
+        RequiredInterfaces = new[] { typeof(IDialogueConditionResolver), typeof(IDialogueEffectSink) },
+        NativeSetup = new[]
+        {
+            "register dialogue nodes in graph",
+            "configure NPC profile with start graph",
+            "bind dialogue UI to DialogueService events"
+        },
+        AssignmentFields = new[] { "_progression", "_inventory", "_quests", "_skills" },
+        FirstProof = "A dialogue session starts and displays the correct starting node text."
+    ,
+        ExpertAdvice = "Dialogue graphs can trigger world effects via IDialogueEffectSink. Use the custom condition resolver for complex narrative gates.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/rpg/dialogue")]
+    public sealed class DialogueService : IDialogueService
+{
+        private readonly IProgressionService _progression;
+        private readonly IInventoryService _inventory;
+        private readonly IQuestService _quests;
+        private readonly ISkillTreeService _skills;
         private readonly IDialogueConditionResolver _customConditionResolver;
         private readonly IDialogueEffectSink _customEffectSink;
         private readonly Dictionary<RpgOwnerKey, DialogueSessionRecord> _sessions = new Dictionary<RpgOwnerKey, DialogueSessionRecord>();
@@ -16,10 +33,10 @@ namespace NeonBlack.Gameplay.Core.Rpg
         private readonly Dictionary<string, IQuestDefinition> _questRegistry = new Dictionary<string, IQuestDefinition>(StringComparer.Ordinal);
 
         public DialogueService(
-            ProgressionService progression = null,
-            InventoryService inventory = null,
-            QuestService quests = null,
-            SkillTreeService skills = null,
+            IProgressionService progression = null,
+            IInventoryService inventory = null,
+            IQuestService quests = null,
+            ISkillTreeService skills = null,
             IDialogueConditionResolver customConditionResolver = null,
             IDialogueEffectSink customEffectSink = null)
         {

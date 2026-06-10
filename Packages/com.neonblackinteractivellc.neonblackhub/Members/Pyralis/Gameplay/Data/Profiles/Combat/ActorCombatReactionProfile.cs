@@ -1,7 +1,15 @@
-﻿using UnityEngine;
+using UnityEngine;
+using NeonBlack.Gameplay.Core.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Profiles
 {
+    [AuthoringContract(
+        Capability = AuthoringCapability.Combat, 
+        Relevance = "Project-window creation path for combat reaction behavior.",
+        AssignmentFields = new[] { nameof(enableGuard), nameof(enableParry), nameof(blockDamageReduction) },
+        FirstProof = "Trigger a parry in-game and verify the reaction lock is applied.",
+        NativeSetup = new[] { "Create Asset" }
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Actor Combat Reaction Profile", fileName = "ActorCombatReactionProfile")]
     public class ActorCombatReactionProfile : ScriptableObject
     {

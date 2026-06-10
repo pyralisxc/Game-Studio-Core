@@ -1,4 +1,6 @@
-﻿using NeonBlack.Gameplay.Data.Definitions;
+using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Core.Rules.TurnPhase;
+using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Actions;
 using NeonBlack.Gameplay.Presentation.Animation;
@@ -8,6 +10,7 @@ using NeonBlack.Gameplay.Features.Feedback;
 using NeonBlack.Gameplay.Features.Feedback.UI;
 using NeonBlack.Gameplay.Features.Composition;
 using NeonBlack.Gameplay.Characters;
+using NeonBlack.Gameplay.Features.Characters;
 using NeonBlack.Gameplay.Editor;
 using NeonBlack.Gameplay.Editor.Inspectors;
 using NeonBlack.Gameplay.Core.Runtime;
@@ -1979,6 +1982,28 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(hazardSource.Contains("SetSettings(IGameplaySettingsApplier"), Is.True);
             Assert.That(hazardSlamSource.Contains("SettingsManager.Instance"), Is.False);
             Assert.That(hazardSlamSource.Contains("ResolveSfxVolume()"), Is.True);
+        }
+
+        [Test]
+        public void ReflectiveAuthoring_KeyInterfacesAreTagged()
+        {
+            var keyInterfaces = new[]
+            {
+                typeof(IActionResolver),
+                typeof(ITurnOrderService),
+                typeof(IActorAnimationController),
+                typeof(ICameraBoundsProvider),
+                typeof(IFeatureModuleRuntime),
+                typeof(ICharacterMotorState),
+                typeof(IMovementModule),
+                typeof(IPawnCombatModule)
+            };
+
+            foreach (var type in keyInterfaces)
+            {
+                var attr = type.GetCustomAttributes(typeof(AuthoringContractAttribute), true);
+                Assert.That(attr.Length, Is.GreaterThan(0), $"Expected interface {type.Name} to be tagged with [AuthoringContract] for reflective discovery.");
+            }
         }
     }
 }

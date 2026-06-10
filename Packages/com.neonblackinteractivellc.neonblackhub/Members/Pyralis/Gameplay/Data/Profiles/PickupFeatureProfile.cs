@@ -1,7 +1,15 @@
-﻿using UnityEngine;
+using UnityEngine;
+using NeonBlack.Gameplay.Core.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Profiles
 {
+    [AuthoringContract(
+        Capability = AuthoringCapability.Puzzle | AuthoringCapability.Inventory, 
+        Relevance = "Project-window creation path for pickup feature setup.",
+        AssignmentFields = new[] { nameof(enableAutoCollect), nameof(interactionRadius), nameof(collectibleLayers) },
+        FirstProof = "Walk over a pickup and verify it is collected.",
+        NativeSetup = new[] { "Create Asset" }
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Pickup Feature Profile", fileName = "PickupFeatureProfile")]
     public class PickupFeatureProfile : ScriptableObject
     {

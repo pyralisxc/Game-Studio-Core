@@ -1,5 +1,6 @@
 using NeonBlack.Gameplay.Core.Actions;
 using NeonBlack.Gameplay.Core.Rules.TurnPhase;
+using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Core.Rules.Board
@@ -7,6 +8,13 @@ namespace NeonBlack.Gameplay.Core.Rules.Board
     /// <summary>
     /// Unity-facing bridge between a project-owned board presenter and queued board actions.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Tabletop,
+        Relevance = "Bridge between a board presenter and queued board actions (e.g. piece selection and movement).",
+        NativeSetup = new[] { "Add to Tabletop board root", "Initialize with BoardRuntimeState and ActionQueue" },
+        AssignmentFields = new[] { nameof(resolveQueuedMoveImmediately) },
+        FirstProof = "Selecting a piece and a destination enqueues and resolves a move action."
+    )]
     [AddComponentMenu("NeonBlack/Gameplay/Tabletop/Tabletop Board Selection Bridge")]
     public sealed class TabletopBoardSelectionBridge : MonoBehaviour
     {

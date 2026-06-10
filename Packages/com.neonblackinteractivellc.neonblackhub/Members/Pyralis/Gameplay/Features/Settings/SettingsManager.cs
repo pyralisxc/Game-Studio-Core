@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Core.Runtime;
 using UnityEngine;
 using UnityEngine.Audio;
 
@@ -22,6 +23,11 @@ namespace NeonBlack.Gameplay.Features.Settings
 ///   2. Assign a SettingsProfile asset — it provides the AudioMixer and all default values.
 ///   3. Optionally override the Mixer field directly if the profile mixer is unavailable.
 /// </summary>
+[AuthoringContract(
+    Capability = AuthoringCapability.Audio | AuthoringCapability.UI,
+    Relevance = "Manages global audio volume levels and mixer integration. Connects settings profiles to the active Unity AudioMixer.",
+    FirstProof = "Verify AudioMixer parameters 'MusicVolume' and 'SFXVolume' change when sliders are moved in the Settings UI."
+)]
 [DefaultExecutionOrder(-40)]
 public class SettingsManager : MonoBehaviour, IGameplaySettingsApplier, IInputSettingsRegistrar
 {
@@ -67,17 +73,26 @@ public class SettingsManager : MonoBehaviour, IGameplaySettingsApplier, IInputSe
 
     private void Awake()
     {
-        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
-        Instance = this;
-        DontDestroyOnLoad(gameObject);
+        // Register with platform context for dependency injection.
+        if (GameplayPlatformContext.TryGetServices(out PlatformServiceRegistry services))
+        {
+            services.Register<IGameplaySettingsApplier>(this);
+            services.Register<IInputSettingsRegistrar>(this);
+            services.Register(this);
+        }
+
         Load();
         ApplyMixer();
     }
 
     private void OnDestroy()
     {
-        if (Instance == this)
-            Instance = null;
+        if (GameplayPlatformContext.TryGetServices(out PlatformServiceRegistry services))
+        {
+            services.Unregister<IGameplaySettingsApplier>();
+            services.Unregister<IInputSettingsRegistrar>();
+            services.Unregister<SettingsManager>();
+        }
     }
 
     private void Start()

@@ -1,5 +1,6 @@
-﻿using NeonBlack.Gameplay.Data.Profiles;
+using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Data.Definitions.Rules;
+using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,6 +9,12 @@ namespace NeonBlack.Gameplay.Data.Definitions
     /// <summary>
     /// Data-authored game mode composition and session rules.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Session, 
+        Relevance = "Defines the specific game rules, required features, and scene setup for a gameplay session.",
+        AssignmentFields = new[] { nameof(setupProfile), nameof(cameraRigProfile), nameof(requiredFeatureModules), nameof(boardDefinition), nameof(turnOrderDefinition) },
+        FirstProof = "Assign this Game Mode Definition to a Session Definition asset."
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/Definitions/Game Mode Definition", fileName = "GameModeDefinition", order = 10)]
     public class GameModeDefinition : ScriptableObject
     {

@@ -8,8 +8,42 @@ using UnityEngine;
 namespace NeonBlack.Gameplay.Features.Combat
 {
     [AddComponentMenu("NeonBlack/Gameplay/Combat/Actor Status Effect Feature Runtime")]
+    [AuthoringContract(
+        ModuleId = "actor.status",
+        Capability = AuthoringCapability.Combat,
+        Lane = "Combat",
+        ProfileType = typeof(ActorStatusEffectProfile),
+        RequiredInterfaces = new[] { typeof(IFeatureModuleRuntime), typeof(IActorStatusEffectReceiver), typeof(IDamageModifier) },
+        RequiredInterfaceNames = new[] 
+        { 
+            "NeonBlack.Gameplay.Features.Combat.IActorMovementModifierReceiver",
+            "NeonBlack.Gameplay.Features.Combat.IActorCombatModifierReceiver",
+            "NeonBlack.Gameplay.Features.Combat.IActorHealthModifierReceiver"
+        },
+        RequiredComponentNames = new[] { "NeonBlack.Gameplay.Features.Combat.HealthComponent" },
+        NativeSetup = new[]
+        {
+            "create ActorStatusEffectProfile",
+            "create FeatureModuleDefinition",
+            "assign runtime prefab with ActorStatusEffectFeatureRuntime",
+            "assign profile asset",
+            "add module to PawnDefinition.featureModules"
+        },
+        FirstProof = "proof.custom-object-effect",
+        AssignmentFields = new[]
+        {
+            "FeatureModuleDefinition.moduleId",
+            "FeatureModuleDefinition.runtimePrefab",
+            "FeatureModuleDefinition.profileAsset"
+        },
+        CustomizationMoments = new[]
+        {
+            "ActorStatusEffectProfile.startingEffects",
+            "ActorStatusEffectProfile.defaultShieldDamageReduction"
+        }
+    )]
     public class ActorStatusEffectFeatureRuntime : MonoBehaviour, IFeatureModuleRuntime, IActorStatusEffectReceiver, IDamageModifier
-    {
+{
         private sealed class ActiveStatusEffect
         {
             public StatusEffectDefinition Definition;

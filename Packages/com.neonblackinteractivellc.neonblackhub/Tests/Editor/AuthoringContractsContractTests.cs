@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Editor;
@@ -53,33 +54,21 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void IntentAdvisor_WorldAndControlShape_InfluenceProjectIntentReading()
+        public void IntentAdvisor_AxiomsAndGoals_InfluenceProjectIntentReading()
         {
             PyralisAuthoringIntentModel sideView = PyralisAuthoringIntentAdvisor.Build(
                 new PyralisAuthoringIntentSelection(
-                    PyralisAuthoringWorldIntent.SideView2DGravity,
-                    PyralisAuthoringControlIntent.PawnActor,
                     RuntimeCapabilityLaneTag.Sprite2D,
-                    new[]
-                    {
-                        RuntimeCapabilityGoalTag.Movement,
-                        RuntimeCapabilityGoalTag.JumpTraversal,
-                        RuntimeCapabilityGoalTag.Combat
-                    }));
+                    AuthoringCapability.Movement | AuthoringCapability.Combat,
+                    AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityVertical));
 
             PyralisAuthoringIntentModel topDown = PyralisAuthoringIntentAdvisor.Build(
                 new PyralisAuthoringIntentSelection(
-                    PyralisAuthoringWorldIntent.TopDown2DPlane,
-                    PyralisAuthoringControlIntent.PawnActor,
                     RuntimeCapabilityLaneTag.Sprite2D,
-                    new[]
-                    {
-                        RuntimeCapabilityGoalTag.Movement,
-                        RuntimeCapabilityGoalTag.Input,
-                        RuntimeCapabilityGoalTag.Projectiles
-                    }));
+                    AuthoringCapability.Movement | AuthoringCapability.Input | AuthoringCapability.Combat,
+                    AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone));
 
-            Assert.That(sideView.Summary, Does.Contain("Project intent"));
+            Assert.That(sideView.Summary, Does.Contain("Active focus"));
             Assert.That(sideView.Recommendations[0].Fact.StableId, Is.Not.EqualTo(topDown.Recommendations[0].Fact.StableId));
             Assert.That(topDown.Recommendations.Select(row => row.Fact.StableId), Does.Contain("intent.2d-top-down-plane"));
         }
@@ -91,7 +80,6 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             Assert.That(contract, Is.Not.Null);
             Assert.That(contract.StableId, Is.EqualTo("feature.actor.traversal.topdown-hop"));
-            Assert.That(contract.ModuleId, Is.EqualTo("actor.traversal.topdown-hop"));
         }
 
         [Test]
@@ -460,10 +448,9 @@ namespace NeonBlack.Gameplay.Tests.Editor
             string registrySource = File.ReadAllText(
                 Path.Combine(GameplayRoot, "Editor", "Authoring", "Facts", "PyralisAuthoringFactTypes.cs"));
 
-            Assert.That(registrySource.Contains("GetTypes()"), Is.True, "Registry should discover providers via assembly type scanning.");
-            Assert.That(registrySource.Contains("AppDomain.CurrentDomain.GetAssemblies()"), Is.True, "Registry should discover providers across loaded feature editor assemblies.");
-            Assert.That(registrySource.Contains("IAuthoringContractProvider"), Is.True, "Registry should discover by provider interface.");
-            Assert.That(registrySource.Contains("new TopDownHopAuthoringContractProvider"), Is.False, "Registry discovery should remain generic without a hard-coded TopDownHop provider.");
+            Assert.That(registrySource.Contains("GetTypesWithAttribute<AuthoringContractAttribute>()"), Is.True, "Registry should discover contracts via TypeCache attribute scanning.");
+            Assert.That(registrySource.Contains("ModuleId"), Is.True, "Registry should filter and map via ModuleId metadata.");
+            Assert.That(registrySource.Contains("PrettifyTypeName"), Is.True, "Registry should generate clean display names from reflected types.");
         }
 
         [Test]
@@ -475,10 +462,10 @@ namespace NeonBlack.Gameplay.Tests.Editor
             for (int i = 0; i < contracts.Count; i++)
             {
                 PyralisAuthoringContract contract = contracts[i];
-                Assert.That(contract.AuthoringCategory, Is.Not.Empty, contract.ModuleId);
-                Assert.That(contract.NativeSetup.Length, Is.GreaterThan(0), contract.ModuleId);
-                Assert.That(contract.AssignmentFields.Length, Is.GreaterThan(0), contract.ModuleId);
-                Assert.That(contract.CustomizationMoments.Length, Is.GreaterThan(0), contract.ModuleId);
+                Assert.That(contract.AuthoringCategory, Is.Not.Empty, contract.StableId);
+                Assert.That(contract.NativeSetup.Length, Is.GreaterThan(0), contract.StableId);
+                Assert.That(contract.AssignmentFields.Length, Is.GreaterThan(0), contract.StableId);
+                Assert.That(contract.CustomizationMoments.Length, Is.GreaterThan(0), contract.StableId);
             }
         }
 
@@ -491,8 +478,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
             for (int i = 0; i < contracts.Count; i++)
             {
                 PyralisAuthoringContract contract = contracts[i];
-                Assert.That(contract.FirstProofTargetId, Is.Not.Empty, contract.ModuleId);
-                Assert.That(PyralisAuthoringRouteProof.FindProofFact(contract.FirstProofTargetId), Is.Not.Null, contract.ModuleId);
+                Assert.That(contract.FirstProofTargetId, Is.Not.Empty, contract.StableId);
+                Assert.That(PyralisAuthoringRouteProof.FindProofFact(contract.FirstProofTargetId), Is.Not.Null, contract.StableId);
             }
         }
 
@@ -509,7 +496,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             IReadOnlyList<PyralisAuthoringContractProofGuidanceRow> rows = PyralisAuthoringContractProofGuidance.Build(mode, null);
 
             Assert.That(rows.Count, Is.EqualTo(1));
-            Assert.That(rows[0].Contract.ModuleId, Is.EqualTo(moduleId));
+            Assert.That(rows[0].Contract.StableId, Is.EqualTo($"feature.{moduleId}"));
             Assert.That(rows[0].Contract.FirstProofTargetId, Is.EqualTo(proofId));
             Assert.That(rows[0].ProofTargetExists, Is.True);
             Assert.That(rows[0].ProofFact.DisplayName, Is.EqualTo(proofLabel));

@@ -2,28 +2,21 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Features.Combat;
+using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Features.Spawning
 {
 /// <summary>
-/// Enemy spawner with two modes:
-///
-///   Continuous - keeps up to MaxAlive enemies alive at all times.
-///                When one dies it is respawned after RespawnDelay seconds.
-///
-///   Waves      - spawns a fixed number of enemies per wave.
-///                The next wave starts only after ALL enemies from the current
-///                wave are dead, plus WaveCooldown seconds.
-///                Set TotalWaves to 0 for endless waves.
-///
-/// Setup:
-///   1. Add this component to an empty GameObject (the "spawner anchor").
-///   2. Drag one or more enemy prefabs into Enemy Prefabs.
-///   3. Optionally add Spawn Points - child Transforms or any scene objects.
-///      If left empty the spawner's own position is used (+ Spawn Radius scatter).
-///   4. Choose a Spawn Mode and tune the timing fields.
+/// Enemy spawner with two modes: Continuous and Waves.
 /// </summary>
+[AuthoringContract(
+    Capability = AuthoringCapability.Combat | AuthoringCapability.Session, 
+    Relevance = "Inspector Add Component path for scene-authored enemy spawning.",
+    AssignmentFields = new[] { "enemyPrefabs", "spawnPoints", "mode" },
+    FirstProof = "Verify that enemies are spawned according to the selected mode (Continuous/Waves).",
+    NativeSetup = new[] { "Add Component", "Configure Spawn Points" }
+)]
 [AddComponentMenu("NeonBlack/Gameplay/Spawning/Enemy Spawner")]
 public class EnemySpawner : MonoBehaviour
 {

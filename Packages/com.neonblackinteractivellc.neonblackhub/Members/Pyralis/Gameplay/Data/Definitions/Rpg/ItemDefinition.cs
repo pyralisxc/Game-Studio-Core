@@ -1,12 +1,20 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
+using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rpg
 {
+    [AuthoringContract(
+        ModuleId = "rpg.item",
+        Capability = AuthoringCapability.Inventory,
+        Lane = "RPG",
+        AssignmentFields = new[] { nameof(itemId), nameof(displayName), nameof(category), nameof(rarity), nameof(maxStackSize), nameof(tags) },
+        FirstProof = "Proof that the item can exist in an inventory and has correct display properties."
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Item Definition", fileName = "ItemDefinition")]
     public class ItemDefinition : ScriptableObject
-    {
+{
         public string itemId = "item.new";
         public string displayName = "New Item";
         public string category = "General";

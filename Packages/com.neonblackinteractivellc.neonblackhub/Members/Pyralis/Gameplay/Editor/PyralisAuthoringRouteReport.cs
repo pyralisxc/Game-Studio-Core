@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Profiles;
@@ -21,6 +21,7 @@ namespace NeonBlack.Gameplay.Editor
         PlayersSeats,
         PawnsActors,
         SceneObjects,
+        CodeContract,
         Other
     }
 
@@ -988,8 +989,11 @@ namespace NeonBlack.Gameplay.Editor
             if (lower.Contains("spawn") || lower.Contains("camera") || lower.Contains("scene") || lower.Contains("bootstrap") || lower.Contains("playfield"))
                 return PyralisAuthoringValidationCategory.SceneObjects;
 
+            if (lower.Contains("contract") || lower.Contains("reflective") || lower.Contains("required types"))
+                return PyralisAuthoringValidationCategory.CodeContract;
+
             return PyralisAuthoringValidationCategory.Other;
-        }
+}
 
         public static string GetCategoryTitle(PyralisAuthoringValidationCategory category)
         {
@@ -1001,6 +1005,7 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringValidationCategory.PlayersSeats => "Players / Seats",
                 PyralisAuthoringValidationCategory.PawnsActors => "Pawns & Actors",
                 PyralisAuthoringValidationCategory.SceneObjects => "Scene Objects",
+                PyralisAuthoringValidationCategory.CodeContract => "Code Contract",
                 _ => "Other"
             };
         }
@@ -1015,6 +1020,7 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringValidationCategory.PlayersSeats => "Participants describe who can act in the session, including players, seats, hands, factions, and AI.",
                 PyralisAuthoringValidationCategory.PawnsActors => "Pawn-backed routes cannot spawn or drive actor bodies until pawn definitions and prefabs are coherent.",
                 PyralisAuthoringValidationCategory.SceneObjects => "Scene objects are the runtime anchors that let the authored route exist when Play starts.",
+                PyralisAuthoringValidationCategory.CodeContract => "Code logic or metadata inconsistencies detected. This is a development bug that must be fixed in the codebase.",
                 _ => "This issue still blocks confidence in the selected authoring asset."
             };
         }
@@ -1193,8 +1199,11 @@ namespace NeonBlack.Gameplay.Editor
             if (issueCode.StartsWith("route.", System.StringComparison.Ordinal))
                 return PyralisAuthoringIssueSeverity.Recommended;
 
+            if (category == PyralisAuthoringValidationCategory.CodeContract)
+                return PyralisAuthoringIssueSeverity.Bug;
+
             return category == PyralisAuthoringValidationCategory.Other
-                ? PyralisAuthoringIssueSeverity.Recommended
+? PyralisAuthoringIssueSeverity.Recommended
                 : PyralisAuthoringIssueSeverity.Required;
         }
 
@@ -1375,7 +1384,21 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             List<string> issues = validationIssues ?? BuildValidationIssues(analysis);
-            PyralisAuthoringRouteDescriptor descriptor = PyralisAuthoringRouteDescriptor.Build(analysis);
+
+            if (bootstrap != null)
+            {
+                PyralisSetupFlowReport reflectiveReport = PyralisReflectiveContractSolver.BuildReport(bootstrap);
+                for (int i = 0; i < reflectiveReport.Steps.Count; i++)
+                {
+                    PyralisSetupFlowStep step = reflectiveReport.Steps[i];
+                    if (step.Status != PyralisSetupFlowStepStatus.Ready)
+                    {
+                        if (!issues.Contains(step.Message))
+                            issues.Add(step.Message);
+                    }
+                }
+            }
+PyralisAuthoringRouteDescriptor descriptor = PyralisAuthoringRouteDescriptor.Build(analysis);
             PyralisAuthoringRouteProof proof = PyralisAuthoringRouteProof.Build(descriptor);
             if (analysis.Session != null && analysis.Mode == null)
             {

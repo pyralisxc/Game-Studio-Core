@@ -1,11 +1,16 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Linq;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Characters;
+using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Editor.Inspectors;
 using NeonBlack.Gameplay.Presentation.Animation;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UIElements;
+using Object = UnityEngine.Object;
 
 namespace NeonBlack.Gameplay.Editor
 {
@@ -39,22 +44,6 @@ namespace NeonBlack.Gameplay.Editor
             RuntimeCapabilityFamily.ProceduralGeneration,
             RuntimeCapabilityFamily.Networking
         };
-        private static readonly RuntimeCapabilityGoalTag[] GuidedCapabilityGoalTags =
-        {
-            RuntimeCapabilityGoalTag.Movement,
-            RuntimeCapabilityGoalTag.JumpTraversal,
-            RuntimeCapabilityGoalTag.Combat,
-            RuntimeCapabilityGoalTag.Input,
-            RuntimeCapabilityGoalTag.AnimationPresentation,
-            RuntimeCapabilityGoalTag.Camera,
-            RuntimeCapabilityGoalTag.Interaction,
-            RuntimeCapabilityGoalTag.Projectiles,
-            RuntimeCapabilityGoalTag.UiHud,
-            RuntimeCapabilityGoalTag.Scoring,
-            RuntimeCapabilityGoalTag.Tabletop,
-            RuntimeCapabilityGoalTag.NpcsEnemies,
-            RuntimeCapabilityGoalTag.Networking
-        };
         private static readonly RuntimeCapabilityLaneTag[] GuidedCapabilityLaneTags =
         {
             RuntimeCapabilityLaneTag.Sprite2D,
@@ -65,7 +54,7 @@ namespace NeonBlack.Gameplay.Editor
             RuntimeCapabilityLaneTag.CameraCursor,
             RuntimeCapabilityLaneTag.Networked
         };
-        private static readonly SemanticTokenRule[] SemanticTokenRules =
+private static readonly SemanticTokenRule[] SemanticTokenRules =
         {
             new SemanticTokenRule(PyralisAuthoringSemanticTag.PlayMode, "Play Mode proof"),
             new SemanticTokenRule(PyralisAuthoringSemanticTag.PlayMode, "Play Mode"),
@@ -97,6 +86,7 @@ namespace NeonBlack.Gameplay.Editor
         };
         private static readonly Dictionary<string, bool> ServiceStepFoldouts = new Dictionary<string, bool>();
         private static readonly Dictionary<string, bool> IntentRowFoldouts = new Dictionary<string, bool>();
+        private static readonly Dictionary<string, bool> GoalCategoryFoldouts = new Dictionary<string, bool>();
         private const double InspectorRepaintIntervalSeconds = 0.35d;
 
         private AuthoringWindowMode _mode = AuthoringWindowMode.Overview;
@@ -104,11 +94,11 @@ namespace NeonBlack.Gameplay.Editor
         [SerializeField] private Object _lastActiveSetup;
         [SerializeField] private bool _showBeginnerLocationTags = true;
         [SerializeField] private bool _emptySceneIntentStartApplied;
-        [SerializeField] private PyralisAuthoringWorldIntent _intentWorld = PyralisAuthoringWorldIntent.SideView2DGravity;
-        [SerializeField] private PyralisAuthoringControlIntent _intentControl = PyralisAuthoringControlIntent.PawnActor;
         [SerializeField] private RuntimeCapabilityLaneTag _intentLane = RuntimeCapabilityLaneTag.Sprite2D;
-        [SerializeField] private List<RuntimeCapabilityGoalTag> _intentGoals = new List<RuntimeCapabilityGoalTag>();
-        private Vector2 _scroll;
+        [SerializeField] private AuthoringWorldAxiom _intentAxioms = AuthoringWorldAxiom.None;
+        [SerializeField] private AuthoringCapability _intentCapabilities = AuthoringCapability.None;
+        [SerializeField] private string _intentGoalFilter = "";
+private Vector2 _scroll;
         private double _lastInspectorRepaintTime;
         private int _authoringCacheVersion;
         private string _cachedIntentModelKey;
@@ -119,6 +109,8 @@ namespace NeonBlack.Gameplay.Editor
         private Object _cachedSelectionReportTarget;
         private PyralisAuthoringRouteReport _cachedActiveReport;
         private PyralisAuthoringRouteReport _cachedSelectionReport;
+
+        private VisualElement _contentRoot;
 
         private readonly struct SemanticTokenRule
         {
@@ -138,6 +130,497 @@ namespace NeonBlack.Gameplay.Editor
             GetWindow<PyralisAuthoringWindow>("Pyralis Authoring");
         }
 
+        public void CreateGUI()
+        {
+            var uxml = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Editor/AuthoringUI/PyralisAuthoringWindow.uxml");
+            if (uxml == null)
+            {
+                rootVisualElement.Add(new Label("Failed to load UXML. Check path: Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Editor/AuthoringUI/PyralisAuthoringWindow.uxml"));
+                return;
+            }
+
+            uxml.CloneTree(rootVisualElement);
+            _contentRoot = rootVisualElement.Q<VisualElement>("content");
+
+            SetupTabs();
+            RefreshActiveTab();
+        }
+
+        private void SetupTabs()
+        {
+            var toolbar = rootVisualElement.Q<VisualElement>("toolbar");
+            if (toolbar == null) return;
+
+            foreach (var tab in toolbar.Children())
+            {
+                tab.RegisterCallback<PointerDownEvent>(evt =>
+                {
+                    UpdateTabSelection(tab);
+                });
+            }
+        }
+
+        private void UpdateTabSelection(VisualElement selectedTab)
+        {
+            var toolbar = rootVisualElement.Q<VisualElement>("toolbar");
+            foreach (var tab in toolbar.Children())
+                tab.RemoveFromClassList("mode-tab--active");
+
+            selectedTab.AddToClassList("mode-tab--active");
+
+            _mode = selectedTab.name switch
+            {
+                "tabOverview" => AuthoringWindowMode.Overview,
+                "tabIntent" => AuthoringWindowMode.Intent,
+                "tabMap" => AuthoringWindowMode.Map,
+                "tabHygiene" => AuthoringWindowMode.Validate,
+                "tabGuide" => AuthoringWindowMode.Guide,
+                "tabFacts" => AuthoringWindowMode.Facts,
+                _ => _mode
+            };
+
+            RefreshActiveTab();
+        }
+
+        private void RefreshActiveTab()
+        {
+            if (_contentRoot == null) return;
+            _contentRoot.Clear();
+
+            if (_mode == AuthoringWindowMode.Intent)
+            {
+                RefreshIntentTab();
+            }
+            else if (_mode == AuthoringWindowMode.Validate)
+            {
+                RefreshHygieneTab();
+            }
+            else if (_mode == AuthoringWindowMode.Map)
+            {
+                RefreshMapTab();
+            }
+            else
+            {
+                _contentRoot.Add(new IMGUIContainer(() =>
+                {
+                    // We use the same logic as the old OnGUI but skip the layout headers
+                    Object selection = Selection.activeObject;
+                    Object selectionSetup = GetSetupContext(selection);
+                    Object sceneFallbackSetup = GetSceneFallbackSetup(selection, selectionSetup);
+                    Object activeSetup = ResolveActiveSetup(selection, selectionSetup, sceneFallbackSetup, _pinnedActiveSetup, _lastActiveSetup);
+                    
+                    _scroll = EditorGUILayout.BeginScrollView(_scroll);
+                    DrawModeContent(activeSetup, selection);
+                    EditorGUILayout.EndScrollView();
+                }));
+            }
+        }
+
+        private void RefreshIntentTab()
+        {
+            var axiomContainer = new VisualElement() { name = "axiomContainer" };
+            axiomContainer.AddToClassList("section");
+            var axiomTitle = new Label("DNA AXIOMS");
+            axiomTitle.AddToClassList("section-title");
+            axiomContainer.Add(axiomTitle);
+            var axiomToggles = new VisualElement() { name = "axiomToggles" };
+            axiomContainer.Add(axiomToggles);
+            PopulateAxioms(axiomToggles);
+
+            var laneContainer = new VisualElement() { name = "laneContainer" };
+            laneContainer.AddToClassList("section");
+            var laneTitle = new Label("PRESENTATION LANE");
+            laneTitle.AddToClassList("section-title");
+            laneContainer.Add(laneTitle);
+            PopulateLanes(laneContainer);
+
+            var capabilityContainer = new VisualElement() { name = "capabilityContainer" };
+            capabilityContainer.AddToClassList("section");
+            var capTitle = new Label("ENGINE SPINE CAPABILITIES");
+            capTitle.AddToClassList("section-title");
+            capabilityContainer.Add(capTitle);
+            PopulateCapabilities(capabilityContainer);
+
+            var advisorContainer = new VisualElement() { name = "advisorContainer" };
+            advisorContainer.AddToClassList("section");
+            var advisorTitle = new Label("INTENT ADVISOR");
+            advisorTitle.AddToClassList("section-title");
+            advisorContainer.Add(advisorTitle);
+            
+            var intentSummary = new Label("Project DNA is defined by... Engine Spine capabilities: ...") { name = "intentSummary" };
+            intentSummary.AddToClassList("intent-card-summary");
+            advisorContainer.Add(intentSummary);
+
+            var sidebar = new VisualElement() { name = "sidebar" };
+            sidebar.AddToClassList("intent-sidebar");
+            sidebar.Add(axiomContainer);
+            sidebar.Add(laneContainer);
+
+            var main = new VisualElement() { name = "main" };
+            main.AddToClassList("intent-main");
+            main.Add(capabilityContainer);
+            main.Add(advisorContainer);
+
+            var intentView = new VisualElement() { name = "intentView" };
+            intentView.AddToClassList("intent-container");
+            intentView.Add(sidebar);
+            intentView.Add(main);
+
+            _contentRoot.Add(intentView);
+            UpdateAdvisor(_contentRoot);
+        }
+
+        private void PopulateAxioms(VisualElement container)
+{
+            if (container == null) return;
+            foreach (AuthoringWorldAxiom axiom in Enum.GetValues(typeof(AuthoringWorldAxiom)))
+            {
+                if (axiom == AuthoringWorldAxiom.None) continue;
+                
+                var toggle = new Toggle(AuthoringWorldAxiomRegistry.GetDisplayName(axiom));
+                toggle.value = (_intentAxioms & axiom) != 0;
+                toggle.tooltip = AuthoringWorldAxiomRegistry.GetTooltip(axiom);
+                toggle.RegisterValueChangedCallback(evt =>
+                {
+                    if (evt.newValue) _intentAxioms |= axiom;
+                    else _intentAxioms &= ~axiom;
+                    InvalidateAuthoringCache();
+                    UpdateAdvisor(_contentRoot);
+                });
+                container.Add(toggle);
+            }
+        }
+
+        private void PopulateLanes(VisualElement container)
+        {
+            if (container == null) return;
+            var laneEnumField = new EnumField("Active Lane", _intentLane);
+            laneEnumField.RegisterValueChangedCallback(evt =>
+            {
+                _intentLane = (RuntimeCapabilityLaneTag)evt.newValue;
+                InvalidateAuthoringCache();
+                UpdateAdvisor(rootVisualElement);
+            });
+            container.Add(laneEnumField);
+        }
+
+        private void DrawModeContent(Object activeSetup, Object selection)
+        {
+            switch (_mode)
+            {
+                case AuthoringWindowMode.Overview:
+                    DrawOverviewMode(
+                        activeSetup,
+                        selection,
+                        GetCachedRouteReport(activeSetup, true),
+                        GetCachedRouteReport(selection, false));
+                    break;
+                case AuthoringWindowMode.Intent:
+                    DrawIntentMode(activeSetup);
+                    break;
+                case AuthoringWindowMode.Guide:
+                    DrawGuideMode(
+                        selection,
+                        GetCachedRouteReport(selection, false),
+                        activeSetup,
+                        GetCachedRouteReport(activeSetup, true));
+                    break;
+                case AuthoringWindowMode.Map:
+                    DrawMapMode(activeSetup, selection, GetCachedRouteReport(activeSetup, true));
+                    break;
+                case AuthoringWindowMode.Validate:
+                    DrawValidateMode(activeSetup, GetCachedRouteReport(activeSetup, true));
+                    break;
+                case AuthoringWindowMode.Facts:
+                    DrawFactExplorerMode(activeSetup);
+                    break;
+            }
+        }
+
+        private void PopulateCapabilities(VisualElement container)
+        {
+            if (container == null) return;
+
+            var searchField = new UnityEditor.UIElements.ToolbarSearchField();
+            searchField.value = _intentGoalFilter;
+            searchField.style.width = new Length(100, LengthUnit.Percent);
+            searchField.RegisterValueChangedCallback(evt =>
+            {
+                _intentGoalFilter = evt.newValue;
+                FilterCapabilities(container, _intentGoalFilter);
+            });
+            container.Add(searchField);
+
+            var grid = new VisualElement() { name = "capabilityGridInternal" };
+            grid.AddToClassList("capability-grid");
+            container.Add(grid);
+            
+            // ... (rest of method remains same)
+
+            // Group by Category (Simplified for now)
+            var groups = new Dictionary<string, List<AuthoringCapability>>
+            {
+                { "Core & Shell", new List<AuthoringCapability> { AuthoringCapability.Setup, AuthoringCapability.Session, AuthoringCapability.Input, AuthoringCapability.UI } },
+                { "Actor & Action", new List<AuthoringCapability> { AuthoringCapability.Movement, AuthoringCapability.Combat, AuthoringCapability.Animation, AuthoringCapability.VFX } },
+                { "Strategy & Board", new List<AuthoringCapability> { AuthoringCapability.Tabletop, AuthoringCapability.Grid, AuthoringCapability.TurnBased } },
+                { "RPG & Narrative", new List<AuthoringCapability> { AuthoringCapability.Stats, AuthoringCapability.Inventory, AuthoringCapability.Dialogue, AuthoringCapability.Puzzle } },
+                { "World & Meta", new List<AuthoringCapability> { AuthoringCapability.Camera, AuthoringCapability.Environment, AuthoringCapability.Audio, AuthoringCapability.Networking } }
+            };
+
+            foreach (var group in groups)
+            {
+                var groupBox = new VisualElement();
+                groupBox.AddToClassList("capability-group");
+                var groupTitle = new Label(group.Key);
+                groupTitle.AddToClassList("capability-group-title");
+                groupBox.Add(groupTitle);
+                
+                foreach (var cap in group.Value)
+                {
+                    var toggle = new Toggle(AuthoringCapabilityRegistry.GetDisplayName(cap));
+                    toggle.name = "cap_" + cap.ToString();
+                    toggle.value = (_intentCapabilities & cap) != 0;
+                    toggle.tooltip = AuthoringCapabilityRegistry.GetTooltip(cap);
+                    toggle.RegisterValueChangedCallback(evt =>
+                    {
+                        if (evt.newValue) _intentCapabilities |= cap;
+                        else _intentCapabilities &= ~cap;
+                        InvalidateAuthoringCache();
+                        UpdateAdvisor(rootVisualElement);
+                    });
+                    groupBox.Add(toggle);
+                }
+                grid.Add(groupBox);
+            }
+        }
+
+        private void FilterCapabilities(VisualElement container, string filter)
+        {
+            var grid = container.Q<VisualElement>("capabilityGridInternal");
+            if (grid == null) return;
+
+            bool hasFilter = !string.IsNullOrWhiteSpace(filter);
+            filter = filter?.ToLowerInvariant();
+
+            foreach (var groupBox in grid.Children())
+            {
+                int visibleToggles = 0;
+                foreach (var element in groupBox.Children())
+                {
+                    if (element is Toggle toggle)
+                    {
+                        bool matches = !hasFilter || toggle.label.ToLowerInvariant().Contains(filter);
+                        toggle.style.display = matches ? DisplayStyle.Flex : DisplayStyle.None;
+                        if (matches) visibleToggles++;
+                    }
+                }
+                groupBox.style.display = (visibleToggles > 0 || !hasFilter) ? DisplayStyle.Flex : DisplayStyle.None;
+            }
+        }
+
+        private void RefreshHygieneTab()
+        {
+            if (_contentRoot == null) return;
+            _contentRoot.Clear();
+
+            var hygieneView = new VisualElement();
+            hygieneView.AddToClassList("hygiene-view");
+            
+            var title = new Label("PROJECT HYGIENE AUDIT");
+            title.AddToClassList("section-title");
+            hygieneView.Add(title);
+
+            var list = new VisualElement() { name = "globalHygieneList" };
+            hygieneView.Add(list);
+            
+            _contentRoot.Add(hygieneView);
+            UpdateHygiene(list);
+        }
+
+        private void RefreshMapTab()
+        {
+            if (_contentRoot == null) return;
+            _contentRoot.Clear();
+
+            Object selection = Selection.activeObject;
+            Object activeSetup = ResolveActiveSetup(selection, GetSetupContext(selection), GetSceneFallbackSetup(selection, GetSetupContext(selection)), _pinnedActiveSetup, _lastActiveSetup);
+            PyralisAuthoringRouteReport report = GetCachedRouteReport(activeSetup, true);
+
+            GameplaySessionBootstrap bootstrap = GetSelectedBootstrap(activeSetup);
+            SessionDefinition session = GetSelectedSession(activeSetup, bootstrap);
+            GameModeDefinition mode = GetSelectedMode(activeSetup, session);
+            GameSetupProfile setupProfile = GetSelectedSetupProfile(activeSetup, mode);
+
+            var mapView = new VisualElement();
+            mapView.AddToClassList("map-view");
+            
+            var title = new Label("SETUP CHAIN MAP");
+            title.AddToClassList("section-title");
+            mapView.Add(title);
+
+            var info = new Label("Use this map to understand how the active setup is connected. Select an object to see its details in the Inspector.");
+            info.style.opacity = 0.7f;
+            info.style.marginBottom = 10;
+            info.style.whiteSpace = WhiteSpace.Normal;
+            mapView.Add(info);
+
+            var chainContainer = new VisualElement() { name = "chainContainer" };
+            chainContainer.AddToClassList("setup-chain-container");
+            mapView.Add(chainContainer);
+
+            // 1. Bootstrap
+            AddChainLink(chainContainer, "BOOTSTRAP", bootstrap, "The scene entry point. Initializes services and starts the session.", "Select a GameplaySessionBootstrap or Gameplay Root object.");
+            
+            // 2. Session
+            AddChainLink(chainContainer, "SESSION", session, "Defines participants, networking, and rules.", "Create or assign the first asset the scene root reads.");
+
+            // 3. Game Mode
+            AddChainLink(chainContainer, "GAME MODE", mode, "The specific setup recipe and win/loss rules.", "Create or assign the rules asset for this session.");
+
+            // 4. Setup Recipe
+            AddChainLink(chainContainer, "SETUP RECIPE", setupProfile, "Combines capability patterns before prefab or scene wiring starts.", "Create or assign the recipe that combines game capability patterns.");
+
+            if (report != null && !string.IsNullOrEmpty(report.NextStep))
+            {
+                var recContainer = new VisualElement();
+                recContainer.style.marginTop = 15;
+                recContainer.style.paddingTop = 10;
+                recContainer.style.paddingBottom = 10;
+                recContainer.style.paddingLeft = 10;
+                recContainer.style.paddingRight = 10;
+                recContainer.style.backgroundColor = new Color(0.1f, 0.1f, 0.1f, 0.3f);
+                recContainer.style.borderLeftWidth = 4;
+                recContainer.style.borderLeftColor = new Color(1f, 0.8f, 0f);
+
+                var recTitle = new Label("NEXT RECOMMENDED ACTION");
+                recTitle.style.unityFontStyleAndWeight = FontStyle.Bold;
+                recTitle.style.fontSize = 10;
+                recTitle.style.opacity = 0.6f;
+                recContainer.Add(recTitle);
+
+                var recText = new Label(report.NextStep);
+                recText.style.whiteSpace = WhiteSpace.Normal;
+                recContainer.Add(recText);
+
+                mapView.Add(recContainer);
+            }
+            
+            _contentRoot.Add(mapView);
+        }
+
+        private void AddChainLink(VisualElement container, string step, Object target, string description, string missingMessage)
+        {
+            bool isConnected = target != null;
+            var link = new VisualElement();
+            link.AddToClassList("setup-link");
+            link.style.marginBottom = 10;
+            link.style.paddingLeft = 10;
+            link.style.borderLeftWidth = 4;
+            link.style.borderLeftColor = isConnected ? new Color(0.4f, 1f, 0.4f) : new Color(1f, 0.4f, 0.4f);
+
+            var header = new VisualElement();
+            header.style.flexDirection = FlexDirection.Row;
+            header.style.justifyContent = Justify.SpaceBetween;
+            
+            var leftSide = new VisualElement();
+            leftSide.style.flexDirection = FlexDirection.Row;
+
+            var stepLabel = new Label(step);
+            stepLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            stepLabel.style.width = 100;
+            leftSide.Add(stepLabel);
+
+            var statusLabel = new Label(isConnected ? $"CONNECTED: {target.name}" : "MISSING");
+            statusLabel.style.color = isConnected ? new Color(0.8f, 0.8f, 0.8f) : new Color(1f, 0.6f, 0.6f);
+            leftSide.Add(statusLabel);
+            header.Add(leftSide);
+
+            if (isConnected)
+            {
+                var selectBtn = new Button(() => Selection.activeObject = target) { text = "SELECT" };
+                selectBtn.style.height = 18;
+                selectBtn.style.fontSize = 9;
+                header.Add(selectBtn);
+            }
+
+            link.Add(header);
+
+            var descLabel = new Label(isConnected ? description : missingMessage);
+            descLabel.style.whiteSpace = WhiteSpace.Normal;
+            descLabel.style.fontSize = 11;
+            descLabel.style.opacity = isConnected ? 0.7f : 1f;
+            link.Add(descLabel);
+
+            container.Add(link);
+        }
+
+        private void UpdateHygiene(VisualElement container)
+        {
+            if (container == null) return;
+            container.Clear();
+
+            var selection = new PyralisAuthoringIntentSelection(_intentLane, _intentCapabilities, _intentAxioms);
+            var model = PyralisAuthoringIntentAdvisor.Build(selection);
+
+            if (model.HygieneIssues.Count == 0)
+            {
+                var success = new VisualElement();
+                success.style.paddingTop = 20;
+                success.style.alignItems = Align.Center;
+                
+                var label = new Label("✓ PROJECT HYGIENE: 100%") { name = "hygieneSuccess" };
+                label.style.fontSize = 18;
+                label.style.unityFontStyleAndWeight = FontStyle.Bold;
+                label.style.color = new Color(0.4f, 1f, 0.4f);
+                success.Add(label);
+                
+                var subLabel = new Label("All active authoring contracts have high-fidelity metadata and proofs.") { name = "hygieneSubLabel" };
+                subLabel.style.opacity = 0.7f;
+                success.Add(subLabel);
+                
+                container.Add(success);
+            }
+            else
+            {
+                var header = new Label($"HYGIENE ALERTS ({model.HygieneIssues.Count})");
+                header.style.unityFontStyleAndWeight = FontStyle.Bold;
+                header.style.marginBottom = 8;
+                container.Add(header);
+
+                foreach (var issue in model.HygieneIssues)
+                {
+                    var issueBox = new HelpBox(issue.Reason, GetHelpBoxType(issue.Severity));
+                    issueBox.style.marginBottom = 4;
+                    container.Add(issueBox);
+                }
+            }
+        }
+
+        private void UpdateAdvisor(VisualElement root)
+        {
+            var summaryLabel = root.Q<Label>("intentSummary");
+            if (summaryLabel == null) return;
+
+            var selection = new PyralisAuthoringIntentSelection(_intentLane, _intentCapabilities, _intentAxioms);
+            var model = PyralisAuthoringIntentAdvisor.Build(selection);
+
+            summaryLabel.text = model.Summary;
+        }
+
+        private HelpBoxMessageType GetHelpBoxType(PyralisAuthoringIssueSeverity severity)
+        {
+            return severity switch
+            {
+                PyralisAuthoringIssueSeverity.Required => HelpBoxMessageType.Error,
+                PyralisAuthoringIssueSeverity.Blocked => HelpBoxMessageType.Error,
+                PyralisAuthoringIssueSeverity.Bug => HelpBoxMessageType.Error,
+                PyralisAuthoringIssueSeverity.Recommended => HelpBoxMessageType.Warning,
+                PyralisAuthoringIssueSeverity.Optional => HelpBoxMessageType.Info,
+                PyralisAuthoringIssueSeverity.Info => HelpBoxMessageType.Info,
+                _ => HelpBoxMessageType.None
+            };
+        }
+
         private void OnSelectionChange()
         {
             InvalidateAuthoringCache();
@@ -152,18 +635,21 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             Repaint();
+            RefreshActiveTab();
         }
 
         private void OnHierarchyChange()
         {
             InvalidateAuthoringCache();
             Repaint();
+            RefreshActiveTab();
         }
 
         private void OnProjectChange()
         {
             InvalidateAuthoringCache();
             Repaint();
+            RefreshActiveTab();
         }
 
         private void OnInspectorUpdate()
@@ -176,66 +662,6 @@ namespace NeonBlack.Gameplay.Editor
             Repaint();
         }
 
-        private void OnGUI()
-        {
-            Object selection = Selection.activeObject;
-            Object selectionSetup = GetSetupContext(selection);
-            Object sceneFallbackSetup = GetSceneFallbackSetup(selection, selectionSetup);
-            Object activeSetup = ResolveActiveSetup(selection, selectionSetup, sceneFallbackSetup, _pinnedActiveSetup, _lastActiveSetup);
-            if (_pinnedActiveSetup == null && (selectionSetup != null || sceneFallbackSetup != null))
-                _lastActiveSetup = selectionSetup != null ? selectionSetup : sceneFallbackSetup;
-
-            bool hasNoSetupContext = HasNoSetupContext(activeSetup, selectionSetup, sceneFallbackSetup);
-            bool shouldStartInIntent = ShouldStartInIntent(activeSetup, selectionSetup, sceneFallbackSetup, _mode);
-            if (shouldStartInIntent && !_emptySceneIntentStartApplied)
-            {
-                _mode = AuthoringWindowMode.Intent;
-                _emptySceneIntentStartApplied = true;
-            }
-            else if (!hasNoSetupContext)
-            {
-                _emptySceneIntentStartApplied = false;
-            }
-
-            DrawBeginnerLocationLegend();
-            DrawActiveSetupBar(selection, activeSetup, selectionSetup, sceneFallbackSetup);
-            DrawModeToolbar();
-
-            using (EditorGUILayout.ScrollViewScope scroll = new EditorGUILayout.ScrollViewScope(_scroll))
-            {
-                _scroll = scroll.scrollPosition;
-
-                switch (_mode)
-                {
-                    case AuthoringWindowMode.Overview:
-                        DrawOverviewMode(
-                            activeSetup,
-                            selection,
-                            GetCachedRouteReport(activeSetup, true),
-                            GetCachedRouteReport(selection, false));
-                        break;
-                    case AuthoringWindowMode.Intent:
-                        DrawIntentMode(activeSetup);
-                        break;
-                    case AuthoringWindowMode.Guide:
-                        DrawGuideMode(
-                            selection,
-                            GetCachedRouteReport(selection, false),
-                            activeSetup,
-                            GetCachedRouteReport(activeSetup, true));
-                        break;
-                    case AuthoringWindowMode.Map:
-                        DrawMapMode(activeSetup, selection, GetCachedRouteReport(activeSetup, true));
-                        break;
-                    case AuthoringWindowMode.Validate:
-                        DrawValidateMode(activeSetup, GetCachedRouteReport(activeSetup, true));
-                        break;
-                    case AuthoringWindowMode.Facts:
-                        DrawFactExplorerMode(activeSetup);
-                        break;
-                }
-            }
-        }
 
         private void InvalidateAuthoringCache()
         {
@@ -618,7 +1044,7 @@ namespace NeonBlack.Gameplay.Editor
             {
                 string proofLabel = row.ProofFact != null ? row.ProofFact.DisplayName : row.Contract.FirstProofTargetId;
                 EditorGUILayout.LabelField(row.Contract.DisplayName, proofLabel, EditorStyles.boldLabel);
-                DrawMiniField("Feature Module", row.Contract.ModuleId);
+                DrawMiniField("Feature Module", row.Contract.StableId);
                 DrawMiniField("Proof Target", string.IsNullOrWhiteSpace(row.Contract.FirstProofTargetId) ? "None recorded." : row.Contract.FirstProofTargetId);
                 DrawMiniField("Proof Target Exists", row.ProofTargetExists ? "Yes - this contract maps to a route proof card." : "No - the contract points at a missing route proof card.");
                 DrawMiniField("Proof Status", GetContractProofStatusText(row));
@@ -663,7 +1089,7 @@ namespace NeonBlack.Gameplay.Editor
             return $"{row.Contract.DisplayName} does not support {row.ActiveLane.Value}. Choose a supported feature module or change the pawn presentation profile before Play Mode.";
         }
 
-        private void DrawIntentMode(Object activeSetup)
+                private void DrawIntentMode(Object activeSetup)
         {
             EditorGUILayout.LabelField("Intent", EditorStyles.boldLabel);
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
@@ -671,21 +1097,17 @@ namespace NeonBlack.Gameplay.Editor
                 EditorGUILayout.LabelField(
                     new GUIContent(
                         "Project Intent And Capability Map",
-                        "This is a reflective project-wide intent map. It ranks known facts and cautions without creating assets, applying presets, or choosing art."),
+                        "This is a reflective project-wide intent map. It ranks known facts and cautions without creating assets or choosing art."),
                     EditorStyles.miniBoldLabel);
+                
                 EditorGUI.BeginChangeCheck();
-                _intentWorld = (PyralisAuthoringWorldIntent)EditorGUILayout.EnumPopup(
-                    new GUIContent("World / Playfield", "Start world-up. The playfield shape influences movement, camera, actor setup, scene surfaces, action targeting, and proof readiness."),
-                    _intentWorld);
-                _intentControl = (PyralisAuthoringControlIntent)EditorGUILayout.EnumPopup(
-                    new GUIContent("Control Shape", "Choose what the player primarily manipulates: pawn, cursor, seat, card hand, camera, menu command, faction/team, or a mixed route."),
-                    _intentControl);
                 _intentLane = (RuntimeCapabilityLaneTag)EditorGUILayout.EnumPopup(
                     new GUIContent("Presentation / Runtime Lane", "Choose the route surface being explored. 2D, 2.5D, 3D, tabletop, UI, camera/cursor, and networked lanes surface different feature guidance."),
                     _intentLane);
                 if (EditorGUI.EndChangeCheck())
                     _cachedIntentModelKey = null;
 
+                DrawAxiomToggles();
                 DrawIntentGoalToggles();
             }
 
@@ -693,14 +1115,15 @@ namespace NeonBlack.Gameplay.Editor
 
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                DrawMiniField("Project Intent", model.Summary, "Plain-language project-wide interpretation of the selected world, control shape, lane, and capability goals.");
-                DrawMiniField("Active Authoring Focus", $"{PyralisAuthoringIntentAdvisor.GetWorldLabel(_intentWorld)} -> {PyralisAuthoringIntentAdvisor.GetControlLabel(_intentControl)} -> {_intentLane}", "The current slice of the larger project intent that is shaping setup guidance.");
+                DrawMiniField("Project DNA Summary", model.Summary, "Plain-language project-wide interpretation of the selected world DNA and capability goals.");
                 DrawMiniField("Active Setup", activeSetup != null ? $"{activeSetup.name} ({activeSetup.GetType().Name})" : "No active setup selected yet", "The setup story currently being inspected by the authoring window.");
-                DrawMiniList("Selected Goals", GetIntentGoalNames(), "The enabled game goals currently shaping the recommendations.");
+                DrawMiniList("Selected Capabilities", GetIntentGoalNames(), "The enabled engine capabilities currently shaping the recommendations.");
             }
 
+            DrawHygieneIssues(model.HygieneIssues);
+
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
-            {
+{
                 EditorGUILayout.LabelField("Guide Cards", EditorStyles.miniBoldLabel);
                 EditorGUILayout.LabelField($"{GetIntentGuideCardCount(model)} matching cookbook card(s) are ranked in Guide. Intent only owns the project-shape controls.", EditorStyles.wordWrappedMiniLabel);
                 if (GUILayout.Button("Open Guide Cards"))
@@ -711,104 +1134,172 @@ namespace NeonBlack.Gameplay.Editor
             }
         }
 
-        private void DrawIntentGoalToggles()
+        private void DrawAxiomToggles()
         {
-            if (_intentGoals == null)
-                _intentGoals = new List<RuntimeCapabilityGoalTag>();
-
-            using (new EditorGUILayout.HorizontalScope())
+            EditorGUILayout.Space(5f);
+            EditorGUILayout.LabelField(new GUIContent("World DNA / Axioms", "Toggle the physical and logical properties of the world. These provide granular control over setup guidance."), EditorStyles.miniBoldLabel);
+            
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                EditorGUILayout.LabelField(new GUIContent("Project Capabilities I'm Considering", "Toggle the capabilities the creator is considering. These shape guidance only; they do not select a setup preset."), EditorStyles.miniBoldLabel);
-            }
+                EditorGUI.BeginChangeCheck();
+                
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    DrawAxiomGroup("Dimensionality", AuthoringWorldAxiom.Dimensions2D, AuthoringWorldAxiom.Dimensions3D);
+                    DrawAxiomGroup("Physics", AuthoringWorldAxiom.GravityVertical, AuthoringWorldAxiom.GravityNone, AuthoringWorldAxiom.GravityRadial);
+                }
+                
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    DrawAxiomGroup("Time/Sequence", AuthoringWorldAxiom.Realtime, AuthoringWorldAxiom.TurnBased);
+                    DrawAxiomGroup("Topology", AuthoringWorldAxiom.BoundedSpace, AuthoringWorldAxiom.WrappedSpace, AuthoringWorldAxiom.InfiniteSpace);
+                }
 
-            EditorGUILayout.LabelField(
-                "Choose only the goals you mean to explore. Intent ranks reflective cookbook facts; it does not fill a preset.",
-                EditorStyles.wordWrappedMiniLabel);
-
-            DrawIntentGoalGroup("Body, Movement, And Presentation", RuntimeCapabilityGoalTag.Movement, RuntimeCapabilityGoalTag.JumpTraversal, RuntimeCapabilityGoalTag.Input, RuntimeCapabilityGoalTag.AnimationPresentation, RuntimeCapabilityGoalTag.Camera);
-            DrawIntentGoalGroup("Interaction And Combat", RuntimeCapabilityGoalTag.Combat, RuntimeCapabilityGoalTag.Interaction, RuntimeCapabilityGoalTag.Projectiles, RuntimeCapabilityGoalTag.NpcsEnemies);
-            DrawIntentGoalGroup("Systems And Surfaces", RuntimeCapabilityGoalTag.UiHud, RuntimeCapabilityGoalTag.Scoring, RuntimeCapabilityGoalTag.Tabletop, RuntimeCapabilityGoalTag.Networking);
-        }
-
-        private void DrawIntentGoalGroup(string label, params RuntimeCapabilityGoalTag[] goals)
-        {
-            EditorGUILayout.LabelField(label, EditorStyles.wordWrappedMiniLabel);
-            EditorGUI.indentLevel++;
-            for (int i = 0; i < goals.Length; i++)
-                DrawIntentGoalToggle(goals[i]);
-            EditorGUI.indentLevel--;
-        }
-
-        private void DrawIntentGoalToggle(RuntimeCapabilityGoalTag goal)
-        {
-            bool selected = _intentGoals.Contains(goal);
-            bool next = EditorGUILayout.ToggleLeft(new GUIContent(GetGoalTagLabel(goal), GetIntentGoalTooltip(goal)), selected);
-            if (next && !selected)
-            {
-                _intentGoals.Add(goal);
-                _cachedIntentModelKey = null;
-            }
-            else if (!next && selected)
-            {
-                _intentGoals.Remove(goal);
-                _cachedIntentModelKey = null;
+                if (EditorGUI.EndChangeCheck())
+                    _cachedIntentModelKey = null;
             }
         }
+
+        private void DrawAxiomGroup(string label, params AuthoringWorldAxiom[] axioms)
+        {
+            using (new EditorGUILayout.VerticalScope())
+            {
+                EditorGUILayout.LabelField(label, EditorStyles.wordWrappedMiniLabel);
+                foreach (var axiom in axioms)
+                {
+                    bool active = (_intentAxioms & axiom) != 0;
+                    bool next = EditorGUILayout.ToggleLeft(axiom.ToString(), active);
+                    if (next != active)
+                    {
+                        if (next) _intentAxioms |= axiom;
+                        else _intentAxioms &= ~axiom;
+                    }
+                }
+            }
+        }
+
+                private void DrawIntentGoalToggles()
+                {
+                    EditorGUILayout.Space(5f);
+                    using (new EditorGUILayout.HorizontalScope())
+                    {
+                        EditorGUILayout.LabelField(new GUIContent("Engine Spine Capabilities", "Select the professional engine capabilities you are authoring for. This shapes guidance and reduces noise."), EditorStyles.miniBoldLabel);
+                
+                        if (GUILayout.Button("Select...", EditorStyles.miniButton, GUILayout.Width(100)))
+                        {
+                            ShowCapabilitySelectionMenu();
+                        }
+                    }
+
+                    EditorGUILayout.LabelField(
+                        "These are defined centrally in the Pyralis Spine. Membership is discovered reflectively.",
+                        EditorStyles.wordWrappedMiniLabel);
+
+                    using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+                    {
+                        _scroll = EditorGUILayout.BeginScrollView(_scroll, GUILayout.MaxHeight(400));
+                        foreach (AuthoringCapability cap in AuthoringCapabilityRegistry.GetAllIndividualCapabilities())
+                        {
+                            if (cap == AuthoringCapability.None) continue;
+
+                            bool selected = (_intentCapabilities & cap) != 0;
+                            EditorGUI.BeginChangeCheck();
+                            bool newVal = EditorGUILayout.ToggleLeft(new GUIContent(AuthoringCapabilityRegistry.GetDisplayName(cap), AuthoringCapabilityRegistry.GetTooltip(cap)), selected);
+                            if (EditorGUI.EndChangeCheck())
+                            {
+                                if (newVal) _intentCapabilities |= cap;
+                                else _intentCapabilities &= ~cap;
+                                _cachedIntentModelKey = null;
+                            }
+                        }
+                        EditorGUILayout.EndScrollView();
+                    }
+                }
+
+                private void ShowCapabilitySelectionMenu()
+                {
+                    GenericMenu menu = new GenericMenu();
+                    foreach (AuthoringCapability cap in AuthoringCapabilityRegistry.GetAllIndividualCapabilities())
+                    {
+                        if (cap == AuthoringCapability.None) continue;
+
+                        bool selected = (_intentCapabilities & cap) != 0;
+                        menu.AddItem(new GUIContent(AuthoringCapabilityRegistry.GetDisplayName(cap)), selected, () => 
+                        {
+                            if ((_intentCapabilities & cap) != 0) _intentCapabilities &= ~cap;
+                            else _intentCapabilities |= cap;
+                            _cachedIntentModelKey = null;
+                            Repaint();
+                        });
+                    }
+            
+                    if (menu.GetItemCount() > 0)
+                    {
+                        menu.AddSeparator("");
+                        menu.AddItem(new GUIContent("Clear All"), false, () => 
+                        {
+                            _intentCapabilities = AuthoringCapability.None;
+                            _cachedIntentModelKey = null;
+                            Repaint();
+                        });
+                    }
+            
+                    menu.ShowAsContext();
+                }
 
         private PyralisAuthoringIntentModel GetCachedIntentModel()
-        {
-            if (_intentGoals == null)
-                _intentGoals = new List<RuntimeCapabilityGoalTag>();
-
-            string key = GetIntentModelKey();
-            if (_cachedIntentModel != null && string.Equals(_cachedIntentModelKey, key, System.StringComparison.Ordinal))
+{
+            string key = $"{_intentLane}_{_intentAxioms}_{_intentCapabilities}_{_authoringCacheVersion}";
+            if (_cachedIntentModelKey == key)
                 return _cachedIntentModel;
 
             _cachedIntentModelKey = key;
             _cachedIntentModel = PyralisAuthoringIntentAdvisor.Build(
-                new PyralisAuthoringIntentSelection(_intentWorld, _intentControl, _intentLane, _intentGoals.ToArray()));
+                new PyralisAuthoringIntentSelection(_intentLane, _intentCapabilities, _intentAxioms));
             return _cachedIntentModel;
         }
 
         private string GetIntentModelKey()
         {
-            if (_intentGoals == null || _intentGoals.Count == 0)
-                return $"{(int)_intentWorld}:{(int)_intentControl}:{(int)_intentLane}:";
-
-            List<RuntimeCapabilityGoalTag> sortedGoals = new List<RuntimeCapabilityGoalTag>(_intentGoals);
-            sortedGoals.Sort();
-
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
-            builder.Append((int)_intentWorld);
-            builder.Append(':');
-            builder.Append((int)_intentControl);
-            builder.Append(':');
-            builder.Append((int)_intentLane);
-            builder.Append(':');
-            for (int i = 0; i < sortedGoals.Count; i++)
-            {
-                if (i > 0)
-                    builder.Append(',');
-                builder.Append((int)sortedGoals[i]);
-            }
-
-            return builder.ToString();
+            return $"{_intentLane}_{_intentAxioms}_{_intentCapabilities}_{_authoringCacheVersion}";
         }
 
         private string[] GetIntentGoalNames()
         {
-            if (_intentGoals == null || _intentGoals.Count == 0)
-                return new[] { "No goals selected yet" };
+            if (_intentCapabilities == AuthoringCapability.None)
+                return new[] { "No capabilities selected yet" };
 
-            string[] names = new string[_intentGoals.Count];
-            for (int i = 0; i < _intentGoals.Count; i++)
-                names[i] = GetGoalTagLabel(_intentGoals[i]);
+            List<string> names = new List<string>();
+            foreach (AuthoringCapability cap in AuthoringCapabilityRegistry.GetAllIndividualCapabilities())
+            {
+                if ((_intentCapabilities & cap) != 0)
+                    names.Add(AuthoringCapabilityRegistry.GetDisplayName(cap));
+            }
+            return names.ToArray();
+        }
 
-            return names;
+        private void DrawHygieneIssues(IReadOnlyList<PyralisAuthoringIssue> issues)
+        {
+            if (issues == null || issues.Count == 0) return;
+
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.LabelField(new GUIContent("Code Hygiene & Duplication", "Warnings and errors related to the engine spine and capability registry."), EditorStyles.miniBoldLabel);
+                foreach (var issue in issues)
+                {
+                    MessageType type = issue.Severity switch
+                    {
+                        PyralisAuthoringIssueSeverity.Bug => MessageType.Error,
+                        PyralisAuthoringIssueSeverity.Required => MessageType.Warning,
+                        _ => MessageType.Info
+                    };
+                    EditorGUILayout.HelpBox($"{issue.IssueCode}: {issue.Reason}", type);
+                }
+            }
         }
 
         private static void DrawIntentRows(string title, string description, IReadOnlyList<PyralisAuthoringIntentRow> rows, string tooltip, int collapsedLimit = 0)
-        {
+{
             EditorGUILayout.Space(6f);
             EditorGUILayout.LabelField(new GUIContent(title, tooltip), new GUIContent(rows != null ? $"{rows.Count} items" : "0 items", description), EditorStyles.miniBoldLabel);
             EditorGUILayout.LabelField(description, EditorStyles.wordWrappedMiniLabel);
@@ -1306,10 +1797,14 @@ namespace NeonBlack.Gameplay.Editor
 
                 EditorGUILayout.Space(10f);
                 DrawCurrentIntentGuide(GetCachedIntentModel());
+                
+                DrawReflectiveContracts(activeSetup);
             }
             else
             {
                 DrawCurrentIntentGuide(GetCachedIntentModel());
+                
+                DrawReflectiveContracts(activeSetup);
 
                 EditorGUILayout.Space(10f);
                 EditorGUILayout.LabelField("What This Selection Does", EditorStyles.boldLabel);
@@ -1324,8 +1819,11 @@ namespace NeonBlack.Gameplay.Editor
                 using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
                 {
                     EditorGUILayout.LabelField("Active Setup", $"{activeSetup.name} ({activeSetup.GetType().Name})", EditorStyles.wordWrappedLabel);
-                    EditorGUILayout.LabelField("Route", activeSetupReport.RouteName, EditorStyles.wordWrappedLabel);
-                    EditorGUILayout.LabelField("Next Required Step", activeSetupReport.NextStep, EditorStyles.wordWrappedLabel);
+                    if (activeSetupReport != null)
+                    {
+                        EditorGUILayout.LabelField("Route", activeSetupReport.RouteName, EditorStyles.wordWrappedLabel);
+                        EditorGUILayout.LabelField("Next Required Step", activeSetupReport.NextStep, EditorStyles.wordWrappedLabel);
+                    }
                 }
             }
         }
@@ -1339,6 +1837,9 @@ namespace NeonBlack.Gameplay.Editor
 
         private static void DrawCurrentStepPanel(Object selection, PyralisAuthoringRouteReport report)
         {
+            if (report == null)
+                return;
+
             EditorGUILayout.LabelField("Current Step", EditorStyles.boldLabel);
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
@@ -1390,6 +1891,75 @@ namespace NeonBlack.Gameplay.Editor
                 "Useful facts that are not a clean fit for the selected lane. Keep them visible as tradeoffs, not primary steps.",
                 model.Cautions,
                 "Cautions help prevent pawn, combat, UI, board, or networking assumptions from leaking into the wrong route.");
+        }
+
+        private void DrawReflectiveContracts(Object activeSetup)
+        {
+            if (activeSetup == null) return;
+            
+            GameplaySessionBootstrap bootstrap = GetSelectedBootstrap(activeSetup);
+            if (bootstrap == null) return;
+
+            PyralisSetupFlowReport flowReport = PyralisSetupFlowValidator.BuildReport(bootstrap);
+            if (flowReport == null || flowReport.Steps.Count == 0) return;
+
+            // Filter for reflective steps (StepId == Unknown)
+            List<PyralisSetupFlowStep> reflectiveSteps = new List<PyralisSetupFlowStep>();
+            foreach (var step in flowReport.Steps)
+            {
+                if (step.StepId == PyralisSetupFlowStepId.Unknown)
+                {
+                    reflectiveSteps.Add(step);
+                }
+            }
+
+            if (reflectiveSteps.Count == 0) return;
+
+            EditorGUILayout.Space(12f);
+            EditorGUILayout.LabelField("Reflective Design Contracts", EditorStyles.boldLabel);
+            DrawSemanticHelpBox("These contracts are discovered reflectively from feature code and attributes. They ensure the scene state matches the design intent.", MessageType.Info);
+
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                foreach (var step in reflectiveSteps)
+                {
+                    DrawReflectiveContractRow(step);
+                }
+            }
+        }
+
+        private static void DrawReflectiveContractRow(PyralisSetupFlowStep step)
+        {
+            MessageType msgType = step.Status switch
+            {
+                PyralisSetupFlowStepStatus.Ready => MessageType.Info,
+                PyralisSetupFlowStepStatus.Missing => MessageType.Warning,
+                PyralisSetupFlowStepStatus.Blocked => MessageType.Error,
+                _ => MessageType.None
+            };
+
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    string statusPrefix = step.Status == PyralisSetupFlowStepStatus.Ready ? "✔" : "❌";
+                    EditorGUILayout.LabelField($"{statusPrefix} {step.Label}", EditorStyles.boldLabel);
+                    
+                    if (step.ReferencedObject != null)
+                    {
+                        if (GUILayout.Button("Ping", GUILayout.Width(44f)))
+                            EditorGUIUtility.PingObject(step.ReferencedObject);
+                        
+                        if (GUILayout.Button("Select", GUILayout.Width(56f)))
+                            Selection.activeObject = step.ReferencedObject;
+                    }
+                }
+                
+                if (!string.IsNullOrWhiteSpace(step.Message))
+                {
+                    EditorGUILayout.HelpBox(step.Message, msgType);
+                }
+            }
         }
 
         private static int GetIntentGuideCardCount(PyralisAuthoringIntentModel model)
@@ -1732,8 +2302,9 @@ namespace NeonBlack.Gameplay.Editor
             DrawValidationIssueGroup(PyralisAuthoringValidationCategory.PlayersSeats, model.Issues);
             DrawValidationIssueGroup(PyralisAuthoringValidationCategory.PawnsActors, model.Issues);
             DrawValidationIssueGroup(PyralisAuthoringValidationCategory.SceneObjects, model.Issues);
+            DrawValidationIssueGroup(PyralisAuthoringValidationCategory.CodeContract, model.Issues);
             DrawValidationIssueGroup(PyralisAuthoringValidationCategory.Other, model.Issues);
-        }
+}
 
         private static void DrawValidateReadinessBuckets(Object activeSetup)
         {
@@ -1997,7 +2568,7 @@ namespace NeonBlack.Gameplay.Editor
 
             if (contracts == null || contracts.Count == 0)
             {
-                EditorGUILayout.LabelField("No feature contracts discovered. Add an IAuthoringContractProvider beside the owning feature.", EditorStyles.wordWrappedMiniLabel);
+                EditorGUILayout.LabelField("No feature contracts discovered. Tag interfaces with [AuthoringContract(ModuleId=\"...\")] for reflective discovery.", EditorStyles.wordWrappedMiniLabel);
                 return;
             }
 
@@ -2063,7 +2634,7 @@ namespace NeonBlack.Gameplay.Editor
 
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                EditorGUILayout.LabelField(contract.DisplayName, contract.ModuleId, EditorStyles.boldLabel);
+                EditorGUILayout.LabelField(contract.DisplayName, contract.StableId, EditorStyles.boldLabel);
                 DrawSemanticTagStrip(GetFeatureContractSetupTags(contract));
                 DrawMiniField("Feature Contract", contract.StableId);
                 DrawMiniField("Required Profile", contract.RequiredProfileType != null ? contract.RequiredProfileType.Name : "None for this module.");
@@ -2705,12 +3276,25 @@ namespace NeonBlack.Gameplay.Editor
         private static void DrawRuntimeCapabilityCatalogByGoal(GameSetupProfile setupProfile)
         {
             EditorGUILayout.Space(4f);
-            EditorGUILayout.LabelField("Browse By Game Goal", EditorStyles.miniBoldLabel);
-            for (int i = 0; i < GuidedCapabilityGoalTags.Length; i++)
+            EditorGUILayout.LabelField("Browse By Engine Spine Capability", EditorStyles.miniBoldLabel);
+            foreach (AuthoringCapability cap in AuthoringCapabilityRegistry.GetAllIndividualCapabilities())
             {
-                RuntimeCapabilityGoalTag tag = GuidedCapabilityGoalTags[i];
-                List<RuntimeCapabilityCard> cards = PyralisRuntimeCapabilityCatalog.GetByGoal(tag);
-                DrawRuntimeCapabilityGroup(GetGoalTagLabel(tag), "Goal", cards, setupProfile, tag.ToString());
+                if (cap == AuthoringCapability.None) continue;
+                
+                List<PyralisAuthoringFact> facts = PyralisAuthoringFactRegistry.AllFacts
+                    .Where(f => f.Kind == PyralisAuthoringFactKind.RuntimeCapability || f.Kind == PyralisAuthoringFactKind.FeatureContract)
+                    .Where(f => (f.Capability & cap) != 0)
+                    .ToList();
+
+                if (facts.Count > 0)
+                {
+                    DrawRuntimeCapabilityGroup(
+                        AuthoringCapabilityRegistry.GetDisplayName(cap), 
+                        "Capability", 
+                        facts, 
+                        setupProfile, 
+                        AuthoringCapabilityRegistry.GetTooltip(cap));
+                }
             }
         }
 
@@ -2721,50 +3305,57 @@ namespace NeonBlack.Gameplay.Editor
             for (int i = 0; i < GuidedCapabilityLaneTags.Length; i++)
             {
                 RuntimeCapabilityLaneTag tag = GuidedCapabilityLaneTags[i];
-                List<RuntimeCapabilityCard> cards = PyralisRuntimeCapabilityCatalog.GetByLane(tag);
-                DrawRuntimeCapabilityGroup(GetLaneTagLabel(tag), "Lane", cards, setupProfile, tag.ToString(), tag);
+                string laneName = tag.ToString();
+                List<PyralisAuthoringFact> facts = PyralisAuthoringFactRegistry.AllFacts
+                    .Where(f => f.Kind == PyralisAuthoringFactKind.RuntimeCapability 
+                                || f.Kind == PyralisAuthoringFactKind.FeatureContract
+                                || f.Kind == PyralisAuthoringFactKind.PrefabComponent
+                                || f.Kind == PyralisAuthoringFactKind.Profile
+                                || f.Kind == PyralisAuthoringFactKind.Definition)
+                    .Where(f => f.HasLane(laneName) || f.IsExplicitlyUnsupported(laneName)).ToList();
+DrawRuntimeCapabilityGroup(GetLaneTagLabel(tag), "Lane", facts, setupProfile, laneName, tag);
             }
         }
 
         private static void DrawRuntimeCapabilityGroup(
             string title,
             string groupKind,
-            IReadOnlyList<RuntimeCapabilityCard> cards,
+            IReadOnlyList<PyralisAuthoringFact> facts,
             GameSetupProfile setupProfile,
             string keySuffix,
             RuntimeCapabilityLaneTag? laneTag = null)
         {
             string key = "Pyralis.AuthoringWindow.RuntimeCapabilityCatalog." + groupKind + "." + keySuffix;
             bool isOpen = ServiceStepFoldouts.TryGetValue(key, out bool value) && value;
-            int count = cards != null ? cards.Count : 0;
+            int count = facts != null ? facts.Count : 0;
             isOpen = EditorGUILayout.Foldout(isOpen, $"{title} ({count})", true);
             ServiceStepFoldouts[key] = isOpen;
 
-            if (!isOpen || cards == null)
+            if (!isOpen || facts == null)
                 return;
 
             EditorGUI.indentLevel++;
-            for (int i = 0; i < cards.Count; i++)
-                DrawRuntimeCapabilityCard(cards[i], setupProfile, keySuffix + "." + i, laneTag);
+            for (int i = 0; i < facts.Count; i++)
+                DrawRuntimeCapabilityCard(facts[i], setupProfile, keySuffix + "." + i, laneTag);
             EditorGUI.indentLevel--;
         }
 
         private static void DrawRuntimeCapabilityCard(
-            RuntimeCapabilityCard card,
+            PyralisAuthoringFact fact,
             GameSetupProfile setupProfile,
             string keySuffix,
             RuntimeCapabilityLaneTag? laneContext)
         {
-            if (card == null)
+            if (fact == null)
                 return;
 
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                string status = GetRuntimeCapabilityStatus(card, setupProfile, laneContext);
-                EditorGUILayout.LabelField(card.DisplayName, status, EditorStyles.boldLabel);
-                EditorGUILayout.LabelField(card.WhatItAdds, EditorStyles.wordWrappedMiniLabel);
+                string status = GetRuntimeCapabilityStatus(fact, setupProfile, laneContext);
+                EditorGUILayout.LabelField(fact.DisplayName, status, EditorStyles.boldLabel);
+                EditorGUILayout.LabelField(fact.Summary, EditorStyles.wordWrappedMiniLabel);
 
-                string key = "Pyralis.AuthoringWindow.RuntimeCapabilityCard." + card.StableId + "." + keySuffix;
+                string key = "Pyralis.AuthoringWindow.RuntimeCapabilityCard." + fact.StableId + "." + keySuffix;
                 bool isOpen = ServiceStepFoldouts.TryGetValue(key, out bool value) && value;
                 isOpen = EditorGUILayout.Foldout(isOpen, "Native Setup Guide", true);
                 ServiceStepFoldouts[key] = isOpen;
@@ -2773,30 +3364,46 @@ namespace NeonBlack.Gameplay.Editor
                     return;
 
                 EditorGUI.indentLevel++;
-                DrawMiniField("When To Use", card.WhenToUse);
-                DrawMiniList("Required Definitions", card.RequiredDefinitions);
-                DrawMiniList("Required Profiles", card.RequiredProfiles);
-                DrawMiniList("Required Scene Components", card.RequiredSceneComponents);
-                DrawMiniList("Required Prefab Components", card.RequiredPrefabComponents);
-                DrawMiniList("Assignment Fields", card.AssignmentFields);
-                DrawMiniList("Customization Moments", card.CustomizationMoments);
-                DrawMiniList("Can Wait", card.CanWait);
-                DrawMiniField("First Proof", card.FirstProof);
-                DrawMiniList("Common Next Capabilities", card.CommonNextCapabilities);
+                DrawMiniField("Route Relevance", fact.RouteRelevance);
+                DrawMiniList("Required Definitions", fact.RequiredDefinitions);
+                DrawMiniList("Required Profiles", fact.RequiredProfiles);
+                DrawMiniList("Required Scene Components", fact.RequiredSceneComponents);
+                DrawMiniList("Required Prefab Components", fact.RequiredPrefabComponents);
+                DrawMiniList("Assignment Fields", fact.AssignmentFields);
+                DrawMiniList("Customization Moments", fact.CustomizationMoments);
+                DrawMiniList("Can Wait", fact.CanWait);
+                DrawMiniField("First Proof", fact.FirstProof);
+                DrawMiniList("Common Next Capabilities", fact.RelatedStableIds);
                 EditorGUI.indentLevel--;
             }
         }
 
-        private static string GetRuntimeCapabilityStatus(RuntimeCapabilityCard card, GameSetupProfile setupProfile, RuntimeCapabilityLaneTag? laneContext)
+        private static string GetRuntimeCapabilityStatus(PyralisAuthoringFact fact, GameSetupProfile setupProfile, RuntimeCapabilityLaneTag? laneContext)
         {
-            if (card == null)
+            if (fact == null)
                 return "Unknown";
 
-            if (laneContext.HasValue && card.HasCautionLane(laneContext.Value) && !card.HasLane(laneContext.Value))
-                return "Available in Pyralis, but not relevant to this lane";
+            if (laneContext.HasValue)
+            {
+                string laneName = laneContext.Value.ToString();
+                if (fact.IsExplicitlyUnsupported(laneName))
+                    return "Explicitly unsupported for this lane";
+                
+                if (!fact.HasLane(laneName))
+                    return "Available in Pyralis, but not explicitly relevant to this lane";
+            }
 
-            bool selected = setupProfile != null && PyralisAuthoringCapabilitySelection.GetSelectedPattern(setupProfile.runtimePatterns, card.CapabilityFamily) != null;
-            return selected ? "Selected in current setup" : "Guide-only option";
+            if (PyralisReflectiveContractSolver.IsSatisfied(fact, out string message, out _))
+            {
+                return "✔ " + message;
+            }
+
+            if (fact.RequiredSceneComponents != null && fact.RequiredSceneComponents.Length > 0)
+            {
+                return "❌ " + message;
+            }
+
+            return "Guide-only option";
         }
 
         private static void DrawMiniList(string label, IReadOnlyList<string> values)
@@ -3645,50 +4252,8 @@ namespace NeonBlack.Gameplay.Editor
             };
         }
 
-        private static string GetGoalTagLabel(RuntimeCapabilityGoalTag tag)
-        {
-            return tag switch
-            {
-                RuntimeCapabilityGoalTag.Movement => "Movement",
-                RuntimeCapabilityGoalTag.JumpTraversal => "Jump / Traversal",
-                RuntimeCapabilityGoalTag.Camera => "Camera",
-                RuntimeCapabilityGoalTag.Input => "Input",
-                RuntimeCapabilityGoalTag.AnimationPresentation => "Animation / Presentation",
-                RuntimeCapabilityGoalTag.Interaction => "Interaction",
-                RuntimeCapabilityGoalTag.Combat => "Combat",
-                RuntimeCapabilityGoalTag.Projectiles => "Projectiles",
-                RuntimeCapabilityGoalTag.UiHud => "UI / HUD",
-                RuntimeCapabilityGoalTag.Scoring => "Scoring / Objectives",
-                RuntimeCapabilityGoalTag.Tabletop => "Tabletop / Board / Card",
-                RuntimeCapabilityGoalTag.Networking => "Networking",
-                RuntimeCapabilityGoalTag.NpcsEnemies => "NPCs / Enemies",
-                _ => tag.ToString()
-            };
-        }
-
-        private static string GetIntentGoalTooltip(RuntimeCapabilityGoalTag tag)
-        {
-            return tag switch
-            {
-                RuntimeCapabilityGoalTag.Movement => "Guide pawn movement, traversal, jump, or locomotion setup.",
-                RuntimeCapabilityGoalTag.JumpTraversal => "Guide jumps, ledges, air control, traversal feel, and side-view movement constraints.",
-                RuntimeCapabilityGoalTag.Camera => "Guide follow cameras, camera bounds, cursor/camera control, and first proof framing.",
-                RuntimeCapabilityGoalTag.Input => "Guide InputProfile mapping, action names, device expectations, and control handoff.",
-                RuntimeCapabilityGoalTag.AnimationPresentation => "Guide sprite/rig presentation, animation signals, facing, collider fit, and imported art mapping.",
-                RuntimeCapabilityGoalTag.Interaction => "Guide selection, command, pickup, trigger, interactable, or action-targeting setup.",
-                RuntimeCapabilityGoalTag.Combat => "Guide close-range attacks, hit reactions, health/damage, and brawler/fighter proof loops.",
-                RuntimeCapabilityGoalTag.Projectiles => "Guide shots, spells, traps, turrets, hitscan, or projectile feedback setup.",
-                RuntimeCapabilityGoalTag.UiHud => "Guide HUD, menus, overlays, health bars, score readouts, and EventSystem surfaces.",
-                RuntimeCapabilityGoalTag.Scoring => "Guide objectives, scoring rules, win/loss conditions, and progress feedback.",
-                RuntimeCapabilityGoalTag.Tabletop => "Guide boards, cards, seats, turns, pieces, hands, zones, or no-pawn routes.",
-                RuntimeCapabilityGoalTag.Networking => "Guide network ownership, spawn authority, replication, and multiplayer proof cautions.",
-                RuntimeCapabilityGoalTag.NpcsEnemies => "Guide enemy, NPC, hazard, pickup, wave, and encounter proof work.",
-                _ => "Toggle this goal to rank matching reflective authoring facts."
-            };
-        }
-
         private static string GetIntentTierLabel(PyralisAuthoringIntentGuideTier tier)
-        {
+{
             return tier switch
             {
                 PyralisAuthoringIntentGuideTier.Primary => "Strong match",
@@ -3757,6 +4322,5 @@ namespace NeonBlack.Gameplay.Editor
                 EditorGUILayout.HelpBox(report.RouteGuidance, MessageType.Info);
             }
         }
-
     }
 }

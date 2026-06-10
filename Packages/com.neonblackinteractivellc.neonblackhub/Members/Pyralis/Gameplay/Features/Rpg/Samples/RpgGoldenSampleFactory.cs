@@ -1,11 +1,48 @@
 using System;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Rpg;
+using VContainer;
 
 namespace NeonBlack.Gameplay.Features.Rpg.Samples
 {
     public static class RpgGoldenSampleFactory
     {
+        public static void RegisterTo(IContainerBuilder builder)
+        {
+            RpgOwnerKey owner = new RpgOwnerKey(RpgOwnerKind.Participant, RpgGoldenSampleIds.OwnerStableId);
+            IQuestDefinition quest = CreateQuest();
+            ISkillTree skillTree = CreateSkillTree();
+            IVendorDefinition vendorDefinition = CreateVendor();
+            IEquipmentSlot capeSlot = new GoldenEquipmentSlot(RpgGoldenSampleIds.CapeSlotId);
+            IEquippableItem cape = new GoldenEquippableItem(
+                RpgGoldenSampleIds.CapeItemId,
+                RpgGoldenSampleIds.CapeSlotId,
+                new[] { new StatModifier("stat.wisdom", 3f, "item.golden.wisdom-cape") });
+            HubDefinitionModel hub = CreateHub();
+            DialogueGraph dialogueGraph = CreateDialogueGraph();
+            NpcProfile guide = new NpcProfile(RpgGoldenSampleIds.GuideNpcId, "Meadow Guide", "guide", new[] { "golden" }, "faction.village", string.Empty);
+            RpgZoneDefinition meadow = new RpgZoneDefinition(
+                RpgGoldenSampleIds.MeadowZoneId,
+                "Golden Meadow",
+                RpgGoldenSampleIds.MeadowSceneId,
+                RpgZoneResetPolicy.CampaignPersistent,
+                new[] { RpgGoldenSampleIds.MeadowEntranceId },
+                new[] { RpgGoldenSampleIds.MeadowExitId });
+
+            builder.RegisterInstance(owner);
+            builder.RegisterInstance(hub);
+            builder.RegisterInstance<INpcProfile>(guide);
+            builder.RegisterInstance<IDialogueGraph>(dialogueGraph);
+            builder.RegisterInstance(quest);
+            builder.RegisterInstance(vendorDefinition);
+            builder.RegisterInstance(capeSlot);
+            builder.RegisterInstance(cape);
+            builder.RegisterInstance(skillTree);
+            builder.RegisterInstance(meadow);
+
+            builder.Register<RpgGoldenSampleRuntime>(Lifetime.Singleton);
+        }
+
         public static RpgGoldenSampleRuntime CreateRuntime()
         {
             RpgOwnerKey owner = new RpgOwnerKey(RpgOwnerKind.Participant, RpgGoldenSampleIds.OwnerStableId);

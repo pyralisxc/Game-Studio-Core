@@ -1,10 +1,18 @@
-﻿using UnityEngine;
+using UnityEngine;
+using NeonBlack.Gameplay.Core.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Profiles
 {
     /// <summary>
     /// Defines camera presentation choices for shared or split participant views.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Camera, 
+        Relevance = "Project-window creation path for camera framing, follow, zoom, and 2D orthographic route choices.",
+        AssignmentFields = new[] { nameof(presentationMode), nameof(useCinemachine), nameof(followOffset) },
+        FirstProof = "Verify the camera follows the focus object at the specified offset.",
+        NativeSetup = new[] { "Create Asset" }
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Camera Rig Profile", fileName = "CameraRigProfile", order = -70)]
     public class CameraRigProfile : ScriptableObject
     {

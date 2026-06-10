@@ -11,8 +11,46 @@ namespace NeonBlack.Gameplay.Features.Traversal
     /// a visual transform lifts on an arc.
     /// </summary>
     [AddComponentMenu("NeonBlack/Gameplay/Traversal/Top Down Hop Feature Runtime")]
+    [AuthoringContract(
+        ModuleId = "actor.traversal.topdown-hop",
+        Capability = AuthoringCapability.Movement,
+        Relevance = "Enables top-down/isometric hop actions where actors arc visually while maintaining their map position.",
+        Lane = "Traversal",
+        ProfileType = typeof(TopDownHopProfile),
+        RequiredInterfaces = new[] { typeof(IFeatureModuleRuntime), typeof(IActorGameplayActionReceiver) },
+        SupportedLanes = new[] { ActorPresentationMode.Sprite2D, ActorPresentationMode.Billboard2_5D },
+        UnsupportedLanes = new[] { ActorPresentationMode.Rigged3D },
+        UnsupportedLaneMessage = "Rigged3D actors should use the 3D traversal jump path instead of the top-down visual-hop module.",
+        ConsumedRoles = new[] { "Jump" },
+        NativeSetup = new[]
+        {
+            "create TopDownHopProfile",
+            "create FeatureModuleDefinition",
+            "assign runtime prefab with TopDownHopFeatureRuntime",
+            "assign profile asset",
+            "add module to PawnDefinition.featureModules",
+            "bind Jump in InputProfile"
+        },
+        FirstProof = "Press the Jump key and verify the actor performs a visual hop animation.",
+        AssignmentFields = new[]
+        {
+            "FeatureModuleDefinition.moduleId",
+            "FeatureModuleDefinition.runtimePrefab",
+            "FeatureModuleDefinition.profileAsset",
+            "PawnDefinition.featureModules",
+            "InputProfile.gameplayActions"
+        },
+        CustomizationMoments = new[]
+        {
+            "TopDownHopProfile.actionRole",
+            "duration",
+            "height",
+            "cooldown",
+            "TopDownHopFeatureRuntime.visualTransform"
+        }
+    )]
     public sealed class TopDownHopFeatureRuntime : MonoBehaviour, IFeatureModuleRuntime, IActorGameplayActionReceiver
-    {
+{
         [SerializeField] private TopDownHopProfile hopProfile;
         [SerializeField, Tooltip("Optional visual transform to lift. If empty, the runtime uses a child SpriteRenderer or Animator.")]
         private Transform visualTransform;

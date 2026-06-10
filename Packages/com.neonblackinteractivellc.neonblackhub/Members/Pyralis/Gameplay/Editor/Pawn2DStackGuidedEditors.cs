@@ -568,12 +568,24 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
         public static List<PyralisGuideIssue> GetSharedCombatMessages(GameObject root, SerializedObject serializedObject)
         {
             List<PyralisGuideIssue> messages = new List<PyralisGuideIssue>();
-            SerializedProperty hitBoxZones = serializedObject.FindProperty("hitBoxZones");
-            SerializedProperty equippedWeapons = serializedObject.FindProperty("equippedWeapons");
-            SerializedProperty startingWeaponIndex = serializedObject.FindProperty("startingWeaponIndex");
+            
+            PawnHitBoxModule hitBoxModule = root.GetComponent<PawnHitBoxModule>();
+            PawnWeaponModule weaponModule = root.GetComponent<PawnWeaponModule>();
+            PawnBlockModule blockModule = root.GetComponent<PawnBlockModule>();
+            PawnProjectileModule projectileModule = root.GetComponent<PawnProjectileModule>();
+
+            SerializedObject hitBoxSO = hitBoxModule != null ? new SerializedObject(hitBoxModule) : null;
+            SerializedObject weaponSO = weaponModule != null ? new SerializedObject(weaponModule) : null;
+            SerializedObject blockSO = blockModule != null ? new SerializedObject(blockModule) : null;
+            SerializedObject projectileSO = projectileModule != null ? new SerializedObject(projectileModule) : null;
+
+            SerializedProperty hitBoxZones = hitBoxSO?.FindProperty("hitBoxZones");
+            SerializedProperty equippedWeapons = weaponSO?.FindProperty("equippedWeapons");
+            SerializedProperty startingWeaponIndex = weaponSO?.FindProperty("startingWeaponIndex");
+            SerializedProperty blockDamageReduction = blockSO?.FindProperty("blockDamageReduction");
+            SerializedProperty projectileLauncher = projectileSO?.FindProperty("projectileLauncher");
+            
             SerializedProperty maxAerialAttacks = serializedObject.FindProperty("maxAerialAttacks");
-            SerializedProperty blockDamageReduction = serializedObject.FindProperty("blockDamageReduction");
-            SerializedProperty projectileLauncher = serializedObject.FindProperty("projectileLauncher");
 
             if (root.GetComponent<ActorAnimationDriver>() == null)
                 messages.Add(PyralisGuideIssue.Recommended("ActorAnimationDriver is missing. Add it when attacks, block, aerial, or combo signals should animate."));

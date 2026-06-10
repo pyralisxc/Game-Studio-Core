@@ -16,23 +16,14 @@ using UnityEngine;
 [CustomEditor(typeof(EnemyAI))]
 public class EnemyAIEditor : Editor
 {
+    private SerializedObject _detectionSerialized;
+    private SerializedObject _combatSerialized;
+
     private SerializedProperty _aggroRange;
     private SerializedProperty _leashRange;
     private SerializedProperty _obstacleMask;
     private SerializedProperty _requireLineOfSight;
-
-    private SerializedProperty _movementMode;
-    private SerializedProperty _moveSpeed;
-    private SerializedProperty _gravity;
-    private SerializedProperty _waypointTolerance;
-
-    private SerializedProperty _visualRoot;
-    private SerializedProperty _spriteDefaultFacesRight;
-    private SerializedProperty _billboardFacing;
-    private SerializedProperty _presentationCamera;
-
-    private SerializedProperty _patrolPoints;
-    private SerializedProperty _randomPatrolDistance;
+    private SerializedProperty _targetOverride;
 
     private SerializedProperty _hitBoxZones;
     private SerializedProperty _attackSequence;
@@ -46,69 +37,87 @@ public class EnemyAIEditor : Editor
     private SerializedProperty _assetPriorityWeight;
     private SerializedProperty _attackCooldown;
     private SerializedProperty _attackRangeOverride;
-    private SerializedProperty _targetOverride;
-    private SerializedProperty _enemyFeatureProfile;
 
-    private SerializedProperty _groundLayer;
-    private SerializedProperty _groundCheckRadius;
+    private SerializedProperty _movementMode;
+    private SerializedProperty _moveSpeed;
+    private SerializedProperty _waypointTolerance;
+
+    private SerializedProperty _visualRoot;
+    private SerializedProperty _spriteDefaultFacesRight;
+    private SerializedProperty _presentationCamera;
+
+    private SerializedProperty _patrolPoints;
+    private SerializedProperty _randomPatrolDistance;
+    private SerializedProperty _enemyFeatureProfile;
 
     private void OnEnable()
     {
-        _aggroRange = serializedObject.FindProperty("aggroRange");
-        _leashRange = serializedObject.FindProperty("leashRange");
-        _obstacleMask = serializedObject.FindProperty("obstacleMask");
-        _requireLineOfSight = serializedObject.FindProperty("requireLineOfSight");
+        EnemyAI ai = (EnemyAI)target;
+        var detection = ai.GetComponent<EnemyDetectionModule>();
+        var combat = ai.GetComponent<EnemyCombatModule>();
+
+        if (detection != null)
+        {
+            _detectionSerialized = new SerializedObject(detection);
+            _aggroRange = _detectionSerialized.FindProperty("aggroRange");
+            _leashRange = _detectionSerialized.FindProperty("leashRange");
+            _obstacleMask = _detectionSerialized.FindProperty("obstacleMask");
+            _requireLineOfSight = _detectionSerialized.FindProperty("requireLineOfSight");
+            _targetOverride = _detectionSerialized.FindProperty("targetOverride");
+        }
+
+        if (combat != null)
+        {
+            _combatSerialized = new SerializedObject(combat);
+            _hitBoxZones = _combatSerialized.FindProperty("hitBoxZones");
+            _attackSequence = _combatSerialized.FindProperty("attackSequence");
+            _attackMode = _combatSerialized.FindProperty("attackMode");
+            _usePrioritySelection = _combatSerialized.FindProperty("usePrioritySelection");
+            _attackPriorityProfile = _combatSerialized.FindProperty("attackPriorityProfile");
+            _preferAttacksCurrentlyInRange = _combatSerialized.FindProperty("preferAttacksCurrentlyInRange");
+            _rangeWeight = _combatSerialized.FindProperty("rangeWeight");
+            _damageWeight = _combatSerialized.FindProperty("damageWeight");
+            _knockbackWeight = _combatSerialized.FindProperty("knockbackWeight");
+            _assetPriorityWeight = _combatSerialized.FindProperty("assetPriorityWeight");
+            _attackCooldown = _combatSerialized.FindProperty("attackCooldown");
+            _attackRangeOverride = _combatSerialized.FindProperty("attackRangeOverride");
+        }
 
         _movementMode = serializedObject.FindProperty("movementMode");
         _moveSpeed = serializedObject.FindProperty("moveSpeed");
-        _gravity = serializedObject.FindProperty("gravity");
         _waypointTolerance = serializedObject.FindProperty("waypointTolerance");
 
         _visualRoot = serializedObject.FindProperty("visualRoot");
         _spriteDefaultFacesRight = serializedObject.FindProperty("spriteDefaultFacesRight");
-        _billboardFacing = serializedObject.FindProperty("billboardFacing");
         _presentationCamera = serializedObject.FindProperty("presentationCamera");
 
         _patrolPoints = serializedObject.FindProperty("patrolPoints");
         _randomPatrolDistance = serializedObject.FindProperty("randomPatrolDistance");
-
-        _hitBoxZones = serializedObject.FindProperty("hitBoxZones");
-        _attackSequence = serializedObject.FindProperty("attackSequence");
-        _attackMode = serializedObject.FindProperty("attackMode");
-        _usePrioritySelection = serializedObject.FindProperty("usePrioritySelection");
-        _attackPriorityProfile = serializedObject.FindProperty("attackPriorityProfile");
-        _preferAttacksCurrentlyInRange = serializedObject.FindProperty("preferAttacksCurrentlyInRange");
-        _rangeWeight = serializedObject.FindProperty("rangeWeight");
-        _damageWeight = serializedObject.FindProperty("damageWeight");
-        _knockbackWeight = serializedObject.FindProperty("knockbackWeight");
-        _assetPriorityWeight = serializedObject.FindProperty("assetPriorityWeight");
-        _attackCooldown = serializedObject.FindProperty("attackCooldown");
-        _attackRangeOverride = serializedObject.FindProperty("attackRangeOverride");
-        _targetOverride = serializedObject.FindProperty("targetOverride");
         _enemyFeatureProfile = serializedObject.FindProperty("enemyFeatureProfile");
-
-        _groundLayer = serializedObject.FindProperty("groundLayer");
-        _groundCheckRadius = serializedObject.FindProperty("groundCheckRadius");
     }
 
     public override void OnInspectorGUI()
     {
         serializedObject.Update();
+        _detectionSerialized?.Update();
+        _combatSerialized?.Update();
 
         bool is3D = _movementMode.enumValueIndex == (int)MovementMode.ThreeD;
         DrawGuidance(is3D);
 
-        EditorGUILayout.LabelField("Detection", EditorStyles.boldLabel);
-        EditorGUILayout.PropertyField(_aggroRange);
-        EditorGUILayout.PropertyField(_leashRange);
-        EditorGUILayout.PropertyField(_obstacleMask);
-        EditorGUILayout.PropertyField(_requireLineOfSight);
-        EditorGUILayout.Space(4f);
+        if (_detectionSerialized != null)
+        {
+            EditorGUILayout.LabelField("Detection", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(_aggroRange);
+            EditorGUILayout.PropertyField(_leashRange);
+            EditorGUILayout.PropertyField(_obstacleMask);
+            EditorGUILayout.PropertyField(_requireLineOfSight);
+            EditorGUILayout.Space(4f);
+        }
 
         EditorGUILayout.LabelField("Movement", EditorStyles.boldLabel);
         EditorGUILayout.PropertyField(_movementMode);
         EditorGUILayout.PropertyField(_moveSpeed);
-        EditorGUILayout.PropertyField(_gravity);
         EditorGUILayout.PropertyField(_waypointTolerance);
 
         EditorGUILayout.HelpBox(
@@ -123,14 +132,9 @@ public class EnemyAIEditor : Editor
             EditorGUILayout.LabelField("Visuals (3D Brawler)", EditorStyles.boldLabel);
             EditorGUILayout.PropertyField(_visualRoot);
             EditorGUILayout.PropertyField(_spriteDefaultFacesRight);
-            EditorGUILayout.PropertyField(_billboardFacing);
             EditorGUILayout.PropertyField(_presentationCamera);
             if (_presentationCamera.objectReferenceValue == null)
                 EditorGUILayout.HelpBox("Presentation Camera is empty. Assign the gameplay camera for screen-left/right facing and billboarding, or call SetPresentationCamera when the enemy spawns.", MessageType.Warning);
-        }
-        else
-        {
-            EditorGUILayout.LabelField("Visuals hidden in TwoD mode", EditorStyles.miniLabel);
         }
 
         EditorGUILayout.Space(4f);
@@ -141,12 +145,9 @@ public class EnemyAIEditor : Editor
 
         DrawCombat();
 
-        EditorGUILayout.Space(4f);
-        EditorGUILayout.LabelField("Ground Check", EditorStyles.boldLabel);
-        EditorGUILayout.PropertyField(_groundLayer);
-        EditorGUILayout.PropertyField(_groundCheckRadius);
-
         serializedObject.ApplyModifiedProperties();
+        _detectionSerialized?.ApplyModifiedProperties();
+        _combatSerialized?.ApplyModifiedProperties();
     }
 
     private void DrawGuidance(bool is3D)
@@ -284,20 +285,11 @@ public class EnemyAIEditor : Editor
             issues.Add($"HealthComponent fraction is set to '{health.faction}'. For brawler/NPC setups, enemies should be set to '{Faction.Enemy}' to avoid friendly fire or target selection issues.");
         }
 
-        // Use reflection to inspect private fields safely in the Editor
-        var hitBoxZonesField = typeof(EnemyAI).GetField("hitBoxZones", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        HitBoxSlot[] slots = hitBoxZonesField?.GetValue(enemy) as HitBoxSlot[];
+        EnemyCombatModule combat = enemy.GetComponent<EnemyCombatModule>();
+        EnemyDetectionModule detection = enemy.GetComponent<EnemyDetectionModule>();
 
-        var attackSequenceField = typeof(EnemyAI).GetField("attackSequence", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        EnemyAttack[] attacks = attackSequenceField?.GetValue(enemy) as EnemyAttack[];
-
-        var combatProfileField = typeof(EnemyAI).GetField("combatProfile", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        EnemyCombatProfile combatProfile = combatProfileField?.GetValue(enemy) as EnemyCombatProfile;
-
-        if (combatProfile != null)
-        {
-            attacks = combatProfile.attackSequence;
-        }
+        HitBoxSlot[] slots = combat != null ? (HitBoxSlot[])typeof(EnemyCombatModule).GetField("hitBoxZones", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(combat) : null;
+        EnemyAttack[] attacks = combat != null ? (EnemyAttack[])typeof(EnemyCombatModule).GetField("attackSequence", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(combat) : null;
 
         // 2. Hitbox Slots integrity
         HashSet<string> definedZones = new HashSet<string>();
@@ -399,15 +391,15 @@ public class EnemyAIEditor : Editor
         }
 
         // 5. Detection / Chase safety limits
-        var aggroRangeField = typeof(EnemyAI).GetField("aggroRange", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        float aggroRange = (float)(aggroRangeField?.GetValue(enemy) ?? 0f);
-
-        var leashRangeField = typeof(EnemyAI).GetField("leashRange", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        float leashRange = (float)(leashRangeField?.GetValue(enemy) ?? 0f);
-
-        if (aggroRange >= leashRange)
+        if (detection != null)
         {
-            issues.Add($"Aggro Range ({aggroRange}) is greater than or equal to Leash Range ({leashRange}). Aggro Range should be smaller than Leash Range to prevent rapid chase-drop loops.");
+            float aggroRange = (float)(typeof(EnemyDetectionModule).GetField("aggroRange", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(detection) ?? 0f);
+            float leashRange = (float)(typeof(EnemyDetectionModule).GetField("leashRange", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(detection) ?? 0f);
+
+            if (aggroRange >= leashRange)
+            {
+                issues.Add($"Aggro Range ({aggroRange}) is greater than or equal to Leash Range ({leashRange}). Aggro Range should be smaller than Leash Range to prevent rapid chase-drop loops.");
+            }
         }
 
         return issues;

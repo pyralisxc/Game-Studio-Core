@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
+using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Data.Definitions
@@ -37,6 +38,12 @@ namespace NeonBlack.Gameplay.Data.Definitions
     /// Authoring asset for one reusable runtime setup recipe.
     /// Patterns are composable; they describe capability expectations rather than exclusive genres.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Setup, 
+        Relevance = "Defines a reusable recipe for runtime system expectations and presentation requirements.",
+        AssignmentFields = new[] { nameof(patternId), nameof(displayName), nameof(capabilityFamily), nameof(supportedControlSurfaces) },
+        FirstProof = "Assign this Runtime Pattern to a Game Setup Profile asset."
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/Definitions/Runtime Pattern Definition", fileName = "RuntimePatternDefinition", order = 40)]
     public class RuntimePatternDefinition : ScriptableObject
     {

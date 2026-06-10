@@ -1,3 +1,4 @@
+using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Presentation.Animation;
@@ -7,8 +8,31 @@ using UnityEngine;
 namespace NeonBlack.Gameplay.Features.Enemies
 {
     [AddComponentMenu("NeonBlack/Gameplay/Enemies/Enemy Ambient Feature Runtime")]
+    [AuthoringContract(
+        Capability = AuthoringCapability.Combat | AuthoringCapability.Animation,
+        ModuleId = "enemy.ambient",
+        Lane = "Enemy",
+        ProfileType = typeof(EnemyAmbientFeatureProfile),
+        RequiredInterfaces = new[] { typeof(IFeatureModuleRuntime) },
+        RequiredComponentNames = new[] { "NeonBlack.Gameplay.Features.Enemies.EnemyAI" },
+        AssignmentFields = new[] { nameof(ambientProfile) },
+        FirstProof = "Verify that the enemy performs ambient look-around animations while patrolling.",
+        NativeSetup = new[]
+        {
+            "create EnemyAmbientFeatureProfile",
+            "create FeatureModuleDefinition",
+            "assign runtime prefab with EnemyAmbientFeatureRuntime",
+            "assign profile asset",
+            "add module to PawnDefinition.featureModules"
+        },
+        CustomizationMoments = new[]
+        {
+            "EnemyAmbientFeatureProfile.enableAmbientLookAround",
+            "EnemyAmbientFeatureProfile.lookAroundInterval"
+        }
+    )]
     public class EnemyAmbientFeatureRuntime : MonoBehaviour, IFeatureModuleRuntime
-    {
+{
         [SerializeField] private EnemyAmbientFeatureProfile ambientProfile;
         private ActorFeatureContext _context;
         private EnemyAI _enemyAI;

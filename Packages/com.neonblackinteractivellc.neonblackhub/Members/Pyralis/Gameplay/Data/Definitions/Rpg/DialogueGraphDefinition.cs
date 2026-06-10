@@ -1,14 +1,22 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NeonBlack.Gameplay.Core.Rpg;
+using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rpg
 {
+    [AuthoringContract(
+        ModuleId = "rpg.dialogue.graph",
+        Capability = AuthoringCapability.Dialogue,
+        Lane = "RPG",
+        AssignmentFields = new[] { nameof(graphId), nameof(displayName), nameof(startNodeId), nameof(nodes) },
+        FirstProof = "Proof that the dialogue graph can be traversed and contains at least one terminal node."
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Dialogue Graph", fileName = "DialogueGraphDefinition")]
     public class DialogueGraphDefinition : ScriptableObject, IDialogueGraph
-    {
+{
         public string graphId = "dialogue.new";
         public string displayName = "New Dialogue";
         public string startNodeId = "node.start";

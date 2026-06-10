@@ -8,6 +8,13 @@ using UnityEngine.UI;
 
 namespace NeonBlack.Gameplay.Features.Feedback.UI
 {
+    [AuthoringContract(
+        Capability = AuthoringCapability.UI,
+        Relevance = "Binds participant health state to UI elements like labels and progress bars.",
+        NativeSetup = new[] { "Attach to HUD canvas element", "Assign health label or fill image" },
+        AssignmentFields = new[] { nameof(healthLabel), nameof(healthFillImage), nameof(healthPanels) },
+        FirstProof = "The health bar updates when the tracked participant takes damage."
+    )]
     [AddComponentMenu("NeonBlack/Gameplay/Feedback/UI/Participant Health HUD Binder")]
     public class ParticipantHealthHudBinder : ParticipantHudTargetBinding, IRuntimeValidationProvider
     {

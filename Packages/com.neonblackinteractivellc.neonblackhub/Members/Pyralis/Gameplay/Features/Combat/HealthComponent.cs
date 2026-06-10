@@ -18,6 +18,16 @@ namespace NeonBlack.Gameplay.Features.Combat
 /// Dealing damage from other scripts:
 ///   target.GetComponent<HealthComponent>().TakeDamage(10f, hitPoint, attacker);
 /// </summary>
+[AuthoringContract(
+    Capability = AuthoringCapability.Combat, 
+    Priority = 10,
+    Relevance = "Inspector Add Component path for any damageable player, enemy, prop, or custom object.",
+    AssignmentFields = new[] { nameof(maxHealth), nameof(faction), nameof(iFrameDuration) },
+    FirstProof = "Enter Play Mode and trigger TakeDamage via a custom script or trigger. Verify the CurrentHealth decreases in the Inspector and the OnDamaged UnityEvent fires.",
+    NativeSetup = new[] { "Add Component", "Wire UnityEvents for feedback" }
+,
+        ExpertAdvice = "The HealthComponent is a neutral actor. Use the Faction property to group players and enemies. It dispatches UnityEvents for visual feedback (HitFlash, UI).",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/health")]
 [AddComponentMenu("NeonBlack/Gameplay/Combat/Health Component")]
 public class HealthComponent : MonoBehaviour, IActorHealthModifierReceiver, IActorHealthState
 {

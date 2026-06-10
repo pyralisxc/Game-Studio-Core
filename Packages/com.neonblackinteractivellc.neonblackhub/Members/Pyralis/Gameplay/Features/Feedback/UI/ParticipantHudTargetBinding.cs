@@ -13,7 +13,7 @@ namespace NeonBlack.Gameplay.Features.Feedback.UI
         private IParticipantRoster _participantRoster;
 
         [Inject]
-        private void Construct(IParticipantRoster participantRoster = null)
+        private void Construct(IParticipantRoster participantRoster)
         {
             _participantRoster = participantRoster;
             OnBindingsConstructed();

@@ -1,3 +1,4 @@
+using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -9,6 +10,11 @@ namespace NeonBlack.Gameplay.Core.Navigation
     /// <summary>
     /// Drives the company splash/intro scene.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.UI,
+        Relevance = "Handles the timed or video-backed splash screen flow.",
+        AssignmentFields = new[] { "splashVideo", "splashDuration" }
+    )]
     public class SplashScreenController : MonoBehaviour
     {
         [Header("Video (optional - leave empty for static image)")]

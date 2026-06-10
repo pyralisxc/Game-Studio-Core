@@ -1,12 +1,20 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Rpg;
+using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rpg
 {
+    [AuthoringContract(
+        ModuleId = "rpg.progression.curve",
+        Capability = AuthoringCapability.Stats,
+        Lane = "RPG",
+        AssignmentFields = new[] { nameof(curveId), nameof(displayName), nameof(levelExperienceThresholds), nameof(skillPointGrants) },
+        FirstProof = "Proof that the curve correctly resolves levels from experience points."
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Progression Curve", fileName = "ProgressionCurveDefinition")]
     public class ProgressionCurveDefinition : ScriptableObject, IProgressionCurve
-    {
+{
         public string curveId = "progression.default";
         public string displayName = "Default Progression";
         public int[] levelExperienceThresholds = { 0 };

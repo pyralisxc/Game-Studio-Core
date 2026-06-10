@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80491116670e62d4eab9b5b91ed69b68, type: 3}
+  m_Name: ProofGameMode
+  m_EditorClassIdentifier: NeonBlack.Gameplay.Data::NeonBlack.Gameplay.Data.Definitions.GameModeDefinition
+  mainMenuScene: MainMenu
+  gameplayScene: Opening
+  setupProfile: {fileID: 0}
+  playfieldProfile: {fileID: 0}
+  cameraRigProfile: {fileID: 0}
+  requiredFeatureModules: []
+  enableCombat: 1
+  enablePickups: 0
+  enableHazards: 0
+  enableScore: 0
+  enableRespawn: 1
+  turnOrderDefinition: {fileID: 0}
+  boardDefinition: {fileID: 11400000, guid: c4481b6facf1ea143a766621bf4954e7, type: 2}
+  boardTerminalConditions: []
+  respawnDelay: 3
+  startingLives: 0
+  maxParticipantsOverride: 0

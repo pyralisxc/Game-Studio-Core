@@ -1,9 +1,11 @@
 using NeonBlack.Gameplay.Core.Rpg;
+using VContainer;
 
 namespace NeonBlack.Gameplay.Features.Rpg.Samples
 {
     public sealed class RpgGoldenSampleRuntime
     {
+        [Inject]
         public RpgGoldenSampleRuntime(
             RpgOwnerKey owner,
             HubDefinitionModel hub,

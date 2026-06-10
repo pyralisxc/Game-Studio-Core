@@ -5,6 +5,12 @@ using UnityEngine;
 
 namespace NeonBlack.Gameplay.Features.Combat
 {
+    [AuthoringContract(
+        Capability = AuthoringCapability.Combat,
+        Relevance = "Base component for firing projectiles and hitscan attacks.",
+        AssignmentFields = new[] { "usePrefabPooling", "maxPoolSizePerPrefab" },
+        ExpertAdvice = "Extend this class to create custom 2D or 3D launchers. It handles the low-level spawning and impact feedback routing."
+    )]
     public abstract class ProjectileLauncherBase : MonoBehaviour
     {
         [Header("Prefab Delivery")]

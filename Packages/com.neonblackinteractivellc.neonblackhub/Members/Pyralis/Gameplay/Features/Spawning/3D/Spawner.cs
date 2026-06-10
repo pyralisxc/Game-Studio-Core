@@ -1,15 +1,23 @@
+using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Features.Spawning
 {
 /// <summary>
 /// General-purpose prefab and sprite spawner with optional patrol movement.
-///
-/// Setup:
-///   - Add this component to any empty GameObject.
-///   - Drag prefabs into Prefabs or drag sprite slices into Sprites.
-///   - Enable Patrol to have the spawner move left and right automatically.
 /// </summary>
+[AuthoringContract(
+    Capability = AuthoringCapability.Setup,
+    Relevance = "General-purpose utility for spawning prefabs and sprites with optional patrol movement.",
+    Axioms = AuthoringWorldAxiom.None,
+    NativeSetup = new[] 
+    { 
+        "Add Spawner to the scene.",
+        "Assign prefabs or sprites.",
+        "Enable Patrol if movement is needed."
+    },
+    FirstProof = "Enable Auto Spawn and enter Play Mode. Verify objects appear at the spawner's location or within the spawn radius and move if Patrol is enabled."
+)]
 public class Spawner : MonoBehaviour
 {
     [Header("Prefabs  (drag full prefabs here)")]

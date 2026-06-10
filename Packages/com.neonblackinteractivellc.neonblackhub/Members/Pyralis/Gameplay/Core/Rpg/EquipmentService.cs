@@ -1,10 +1,26 @@
 using System;
 using System.Collections.Generic;
+using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Core.Contracts.Rpg;
 
 namespace NeonBlack.Gameplay.Core.Rpg
 {
-    public sealed class EquipmentService
-    {
+    [AuthoringContract(
+        ModuleId = "rpg.equipment",
+        Capability = AuthoringCapability.Inventory,
+        Relevance = "Manages RPG equipment slots and loadouts for actors, allowing items to be equipped and unequipped.",
+        Lane = "RPG",
+        RequiredInterfaces = new[] { typeof(IEquipmentSlot) },
+        NativeSetup = new[]
+        {
+            "define EquipmentSlotDefinitions",
+            "tag items as Equippable",
+            "configure equipment visual mapping"
+        },
+        FirstProof = "Equip an item to an actor and verify its stats or visuals update accordingly."
+    )]
+    public sealed class EquipmentService : IEquipmentService
+{
         private const string EquipmentModifierSourcePrefix = "equipment:";
         private readonly Dictionary<RpgOwnerKey, Dictionary<string, IEquippableItem>> _loadouts =
             new Dictionary<RpgOwnerKey, Dictionary<string, IEquippableItem>>();

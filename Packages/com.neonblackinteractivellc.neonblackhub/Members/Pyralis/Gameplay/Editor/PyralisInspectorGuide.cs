@@ -1,3 +1,4 @@
+using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
 using System.Text;
 using NeonBlack.Gameplay.Editor;
@@ -293,33 +294,33 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
 
         public static string FeatureModuleSetup(string moduleId)
         {
-            NeonBlack.Gameplay.Editor.PyralisAuthoringContract contract = NeonBlack.Gameplay.Editor.PyralisAuthoringContractRegistry.FindByModuleId(moduleId);
-            if (contract == null)
+            NeonBlack.Gameplay.Core.Contracts.PyralisAuthoringContract contract = NeonBlack.Gameplay.Core.Contracts.PyralisAuthoringContractRegistry.FindByModuleId(moduleId);
+if (contract == null)
                 return string.IsNullOrWhiteSpace(moduleId)
                     ? "Use a FeatureModuleDefinition whose module id matches this feature runtime."
                     : "Use a FeatureModuleDefinition with module id `" + moduleId + "`.";
 
             string profileName = RequiredProfileName(contract, null);
             if (string.IsNullOrWhiteSpace(profileName))
-                return "Use a FeatureModuleDefinition with module id `" + contract.ModuleId + "`.";
+                return "Use a FeatureModuleDefinition with module id `" + contract.StableId + "`.";
 
-            return "Use a FeatureModuleDefinition with module id `" + contract.ModuleId + "` and a " + profileName + ".";
+            return "Use a FeatureModuleDefinition with module id `" + contract.StableId + "` and a " + profileName + ".";
         }
 
         public static string RequiredProfileName(IFeatureModuleRuntime runtime, string fallback)
         {
             string moduleId = runtime != null ? runtime.ModuleId : null;
-            NeonBlack.Gameplay.Editor.PyralisAuthoringContract contract = NeonBlack.Gameplay.Editor.PyralisAuthoringContractRegistry.FindByModuleId(moduleId);
-            return RequiredProfileName(contract, fallback);
+            NeonBlack.Gameplay.Core.Contracts.PyralisAuthoringContract contract = NeonBlack.Gameplay.Core.Contracts.PyralisAuthoringContractRegistry.FindByModuleId(moduleId);
+return RequiredProfileName(contract, fallback);
         }
 
         public static string RequiredProfileName(string moduleId, string fallback)
         {
-            NeonBlack.Gameplay.Editor.PyralisAuthoringContract contract = NeonBlack.Gameplay.Editor.PyralisAuthoringContractRegistry.FindByModuleId(moduleId);
-            return RequiredProfileName(contract, fallback);
+            NeonBlack.Gameplay.Core.Contracts.PyralisAuthoringContract contract = NeonBlack.Gameplay.Core.Contracts.PyralisAuthoringContractRegistry.FindByModuleId(moduleId);
+return RequiredProfileName(contract, fallback);
         }
 
-        private static string RequiredProfileName(NeonBlack.Gameplay.Editor.PyralisAuthoringContract contract, string fallback)
+        private static string RequiredProfileName(NeonBlack.Gameplay.Core.Contracts.PyralisAuthoringContract contract, string fallback)
         {
             if (contract != null && contract.RequiredProfileType != null)
                 return contract.RequiredProfileType.Name;

@@ -1,3 +1,4 @@
+using System;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Core.Runtime;
 using NeonBlack.Gameplay.Characters;
@@ -23,6 +24,14 @@ namespace NeonBlack.Gameplay.Features.Composition
         public PawnDefinition PawnDefinition => ActorContext != null ? ActorContext.PawnDefinition : null;
         public ActorPresentationMode PresentationMode => ActorContext != null ? ActorContext.PresentationMode : ActorPresentationMode.Sprite2D;
 
+        public FeatureRuntimeInitializationContext(ActorFeatureContext actorContext, FeatureModuleDefinition definition, IObjectResolver resolver)
+        {
+            ActorContext = actorContext;
+            Definition = definition;
+            Resolver = resolver;
+        }
+
+        [Obsolete("Use IObjectResolver constructor instead.")]
         public FeatureRuntimeInitializationContext(ActorFeatureContext actorContext, FeatureModuleDefinition definition, PlatformServiceRegistry services)
         {
             ActorContext = actorContext;

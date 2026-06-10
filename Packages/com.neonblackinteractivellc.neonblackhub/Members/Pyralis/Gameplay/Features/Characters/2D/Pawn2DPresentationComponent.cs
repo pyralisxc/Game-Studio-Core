@@ -1,10 +1,18 @@
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Presentation.Animation;
+using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Features.Characters
 {
+    [AuthoringContract(
+        Capability = AuthoringCapability.Animation | AuthoringCapability.VFX, 
+        Relevance = "Inspector Add Component path for the 2D pawn visual and presentation module.",
+        AssignmentFields = new[] { nameof(spriteRenderer), nameof(movingTint), nameof(tiltEnabled) },
+        FirstProof = "Move the pawn and verify the sprite tilts and tints according to the velocity.",
+        NativeSetup = new[] { "Add Component", "Assign SpriteRenderer" }
+    )]
     [AddComponentMenu("NeonBlack/Gameplay/Characters/2D/Pawn 2D Presentation Component")]
     [RequireComponent(typeof(Pawn2DMovementComponent))]
     [RequireComponent(typeof(ActorAnimationDriver))]

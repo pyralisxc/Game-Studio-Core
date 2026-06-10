@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
+using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rules
@@ -6,6 +7,13 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
     /// <summary>
     /// Designer-authored logical board piece identity.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Tabletop | AuthoringCapability.Grid, 
+        Relevance = "Project-window creation path for tabletop board pieces.",
+        AssignmentFields = new[] { nameof(pieceId), nameof(displayName), nameof(visualPrefab) },
+        FirstProof = "Verify the piece is instantiated correctly on the board with the assigned visual prefab.",
+        NativeSetup = new[] { "Create Asset" }
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/Rules/Board Piece Definition", fileName = "BoardPieceDefinition", order = -90)]
     public class BoardPieceDefinition : ScriptableObject
     {

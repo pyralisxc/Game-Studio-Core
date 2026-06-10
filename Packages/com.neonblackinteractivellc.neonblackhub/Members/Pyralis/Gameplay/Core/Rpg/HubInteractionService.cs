@@ -1,24 +1,40 @@
 using System;
 using System.Collections.Generic;
+using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Core.Contracts.Rpg;
 
 namespace NeonBlack.Gameplay.Core.Rpg
 {
-    public sealed class HubInteractionService
-    {
-        private readonly InventoryService _inventory;
-        private readonly QuestService _quests;
-        private readonly SkillTreeService _skills;
-        private readonly DialogueService _dialogue;
+    [AuthoringContract(
+        ModuleId = "rpg.hub",
+        Capability = AuthoringCapability.Dialogue | AuthoringCapability.Puzzle,
+        Relevance = "Handles RPG hub interactions, including NPC dialogue, quest triggers, and scene navigation.",
+        Lane = "RPG",
+        RequiredInterfaces = new[] { typeof(IHubDefinition), typeof(IHubConditionResolver), typeof(IHubEffectSink) },
+        NativeSetup = new[]
+        {
+            "create HubDefinition assets",
+            "configure HubInteractables",
+            "place HubInteractionSceneController in scene"
+        },
+        FirstProof = "Interact with an NPC in the hub and verify the dialogue or interaction flow begins."
+    )]
+    public sealed class HubInteractionService : IHubInteractionService
+{
+        private readonly IInventoryService _inventory;
+        private readonly IQuestService _quests;
+        private readonly ISkillTreeService _skills;
+        private readonly IDialogueService _dialogue;
         private readonly IHubConditionResolver _customConditionResolver;
         private readonly IHubEffectSink _customEffectSink;
         private readonly Dictionary<string, IQuestDefinition> _questRegistry = new Dictionary<string, IQuestDefinition>(StringComparer.Ordinal);
         private readonly Dictionary<string, ISkillTree> _skillTreeRegistry = new Dictionary<string, ISkillTree>(StringComparer.Ordinal);
 
         public HubInteractionService(
-            InventoryService inventory = null,
-            QuestService quests = null,
-            SkillTreeService skills = null,
-            DialogueService dialogue = null,
+            IInventoryService inventory = null,
+            IQuestService quests = null,
+            ISkillTreeService skills = null,
+            IDialogueService dialogue = null,
             IHubConditionResolver customConditionResolver = null,
             IHubEffectSink customEffectSink = null)
         {

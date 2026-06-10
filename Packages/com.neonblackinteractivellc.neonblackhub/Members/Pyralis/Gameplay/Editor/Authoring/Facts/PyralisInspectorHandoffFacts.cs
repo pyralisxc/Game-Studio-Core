@@ -1,3 +1,4 @@
+using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
 
 namespace NeonBlack.Gameplay.Editor

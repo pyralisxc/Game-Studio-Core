@@ -13,8 +13,25 @@ namespace NeonBlack.Gameplay.Features.Scoring
     /// Register this service through the Pyralis gameplay composition root and resolve it via DI.
     /// </summary>
     [AddComponentMenu("NeonBlack/Gameplay/Scoring/Participant Score Service")]
+    [AuthoringContract(
+        Capability = AuthoringCapability.Session,
+        Relevance = "Canonical scoring service; tracks participant scores, session points, survival time, and high-score persistence.",
+        Axioms = AuthoringWorldAxiom.None,
+        RequiredInterfaces = new[] { typeof(IGameService), typeof(ISessionScoreService) },
+        NativeSetup = new[]
+        {
+            "Add ParticipantScoreService to a global service GameObject in the scene.",
+            "Reference the service from HUD or GameMode presenters to show score."
+        },
+        FirstProof = "Earn points during gameplay and verify the score updates in the UI.",
+        AssignmentFields = new[]
+        {
+            "OnPointsChanged event",
+            "HighScore persistence keys"
+        }
+    )]
     [DefaultExecutionOrder(-30)]
-    public class ParticipantScoreService : MonoBehaviour, IGameService, ISessionScoreService
+public class ParticipantScoreService : MonoBehaviour, IGameService, ISessionScoreService
     {
         // PlayerPrefs keys.
         public const string HighScorePointsKey   = "HighScore_Points";

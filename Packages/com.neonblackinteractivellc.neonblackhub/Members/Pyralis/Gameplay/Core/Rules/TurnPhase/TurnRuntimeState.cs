@@ -1,3 +1,4 @@
+using NeonBlack.Gameplay.Core.Contracts;
 using System;
 using System.Collections.Generic;
 
@@ -7,6 +8,11 @@ namespace NeonBlack.Gameplay.Core.Rules.TurnPhase
     /// Runtime cursor for seat-based turn order.
     /// </summary>
     [Serializable]
+    [AuthoringContract(
+        Capability = AuthoringCapability.TurnBased,
+        Relevance = "Runtime cursor for seat-based turn order tracking.",
+        FirstProof = "Advancing the turn correctly moves the active seat index through the defined order."
+    )]
     public sealed class TurnRuntimeState
     {
         private readonly int[] _seatOrder;

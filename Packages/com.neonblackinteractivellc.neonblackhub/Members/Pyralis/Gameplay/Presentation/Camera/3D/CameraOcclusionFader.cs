@@ -43,15 +43,39 @@ public class CameraOcclusionFader : MonoBehaviour
         = new Dictionary<Renderer, RendererState>();
 
     private readonly HashSet<Renderer> _currentlyOccluding = new HashSet<Renderer>();
-    private readonly List<Renderer> _rendererScratch = new List<Renderer>(8);
-    private readonly List<Renderer> _restoreScratch = new List<Renderer>(8);
+    private readonly List<Renderer> _rendererScratch = new List<Renderer>(16);
+    private readonly List<Renderer> _restoreScratch = new List<Renderer>(16);
     private readonly RaycastHit[] _hitBuffer = new RaycastHit[MaxOcclusionHits];
 
-    private struct RendererState
+    private class RendererState
     {
         public Material[] materials;
         public Color[] originalColors;   // one per material
         public float[] originalSurface;  // 0 = opaque, 1 = transparent
+
+        public void Reset(int materialCount)
+        {
+            if (originalColors == null || originalColors.Length < materialCount)
+                originalColors = new Color[materialCount];
+            if (originalSurface == null || originalSurface.Length < materialCount)
+                originalSurface = new float[materialCount];
+        }
+    }
+
+    private static readonly Stack<RendererState> _statePool = new Stack<RendererState>();
+
+    private static RendererState GetStateFromPool(int materialCount)
+    {
+        RendererState state = _statePool.Count > 0 ? _statePool.Pop() : new RendererState();
+        state.Reset(materialCount);
+        return state;
+    }
+
+    private static void ReturnStateToPool(RendererState state)
+    {
+        if (state == null) return;
+        state.materials = null;
+        _statePool.Push(state);
     }
 
     // Static property IDs cached for performance.
@@ -120,12 +144,8 @@ public class CameraOcclusionFader : MonoBehaviour
         if (r.sharedMaterials == null || r.sharedMaterials.Length == 0) return;
 
         Material[] materials = r.materials;
-        var state = new RendererState
-        {
-            materials = materials,
-            originalColors  = new Color[materials.Length],
-            originalSurface = new float[materials.Length]
-        };
+        RendererState state = GetStateFromPool(materials.Length);
+        state.materials = materials;
 
         for (int i = 0; i < materials.Length; i++)
         {
@@ -157,31 +177,29 @@ public class CameraOcclusionFader : MonoBehaviour
         if (r == null)
         {
             _fadedRenderers.Remove(r);
+            ReturnStateToPool(state);
             return;
         }
 
         Material[] materials = state.materials;
-        if (materials == null)
+        if (materials != null)
         {
-            _fadedRenderers.Remove(r);
-            return;
-        }
+            int materialCount = Mathf.Min(materials.Length, state.originalColors.Length);
+            for (int i = 0; i < materialCount; i++)
+            {
+                Material mat = materials[i];
+                if (mat == null) continue;
 
-        int materialCount = Mathf.Min(materials.Length, state.originalColors != null ? state.originalColors.Length : 0);
-        materialCount = Mathf.Min(materialCount, state.originalSurface != null ? state.originalSurface.Length : 0);
-        for (int i = 0; i < materialCount; i++)
-        {
-            Material mat = materials[i];
-            if (mat == null) continue;
+                if (mat.HasProperty(SurfaceId))
+                    mat.SetFloat(SurfaceId, state.originalSurface[i]);
 
-            if (mat.HasProperty(SurfaceId))
-                mat.SetFloat(SurfaceId, state.originalSurface[i]);
-
-            if (mat.HasProperty(BaseColorId))
-                mat.SetColor(BaseColorId, state.originalColors[i]);
+                if (mat.HasProperty(BaseColorId))
+                    mat.SetColor(BaseColorId, state.originalColors[i]);
+            }
         }
 
         _fadedRenderers.Remove(r);
+        ReturnStateToPool(state);
     }
 
     private void RestoreAll()

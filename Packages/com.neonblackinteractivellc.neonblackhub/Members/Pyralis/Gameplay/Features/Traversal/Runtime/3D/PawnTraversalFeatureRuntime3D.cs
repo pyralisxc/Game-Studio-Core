@@ -1,17 +1,51 @@
+using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Profiles;
-using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Features.Characters;
 using NeonBlack.Gameplay.Features.Composition;
+using NeonBlack.Gameplay.Features.Traversal;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Features.Traversal
 {
     [AddComponentMenu("NeonBlack/Gameplay/Traversal/Pawn Traversal Feature Runtime 3D")]
     [RequireComponent(typeof(Pawn3DTraversalComponent))]
+    [AuthoringContract(
+        ModuleId = "actor.traversal.3d",
+        Capability = AuthoringCapability.Movement,
+        Lane = "Traversal",
+        ProfileType = typeof(PawnTraversalProfile),
+        RequiredInterfaces = new[] { typeof(IFeatureModuleRuntime), typeof(IActorTraversalFeature) },
+        RequiredInterfaceNames = new[] { "NeonBlack.Gameplay.Features.Characters.IActorInteractionHandler" },
+        RequiredComponentNames = new[] { "NeonBlack.Gameplay.Features.Characters.Motor3D", "NeonBlack.Gameplay.Features.Traversal.Pawn3DTraversalComponent" },
+        SupportedLanes = new[] { ActorPresentationMode.Billboard2_5D, ActorPresentationMode.Rigged3D },
+        UnsupportedLanes = new[] { ActorPresentationMode.Sprite2D },
+        NativeSetup = new[]
+        {
+            "create PawnTraversalProfile",
+            "create FeatureModuleDefinition",
+            "assign runtime prefab with PawnTraversalFeatureRuntime3D",
+            "assign profile asset",
+            "add module to PawnDefinition.featureModules"
+        },
+        FirstProof = "proof.npc-enemy-behavior",
+        AssignmentFields = new[]
+        {
+            "FeatureModuleDefinition.moduleId",
+            "FeatureModuleDefinition.runtimePrefab",
+            "FeatureModuleDefinition.profileAsset"
+        },
+        CustomizationMoments = new[]
+        {
+            "PawnTraversalProfile.maxSlopeAngle",
+            "PawnTraversalProfile.jumpImpulse",
+            "Pawn3DTraversalComponent.ledgeDetectionOffset"
+        }
+    )]
     public class PawnTraversalFeatureRuntime3D : MonoBehaviour, IFeatureModuleRuntime, IActorTraversalFeature, IActorInteractionHandler
-    {
+{
         [SerializeField] private PawnTraversalProfile traversalProfile;
         private ActorFeatureContext _context;
         private Pawn3DTraversalComponent _traversal;

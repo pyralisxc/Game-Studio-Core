@@ -1,3 +1,4 @@
+using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,6 +11,19 @@ namespace NeonBlack.Gameplay.Presentation.Visuals
 /// Supports Pulse, Strobe, Blink, and ColorCycle modes via FlashPresetSO assets.
 /// A single component works on hazards, players, UI sprites, backgrounds, and other 2D visuals.
 /// </summary>
+[AuthoringContract(
+    Capability = AuthoringCapability.VFX,
+    Relevance = "Coroutine-driven color flash effects on SpriteRenderers.",
+    Axioms = AuthoringWorldAxiom.SpriteVisuals | AuthoringWorldAxiom.BillboardVisuals,
+    AssignmentFields = new[] { "_renderers", "_defaultPreset", "_playOnStart" },
+    FirstProof = "Assign a FlashPresetSO and call Play() from a script or UnityEvent.",
+    NativeSetup = new[]
+    {
+        "Add SpriteFlasher to an actor or object prefab.",
+        "Enable Auto Find Renderers or assign targets manually.",
+        "Assign a FlashPresetSO for common effects (Hit, Flash)."
+    }
+)]
 public class SpriteFlasher : MonoBehaviour
 {
     [Header("Targets")]

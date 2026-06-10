@@ -13,22 +13,30 @@ namespace NeonBlack.Gameplay.Features.Characters
 /// <summary>
 /// Coordinator for a 3D pawn. Sequences four sibling modules each frame and exposes
 /// the <see cref="ICharacterMotorState"/> contract to systems like <see cref="PawnCombatBehaviour"/>.
-///
-/// Each module owns its domain completely  this class contains no gameplay logic.
-///
-/// Animator parameters required on any Animator in the hierarchy:
-///   Booleans : IsMoving, IsSprinting, IsGrounded, IsCrouching, IsInAir, InCombat
-///              IsHanging*, IsWallSliding*, IsSliding*, LookAround*
-///   Triggers : Jump, DiveRoll, Slide, ClimbUp, MoveToIdle*, SideClimb, FwdClimb,
-///              LedgeDrop*, KnockedBack, Interact
-///   Floats   : ShimmySpeed*   (* = optional; detected at runtime via parameter scan)
-///
-/// Setup:
-///   1. Add to a character root that also has CharacterController, HealthComponent,
-///      KnockbackReceiver, and the four Pawn3D* module components.
-///   2. Assign the InputSystem_Actions asset on Pawn3DInputModule.
-///   3. Wire any PawnCombatBehaviour hit box zones and weapon data independently.
 /// </summary>
+[AuthoringContract(
+    Capability = AuthoringCapability.Movement,
+    Relevance = "Canonical 3D pawn motor; coordinates input, movement, traversal, and presentation.",
+    Axioms = AuthoringWorldAxiom.Dimensions3D,
+    RequiredComponents = new[] { 
+        typeof(CharacterController), 
+        typeof(HealthComponent), 
+        typeof(KnockbackReceiver),
+        typeof(Pawn3DInputModule),
+        typeof(Pawn3DMovementComponent),
+        typeof(Pawn3DTraversalComponent),
+        typeof(Pawn3DPresentationComponent)
+    },
+    NativeSetup = new[]
+    {
+        "Attach Motor3D to the 3D pawn root.",
+        "Add all required 3D pawn modules to the same GameObject.",
+        "Assign the InputSystem_Actions asset on Pawn3DInputModule.",
+        "Ensure an Animator with the required parameters is present."
+    },
+    AssignmentFields = new[] { "_input", "_movement", "_traversal", "_presentation" },
+    FirstProof = "Pawn moves, jumps, and rotates correctly in 3D space."
+)]
 [AddComponentMenu("NeonBlack/Gameplay/Runtime 3D/Motor 3D")]
 [RequireComponent(typeof(CharacterController))]
 [RequireComponent(typeof(HealthComponent))]

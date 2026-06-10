@@ -1,11 +1,19 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.Audio;
+using NeonBlack.Gameplay.Core.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Profiles
 {
     /// <summary>
     /// Shared defaults for save-backed user settings and runtime presentation choices.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.UI, 
+        Relevance = "Project-window creation path for settings and menu defaults.",
+        AssignmentFields = new[] { nameof(mixer), nameof(defaultMusicVolume), nameof(defaultSfxVolume) },
+        FirstProof = "Check that volumes are applied correctly in the main menu.",
+        NativeSetup = new[] { "Create Asset" }
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Settings Profile", fileName = "SettingsProfile", order = -10)]
     public class SettingsProfile : ScriptableObject
     {

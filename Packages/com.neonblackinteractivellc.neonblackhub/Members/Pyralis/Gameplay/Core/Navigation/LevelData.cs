@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+using NeonBlack.Gameplay.Core.Contracts;
+using UnityEngine;
 
 namespace NeonBlack.Gameplay.Core.Navigation
 {
@@ -14,6 +15,11 @@ namespace NeonBlack.Gameplay.Core.Navigation
     ///   5. Drag all LevelData assets into the LevelRegistry asset's Levels array.
     /// </summary>
     [CreateAssetMenu(menuName = "NeonBlack/Scene Flow/Level Data", fileName = "LevelData_New")]
+    [AuthoringContract(
+        Capability = AuthoringCapability.Setup | AuthoringCapability.Environment,
+        Relevance = "Data container for level configuration, including display names and scene references.",
+        AssignmentFields = new[] { "sceneName", "displayName" }
+    )]
     public class LevelData : ScriptableObject
     {
         [Tooltip("Exact scene name as listed in File -> Build Settings. Must match perfectly.")]

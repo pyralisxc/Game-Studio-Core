@@ -1,3 +1,4 @@
+using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections;
 using TMPro;
 using UnityEngine;
@@ -9,6 +10,11 @@ namespace NeonBlack.Gameplay.Core.Navigation
     /// <summary>
     /// Drives the optional LoadingScreen intermediate scene.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.UI,
+        Relevance = "Handles the presentation and progress tracking of the loading screen.",
+        AssignmentFields = new[] { "loadingBar", "statusText" }
+    )]
     public class LoadingScreenController : MonoBehaviour
     {
         [SerializeField] private Slider _progressBar;

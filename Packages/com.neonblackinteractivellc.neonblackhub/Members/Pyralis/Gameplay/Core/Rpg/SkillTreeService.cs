@@ -1,15 +1,30 @@
 using System.Collections.Generic;
+using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Core.Contracts.Rpg;
 
 namespace NeonBlack.Gameplay.Core.Rpg
 {
-    public sealed class SkillTreeService
-    {
+    [AuthoringContract(
+        Capability = AuthoringCapability.Stats | AuthoringCapability.Session,
+        ModuleId = "rpg.skilltree",
+        Lane = "RPG",
+        RequiredInterfaces = new[] { typeof(ISkillTree) },
+        FirstProof = "Unlock a skill and verify that its stat modifiers are applied to the character.",
+        NativeSetup = new[]
+        {
+            "create SkillTree assets",
+            "link SkillNodes to StatModifiers or Abilities",
+            "assign skill tree to ProgressionService"
+        }
+    )]
+    public sealed class SkillTreeService : ISkillTreeService
+{
         private const string SkillModifierSourcePrefix = "skill:";
-        private readonly ProgressionService _progression;
+        private readonly IProgressionService _progression;
         private readonly Dictionary<RpgOwnerKey, Dictionary<string, int>> _unlockCounts =
             new Dictionary<RpgOwnerKey, Dictionary<string, int>>();
 
-        public SkillTreeService(ProgressionService progression)
+        public SkillTreeService(IProgressionService progression)
         {
             _progression = progression;
         }

@@ -1,10 +1,11 @@
-﻿using UnityEngine;
+using NeonBlack.Gameplay.Core.Contracts;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace NeonBlack.Gameplay.Data.Profiles
 {
     public enum GameplayInputActionRole
-    {
+{
         Move,
         Look,
         Jump,
@@ -109,9 +110,26 @@ namespace NeonBlack.Gameplay.Data.Profiles
     /// <summary>
      /// Authoring profile for participant input ownership and preferred control schemes.
      /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Input,
+        Relevance = "Maps high-level gameplay actions (Move, Jump, Interact) to Unity Input System actions.",
+        Axioms = AuthoringWorldAxiom.None,
+        Priority = 10,
+        ProfileType = typeof(InputProfile),
+        AssignmentFields = new[] { nameof(actions), nameof(actionBindings) },
+        FirstProof = "Verify that input actions mapped in this profile correctly drive character movement and actions.",
+        ExpertAdvice = "InputProfile decouples gameplay logic from physical keys. Use the action role to map common verbs (Jump, Dash) across different control schemes.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/input",
+        NativeSetup = new[] 
+        { 
+            "Create an InputProfile asset.",
+            "Assign a Unity Input Action Asset.",
+            "Define action names for Move, Jump, Interact, etc."
+        }
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Input Profile", fileName = "InputProfile", order = -90)]
     public class InputProfile : ScriptableObject
-    {
+{
         [Tooltip("Primary input action asset used by this participant or pawn definition.")]
         public InputActionAsset actions;
         [Tooltip("Default action map name expected by shared and compatibility input bridges.")]

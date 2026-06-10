@@ -1,3 +1,4 @@
+using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Profiles;
@@ -8,12 +9,25 @@ using VContainer;
 
 namespace NeonBlack.Gameplay.Features.Input
 {
-    /// <summary>
+/// <summary>
     /// Watches PlayerInput instances and maps them into the participant roster.
     /// This keeps the session local-first while matching an N-participant model.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Input | AuthoringCapability.Setup,
+        Relevance = "Routes physical input device events to the correct participant and their pawn.",
+        Axioms = AuthoringWorldAxiom.None,
+        RequiredComponents = new[] { typeof(ParticipantInputRouter) },
+        AssignmentFields = new[] { nameof(sessionDefinition), nameof(rosterService), nameof(playerInputManager) },
+        FirstProof = "Join a new player and verify they are correctly assigned to a participant seat in the roster.",
+        NativeSetup = new[] 
+        { 
+            "Add ParticipantInputRouter to the Gameplay Session GO.",
+            "Ensure it is wired to the ParticipantRosterService."
+        }
+    )]
     public class ParticipantInputRouter : MonoBehaviour
-    {
+{
         [SerializeField] private SessionDefinition sessionDefinition;
         [SerializeField] private ParticipantRosterService rosterService;
         [SerializeField] private PlayerInputManager playerInputManager;

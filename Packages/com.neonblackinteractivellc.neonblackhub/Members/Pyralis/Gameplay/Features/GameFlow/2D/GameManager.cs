@@ -29,13 +29,28 @@ public interface IGameplaySessionFlow : IGameplayStateReader
 
 /// <summary>
 /// Central game orchestrator for the current 2D score-loop runtime.
-/// Uses explicit scene references plus the participant roster rather than
-/// scanning the scene for runtime wiring.
 /// </summary>
+[AuthoringContract(
+    Capability = AuthoringCapability.Setup | AuthoringCapability.Session,
+    Relevance = "Central game orchestrator; coordinates scoring, difficulty, spawning, and high-level game flow.",
+    Axioms = AuthoringWorldAxiom.Dimensions2D,
+    RequiredInterfaces = new[] { typeof(IGameplaySessionFlow), typeof(IGameplayStateReader), typeof(IHazardOutcomeSink) },
+    RequiredComponents = new[] { typeof(GameManager) },
+    NativeSetup = new[] 
+    { 
+        "Add GameManager to the scene.",
+        "Wire system references (Score, Hazards, Pickups, etc.).",
+        "Assign player controller reference."
+    },
+    FirstProof = "Start the game and verify the session initializes and transitions to the Playing state."
+,
+        AssignmentFields = new[] { "playerRoot", "scoreService", "hazardSpawner" },
+        ExpertAdvice = "The GameManager is the 2D arcade orchestrator. It manages the lifecycle from Splash to Game Over. Use the inspector events to hook up UI and audio transitions.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/gameflow")]
 [AddComponentMenu("NeonBlack/Gameplay/Game Flow/2D Game Manager")]
 [DefaultExecutionOrder(-20)]
 public class GameManager : MonoBehaviour
-    , IGameplayStateReader
+, IGameplayStateReader
     , IGameplaySessionFlow
     , IHazardOutcomeSink
 {
@@ -59,15 +74,6 @@ public class GameManager : MonoBehaviour
 
     [SerializeField, Tooltip("DifficultyManager for this scene.")]
     private DifficultyManager difficultyManager;
-
-    [SerializeField, Tooltip("Camera bounds provider for the 2D playfield, usually CinemachineCameraRigController.")]
-    private MonoBehaviour cameraBoundsSource;
-
-    [SerializeField, Tooltip("Scene transition service used by restart and main-menu navigation. SceneFader and SceneLoader implement ISceneNavigator.")]
-    private MonoBehaviour sceneNavigatorSource;
-
-    [SerializeField, Tooltip("Settings service saved before restart or menu navigation. SettingsManager implements IGameplaySettingsApplier.")]
-    private MonoBehaviour settingsSource;
 
     [Header("Scene Names")]
     [SerializeField, Tooltip("Exact name of the main menu scene as listed in Build Settings.")]
@@ -134,19 +140,8 @@ public class GameManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(this);
-            return;
-        }
-
-        Instance = this;
-
         scoreManager ??= GetComponent<ParticipantScoreService>();
         difficultyManager ??= GetComponent<DifficultyManager>();
-        _cameraBoundsProvider = ResolveCameraBoundsProvider();
-        ResolveSceneNavigator();
-        ResolveSettings();
 
         if (player != null && primaryPlayerController == null)
             primaryPlayerController = ResolvePlayerController(player);
@@ -157,8 +152,6 @@ public class GameManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (Instance == this)
-            Instance = null;
     }
 
     private void Start()
@@ -253,7 +246,7 @@ public class GameManager : MonoBehaviour
 
     public void RestartGame()
     {
-        ResolveSettings()?.Save();
+        _settings?.Save();
 
         string sceneToLoad;
         if (LevelSession.IsRandom && levelRegistry != null)
@@ -276,7 +269,7 @@ public class GameManager : MonoBehaviour
 
     public void GoToMainMenu()
     {
-        ResolveSettings()?.Save();
+        _settings?.Save();
         LoadScene(mainMenuSceneName);
     }
 
@@ -391,14 +384,6 @@ public class GameManager : MonoBehaviour
         hazardSpawner?.ConfigureRuntime(this, _cameraBoundsProvider, this, pickupSpawner);
     }
 
-    private ICameraBoundsProvider ResolveCameraBoundsProvider()
-    {
-        if (cameraBoundsSource is ICameraBoundsProvider provider)
-            return provider;
-
-        return null;
-    }
-
     public void SetSceneNavigator(ISceneNavigator sceneNavigator)
     {
         _sceneNavigator = sceneNavigator;
@@ -417,44 +402,13 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        ISceneNavigator navigator = ResolveSceneNavigator();
-        if (navigator != null)
+        if (_sceneNavigator != null)
         {
-            navigator.LoadScene(sceneName);
+            _sceneNavigator.LoadScene(sceneName);
             return;
         }
 
-        Debug.LogError("[GameManager] Scene Navigator Source is not configured. Assign SceneFader, SceneLoader, or another ISceneNavigator.", this);
-    }
-
-    private ISceneNavigator ResolveSceneNavigator()
-    {
-        if (_sceneNavigator != null)
-            return _sceneNavigator;
-
-        if (sceneNavigatorSource == null)
-            return null;
-
-        _sceneNavigator = sceneNavigatorSource as ISceneNavigator;
-        if (_sceneNavigator == null)
-            _sceneNavigator = sceneNavigatorSource.GetComponent<ISceneNavigator>();
-
-        return _sceneNavigator;
-    }
-
-    private IGameplaySettingsApplier ResolveSettings()
-    {
-        if (_settings != null)
-            return _settings;
-
-        if (settingsSource == null)
-            return null;
-
-        _settings = settingsSource as IGameplaySettingsApplier;
-        if (_settings == null)
-            _settings = settingsSource.GetComponent<IGameplaySettingsApplier>();
-
-        return _settings;
+        Debug.LogError("[GameManager] Scene Navigator is not injected. Ensure ISceneNavigator is registered in the LifetimeScope.", this);
     }
 }
 }

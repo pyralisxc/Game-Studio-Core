@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
@@ -9,8 +10,20 @@ namespace NeonBlack.Gameplay.Core.Runtime
     /// <summary>
     /// Singleton that handles all scene transitions with a fade.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Setup,
+        Relevance = "Manages global scene transitions and screen fades.",
+        Axioms = AuthoringWorldAxiom.None,
+        RequiredInterfaces = new[] { typeof(ISceneNavigator), typeof(IGameService) },
+        NativeSetup = new[] { "Add to a persistent Bootstrap or CoreServices GameObject", "Configure fade duration" },
+        AssignmentFields = new[] { nameof(fadeDuration) },
+        FirstProof = "Transitioning between scenes triggers a smooth fade out and fade in."
+    ,
+        ExpertAdvice = "Prefer ISceneNavigator injection over calling SceneLoader.Instance directly. This ensures your scene transitions are testable and decoupled.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/navigation")]
     public class SceneLoader : MonoBehaviour, ISceneNavigator, IGameService
-    {
+{
+        [Obsolete("Use IObjectResolver to inject ISceneNavigator or resolve SceneLoader from the active session scope.")]
         public static SceneLoader Instance { get; private set; }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -26,26 +39,13 @@ namespace NeonBlack.Gameplay.Core.Runtime
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-
-            Instance = this;
-            if (transform.parent == null)
-                DontDestroyOnLoad(gameObject);
             Initialize();
             BuildFadeCanvas();
         }
 
         private void OnDestroy()
         {
-            if (Instance == this)
-            {
-                Shutdown();
-                Instance = null;
-            }
+            Shutdown();
         }
 
         public void LoadScene(string sceneName)

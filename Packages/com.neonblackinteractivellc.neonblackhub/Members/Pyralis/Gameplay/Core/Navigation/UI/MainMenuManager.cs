@@ -7,6 +7,12 @@ namespace NeonBlack.Gameplay.Core.Navigation
     /// <summary>
     /// Main menu controller for a panel-driven gameplay menu scene.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.UI,
+        Relevance = "Main menu controller for a panel-driven gameplay menu scene.",
+        AssignmentFields = new[] { "mainPanel", "settingsPanel", "newGameButton", "exitButton" },
+        FirstProof = "Menu buttons correctly navigate between panels or trigger scene transitions."
+    )]
     public class MainMenuManager : MonoBehaviour
     {
         [Header("Panels")]

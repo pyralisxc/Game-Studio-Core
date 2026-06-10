@@ -4,6 +4,7 @@
         "NeonBlack.Gameplay.Core",
         "NeonBlack.Gameplay.Characters",
         "NeonBlack.Gameplay.Data",
+        "NeonBlack.Gameplay",
         "Unity.Netcode.Runtime",
         "Unity.InputSystem"
     ],

@@ -56,19 +56,15 @@ namespace NeonBlack.Gameplay.Features.Rpg.UI
         public RpgSkillTreeEntry SelectedEntry => Entries.Length > 0 && _selectedNodeIndex >= 0 && _selectedNodeIndex < Entries.Length ? Entries[_selectedNodeIndex] : default;
 
         [Inject]
-        private void Construct(ProgressionService progression = null, SkillTreeService skills = null)
+        private void Construct(ProgressionService progression, SkillTreeService skills)
         {
-            if (_progressionService == null)
-                _progressionService = progression;
-
-            if (_skillTreeService == null)
-                _skillTreeService = skills ?? new SkillTreeService(_progressionService);
+            _progressionService = progression;
+            _skillTreeService = skills;
         }
 
         private void Awake()
         {
             ResolveReferences();
-            EnsureServices();
         }
 
         private void OnEnable()
@@ -89,7 +85,7 @@ namespace NeonBlack.Gameplay.Features.Rpg.UI
             _runtimeOwner = owner;
             _hasRuntimeOwner = true;
             _progressionService = progression;
-            _skillTreeService = service ?? new SkillTreeService(_progressionService);
+            _skillTreeService = service;
             _runtimeTrees = trees ?? Array.Empty<SkillTreeDefinition>();
         }
 
@@ -172,7 +168,6 @@ namespace NeonBlack.Gameplay.Features.Rpg.UI
             if (string.IsNullOrEmpty(selected.NodeId))
                 return Fail("No skill node is selected.");
 
-            EnsureServices();
             if (!_skillTreeService.TryUnlock(ResolveOwner(), tree, selected.NodeId, out string issue))
                 return Fail(issue);
 

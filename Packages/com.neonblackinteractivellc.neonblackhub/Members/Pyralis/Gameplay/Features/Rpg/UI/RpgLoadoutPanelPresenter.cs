@@ -52,16 +52,14 @@ namespace NeonBlack.Gameplay.Features.Rpg.UI
         public RpgLoadoutEntry SelectedEntry => Entries.Length > 0 && _selectedIndex >= 0 && _selectedIndex < Entries.Length ? Entries[_selectedIndex] : default;
 
         [Inject]
-        private void Construct(EquipmentService equipment = null)
+        private void Construct(EquipmentService equipment)
         {
-            if (_equipmentService == null)
-                _equipmentService = equipment ?? new EquipmentService();
+            _equipmentService = equipment;
         }
 
         private void Awake()
         {
             ResolveReferences();
-            EnsureService();
         }
 
         private void OnEnable()
@@ -81,7 +79,7 @@ namespace NeonBlack.Gameplay.Features.Rpg.UI
         {
             _runtimeOwner = owner;
             _hasRuntimeOwner = true;
-            _equipmentService = service ?? new EquipmentService();
+            _equipmentService = service;
             _runtimeSlots = equipmentSlots ?? Array.Empty<IEquipmentSlot>();
             _runtimeItems = equippableItems ?? Array.Empty<IEquippableItem>();
         }
@@ -142,7 +140,6 @@ namespace NeonBlack.Gameplay.Features.Rpg.UI
             if (!TryGetFirstCompatibleSlot(item, out IEquipmentSlot slot))
                 return Fail($"Item `{selected.ItemId}` has no compatible configured slot.");
 
-            EnsureService();
             if (!_equipmentService.TryEquip(ResolveOwner(), slot, item, out string issue))
                 return Fail(issue);
 
@@ -161,7 +158,6 @@ namespace NeonBlack.Gameplay.Features.Rpg.UI
             if (!TryGetEquippedSlotForItem(selected.ItemId, out string slotId))
                 return Fail($"Item `{selected.ItemId}` is not currently equipped.");
 
-            EnsureService();
             if (!_equipmentService.TryUnequip(ResolveOwner(), slotId, out _))
                 return Fail($"Slot `{slotId}` could not be unequipped.");
 

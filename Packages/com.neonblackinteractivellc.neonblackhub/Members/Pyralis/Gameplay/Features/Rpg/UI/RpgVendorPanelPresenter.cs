@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Rpg;
+using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions.Rpg;
 using NeonBlack.Gameplay.Features.Composition;
 using TMPro;
@@ -10,9 +11,17 @@ using VContainer;
 
 namespace NeonBlack.Gameplay.Features.Rpg.UI
 {
+    [AuthoringContract(
+        ModuleId = "rpg.vendor.ui",
+        Capability = AuthoringCapability.Inventory,
+        Lane = "RPG",
+        RequiredInterfaces = new[] { typeof(IRuntimeValidationProvider) },
+        RequiredComponentNames = new[] { "TMPro.TextMeshProUGUI" },
+        FirstProof = "Verify that the vendor panel displays offers and correctly calculates total prices."
+    )]
     [AddComponentMenu("NeonBlack/Gameplay/RPG/UI/RPG Vendor Panel Presenter")]
     public sealed class RpgVendorPanelPresenter : MonoBehaviour, IRuntimeValidationProvider
-    {
+{
         [Header("Route")]
         [SerializeField] private RpgPanelRoutePresenter routePresenter;
 
@@ -51,16 +60,14 @@ namespace NeonBlack.Gameplay.Features.Rpg.UI
         public RpgVendorEntry SelectedEntry => Entries.Length > 0 && _selectedIndex >= 0 && _selectedIndex < Entries.Length ? Entries[_selectedIndex] : default;
 
         [Inject]
-        private void Construct(InventoryService inventory = null)
+        private void Construct(VendorService vendorService)
         {
-            if (_vendorService == null)
-                _vendorService = new VendorService(inventory);
+            _vendorService = vendorService;
         }
 
         private void Awake()
         {
             ResolveReferences();
-            EnsureService();
         }
 
         private void OnEnable()
@@ -80,7 +87,7 @@ namespace NeonBlack.Gameplay.Features.Rpg.UI
         {
             _runtimeOwner = owner;
             _hasRuntimeOwner = true;
-            _vendorService = service ?? new VendorService();
+            _vendorService = service;
             _runtimeVendors = vendorDefinitions ?? Array.Empty<IVendorDefinition>();
         }
 
@@ -123,7 +130,6 @@ namespace NeonBlack.Gameplay.Features.Rpg.UI
             if (string.IsNullOrWhiteSpace(selected.OfferId))
                 return Fail("No vendor offer is selected.");
 
-            EnsureService();
             if (!_vendorService.TryBuy(ResolveOwner(), _activeVendor, selected.OfferId, 1, out _, out string issue))
                 return Fail(issue);
 
@@ -138,7 +144,6 @@ namespace NeonBlack.Gameplay.Features.Rpg.UI
             if (string.IsNullOrWhiteSpace(selected.OfferId))
                 return Fail("No vendor offer is selected.");
 
-            EnsureService();
             if (!_vendorService.TrySell(ResolveOwner(), _activeVendor, selected.OfferId, 1, out _, out string issue))
                 return Fail(issue);
 

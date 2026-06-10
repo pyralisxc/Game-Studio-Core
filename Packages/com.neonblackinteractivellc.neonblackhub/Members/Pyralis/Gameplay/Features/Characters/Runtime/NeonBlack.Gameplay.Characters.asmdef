@@ -4,6 +4,7 @@
         "NeonBlack.Gameplay.Core",
         "NeonBlack.Gameplay.Data",
         "Unity.InputSystem",
+        "Unity.Netcode.Runtime",
         "VContainer"
     ],
     "includePlatforms": [],

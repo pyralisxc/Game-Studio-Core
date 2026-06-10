@@ -1,3 +1,5 @@
+using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Features.Composition;
@@ -6,8 +8,41 @@ using UnityEngine;
 namespace NeonBlack.Gameplay.Features.Pickups
 {
     [AddComponentMenu("NeonBlack/Gameplay/Pickups/Actor Pickup Collector Feature 2D")]
+    [AuthoringContract(
+        ModuleId = "actor.pickups.2d",
+        Capability = AuthoringCapability.Inventory,
+        Relevance = "Allows 2D actors to detect and collect pickups using 2D collider overlap detection.",
+        Lane = "Pickups",
+        ProfileType = typeof(PickupFeatureProfile),
+        RequiredInterfaces = new[] { typeof(IFeatureModuleRuntime), typeof(IActorInteractionHandler) },
+        RequiredComponentNames = new[] { "UnityEngine.Collider2D" },
+        SupportedLanes = new[] { ActorPresentationMode.Sprite2D },
+        UnsupportedLanes = new[] { ActorPresentationMode.Billboard2_5D, ActorPresentationMode.Rigged3D },
+        ConsumedRoles = new[] { "Interact" },
+        NativeSetup = new[]
+        {
+            "create PickupFeatureProfile",
+            "create FeatureModuleDefinition",
+            "assign runtime prefab with ActorPickupCollectorFeature2D",
+            "assign profile asset",
+            "add module to PawnDefinition.featureModules"
+        },
+        FirstProof = "Walk a 2D actor into a pickup and verify it is collected.",
+        AssignmentFields = new[]
+        {
+            "FeatureModuleDefinition.moduleId",
+            "FeatureModuleDefinition.runtimePrefab",
+            "FeatureModuleDefinition.profileAsset"
+        },
+        CustomizationMoments = new[]
+        {
+            "PickupFeatureProfile.enableAutoCollect",
+            "PickupFeatureProfile.enableInteractionCollect",
+            "PickupFeatureProfile.collectibleLayers"
+        }
+    )]
     public class ActorPickupCollectorFeature2D : MonoBehaviour, IFeatureModuleRuntime, IActorInteractionHandler
-    {
+{
         private const int BufferSize = 16;
         [SerializeField] private PickupFeatureProfile pickupProfile;
 

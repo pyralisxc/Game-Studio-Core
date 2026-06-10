@@ -1,3 +1,4 @@
+using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,9 +8,22 @@ namespace NeonBlack.Gameplay.Features.UI
     /// Repositions and resizes a UI element when the device rotates between portrait and landscape.
     /// Add this to any Canvas child that needs orientation-specific layout.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.UI,
+        Relevance = "Maintains UI layout integrity across portrait and landscape device orientations.",
+        Axioms = AuthoringWorldAxiom.None,
+        RequiredComponents = new[] { typeof(RectTransform) },
+        AssignmentFields = new[] { nameof(portrait), nameof(landscape) },
+        FirstProof = "Rotate the device/screen and verify the UI element repositions to the captured layout.",
+        NativeSetup = new[] 
+        { 
+            "Add UIOrientationHandler to a UI element.",
+            "Capture Portrait and Landscape layouts in the Inspector."
+        }
+    )]
     [RequireComponent(typeof(RectTransform))]
     public class UIOrientationHandler : MonoBehaviour
-    {
+{
         [System.Serializable]
         public class LayoutData
         {

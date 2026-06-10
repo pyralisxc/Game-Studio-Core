@@ -1,9 +1,17 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Actions;
+using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Features.Combat
 {
+    [AuthoringContract(
+        Capability = AuthoringCapability.Combat, 
+        Relevance = "Project-window creation path for projectile behavior.",
+        AssignmentFields = new[] { nameof(projectileId), nameof(projectilePrefab), nameof(speed) },
+        FirstProof = "Spawn the projectile and verify it travels at the correct speed and deals damage.",
+        NativeSetup = new[] { "Create Asset" }
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/Combat/Projectile Definition", fileName = "ProjectileDefinition")]
     public class ProjectileDefinition : ScriptableObject
     {

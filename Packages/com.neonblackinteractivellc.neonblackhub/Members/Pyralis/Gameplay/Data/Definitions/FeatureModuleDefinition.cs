@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Presentation.Animation;
 using UnityEngine;
 
@@ -24,6 +25,12 @@ namespace NeonBlack.Gameplay.Data.Definitions
     /// <summary>
     /// Authoring definition for an attachable runtime feature module.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Setup, 
+        Relevance = "Authoring container for attachable runtime logic, used to extend Pawns or Game Modes with modular functionality.",
+        AssignmentFields = new[] { nameof(moduleId), nameof(displayName), nameof(profileAsset), nameof(runtimePrefab) },
+        FirstProof = "Add this Feature Module to the 'Required Feature Modules' list on a Game Mode or Pawn Definition."
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/Definitions/Feature Module Definition", fileName = "FeatureModuleDefinition", order = 50)]
     public class FeatureModuleDefinition : ScriptableObject
     {
@@ -148,73 +155,63 @@ namespace NeonBlack.Gameplay.Data.Definitions
             if (actorRoot == null)
                 return issues;
 
-            switch (moduleId)
+            // Reflective Contract Validation
+            PyralisAuthoringContract contract = PyralisAuthoringContractRegistry.FindByModuleId(moduleId);
+            if (contract != null)
             {
-                case "actor.interaction":
-                    if (presentationMode == ActorPresentationMode.Sprite2D
-                        && !HasComponentImplementing(actorRoot, "NeonBlack.Gameplay.Features.Characters.IActorInteractionInputReceiver2D"))
+                // Validate Required Components
+                if (contract.RequiredComponentNames != null)
+                {
+                    foreach (var typeName in contract.RequiredComponentNames)
                     {
-                        issues.Add("`actor.interaction` on Sprite2D actors should expose an IActorInteractionInputReceiver2D bridge.");
+                        if (!HasComponentOfType(actorRoot, typeName))
+                            issues.Add($"`{moduleId}` expects a {GetShortTypeName(typeName)} on the actor root.");
                     }
-                    break;
+                }
 
-                case "actor.traversal.3d":
-                    if (!HasComponentOfType(actorRoot, "NeonBlack.Gameplay.Features.Characters.Motor3D"))
-                        issues.Add("`actor.traversal.3d` expects a Motor3D on the actor root.");
-                    if (!HasComponentOfType(actorRoot, "NeonBlack.Gameplay.Features.Traversal.Pawn3DTraversalComponent"))
-                        issues.Add("`actor.traversal.3d` expects a Pawn3DTraversalComponent on the actor root.");
-                    break;
+                // Validate Required Interfaces (from attribute)
+                if (contract.RequiredRuntimeInterfaceNames != null)
+                {
+                    foreach (var interfaceName in contract.RequiredRuntimeInterfaceNames)
+                    {
+                        // Skip the base runtime interface which is checked separately or is on the module itself
+                        if (string.Equals(interfaceName, FeatureRuntimeInterfaceName, StringComparison.Ordinal))
+                            continue;
 
-                case "actor.pickups.2d":
-                    if (actorRoot.GetComponent<Collider2D>() == null)
-                        issues.Add("`actor.pickups.2d` expects a Collider2D on the actor root.");
-                    break;
+                        // Specific exception for combat modifiers on enemies if needed (legacy parity)
+                        if (moduleId == "actor.status" && isEnemyActor && interfaceName.Contains("IActorCombatModifierReceiver"))
+                            continue;
 
-                case "actor.pickups.3d":
-                    if (actorRoot.GetComponent<Collider>() == null && actorRoot.GetComponent<CharacterController>() == null)
-                        issues.Add("`actor.pickups.3d` expects a Collider or CharacterController on the actor root.");
-                    break;
+                        // Conditional check for interaction bridge
+                        if (moduleId == "actor.interaction" && presentationMode != ActorPresentationMode.Sprite2D && interfaceName.Contains("IActorInteractionInputReceiver2D"))
+                            continue;
 
-                case "actor.combat.reaction":
-                    if (!HasComponentOfType(actorRoot, "NeonBlack.Gameplay.Features.Combat.HealthComponent"))
-                        issues.Add("`actor.combat.reaction` expects a HealthComponent on the actor root.");
-                    if (!HasComponentImplementing(actorRoot, "NeonBlack.Gameplay.Features.Combat.IActorReactionResponder"))
-                        issues.Add("`actor.combat.reaction` expects an IActorReactionResponder on the actor root.");
-                    break;
+                        if (!HasComponentImplementing(actorRoot, interfaceName))
+                            issues.Add($"`{moduleId}` expects a component implementing {GetShortTypeName(interfaceName)} on the actor root.");
+                    }
+                }
 
-                case "actor.status":
-                    if (!HasComponentOfType(actorRoot, "NeonBlack.Gameplay.Features.Combat.HealthComponent"))
-                        issues.Add("`actor.status` expects a HealthComponent on the actor root.");
-                    if (!HasComponentImplementing(actorRoot, "NeonBlack.Gameplay.Features.Combat.IActorMovementModifierReceiver"))
-                        issues.Add("`actor.status` expects an IActorMovementModifierReceiver on the actor root.");
-                    if (!HasComponentImplementing(actorRoot, "NeonBlack.Gameplay.Features.Combat.IActorCombatModifierReceiver") && !isEnemyActor)
-                        issues.Add("`actor.status` expects an IActorCombatModifierReceiver on the actor root.");
-                    if (!HasComponentImplementing(actorRoot, "NeonBlack.Gameplay.Features.Combat.IActorHealthModifierReceiver"))
-                        issues.Add("`actor.status` expects an IActorHealthModifierReceiver on the actor root.");
-                    break;
-
-                case "actor.feedback":
-                    if (!HasComponentOfType(actorRoot, "NeonBlack.Gameplay.Features.Combat.HealthComponent"))
-                        issues.Add("`actor.feedback` should usually be paired with a HealthComponent on the actor root.");
-                    if (!HasComponentImplementing(actorRoot, "NeonBlack.Gameplay.Features.Feedback.IActorFeedbackReceiver"))
-                        issues.Add("`actor.feedback` should usually have at least one IActorFeedbackReceiver in the actor hierarchy.");
-                    AppendActorValidationProviderIssues(actorRoot, issues);
-                    break;
-
-                case "enemy.reaction":
-                    if (!HasComponentOfType(actorRoot, "NeonBlack.Gameplay.Features.Enemies.EnemyAI"))
-                        issues.Add("`enemy.reaction` expects an EnemyAI on the actor root.");
-                    if (!HasComponentOfType(actorRoot, "NeonBlack.Gameplay.Features.Combat.HealthComponent"))
-                        issues.Add("`enemy.reaction` expects a HealthComponent on the actor root.");
-                    break;
-
-                case "enemy.ambient":
-                    if (!HasComponentOfType(actorRoot, "NeonBlack.Gameplay.Features.Enemies.EnemyAI"))
-                        issues.Add("`enemy.ambient` expects an EnemyAI on the actor root.");
-                    break;
+                // Presentation Lane Validation
+                if (contract.IsExplicitlyUnsupported(presentationMode))
+                {
+                    issues.Add(!string.IsNullOrWhiteSpace(contract.UnsupportedLaneMessage) 
+                        ? contract.UnsupportedLaneMessage 
+                        : $"`{moduleId}` is explicitly unsupported for {presentationMode} presentation.");
+                }
             }
 
+            // Support for generic IRuntimeValidationProvider components on the actor root.
+            // This allows modules to perform custom actor-specific validation without hardcoding logic here.
+            AppendActorValidationProviderIssues(actorRoot, issues);
+
             return issues;
+        }
+
+        private static string GetShortTypeName(string fullTypeName)
+        {
+            if (string.IsNullOrWhiteSpace(fullTypeName)) return string.Empty;
+            int lastDot = fullTypeName.LastIndexOf('.');
+            return lastDot >= 0 ? fullTypeName.Substring(lastDot + 1) : fullTypeName;
         }
 
         private static bool HasFeatureRuntime(GameObject prefab)

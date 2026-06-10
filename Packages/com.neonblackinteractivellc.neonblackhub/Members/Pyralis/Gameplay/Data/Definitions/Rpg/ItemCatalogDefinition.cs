@@ -1,12 +1,20 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Rpg;
+using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rpg
 {
+    [AuthoringContract(
+        ModuleId = "rpg.item.catalog",
+        Capability = AuthoringCapability.Inventory,
+        Lane = "RPG",
+        AssignmentFields = new[] { nameof(catalogId), nameof(displayName), nameof(items) },
+        FirstProof = "Proof that the catalog contains valid item definitions and can resolve stack sizes."
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Item Catalog", fileName = "ItemCatalogDefinition")]
     public class ItemCatalogDefinition : ScriptableObject, IItemCatalog
-    {
+{
         public string catalogId = "items.default";
         public string displayName = "Default Item Catalog";
         public ItemDefinition[] items = System.Array.Empty<ItemDefinition>();

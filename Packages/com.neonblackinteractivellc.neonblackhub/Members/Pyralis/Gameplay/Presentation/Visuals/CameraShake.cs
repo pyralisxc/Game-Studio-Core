@@ -8,8 +8,22 @@ namespace NeonBlack.Gameplay.Presentation.Visuals
     /// Canonical camera shake service for gameplay impact feedback.
     /// Add one to the bootstrap or camera rig; assign Target Transform for a custom rig.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.VFX,
+        Relevance = "Canonical camera shake service for gameplay impact feedback.",
+        Axioms = AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.Dimensions3D,
+        RequiredInterfaces = new[] { typeof(IGameService), typeof(ICameraShakeSink) },
+        NativeSetup = new[]
+        {
+            "Add CameraShake to a global service GameObject.",
+            "Assign Target Transform (camera rig root or main camera).",
+            "Set Default Shake Mode (Planar2D for most games)."
+        },
+        AssignmentFields = new[] { nameof(targetTransform), nameof(defaultShakeMode), nameof(positionInfluence), nameof(rotationInfluence) },
+        FirstProof = "Calling Shake(intensity, duration) causes the target transform to vibrate."
+    )]
     [AddComponentMenu("NeonBlack/Gameplay/Camera/Camera Shake")]
-    public class CameraShake : MonoBehaviour, IGameService, ICameraShakeSink
+public class CameraShake : MonoBehaviour, IGameService, ICameraShakeSink
     {
         public enum ShakeMode
         {
@@ -49,23 +63,13 @@ namespace NeonBlack.Gameplay.Presentation.Visuals
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-
-            Instance = this;
-            if (transform.parent == null)
-                DontDestroyOnLoad(gameObject);
             ResolveTarget();
             Initialize();
         }
 
         private void OnDestroy()
         {
-            if (Instance == this)
-                Shutdown();
+            Shutdown();
         }
 
         /// <summary>

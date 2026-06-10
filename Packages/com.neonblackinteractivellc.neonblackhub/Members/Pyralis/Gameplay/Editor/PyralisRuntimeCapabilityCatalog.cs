@@ -1,3 +1,4 @@
+using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
 using System.Reflection;
 using NeonBlack.Gameplay.Characters;
@@ -19,25 +20,8 @@ using UnityEngine;
 
 namespace NeonBlack.Gameplay.Editor
 {
-    public enum RuntimeCapabilityGoalTag
-    {
-        Movement,
-        Camera,
-        Interaction,
-        Combat,
-        Projectiles,
-        UiHud,
-        Scoring,
-        Tabletop,
-        Networking,
-        NpcsEnemies,
-        JumpTraversal,
-        Input,
-        AnimationPresentation
-    }
-
     public enum RuntimeCapabilityLaneTag
-    {
+{
         Sprite2D,
         Billboard2_5D,
         Rigged3D,
@@ -53,7 +37,7 @@ namespace NeonBlack.Gameplay.Editor
             string stableId,
             string displayName,
             RuntimeCapabilityFamily capabilityFamily,
-            RuntimeCapabilityGoalTag[] goalTags,
+            string[] goalTags,
             RuntimeCapabilityLaneTag[] laneTags,
             RuntimeCapabilityLaneTag[] cautionLaneTags,
             string whatItAdds,
@@ -72,7 +56,7 @@ namespace NeonBlack.Gameplay.Editor
             StableId = stableId;
             DisplayName = displayName;
             CapabilityFamily = capabilityFamily;
-            GoalTags = goalTags ?? System.Array.Empty<RuntimeCapabilityGoalTag>();
+            GoalTags = goalTags ?? System.Array.Empty<string>();
             LaneTags = laneTags ?? System.Array.Empty<RuntimeCapabilityLaneTag>();
             CautionLaneTags = cautionLaneTags ?? System.Array.Empty<RuntimeCapabilityLaneTag>();
             WhatItAdds = whatItAdds;
@@ -96,7 +80,7 @@ namespace NeonBlack.Gameplay.Editor
                 whatItAdds,
                 whenToUse,
                 firstProof,
-                ToStrings(GoalTags),
+                GoalTags,
                 ToStrings(LaneTags),
                 ToStrings(CautionLaneTags),
                 RequiredDefinitions,
@@ -113,7 +97,7 @@ namespace NeonBlack.Gameplay.Editor
         public string StableId { get; }
         public string DisplayName { get; }
         public RuntimeCapabilityFamily CapabilityFamily { get; }
-        public RuntimeCapabilityGoalTag[] GoalTags { get; }
+        public string[] GoalTags { get; }
         public RuntimeCapabilityLaneTag[] LaneTags { get; }
         public RuntimeCapabilityLaneTag[] CautionLaneTags { get; }
         public string WhatItAdds { get; }
@@ -130,7 +114,7 @@ namespace NeonBlack.Gameplay.Editor
         public PyralisAuthoringNativeAction[] NativeActions { get; }
         public PyralisAuthoringFact Fact { get; }
 
-        public bool HasGoal(RuntimeCapabilityGoalTag tag)
+        public bool HasGoal(string tag)
         {
             return Contains(GoalTags, tag);
         }
@@ -145,11 +129,20 @@ namespace NeonBlack.Gameplay.Editor
             return Contains(CautionLaneTags, tag);
         }
 
-        private static bool Contains(RuntimeCapabilityGoalTag[] tags, RuntimeCapabilityGoalTag tag)
+        private static bool Contains(string[] tags, string tag)
         {
+            if (tags == null || string.IsNullOrEmpty(tag)) return false;
             for (int i = 0; i < tags.Length; i++)
             {
-                if (tags[i] == tag)
+                string t = tags[i];
+                if (string.Equals(t, tag, System.StringComparison.OrdinalIgnoreCase))
+                    return true;
+
+                // Hierarchical match: 
+                // - A tag like 'Combat/Reaction' matches a search for 'Combat'
+                // - A tag like 'Combat' matches a search for 'Combat/Reaction' (as a parent category)
+                if (t != null && (t.StartsWith(tag + "/", System.StringComparison.OrdinalIgnoreCase) ||
+                                 tag.StartsWith(t + "/", System.StringComparison.OrdinalIgnoreCase)))
                     return true;
             }
 
@@ -165,15 +158,6 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             return false;
-        }
-
-        private static string[] ToStrings(RuntimeCapabilityGoalTag[] tags)
-        {
-            string[] values = new string[tags.Length];
-            for (int i = 0; i < tags.Length; i++)
-                values[i] = tags[i].ToString();
-
-            return values;
         }
 
         private static string[] ToStrings(RuntimeCapabilityLaneTag[] tags)
@@ -232,10 +216,10 @@ namespace NeonBlack.Gameplay.Editor
                 RuntimeCapabilityFamily.CharacterPawnGameplay,
                 new[]
                 {
-                    RuntimeCapabilityGoalTag.Movement,
-                    RuntimeCapabilityGoalTag.JumpTraversal,
-                    RuntimeCapabilityGoalTag.Input,
-                    RuntimeCapabilityGoalTag.AnimationPresentation
+                    "Movement",
+                    "JumpTraversal",
+                    "Input",
+                    "AnimationPresentation"
                 },
                 new[] { RuntimeCapabilityLaneTag.Sprite2D },
                 new[] { RuntimeCapabilityLaneTag.Rigged3D, RuntimeCapabilityLaneTag.TabletopNoPawn },
@@ -279,12 +263,12 @@ namespace NeonBlack.Gameplay.Editor
                 RuntimeCapabilityFamily.CharacterPawnGameplay,
                 new[]
                 {
-                    RuntimeCapabilityGoalTag.Movement,
-                    RuntimeCapabilityGoalTag.JumpTraversal,
-                    RuntimeCapabilityGoalTag.Input,
-                    RuntimeCapabilityGoalTag.AnimationPresentation,
-                    RuntimeCapabilityGoalTag.Combat,
-                    RuntimeCapabilityGoalTag.NpcsEnemies
+                    "Movement",
+                    "JumpTraversal",
+                    "Input",
+                    "AnimationPresentation",
+                    "Combat",
+                    "NpcsEnemies"
                 },
                 new[] { RuntimeCapabilityLaneTag.Billboard2_5D, RuntimeCapabilityLaneTag.Rigged3D },
                 new[] { RuntimeCapabilityLaneTag.TabletopNoPawn },
@@ -330,7 +314,7 @@ namespace NeonBlack.Gameplay.Editor
                 "capability.camera-follow-bounds",
                 "Camera Follow And Bounds",
                 RuntimeCapabilityFamily.CameraInput,
-                new[] { RuntimeCapabilityGoalTag.Camera },
+                new[] { "Camera" },
                 new[] { RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Billboard2_5D, RuntimeCapabilityLaneTag.Rigged3D, RuntimeCapabilityLaneTag.CameraCursor },
                 System.Array.Empty<RuntimeCapabilityLaneTag>(),
                 "A camera or cursor control surface that makes the current route visible and keeps 2D proofs framed.",
@@ -359,7 +343,7 @@ namespace NeonBlack.Gameplay.Editor
                 "capability.interaction-action-selection",
                 "Interaction Or Action Selection",
                 RuntimeCapabilityFamily.ActionTargeting,
-                new[] { RuntimeCapabilityGoalTag.Interaction, RuntimeCapabilityGoalTag.Input, RuntimeCapabilityGoalTag.Tabletop },
+                new[] { "Interaction", "Input", "Tabletop" },
                 new[] { RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Billboard2_5D, RuntimeCapabilityLaneTag.Rigged3D, RuntimeCapabilityLaneTag.TabletopNoPawn, RuntimeCapabilityLaneTag.UiMenu, RuntimeCapabilityLaneTag.CameraCursor },
                 System.Array.Empty<RuntimeCapabilityLaneTag>(),
                 "One selectable command surface such as an interact prompt, menu command, board space, card, cursor target, or pawn action.",
@@ -389,11 +373,11 @@ namespace NeonBlack.Gameplay.Editor
                 RuntimeCapabilityFamily.Combat,
                 new[]
                 {
-                    RuntimeCapabilityGoalTag.Combat,
-                    RuntimeCapabilityGoalTag.Input,
-                    RuntimeCapabilityGoalTag.AnimationPresentation,
-                    RuntimeCapabilityGoalTag.Projectiles,
-                    RuntimeCapabilityGoalTag.NpcsEnemies
+                    "Combat",
+                    "Input",
+                    "AnimationPresentation",
+                    "Projectiles",
+                    "NpcsEnemies"
                 },
                 new[] { RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Billboard2_5D, RuntimeCapabilityLaneTag.Rigged3D, RuntimeCapabilityLaneTag.CameraCursor },
                 new[] { RuntimeCapabilityLaneTag.TabletopNoPawn },
@@ -428,10 +412,10 @@ namespace NeonBlack.Gameplay.Editor
                 RuntimeCapabilityFamily.Combat,
                 new[]
                 {
-                    RuntimeCapabilityGoalTag.NpcsEnemies,
-                    RuntimeCapabilityGoalTag.Combat,
-                    RuntimeCapabilityGoalTag.AnimationPresentation,
-                    RuntimeCapabilityGoalTag.Movement
+                    "NpcsEnemies",
+                    "Combat",
+                    "AnimationPresentation",
+                    "Movement"
                 },
                 new[] { RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Billboard2_5D, RuntimeCapabilityLaneTag.Rigged3D },
                 new[] { RuntimeCapabilityLaneTag.UiMenu },
@@ -471,7 +455,7 @@ namespace NeonBlack.Gameplay.Editor
                 "capability.ui-scoring-feedback",
                 "UI And Scoring Feedback",
                 RuntimeCapabilityFamily.ScoringObjectives,
-                new[] { RuntimeCapabilityGoalTag.UiHud, RuntimeCapabilityGoalTag.Scoring },
+                new[] { "UiHud", "Scoring" },
                 new[] { RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Billboard2_5D, RuntimeCapabilityLaneTag.Rigged3D, RuntimeCapabilityLaneTag.TabletopNoPawn, RuntimeCapabilityLaneTag.UiMenu },
                 System.Array.Empty<RuntimeCapabilityLaneTag>(),
                 "Visible route state such as score, health, prompt text, feedback, objective state, or menu/action labels.",
@@ -499,8 +483,8 @@ namespace NeonBlack.Gameplay.Editor
 
         public static IReadOnlyList<RuntimeCapabilityCard> All => Cards;
 
-        public static List<RuntimeCapabilityCard> GetByGoal(RuntimeCapabilityGoalTag goal)
-        {
+        public static List<RuntimeCapabilityCard> GetByGoal(string goal)
+{
             List<RuntimeCapabilityCard> matches = new List<RuntimeCapabilityCard>();
             for (int i = 0; i < Cards.Length; i++)
             {

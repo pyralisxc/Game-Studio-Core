@@ -1,9 +1,25 @@
 using System.Collections.Generic;
+using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Core.Contracts.Rpg;
 
 namespace NeonBlack.Gameplay.Core.Rpg
 {
-    public sealed class ProgressionService
-    {
+    [AuthoringContract(
+        ModuleId = "rpg.progression",
+        Capability = AuthoringCapability.Stats,
+        Relevance = "Manages character progression, including experience points, leveling up, and skill point grants.",
+        Lane = "RPG",
+        RequiredInterfaces = new[] { typeof(IProgressionCurve) },
+        NativeSetup = new[]
+        {
+            "define progression curves for Level/XP",
+            "assign curves to ProgressionService",
+            "configure StatSheets for classes"
+        },
+        FirstProof = "Grant experience to an actor and verify they level up according to the progression curve."
+    )]
+    public sealed class ProgressionService : IProgressionService
+{
         private readonly IProgressionCurve _curve;
         private readonly Dictionary<RpgOwnerKey, ProgressionState> _states = new Dictionary<RpgOwnerKey, ProgressionState>();
 

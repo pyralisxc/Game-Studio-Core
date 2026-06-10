@@ -10,8 +10,22 @@ namespace NeonBlack.Gameplay.Features.Characters
     /// Coordinates the 2D pawn stack.
     /// Movement, presentation, and reaction ownership live in dedicated 2D components.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Movement,
+        Relevance = "Canonical 2D pawn motor; coordinates movement, animations, and reactions.",
+        Axioms = AuthoringWorldAxiom.Dimensions2D,
+        RequiredComponents = new[] { typeof(Pawn2DMovementComponent), typeof(Pawn2DPresentationComponent) },
+        NativeSetup = new[]
+        {
+            "Attach Motor2D to the 2D pawn root.",
+            "Ensure Pawn2DMovementComponent and Pawn2DPresentationComponent are present.",
+            "Wire sprite renderers and animators into the presentation component."
+        },
+        AssignmentFields = new[] { "movement", "presentation" },
+        FirstProof = "Enter Play Mode and move the character. Verify the pawn responds to input, plays the correct 'Move' animation, and flips facing direction when changing movement horizontal intent."
+    )]
     [AddComponentMenu("NeonBlack/Gameplay/Runtime 2D/Motor 2D")]
-    [RequireComponent(typeof(Pawn2DMovementComponent))]
+[RequireComponent(typeof(Pawn2DMovementComponent))]
     [RequireComponent(typeof(Pawn2DPresentationComponent))]
     public sealed class Motor2D : MonoBehaviour, IActorReactionResponder, IActorMovementModifierReceiver, IFacingDirectionProvider
     {

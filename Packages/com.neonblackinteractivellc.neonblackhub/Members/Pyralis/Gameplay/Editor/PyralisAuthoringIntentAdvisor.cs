@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using NeonBlack.Gameplay.Core.Contracts;
 
 namespace NeonBlack.Gameplay.Editor
 {
@@ -18,53 +20,18 @@ namespace NeonBlack.Gameplay.Editor
         Caution
     }
 
-    public enum PyralisAuthoringWorldIntent
-    {
-        SideView2DGravity,
-        TopDown2DPlane,
-        Lane2_5D,
-        Space3D,
-        BoardGridTabletop,
-        CardTableSurface,
-        UiMenuFirst,
-        HybridUnsure
-    }
-
-    public enum PyralisAuthoringControlIntent
-    {
-        PawnActor,
-        CursorSelector,
-        BoardSeat,
-        CardHand,
-        Camera,
-        MenuCommand,
-        FactionTeam,
-        Mixed
-    }
-
     public sealed class PyralisAuthoringIntentSelection
     {
-        public PyralisAuthoringIntentSelection(RuntimeCapabilityLaneTag lane, RuntimeCapabilityGoalTag[] goals)
-            : this(PyralisAuthoringWorldIntent.SideView2DGravity, PyralisAuthoringControlIntent.PawnActor, lane, goals)
+        public PyralisAuthoringIntentSelection(RuntimeCapabilityLaneTag lane, AuthoringCapability capabilities, AuthoringWorldAxiom axioms)
         {
-        }
-
-        public PyralisAuthoringIntentSelection(
-            PyralisAuthoringWorldIntent world,
-            PyralisAuthoringControlIntent control,
-            RuntimeCapabilityLaneTag lane,
-            RuntimeCapabilityGoalTag[] goals)
-        {
-            World = world;
-            Control = control;
             Lane = lane;
-            Goals = goals ?? Array.Empty<RuntimeCapabilityGoalTag>();
+            Capabilities = capabilities;
+            Axioms = axioms;
         }
 
-        public PyralisAuthoringWorldIntent World { get; }
-        public PyralisAuthoringControlIntent Control { get; }
         public RuntimeCapabilityLaneTag Lane { get; }
-        public RuntimeCapabilityGoalTag[] Goals { get; }
+        public AuthoringCapability Capabilities { get; }
+        public AuthoringWorldAxiom Axioms { get; }
     }
 
     public sealed class PyralisAuthoringIntentRow
@@ -96,18 +63,32 @@ namespace NeonBlack.Gameplay.Editor
             string summary,
             IReadOnlyList<PyralisAuthoringIntentRow> recommendations,
             IReadOnlyList<PyralisAuthoringIntentRow> cautions,
-            IReadOnlyList<PyralisAuthoringFact> matchingIntents)
+            IReadOnlyList<PyralisAuthoringFact> matchingIntents,
+            IReadOnlyList<PyralisAuthoringIssue> hygieneIssues = null)
         {
             Summary = summary ?? string.Empty;
             Recommendations = recommendations ?? Array.Empty<PyralisAuthoringIntentRow>();
             Cautions = cautions ?? Array.Empty<PyralisAuthoringIntentRow>();
             MatchingIntents = matchingIntents ?? Array.Empty<PyralisAuthoringFact>();
+            HygieneIssues = hygieneIssues ?? Array.Empty<PyralisAuthoringIssue>();
         }
 
         public string Summary { get; }
         public IReadOnlyList<PyralisAuthoringIntentRow> Recommendations { get; }
         public IReadOnlyList<PyralisAuthoringIntentRow> Cautions { get; }
         public IReadOnlyList<PyralisAuthoringFact> MatchingIntents { get; }
+        public IReadOnlyList<PyralisAuthoringIssue> HygieneIssues { get; }
+    }
+
+    public static class PyralisAuthoringGuidance
+    {
+        public const string RelatedByIntent = "Related by the selected route intent.";
+        public const string MatchesCapabilities = "Matches the selected Spine capabilities.";
+        public const string MatchesLane = "Matches the selected lane.";
+        public const string GeneralReflectiveFact = "Relevant reflective authoring fact.";
+        public const string CautionAgainstLane = "Useful context, but this fact cautions against {0}.";
+        public const string MatchingIntentSummary = "Active focus currently resembles {0} for {1}. DNA Axioms provide {2} grounding.";
+        public const string AxiomFoundationSummary = "Project DNA is defined by {0}. Engine Spine capabilities: {1}.";
     }
 
     public static class PyralisAuthoringIntentAdvisor
@@ -120,10 +101,9 @@ namespace NeonBlack.Gameplay.Editor
         public static PyralisAuthoringIntentModel Build(PyralisAuthoringIntentSelection selection, IReadOnlyList<PyralisAuthoringFact> facts)
         {
             selection ??= new PyralisAuthoringIntentSelection(
-                PyralisAuthoringWorldIntent.SideView2DGravity,
-                PyralisAuthoringControlIntent.PawnActor,
                 RuntimeCapabilityLaneTag.Sprite2D,
-                Array.Empty<RuntimeCapabilityGoalTag>());
+                AuthoringCapability.None,
+                AuthoringWorldAxiom.None);
             facts ??= Array.Empty<PyralisAuthoringFact>();
 
             List<PyralisAuthoringFact> matchingIntents = FindMatchingIntentFacts(selection, facts);
@@ -139,21 +119,22 @@ namespace NeonBlack.Gameplay.Editor
 
                 bool unsupported = HasUnsupportedLane(fact, selection.Lane);
                 int score = ScoreFact(selection, fact, relatedStableIds, unsupported);
-                if (score <= 0 && !unsupported)
+                
+                if (score <= 0 && !unsupported && !HasCapabilityOverlap(selection, fact))
                     continue;
 
-                if (unsupported && (score > 0 || HasGoalOverlap(selection, fact)))
+                if (unsupported && (score > 0 || HasCapabilityOverlap(selection, fact)))
                 {
                     cautions.Add(new PyralisAuthoringIntentRow(
                         fact,
                         score,
                         PyralisAuthoringIntentRowState.Caution,
-                        $"Useful context, but this fact cautions against {selection.Lane}.",
+                        string.Format(PyralisAuthoringGuidance.CautionAgainstLane, selection.Lane),
                         PyralisAuthoringIntentGuideTier.Caution));
                     continue;
                 }
 
-                if (score <= 0)
+                if (score <= 0 && !HasCapabilityOverlap(selection, fact))
                     continue;
 
                 recommendations.Add(new PyralisAuthoringIntentRow(
@@ -166,11 +147,129 @@ namespace NeonBlack.Gameplay.Editor
 
             SortRows(recommendations);
             SortRows(cautions);
+
+            List<PyralisAuthoringIssue> hygieneIssues = ValidateHygiene(selection, facts, recommendations);
+
             return new PyralisAuthoringIntentModel(
                 BuildSummary(selection, matchingIntents),
                 recommendations,
                 cautions,
-                matchingIntents);
+                matchingIntents,
+                hygieneIssues);
+        }
+
+        private static List<PyralisAuthoringIssue> ValidateHygiene(
+            PyralisAuthoringIntentSelection selection,
+            IReadOnlyList<PyralisAuthoringFact> allFacts,
+            List<PyralisAuthoringIntentRow> recommendations)
+        {
+            List<PyralisAuthoringIssue> issues = new List<PyralisAuthoringIssue>();
+
+            // 1. Check for Missing Primary Providers for selected capabilities
+            foreach (AuthoringCapability cap in AuthoringCapabilityRegistry.GetAllIndividualCapabilities())
+            {
+                if ((selection.Capabilities & cap) == 0) continue;
+
+                bool hasProvider = recommendations.Any(r => (r.Fact.Capability & cap) != 0);
+                if (!hasProvider)
+                {
+                    issues.Add(new PyralisAuthoringIssue(
+                        "HYG001",
+                        PyralisAuthoringIssueSeverity.Required,
+                        cap.ToString(),
+                        PyralisAuthoringEvidenceState.Missing,
+                        "Project",
+                        "Spine",
+                        null,
+                        $"Capability '{AuthoringCapabilityRegistry.GetDisplayName(cap)}' is selected but no providing scripts were discovered in the project. {AuthoringCapabilityRegistry.GetHygieneAdvice(cap)}"));
+                }
+            }
+
+            // 2. Check for Capability Conflicts (Multiple High-Priority Providers)
+            var groups = recommendations
+                .Where(r => r.Fact.Capability != AuthoringCapability.None)
+                .GroupBy(r => r.Fact.Capability);
+
+            foreach (var group in groups)
+            {
+                var facts = group.ToList();
+                if (facts.Count <= 1) continue;
+
+                int maxPriority = facts.Max(f => f.Fact.Priority);
+                var topProviders = facts.Where(f => f.Fact.Priority == maxPriority).ToList();
+
+                if (topProviders.Count > 1)
+                {
+                    string names = string.Join(", ", topProviders.Select(p => p.Fact.DisplayName));
+                    issues.Add(new PyralisAuthoringIssue(
+                        "HYG002",
+                        PyralisAuthoringIssueSeverity.Bug,
+                        group.Key.ToString(),
+                        PyralisAuthoringEvidenceState.Conflict,
+                        "Code",
+                        "Duplication",
+                        null,
+                        $"Multiple primary providers for '{group.Key}' detected: {names}. This indicates potential code duplication or a need to refine Priority in the [AuthoringContract]. Refine Priority to resolve conflict."));
+                }
+            }
+
+            // 3. Check for Documentation/Doc Truth Hygiene
+            foreach (var rec in recommendations)
+            {
+                if (string.IsNullOrEmpty(rec.Fact.Summary) || rec.Fact.Summary == rec.Fact.DisplayName)
+                {
+                    issues.Add(new PyralisAuthoringIssue(
+                        "HYG003",
+                        PyralisAuthoringIssueSeverity.Optional,
+                        rec.Fact.DisplayName,
+                        PyralisAuthoringEvidenceState.CandidateDetected,
+                        "Documentation",
+                        "Content",
+                        null,
+                        $"Contract '{rec.Fact.DisplayName}' is missing a meaningful Summary. Update the [AuthoringContract] attribute with 'Relevance' or 'Summary' text."));
+                }
+
+                if (string.IsNullOrEmpty(rec.Fact.DocumentationURL))
+                {
+                    issues.Add(new PyralisAuthoringIssue(
+                        "HYG004",
+                        PyralisAuthoringIssueSeverity.Info,
+                        rec.Fact.DisplayName,
+                        PyralisAuthoringEvidenceState.CandidateDetected,
+                        "Documentation",
+                        "Source",
+                        null,
+                        $"Contract '{rec.Fact.DisplayName}' has no Documentation URL. Consider adding a link to the technical wiki in [AuthoringContract]."));
+                }
+
+                if (string.IsNullOrEmpty(rec.Fact.ExpertAdvice))
+                {
+                    issues.Add(new PyralisAuthoringIssue(
+                        "HYG005",
+                        PyralisAuthoringIssueSeverity.Recommended,
+                        rec.Fact.DisplayName,
+                        PyralisAuthoringEvidenceState.Missing,
+                        "Authoring",
+                        "Content",
+                        null,
+                        $"Contract '{rec.Fact.DisplayName}' is missing Expert Advice. Provide a pro-tip in the [AuthoringContract] to help developers use this feature effectively."));
+                }
+
+                if (string.IsNullOrEmpty(rec.Fact.FirstProof))
+                {
+                    issues.Add(new PyralisAuthoringIssue(
+                        "HYG006",
+                        PyralisAuthoringIssueSeverity.Recommended,
+                        rec.Fact.DisplayName,
+                        PyralisAuthoringEvidenceState.Missing,
+                        "Authoring",
+                        "Validation",
+                        null,
+                        $"Contract '{rec.Fact.DisplayName}' has no First Proof defined. Describe a simple setup step to verify this feature works in the [AuthoringContract]."));
+                }
+            }
+
+            return issues;
         }
 
         private static List<PyralisAuthoringFact> FindMatchingIntentFacts(PyralisAuthoringIntentSelection selection, IReadOnlyList<PyralisAuthoringFact> facts)
@@ -182,16 +281,8 @@ namespace NeonBlack.Gameplay.Editor
                 if (fact == null || fact.Kind != PyralisAuthoringFactKind.RouteIntent)
                     continue;
 
-                bool matchesWorld = HasWorldOverlap(selection, fact);
-                bool matchesControl = HasControlOverlap(selection, fact);
-                bool isHybridSelection = selection.World == PyralisAuthoringWorldIntent.HybridUnsure
-                    || selection.Control == PyralisAuthoringControlIntent.Mixed;
-
-                if (!isHybridSelection && (!matchesWorld || !matchesControl))
-                    continue;
-
                 int score = ScoreFact(selection, fact, new HashSet<string>(StringComparer.Ordinal), false);
-                if (score >= 60)
+                if (score >= 40)
                     matches.Add(new ScoredIntentFact(fact, score));
             }
 
@@ -230,14 +321,30 @@ namespace NeonBlack.Gameplay.Editor
             else
                 score -= 8;
 
-            if (HasWorldOverlap(selection, fact))
-                score += 24;
+            // Typed Capability Scoring
+            if (selection.Capabilities != AuthoringCapability.None)
+            {
+                int capabilityOverlap = CountCapabilityMatches(selection.Capabilities, fact.Capability);
+                score += capabilityOverlap * 50; // High weight for Spine alignment
+            }
 
-            if (HasControlOverlap(selection, fact))
-                score += 20;
+            if (selection.Axioms != AuthoringWorldAxiom.None && fact.Axioms != AuthoringWorldAxiom.None)
+            {
+                int axiomOverlap = CountAxiomOverlap(selection.Axioms, fact.Axioms);
+                score += axiomOverlap * 25; 
+                
+                if (IsAxiomContradiction(selection.Axioms, fact.Axioms))
+                {
+                    score -= 50;
+                }
+            }
+            else if (selection.Axioms != AuthoringWorldAxiom.None && fact.Axioms == AuthoringWorldAxiom.None)
+            {
+                score += 5; 
+            }
 
-            int goalMatches = CountGoalMatches(selection, fact);
-            score += goalMatches * 18;
+            // Priority boost for "Primary Providers"
+            score += fact.Priority * 15;
 
             if (relatedStableIds.Contains(fact.StableId))
                 score += 28;
@@ -257,7 +364,7 @@ namespace NeonBlack.Gameplay.Editor
             if (relatedStableIds.Contains(fact.StableId) || fact.Kind == PyralisAuthoringFactKind.RouteIntent || score >= 85)
                 return PyralisAuthoringIntentGuideTier.Primary;
 
-            if (HasGoalOverlap(selection, fact) || score >= 55)
+            if (HasCapabilityOverlap(selection, fact) || score >= 55)
                 return PyralisAuthoringIntentGuideTier.SuggestedNext;
 
             return PyralisAuthoringIntentGuideTier.OptionalEnhancer;
@@ -265,34 +372,24 @@ namespace NeonBlack.Gameplay.Editor
 
         private static string BuildSummary(PyralisAuthoringIntentSelection selection, IReadOnlyList<PyralisAuthoringFact> matchingIntents)
         {
-            string projectShape = $"{GetWorldLabel(selection.World)} with {GetControlLabel(selection.Control)}";
             if (matchingIntents != null && matchingIntents.Count > 0)
-                return $"Project intent reads like {projectShape}. Active focus currently resembles {JoinFactNames(matchingIntents)} for {selection.Lane}.";
+                return string.Format(PyralisAuthoringGuidance.MatchingIntentSummary, JoinFactNames(matchingIntents), selection.Lane, selection.Axioms);
 
-            return $"Project intent reads like {projectShape}. Toggle capabilities to shape guidance without applying a preset.";
+            return string.Format(PyralisAuthoringGuidance.AxiomFoundationSummary, selection.Axioms, selection.Capabilities);
         }
 
         private static string BuildReason(PyralisAuthoringIntentSelection selection, PyralisAuthoringFact fact, HashSet<string> relatedStableIds)
         {
             if (relatedStableIds.Contains(fact.StableId))
-                return "Related by the selected route intent.";
+                return PyralisAuthoringGuidance.RelatedByIntent;
 
-            if (HasWorldOverlap(selection, fact) && HasControlOverlap(selection, fact) && HasGoalOverlap(selection, fact))
-                return "Matches the project world, control shape, and selected capability goals.";
-
-            if (HasWorldOverlap(selection, fact) && HasControlOverlap(selection, fact))
-                return "Matches the project world and control shape.";
-
-            if (HasLane(fact, selection.Lane) && HasGoalOverlap(selection, fact))
-                return "Matches the selected lane and game goal.";
+            if (HasCapabilityOverlap(selection, fact))
+                return PyralisAuthoringGuidance.MatchesCapabilities;
 
             if (HasLane(fact, selection.Lane))
-                return "Matches the selected lane.";
+                return PyralisAuthoringGuidance.MatchesLane;
 
-            if (HasGoalOverlap(selection, fact))
-                return "Matches the selected game goal.";
-
-            return "Relevant reflective authoring fact.";
+            return PyralisAuthoringGuidance.GeneralReflectiveFact;
         }
 
         private static bool IsIntentVisibleKind(PyralisAuthoringFactKind kind)
@@ -326,6 +423,57 @@ namespace NeonBlack.Gameplay.Editor
             return ids;
         }
 
+        private static int CountAxiomOverlap(AuthoringWorldAxiom selection, AuthoringWorldAxiom fact)
+        {
+            AuthoringWorldAxiom overlap = selection & fact;
+            if (overlap == AuthoringWorldAxiom.None) return 0;
+
+            int count = 0;
+            uint value = (uint)overlap;
+            while (value != 0)
+            {
+                value &= (value - 1);
+                count++;
+            }
+            return count;
+        }
+
+        private static int CountCapabilityMatches(AuthoringCapability selection, AuthoringCapability fact)
+        {
+            AuthoringCapability overlap = selection & fact;
+            if (overlap == AuthoringCapability.None) return 0;
+
+            int count = 0;
+            uint value = (uint)overlap;
+            while (value != 0)
+            {
+                value &= (value - 1);
+                count++;
+            }
+            return count;
+        }
+
+        private static bool HasCapabilityOverlap(PyralisAuthoringIntentSelection selection, PyralisAuthoringFact fact)
+        {
+            return (selection.Capabilities & fact.Capability) != AuthoringCapability.None;
+        }
+
+        private static bool IsAxiomContradiction(AuthoringWorldAxiom selection, AuthoringWorldAxiom fact)
+        {
+            if (HasAxiom(selection, AuthoringWorldAxiom.Dimensions2D) && HasAxiom(fact, AuthoringWorldAxiom.Dimensions3D)) return true;
+            if (HasAxiom(selection, AuthoringWorldAxiom.Dimensions3D) && HasAxiom(fact, AuthoringWorldAxiom.Dimensions2D)) return true;
+            if (HasAxiom(selection, AuthoringWorldAxiom.Realtime) && HasAxiom(fact, AuthoringWorldAxiom.TurnBased)) return true;
+            if (HasAxiom(selection, AuthoringWorldAxiom.TurnBased) && HasAxiom(fact, AuthoringWorldAxiom.Realtime)) return true;
+            if (HasAxiom(selection, AuthoringWorldAxiom.GravityNone) && HasAxiom(fact, AuthoringWorldAxiom.GravityVertical)) return true;
+            
+            return false;
+        }
+
+        private static bool HasAxiom(AuthoringWorldAxiom flags, AuthoringWorldAxiom target)
+        {
+            return (flags & target) != 0;
+        }
+
         private static bool HasLane(PyralisAuthoringFact fact, RuntimeCapabilityLaneTag lane)
         {
             return Contains(fact.LaneTags, lane.ToString()) || Contains(fact.LaneTags, ToPresentationModeLaneName(lane));
@@ -349,17 +497,11 @@ namespace NeonBlack.Gameplay.Editor
 
         private static int CountGoalMatches(PyralisAuthoringIntentSelection selection, PyralisAuthoringFact fact)
         {
-            if (selection.Goals == null || selection.Goals.Length == 0)
+            if (fact.GoalTags == null || fact.GoalTags.Length == 0)
                 return 0;
 
-            int count = 0;
-            for (int i = 0; i < selection.Goals.Length; i++)
-            {
-                if (Contains(fact.GoalTags, selection.Goals[i].ToString()))
-                    count++;
-            }
-
-            return count;
+            // This is a legacy fallback for facts without typed Capabilities
+            return 0; 
         }
 
         private static bool HasGoalOverlap(PyralisAuthoringIntentSelection selection, PyralisAuthoringFact fact)
@@ -367,114 +509,22 @@ namespace NeonBlack.Gameplay.Editor
             return CountGoalMatches(selection, fact) > 0;
         }
 
-        private static bool HasWorldOverlap(PyralisAuthoringIntentSelection selection, PyralisAuthoringFact fact)
-        {
-            return ContainsAny(GetFactSearchText(fact), GetWorldKeywords(selection.World));
-        }
-
-        private static bool HasControlOverlap(PyralisAuthoringIntentSelection selection, PyralisAuthoringFact fact)
-        {
-            return ContainsAny(GetFactSearchText(fact), GetControlKeywords(selection.Control));
-        }
-
-        private static string GetFactSearchText(PyralisAuthoringFact fact)
-        {
-            return (
-                fact.StableId + " " +
-                fact.DisplayName + " " +
-                fact.Summary + " " +
-                fact.RouteRelevance + " " +
-                fact.FirstProof + " " +
-                string.Join(" ", fact.GoalTags ?? Array.Empty<string>()) + " " +
-                string.Join(" ", fact.LaneTags ?? Array.Empty<string>()) + " " +
-                string.Join(" ", fact.AssignmentFields ?? Array.Empty<string>()) + " " +
-                string.Join(" ", fact.CustomizationMoments ?? Array.Empty<string>()) + " " +
-                string.Join(" ", fact.RelatedStableIds ?? Array.Empty<string>())).ToLowerInvariant();
-        }
-
-        private static bool ContainsAny(string haystack, string[] needles)
-        {
-            if (string.IsNullOrWhiteSpace(haystack) || needles == null)
-                return false;
-
-            for (int i = 0; i < needles.Length; i++)
-            {
-                string needle = needles[i];
-                if (!string.IsNullOrWhiteSpace(needle) && haystack.Contains(needle.ToLowerInvariant()))
-                    return true;
-            }
-
-            return false;
-        }
-
-        private static string[] GetWorldKeywords(PyralisAuthoringWorldIntent world)
-        {
-            return world switch
-            {
-                PyralisAuthoringWorldIntent.SideView2DGravity => new[] { "side-view", "side view", "gravity", "platform", "brawler", "runner", "2d-side-view" },
-                PyralisAuthoringWorldIntent.TopDown2DPlane => new[] { "top-down", "top down", "free movement", "plane", "no gravity", "topdown" },
-                PyralisAuthoringWorldIntent.Lane2_5D => new[] { "2.5d", "lane", "depth", "arena", "billboard" },
-                PyralisAuthoringWorldIntent.Space3D => new[] { "3d", "rigged", "space", "rigged3d" },
-                PyralisAuthoringWorldIntent.BoardGridTabletop => new[] { "board", "grid", "tabletop", "tile", "turn" },
-                PyralisAuthoringWorldIntent.CardTableSurface => new[] { "card", "hand", "deck", "table surface" },
-                PyralisAuthoringWorldIntent.UiMenuFirst => new[] { "ui", "menu", "hud", "canvas", "command" },
-                _ => new[] { "hybrid", "custom", "mixed" }
-            };
-        }
-
-        private static string[] GetControlKeywords(PyralisAuthoringControlIntent control)
-        {
-            return control switch
-            {
-                PyralisAuthoringControlIntent.PawnActor => new[] { "pawn", "actor", "participant", "movement" },
-                PyralisAuthoringControlIntent.CursorSelector => new[] { "cursor", "selector", "selection" },
-                PyralisAuthoringControlIntent.BoardSeat => new[] { "seat", "board", "tabletop", "faction" },
-                PyralisAuthoringControlIntent.CardHand => new[] { "card", "hand", "deck" },
-                PyralisAuthoringControlIntent.Camera => new[] { "camera", "framing", "bounds" },
-                PyralisAuthoringControlIntent.MenuCommand => new[] { "menu", "command", "action selection", "ui" },
-                PyralisAuthoringControlIntent.FactionTeam => new[] { "faction", "team", "seat", "participant" },
-                _ => new[] { "mixed", "hybrid", "custom" }
-            };
-        }
-
-        public static string GetWorldLabel(PyralisAuthoringWorldIntent world)
-        {
-            return world switch
-            {
-                PyralisAuthoringWorldIntent.SideView2DGravity => "2D side-view gravity world",
-                PyralisAuthoringWorldIntent.TopDown2DPlane => "2D top-down/free-movement plane",
-                PyralisAuthoringWorldIntent.Lane2_5D => "2.5D lane or arena space",
-                PyralisAuthoringWorldIntent.Space3D => "3D space",
-                PyralisAuthoringWorldIntent.BoardGridTabletop => "board/grid/tabletop world",
-                PyralisAuthoringWorldIntent.CardTableSurface => "card/table surface",
-                PyralisAuthoringWorldIntent.UiMenuFirst => "UI/menu-first surface",
-                _ => "hybrid or unsure world"
-            };
-        }
-
-        public static string GetControlLabel(PyralisAuthoringControlIntent control)
-        {
-            return control switch
-            {
-                PyralisAuthoringControlIntent.PawnActor => "pawn/actor control",
-                PyralisAuthoringControlIntent.CursorSelector => "cursor or selector control",
-                PyralisAuthoringControlIntent.BoardSeat => "board seat control",
-                PyralisAuthoringControlIntent.CardHand => "card hand control",
-                PyralisAuthoringControlIntent.Camera => "camera control",
-                PyralisAuthoringControlIntent.MenuCommand => "menu command control",
-                PyralisAuthoringControlIntent.FactionTeam => "faction/team control",
-                _ => "mixed control"
-            };
-        }
-
         private static bool Contains(string[] values, string expected)
-        {
+{
             if (values == null || string.IsNullOrWhiteSpace(expected))
                 return false;
 
             for (int i = 0; i < values.Length; i++)
             {
-                if (string.Equals(values[i], expected, StringComparison.Ordinal))
+                string val = values[i];
+                if (string.Equals(val, expected, StringComparison.OrdinalIgnoreCase))
+                    return true;
+
+                // Hierarchical match: 
+                // - A tag like 'Combat/Reaction' matches a search for 'Combat'
+                // - A tag like 'Combat' matches a search for 'Combat/Reaction' (as a parent category)
+                if (val != null && (val.StartsWith(expected + "/", StringComparison.OrdinalIgnoreCase) ||
+                                   expected.StartsWith(val + "/", StringComparison.OrdinalIgnoreCase)))
                     return true;
             }
 

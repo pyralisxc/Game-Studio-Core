@@ -8,8 +8,18 @@ namespace NeonBlack.Gameplay.Characters
     /// <summary>
     /// Spawns and assigns pawns for registered participants using authored PawnDefinitions.
     /// </summary>
+    /// <summary>
+    /// Service for spawning participants into the scene at designated spawn points.
+    /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Setup | AuthoringCapability.Session,
+        Relevance = "Orchestrates participant spawning at designated spawn points during session initialization.",
+        Axioms = AuthoringWorldAxiom.None,
+        RequiredInterfaces = new[] { typeof(IGameService) },
+        FirstProof = "Register a participant and verify their pawn is spawned at the correct spawn point."
+    )]
     public class ParticipantSpawnService : MonoBehaviour, IGameService
-    {
+{
         [SerializeField] private ParticipantRosterService rosterService;
         [SerializeField] private SessionStateService sessionStateService;
         [SerializeField] private Transform[] spawnPoints;

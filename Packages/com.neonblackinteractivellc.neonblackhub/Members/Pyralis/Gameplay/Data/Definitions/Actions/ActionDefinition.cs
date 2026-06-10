@@ -1,9 +1,17 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Actions;
+using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Data.Definitions
 {
+    [AuthoringContract(
+        Capability = AuthoringCapability.Session | AuthoringCapability.TurnBased, 
+        Relevance = "Project-window creation path for one selectable command or resolver-backed action.",
+        AssignmentFields = new[] { nameof(actionId), nameof(displayName), nameof(targetRule) },
+        FirstProof = "Verify the action is selectable in the character menu or action bar.",
+        NativeSetup = new[] { "Create Asset" }
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/Definitions/Action Definition", fileName = "ActionDefinition", order = 60)]
     public class ActionDefinition : ScriptableObject
     {

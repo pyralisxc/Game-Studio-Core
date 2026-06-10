@@ -8,8 +8,18 @@ namespace NeonBlack.Gameplay.Features.Feedback
 {
     [DefaultExecutionOrder(-25)]
     [AddComponentMenu("NeonBlack/Gameplay/Feedback/Participant Feedback Service")]
+    /// <summary>
+    /// Service for publishing and streaming feedback events (e.g., scoring, health changes) to participants.
+    /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.VFX,
+        Relevance = "Global service for streaming feedback events (scoring, health) to participants for UI/SFX triggers.",
+        Axioms = AuthoringWorldAxiom.None,
+        RequiredInterfaces = new[] { typeof(IGameService), typeof(IParticipantFeedbackStream), typeof(IParticipantFeedbackPublisher) },
+        FirstProof = "Publish a score event via the service and verify it is received by registered UI listeners."
+    )]
     public class ParticipantFeedbackService : MonoBehaviour, IGameService, IParticipantFeedbackStream, IParticipantFeedbackPublisher
-    {
+{
         [System.Serializable]
         public sealed class ParticipantIntEvent : UnityEvent<ParticipantHandle, int> { }
 

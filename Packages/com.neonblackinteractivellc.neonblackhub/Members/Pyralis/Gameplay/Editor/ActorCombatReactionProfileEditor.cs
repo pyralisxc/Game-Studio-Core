@@ -1,3 +1,4 @@
+using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Profiles;
 using System.Collections.Generic;
 using UnityEditor;

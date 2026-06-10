@@ -1,9 +1,15 @@
+using NeonBlack.Gameplay.Core.Contracts;
 using System;
 using NeonBlack.Gameplay.Core.Actions;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Features.Combat
 {
+    [AuthoringContract(
+        Capability = NeonBlack.Gameplay.Core.Contracts.AuthoringCapability.Combat,
+        Relevance = "Logic for planning projectile trajectories based on fire modes and spread rules.",
+        ExpertAdvice = "This class produces ProjectileSpawnCommands but does not execute them. Use it in conjunction with a Launcher."
+    )]
     public static class ProjectileFirePlanner
     {
         public static ProjectileSpawnCommand[] BuildCommands(ProjectileFireRequest request)

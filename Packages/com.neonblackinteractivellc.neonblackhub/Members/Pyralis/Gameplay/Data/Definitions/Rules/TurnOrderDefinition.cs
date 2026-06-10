@@ -1,4 +1,5 @@
-﻿using NeonBlack.Gameplay.Core.Rules.TurnPhase;
+using NeonBlack.Gameplay.Core.Rules.TurnPhase;
+using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,6 +8,13 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
     /// <summary>
     /// Designer-authored seat order and phase list for turn-based rules.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Tabletop | AuthoringCapability.TurnBased, 
+        Relevance = "Project-window creation path for tabletop and turn/menu action order.",
+        AssignmentFields = new[] { nameof(participantSeats), nameof(phases) },
+        FirstProof = "Verify the turn sequence in the Tabletop Board Grid Presenter.",
+        NativeSetup = new[] { "Create Asset" }
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/Rules/Turn Order Definition", fileName = "TurnOrderDefinition", order = -70)]
     public class TurnOrderDefinition : ScriptableObject
     {

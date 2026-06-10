@@ -1,10 +1,23 @@
 using System;
+using UnityEngine;
 
 namespace NeonBlack.Gameplay.Core.Rpg
 {
+    [Serializable]
     public sealed class RpgOwnerSaveData
     {
         public const int CurrentSchemaVersion = 1;
+
+        [SerializeField] private RpgOwnerKey owner;
+        [SerializeField] private int schemaVersion;
+        [SerializeField] private RpgProgressionSnapshot progression;
+        [SerializeField] private RpgInventoryItemSnapshot[] inventory;
+        [SerializeField] private RpgEquipmentSnapshot[] equipment;
+        [SerializeField] private RpgQuestSnapshot[] quests;
+        [SerializeField] private RpgSkillUnlockSnapshot[] skillUnlocks;
+        [SerializeField] private RpgDialogueSnapshot dialogue;
+        [SerializeField] private RpgHubReturnSnapshot hubReturn;
+        [SerializeField] private RpgOpenZoneSnapshot openZones;
 
         public RpgOwnerSaveData(
             RpgOwnerKey owner,
@@ -18,28 +31,28 @@ namespace NeonBlack.Gameplay.Core.Rpg
             RpgHubReturnSnapshot hubReturn,
             RpgOpenZoneSnapshot openZones = default)
         {
-            Owner = owner;
-            SchemaVersion = schemaVersion < 1 ? CurrentSchemaVersion : schemaVersion;
-            Progression = progression;
-            Inventory = inventory ?? Array.Empty<RpgInventoryItemSnapshot>();
-            Equipment = equipment ?? Array.Empty<RpgEquipmentSnapshot>();
-            Quests = quests ?? Array.Empty<RpgQuestSnapshot>();
-            SkillUnlocks = skillUnlocks ?? Array.Empty<RpgSkillUnlockSnapshot>();
-            Dialogue = dialogue;
-            HubReturn = hubReturn;
-            OpenZones = openZones;
+            this.owner = owner;
+            this.schemaVersion = schemaVersion < 1 ? CurrentSchemaVersion : schemaVersion;
+            this.progression = progression;
+            this.inventory = inventory ?? Array.Empty<RpgInventoryItemSnapshot>();
+            this.equipment = equipment ?? Array.Empty<RpgEquipmentSnapshot>();
+            this.quests = quests ?? Array.Empty<RpgQuestSnapshot>();
+            this.skillUnlocks = skillUnlocks ?? Array.Empty<RpgSkillUnlockSnapshot>();
+            this.dialogue = dialogue;
+            this.hubReturn = hubReturn;
+            this.openZones = openZones;
         }
 
-        public RpgOwnerKey Owner { get; }
-        public int SchemaVersion { get; }
-        public RpgProgressionSnapshot Progression { get; }
-        public RpgInventoryItemSnapshot[] Inventory { get; }
-        public RpgEquipmentSnapshot[] Equipment { get; }
-        public RpgQuestSnapshot[] Quests { get; }
-        public RpgSkillUnlockSnapshot[] SkillUnlocks { get; }
-        public RpgDialogueSnapshot Dialogue { get; }
-        public RpgHubReturnSnapshot HubReturn { get; }
-        public RpgOpenZoneSnapshot OpenZones { get; }
+        public RpgOwnerKey Owner => owner;
+        public int SchemaVersion => schemaVersion;
+        public RpgProgressionSnapshot Progression => progression;
+        public RpgInventoryItemSnapshot[] Inventory => inventory;
+        public RpgEquipmentSnapshot[] Equipment => equipment;
+        public RpgQuestSnapshot[] Quests => quests;
+        public RpgSkillUnlockSnapshot[] SkillUnlocks => skillUnlocks;
+        public RpgDialogueSnapshot Dialogue => dialogue;
+        public RpgHubReturnSnapshot HubReturn => hubReturn;
+        public RpgOpenZoneSnapshot OpenZones => openZones;
 
         public static RpgOwnerSaveData Capture(
             RpgOwnerKey owner,
@@ -88,18 +101,23 @@ namespace NeonBlack.Gameplay.Core.Rpg
         }
     }
 
-    public readonly struct RpgProgressionSnapshot
+    [Serializable]
+    public struct RpgProgressionSnapshot
     {
+        [SerializeField] private int experience;
+        [SerializeField] private int level;
+        [SerializeField] private int skillPoints;
+
         public RpgProgressionSnapshot(int experience, int level, int skillPoints)
         {
-            Experience = experience < 0 ? 0 : experience;
-            Level = level < 1 ? 1 : level;
-            SkillPoints = skillPoints < 0 ? 0 : skillPoints;
+            this.experience = experience < 0 ? 0 : experience;
+            this.level = level < 1 ? 1 : level;
+            this.skillPoints = skillPoints < 0 ? 0 : skillPoints;
         }
 
-        public int Experience { get; }
-        public int Level { get; }
-        public int SkillPoints { get; }
+        public int Experience => experience;
+        public int Level => level;
+        public int SkillPoints => skillPoints;
 
         public ProgressionState ToState()
         {
@@ -107,16 +125,20 @@ namespace NeonBlack.Gameplay.Core.Rpg
         }
     }
 
-    public readonly struct RpgInventoryItemSnapshot
+    [Serializable]
+    public struct RpgInventoryItemSnapshot
     {
+        [SerializeField] private string itemId;
+        [SerializeField] private int quantity;
+
         public RpgInventoryItemSnapshot(string itemId, int quantity)
         {
-            ItemId = Normalize(itemId);
-            Quantity = quantity < 0 ? 0 : quantity;
+            this.itemId = Normalize(itemId);
+            this.quantity = quantity < 0 ? 0 : quantity;
         }
 
-        public string ItemId { get; }
-        public int Quantity { get; }
+        public string ItemId => itemId;
+        public int Quantity => quantity;
         public bool IsValid => !string.IsNullOrEmpty(ItemId) && Quantity > 0;
 
         private static string Normalize(string value)
@@ -125,16 +147,20 @@ namespace NeonBlack.Gameplay.Core.Rpg
         }
     }
 
-    public readonly struct RpgEquipmentSnapshot
+    [Serializable]
+    public struct RpgEquipmentSnapshot
     {
+        [SerializeField] private string slotId;
+        [SerializeField] private string itemId;
+
         public RpgEquipmentSnapshot(string slotId, string itemId)
         {
-            SlotId = Normalize(slotId);
-            ItemId = Normalize(itemId);
+            this.slotId = Normalize(slotId);
+            this.itemId = Normalize(itemId);
         }
 
-        public string SlotId { get; }
-        public string ItemId { get; }
+        public string SlotId => slotId;
+        public string ItemId => itemId;
         public bool IsValid => !string.IsNullOrEmpty(SlotId) && !string.IsNullOrEmpty(ItemId);
 
         private static string Normalize(string value)
@@ -143,20 +169,26 @@ namespace NeonBlack.Gameplay.Core.Rpg
         }
     }
 
-    public readonly struct RpgQuestSnapshot
+    [Serializable]
+    public struct RpgQuestSnapshot
     {
+        [SerializeField] private string questId;
+        [SerializeField] private QuestStatus status;
+        [SerializeField] private bool rewardsGranted;
+        [SerializeField] private RpgQuestObjectiveSnapshot[] objectives;
+
         public RpgQuestSnapshot(string questId, QuestStatus status, bool rewardsGranted, RpgQuestObjectiveSnapshot[] objectives)
         {
-            QuestId = Normalize(questId);
-            Status = status;
-            RewardsGranted = rewardsGranted;
-            Objectives = objectives ?? Array.Empty<RpgQuestObjectiveSnapshot>();
+            this.questId = Normalize(questId);
+            this.status = status;
+            this.rewardsGranted = rewardsGranted;
+            this.objectives = objectives ?? Array.Empty<RpgQuestObjectiveSnapshot>();
         }
 
-        public string QuestId { get; }
-        public QuestStatus Status { get; }
-        public bool RewardsGranted { get; }
-        public RpgQuestObjectiveSnapshot[] Objectives { get; }
+        public string QuestId => questId;
+        public QuestStatus Status => status;
+        public bool RewardsGranted => rewardsGranted;
+        public RpgQuestObjectiveSnapshot[] Objectives => objectives;
         public bool IsValid => !string.IsNullOrEmpty(QuestId);
 
         private static string Normalize(string value)
@@ -165,16 +197,20 @@ namespace NeonBlack.Gameplay.Core.Rpg
         }
     }
 
-    public readonly struct RpgQuestObjectiveSnapshot
+    [Serializable]
+    public struct RpgQuestObjectiveSnapshot
     {
+        [SerializeField] private string objectiveId;
+        [SerializeField] private int progress;
+
         public RpgQuestObjectiveSnapshot(string objectiveId, int progress)
         {
-            ObjectiveId = Normalize(objectiveId);
-            Progress = progress < 0 ? 0 : progress;
+            this.objectiveId = Normalize(objectiveId);
+            this.progress = progress < 0 ? 0 : progress;
         }
 
-        public string ObjectiveId { get; }
-        public int Progress { get; }
+        public string ObjectiveId => objectiveId;
+        public int Progress => progress;
         public bool IsValid => !string.IsNullOrEmpty(ObjectiveId);
 
         private static string Normalize(string value)
@@ -183,16 +219,20 @@ namespace NeonBlack.Gameplay.Core.Rpg
         }
     }
 
-    public readonly struct RpgSkillUnlockSnapshot
+    [Serializable]
+    public struct RpgSkillUnlockSnapshot
     {
+        [SerializeField] private string nodeId;
+        [SerializeField] private int count;
+
         public RpgSkillUnlockSnapshot(string nodeId, int count)
         {
-            NodeId = Normalize(nodeId);
-            Count = count < 0 ? 0 : count;
+            this.nodeId = Normalize(nodeId);
+            this.count = count < 0 ? 0 : count;
         }
 
-        public string NodeId { get; }
-        public int Count { get; }
+        public string NodeId => nodeId;
+        public int Count => count;
         public bool IsValid => !string.IsNullOrEmpty(NodeId) && Count > 0;
 
         private static string Normalize(string value)
@@ -201,32 +241,42 @@ namespace NeonBlack.Gameplay.Core.Rpg
         }
     }
 
-    public readonly struct RpgDialogueSnapshot
+    [Serializable]
+    public struct RpgDialogueSnapshot
     {
+        [SerializeField] private string[] flags;
+        [SerializeField] private RpgDialogueSessionSnapshot session;
+
         public RpgDialogueSnapshot(string[] flags, RpgDialogueSessionSnapshot session)
         {
-            Flags = flags ?? Array.Empty<string>();
-            Session = session;
+            this.flags = flags ?? Array.Empty<string>();
+            this.session = session;
         }
 
-        public string[] Flags { get; }
-        public RpgDialogueSessionSnapshot Session { get; }
+        public string[] Flags => flags;
+        public RpgDialogueSessionSnapshot Session => session;
     }
 
-    public readonly struct RpgDialogueSessionSnapshot
+    [Serializable]
+    public struct RpgDialogueSessionSnapshot
     {
+        [SerializeField] private string npcId;
+        [SerializeField] private string graphId;
+        [SerializeField] private string currentNodeId;
+        [SerializeField] private bool ended;
+
         public RpgDialogueSessionSnapshot(string npcId, string graphId, string currentNodeId, bool ended)
         {
-            NpcId = Normalize(npcId);
-            GraphId = Normalize(graphId);
-            CurrentNodeId = Normalize(currentNodeId);
-            Ended = ended;
+            this.npcId = Normalize(npcId);
+            this.graphId = Normalize(graphId);
+            this.currentNodeId = Normalize(currentNodeId);
+            this.ended = ended;
         }
 
-        public string NpcId { get; }
-        public string GraphId { get; }
-        public string CurrentNodeId { get; }
-        public bool Ended { get; }
+        public string NpcId => npcId;
+        public string GraphId => graphId;
+        public string CurrentNodeId => currentNodeId;
+        public bool Ended => ended;
         public bool IsValid => !string.IsNullOrEmpty(NpcId) && !string.IsNullOrEmpty(GraphId);
 
         private static string Normalize(string value)
@@ -235,22 +285,30 @@ namespace NeonBlack.Gameplay.Core.Rpg
         }
     }
 
-    public readonly struct RpgHubReturnSnapshot
+    [Serializable]
+    public struct RpgHubReturnSnapshot
     {
+        [SerializeField] private string hubId;
+        [SerializeField] private string hubSceneId;
+        [SerializeField] private string spawnPointId;
+        [SerializeField] private string lastInteractableId;
+        [SerializeField] private string requestedSceneId;
+
         public RpgHubReturnSnapshot(string hubId, string hubSceneId, string spawnPointId, string lastInteractableId, string requestedSceneId)
         {
-            HubId = Normalize(hubId);
-            HubSceneId = Normalize(hubSceneId);
-            SpawnPointId = Normalize(spawnPointId);
-            LastInteractableId = Normalize(lastInteractableId);
-            RequestedSceneId = Normalize(requestedSceneId);
+            this.hubId = Normalize(hubId);
+            this.hubSceneId = Normalize(hubSceneId);
+            this.spawnPointId = Normalize(spawnPointId);
+            this.lastInteractableId = Normalize(lastInteractableId);
+            this.requestedSceneId = Normalize(requestedSceneId);
         }
 
-        public string HubId { get; }
-        public string HubSceneId { get; }
-        public string SpawnPointId { get; }
-        public string LastInteractableId { get; }
-        public string RequestedSceneId { get; }
+        public string HubId => hubId;
+        public string HubSceneId => hubSceneId;
+        public string spawnPointId_ => spawnPointId; // keeping internal field name consistent with constructor param name if possible, but let's use property
+        public string SpawnPointId => spawnPointId;
+        public string LastInteractableId => lastInteractableId;
+        public string RequestedSceneId => requestedSceneId;
 
         private static string Normalize(string value)
         {

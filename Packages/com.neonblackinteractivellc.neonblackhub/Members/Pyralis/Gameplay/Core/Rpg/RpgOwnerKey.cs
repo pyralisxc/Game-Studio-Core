@@ -1,17 +1,22 @@
 using System;
+using UnityEngine;
 
 namespace NeonBlack.Gameplay.Core.Rpg
 {
-    public readonly struct RpgOwnerKey : IEquatable<RpgOwnerKey>
-    {
+    [Serializable]
+    public struct RpgOwnerKey : IEquatable<RpgOwnerKey>
+{
+        [SerializeField] private RpgOwnerKind kind;
+        [SerializeField] private string stableId;
+
         public RpgOwnerKey(RpgOwnerKind kind, string stableId)
         {
-            Kind = kind;
-            StableId = string.IsNullOrWhiteSpace(stableId) ? string.Empty : stableId.Trim();
+            this.kind = kind;
+            this.stableId = string.IsNullOrWhiteSpace(stableId) ? string.Empty : stableId.Trim();
         }
 
-        public RpgOwnerKind Kind { get; }
-        public string StableId { get; }
+        public RpgOwnerKind Kind => kind;
+        public string StableId => stableId;
         public bool IsValid => Kind != RpgOwnerKind.Unknown && !string.IsNullOrWhiteSpace(StableId);
 
         public bool Equals(RpgOwnerKey other)

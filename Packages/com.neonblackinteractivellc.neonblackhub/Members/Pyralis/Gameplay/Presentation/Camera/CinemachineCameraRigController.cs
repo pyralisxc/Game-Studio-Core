@@ -14,10 +14,17 @@ namespace NeonBlack.Gameplay.Presentation.Camera
     /// participants and keeps them framed, with support for shared and split-screen modes,
     /// playfield bounds clamping, runtime profile switching, and optional scroll zoom.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Camera,
+        Relevance = "Canonical shared camera rig controller. Handles participant framing, 2D/3D bounds, and profile switching.",
+        NativeSetup = new[] { "Add to CameraRig root", "Assign Target Camera", "Assign CameraRigProfile" },
+        AssignmentFields = new[] { nameof(cameraRigProfile), nameof(playfieldProfile), nameof(targetCamera) },
+        FirstProof = "The camera follows and frames active participants in the scene."
+    )]
     [AddComponentMenu("NeonBlack/Gameplay/Camera/Cinemachine Camera Rig Controller")]
     [ExecuteAlways]
     public class CinemachineCameraRigController : MonoBehaviour, ICameraBoundsProvider
-    {
+{
         [SerializeField] private CameraRigProfile cameraRigProfile;
         [SerializeField] private PlayfieldProfile playfieldProfile;
         [SerializeField] private ParticipantRosterService participantRoster;

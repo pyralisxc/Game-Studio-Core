@@ -1,13 +1,24 @@
 using System;
 using System.Collections.Generic;
+using NeonBlack.Gameplay.Core.Contracts;
 
 namespace NeonBlack.Gameplay.Core.Actions
 {
     /// <summary>
     /// In-memory FIFO action queue for rules-driven and menu-driven gameplay.
     /// </summary>
-    public sealed class ActionQueueService : IActionQueueService
-    {
+    [AuthoringContract(
+        Capability = AuthoringCapability.Session,
+        Relevance = "Processes action execution requests and resolves them via registered resolvers.",
+        Axioms = AuthoringWorldAxiom.TurnBased | AuthoringWorldAxiom.Realtime,
+        RequiredInterfaces = new[] { typeof(IActionQueueService) },
+        SatisfactionReason = "Provides the central queue for processing gameplay actions."
+    ,
+        AssignmentFields = new[] { "_pendingActions", "_resolvers" },
+        ExpertAdvice = "Register custom IActionResolvers to extend the engine's action vocabulary. The queue handles FIFO execution and validation.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/actions")]
+public sealed class ActionQueueService : IActionQueueService
+{
         private readonly List<QueuedAction> _pendingActions;
         private readonly List<IActionResolver> _resolvers;
         private long _nextSequenceId;

@@ -1,10 +1,11 @@
 {
     "name": "NeonBlack.Gameplay.Feature.Pickups",
     "references": [
+        "NeonBlack.Gameplay.Core",
         "NeonBlack.Gameplay.Data",
         "NeonBlack.Gameplay.Features.Composition"
     ],
-    "includePlatforms": [],
+"includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

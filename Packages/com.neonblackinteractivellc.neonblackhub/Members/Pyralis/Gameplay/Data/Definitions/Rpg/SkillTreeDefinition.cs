@@ -1,12 +1,20 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Rpg;
+using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rpg
 {
+    [AuthoringContract(
+        ModuleId = "rpg.skilltree.definition",
+        Capability = AuthoringCapability.Stats,
+        Lane = "RPG",
+        AssignmentFields = new[] { nameof(treeId), nameof(displayName), nameof(nodes) },
+        FirstProof = "Proof that the skill tree contains valid nodes and prerequisites are correctly linked."
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Skill Tree", fileName = "SkillTreeDefinition")]
     public class SkillTreeDefinition : ScriptableObject, ISkillTree
-    {
+{
         public string treeId = "skilltree.new";
         public string displayName = "New Skill Tree";
         public SkillNodeDefinition[] nodes = System.Array.Empty<SkillNodeDefinition>();

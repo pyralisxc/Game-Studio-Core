@@ -1,3 +1,4 @@
+using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Definitions;
 using Unity.Netcode;
@@ -9,6 +10,11 @@ namespace NeonBlack.Gameplay.Networking.Runtime
     /// <summary>
     /// Shared validation for the NGO-backed Pyralis runtime lane.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Networking,
+        Relevance = "Shared validation for the NGO-backed Pyralis runtime lane.",
+        FirstProof = "Validation issues are correctly reported in the Authoring Window when NGO components are missing."
+    )]
     public static class PyralisNetworkSetupValidator
     {
         public static List<string> GetIssues(SessionDefinition sessionDefinition, NetworkManager networkManager)

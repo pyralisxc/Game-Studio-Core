@@ -1,11 +1,17 @@
 using NeonBlack.Gameplay.Data.Definitions;
+using NeonBlack.Gameplay.Data.Definitions.Rpg;
+using NeonBlack.Gameplay.Features.Rpg.Samples;
 using NeonBlack.Gameplay.Presentation.Camera;
 using NeonBlack.Gameplay.Presentation.Visuals;
 using NeonBlack.Gameplay.Core.Contracts.Networking;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Runtime;
+using NeonBlack.Gameplay.Core.Rpg;
 using NeonBlack.Gameplay.Features.Input;
 using NeonBlack.Gameplay.Characters;
+using NeonBlack.Gameplay.Features.Combat;
+using NeonBlack.Gameplay.Features.Enemies;
+using NeonBlack.Gameplay.Features.Characters;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -21,6 +27,14 @@ namespace NeonBlack.Gameplay.Core.Runtime
     /// </summary>
     [AddComponentMenu("NeonBlack/Gameplay/Setup/Pyralis Gameplay Lifetime Scope")]
     [DisallowMultipleComponent]
+    [AuthoringContract(
+        Capability = AuthoringCapability.Setup, 
+        Relevance = "Inspector Add Component path for the visible Pyralis runtime composition scope.", 
+        Axioms = AuthoringWorldAxiom.None,
+        AssignmentFields = new[] { nameof(InjectLoadedScenesOnBuild) },
+        FirstProof = "Check the VContainer debugger to ensure all gameplay services are correctly registered in the scope.",
+        NativeSetup = new[] { "Add Component", "Configure VContainer Resolver" }
+    )]
     public class PyralisGameplayLifetimeScope : LifetimeScope
     {
         private bool _isConfigured;
@@ -36,6 +50,11 @@ namespace NeonBlack.Gameplay.Core.Runtime
         private CinemachineCameraRigController _cameraRigController;
         private ISessionOwnershipService _sessionOwnershipService;
         private IParticipantAuthorityService _participantAuthorityService;
+
+        [Header("RPG Definitions")]
+        [SerializeField] private ItemCatalogDefinition itemCatalog;
+        [SerializeField] private ProgressionCurveDefinition progressionCurve;
+        [SerializeField] private bool includeGoldenSample;
 
         public bool InjectLoadedScenesOnBuild { get; set; } = true;
 
@@ -88,16 +107,53 @@ namespace NeonBlack.Gameplay.Core.Runtime
                 builder.RegisterInstance(_sessionDefinition).AsSelf();
 
             RegisterComponent(builder, _sessionStateService);
+            if (_sessionStateService != null)
+                builder.RegisterInstance<IGameplayStateReader>(_sessionStateService);
+
             RegisterComponent(builder, _participantRosterService);
+            if (_participantRosterService != null)
+            {
+                builder.RegisterInstance<IParticipantRoster>(_participantRosterService);
+                builder.RegisterInstance<IPlayerProvider>(_participantRosterService);
+            }
+
             RegisterComponent(builder, _participantSpawnService);
             RegisterComponent(builder, _participantInputRouter);
-            RegisterComponent(builder, _sceneLoader);
+RegisterComponent(builder, _sceneLoader);
             RegisterComponent(builder, _timeManager);
             RegisterComponent(builder, _cameraShake);
             RegisterComponent(builder, _cameraRigController);
 
+            builder.Register<PawnComboProcessor>(Lifetime.Transient);
+            builder.Register<PawnDamageHandler>(Lifetime.Transient);
+
+            builder.Register<EnemyDetectionService>(Lifetime.Singleton);
+            builder.Register<EnemyCombatProcessor>(Lifetime.Singleton);
+            builder.RegisterComponentInHierarchy<BattleManager>().AsSelf();
+
+            builder.Register<LocalRpgPersistenceService>(Lifetime.Singleton).As<IRpgPersistenceService>();
+
+            if (itemCatalog != null)
+                builder.RegisterInstance<IItemCatalog>(itemCatalog);
+
+            if (progressionCurve != null)
+                builder.RegisterInstance<IProgressionCurve>(progressionCurve);
+
+            builder.Register<InventoryService>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
+            builder.Register<ProgressionService>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
+            builder.Register<QuestService>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
+            builder.Register<EquipmentService>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
+            builder.Register<SkillTreeService>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
+            builder.Register<DialogueService>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
+            builder.Register<VendorService>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
+            builder.Register<RpgOpenZoneService>(Lifetime.Singleton).AsSelf();
+            builder.Register<HubInteractionService>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
+
+            if (includeGoldenSample)
+                RpgGoldenSampleFactory.RegisterTo(builder);
+
             if (_sessionOwnershipService != null)
-                builder.RegisterInstance<ISessionOwnershipService>(_sessionOwnershipService);
+builder.RegisterInstance<ISessionOwnershipService>(_sessionOwnershipService);
 
             if (_participantAuthorityService != null)
                 builder.RegisterInstance<IParticipantAuthorityService>(_participantAuthorityService);
@@ -115,12 +171,11 @@ namespace NeonBlack.Gameplay.Core.Runtime
                 if (_platformContext == null)
                     return;
 
-                _platformContext.Services.Register<IObjectResolver>(container);
-                _platformContext.Services.Register(container);
+                _platformContext.Services.SetFallbackResolver(type => container.Resolve(type));
                 if (InjectLoadedScenesOnBuild)
                     InjectLoadedSceneObjects(container);
             });
-        }
+}
 
         protected override void OnDestroy()
         {

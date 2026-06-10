@@ -1,3 +1,4 @@
+using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
 
 namespace NeonBlack.Gameplay.Editor
@@ -16,14 +17,14 @@ namespace NeonBlack.Gameplay.Editor
                     PyralisAuthoringConfidence.Explicit,
                     "A Sprite2D route where authored pawns move on a side-view playfield with gravity, ledges, platforms, or jumping.",
                     "Use this when the creator wants a 2D side-scroller, platformer, brawler, runner, or action prototype without applying a preset.",
-                    "One Sprite2D pawn spawns, receives input, moves horizontally, and proves the side-view movement surface.",
+                    "One Sprite2D pawn spawns, receives input, moves horizontally, and proves the side-view movement surface. Verify by checking that the pawn lands on a platform and can jump successfully.",
                     goalTags: new[]
                     {
-                        RuntimeCapabilityGoalTag.Movement.ToString(),
-                        RuntimeCapabilityGoalTag.JumpTraversal.ToString(),
-                        RuntimeCapabilityGoalTag.Input.ToString(),
-                        RuntimeCapabilityGoalTag.AnimationPresentation.ToString(),
-                        RuntimeCapabilityGoalTag.Camera.ToString()
+                        "Movement",
+                        "JumpTraversal",
+                        "Input",
+                        "AnimationPresentation",
+                        "Camera"
                     },
                     laneTags: new[] { RuntimeCapabilityLaneTag.Sprite2D.ToString() },
                     assignmentFields: new[]
@@ -55,13 +56,13 @@ namespace NeonBlack.Gameplay.Editor
                     "One controlled body, cursor, or action surface moves on the 2D plane and proves camera/world bounds; arena-style proofs can then add one projectile or pickup event, one score change, and one HUD readout without treating jump gravity as required.",
                     goalTags: new[]
                     {
-                        RuntimeCapabilityGoalTag.Movement.ToString(),
-                        RuntimeCapabilityGoalTag.Input.ToString(),
-                        RuntimeCapabilityGoalTag.Camera.ToString(),
-                        RuntimeCapabilityGoalTag.Interaction.ToString(),
-                        RuntimeCapabilityGoalTag.Projectiles.ToString(),
-                        RuntimeCapabilityGoalTag.Scoring.ToString(),
-                        RuntimeCapabilityGoalTag.UiHud.ToString()
+                        "Movement",
+                        "Input",
+                        "Camera",
+                        "Interaction",
+                        "Projectiles",
+                        "Scoring",
+                        "UiHud"
                     },
                     laneTags: new[] { RuntimeCapabilityLaneTag.Sprite2D.ToString(), RuntimeCapabilityLaneTag.CameraCursor.ToString() },
                     assignmentFields: new[]
@@ -97,17 +98,17 @@ namespace NeonBlack.Gameplay.Editor
                     "One pawn moves, triggers one attack signal, and proves visible cause/effect before expanding enemies, scoring, or combos.",
                     goalTags: new[]
                     {
-                        RuntimeCapabilityGoalTag.Movement.ToString(),
-                        RuntimeCapabilityGoalTag.JumpTraversal.ToString(),
-                        RuntimeCapabilityGoalTag.Combat.ToString(),
-                        RuntimeCapabilityGoalTag.Input.ToString(),
-                        RuntimeCapabilityGoalTag.AnimationPresentation.ToString()
+                        "Movement",
+                        "JumpTraversal",
+                        "Combat",
+                        "Input",
+                        "AnimationPresentation"
                     },
                     laneTags: new[]
                     {
-                        RuntimeCapabilityLaneTag.Sprite2D.ToString(),
-                        RuntimeCapabilityLaneTag.Billboard2_5D.ToString(),
-                        RuntimeCapabilityLaneTag.Rigged3D.ToString()
+                        "Sprite2D",
+                        "Billboard2_5D",
+                        "Rigged3D"
                     },
                     requiredDefinitions: new[] { "ParticipantDefinition", "PawnDefinition", "CombatActionDefinition" },
                     requiredProfiles: new[] { "PawnMovementProfile", "PawnCombatProfile", "PawnPresentationProfile" },
@@ -140,16 +141,16 @@ namespace NeonBlack.Gameplay.Editor
                     PyralisAuthoringConfidence.Explicit,
                     "A lane, depth, or arena route where actors use 2.5D presentation and route-specific movement, camera, combat, or enemy behavior.",
                     "Use this when the project wants beat-em-up lane depth, arena positioning, billboard actors, or a hybrid 2D/3D camera relationship.",
-                    "One actor moves through the intended lane or arena space and proves camera framing before deeper combat or encounter work.",
+                    "One actor moves through the intended lane or arena space and proves camera framing before deeper combat or encounter work. Verify by checking billboard rotation and depth-based sorting.",
                     goalTags: new[]
                     {
-                        RuntimeCapabilityGoalTag.Movement.ToString(),
-                        RuntimeCapabilityGoalTag.Combat.ToString(),
-                        RuntimeCapabilityGoalTag.Camera.ToString(),
-                        RuntimeCapabilityGoalTag.NpcsEnemies.ToString(),
-                        RuntimeCapabilityGoalTag.AnimationPresentation.ToString()
+                        "Movement",
+                        "Combat",
+                        "Camera",
+                        "NpcsEnemies",
+                        "AnimationPresentation"
                     },
-                    laneTags: new[] { RuntimeCapabilityLaneTag.Billboard2_5D.ToString() },
+                    laneTags: new[] { "Billboard2_5D" },
                     assignmentFields: new[]
                     {
                         "PawnPresentationProfile -> Billboard2_5D",
@@ -182,13 +183,13 @@ namespace NeonBlack.Gameplay.Editor
                     "One rigged or placeholder actor exists in 3D space, receives control or AI intent, and proves movement/camera/interaction before deeper systems.",
                     goalTags: new[]
                     {
-                        RuntimeCapabilityGoalTag.Movement.ToString(),
-                        RuntimeCapabilityGoalTag.Camera.ToString(),
-                        RuntimeCapabilityGoalTag.Interaction.ToString(),
-                        RuntimeCapabilityGoalTag.NpcsEnemies.ToString(),
-                        RuntimeCapabilityGoalTag.AnimationPresentation.ToString()
+                        "Movement",
+                        "Camera",
+                        "Interaction",
+                        "NpcsEnemies",
+                        "AnimationPresentation"
                     },
-                    laneTags: new[] { RuntimeCapabilityLaneTag.Rigged3D.ToString() },
+                    laneTags: new[] { "Rigged3D" },
                     assignmentFields: new[]
                     {
                         "PawnPresentationProfile -> Rigged3D",
@@ -219,12 +220,12 @@ namespace NeonBlack.Gameplay.Editor
                     "A non-pawn or mixed route where the player first controls a camera, cursor, selector, board surface, or command UI.",
                     "Use this when the game idea is tactical, tabletop, menu-command, camera-driven, or cursor-first instead of actor-body-first.",
                     "One selection surface drives one visible command, cursor movement, camera action, or board/card choice.",
-                    goalTags: new[] { RuntimeCapabilityGoalTag.Camera.ToString(), RuntimeCapabilityGoalTag.Tabletop.ToString() },
+                    goalTags: new[] { "Camera", "Tabletop" },
                     laneTags: new[]
                     {
-                        RuntimeCapabilityLaneTag.CameraCursor.ToString(),
-                        RuntimeCapabilityLaneTag.TabletopNoPawn.ToString(),
-                        RuntimeCapabilityLaneTag.UiMenu.ToString()
+                        "CameraCursor",
+                        "TabletopNoPawn",
+                        "UiMenu"
                     },
                     relatedStableIds: new[]
                     {
@@ -242,18 +243,18 @@ namespace NeonBlack.Gameplay.Editor
                     "One selectable surface accepts or rejects one rules-backed action and shows a visible or inspectable state change.",
                     goalTags: new[]
                     {
-                        RuntimeCapabilityGoalTag.Tabletop.ToString(),
-                        RuntimeCapabilityGoalTag.UiHud.ToString(),
-                        RuntimeCapabilityGoalTag.Camera.ToString(),
-                        RuntimeCapabilityGoalTag.Interaction.ToString(),
-                        RuntimeCapabilityGoalTag.Projectiles.ToString()
+                        "Tabletop",
+                        "UiHud",
+                        "Camera",
+                        "Interaction",
+                        "Projectiles"
                     },
                     laneTags: new[]
                     {
-                        RuntimeCapabilityLaneTag.TabletopNoPawn.ToString(),
-                        RuntimeCapabilityLaneTag.UiMenu.ToString(),
-                        RuntimeCapabilityLaneTag.CameraCursor.ToString(),
-                        RuntimeCapabilityLaneTag.Sprite2D.ToString()
+                        "TabletopNoPawn",
+                        "UiMenu",
+                        "CameraCursor",
+                        "Sprite2D"
                     },
                     assignmentFields: new[]
                     {
@@ -282,15 +283,15 @@ namespace NeonBlack.Gameplay.Editor
                     PyralisAuthoringConfidence.Explicit,
                     "A route where menu commands, HUD, action selection, settings, results, dialogue, or UI-presented game state are the first authored surface.",
                     "Use this when the project begins with command choice, UI state, card/menu interaction, HUD feedback, or a non-scene-object first proof.",
-                    "One UI or menu action changes visible game/session state without requiring a pawn body.",
+                    "One UI or menu action changes visible game/session state without requiring a pawn body. Verify by clicking a button and seeing a 'Score Changed' or 'State Updated' HUD response.",
                     goalTags: new[]
                     {
-                        RuntimeCapabilityGoalTag.UiHud.ToString(),
-                        RuntimeCapabilityGoalTag.Tabletop.ToString(),
-                        RuntimeCapabilityGoalTag.Scoring.ToString(),
-                        RuntimeCapabilityGoalTag.Interaction.ToString()
+                        "UiHud",
+                        "Tabletop",
+                        "Scoring",
+                        "Interaction"
                     },
-                    laneTags: new[] { RuntimeCapabilityLaneTag.UiMenu.ToString(), RuntimeCapabilityLaneTag.TabletopNoPawn.ToString(), RuntimeCapabilityLaneTag.CameraCursor.ToString() },
+                    laneTags: new[] { "UiMenu", "TabletopNoPawn", "CameraCursor" },
                     assignmentFields: new[]
                     {
                         "Canvas / EventSystem -> UI surface",
@@ -299,7 +300,7 @@ namespace NeonBlack.Gameplay.Editor
                     },
                     customizationMoments: new[]
                     {
-                        "Choose UI composition, labels, navigation, action vocabulary, and visible state feedback.",
+                        "Choose UI composition, labels, navigation order, feedback timing, accessibility, and whether UI is screen-space or world-space.",
                         "Keep art/layout in the user's hands while facts describe required binders and proof targets."
                     },
                     canWait: new[] { "pawn prefab", "movement controller", "final art", "networking" },
@@ -317,25 +318,25 @@ namespace NeonBlack.Gameplay.Editor
                     PyralisAuthoringConfidence.Explicit,
                     "A project-wide intent that combines ingredients across world, actor, action, UI, rules, or runtime lanes without accepting a named preset.",
                     "Use this when the creator is exploring combinations such as tabletop plus projectiles, brawler plus RPG progression, card plus board, or custom systems.",
-                    "One chosen ingredient chain has a small proof target; other selected ingredients remain visible as next options, cautions, or proof enhancers.",
+                    "One chosen ingredient chain has a small proof target; other selected ingredients remain visible as next options, cautions, or proof enhancers. Verify that your custom logic executes and produces at least one observable side effect.",
                     goalTags: new[]
                     {
-                        RuntimeCapabilityGoalTag.Movement.ToString(),
-                        RuntimeCapabilityGoalTag.Combat.ToString(),
-                        RuntimeCapabilityGoalTag.Projectiles.ToString(),
-                        RuntimeCapabilityGoalTag.Tabletop.ToString(),
-                        RuntimeCapabilityGoalTag.UiHud.ToString(),
-                        RuntimeCapabilityGoalTag.Interaction.ToString(),
-                        RuntimeCapabilityGoalTag.NpcsEnemies.ToString()
+                        "Movement",
+                        "Combat",
+                        "Projectiles",
+                        "Tabletop",
+                        "UiHud",
+                        "Interaction",
+                        "NpcsEnemies"
                     },
                     laneTags: new[]
                     {
-                        RuntimeCapabilityLaneTag.Sprite2D.ToString(),
-                        RuntimeCapabilityLaneTag.Billboard2_5D.ToString(),
-                        RuntimeCapabilityLaneTag.Rigged3D.ToString(),
-                        RuntimeCapabilityLaneTag.TabletopNoPawn.ToString(),
-                        RuntimeCapabilityLaneTag.UiMenu.ToString(),
-                        RuntimeCapabilityLaneTag.CameraCursor.ToString()
+                        "Sprite2D",
+                        "Billboard2_5D",
+                        "Rigged3D",
+                        "TabletopNoPawn",
+                        "UiMenu",
+                        "CameraCursor"
                     },
                     assignmentFields: new[]
                     {

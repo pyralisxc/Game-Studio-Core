@@ -1,3 +1,4 @@
+using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Characters
@@ -8,8 +9,16 @@ namespace NeonBlack.Gameplay.Characters
     /// so external systems (AI, network) can drive movement without knowing the
     /// concrete controller type.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Movement, 
+        Relevance = "Calculates actor translation and velocity based on input and physical rules.", 
+        Axioms = AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.Dimensions3D,
+        AssignmentFields = new[] { nameof(IMovementModule.MoveSpeed), nameof(IMovementModule.IsGrounded) },
+        FirstProof = "Call Move and verify the character's world position changes.",
+        NativeSetup = new[] { "Implement interface in a movement component" }
+    )]
     public interface IMovementModule
-    {
+{
         /// <summary>Current horizontal move speed in world-units per second.</summary>
         float MoveSpeed { get; }
 

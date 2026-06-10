@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Profiles;
+using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Data.Definitions
@@ -15,6 +16,16 @@ namespace NeonBlack.Gameplay.Data.Definitions
     /// <summary>
     /// Top-level session definition for local-first, N-participant-ready gameplay startup.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Session, 
+        Relevance = "Top-level session configuration for local and networked gameplay setup.",
+        Priority = 10,
+        AssignmentFields = new[] { nameof(sessionName), nameof(defaultGameMode), nameof(defaultParticipants) },
+        NativeSetup = new[] { "GameplaySessionBootstrap" },
+        FirstProof = "Create a Session Definition asset in the Project window and assign it to a Gameplay Session Bootstrap component.",
+        ExpertAdvice = "SessionDefinition controls the scope of your session. For multiplayer, ensure 'Local First' is false if using NGO.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/session"
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/Definitions/Session Definition", fileName = "SessionDefinition", order = 0)]
     public class SessionDefinition : ScriptableObject
     {

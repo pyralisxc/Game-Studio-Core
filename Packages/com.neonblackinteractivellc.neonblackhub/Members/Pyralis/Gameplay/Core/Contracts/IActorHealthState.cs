@@ -10,8 +10,16 @@ namespace NeonBlack.Gameplay.Core.Contracts
         Enemy
     }
 
+    [AuthoringContract(
+        Capability = AuthoringCapability.Combat,
+        Relevance = "Provides the current health and life state of an actor.",
+        Axioms = AuthoringWorldAxiom.None,
+        NativeSetup = new[] { "Implement on HealthComponent or Actor core", "Initialize MaxHealth" },
+        AssignmentFields = new[] { nameof(IActorHealthState.CurrentHealth), nameof(IActorHealthState.MaxHealth) },
+        FirstProof = "Actor takes damage and its health percent decreases."
+    )]
     public interface IActorHealthState
-    {
+{
         float CurrentHealth { get; }
         float MaxHealth { get; }
         bool IsDead { get; }

@@ -121,11 +121,9 @@ public class PlayerSpawner : MonoBehaviour
 
     private void ResolveParticipantServices()
     {
-        GameplayPlatformContext.TryGetServices(out PlatformServiceRegistry services);
-
         if (participantSpawnService == null)
         {
-            if (services != null && services.TryResolve(out ParticipantSpawnService resolvedSpawnService))
+            if (GameplayPlatformContext.TryResolve(out ParticipantSpawnService resolvedSpawnService))
                 participantSpawnService = resolvedSpawnService;
             else
                 participantSpawnService = ResolveHierarchyComponent<ParticipantSpawnService>();
@@ -133,9 +131,9 @@ public class PlayerSpawner : MonoBehaviour
 
         if (rosterService == null)
         {
-            if (services != null && services.TryResolve(out ParticipantRosterService resolvedRosterService))
+            if (GameplayPlatformContext.TryResolve(out ParticipantRosterService resolvedRosterService))
                 rosterService = resolvedRosterService;
-            else if (services != null && services.TryResolve(out IParticipantRoster resolvedRoster))
+            else if (GameplayPlatformContext.TryResolve(out IParticipantRoster resolvedRoster))
                 rosterService = resolvedRoster as ParticipantRosterService;
 
             rosterService ??= ResolveHierarchyComponent<ParticipantRosterService>();
@@ -143,7 +141,7 @@ public class PlayerSpawner : MonoBehaviour
 
         if (_playerProvider == null)
         {
-            if (services != null && services.TryResolve(out IPlayerProvider resolvedPlayerProvider))
+            if (GameplayPlatformContext.TryResolve(out IPlayerProvider resolvedPlayerProvider))
                 _playerProvider = resolvedPlayerProvider;
             else
                 _playerProvider = rosterService;
@@ -450,16 +448,20 @@ public class PlayerSpawner : MonoBehaviour
         if (rosterService == null)
             return null;
 
-        for (int i = 0; i < rosterService.Participants.Count; i++)
+        // If a specific seat is targeted, we ONLY return that seat.
+        if (targetSeatIndex >= 0)
         {
-            ParticipantHandle participant = rosterService.Participants[i];
-            if (participant != null && participant.SeatIndex == targetSeatIndex)
-                return participant;
+            for (int i = 0; i < rosterService.Participants.Count; i++)
+            {
+                ParticipantHandle participant = rosterService.Participants[i];
+                if (participant != null && participant.SeatIndex == targetSeatIndex)
+                    return participant;
+            }
+            return null;
         }
 
-        return targetSeatIndex < 0 && rosterService.Participants.Count > 0
-            ? rosterService.Participants[0]
-            : null;
+        // If targetSeatIndex is -1 (default/unconfigured), we fall back to the primary participant.
+        return rosterService.Participants.Count > 0 ? rosterService.Participants[0] : null;
     }
 
     private GameObject ResolveTrackedPlayer()

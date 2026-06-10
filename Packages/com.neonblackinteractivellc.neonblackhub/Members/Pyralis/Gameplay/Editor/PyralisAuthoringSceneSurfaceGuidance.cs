@@ -31,6 +31,7 @@ namespace NeonBlack.Gameplay.Editor
         NotRelevant,
         Missing,
         CandidateDetected,
+        Conflict,
         LinkedToActiveSetup,
         Validated,
         PlayProven

@@ -1,3 +1,4 @@
+using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
 
 namespace NeonBlack.Gameplay.Editor
@@ -13,7 +14,7 @@ namespace NeonBlack.Gameplay.Editor
                     "Pawn Actor Route",
                     "Participant-backed player, NPC, or simulated actor routes that spawn or control a pawn body.",
                     "This is the first route family to receive deep Authoring 2.0 coverage.",
-                    new[] { RuntimeCapabilityGoalTag.Movement, RuntimeCapabilityGoalTag.Combat, RuntimeCapabilityGoalTag.NpcsEnemies },
+                    new[] { "Movement", "Combat", "NpcsEnemies" },
                     new[] { RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Billboard2_5D, RuntimeCapabilityLaneTag.Rigged3D },
                     new[] { RuntimeCapabilityLaneTag.TabletopNoPawn },
                     new[] { "SessionDefinition", "ParticipantDefinition", "PawnDefinition", "RuntimePatternDefinition" },
@@ -30,7 +31,7 @@ namespace NeonBlack.Gameplay.Editor
                     "NPC And Enemy Actor Route",
                     "Pawn or actor routes driven by AI, encounter, ambient, dialogue, vendor, quest, or enemy combat definitions.",
                     "The package has NPC/enemy definitions and feature modules, but Authoring 2.0 still needs fuller guided setup and proof coverage.",
-                    new[] { RuntimeCapabilityGoalTag.NpcsEnemies, RuntimeCapabilityGoalTag.Combat, RuntimeCapabilityGoalTag.Interaction },
+                    new[] { "NpcsEnemies", "Combat", "Interaction" },
                     new[] { RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Billboard2_5D, RuntimeCapabilityLaneTag.Rigged3D },
                     new[] { RuntimeCapabilityLaneTag.UiMenu },
                     new[] { "NpcDefinition", "ParticipantDefinition or enemy actor definition", "FeatureModuleDefinition" },
@@ -47,7 +48,7 @@ namespace NeonBlack.Gameplay.Editor
                     "Custom Object Or Feature Route",
                     "Scene objects, feature modules, hazards, pickups, triggers, turrets, traps, or custom systems that are not the primary pawn.",
                     "This route protects custom game objects from being treated as second-class setup after pawn paths work.",
-                    new[] { RuntimeCapabilityGoalTag.Interaction, RuntimeCapabilityGoalTag.Combat, RuntimeCapabilityGoalTag.Scoring },
+                    new[] { "Interaction", "Combat", "Scoring" },
                     new[] { RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Billboard2_5D, RuntimeCapabilityLaneTag.Rigged3D, RuntimeCapabilityLaneTag.TabletopNoPawn },
                     System.Array.Empty<RuntimeCapabilityLaneTag>(),
                     new[] { "FeatureModuleDefinition", "ActionDefinition or feature-specific definition when commands are involved" },
@@ -64,7 +65,7 @@ namespace NeonBlack.Gameplay.Editor
                     "UI HUD Or Menu Route",
                     "Canvas, HUD, menu, prompt, health, score, feedback, inventory, dialogue, card hand, or route-selection surfaces.",
                     "UI routes need authoring coverage because many games start from menus or non-pawn interaction surfaces.",
-                    new[] { RuntimeCapabilityGoalTag.UiHud, RuntimeCapabilityGoalTag.Scoring, RuntimeCapabilityGoalTag.Interaction },
+                    new[] { "UiHud", "Scoring", "Interaction" },
                     new[] { RuntimeCapabilityLaneTag.UiMenu, RuntimeCapabilityLaneTag.TabletopNoPawn, RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Rigged3D },
                     System.Array.Empty<RuntimeCapabilityLaneTag>(),
                     new[] { "ActionDefinition when UI triggers gameplay commands" },
@@ -81,7 +82,7 @@ namespace NeonBlack.Gameplay.Editor
                     "World Camera And Scene Surface Route",
                     "Camera, bounds, scene service, world trigger, board view, cursor view, or environmental route surfaces.",
                     "Camera/world coverage keeps setup honest when the first proof depends on visibility, framing, bounds, or scene context.",
-                    new[] { RuntimeCapabilityGoalTag.Camera, RuntimeCapabilityGoalTag.Movement, RuntimeCapabilityGoalTag.Interaction },
+                    new[] { "Camera", "Movement", "Interaction" },
                     new[] { RuntimeCapabilityLaneTag.CameraCursor, RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Billboard2_5D, RuntimeCapabilityLaneTag.Rigged3D, RuntimeCapabilityLaneTag.TabletopNoPawn },
                     System.Array.Empty<RuntimeCapabilityLaneTag>(),
                     System.Array.Empty<string>(),
@@ -98,7 +99,7 @@ namespace NeonBlack.Gameplay.Editor
                     "Tabletop Board Card Route",
                     "Board seats, board pieces, card hands, faction surfaces, turn order, phases, terminal conditions, and board action selection.",
                     "This route is explicitly non-pawn capable and should not inherit pawn requirements by accident.",
-                    new[] { RuntimeCapabilityGoalTag.Tabletop, RuntimeCapabilityGoalTag.Interaction, RuntimeCapabilityGoalTag.Scoring },
+                    new[] { "Tabletop", "Interaction", "Scoring" },
                     new[] { RuntimeCapabilityLaneTag.TabletopNoPawn, RuntimeCapabilityLaneTag.UiMenu, RuntimeCapabilityLaneTag.CameraCursor },
                     new[] { RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Rigged3D },
                     new[] { "BoardDefinition", "BoardPieceDefinition", "BoardMovePolicyDefinition", "TurnOrderDefinition", "PhaseDefinition" },
@@ -115,7 +116,7 @@ namespace NeonBlack.Gameplay.Editor
                     "Networking Authority Route",
                     "Host/client/server, participant ownership, authority, network spawn, replicated state, and network-ready route proof.",
                     "Networking must stay explicit so local-first setup does not silently pretend it has network authority coverage.",
-                    new[] { RuntimeCapabilityGoalTag.Networking, RuntimeCapabilityGoalTag.Movement, RuntimeCapabilityGoalTag.Combat },
+                    new[] { "Networking", "Movement", "Combat" },
                     new[] { RuntimeCapabilityLaneTag.Networked, RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Rigged3D },
                     new[] { RuntimeCapabilityLaneTag.TabletopNoPawn },
                     new[] { "SessionDefinition" },
@@ -134,7 +135,7 @@ namespace NeonBlack.Gameplay.Editor
             string displayName,
             string summary,
             string routeRelevance,
-            RuntimeCapabilityGoalTag[] goalTags,
+            string[] goalTags,
             RuntimeCapabilityLaneTag[] laneTags,
             RuntimeCapabilityLaneTag[] unsupportedLaneTags,
             string[] requiredDefinitions,
@@ -155,7 +156,7 @@ namespace NeonBlack.Gameplay.Editor
                 summary,
                 routeRelevance,
                 firstProof,
-                goalTags: ToStrings(goalTags),
+                goalTags: goalTags,
                 laneTags: ToStrings(laneTags),
                 unsupportedLaneTags: ToStrings(unsupportedLaneTags),
                 requiredDefinitions: requiredDefinitions,
@@ -182,15 +183,6 @@ namespace NeonBlack.Gameplay.Editor
                 },
                 workIntent: "RouteCoverage",
                 relatedStableIds: relatedStableIds);
-        }
-
-        private static string[] ToStrings(RuntimeCapabilityGoalTag[] tags)
-        {
-            string[] values = new string[tags.Length];
-            for (int i = 0; i < tags.Length; i++)
-                values[i] = tags[i].ToString();
-
-            return values;
         }
 
         private static string[] ToStrings(RuntimeCapabilityLaneTag[] tags)

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Rpg;
+using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions.Rpg;
 using NeonBlack.Gameplay.Features.Composition;
 using TMPro;
@@ -11,9 +12,17 @@ using VContainer;
 
 namespace NeonBlack.Gameplay.Features.Rpg.UI
 {
+    [AuthoringContract(
+        ModuleId = "rpg.quest.ui",
+        Capability = AuthoringCapability.Dialogue,
+        Lane = "RPG",
+        RequiredInterfaces = new[] { typeof(IRuntimeValidationProvider) },
+        RequiredComponentNames = new[] { "TMPro.TextMeshProUGUI" },
+        FirstProof = "Verify that the quest board displays the list of quests and correctly handles quest selection."
+    )]
     [AddComponentMenu("NeonBlack/Gameplay/RPG/UI/RPG Quest Board Panel Presenter")]
     public sealed class RpgQuestBoardPanelPresenter : MonoBehaviour, IRuntimeValidationProvider
-    {
+{
         [Header("Route")]
         [SerializeField] private RpgPanelRoutePresenter routePresenter;
 
@@ -59,7 +68,6 @@ namespace NeonBlack.Gameplay.Features.Rpg.UI
         private void Awake()
         {
             ResolveReferences();
-            EnsureService();
         }
 
         private void OnEnable()
@@ -136,7 +144,6 @@ namespace NeonBlack.Gameplay.Features.Rpg.UI
             if (!TryGetQuest(selected.QuestId, out IQuestDefinition quest))
                 return Fail($"Quest `{selected.QuestId}` could not be found.");
 
-            EnsureService();
             if (!_questService.TryStartQuest(ResolveOwner(), quest, out string issue))
                 return Fail(issue);
 
@@ -266,12 +273,6 @@ namespace NeonBlack.Gameplay.Features.Rpg.UI
         {
             if (routePresenter == null)
                 routePresenter = GetComponentInParent<RpgPanelRoutePresenter>() ?? GetComponentInChildren<RpgPanelRoutePresenter>(true);
-        }
-
-        private void EnsureService()
-        {
-            if (_questService == null)
-                _questService = new QuestService();
         }
 
         private RpgOwnerKey ResolveOwner()

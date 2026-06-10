@@ -11,9 +11,22 @@ namespace NeonBlack.Gameplay.Features.Hazards
     /// still comes from DifficultyManager, but this class keeps setup, pooling,
     /// and spawn-shape responsibilities in smaller helpers.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Combat | AuthoringCapability.Session,
+        Relevance = "Orchestrates pooling and spawning of 2D hazards based on difficulty pacing.",
+        Axioms = AuthoringWorldAxiom.Dimensions2D,
+        NativeSetup = new[]
+        {
+            "Add HazardSpawner to a scene GameObject.",
+            "Wire references to DifficultyManager, Camera, and Outcome Sink.",
+            "Populate Hazard Entries with prefabs and weights."
+        },
+        FirstProof = "Start the game and verify hazards begin spawning around the play area.",
+        AssignmentFields = new[] { "_hazardEntries", "_difficultyManager", "_targetCamera" }
+    )]
     [DefaultExecutionOrder(-10)]
     public class HazardSpawner : MonoBehaviour
-    {
+{
         [System.Serializable]
         public class HazardEntry
         {

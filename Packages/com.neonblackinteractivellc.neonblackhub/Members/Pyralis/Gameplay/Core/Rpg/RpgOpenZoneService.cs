@@ -1,10 +1,24 @@
 using System;
 using System.Collections.Generic;
+using NeonBlack.Gameplay.Core.Contracts;
+using UnityEngine;
 
 namespace NeonBlack.Gameplay.Core.Rpg
 {
+    [AuthoringContract(
+        Capability = AuthoringCapability.Session | AuthoringCapability.Environment,
+        ModuleId = "rpg.openzone",
+        Lane = "RPG",
+        FirstProof = "Verify that zone state (flags, pickups) is persisted after exiting and re-entering a zone.",
+        NativeSetup = new[]
+        {
+            "configure WorldZone flags",
+            "link EncounterRestoration to zone entry",
+            "register persistent zone state"
+        }
+    )]
     public sealed class RpgOpenZoneService
-    {
+{
         private readonly Dictionary<string, RpgZoneDefinition> _definitions = new Dictionary<string, RpgZoneDefinition>(StringComparer.Ordinal);
         private readonly Dictionary<RpgOwnerKey, OwnerZoneState> _ownerStates = new Dictionary<RpgOwnerKey, OwnerZoneState>();
 
@@ -477,34 +491,45 @@ namespace NeonBlack.Gameplay.Core.Rpg
         }
     }
 
-    public readonly struct RpgOpenZoneSnapshot
+    [Serializable]
+    public struct RpgOpenZoneSnapshot
     {
+        [SerializeField] private RpgZoneTravelSnapshot travel;
+        [SerializeField] private RpgZoneSnapshot[] zones;
+
         public RpgOpenZoneSnapshot(RpgZoneTravelSnapshot travel, RpgZoneSnapshot[] zones)
         {
-            Travel = travel;
-            Zones = zones ?? Array.Empty<RpgZoneSnapshot>();
+            this.travel = travel;
+            this.zones = zones ?? Array.Empty<RpgZoneSnapshot>();
         }
 
-        public RpgZoneTravelSnapshot Travel { get; }
-        public RpgZoneSnapshot[] Zones { get; }
+        public RpgZoneTravelSnapshot Travel => travel;
+        public RpgZoneSnapshot[] Zones => zones;
     }
 
-    public readonly struct RpgZoneTravelSnapshot
+    [Serializable]
+    public struct RpgZoneTravelSnapshot
     {
+        [SerializeField] private string currentZoneId;
+        [SerializeField] private string previousZoneId;
+        [SerializeField] private string lastEntranceId;
+        [SerializeField] private string lastExitId;
+        [SerializeField] private string returnHubId;
+
         public RpgZoneTravelSnapshot(string currentZoneId, string previousZoneId, string lastEntranceId, string lastExitId, string returnHubId)
         {
-            CurrentZoneId = Normalize(currentZoneId);
-            PreviousZoneId = Normalize(previousZoneId);
-            LastEntranceId = Normalize(lastEntranceId);
-            LastExitId = Normalize(lastExitId);
-            ReturnHubId = Normalize(returnHubId);
+            this.currentZoneId = Normalize(currentZoneId);
+            this.previousZoneId = Normalize(previousZoneId);
+            this.lastEntranceId = Normalize(lastEntranceId);
+            this.lastExitId = Normalize(lastExitId);
+            this.returnHubId = Normalize(returnHubId);
         }
 
-        public string CurrentZoneId { get; }
-        public string PreviousZoneId { get; }
-        public string LastEntranceId { get; }
-        public string LastExitId { get; }
-        public string ReturnHubId { get; }
+        public string CurrentZoneId => currentZoneId;
+        public string PreviousZoneId => previousZoneId;
+        public string LastEntranceId => lastEntranceId;
+        public string LastExitId => lastExitId;
+        public string ReturnHubId => returnHubId;
 
         private static string Normalize(string value)
         {
@@ -512,8 +537,16 @@ namespace NeonBlack.Gameplay.Core.Rpg
         }
     }
 
-    public readonly struct RpgZoneSnapshot
+    [Serializable]
+    public struct RpgZoneSnapshot
     {
+        [SerializeField] private string zoneId;
+        [SerializeField] private string[] flags;
+        [SerializeField] private RpgZoneEntitySnapshot[] encounters;
+        [SerializeField] private RpgZoneResourceSnapshot[] resources;
+        [SerializeField] private RpgZoneEntitySnapshot[] pickups;
+        [SerializeField] private RpgZoneNpcSnapshot[] npcs;
+
         public RpgZoneSnapshot(
             string zoneId,
             string[] flags,
@@ -522,20 +555,20 @@ namespace NeonBlack.Gameplay.Core.Rpg
             RpgZoneEntitySnapshot[] pickups,
             RpgZoneNpcSnapshot[] npcs)
         {
-            ZoneId = Normalize(zoneId);
-            Flags = flags ?? Array.Empty<string>();
-            Encounters = encounters ?? Array.Empty<RpgZoneEntitySnapshot>();
-            Resources = resources ?? Array.Empty<RpgZoneResourceSnapshot>();
-            Pickups = pickups ?? Array.Empty<RpgZoneEntitySnapshot>();
-            Npcs = npcs ?? Array.Empty<RpgZoneNpcSnapshot>();
+            this.zoneId = Normalize(zoneId);
+            this.flags = flags ?? Array.Empty<string>();
+            this.encounters = encounters ?? Array.Empty<RpgZoneEntitySnapshot>();
+            this.resources = resources ?? Array.Empty<RpgZoneResourceSnapshot>();
+            this.pickups = pickups ?? Array.Empty<RpgZoneEntitySnapshot>();
+            this.npcs = npcs ?? Array.Empty<RpgZoneNpcSnapshot>();
         }
 
-        public string ZoneId { get; }
-        public string[] Flags { get; }
-        public RpgZoneEntitySnapshot[] Encounters { get; }
-        public RpgZoneResourceSnapshot[] Resources { get; }
-        public RpgZoneEntitySnapshot[] Pickups { get; }
-        public RpgZoneNpcSnapshot[] Npcs { get; }
+        public string ZoneId => zoneId;
+        public string[] Flags => flags;
+        public RpgZoneEntitySnapshot[] Encounters => encounters;
+        public RpgZoneResourceSnapshot[] Resources => resources;
+        public RpgZoneEntitySnapshot[] Pickups => pickups;
+        public RpgZoneNpcSnapshot[] Npcs => npcs;
         public bool IsValid => !string.IsNullOrEmpty(ZoneId);
 
         private static string Normalize(string value)
@@ -544,16 +577,20 @@ namespace NeonBlack.Gameplay.Core.Rpg
         }
     }
 
-    public readonly struct RpgZoneEntitySnapshot
+    [Serializable]
+    public struct RpgZoneEntitySnapshot
     {
+        [SerializeField] private string entityId;
+        [SerializeField] private RpgZoneEntityStatus status;
+
         public RpgZoneEntitySnapshot(string entityId, RpgZoneEntityStatus status)
         {
-            EntityId = Normalize(entityId);
-            Status = status;
+            this.entityId = Normalize(entityId);
+            this.status = status;
         }
 
-        public string EntityId { get; }
-        public RpgZoneEntityStatus Status { get; }
+        public string EntityId => entityId;
+        public RpgZoneEntityStatus Status => status;
         public bool IsValid => !string.IsNullOrEmpty(EntityId);
 
         private static string Normalize(string value)
@@ -562,18 +599,23 @@ namespace NeonBlack.Gameplay.Core.Rpg
         }
     }
 
-    public readonly struct RpgZoneResourceSnapshot
+    [Serializable]
+    public struct RpgZoneResourceSnapshot
     {
+        [SerializeField] private string resourceId;
+        [SerializeField] private int quantity;
+        [SerializeField] private bool depleted;
+
         public RpgZoneResourceSnapshot(string resourceId, int quantity, bool depleted)
         {
-            ResourceId = Normalize(resourceId);
-            Quantity = quantity < 0 ? 0 : quantity;
-            Depleted = depleted;
+            this.resourceId = Normalize(resourceId);
+            this.quantity = quantity < 0 ? 0 : quantity;
+            this.depleted = depleted;
         }
 
-        public string ResourceId { get; }
-        public int Quantity { get; }
-        public bool Depleted { get; }
+        public string ResourceId => resourceId;
+        public int Quantity => quantity;
+        public bool Depleted => depleted;
         public bool IsValid => !string.IsNullOrEmpty(ResourceId);
 
         private static string Normalize(string value)
@@ -582,20 +624,26 @@ namespace NeonBlack.Gameplay.Core.Rpg
         }
     }
 
-    public readonly struct RpgZoneNpcSnapshot
+    [Serializable]
+    public struct RpgZoneNpcSnapshot
     {
+        [SerializeField] private string npcId;
+        [SerializeField] private string spawnPointId;
+        [SerializeField] private bool active;
+        [SerializeField] private string dialogueStateId;
+
         public RpgZoneNpcSnapshot(string npcId, string spawnPointId, bool active, string dialogueStateId)
         {
-            NpcId = Normalize(npcId);
-            SpawnPointId = Normalize(spawnPointId);
-            Active = active;
-            DialogueStateId = Normalize(dialogueStateId);
+            this.npcId = Normalize(npcId);
+            this.spawnPointId = Normalize(spawnPointId);
+            this.active = active;
+            this.dialogueStateId = Normalize(dialogueStateId);
         }
 
-        public string NpcId { get; }
-        public string SpawnPointId { get; }
-        public bool Active { get; }
-        public string DialogueStateId { get; }
+        public string NpcId => npcId;
+        public string SpawnPointId => spawnPointId;
+        public bool Active => active;
+        public string DialogueStateId => dialogueStateId;
         public bool IsValid => !string.IsNullOrEmpty(NpcId);
 
         private static string Normalize(string value)

@@ -1,3 +1,4 @@
+using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine.SceneManagement;
 
 namespace NeonBlack.Gameplay.Core.Runtime
@@ -7,6 +8,11 @@ namespace NeonBlack.Gameplay.Core.Runtime
     /// ISceneNavigator service is available. User-facing components should
     /// prefer explicit ISceneNavigator references.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Setup,
+        Relevance = "Lightweight static helper for simple scene loads. Prefers ISceneNavigator when available.",
+        FirstProof = "Calling LoadScene correctly changes the active Unity scene."
+    )]
     public static class SceneNavigator
     {
         public static void LoadScene(string sceneName)

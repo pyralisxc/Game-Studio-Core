@@ -13,6 +13,13 @@ namespace NeonBlack.Gameplay.Characters
     /// Authoritative local/runtime roster of participants. Also bridges compatibility
     /// single-player lookups by exposing the primary participant as an IPlayerProvider.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Session,
+        Relevance = "Authoritative local roster of participants. Bridges compatibility for single-player lookups.",
+        AssignmentFields = new[] { "sessionDefinition" },
+        FirstProof = "Enter Play Mode and spawn a pawn. Verify the ParticipantRosterService 'Participants' list reflects the new character with the correct seat index.",
+        ExpertAdvice = "The Roster is the source of truth for who is currently in the game. Use it to find ParticipantHandles by ID or seat."
+    )]
     public class ParticipantRosterService : MonoBehaviour, IParticipantRoster, IPlayerProvider
     {
         [SerializeField] private SessionDefinition sessionDefinition;

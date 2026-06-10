@@ -1,3 +1,4 @@
+using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Presentation.Animation;
@@ -117,7 +118,7 @@ namespace NeonBlack.Gameplay.Editor
 
             if (contract.RequiredProfileType != null && !contract.RequiredProfileType.IsInstanceOfType(definition.profileAsset))
             {
-                issues.Add($"`{contract.ModuleId}` expects a {contract.RequiredProfileType.Name} profile asset.");
+                issues.Add($"`{contract.StableId}` expects a {contract.RequiredProfileType.Name} profile asset.");
             }
 
             if (definition.supportedPresentationModes != null && definition.supportedPresentationModes.Length > 0)
@@ -132,7 +133,7 @@ namespace NeonBlack.Gameplay.Editor
                     }
                     else if (!contract.SupportsPresentationMode(mode))
                     {
-                        issues.Add($"`{contract.ModuleId}` does not declare support for {mode} presentation.");
+                        issues.Add($"`{contract.StableId}` does not declare support for {mode} presentation.");
                     }
                 }
             }

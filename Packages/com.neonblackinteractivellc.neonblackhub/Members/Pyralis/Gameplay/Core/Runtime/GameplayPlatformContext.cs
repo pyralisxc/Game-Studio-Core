@@ -1,8 +1,14 @@
+using NeonBlack.Gameplay.Core.Contracts;
 namespace NeonBlack.Gameplay.Core.Runtime
 {
     /// <summary>
     /// Current platform runtime composition context for the active gameplay session.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Setup,
+        Relevance = "Current platform runtime composition context for the active gameplay session.",
+        ExpertAdvice = "Use TryGetCurrent to safely resolve the platform context without hard singleton dependencies."
+    )]
     public sealed class GameplayPlatformContext
     {
         private static GameplayPlatformContext _current;

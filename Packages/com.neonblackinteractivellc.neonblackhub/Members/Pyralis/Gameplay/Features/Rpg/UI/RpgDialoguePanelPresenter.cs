@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Rpg;
+using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions.Rpg;
 using NeonBlack.Gameplay.Features.Composition;
 using TMPro;
@@ -11,9 +12,17 @@ using VContainer;
 
 namespace NeonBlack.Gameplay.Features.Rpg.UI
 {
+    [AuthoringContract(
+        ModuleId = "rpg.dialogue.ui",
+        Capability = AuthoringCapability.Dialogue,
+        Lane = "RPG",
+        RequiredInterfaces = new[] { typeof(IRuntimeValidationProvider) },
+        RequiredComponentNames = new[] { "TMPro.TextMeshProUGUI" },
+        FirstProof = "Verify that the dialogue panel displays the speaker name and line text correctly."
+    )]
     [AddComponentMenu("NeonBlack/Gameplay/RPG/UI/RPG Dialogue Panel Presenter")]
     public sealed class RpgDialoguePanelPresenter : MonoBehaviour, IRuntimeValidationProvider
-    {
+{
         [Header("Route")]
         [SerializeField] private RpgPanelRoutePresenter routePresenter;
 
@@ -53,16 +62,14 @@ namespace NeonBlack.Gameplay.Features.Rpg.UI
         public string LastIssue { get; private set; } = string.Empty;
 
         [Inject]
-        private void Construct(DialogueService dialogue = null)
+        private void Construct(DialogueService dialogue)
         {
-            if (_dialogueService == null)
-                _dialogueService = dialogue ?? new DialogueService();
+            _dialogueService = dialogue;
         }
 
         private void Awake()
         {
             ResolveReferences();
-            EnsureService();
         }
 
         private void OnEnable()
@@ -82,14 +89,13 @@ namespace NeonBlack.Gameplay.Features.Rpg.UI
         {
             _runtimeOwner = owner;
             _hasRuntimeOwner = true;
-            _dialogueService = service ?? new DialogueService();
+            _dialogueService = service;
             _runtimeGraphs = graphs ?? Array.Empty<IDialogueGraph>();
             _runtimeNpcs = npcs ?? Array.Empty<INpcProfile>();
         }
 
         public bool ShowInteractionResult(HubInteractionResult result)
         {
-            EnsureService();
             if (result.Status != HubInteractionStatus.Selected || result.PanelRoute != PlayerPanelRoute.Dialogue)
                 return false;
 

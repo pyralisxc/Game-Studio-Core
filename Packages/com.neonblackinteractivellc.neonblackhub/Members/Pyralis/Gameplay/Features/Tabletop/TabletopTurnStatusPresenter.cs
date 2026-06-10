@@ -1,4 +1,5 @@
 using TMPro;
+using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Features.Tabletop
@@ -6,6 +7,13 @@ namespace NeonBlack.Gameplay.Features.Tabletop
     /// <summary>
     /// Lightweight UI binding for local tabletop turn proofs.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Tabletop,
+        Relevance = "LIGHTWEIGHT UI binding that shows which tabletop seat acts next.",
+        NativeSetup = new[] { "Add to Tabletop HUD", "Assign BoardPresenter and TMP Label" },
+        AssignmentFields = new[] { nameof(boardPresenter), nameof(label), nameof(seatZeroName), nameof(seatOneName) },
+        FirstProof = "The HUD label correctly displays the name of the active participant's seat."
+    )]
     [AddComponentMenu("NeonBlack/Gameplay/Tabletop/Tabletop Turn Status Presenter")]
     public sealed class TabletopTurnStatusPresenter : MonoBehaviour
     {

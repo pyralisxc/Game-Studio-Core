@@ -1,10 +1,26 @@
 using System;
 using System.Collections.Generic;
+using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Core.Contracts.Rpg;
 
 namespace NeonBlack.Gameplay.Core.Rpg
 {
-    public sealed class InventoryService
-    {
+    [AuthoringContract(
+        ModuleId = "rpg.inventory",
+        Capability = AuthoringCapability.Inventory,
+        Lane = "RPG",
+        RequiredInterfaces = new[] { typeof(IItemCatalog) },
+        NativeSetup = new[]
+        {
+            "create ItemCatalogDefinition",
+            "define ItemDefinitions",
+            "assign catalog to InventoryService"
+        },
+        AssignmentFields = new[] { "_catalog" },
+        FirstProof = "Items can be added to and removed from a participant's inventory."
+    )]
+    public sealed class InventoryService : IInventoryService
+{
         private readonly IItemCatalog _catalog;
         private readonly Dictionary<RpgOwnerKey, Dictionary<string, int>> _inventories = new Dictionary<RpgOwnerKey, Dictionary<string, int>>();
 

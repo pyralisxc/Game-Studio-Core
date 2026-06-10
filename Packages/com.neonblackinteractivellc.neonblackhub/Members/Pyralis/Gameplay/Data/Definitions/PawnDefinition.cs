@@ -1,6 +1,7 @@
-﻿using NeonBlack.Gameplay.Data.Profiles;
+using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Features.Combat;
 using NeonBlack.Gameplay.Presentation.Animation;
+using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,6 +10,13 @@ namespace NeonBlack.Gameplay.Data.Definitions
     /// <summary>
     /// Primary authored definition for a controllable or simulated pawn.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Movement, 
+        Relevance = "Core definition for a controllable entity, linking its prefab to movement, combat, and animation profiles.",
+        AssignmentFields = new[] { nameof(pawnPrefab), nameof(movementProfile), nameof(combatProfile), nameof(animationProfile), nameof(featureModules) },
+        NativeSetup = new[] { "PawnRoot" },
+        FirstProof = "Assign this Pawn Definition to a Participant Definition or a Spawner in the scene."
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/Definitions/Pawn Definition", fileName = "PawnDefinition", order = 30)]
     public class PawnDefinition : ScriptableObject
     {

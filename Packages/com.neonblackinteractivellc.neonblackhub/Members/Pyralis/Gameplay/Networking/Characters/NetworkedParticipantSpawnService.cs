@@ -1,3 +1,4 @@
+using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Characters;
 using Unity.Netcode;
@@ -9,6 +10,11 @@ namespace NeonBlack.Gameplay.Networking.Participants
     /// Drop-in replacement for <see cref="ParticipantSpawnService"/> in online sessions.
     /// Registers spawned pawns with NGO and despawns them cleanly on removal.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Networking,
+        Relevance = "Drop-in replacement for ParticipantSpawnService in online sessions. Registers pawns with NGO.",
+        FirstProof = "Spawned pawns have a valid NetworkObject and are correctly replicated to clients."
+    )]
     public class NetworkedParticipantSpawnService : ParticipantSpawnService
     {
         public override GameObject SpawnParticipantPawn(ParticipantHandle participant)

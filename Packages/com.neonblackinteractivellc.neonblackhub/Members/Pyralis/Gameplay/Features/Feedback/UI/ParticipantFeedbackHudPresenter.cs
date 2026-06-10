@@ -1,11 +1,19 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Features.Composition;
+using NeonBlack.Gameplay.Core.Contracts;
 using TMPro;
 using UnityEngine;
 using VContainer;
 
 namespace NeonBlack.Gameplay.Features.Feedback.UI
 {
+    [AuthoringContract(
+        Capability = AuthoringCapability.UI,
+        Relevance = "Displays participant-specific feedback (combos, status, scores) in the HUD.",
+        NativeSetup = new[] { "Attach to HUD canvas element", "Assign TMP labels or timed panels" },
+        AssignmentFields = new[] { nameof(comboLabel), nameof(statusLabel), nameof(scorePopupLabel) },
+        FirstProof = "Feedback messages (e.g. status applied) appear in the UI."
+    )]
     [AddComponentMenu("NeonBlack/Gameplay/Feedback/UI/Participant Feedback HUD Presenter")]
     public class ParticipantFeedbackHudPresenter : ParticipantHudTargetBinding, IRuntimeValidationProvider
     {
@@ -34,7 +42,7 @@ namespace NeonBlack.Gameplay.Features.Feedback.UI
         private float _combatAlertTimer;
 
         [Inject]
-        private void Construct(IParticipantFeedbackStream feedbackStream = null)
+        private void Construct(IParticipantFeedbackStream feedbackStream)
         {
             _feedbackStream = feedbackStream;
         }

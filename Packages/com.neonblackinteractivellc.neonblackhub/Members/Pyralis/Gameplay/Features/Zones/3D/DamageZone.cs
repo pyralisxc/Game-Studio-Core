@@ -37,9 +37,14 @@ namespace NeonBlack.Gameplay.Features.Zones
             All
         }
 
-        private readonly Dictionary<HealthComponent, float> _targets = new Dictionary<HealthComponent, float>();
-        private readonly List<HealthComponent> _targetSnapshot = new List<HealthComponent>(8);
-        private readonly List<HealthComponent> _expiredTargets = new List<HealthComponent>(4);
+        private struct TargetState
+        {
+            public HealthComponent health;
+            public float timer;
+        }
+
+        private readonly List<TargetState> _targets = new List<TargetState>(8);
+        private readonly HashSet<HealthComponent> _targetLookup = new HashSet<HealthComponent>();
 
         private void Awake()
         {
@@ -50,18 +55,29 @@ namespace NeonBlack.Gameplay.Features.Zones
         private void OnTriggerEnter(Collider other)
         {
             HealthComponent health = other.GetComponentInParent<HealthComponent>();
-            if (health == null || _targets.ContainsKey(health) || !IsValidTarget(health))
+            if (health == null || _targetLookup.Contains(health) || !IsValidTarget(health))
                 return;
 
-            _targets[health] = 0f;
+            _targetLookup.Add(health);
+            _targets.Add(new TargetState { health = health, timer = 0f });
             OnTargetEntered?.Invoke(health.gameObject);
         }
 
         private void OnTriggerExit(Collider other)
         {
             HealthComponent health = other.GetComponentInParent<HealthComponent>();
-            if (health != null && _targets.Remove(health))
-                OnTargetExited?.Invoke(health.gameObject);
+            if (health == null || !_targetLookup.Remove(health))
+                return;
+
+            for (int i = 0; i < _targets.Count; i++)
+            {
+                if (_targets[i].health == health)
+                {
+                    _targets.RemoveAt(i);
+                    break;
+                }
+            }
+            OnTargetExited?.Invoke(health.gameObject);
         }
 
         private void Update()
@@ -71,28 +87,27 @@ namespace NeonBlack.Gameplay.Features.Zones
 
             float activeTickInterval = impactProfile != null ? impactProfile.tickInterval : tickInterval;
 
-            _targetSnapshot.Clear();
-            _expiredTargets.Clear();
-            foreach (HealthComponent health in _targets.Keys)
-                _targetSnapshot.Add(health);
-
-            for (int i = 0; i < _targetSnapshot.Count; i++)
+            for (int i = _targets.Count - 1; i >= 0; i--)
             {
-                HealthComponent health = _targetSnapshot[i];
+                TargetState state = _targets[i];
+                HealthComponent health = state.health;
+
                 if (health == null || health.IsDead)
                 {
-                    _expiredTargets.Add(health);
+                    _targetLookup.Remove(health);
+                    _targets.RemoveAt(i);
                     continue;
                 }
 
-                float remaining = _targets[health] - Time.deltaTime;
-                if (remaining > 0f)
+                state.timer -= Time.deltaTime;
+                if (state.timer > 0f)
                 {
-                    _targets[health] = remaining;
+                    _targets[i] = state;
                     continue;
                 }
 
-                _targets[health] = activeTickInterval;
+                state.timer = activeTickInterval;
+                _targets[i] = state;
 
                 if (impactProfile != null)
                 {
@@ -108,9 +123,6 @@ namespace NeonBlack.Gameplay.Features.Zones
                         knockback.ApplyKnockback(Vector3.up * knockbackForce);
                 }
             }
-
-            for (int i = 0; i < _expiredTargets.Count; i++)
-                _targets.Remove(_expiredTargets[i]);
         }
 
         private bool IsValidTarget(HealthComponent health)

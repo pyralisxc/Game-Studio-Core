@@ -1,0 +1,22 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <ui:Style src="PyralisAuthoringWindow.uss" />
+    <ui:VisualElement name="root" class="root-container">
+        <!-- Header & Toolbar -->
+        <ui:VisualElement name="header" class="header">
+            <ui:Label text="PYRALIS AUTHORING" class="header-title" />
+            <ui:VisualElement name="toolbar" class="mode-toolbar">
+                <ui:VisualElement name="tabOverview" class="mode-tab"><ui:Label text="Overview" /></ui:VisualElement>
+                <ui:VisualElement name="tabIntent" class="mode-tab"><ui:Label text="Intent" /></ui:VisualElement>
+                <ui:VisualElement name="tabMap" class="mode-tab"><ui:Label text="Map" /></ui:VisualElement>
+                <ui:VisualElement name="tabHygiene" class="mode-tab"><ui:Label text="Hygiene" /></ui:VisualElement>
+                <ui:VisualElement name="tabGuide" class="mode-tab"><ui:Label text="Guide" /></ui:VisualElement>
+                <ui:VisualElement name="tabFacts" class="mode-tab"><ui:Label text="Facts" /></ui:VisualElement>
+            </ui:VisualElement>
+</ui:VisualElement>
+
+        <!-- Main Content -->
+        <ui:ScrollView name="mainScroll" class="content-area">
+            <ui:VisualElement name="content" />
+        </ui:ScrollView>
+    </ui:VisualElement>
+</ui:UXML>

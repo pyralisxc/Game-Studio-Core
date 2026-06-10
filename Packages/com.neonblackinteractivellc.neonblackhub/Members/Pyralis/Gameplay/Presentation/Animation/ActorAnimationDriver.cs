@@ -6,7 +6,13 @@ using UnityEngine;
 
 namespace NeonBlack.Gameplay.Presentation.Animation
 {
-    [AddComponentMenu("NeonBlack/Gameplay/Animation/Actor Animation Driver")]
+    [AuthoringContract(
+        Capability = AuthoringCapability.Animation, 
+        Relevance = "Inspector Add Component path for actor animation and presentation mapping.",
+        FirstProof = "Enter Play Mode and verify the actor visual reflects the chosen Presentation Mode. Confirm that movement signals (if mapped) trigger animation state changes in the Animator.",
+        ExpertAdvice = "ActorAnimationDriver bridges Pyralis signals (like Move, Jump, Attack) to your Animator parameters. Ensure the PawnAnimationProfile bindings match your Animator parameter names exactly.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/animation")]
+[AddComponentMenu("NeonBlack/Gameplay/Animation/Actor Animation Driver")]
     public class ActorAnimationDriver : MonoBehaviour, IActorAnimationController
     {
         [Header("Scene References")]

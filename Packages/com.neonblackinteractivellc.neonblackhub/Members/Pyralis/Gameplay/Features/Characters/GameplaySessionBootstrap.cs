@@ -18,10 +18,23 @@ namespace NeonBlack.Gameplay.Characters
     /// <summary>
     /// Single supported startup path for NeonBlack Gameplay scenes.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Setup,
+        Relevance = "Primary entry point for gameplay sessions; orchestrates participant spawn, camera setup, and core services.",
+        Axioms = AuthoringWorldAxiom.None,
+        NativeSetup = new[]
+        {
+            "Add GameplaySessionBootstrap to the first scene of your game.",
+            "Assign a SessionDefinition asset.",
+            "Wire spawn points for participants.",
+            "Configure camera rig controller and core service references."
+        },
+        FirstProof = "Enter Play Mode and confirm the session initializes. Verify participant pawns spawn at designated points and the camera frames the action correctly."
+    )]
     [AddComponentMenu("NeonBlack/Gameplay/Setup/Gameplay Session Bootstrap")]
     [DefaultExecutionOrder(-1100)]
     public class GameplaySessionBootstrap : MonoBehaviour
-    {
+{
         private const string NetworkedSessionStateServiceTypeName = "NeonBlack.Gameplay.Networking.Participants.NetworkedSessionStateService, NeonBlack.Gameplay.Networking";
         private const string NetworkedParticipantRosterServiceTypeName = "NeonBlack.Gameplay.Networking.Participants.NetworkedParticipantRosterService, NeonBlack.Gameplay.Networking";
         private const string NetworkedParticipantSpawnServiceTypeName = "NeonBlack.Gameplay.Networking.Participants.NetworkedParticipantSpawnService, NeonBlack.Gameplay.Networking";
@@ -78,18 +91,15 @@ namespace NeonBlack.Gameplay.Characters
                 : GetOrCreatePersistentService<SessionStateService>("SessionStateService");
             sessionStateService.SetSessionDefinition(sessionDefinition);
             platformContext.Services.Register(sessionStateService);
-            platformContext.Services.Register<IGameplayStateReader>(sessionStateService);
 
             ParticipantRosterService rosterService = participantRosterService ??= useNetcodeServices
                 ? GetOrCreatePersistentService<ParticipantRosterService>("ParticipantRosterService", NetworkedParticipantRosterServiceTypeName)
                 : GetOrCreatePersistentService<ParticipantRosterService>("ParticipantRosterService");
             rosterService.SetSessionDefinition(sessionDefinition);
             platformContext.Services.Register(rosterService);
-            platformContext.Services.Register<IParticipantRoster>(rosterService);
-            platformContext.Services.Register<IPlayerProvider>(rosterService);
 
             ParticipantSpawnService spawnService = participantSpawnService ??= useNetcodeServices
-                ? GetOrCreatePersistentService<ParticipantSpawnService>("ParticipantSpawnService", NetworkedParticipantSpawnServiceTypeName)
+? GetOrCreatePersistentService<ParticipantSpawnService>("ParticipantSpawnService", NetworkedParticipantSpawnServiceTypeName)
                 : GetOrCreatePersistentService<ParticipantSpawnService>("ParticipantSpawnService");
             spawnService.SetRosterService(rosterService);
             spawnService.SetSessionStateService(sessionStateService);
@@ -236,20 +246,37 @@ namespace NeonBlack.Gameplay.Characters
         {
             if (sessionDefinition == null)
             {
-                Debug.LogWarning("[GameplaySessionBootstrap] Session Definition is not assigned.", this);
+                Debug.LogError("[GameplaySessionBootstrap] CRITICAL: Session Definition is missing. The session cannot initialize.", this);
                 return;
             }
 
+            // Core modularity checks
             if (sessionDefinition.defaultGameMode == null)
-                Debug.LogWarning("[GameplaySessionBootstrap] Session Definition has no Default Game Mode.", this);
+                Debug.LogWarning("[GameplaySessionBootstrap] Session Definition has no Default Game Mode. Ensure your game logic is handled by a custom Feature Module.", this);
+            
             if (sessionDefinition.defaultParticipants == null || sessionDefinition.defaultParticipants.Length == 0)
-                Debug.LogWarning("[GameplaySessionBootstrap] Session Definition has no default participants configured.", this);
-            if (sessionDefinition.defaultInputProfile == null)
-                Debug.LogWarning("[GameplaySessionBootstrap] Session Definition has no default input profile. Compatibility input-driven actors may need per-pawn input setup.", this);
+                Debug.LogWarning("[GameplaySessionBootstrap] Session Definition has no default participants. No actors will spawn automatically.", this);
+            
             if (playerInputManager == null)
-                Debug.LogWarning("[GameplaySessionBootstrap] PlayerInputManager is not assigned. Local join will require explicit participant registration.", this);
+                Debug.LogWarning("[GameplaySessionBootstrap] PlayerInputManager is missing. Local player join will not be automated.", this);
+            
             if (cameraRigController == null)
-                Debug.LogWarning("[GameplaySessionBootstrap] CinemachineCameraRigController is not assigned. Shared camera profile control will remain inactive until a rig is provided.", this);
+                Debug.LogWarning("[GameplaySessionBootstrap] CinemachineCameraRigController is missing. Dynamic camera framing will be disabled.", this);
+
+            // Check for potential service name collisions or missing authored services
+            CheckPersistentService<SessionStateService>("SessionStateService");
+            CheckPersistentService<ParticipantRosterService>("ParticipantRosterService");
+            CheckPersistentService<ParticipantSpawnService>("ParticipantSpawnService");
+            CheckPersistentService<ParticipantInputRouter>("ParticipantInputRouter");
+        }
+
+        private void CheckPersistentService<T>(string serviceName) where T : Component
+        {
+            Transform existing = transform.Find(serviceName);
+            if (existing == null)
+            {
+                Debug.Log($"[GameplaySessionBootstrap] Service '{serviceName}' will be auto-created at runtime. To customize, add an authored GameObject named '{serviceName}' with the {typeof(T).Name} component.", this);
+            }
         }
 
         private void ConfigurePlayerInputManager()
@@ -296,6 +323,14 @@ namespace NeonBlack.Gameplay.Characters
 
             service = Activator.CreateInstance(type) as T;
             return service != null;
+        }
+
+        private void OnDestroy()
+        {
+            if (GameplayPlatformContext.Current != null)
+            {
+                GameplayPlatformContext.ClearCurrent();
+            }
         }
 
         private static void TrySetMember(object target, string memberName, object value)

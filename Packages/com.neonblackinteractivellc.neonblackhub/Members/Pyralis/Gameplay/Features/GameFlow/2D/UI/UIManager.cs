@@ -10,11 +10,23 @@ namespace NeonBlack.Gameplay.Features.GameFlow
 {
 /// <summary>
 /// Manages all UI panels: HUD (live score + time) and Game Over screen.
-/// Subscribes to an explicit gameplay session flow and session score service.
-/// Setup: Attach to a GameObject on the UI Canvas.
-/// Wire all panel GameObjects, TMP labels, and Buttons in the Inspector.
-/// Canvas must be Screen Space - Overlay with a PhysicsRaycaster for button input.
 /// </summary>
+[AuthoringContract(
+    Capability = AuthoringCapability.UI,
+    Relevance = "Manages gameplay UI: HUD, game over screen, and settings navigation.",
+    Axioms = AuthoringWorldAxiom.None,
+    RequiredComponents = new[] { typeof(UIManager) },
+    NativeSetup = new[] 
+    { 
+        "Add UIManager to the UI Canvas.",
+        "Wire panel GameObjects and TMP labels.",
+        "Assign session flow and score service sources."
+    },
+    AssignmentFields = new[] { "_hudPanel", "_gameOverPanel", "_scoreLabel", "_timeLabel" },
+    FirstProof = "The HUD shows points and survival time when the game starts."
+,
+        ExpertAdvice = "The UIManager is a high-level presentation layer. It listens to the IGameplaySessionFlow to toggle panels based on game state.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/ui")]
 [DefaultExecutionOrder(-10)]
 public class UIManager : MonoBehaviour
 {
@@ -48,13 +60,6 @@ public class UIManager : MonoBehaviour
     [SerializeField, Tooltip("SettingsScreen component to open when the settings button is pressed.")]
     private SettingsScreen _settingsScreen;
 
-    [Header("Runtime Services")]
-    [SerializeField, Tooltip("Session flow that drives HUD/game-over state and restart/menu commands. GameManager implements IGameplaySessionFlow, or assign a custom session flow.")]
-    private MonoBehaviour _gameplaySessionSource;
-
-    [SerializeField, Tooltip("Score service for HUD labels and game-over totals. ParticipantScoreService implements ISessionScoreService, or assign a custom score service.")]
-    private MonoBehaviour _scoreServiceSource;
-
     [Header("HUD Format")]
     [SerializeField, Tooltip("Prefix shown before the formatted time value in the HUD (e.g. 'Time: ').")]
     private string _timePrefix = "Time: ";
@@ -86,16 +91,14 @@ public class UIManager : MonoBehaviour
 
     private void Start()
     {
-        ResolveRuntimeServices();
-
         _restartButton?.onClick.AddListener(OnRestartClicked);
         _mainMenuButton?.onClick.AddListener(OnMainMenuClicked);
         _settingsButton?.onClick.AddListener(OnSettingsClicked);
 
         if (_gameplaySession != null)
             _gameplaySession.AddGameStateChangedListener(OnGameStateChanged);
-        else if (RequiresGameplaySessionFlow())
-            Debug.LogError("[UIManager] Gameplay Session Source is not configured. Assign a component that implements IGameplaySessionFlow.", this);
+        else
+            Debug.LogError("[UIManager] Gameplay Session Flow is not injected. Ensure it is registered in the LifetimeScope.", this);
 
         if (_scoreService != null)
         {
@@ -120,12 +123,10 @@ public class UIManager : MonoBehaviour
     }
 
     [Inject]
-    private void Construct(ISessionScoreService scoreService = null, IGameplaySessionFlow gameplaySession = null)
+    private void Construct(ISessionScoreService scoreService, IGameplaySessionFlow gameplaySession)
     {
-        if (scoreService != null)
-            _scoreService = scoreService;
-        if (gameplaySession != null)
-            _gameplaySession = gameplaySession;
+        _scoreService = scoreService;
+        _gameplaySession = gameplaySession;
     }
 
     private void Update()
@@ -193,8 +194,6 @@ public class UIManager : MonoBehaviour
 
     private void ShowPanel(GameState state)
     {
-        ResolveRuntimeServices();
-
         _timeUpdateTimer = 0f; // reset so time label refreshes immediately on game start/restart
         _showingHUD = state == GameState.Playing || state == GameState.Dead;
         if (_hudPanel != null)
@@ -230,40 +229,5 @@ public class UIManager : MonoBehaviour
     private void OnRestartClicked()  { _gameplaySession?.RestartGame(); }
     private void OnMainMenuClicked() { _gameplaySession?.GoToMainMenu(); }
     private void OnSettingsClicked() { _settingsScreen?.Open(); }
-
-    private bool RequiresGameplaySessionFlow()
-    {
-        return _gameOverPanel != null
-            || _finalScoreLabel != null
-            || _highScoreLabel != null
-            || _restartButton != null
-            || _mainMenuButton != null
-            || _settingsButton != null
-            || _settingsScreen != null;
-    }
-
-    private ISessionScoreService ResolveScoreService()
-    {
-        if (_scoreService == null && _scoreServiceSource != null)
-        {
-            _scoreService = _scoreServiceSource as ISessionScoreService;
-            if (_scoreService == null)
-                _scoreService = _scoreServiceSource.GetComponent<ISessionScoreService>();
-        }
-
-        return _scoreService;
-    }
-
-    private void ResolveRuntimeServices()
-    {
-        if (_gameplaySession == null && _gameplaySessionSource != null)
-        {
-            _gameplaySession = _gameplaySessionSource as IGameplaySessionFlow;
-            if (_gameplaySession == null)
-                _gameplaySession = _gameplaySessionSource.GetComponent<IGameplaySessionFlow>();
-        }
-
-        ResolveScoreService();
-    }
 }
 }

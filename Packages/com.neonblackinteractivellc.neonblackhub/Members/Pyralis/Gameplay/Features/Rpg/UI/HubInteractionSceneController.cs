@@ -36,21 +36,17 @@ namespace NeonBlack.Gameplay.Features.Rpg.UI
 
         [Inject]
         private void Construct(
-            InventoryService inventory = null,
-            QuestService quests = null,
-            SkillTreeService skills = null,
-            DialogueService dialogue = null,
-            IHubConditionResolver customConditionResolver = null,
-            IHubEffectSink customEffectSink = null)
+            HubInteractionService interactionService,
+            HubInteractionHudPresenter injectedPresenter = null)
         {
-            if (_interactionService == null)
-                _interactionService = new HubInteractionService(inventory, quests, skills, dialogue, customConditionResolver, customEffectSink);
+            _interactionService = interactionService;
+            if (hudPresenter == null)
+                hudPresenter = injectedPresenter;
         }
 
         private void Awake()
         {
             ResolveHudPresenter();
-            EnsureInteractionService();
         }
 
         private void OnEnable()

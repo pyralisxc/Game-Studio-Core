@@ -1,14 +1,22 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NeonBlack.Gameplay.Core.Rpg;
+using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rpg
 {
+    [AuthoringContract(
+        ModuleId = "rpg.hub.definition",
+        Capability = AuthoringCapability.Session,
+        Lane = "RPG",
+        AssignmentFields = new[] { nameof(hubId), nameof(displayName), nameof(sceneId), nameof(interactables) },
+        FirstProof = "Proof that the hub contains valid interactables and correctly links to a scene."
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Hub Definition", fileName = "HubDefinition")]
     public class HubDefinition : ScriptableObject, IHubDefinition
-    {
+{
         public string hubId = "hub.new";
         public string displayName = "New Hub";
         public string sceneId = "scene.hub";

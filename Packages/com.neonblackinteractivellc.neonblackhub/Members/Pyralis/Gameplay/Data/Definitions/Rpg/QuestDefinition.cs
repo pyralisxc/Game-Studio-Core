@@ -1,14 +1,22 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NeonBlack.Gameplay.Core.Rpg;
+using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rpg
 {
+    [AuthoringContract(
+        ModuleId = "rpg.quest.definition",
+        Capability = AuthoringCapability.Dialogue,
+        Lane = "RPG",
+        AssignmentFields = new[] { nameof(questId), nameof(displayName), nameof(objectives), nameof(rewards) },
+        FirstProof = "Proof that the quest can be tracked and rewards are correctly defined."
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Quest", fileName = "QuestDefinition")]
     public class QuestDefinition : ScriptableObject, IQuestDefinition
-    {
+{
         public string questId = "quest.new";
         public string displayName = "New Quest";
         public bool repeatable;

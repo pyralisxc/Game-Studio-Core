@@ -1,18 +1,29 @@
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Config;
+using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Features.Combat;
 using NeonBlack.Gameplay.Core.Runtime;
 using NeonBlack.Gameplay.Features.Composition;
 using NeonBlack.Gameplay.Features.Input;
 using UnityEngine;
+using VContainer;
 
 namespace NeonBlack.Gameplay.Characters
 {
     /// <summary>
     /// Composition root for participant-owned pawns.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Movement,
+        Relevance = "The root coordinator for participant-owned pawns. Handles profile application and feature installation.",
+        NativeSetup = new[] { "Add to Pawn prefab root", "Assign PawnDefinition" },
+        AssignmentFields = new[] { nameof(pawnDefinition) },
+        FirstProof = "Pawn spawns and receives its defined movement/combat profiles."
+    ,
+        ExpertAdvice = "The PawnRoot is the composition root. It reads the PawnDefinition and installs requested feature modules (Combat, Traversal, etc.) at runtime.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/pawns")]
     [AddComponentMenu("NeonBlack/Gameplay/Characters/Pawn Root")]
     public class PawnRoot : MonoBehaviour, IPawnParticipantInitializer
     {
@@ -68,9 +79,12 @@ namespace NeonBlack.Gameplay.Characters
             if (_featureHost == null)
                 _featureHost = gameObject.AddComponent<ActorFeatureHost>();
 
-            GameplayPlatformContext.TryGetServices(out PlatformServiceRegistry services);
+            IObjectResolver resolver = null;
+            if (GameplayPlatformContext.TryResolve(out IObjectResolver currentResolver))
+                resolver = currentResolver;
+
             _featureHost.InitializeFeatures(
-                new FeatureHostInitializationContext(BuildFeatureContext(), services),
+                new FeatureHostInitializationContext(BuildFeatureContext(), resolver),
                 pawnDefinition != null ? pawnDefinition.featureModules : null);
         }
 

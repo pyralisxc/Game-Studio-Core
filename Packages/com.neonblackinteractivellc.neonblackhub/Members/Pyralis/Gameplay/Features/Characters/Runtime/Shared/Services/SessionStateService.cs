@@ -10,8 +10,18 @@ namespace NeonBlack.Gameplay.Characters
     /// <summary>
     /// Shared session state and host-authoritative startup rules for NeonBlack Gameplay.
     /// </summary>
+    /// <summary>
+    /// Service for tracking and reading the high-level state of the gameplay session (e.g., Playing, Paused).
+    /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Session,
+        Relevance = "Global service for tracking and broadcasting high-level gameplay session states (Playing, Paused, lobby).",
+        Axioms = AuthoringWorldAxiom.None,
+        RequiredInterfaces = new[] { typeof(IGameService), typeof(IGameplayStateReader) },
+        FirstProof = "Verify the session transitions from Boot to Gameplay state upon startup."
+    )]
     public class SessionStateService : MonoBehaviour, IGameService, IGameplayStateReader
-    {
+{
         public enum SessionPhase
         {
             Boot,

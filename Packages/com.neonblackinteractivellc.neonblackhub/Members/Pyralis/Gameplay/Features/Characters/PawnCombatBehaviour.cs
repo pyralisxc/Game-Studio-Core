@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Features.Combat;
@@ -6,102 +7,79 @@ using NeonBlack.Gameplay.Features.Composition;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Characters;
 using UnityEngine;
+using VContainer;
 
 namespace NeonBlack.Gameplay.Features.Characters
 {
+    [AuthoringContract(
+        Capability = AuthoringCapability.Combat,
+        Relevance = "Primary pawn combat controller; handles sequences, combos, and delegates to modules.",
+        Axioms = AuthoringWorldAxiom.Realtime,
+        RequiredInterfaces = new[] { typeof(IPawnCombatModule) },
+        ConsumedRoles = new[] { "AttackPrimary", "AttackSecondary", "Block" },
+        FirstProof = "Perform an attack combo and verify the hits are detected and animations trigger."
+    )]
     [AddComponentMenu("NeonBlack/Gameplay/Characters/Pawn Combat Behaviour")]
+    [RequireComponent(typeof(PawnHitBoxModule))]
+    [RequireComponent(typeof(PawnDamageModule))]
+    [RequireComponent(typeof(PawnProjectileModule))]
+    [RequireComponent(typeof(PawnBlockModule))]
+    [RequireComponent(typeof(PawnWeaponModule))]
     public class PawnCombatBehaviour : MonoBehaviour, IPawnCombatModule, IPawnCombatMovementContext, IDamageModifier, IActorCombatModifierReceiver
     {
-        private sealed class ComboRuntimeState
-        {
-            public CombatSequenceDefinition Sequence;
-            public CombatActionDefinition ActiveAction;
-            public int CurrentIndex = -1;
-            public float Timer;
-            public bool AllowNextBranch;
-            public bool WaitingForHitConfirm;
-
-            public void Reset()
-            {
-                ActiveAction = null;
-                CurrentIndex = -1;
-                Timer = 0f;
-                AllowNextBranch = false;
-                WaitingForHitConfirm = false;
-            }
-        }
-
-        [Header("Combo")]
+        [Header("Combo Settings")]
         [SerializeField] private float comboResetTime = 1.5f;
-
-        [Header("Combat")]
-        [SerializeField] private HitBoxSlot[] hitBoxZones;
-
-        [Header("Projectile")]
-        [SerializeField] private Transform projectileSpawnPoint;
-        [SerializeField] private ProjectileLauncher3D projectileLauncher;
-
-        [Header("Weapons")]
-        [SerializeField] private WeaponData attackWeapon;
-        [SerializeField] private WeaponData kickWeapon;
-        [SerializeField] private WeaponData[] equippedWeapons;
-        [SerializeField] private int startingWeaponIndex;
-        [SerializeField] private float baseDamage = 10f;
-        [SerializeField] private float baseKnockback = 5f;
-        [SerializeField] private float hitDelay = 0.1f;
-        [SerializeField] private float hitDuration = 0.15f;
-        [SerializeField] private float attackCooldown = 0.5f;
-        [SerializeField] private float kickCooldown = 0.8f;
         [SerializeField] private float combatWindow = 3f;
         [SerializeField] private int maxAerialAttacks = 2;
+        [SerializeField] private float attackCooldown = 0.5f;
+        [SerializeField] private float kickCooldown = 0.8f;
+
+        [Header("Movement Modifiers")]
         [Range(0f, 1f)]
         [SerializeField] private float attackMoveMultiplier = 0.2f;
         [Range(0f, 1f)]
         [SerializeField] private float aerialAttackMoveMultiplier = 0.5f;
-        [SerializeField] private string aerialHitBoxZone = "Aerial";
-        [SerializeField] private WeaponData aerialWeapon;
 
         [Header("Combat Definitions")]
         [SerializeField] private CombatSequenceDefinition primarySequence;
         [SerializeField] private CombatSequenceDefinition secondarySequence;
         [SerializeField] private CombatSequenceDefinition aerialSequence;
-
-        [Header("Block")]
-        [Range(0f, 1f)]
-        [SerializeField] private float blockDamageReduction = 0.2f;
-        [Range(10f, 180f)]
-        [SerializeField] private float blockFrontalAngle = 90f;
+        [SerializeField] private string aerialHitBoxZone = "Aerial";
 
         private ICharacterMotorState _motor;
         private ActorAnimationDriver _animationDriver;
         private HealthComponent _health;
         private IActorFeedbackPublisher _feedbackPublisher;
 
-        private readonly ComboRuntimeState _primaryState = new ComboRuntimeState();
-        private readonly ComboRuntimeState _secondaryState = new ComboRuntimeState();
-        private readonly ComboRuntimeState _aerialState = new ComboRuntimeState();
-        private ComboRuntimeState _currentSequenceState;
+        private PawnComboProcessor _comboProcessor;
+        private PawnHitBoxModule _hitBoxModule;
+        private PawnDamageModule _damageModule;
+        private PawnProjectileModule _projectileModule;
+        private PawnBlockModule _blockModule;
+        private PawnWeaponModule _weaponModule;
 
-        private bool _isBlocking;
         private int _attackCount;
         private int _kickCount;
-        private int _activeWeaponIndex;
         private float _attackTimer;
         private float _kickTimer;
         private int _aerialAttackCount;
         private float _aerialTimer;
         private float _combatTimer;
-        private float _outgoingDamageMultiplier = 1f;
-        private float _outgoingKnockbackMultiplier = 1f;
 
-        public bool IsBlocking => _isBlocking;
-        public float BlockDamageReduction => blockDamageReduction;
-        public float BlockFrontalAngle => blockFrontalAngle;
+        public bool IsBlocking => _blockModule != null && _blockModule.IsBlocking;
+        public float BlockDamageReduction => _blockModule != null ? _blockModule.BlockDamageReduction : 0.2f;
+        public float BlockFrontalAngle => _blockModule != null ? _blockModule.BlockFrontalAngle : 90f;
         public float AttackTimer => _attackTimer;
         public float KickTimer => _kickTimer;
         public float AttackMoveMultiplier => attackMoveMultiplier;
         public float AerialAttackMoveMultiplier => aerialAttackMoveMultiplier;
         public float CombatTimer => _combatTimer;
+
+        [Inject]
+        public void Construct(PawnComboProcessor comboProcessor)
+        {
+            _comboProcessor = comboProcessor;
+        }
 
         private void Awake()
         {
@@ -110,16 +88,15 @@ namespace NeonBlack.Gameplay.Features.Characters
             _health = GetComponent<HealthComponent>();
             _feedbackPublisher = GetComponent<IActorFeedbackPublisher>();
 
-            CacheHitBoxOffsets();
+            _hitBoxModule = GetComponent<PawnHitBoxModule>();
+            _damageModule = GetComponent<PawnDamageModule>();
+            _projectileModule = GetComponent<PawnProjectileModule>();
+            _blockModule = GetComponent<PawnBlockModule>();
+            _weaponModule = GetComponent<PawnWeaponModule>();
+
+            _comboProcessor ??= new PawnComboProcessor();
+
             SubscribeHitBoxes();
-
-            if (equippedWeapons != null && equippedWeapons.Length > 0)
-            {
-                _activeWeaponIndex = Mathf.Clamp(startingWeaponIndex, 0, equippedWeapons.Length - 1);
-                attackWeapon = equippedWeapons[_activeWeaponIndex];
-            }
-
-            ApplyActiveWeapon();
         }
 
         private void OnDestroy()
@@ -129,45 +106,27 @@ namespace NeonBlack.Gameplay.Features.Characters
 
         public void UpdateCombatTimers()
         {
-            _attackTimer -= Time.deltaTime;
-            _kickTimer -= Time.deltaTime;
-            _aerialTimer -= Time.deltaTime;
-            _combatTimer -= Time.deltaTime;
+            float dt = Time.deltaTime;
+            _attackTimer -= dt;
+            _kickTimer -= dt;
+            _aerialTimer -= dt;
+            _combatTimer -= dt;
 
-            TickComboState(_primaryState);
-            TickComboState(_secondaryState);
-            TickComboState(_aerialState);
-
-            _animationDriver?.SetBoolSignal(ActorAnimationSignal.BlockLoop, _isBlocking);
+            _comboProcessor.Tick(dt, comboResetTime);
+            _hitBoxModule?.Tick(dt);
+            _blockModule?.Tick();
         }
 
         public void SyncHitBoxSides(Transform root, bool facingRight)
         {
-            if (hitBoxZones == null)
-                return;
-
-            foreach (HitBoxSlot slot in hitBoxZones)
-                slot.MirrorToSide(root, facingRight);
+            _hitBoxModule?.SyncHitBoxSides(facingRight);
         }
 
         public void ResetAerialAttackCount() => _aerialAttackCount = 0;
 
-        public HitBox GetZoneByName(string zoneName)
-        {
-            if (hitBoxZones == null || string.IsNullOrEmpty(zoneName))
-                return null;
-
-            foreach (HitBoxSlot slot in hitBoxZones)
-                if (slot.zoneName == zoneName)
-                    return slot.hitBox;
-
-            return null;
-        }
-
         public void HandleAttack()
         {
-            if (_motor == null)
-                return;
+            if (_motor == null) return;
 
             if (_motor.IsAirborne)
             {
@@ -177,7 +136,7 @@ namespace NeonBlack.Gameplay.Features.Characters
 
             if (primarySequence != null && primarySequence.actions != null && primarySequence.actions.Length > 0)
             {
-                ExecuteSequenceAction(_primaryState, primarySequence, CombatInputType.Primary, attackWeapon, "Punch", ref _attackTimer, attackCooldown);
+                ExecuteSequenceAction(_comboProcessor.PrimaryState, primarySequence, CombatInputType.Primary, _weaponModule.AttackWeapon, "Punch", ref _attackTimer, attackCooldown);
                 return;
             }
 
@@ -186,8 +145,7 @@ namespace NeonBlack.Gameplay.Features.Characters
 
         public void HandleKick()
         {
-            if (_motor == null)
-                return;
+            if (_motor == null) return;
 
             if (_motor.IsAirborne)
             {
@@ -197,131 +155,84 @@ namespace NeonBlack.Gameplay.Features.Characters
 
             if (secondarySequence != null && secondarySequence.actions != null && secondarySequence.actions.Length > 0)
             {
-                ExecuteSequenceAction(_secondaryState, secondarySequence, CombatInputType.Secondary, kickWeapon, "Kick", ref _kickTimer, kickCooldown);
+                ExecuteSequenceAction(_comboProcessor.SecondaryState, secondarySequence, CombatInputType.Secondary, _weaponModule.KickWeapon, "Kick", ref _kickTimer, kickCooldown);
                 return;
             }
 
             ExecuteFallbackKick();
         }
 
-        public void HandleBlockStart()
-        {
-            if (_motor != null && _motor.IsActing)
-                return;
-
-            _isBlocking = true;
-            _animationDriver?.TriggerSignal(ActorAnimationSignal.BlockStart);
-            _animationDriver?.SetBoolSignal(ActorAnimationSignal.BlockLoop, true);
-        }
-
-        public void HandleBlockEnd()
-        {
-            _isBlocking = false;
-            _animationDriver?.TriggerSignal(ActorAnimationSignal.BlockEnd);
-            _animationDriver?.SetBoolSignal(ActorAnimationSignal.BlockLoop, false);
-        }
-
-        public void CycleWeapon(int direction)
-        {
-            if (equippedWeapons == null || equippedWeapons.Length <= 1)
-                return;
-
-            _activeWeaponIndex = (_activeWeaponIndex + direction + equippedWeapons.Length) % equippedWeapons.Length;
-            ApplyActiveWeapon();
-        }
+        public void HandleBlockStart() => _blockModule?.HandleBlockStart();
+        public void HandleBlockEnd() => _blockModule?.HandleBlockEnd();
+        public void CycleWeapon(int direction) => _weaponModule?.CycleWeapon(direction);
 
         public void ResetAttackCombo()
         {
             _attackCount = 0;
-            _primaryState.Reset();
+            _comboProcessor.ResetPrimary();
         }
 
         public void ResetKickCombo()
         {
             _kickCount = 0;
-            _secondaryState.Reset();
+            _comboProcessor.ResetSecondary();
         }
 
         public void ApplyCombatProfile(PawnProfileApplicationContext context, PawnCombatProfile profile)
         {
-            if (profile == null)
-                return;
+            if (profile == null) return;
 
-            baseDamage = profile.baseDamage;
-            baseKnockback = profile.baseKnockback;
             attackCooldown = profile.attackCooldown;
             kickCooldown = profile.kickCooldown;
             comboResetTime = profile.comboResetTime;
             combatWindow = profile.combatWindow;
-            attackWeapon = profile.attackWeapon;
-            kickWeapon = profile.kickWeapon;
-            aerialWeapon = profile.aerialWeapon;
             primarySequence = profile.primarySequence;
             secondarySequence = profile.secondarySequence;
             aerialSequence = profile.aerialSequence;
-            blockDamageReduction = profile.blockDamageReduction;
             maxAerialAttacks = profile.maxAerialAttacks;
-            ApplyActiveWeapon();
+
+            _weaponModule?.SetWeapons(profile.attackWeapon, profile.kickWeapon, profile.aerialWeapon);
+            // Damage scaling usually comes from the module
+            _damageModule?.SetOutgoingDamageMultiplier(1.0f); // Default or from profile if added
         }
 
         public bool TryModifyIncomingDamage(GameObject source, ref float incomingDamage)
         {
-            if (GetComponentInChildren<IActorGuardFeature>(true) != null)
-                return false;
-
-            if (!_isBlocking || source == null)
-                return false;
-
-            Vector3 toAttacker = source.transform.position - transform.position;
-            toAttacker.y = 0f;
-            if (toAttacker.sqrMagnitude <= 0.001f)
-                return false;
-
-            bool facingRight = _motor?.FacingRight ?? true;
-            Vector3 facingDir = facingRight ? Vector3.right : Vector3.left;
-            float dot = Vector3.Dot(facingDir, toAttacker.normalized);
-            float threshold = Mathf.Cos(blockFrontalAngle * Mathf.Deg2Rad);
-            if (dot < threshold)
-                return false;
-
-            incomingDamage *= blockDamageReduction;
-            return true;
+            if (_blockModule == null || _damageModule == null) return false;
+            return _damageModule.TryModifyIncomingDamage(
+                source, 
+                ref incomingDamage, 
+                _blockModule.IsBlocking, 
+                _blockModule.BlockDamageReduction, 
+                _blockModule.BlockFrontalAngle, 
+                _motor?.FacingRight ?? true);
         }
 
-        public void SetOutgoingDamageMultiplier(float multiplier)
-        {
-            _outgoingDamageMultiplier = Mathf.Max(multiplier, 0f);
-        }
-
-        public void SetOutgoingKnockbackMultiplier(float multiplier)
-        {
-            _outgoingKnockbackMultiplier = Mathf.Max(multiplier, 0f);
-        }
+        public void SetOutgoingDamageMultiplier(float multiplier) => _damageModule?.SetOutgoingDamageMultiplier(multiplier);
+        public void SetOutgoingKnockbackMultiplier(float multiplier) => _damageModule?.SetOutgoingKnockbackMultiplier(multiplier);
 
         private void PerformAerialAttack()
         {
-            if (maxAerialAttacks > 0 && _aerialAttackCount >= maxAerialAttacks)
-                return;
+            if (maxAerialAttacks > 0 && _aerialAttackCount >= maxAerialAttacks) return;
 
             if (aerialSequence != null && aerialSequence.actions != null && aerialSequence.actions.Length > 0)
             {
-                if (ExecuteSequenceAction(_aerialState, aerialSequence, CombatInputType.Aerial, aerialWeapon, aerialHitBoxZone, ref _aerialTimer, attackCooldown))
+                if (ExecuteSequenceAction(_comboProcessor.AerialState, aerialSequence, CombatInputType.Aerial, _weaponModule.AerialWeapon, aerialHitBoxZone, ref _aerialTimer, attackCooldown))
                     _aerialAttackCount++;
                 return;
             }
 
-            if (_aerialTimer > 0f)
-                return;
+            if (_aerialTimer > 0f) return;
 
             _aerialAttackCount++;
             _aerialTimer = attackCooldown;
             _animationDriver?.SetIntSignal(ActorAnimationSignal.AttackAerial, _aerialAttackCount);
             _animationDriver?.TriggerSignal(ActorAnimationSignal.AttackAerial, intValue: _aerialAttackCount);
-            ActivateHitBoxForZone(aerialHitBoxZone, aerialWeapon);
+            ActivateHitBoxForZone(aerialHitBoxZone, _weaponModule.AerialWeapon);
         }
 
         private bool ExecuteSequenceAction(
-            ComboRuntimeState state,
+            PawnComboProcessor.ComboRuntimeState state,
             CombatSequenceDefinition sequence,
             CombatInputType inputType,
             WeaponData fallbackWeapon,
@@ -329,53 +240,32 @@ namespace NeonBlack.Gameplay.Features.Characters
             ref float cooldownTimer,
             float fallbackCooldown)
         {
-            if (_motor == null || sequence == null || sequence.actions == null || sequence.actions.Length == 0)
-                return false;
-
-            bool canBranch = state.CurrentIndex >= 0 && state.Timer > 0f && state.AllowNextBranch;
-            int nextIndex = canBranch ? state.CurrentIndex + 1 : 0;
-            if (nextIndex >= sequence.actions.Length)
-                nextIndex = sequence.restartFromFirstActionWhenBranchFails ? 0 : sequence.actions.Length - 1;
-
-            CombatActionDefinition action = sequence.actions[nextIndex];
-            if (action == null)
-                return false;
-
-            if (_motor.IsActing || cooldownTimer > 0f)
-                return false;
-
-            WeaponData resolvedWeapon = action.weapon != null ? action.weapon : fallbackWeapon;
-            float resolvedCooldown = ResolveActionCooldown(action, resolvedWeapon, fallbackCooldown);
-            cooldownTimer = resolvedCooldown;
-            _motor.IsActing = true;
-            _combatTimer = combatWindow;
-
-            state.Sequence = sequence;
-            state.ActiveAction = action;
-            state.CurrentIndex = nextIndex;
-            state.Timer = action.comboWindow > 0f ? action.comboWindow : comboResetTime;
-            state.AllowNextBranch = !action.requiresHitConfirmForNextBranch;
-            state.WaitingForHitConfirm = action.requiresHitConfirmForNextBranch;
-
-            _currentSequenceState = state;
-            _motor.ResetMoveToIdle();
-            TriggerCombatAnimation(action, inputType);
-            ActivateHitBoxForZone(action.fallbackHitBoxZone, resolvedWeapon ?? fallbackWeapon ?? ActiveWeapon ?? attackWeapon, action.fallbackHitBoxZone, state);
-
-            if (action.finisherResetsCombo || (nextIndex >= sequence.actions.Length - 1 && sequence.resetAfterFinalAction))
+            if (_comboProcessor.TryExecuteAction(
+                state, 
+                sequence, 
+                comboResetTime, 
+                combatWindow, 
+                ref _combatTimer, 
+                _motor.IsActing, 
+                cooldownTimer, 
+                out int _, 
+                out CombatActionDefinition action))
             {
-                state.AllowNextBranch = false;
-                state.WaitingForHitConfirm = false;
-                state.CurrentIndex = -1;
+                WeaponData resolvedWeapon = action.weapon != null ? action.weapon : fallbackWeapon;
+                cooldownTimer = ResolveActionCooldown(action, resolvedWeapon, fallbackCooldown);
+                _motor.IsActing = true;
+                _motor.ResetMoveToIdle();
+                TriggerCombatAnimation(action, inputType);
+                ActivateHitBoxForZone(action.fallbackHitBoxZone, resolvedWeapon ?? fallbackWeapon ?? _weaponModule.ActiveWeapon, action.fallbackHitBoxZone);
+                return true;
             }
 
-            return true;
+            return false;
         }
 
         private void ExecuteFallbackAttack()
         {
-            if (_motor == null || _motor.IsActing || _attackTimer > 0f)
-                return;
+            if (_motor == null || _motor.IsActing || _attackTimer > 0f) return;
 
             _attackTimer = attackCooldown;
             _motor.IsActing = true;
@@ -386,13 +276,12 @@ namespace NeonBlack.Gameplay.Features.Characters
             _animationDriver?.SetIntSignal(ActorAnimationSignal.AttackPrimary, _attackCount);
             _animationDriver?.TriggerSignal(ActorAnimationSignal.AttackPrimary, intValue: _attackCount);
 
-            ActivateHitBoxForZone("Punch", attackWeapon);
+            ActivateHitBoxForZone("Punch", _weaponModule.AttackWeapon);
         }
 
         private void ExecuteFallbackKick()
         {
-            if (_motor == null || _motor.IsActing || _kickTimer > 0f)
-                return;
+            if (_motor == null || _motor.IsActing || _kickTimer > 0f) return;
 
             _kickTimer = kickCooldown;
             _motor.IsActing = true;
@@ -403,7 +292,7 @@ namespace NeonBlack.Gameplay.Features.Characters
             _animationDriver?.SetIntSignal(ActorAnimationSignal.AttackSecondary, _kickCount);
             _animationDriver?.TriggerSignal(ActorAnimationSignal.AttackSecondary, intValue: _kickCount);
 
-            ActivateHitBoxForZone("Kick", kickWeapon);
+            ActivateHitBoxForZone("Kick", _weaponModule.KickWeapon);
         }
 
         private void TriggerCombatAnimation(CombatActionDefinition action, CombatInputType inputType)
@@ -430,166 +319,46 @@ namespace NeonBlack.Gameplay.Features.Characters
 
         private float ResolveActionCooldown(CombatActionDefinition action, WeaponData resolvedWeapon, float fallbackCooldown)
         {
-            if (action != null && action.cooldownOverride >= 0f)
-                return action.cooldownOverride;
-
-            if (resolvedWeapon != null && resolvedWeapon.attackCooldown > 0f)
-                return resolvedWeapon.attackCooldown;
-
+            if (action != null && action.cooldownOverride >= 0f) return action.cooldownOverride;
+            if (resolvedWeapon != null && resolvedWeapon.attackCooldown > 0f) return resolvedWeapon.attackCooldown;
             return fallbackCooldown;
         }
 
-        private void ActivateHitBox(HitBox box, WeaponData weapon)
+        private void ActivateHitBoxForZone(string defaultZoneName, WeaponData weapon, string explicitZoneName = null)
         {
-            if (box == null)
-                return;
-
-            float damage = (weapon != null ? weapon.damage : baseDamage) * _outgoingDamageMultiplier;
-            float knockback = (weapon != null ? weapon.knockbackForce : baseKnockback) * _outgoingKnockbackMultiplier;
-            float delay = weapon != null ? weapon.hitDelay : hitDelay;
-            float duration = weapon != null ? weapon.hitDuration : hitDuration;
-
-            SyncHitBoxSides(transform, _motor?.FacingRight ?? true);
-            StartCoroutine(HitBoxTimingRoutine(box, damage, knockback, delay, duration));
-        }
-
-        private IEnumerator HitBoxTimingRoutine(HitBox box, float damage, float knockback, float delay, float duration)
-        {
-            if (delay > 0f)
-                yield return new WaitForSeconds(delay);
-
-            box.Enable(damage, knockback);
-            yield return new WaitForSeconds(Mathf.Max(duration, 0.01f));
-            box.Disable();
-        }
-
-        private void ActivateHitBoxForZone(string defaultZoneName, WeaponData weapon, string explicitZoneName = null, ComboRuntimeState state = null)
-        {
-            if (weapon != null
-                && (weapon.weaponType == WeaponType.Ranged || weapon.weaponType == WeaponType.Thrown)
-                && weapon.projectileDefinition != null)
+            if (weapon != null && (weapon.weaponType == WeaponType.Ranged || weapon.weaponType == WeaponType.Thrown) && weapon.projectileDefinition != null)
             {
-                FireProjectile(weapon);
+                _projectileModule?.FireProjectile(weapon, _motor?.FacingRight ?? true, _damageModule != null ? _damageModule.DamageHandler.OutgoingDamageMultiplier : 1.0f, _damageModule != null ? _damageModule.DamageHandler.OutgoingKnockbackMultiplier : 1.0f);
                 return;
             }
 
-            string zoneName = !string.IsNullOrEmpty(explicitZoneName)
-                ? explicitZoneName
-                : weapon != null && !string.IsNullOrEmpty(weapon.hitBoxZone)
-                    ? weapon.hitBoxZone
-                    : defaultZoneName;
+            string zoneName = !string.IsNullOrEmpty(explicitZoneName) ? explicitZoneName : (weapon != null && !string.IsNullOrEmpty(weapon.hitBoxZone) ? weapon.hitBoxZone : defaultZoneName);
 
-            HitBox box = GetZoneByName(zoneName) ?? GetZoneByName(defaultZoneName);
-            if (state != null)
-                _currentSequenceState = state;
+            float damage = _damageModule != null ? _damageModule.GetModifiedDamage(weapon != null ? weapon.damage : 10f) : 10f;
+            float knockback = _damageModule != null ? _damageModule.GetModifiedKnockback(weapon != null ? weapon.knockbackForce : 5f) : 5f;
+            float delay = weapon != null ? weapon.hitDelay : 0.1f;
+            float duration = weapon != null ? weapon.hitDuration : 0.15f;
 
-            ActivateHitBox(box, weapon);
-        }
-
-        private void FireProjectile(WeaponData weapon)
-        {
-            ProjectileLauncher3D launcher = ResolveProjectileLauncher();
-            if (launcher == null)
-            {
-                Debug.LogWarning($"{nameof(PawnCombatBehaviour)} needs a {nameof(ProjectileLauncher3D)} to fire ranged weapon `{weapon.weaponName}` through the authored projectile path.", this);
-                return;
-            }
-
-            bool facingRight = _motor?.FacingRight ?? true;
-            Vector3 spawnPos = projectileSpawnPoint != null
-                ? projectileSpawnPoint.position
-                : transform.position + Vector3.up * 1f + transform.forward * 0.5f;
-
-            Vector3 forward = facingRight ? Vector3.right : Vector3.left;
-            if (weapon.projectileDefinition == null)
-                return;
-
-            ProjectileFireRequest request = new ProjectileFireRequest(
-                weapon.projectileDefinition,
-                weapon.fireModeDefinition,
-                spawnPos,
-                forward,
-                gameObject,
-                _health != null ? _health.faction : Faction.Neutral,
-                damageMultiplier: _outgoingDamageMultiplier,
-                knockbackMultiplier: _outgoingKnockbackMultiplier);
-
-            launcher.Fire(request);
-        }
-
-        private ProjectileLauncher3D ResolveProjectileLauncher()
-        {
-            if (projectileLauncher != null)
-                return projectileLauncher;
-
-            projectileLauncher = GetComponentInParent<ProjectileLauncher3D>();
-            if (projectileLauncher == null)
-                projectileLauncher = GetComponentInChildren<ProjectileLauncher3D>();
-
-            return projectileLauncher;
-        }
-
-        private WeaponData ActiveWeapon =>
-            equippedWeapons != null && equippedWeapons.Length > _activeWeaponIndex
-                ? equippedWeapons[_activeWeaponIndex]
-                : null;
-
-        private void ApplyActiveWeapon()
-        {
-            WeaponData weapon = ActiveWeapon;
-            _animationDriver?.SetRuntimeControllerOverride(weapon != null ? weapon.overrideController : null);
-        }
-
-        private void TickComboState(ComboRuntimeState state)
-        {
-            if (state == null || state.Timer <= 0f)
-                return;
-
-            state.Timer -= Time.deltaTime;
-            if (state.Timer > 0f)
-                return;
-
-            state.Reset();
-            if (_currentSequenceState == state)
-                _currentSequenceState = null;
+            _hitBoxModule?.SyncHitBoxSides(_motor?.FacingRight ?? true);
+            _hitBoxModule?.ActivateHitBox(zoneName, damage, knockback, delay, duration);
         }
 
         private void HandleHitConfirmed(GameObject _)
         {
-            if (_currentSequenceState == null || !_currentSequenceState.WaitingForHitConfirm)
-                return;
-
-            _currentSequenceState.WaitingForHitConfirm = false;
-            _currentSequenceState.AllowNextBranch = true;
-            _currentSequenceState.Timer = Mathf.Max(_currentSequenceState.Timer, comboResetTime);
-            if (_currentSequenceState.ActiveAction != null)
+            _comboProcessor.HandleHitConfirmed(comboResetTime, (step, isFinisher) => 
             {
-                _animationDriver?.TriggerCustom("ComboConfirm", intValue: _currentSequenceState.ActiveAction.comboStep);
-                _feedbackPublisher?.PublishCombo(_currentSequenceState.ActiveAction.comboStep);
-                if (_currentSequenceState.ActiveAction.finisherResetsCombo)
-                    _feedbackPublisher?.PublishFinisher(_currentSequenceState.ActiveAction.comboStep);
-            }
-        }
-
-        private void CacheHitBoxOffsets()
-        {
-            if (hitBoxZones == null)
-                return;
-
-            foreach (HitBoxSlot slot in hitBoxZones)
-            {
-                slot.absOffsetX = slot.hitBox != null
-                    ? Mathf.Max(Mathf.Abs(slot.hitBox.transform.position.x - transform.position.x), 0.5f)
-                    : 0.5f;
-            }
+                _animationDriver?.TriggerCustom("ComboConfirm", intValue: step);
+                _feedbackPublisher?.PublishCombo(step);
+                if (isFinisher)
+                    _feedbackPublisher?.PublishFinisher(step);
+            });
         }
 
         private void SubscribeHitBoxes()
         {
-            if (hitBoxZones == null)
-                return;
+            if (_hitBoxModule == null || _hitBoxModule.HitBoxZones == null) return;
 
-            foreach (HitBoxSlot slot in hitBoxZones)
+            foreach (HitBoxSlot slot in _hitBoxModule.HitBoxZones)
             {
                 if (slot?.hitBox != null)
                     slot.hitBox.HitConfirmed += HandleHitConfirmed;
@@ -598,10 +367,9 @@ namespace NeonBlack.Gameplay.Features.Characters
 
         private void UnsubscribeHitBoxes()
         {
-            if (hitBoxZones == null)
-                return;
+            if (_hitBoxModule == null || _hitBoxModule.HitBoxZones == null) return;
 
-            foreach (HitBoxSlot slot in hitBoxZones)
+            foreach (HitBoxSlot slot in _hitBoxModule.HitBoxZones)
             {
                 if (slot?.hitBox != null)
                     slot.hitBox.HitConfirmed -= HandleHitConfirmed;

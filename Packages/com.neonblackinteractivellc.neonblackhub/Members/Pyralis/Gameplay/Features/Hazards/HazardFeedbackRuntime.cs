@@ -1,3 +1,4 @@
+using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Presentation.Visuals;
@@ -8,8 +9,30 @@ using UnityEngine;
 namespace NeonBlack.Gameplay.Features.Hazards
 {
     [AddComponentMenu("NeonBlack/Gameplay/Hazards/Hazard Feedback Runtime")]
+    [AuthoringContract(
+        ModuleId = "hazard.feedback",
+        Capability = AuthoringCapability.VFX | AuthoringCapability.Combat,
+        Relevance = "Provides visual feedback (flashes, popups) for hazard states like activation, explosion, and collection.",
+        Lane = "Hazard",
+        ProfileType = typeof(HazardFeedbackProfile),
+        RequiredInterfaces = new[] { typeof(IRuntimeValidationProvider) },
+        RequiredComponentNames = new[] { "NeonBlack.Gameplay.Presentation.Visuals.SpriteFlasher" },
+        NativeSetup = new[]
+        {
+            "create HazardFeedbackProfile",
+            "attach HazardFeedbackRuntime to Hazard GameObject",
+            "assign profile asset to Hazard"
+        },
+        FirstProof = "Activate a hazard and verify the activation flash and popup appear.",
+        CustomizationMoments = new[]
+        {
+            "HazardFeedbackProfile.flashOnActivation",
+            "HazardFeedbackProfile.showActivationPopup",
+            "HazardFeedbackProfile.popupLifetime"
+        }
+    )]
     public class HazardFeedbackRuntime : MonoBehaviour, IRuntimeValidationProvider
-    {
+{
         private sealed class Popup
         {
             public GameObject Root;

@@ -7,8 +7,40 @@ using UnityEngine;
 namespace NeonBlack.Gameplay.Features.Combat
 {
     [AddComponentMenu("NeonBlack/Gameplay/Combat/Actor Combat Reaction Feature Runtime")]
+    [AuthoringContract(
+        ModuleId = "actor.combat.reaction",
+        Capability = AuthoringCapability.Combat,
+        Lane = "Combat",
+        ProfileType = typeof(ActorCombatReactionProfile),
+        RequiredInterfaces = new[] { typeof(IFeatureModuleRuntime), typeof(IActorGuardFeature), typeof(IDamageModifier) },
+        RequiredInterfaceNames = new[] { "NeonBlack.Gameplay.Features.Combat.IActorReactionResponder" },
+        RequiredComponentNames = new[] { "NeonBlack.Gameplay.Features.Combat.HealthComponent" },
+        ConsumedRoles = new[] { "Guard" },
+        NativeSetup = new[]
+        {
+            "create ActorCombatReactionProfile",
+            "create FeatureModuleDefinition",
+            "assign runtime prefab with ActorCombatReactionFeatureRuntime",
+            "assign profile asset",
+            "add module to PawnDefinition.featureModules",
+            "bind Guard in InputProfile"
+        },
+        FirstProof = "proof.npc-enemy-behavior",
+        AssignmentFields = new[]
+        {
+            "FeatureModuleDefinition.moduleId",
+            "FeatureModuleDefinition.runtimePrefab",
+            "FeatureModuleDefinition.profileAsset"
+        },
+        CustomizationMoments = new[]
+        {
+            "ActorCombatReactionProfile.blockDamageReduction",
+            "ActorCombatReactionProfile.parryWindowDuration",
+            "ActorCombatReactionProfile.staggerDamageThreshold"
+        }
+    )]
     public class ActorCombatReactionFeatureRuntime : MonoBehaviour, IFeatureModuleRuntime, IDamageModifier, IActorGuardFeature
-    {
+{
         [SerializeField] private ActorCombatReactionProfile reactionProfile;
         private ActorFeatureContext _context;
         private IActorHealthState _health;

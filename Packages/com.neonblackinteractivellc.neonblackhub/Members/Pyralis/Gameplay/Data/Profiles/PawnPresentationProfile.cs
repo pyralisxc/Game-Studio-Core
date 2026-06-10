@@ -1,4 +1,6 @@
-﻿using NeonBlack.Gameplay.Presentation.Animation;
+using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Presentation.Visuals;
 using UnityEngine;
 
@@ -7,6 +9,13 @@ namespace NeonBlack.Gameplay.Data.Profiles
     /// <summary>
     /// Shared presentation authoring profile for pawn visuals and camera-facing behavior.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Animation | AuthoringCapability.VFX, 
+        Relevance = "Project-window creation path for pawn presentation lane and visual setup choices.",
+        AssignmentFields = new[] { nameof(presentationMode), nameof(hudPrefab), nameof(primaryTint) },
+        FirstProof = "Change the primary tint and see it reflected on the pawn in the scene.",
+        NativeSetup = new[] { "Create Asset" }
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Pawn Presentation Profile", fileName = "PawnPresentationProfile", order = -40)]
     public class PawnPresentationProfile : ScriptableObject
     {

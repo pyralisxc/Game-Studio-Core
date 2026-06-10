@@ -13,6 +13,7 @@ namespace NeonBlack.Gameplay.Core.Navigation
     [DefaultExecutionOrder(-40)]
     public class SceneFader : MonoBehaviour, ISceneNavigator
     {
+        [Obsolete("Use IObjectResolver to inject ISceneNavigator or resolve SceneFader from the active session scope.")]
         public static SceneFader Instance { get; private set; }
 
         [SerializeField, Range(0.05f, 2f)] private float _fadeOutDuration = 0.35f;

@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d7304fb527521a42a3ea49ed379c3d3, type: 3}
+  m_Name: ProofBoard
+  m_EditorClassIdentifier: NeonBlack.Gameplay.Data::NeonBlack.Gameplay.Data.Definitions.Rules.BoardDefinition
+  boardId: board.proof
+  displayName: Proof Board
+  width: 4
+  height: 4
+  startingPieces:
+  - pieceInstanceId: p1
+    pieceDefinition: {fileID: 11400000, guid: 46533feb380a1be4abc04fc68f964681, type: 2}
+    ownerSeat: 0
+    coordinate:
+      x: 0
+      y: 0
+  - pieceInstanceId: p2
+    pieceDefinition: {fileID: 11400000, guid: 29532ba1c09ffd34e9699f7eb566c58e, type: 2}
+    ownerSeat: 1
+    coordinate:
+      x: 1
+      y: 1

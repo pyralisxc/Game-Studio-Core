@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Actions;
 using NeonBlack.Gameplay.Core.Rules.Board;
 using NeonBlack.Gameplay.Core.Rules.TurnPhase;
+using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions.Rules;
 using UnityEngine;
 
@@ -10,6 +11,13 @@ namespace NeonBlack.Gameplay.Features.Tabletop
     /// <summary>
     /// Scene-facing presenter that turns an authored board definition into selectable board objects.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Tabletop | AuthoringCapability.Grid, 
+        Relevance = "Inspector Add Component path for a board presenter that can build selectable tabletop spaces.",
+        AssignmentFields = new[] { "boardDefinition", "movePolicyDefinition", "spacePrefab" },
+        FirstProof = "Click 'Rebuild Board' in the inspector and verify the grid is generated.",
+        NativeSetup = new[] { "Add Component", "Assign Prefabs" }
+    )]
     [AddComponentMenu("NeonBlack/Gameplay/Tabletop/Tabletop Board Grid Presenter")]
     public sealed class TabletopBoardGridPresenter : MonoBehaviour
     {
