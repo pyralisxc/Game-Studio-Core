@@ -8,13 +8,32 @@ namespace NeonBlack.Gameplay.Presentation.Animation
 {
     [AuthoringContract(
         Capability = AuthoringCapability.Animation, 
-        Relevance = "Inspector Add Component path for actor animation and presentation mapping.",
-        FirstProof = "Enter Play Mode and verify the actor visual reflects the chosen Presentation Mode. Confirm that movement signals (if mapped) trigger animation state changes in the Animator.",
-        ExpertAdvice = "ActorAnimationDriver bridges Pyralis signals (like Move, Jump, Attack) to your Animator parameters. Ensure the PawnAnimationProfile bindings match your Animator parameter names exactly.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/animation")]
+        Relevance = "Bridges Pyralis signals (Move, Jump, Attack) to Animator parameters, plus sprite/billboard facing.",
+        NativeSetup = new[] 
+        { 
+            "Assign Animator component (searches children if empty).",
+            "Assign Presentation Profile for mode defaults (2D vs 3D).",
+            "Assign Animation Profile with signal-to-parameter bindings."
+        },
+        AssignmentFields = new[] { nameof(animator), nameof(presentationProfile), nameof(animationProfile), nameof(visualRoot), nameof(billboardTarget), nameof(cameraOverride) },
+        FirstProof = "Enter Play Mode. Verify the 'Speed' and 'IsGrounded' parameters on the Animator react to pawn movement.",
+        ExpertAdvice = "The Animation Driver is a 'Signal Bridge'. It decouples logic from visual state. If using sprites, ensure 'Visual Root' is assigned so the driver can flip the localScale for facing direction logic.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/animation"
+    )]
 [AddComponentMenu("NeonBlack/Gameplay/Animation/Actor Animation Driver")]
-    public class ActorAnimationDriver : MonoBehaviour, IActorAnimationController
+    public class ActorAnimationDriver : MonoBehaviour, IActorAnimationController, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            if (animator == null && GetComponentInChildren<Animator>(true) == null)
+                yield return "Animator is empty and no child Animator was found.";
+            if (presentationProfile == null)
+                yield return "Presentation Profile is empty.";
+            if (animationProfile == null)
+                yield return "Animation Profile is empty.";
+            if (presentationProfile != null && presentationProfile.presentationMode == ActorPresentationMode.Billboard2_5D && cameraOverride == null)
+                yield return "Camera Override is empty for Billboard2_5D presentation.";
+        }
         [Header("Scene References")]
         [SerializeField] private Animator animator;
         [SerializeField] private Transform visualRoot;
@@ -238,7 +257,7 @@ namespace NeonBlack.Gameplay.Presentation.Animation
                     }
                     break;
 
-                case ActorPresentationMode.Rigged3D:
+                case ActorPresentationMode.ThirdPerson3D:
                     target.localRotation = Quaternion.Euler(0f, flip ? 180f : 0f, 0f);
                     break;
             }

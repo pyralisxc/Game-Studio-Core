@@ -12,7 +12,7 @@ NeonBlack Gameplay now has:
 - a `VContainer`-backed composition root
 - enforced feature ownership across the main gameplay domains
 - cleaned deferred slices for Pickups, Feedback, and Scoring
-- consolidated setup docs built around `Docs/Setup/CANONICAL_SETUP.md`
+- consolidated setup docs built around `Docs/Authoring/CANONICAL_SETUP.md`
 
 The platform architecture is no longer the main blocker. The highest-value ongoing work is:
 
@@ -151,9 +151,9 @@ The setup lane is now explicit enough to start prefab/scene setup without preten
 
 Current examples:
 
-- `Editor/PyralisSetupFlowMonitor.cs`
-- `Editor/PyralisSceneReadinessValidator.cs`
-- `Editor/PyralisRuntimeSystemClaimResolver.cs`
+- `Editor/Authoring/Spine/Validation/PyralisSetupFlowValidator.cs`
+- `Editor/Authoring/Spine/Validation/PyralisSceneReadinessValidator.cs`
+- `Editor/Authoring/Spine/Validation/PyralisRuntimeSystemClaimResolver.cs`
 - `Editor/GameplayStarterPackFactory.cs`
 - `Networking/Runtime/PyralisNetworkSetupValidator.cs`
 
@@ -254,8 +254,8 @@ The codebase is no longer centered on one monolithic player controller, but seve
 Current examples:
 
 - `Features/Enemies/3D/EnemyAI.cs`
-- `Editor/PyralisSetupFlowMonitor.cs`
-- `Editor/GameplaySessionBootstrapEditor.cs`
+- `Editor/Authoring/Spine/Validation/PyralisSetupFlowValidator.cs`
+- the guided `GameplaySessionBootstrap` inspector surface
 - `Features/Characters/PawnCombatBehaviour.cs`
 - `Features/Hazards/2D/HazardSpawner.cs`
 - `Features/Combat/UI/WorldHealthBar.cs`
@@ -328,9 +328,9 @@ Why it matters:
 
 Current source-of-truth path:
 
-- `Docs/Setup/CANONICAL_SETUP.md`
-- `Docs/Setup/SCENE_SETUP_GUIDE.md`
-- feature-specific setup docs beneath `Docs/Setup/Prefabs/`
+- `Docs/Authoring/CANONICAL_SETUP.md`
+- `Docs/Authoring/SCENE_SETUP_GUIDE.md`
+- feature-specific setup docs beneath `Docs/Authoring/Prefabs/`
 
 ### 11. Source Encoding Hygiene Is Now Guarded
 

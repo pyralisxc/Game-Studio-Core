@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TMPro;
+using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
@@ -10,21 +11,32 @@ namespace NeonBlack.Gameplay.Features.Scoring
     /// <summary>
     /// Page-swap leaderboard screen. Hides the main menu page and shows the leaderboard page,
     /// matching the pattern used by SettingsScreen.
-    ///
-    /// Setup:
-    ///   1. In your Canvas create two root child GameObjects:
-    ///        - MainMenuPage: the page that holds your title, play/settings/leaderboard buttons.
-    ///        - LeaderboardPage: starts inactive. Contains the scroll view and back button.
-    ///   2. Inside LeaderboardPage, add a ScrollView and wire its Content transform to _rowContainer.
-    ///   3. Create a "LeaderboardRow" prefab: a HorizontalLayoutGroup with three
-    ///      TextMeshProUGUI children in order: Rank, Name, Score.
-    ///   4. Attach this component to any persistent GameObject, such as the Canvas.
-    ///   5. Wire all Inspector fields.
-    ///   6. Call Open() from MainMenuController's leaderboard button.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.UI,
+        Relevance = "UI screen for displaying top scores from a leaderboard service.",
+        NativeSetup = new[] 
+        { 
+            "Wire Main Menu Page and Leaderboard Page.",
+            "Assign Row Prefab with Rank/Name/Score labels.",
+            "Assign Row Container."
+        },
+        AssignmentFields = new[] { nameof(_mainMenuPage), nameof(_leaderboardPage), nameof(_backButton), nameof(_rowContainer), nameof(_rowPrefab), nameof(_statusLabel) },
+        FirstProof = "Open the leaderboard in the menu and verify the 'Fetching scores...' status appears.",
+        ExpertAdvice = "Ensure the Row Prefab has exactly three TMP labels in order: Rank, Name, Score."
+    )]
     [AddComponentMenu("NeonBlack/Gameplay/Scoring/Leaderboard Screen")]
-    public class LeaderboardScreen : MonoBehaviour
+    public class LeaderboardScreen : MonoBehaviour, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            if (_mainMenuPage == null) yield return "Main Menu Page is unassigned.";
+            if (_leaderboardPage == null) yield return "Leaderboard Page is unassigned.";
+            if (_rowContainer == null) yield return "Row Container is unassigned.";
+            if (_rowPrefab == null) yield return "Row Prefab is unassigned.";
+            else if (_rowPrefab.GetComponentsInChildren<TextMeshProUGUI>(true).Length < 3)
+                yield return "Row Prefab needs at least 3 TMP labels for Rank, Name, and Score.";
+        }
         [Header("Pages")]
         [SerializeField, Tooltip("Root GameObject of the main menu content. Hidden while leaderboard is open.")]
         private GameObject _mainMenuPage;

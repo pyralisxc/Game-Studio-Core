@@ -19,7 +19,7 @@ namespace NeonBlack.Gameplay.Features.Combat.Editor
                 new PyralisGuideSection(
                     "What This Is",
                     "HitBox2D is a short-lived melee/contact damage trigger for 2D attacks. Animation events or combat scripts enable it for an active swing, then disable it again.",
-                    manualPath: PyralisInspectorGuide.SetupManualPath("Prefabs/Health_Combat_Setup.md")),
+                    manualPath: PyralisInspectorGuide.AuthoringDocPath("Prefabs/Health_Combat_Setup.md")),
                 new PyralisGuideSection(
                     "Required Fields",
                     null,
@@ -102,7 +102,7 @@ namespace NeonBlack.Gameplay.Features.Combat.Editor
                 new PyralisGuideSection(
                     "What This Is",
                     "Projectile is the runtime projectile body launched by ranged combat. Launch supplies the owner, faction, damage, knockback, and speed.",
-                    manualPath: PyralisInspectorGuide.SetupManualPath("Prefabs/Combat_Definitions_Setup.md")),
+                    manualPath: PyralisInspectorGuide.AuthoringDocPath("Prefabs/Combat_Definitions_Setup.md")),
                 new PyralisGuideSection(
                     "Required Fields",
                     null,
@@ -191,7 +191,7 @@ namespace NeonBlack.Gameplay.Features.Combat.Editor
                 new PyralisGuideSection(
                     "What This Is",
                     "Projectile2D is the runtime projectile body for 2D ProjectileDefinition prefab delivery. ProjectileLauncher2D supplies damage, faction, lifetime, range, and impact behavior through ProjectileSpawnCommand.",
-                    manualPath: PyralisInspectorGuide.SetupManualPath("Prefabs/Combat_Definitions_Setup.md")),
+                    manualPath: PyralisInspectorGuide.AuthoringDocPath("Prefabs/Combat_Definitions_Setup.md")),
                 new PyralisGuideSection(
                     "Required Fields",
                     null,
@@ -247,7 +247,7 @@ namespace NeonBlack.Gameplay.Features.Combat.Editor
                 new PyralisGuideSection(
                     "What This Is",
                     "KnockbackReceiver accumulates 3D knockback velocity so Motor3D, enemy movement, or another controller can fold that velocity into its CharacterController move.",
-                    manualPath: PyralisInspectorGuide.SetupManualPath("Prefabs/Health_Combat_Setup.md")),
+                    manualPath: PyralisInspectorGuide.AuthoringDocPath("Prefabs/Health_Combat_Setup.md")),
                 new PyralisGuideSection(
                     "Required Fields",
                     null,
@@ -302,7 +302,7 @@ namespace NeonBlack.Gameplay.Features.Combat.Editor
                 new PyralisGuideSection(
                     "What This Is",
                     "HitFlash listens to sibling HealthComponent damage events and briefly flashes the SpriteRenderer using unscaled time so it still reads during freeze frames.",
-                    manualPath: PyralisInspectorGuide.SetupManualPath("Prefabs/Feedback_Setup.md")),
+                    manualPath: PyralisInspectorGuide.AuthoringDocPath("Prefabs/UI_HUD_Setup.md")),
                 new PyralisGuideSection(
                     "Required Fields",
                     null,
@@ -358,7 +358,7 @@ namespace NeonBlack.Gameplay.Features.Combat.Editor
                 new PyralisGuideSection(
                     "What This Is",
                     "DamageNumber is a pooled world-space TextMeshPro popup built by DamageNumberSpawner for damage, critical hits, and healing.",
-                    manualPath: PyralisInspectorGuide.SetupManualPath("Prefabs/Feedback_Setup.md")),
+                    manualPath: PyralisInspectorGuide.AuthoringDocPath("Prefabs/UI_HUD_Setup.md")),
                 new PyralisGuideSection(
                     "Required Fields",
                     null,
@@ -407,7 +407,7 @@ namespace NeonBlack.Gameplay.Features.Combat.Editor
                 new PyralisGuideSection(
                     "What This Is",
                     "DamageNumberSpawner is the scene-level damage-number pool and IDamageNumberSink that creates DamageNumber objects and reuses them for combat and healing popups.",
-                    manualPath: PyralisInspectorGuide.SetupManualPath("Prefabs/Feedback_Setup.md")),
+                    manualPath: PyralisInspectorGuide.AuthoringDocPath("Prefabs/UI_HUD_Setup.md")),
                 new PyralisGuideSection(
                     "Required Fields",
                     null,

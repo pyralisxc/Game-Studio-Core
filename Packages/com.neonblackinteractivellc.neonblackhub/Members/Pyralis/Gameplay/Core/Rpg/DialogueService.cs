@@ -7,7 +7,11 @@ namespace NeonBlack.Gameplay.Core.Rpg
 {
     [AuthoringContract(
         Capability = AuthoringCapability.Dialogue,
+        Priority = AuthoringPriority.Primary,
         Lane = "RPG",
+        Relevance = "Manages narrative flow and branching dialogue sessions with condition and effect support.",
+        ExpertAdvice = "Dialogue graphs can trigger world effects via IDialogueEffectSink. Mention event hooks: Graphs can trigger quest updates or item grants through effects. Use the custom condition resolver for complex narrative gates.",
+        Axioms = AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.TurnBased,
         RequiredInterfaces = new[] { typeof(IDialogueConditionResolver), typeof(IDialogueEffectSink) },
         NativeSetup = new[]
         {
@@ -15,11 +19,10 @@ namespace NeonBlack.Gameplay.Core.Rpg
             "configure NPC profile with start graph",
             "bind dialogue UI to DialogueService events"
         },
-        AssignmentFields = new[] { "_progression", "_inventory", "_quests", "_skills" },
-        FirstProof = "A dialogue session starts and displays the correct starting node text."
-    ,
-        ExpertAdvice = "Dialogue graphs can trigger world effects via IDialogueEffectSink. Use the custom condition resolver for complex narrative gates.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/rpg/dialogue")]
+        AssignmentFields = new[] { nameof(_progression), nameof(_inventory), nameof(_quests), nameof(_skills) },
+        FirstProof = "A dialogue session starts and displays the correct starting node text.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/rpg/dialogue"
+    )]
     public sealed class DialogueService : IDialogueService
 {
         private readonly IProgressionService _progression;

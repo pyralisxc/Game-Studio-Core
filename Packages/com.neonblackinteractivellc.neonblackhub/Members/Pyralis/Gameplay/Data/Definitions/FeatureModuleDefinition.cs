@@ -29,11 +29,19 @@ namespace NeonBlack.Gameplay.Data.Definitions
         Capability = AuthoringCapability.Setup, 
         Relevance = "Authoring container for attachable runtime logic, used to extend Pawns or Game Modes with modular functionality.",
         AssignmentFields = new[] { nameof(moduleId), nameof(displayName), nameof(profileAsset), nameof(runtimePrefab) },
-        FirstProof = "Add this Feature Module to the 'Required Feature Modules' list on a Game Mode or Pawn Definition."
+        FirstProof = "Add this Feature Module to the 'Required Feature Modules' list on a Game Mode or Pawn Definition.",
+        NativeSetup = new[] { "Create Asset.", "Define Module ID.", "Assign Runtime Prefab and Profile Asset." },
+        ExpertAdvice = "Module ID must be unique across the project. Use 'OfflineOnly' network role for purely visual or local-state modules.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/composition"
     )]
-    [CreateAssetMenu(menuName = "NeonBlack/Definitions/Feature Module Definition", fileName = "FeatureModuleDefinition", order = 50)]
-    public class FeatureModuleDefinition : ScriptableObject
+[CreateAssetMenu(menuName = "NeonBlack/Definitions/Feature Module Definition", fileName = "FeatureModuleDefinition", order = 50)]
+    public class FeatureModuleDefinition : ScriptableObject, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            return GetValidationIssues();
+        }
+
         private const string FeatureRuntimeInterfaceName = "NeonBlack.Gameplay.Features.Composition.IFeatureModuleRuntime";
         private const string RuntimeValidationProviderInterfaceName = "NeonBlack.Gameplay.Features.Composition.IRuntimeValidationProvider";
 

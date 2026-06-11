@@ -6,10 +6,17 @@ using UnityEngine;
 namespace NeonBlack.Gameplay.Features.Combat
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat,
-        Relevance = "Base component for firing projectiles and hitscan attacks.",
-        AssignmentFields = new[] { "usePrefabPooling", "maxPoolSizePerPrefab" },
-        ExpertAdvice = "Extend this class to create custom 2D or 3D launchers. It handles the low-level spawning and impact feedback routing."
+        Capability = AuthoringCapability.RangedFlow,
+        Relevance = "Base component for firing projectiles and hitscan attacks with built-in pooling and feedback routing.",
+        ExpertAdvice = "Extend this class to create custom 2D or 3D launchers. It handles the low-level spawning and impact feedback routing via IHitPauseSink and ICameraShakeSink.",
+        NativeSetup = new[] 
+        { 
+            "Add ProjectileLauncher2D or 3D to a scene coordinator.", 
+            "Assign a Projectile Parent transform and configure pooling settings." 
+        },
+        FirstProof = "Fire a weapon and observe projectile instances correctly spawning from the launcher.",
+        AssignmentFields = new[] { nameof(usePrefabPooling), nameof(maxPoolSizePerPrefab) },
+        DocumentationURL = "https://docs.neonblack.com/pyralis/combat/projectiles"
     )]
     public abstract class ProjectileLauncherBase : MonoBehaviour
     {

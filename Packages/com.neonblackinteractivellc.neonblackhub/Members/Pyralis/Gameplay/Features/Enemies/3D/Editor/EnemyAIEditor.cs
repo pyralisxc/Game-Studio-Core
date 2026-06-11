@@ -163,7 +163,7 @@ public class EnemyAIEditor : Editor
                     "Skip it for board/card/tabletop pieces unless a piece needs autonomous movement.",
                     "Keep player input, health, hitboxes, score, and UI as separate components so the enemy stays modular."
                 },
-                PyralisInspectorGuide.SetupManualPath("Prefabs/Enemy_Setup.md")),
+                PyralisInspectorGuide.AuthoringDocPath("Prefabs/Enemy_Setup.md")),
             new PyralisGuideSection(
                 "Path choices",
                 is3D ? "Current path: 3D/brawler enemy." : "Current path: 2D side-scroller enemy.",
@@ -173,7 +173,7 @@ public class EnemyAIEditor : Editor
                     "ThreeD path: set Movement Mode to ThreeD, assign a Visual Root and Presentation Camera when the rendered object is offset from the root.",
                     "Board/card path: keep this component off the piece and drive turns through session, participant, scoring, or custom rules."
                 },
-                PyralisInspectorGuide.SetupManualPath("RUNTIME_PATTERN_COOKBOOK.md")),
+                PyralisInspectorGuide.AuthoringDocPath("RUNTIME_PATTERN_COOKBOOK.md")),
             new PyralisGuideSection(
                 "Beginner wiring",
                 "Start with the few fields that decide whether the enemy can find, move to, and attack the player.",
@@ -186,7 +186,7 @@ public class EnemyAIEditor : Editor
                     "Assign Hit Box Zones and an Attack Sequence only when this enemy should deal contact or melee damage.",
                     "Assign Enemy Feature Profile when you want inspector validation for presentation, animation, or required child objects."
                 },
-                PyralisInspectorGuide.SetupManualPath("Prefabs/Health_Combat_Setup.md")),
+                PyralisInspectorGuide.AuthoringDocPath("Prefabs/Health_Combat_Setup.md")),
             new PyralisGuideSection(
                 "Combat choices",
                 "The attack fields support several genres without forcing one combat model.",
@@ -197,7 +197,7 @@ public class EnemyAIEditor : Editor
                     "Projectile enemy: call a ProjectileLauncher from the attack event or animation event instead of putting projectile logic here.",
                     "Turn-based/menu combat: use definitions and session rules to select actions, then invoke health/combat services from that action."
                 },
-                PyralisInspectorGuide.SetupManualPath("Prefabs/Combat_Definitions_Setup.md")),
+                PyralisInspectorGuide.AuthoringDocPath("Prefabs/Combat_Definitions_Setup.md")),
             new PyralisGuideSection(
                 "Common mistakes",
                 "If the enemy does nothing, the issue is usually wiring rather than AI logic.",

@@ -15,8 +15,13 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
         NativeSetup = new[] { "Create Asset" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Rules/Phase Definition", fileName = "PhaseDefinition", order = -60)]
-    public class PhaseDefinition : ScriptableObject
+    public class PhaseDefinition : ScriptableObject, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            return GetValidationIssues();
+        }
+
         public string phaseId = "phase.default";
         public string displayName = "Phase";
         public bool allowsActionSelection = true;

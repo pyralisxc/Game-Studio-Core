@@ -1,8 +1,9 @@
-using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
+using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Characters;
+using NeonBlack.Gameplay.Features.Composition;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using VContainer;
@@ -24,10 +25,19 @@ namespace NeonBlack.Gameplay.Features.Input
         { 
             "Add ParticipantInputRouter to the Gameplay Session GO.",
             "Ensure it is wired to the ParticipantRosterService."
-        }
+        },
+        ExpertAdvice = "The Input Router watches for new 'PlayerJoined' events and automatically registers them into the Roster. It ensures that InputProfiles are correctly applied to the newly created PlayerInput instances.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/input"
     )]
-    public class ParticipantInputRouter : MonoBehaviour
-{
+public class ParticipantInputRouter : MonoBehaviour, IRuntimeValidationProvider
+    {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            if (sessionDefinition == null)
+                yield return "Session Definition is empty. This is expected when GameplaySessionBootstrap injects it at runtime.";
+            if (rosterService == null)
+                yield return "Roster Service is empty. This is expected when GameplaySessionBootstrap injects it at runtime.";
+        }
         [SerializeField] private SessionDefinition sessionDefinition;
         [SerializeField] private ParticipantRosterService rosterService;
         [SerializeField] private PlayerInputManager playerInputManager;

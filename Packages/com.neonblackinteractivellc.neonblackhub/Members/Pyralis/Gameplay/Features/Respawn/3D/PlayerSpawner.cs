@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Features.Characters;
 using NeonBlack.Gameplay.Features.Combat;
 using NeonBlack.Gameplay.Core.Contracts;
@@ -83,7 +84,6 @@ public class PlayerSpawner : MonoBehaviour
     private void Awake()
     {
         LivesRemaining = startingLives;
-        ResolveParticipantServices();
         currentPlayer = ResolveTrackedPlayer();
 
         if (currentPlayer == null)
@@ -108,9 +108,9 @@ public class PlayerSpawner : MonoBehaviour
         IParticipantRoster injectedRoster = null,
         IPlayerProvider playerProvider = null)
     {
-        participantSpawnService ??= injectedSpawnService;
-        rosterService ??= injectedRoster as ParticipantRosterService;
-        _playerProvider = playerProvider;
+        if (injectedSpawnService != null) participantSpawnService = injectedSpawnService;
+        if (injectedRoster != null) rosterService = injectedRoster as ParticipantRosterService;
+        _playerProvider = playerProvider ?? (injectedRoster as IPlayerProvider);
     }
 
     private void OnDestroy()
@@ -118,57 +118,6 @@ public class PlayerSpawner : MonoBehaviour
         UnsubscribeFromPlayer();
         DestroyCountdownUI();
     }
-
-    private void ResolveParticipantServices()
-    {
-        if (participantSpawnService == null)
-        {
-            if (GameplayPlatformContext.TryResolve(out ParticipantSpawnService resolvedSpawnService))
-                participantSpawnService = resolvedSpawnService;
-            else
-                participantSpawnService = ResolveHierarchyComponent<ParticipantSpawnService>();
-        }
-
-        if (rosterService == null)
-        {
-            if (GameplayPlatformContext.TryResolve(out ParticipantRosterService resolvedRosterService))
-                rosterService = resolvedRosterService;
-            else if (GameplayPlatformContext.TryResolve(out IParticipantRoster resolvedRoster))
-                rosterService = resolvedRoster as ParticipantRosterService;
-
-            rosterService ??= ResolveHierarchyComponent<ParticipantRosterService>();
-        }
-
-        if (_playerProvider == null)
-        {
-            if (GameplayPlatformContext.TryResolve(out IPlayerProvider resolvedPlayerProvider))
-                _playerProvider = resolvedPlayerProvider;
-            else
-                _playerProvider = rosterService;
-        }
-    }
-
-#if UNITY_EDITOR
-    private void OnDrawGizmos()
-    {
-        Gizmos.color = new Color(0.2f, 0.8f, 0.2f, 0.9f);
-        if (spawnPoints != null)
-        {
-            foreach (Transform point in spawnPoints)
-            {
-                if (point == null)
-                    continue;
-
-                Gizmos.DrawWireSphere(point.position, 0.35f);
-                Gizmos.DrawLine(transform.position, point.position);
-            }
-        }
-        else
-        {
-            Gizmos.DrawWireSphere(transform.position, 0.35f);
-        }
-    }
-#endif
 
     private void SubscribeToPlayer(GameObject player)
     {
@@ -215,6 +164,19 @@ public class PlayerSpawner : MonoBehaviour
         StartCoroutine(RespawnRoutine());
     }
 
+    private static readonly Dictionary<float, WaitForSeconds> _waitPool = new Dictionary<float, WaitForSeconds>();
+
+    private static WaitForSeconds GetWait(float seconds)
+    {
+        seconds = (float)System.Math.Round(seconds, 2);
+        if (!_waitPool.TryGetValue(seconds, out var wait))
+        {
+            wait = new WaitForSeconds(seconds);
+            _waitPool[seconds] = wait;
+        }
+        return wait;
+    }
+
     private IEnumerator RespawnRoutine()
     {
         IsRespawning = true;
@@ -236,7 +198,7 @@ public class PlayerSpawner : MonoBehaviour
         }
         else
         {
-            yield return new WaitForSeconds(respawnDelay);
+            yield return GetWait(respawnDelay);
         }
 
         OnBeforeRespawn?.Invoke();
@@ -363,7 +325,8 @@ public class PlayerSpawner : MonoBehaviour
             return;
 
         GameObject canvasObject = new GameObject("[PlayerSpawner] RespawnCountdownCanvas");
-        DontDestroyOnLoad(canvasObject);
+        // Parent to this object so it cleans up naturally with the spawner/scene.
+        canvasObject.transform.SetParent(transform, false);
         _countdownCanvas = canvasObject;
         Canvas canvas = canvasObject.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -418,8 +381,6 @@ public class PlayerSpawner : MonoBehaviour
 
     private GameObject SpawnPlayer(Vector3 position, ParticipantHandle participant)
     {
-        ResolveParticipantServices();
-
         if (participantSpawnService != null && participant != null)
         {
             participantSpawnService.SetSpawnPoints(spawnPoints);
@@ -444,7 +405,6 @@ public class PlayerSpawner : MonoBehaviour
 
     private ParticipantHandle ResolveTrackedParticipant()
     {
-        ResolveParticipantServices();
         if (rosterService == null)
             return null;
 
@@ -503,16 +463,6 @@ public class PlayerSpawner : MonoBehaviour
             return;
 
         playerPrefab = prefab;
-    }
-
-    private T ResolveHierarchyComponent<T>() where T : Component
-    {
-        T component = GetComponentInParent<T>(true);
-        if (component != null)
-            return component;
-
-        Transform root = transform.root;
-        return root != null ? root.GetComponentInChildren<T>(true) : GetComponentInChildren<T>(true);
     }
 }
 }

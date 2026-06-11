@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Runtime;
 using UnityEngine;
@@ -13,10 +14,31 @@ namespace NeonBlack.Gameplay.Features.Pickups
 /// NOTE: CircleCollider2D is used instead of PolygonCollider2D - collectibles only need
 /// overlap detection, and Circle is an order of magnitude cheaper in Physics2D.
 /// </summary>
+[AuthoringContract(
+    Capability = AuthoringCapability.Inventory,
+    Relevance = "2D collectible item that awards points and triggers feedback on collection.",
+    Axioms = AuthoringWorldAxiom.Dimensions2D,
+    NativeSetup = new[] 
+    { 
+        "Create a prefab with SpriteRenderer and CircleCollider2D (Is Trigger).",
+        "Add this component.",
+        "Ensure CollectibleSpawner2D is configured to spawn this prefab."
+    },
+    FirstProof = "Walk the player into the collectible and verify points are added to the score service.",
+    ExpertAdvice = "Use CircleCollider2D for optimal performance. Collectibles bob vertically based on local time to avoid visual synchronization.",
+    AssignmentFields = new[] { nameof(_bobSpeed), nameof(_bobHeight), nameof(_awardSinkSource) }
+)]
 [AddComponentMenu("NeonBlack/Gameplay/Pickups/Collectible 2D")]
 [RequireComponent(typeof(CircleCollider2D))]
-public class Collectible2D : MonoBehaviour, IPickupCollectible
+public class Collectible2D : MonoBehaviour, IPickupCollectible, IRuntimeValidationProvider
 {
+    public IEnumerable<string> GetRuntimeValidationIssues()
+    {
+        if (GetComponent<Collider2D>() == null)
+            yield return "Collider2D is required for collection detection.";
+        else if (!GetComponent<Collider2D>().isTrigger)
+            yield return "Collider2D must be set to Is Trigger.";
+    }
     public int FeedbackScoreValue => 1;
     [Header("Idle Animation")]
     [SerializeField, Tooltip("Speed of the idle bob animation.")]
@@ -132,9 +154,6 @@ public class Collectible2D : MonoBehaviour, IPickupCollectible
         IPickupAwardSink parentSink = GetComponentInParent<IPickupAwardSink>();
         if (parentSink != null)
             return parentSink;
-
-        if (GameplayPlatformContext.TryResolve(out IPickupAwardSink serviceSink))
-            return serviceSink;
 
         return null;
     }

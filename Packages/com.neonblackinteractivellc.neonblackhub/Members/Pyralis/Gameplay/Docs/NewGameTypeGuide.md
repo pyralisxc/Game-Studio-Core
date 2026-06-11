@@ -10,7 +10,7 @@ New game types should start from:
 - one or more `RuntimePatternDefinition` assets
 - `GameModeDefinition.setupProfile`
 - `SessionDefinition`
-- the prefab and scene setup guides under `Docs/Setup/`
+- the prefab and scene setup guides under `Docs/Authoring/`
 
 Use pawns only when the selected runtime patterns need authored actor behavior. Camera-only, board, card, tabletop, puzzle, and turn/menu games can be valid Pyralis games without a character controller.
 

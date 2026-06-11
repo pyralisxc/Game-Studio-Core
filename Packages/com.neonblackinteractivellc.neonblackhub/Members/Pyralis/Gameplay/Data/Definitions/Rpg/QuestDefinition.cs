@@ -15,8 +15,13 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
         FirstProof = "Proof that the quest can be tracked and rewards are correctly defined."
     )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Quest", fileName = "QuestDefinition")]
-    public class QuestDefinition : ScriptableObject, IQuestDefinition
-{
+    public class QuestDefinition : ScriptableObject, IQuestDefinition, IRuntimeValidationProvider
+    {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            return GetValidationIssues();
+        }
+
         public string questId = "quest.new";
         public string displayName = "New Quest";
         public bool repeatable;

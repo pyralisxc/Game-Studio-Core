@@ -1,9 +1,25 @@
+using System.Collections.Generic;
+using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Features.Composition;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Features.Combat
 {
-    public sealed class ProjectileLauncher2D : ProjectileLauncherBase
+    [AuthoringContract(
+        Capability = AuthoringCapability.Combat,
+        Relevance = "2D projectile launcher; supports 2D physics projectiles and circlecast/raycast hitscan.",
+        Axioms = AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.Dimensions2D,
+        NativeSetup = new[] { "Add to a 2D scene.", "Configure Hit Mask for 2D colliders." },
+        AssignmentFields = new[] { nameof(hitMask) },
+        FirstProof = "Fire a 2D projectile and verify it impacts a 2D HealthComponent.",
+        ExpertAdvice = "Set Hit Mask to exclude the shooter's layer. Use Hitscan for instant weapons (bullets) and Prefab for traveling projectiles (missiles, fireballs)."
+    )]
+    public sealed class ProjectileLauncher2D : ProjectileLauncherBase, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            if (hitMask == 0) yield return "Hit Mask is empty. No collisions will be detected.";
+        }
         [Header("Hitscan")]
         [SerializeField] private LayerMask hitMask = Physics2D.DefaultRaycastLayers;
         private readonly RaycastHit2D[] _hitscanHits = new RaycastHit2D[16];

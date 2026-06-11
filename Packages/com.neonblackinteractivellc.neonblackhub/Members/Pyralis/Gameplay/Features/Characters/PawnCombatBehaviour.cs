@@ -12,21 +12,31 @@ using VContainer;
 namespace NeonBlack.Gameplay.Features.Characters
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat,
+        Capability = AuthoringCapability.MeleeFlow,
+        Priority = AuthoringPriority.Primary,
+        Lane = "Combat",
         Relevance = "Primary pawn combat controller; handles sequences, combos, and delegates to modules.",
         Axioms = AuthoringWorldAxiom.Realtime,
         RequiredInterfaces = new[] { typeof(IPawnCombatModule) },
         ConsumedRoles = new[] { "AttackPrimary", "AttackSecondary", "Block" },
-        FirstProof = "Perform an attack combo and verify the hits are detected and animations trigger."
+        AssignmentFields = new[] { nameof(primarySequence), nameof(secondarySequence), nameof(aerialSequence), nameof(attackCooldown), nameof(kickCooldown), nameof(maxAerialAttacks) },
+        FirstProof = "Perform an attack combo in Play Mode and verify that 'HitBox.Fire()' is called via animation events and damage is applied.",
+        ExpertAdvice = "PawnCombatBehaviour is sequence-driven. If attacks feel floaty or don't land, check that your Animation Sequence assets have the 'FireHitBox' event timed precisely with the swing frame.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/combat"
     )]
-    [AddComponentMenu("NeonBlack/Gameplay/Characters/Pawn Combat Behaviour")]
+[AddComponentMenu("NeonBlack/Gameplay/Characters/Pawn Combat Behaviour")]
     [RequireComponent(typeof(PawnHitBoxModule))]
     [RequireComponent(typeof(PawnDamageModule))]
     [RequireComponent(typeof(PawnProjectileModule))]
     [RequireComponent(typeof(PawnBlockModule))]
     [RequireComponent(typeof(PawnWeaponModule))]
-    public class PawnCombatBehaviour : MonoBehaviour, IPawnCombatModule, IPawnCombatMovementContext, IDamageModifier, IActorCombatModifierReceiver
+    public class PawnCombatBehaviour : MonoBehaviour, IPawnCombatModule, IPawnCombatMovementContext, IDamageModifier, IActorCombatModifierReceiver, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            if (attackCooldown < 0f) yield return "Attack Cooldown cannot be negative.";
+            if (maxAerialAttacks < 0) yield return "Max Aerial Attacks cannot be negative.";
+        }
         [Header("Combo Settings")]
         [SerializeField] private float comboResetTime = 1.5f;
         [SerializeField] private float combatWindow = 3f;

@@ -26,7 +26,7 @@ public partial class Hazard
         yield return TravelBouncy();
 
         if (_data.hitLingerDuration > 0f)
-            yield return new WaitForSeconds(_data.hitLingerDuration);
+            yield return GetWait(_data.hitLingerDuration);
 
         if (_data.enableExplosion && _data.explosionTrigger == HazardData.ExplosionTrigger.OnExit
             && !_explosionTriggered)

@@ -10,12 +10,21 @@ namespace NeonBlack.Gameplay.Core.Navigation
     /// <summary>
     /// Singleton that fades the screen to black before loading a new scene and back in after it loads.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Setup,
+        Relevance = "Persistent ISceneNavigator that fades to black, optionally routes through the loading screen, and restores time scale.",
+        NativeSetup = new[] 
+        { 
+            "Place one SceneFader in the bootstrap or first navigation scene.",
+            "Use FadeToSceneViaLoader when the LoadingScreen scene should show progress."
+        },
+        AssignmentFields = new[] { nameof(_fadeOutDuration), nameof(_fadeInDuration) },
+        FirstProof = "Initiate a scene transition and verify the screen fades smoothly to black.",
+        ExpertAdvice = "Do not load multiple SceneFaders; Awake keeps one active transition service and destroys duplicates. Do not use FadeToSceneViaLoader unless SceneNames.LoadingScreen is in Build Settings."
+    )]
     [DefaultExecutionOrder(-40)]
     public class SceneFader : MonoBehaviour, ISceneNavigator
     {
-        [Obsolete("Use IObjectResolver to inject ISceneNavigator or resolve SceneFader from the active session scope.")]
-        public static SceneFader Instance { get; private set; }
-
         [SerializeField, Range(0.05f, 2f)] private float _fadeOutDuration = 0.35f;
         [SerializeField, Range(0.05f, 2f)] private float _fadeInDuration = 0.35f;
 
@@ -27,30 +36,17 @@ namespace NeonBlack.Gameplay.Core.Navigation
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {
-            Instance = null;
             PendingScene = null;
         }
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
             BuildOverlay();
         }
 
         private void OnDestroy()
         {
-            if (Instance == this)
-            {
-                Instance = null;
-                _busy = false;
-            }
+            _busy = false;
         }
 
         public void FadeToSceneViaLoader(string sceneName)

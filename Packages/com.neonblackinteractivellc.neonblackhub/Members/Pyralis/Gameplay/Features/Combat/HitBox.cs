@@ -11,7 +11,19 @@ namespace NeonBlack.Gameplay.Features.Combat
     /// Overlap-query hitbox. The BoxCollider or SphereCollider on this GameObject
     /// is used as a sizing volume and gizmo only; it is disabled at runtime.
     /// </summary>
-    [RequireComponent(typeof(Collider))]
+    [AuthoringContract(
+        Capability = AuthoringCapability.CombatSensors,
+        Priority = AuthoringPriority.Primary,
+        Lane = "Combat",
+        Relevance = "One-shot overlap query hitbox for melee and projectile impacts.",
+        Axioms = AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.Dimensions3D,
+        NativeSetup = new[] { "Add to a child GameObject of a combat actor.", "Assign a Box or Sphere collider (it will be disabled at runtime)." },
+        AssignmentFields = new[] { nameof(owner), nameof(hitFXPrefab), nameof(hitPauseSink), nameof(cameraShakeSink) },
+        FirstProof = "Trigger Fire() via an animation event or script and verify it detects HealthComponents in the overlap volume.",
+        ExpertAdvice = "HitBoxes are disabled colliders used only for overlap queries. Ensure the owner is set for correct knockback calculation. Use hitPauseSink for juicy combat feel.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/hitbox"
+    )]
+[RequireComponent(typeof(Collider))]
     public class HitBox : MonoBehaviour
     {
         public event Action<GameObject> HitConfirmed;
@@ -94,25 +106,6 @@ namespace NeonBlack.Gameplay.Features.Combat
             int count = QueryOverlap();
             for (int i = 0; i < count; i++)
                 ProcessHit(OverlapBuffer[i], damage, knockback);
-        }
-
-        /// <summary>
-        /// Backward-compatible arm call. Existing coroutine timing can still call
-        /// Enable, then Disable, while the actual hit resolves immediately here.
-        /// </summary>
-        public void Enable(float damage, float knockback)
-        {
-            Fire(damage, knockback);
-        }
-
-        /// <summary>Animation-event entry point. No damage value is available here.</summary>
-        public void EnableHitBox()
-        {
-        }
-
-        /// <summary>No-op kept for API compatibility with older attack coroutines.</summary>
-        public void Disable()
-        {
         }
 
         /// <summary>

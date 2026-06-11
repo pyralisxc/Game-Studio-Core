@@ -15,27 +15,22 @@ namespace NeonBlack.Gameplay.Features.Characters
 /// the <see cref="ICharacterMotorState"/> contract to systems like <see cref="PawnCombatBehaviour"/>.
 /// </summary>
 [AuthoringContract(
-    Capability = AuthoringCapability.Movement,
-    Relevance = "Canonical 3D pawn motor; coordinates input, movement, traversal, and presentation.",
-    Axioms = AuthoringWorldAxiom.Dimensions3D,
-    RequiredComponents = new[] { 
-        typeof(CharacterController), 
-        typeof(HealthComponent), 
-        typeof(KnockbackReceiver),
-        typeof(Pawn3DInputModule),
-        typeof(Pawn3DMovementComponent),
-        typeof(Pawn3DTraversalComponent),
-        typeof(Pawn3DPresentationComponent)
-    },
+    Capability = AuthoringCapability.KineticMotor3D,
+    Priority = AuthoringPriority.Primary,
+    Lane = "Pawn3D",
+    Relevance = "Canonical 3D pawn motor; sequences input, movement, traversal, and presentation sibling modules.",
+    Axioms = AuthoringWorldAxiom.Dimensions3D | AuthoringWorldAxiom.Realtime,
     NativeSetup = new[]
     {
         "Attach Motor3D to the 3D pawn root.",
-        "Add all required 3D pawn modules to the same GameObject.",
+        "Add all required 3D pawn modules (Input, Movement, Traversal, Presentation).",
         "Assign the InputSystem_Actions asset on Pawn3DInputModule.",
         "Ensure an Animator with the required parameters is present."
     },
-    AssignmentFields = new[] { "_input", "_movement", "_traversal", "_presentation" },
-    FirstProof = "Pawn moves, jumps, and rotates correctly in 3D space."
+    AssignmentFields = new[] { nameof(_input), nameof(_movement), nameof(_traversal), nameof(_presentation) },
+    FirstProof = "Pawn responds to Move input and plays walk animations. Traversal features like Jump or Ledge-climb function when in range.",
+    ExpertAdvice = "Motor3D is a high-level coordinator. It does not move the pawn directly but Ticks its sibling modules in a deterministic order. Ensure CharacterController 'Skin Width' is at least 10% of the radius to prevent jitter on slopes.",
+    DocumentationURL = "https://docs.neonblack.com/pyralis/movement"
 )]
 [AddComponentMenu("NeonBlack/Gameplay/Runtime 3D/Motor 3D")]
 [RequireComponent(typeof(CharacterController))]

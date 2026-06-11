@@ -1,11 +1,28 @@
-﻿using NeonBlack.Gameplay.Presentation.Visuals;
+using System.Collections.Generic;
+using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Presentation.Visuals;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Data.Profiles
 {
+    [AuthoringContract(
+        Capability = AuthoringCapability.VFX | AuthoringCapability.UI,
+        Relevance = "Defines the visual feedback (flashes, popups) for hazard activation and explosion.",
+        NativeSetup = new[] { "Create Asset.", "Assign Flash presets.", "Configure popup text and colors." },
+        AssignmentFields = new[] { nameof(activationFlashPreset), nameof(explosionFlashPreset) },
+        FirstProof = "Trigger a hazard and verify the flashes and popups match the profile.",
+        ExpertAdvice = "Use popupFontSize to ensure warnings are visible at the game's camera distance.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/visuals"
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Hazard Feedback Profile", fileName = "HazardFeedbackProfile")]
-    public class HazardFeedbackProfile : ScriptableObject
+    public class HazardFeedbackProfile : ScriptableObject, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            if (flashOnActivation && activationFlashPreset == null) yield return "Activation Flash is enabled but Preset is missing.";
+            if (flashOnExplosion && explosionFlashPreset == null) yield return "Explosion Flash is enabled but Preset is missing.";
+        }
+
         public bool flashOnActivation = true;
         public FlashPresetSO activationFlashPreset;
         public bool flashOnExplosion = true;

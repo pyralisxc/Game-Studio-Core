@@ -16,8 +16,13 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
         NativeSetup = new[] { "Create Asset" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Rules/Turn Order Definition", fileName = "TurnOrderDefinition", order = -70)]
-    public class TurnOrderDefinition : ScriptableObject
+    public class TurnOrderDefinition : ScriptableObject, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            return GetValidationIssues();
+        }
+
         public string turnOrderId = "turn.default";
         public string displayName = "Turn Order";
         public int[] participantSeats = { 0, 1 };

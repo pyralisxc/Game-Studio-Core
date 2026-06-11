@@ -20,6 +20,7 @@ namespace NeonBlack.Gameplay.Characters
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Setup,
+        Priority = AuthoringPriority.Primary,
         Relevance = "Primary entry point for gameplay sessions; orchestrates participant spawn, camera setup, and core services.",
         Axioms = AuthoringWorldAxiom.None,
         NativeSetup = new[]
@@ -29,9 +30,12 @@ namespace NeonBlack.Gameplay.Characters
             "Wire spawn points for participants.",
             "Configure camera rig controller and core service references."
         },
-        FirstProof = "Enter Play Mode and confirm the session initializes. Verify participant pawns spawn at designated points and the camera frames the action correctly."
+        AssignmentFields = new[] { nameof(sessionDefinition), nameof(spawnPoints), nameof(cameraRigController), nameof(playerInputManager) },
+        FirstProof = "Enter Play Mode and confirm the session initializes. Verify participant pawns spawn at designated points and the camera frames the action correctly.",
+        ExpertAdvice = "The Bootstrap is the heart of the Pyralis session. Ensure your SessionDefinition has at least one Participant defined. The Bootstrap auto-creates required services (Roster, Spawn, State) if they are missing from its children.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/bootstrap"
     )]
-    [AddComponentMenu("NeonBlack/Gameplay/Setup/Gameplay Session Bootstrap")]
+[AddComponentMenu("NeonBlack/Gameplay/Setup/Gameplay Session Bootstrap")]
     [DefaultExecutionOrder(-1100)]
     public class GameplaySessionBootstrap : MonoBehaviour
 {
@@ -45,7 +49,6 @@ namespace NeonBlack.Gameplay.Characters
         [SerializeField] private SessionDefinition sessionDefinition;
         [Header("Behavior")]
         [SerializeField] private bool dontDestroyOnLoad = true;
-        [SerializeField] private bool autoCreateCoreServices = true;
         [SerializeField] private bool injectLoadedScenesOnBuild = true;
 
         [Header("Participants")]
@@ -70,55 +73,45 @@ namespace NeonBlack.Gameplay.Characters
 
             sessionDefinition?.Sanitize();
             GameplayRuntimeContext.SetSession(sessionDefinition);
-            GameplayPlatformContext platformContext = GameplayPlatformContext.CreateOrReplace(sessionDefinition);
-            RegisterPlatformDefaults(platformContext.Services);
-            RegisterSceneServices(platformContext.Services, bootstrapScene);
 
             if (dontDestroyOnLoad)
                 DontDestroyOnLoad(gameObject);
 
-            if (autoCreateCoreServices)
-            {
-                sceneLoader ??= GetOrCreatePersistentService<SceneLoader>("SceneLoader");
-                timeManager ??= GetOrCreatePersistentService<TimeManager>("TimeManager");
-                cameraShake ??= GetOrCreatePersistentService<CameraShake>("CameraShake");
-            }
-
+            // Services are now authored or resolved via hierarchy/DI, removing manual creation logic.
+            
             bool useNetcodeServices = sessionDefinition != null && sessionDefinition.networkMode != GameplayNetworkMode.LocalOnly;
 
             sessionStateService ??= useNetcodeServices
                 ? GetOrCreatePersistentService<SessionStateService>("SessionStateService", NetworkedSessionStateServiceTypeName)
                 : GetOrCreatePersistentService<SessionStateService>("SessionStateService");
             sessionStateService.SetSessionDefinition(sessionDefinition);
-            platformContext.Services.Register(sessionStateService);
 
             ParticipantRosterService rosterService = participantRosterService ??= useNetcodeServices
                 ? GetOrCreatePersistentService<ParticipantRosterService>("ParticipantRosterService", NetworkedParticipantRosterServiceTypeName)
                 : GetOrCreatePersistentService<ParticipantRosterService>("ParticipantRosterService");
             rosterService.SetSessionDefinition(sessionDefinition);
-            platformContext.Services.Register(rosterService);
 
             ParticipantSpawnService spawnService = participantSpawnService ??= useNetcodeServices
-? GetOrCreatePersistentService<ParticipantSpawnService>("ParticipantSpawnService", NetworkedParticipantSpawnServiceTypeName)
+                ? GetOrCreatePersistentService<ParticipantSpawnService>("ParticipantSpawnService", NetworkedParticipantSpawnServiceTypeName)
                 : GetOrCreatePersistentService<ParticipantSpawnService>("ParticipantSpawnService");
             spawnService.SetRosterService(rosterService);
             spawnService.SetSessionStateService(sessionStateService);
             spawnService.SetSpawnPoints(spawnPoints);
-            platformContext.Services.Register(spawnService);
 
             ParticipantInputRouter inputRouter = participantInputRouter ??= GetOrCreatePersistentService<ParticipantInputRouter>("ParticipantInputRouter");
             inputRouter.SetSessionDefinition(sessionDefinition);
             inputRouter.SetRosterService(rosterService);
             inputRouter.SetPlayerInputManager(playerInputManager);
-            platformContext.Services.Register(inputRouter);
 
-            ISessionOwnershipService sessionOwnershipService = ResolveOrCreateSessionOwnershipService(platformContext.Services, useNetcodeServices);
-            IParticipantAuthorityService participantAuthorityService = ResolveOrCreateParticipantAuthorityService(platformContext.Services, useNetcodeServices);
+            // Initialize Static Utilities for systems not yet using DI
+            ParticipantQueryUtility.Initialize(rosterService, rosterService);
+
+            ISessionOwnershipService sessionOwnershipService = ResolveOrCreateSessionOwnershipService(useNetcodeServices);
+            IParticipantAuthorityService participantAuthorityService = ResolveOrCreateParticipantAuthorityService(useNetcodeServices);
 
             PyralisGameplayLifetimeScope lifetimeScope = GetOrCreateLifetimeScope();
             lifetimeScope.InjectLoadedScenesOnBuild = injectLoadedScenesOnBuild;
             lifetimeScope.ConfigureRuntime(
-                platformContext,
                 sessionDefinition,
                 sessionStateService,
                 rosterService,
@@ -142,51 +135,6 @@ namespace NeonBlack.Gameplay.Characters
                 cameraRigController.SetGameMode(sessionDefinition.defaultGameMode);
         }
 
-        private static void RegisterPlatformDefaults(PlatformServiceRegistry services)
-        {
-            if (!services.TryResolve(out ISessionOwnershipService _))
-                services.Register<ISessionOwnershipService>(new LocalSessionOwnershipService());
-
-            if (!services.TryResolve(out IParticipantAuthorityService _))
-                services.Register<IParticipantAuthorityService>(new LocalParticipantAuthorityService());
-
-            if (!services.TryResolve(out IGameplaySettingsApplier _))
-                services.Register<IGameplaySettingsApplier>(new NullGameplaySettingsApplier());
-        }
-
-        private void RegisterSceneServices(PlatformServiceRegistry services, Scene bootstrapScene)
-        {
-            if (services == null || !bootstrapScene.IsValid())
-                return;
-
-            if (!services.TryResolve(out ICameraBoundsProvider _)
-                && cameraRigController != null
-                && cameraRigController.gameObject.scene == bootstrapScene)
-            {
-                services.Register(cameraRigController);
-                services.Register<ICameraBoundsProvider>(cameraRigController);
-            }
-
-            if (!services.TryResolve(out ICameraBoundsProvider _)
-                && TryGetAuthoredSceneService(bootstrapScene, out ICameraBoundsProvider cameraBoundsProvider))
-            {
-                services.Register(cameraBoundsProvider);
-                services.Register<ICameraBoundsProvider>(cameraBoundsProvider);
-            }
-        }
-
-        private bool TryGetAuthoredSceneService<T>(Scene scene, out T service) where T : class
-        {
-            service = null;
-            if (cameraBoundsSource != null && cameraBoundsSource.gameObject.scene == scene && cameraBoundsSource is T candidate)
-            {
-                service = candidate;
-                return true;
-            }
-
-            return false;
-        }
-
         private PyralisGameplayLifetimeScope GetOrCreateLifetimeScope()
         {
             PyralisGameplayLifetimeScope lifetimeScope = GetComponent<PyralisGameplayLifetimeScope>();
@@ -197,48 +145,24 @@ namespace NeonBlack.Gameplay.Characters
             return lifetimeScope;
         }
 
-        private static ISessionOwnershipService ResolveOrCreateSessionOwnershipService(PlatformServiceRegistry services, bool useNetcodeServices)
+        private static ISessionOwnershipService ResolveOrCreateSessionOwnershipService(bool useNetcodeServices)
         {
-            if (services.TryResolve(out ISessionOwnershipService service) && service != null)
-            {
-                if (!useNetcodeServices || service.GetType().FullName != typeof(LocalSessionOwnershipService).FullName)
-                    return service;
-            }
-
             if (useNetcodeServices && TryCreateServiceInstance(NetworkedSessionOwnershipServiceTypeName, out ISessionOwnershipService networkedService))
             {
-                services.Register<ISessionOwnershipService>(networkedService);
                 return networkedService;
             }
 
-            if (service != null)
-                return service;
-
-            service = new LocalSessionOwnershipService();
-            services.Register<ISessionOwnershipService>(service);
-            return service;
+            return new LocalSessionOwnershipService();
         }
 
-        private static IParticipantAuthorityService ResolveOrCreateParticipantAuthorityService(PlatformServiceRegistry services, bool useNetcodeServices)
+        private static IParticipantAuthorityService ResolveOrCreateParticipantAuthorityService(bool useNetcodeServices)
         {
-            if (services.TryResolve(out IParticipantAuthorityService service) && service != null)
-            {
-                if (!useNetcodeServices || service.GetType().FullName != typeof(LocalParticipantAuthorityService).FullName)
-                    return service;
-            }
-
             if (useNetcodeServices && TryCreateServiceInstance(NetworkedParticipantAuthorityServiceTypeName, out IParticipantAuthorityService networkedService))
             {
-                services.Register<IParticipantAuthorityService>(networkedService);
                 return networkedService;
             }
 
-            if (service != null)
-                return service;
-
-            service = new LocalParticipantAuthorityService();
-            services.Register<IParticipantAuthorityService>(service);
-            return service;
+            return new LocalParticipantAuthorityService();
         }
 
         [ContextMenu("Validate Gameplay Setup")]
@@ -325,16 +249,8 @@ namespace NeonBlack.Gameplay.Characters
             return service != null;
         }
 
-        private void OnDestroy()
-        {
-            if (GameplayPlatformContext.Current != null)
-            {
-                GameplayPlatformContext.ClearCurrent();
-            }
-        }
-
         private static void TrySetMember(object target, string memberName, object value)
-        {
+{
             System.Reflection.PropertyInfo property = target.GetType().GetProperty(memberName, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
             if (property != null && property.CanWrite)
             {

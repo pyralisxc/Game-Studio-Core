@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Features.Characters;
 using UnityEngine;
@@ -17,10 +18,29 @@ namespace NeonBlack.Gameplay.Features.Scoring
     ///   3. Optionally assign _bonusClip for an audio cue on reward.
     ///   4. Tune _collectiblesPerBonus and _stillnessInterval in the Inspector.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Session,
+        Relevance = "Awards points to the player for remaining stationary.",
+        NativeSetup = new[] 
+        { 
+            "Attach to the Player GameObject.",
+            "Ensure a Motor2D is present.",
+            "Assign a Score Award Source."
+        },
+        AssignmentFields = new[] { nameof(_collectiblesPerBonus), nameof(_stillnessInterval), nameof(_stillnessThreshold), nameof(_gameplayStateSource), nameof(_scoreAwardSource), nameof(_bonusClip) },
+        FirstProof = "Stay still for 3 seconds and verify the score increases.",
+        ExpertAdvice = "Set the stillness threshold high enough to ignore micro-movement or drift. Ensure the score award source is correctly wired."
+    )]
     [RequireComponent(typeof(Motor2D))]
     [AddComponentMenu("NeonBlack/Gameplay/Features/Scoring/Stillness Bonus 2D")]
-    public class StillnessBonus2D : MonoBehaviour
+    public class StillnessBonus2D : MonoBehaviour, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            if (_collectiblesPerBonus <= 0) yield return "Collectibles Per Bonus must be positive.";
+            if (_stillnessInterval <= 0f) yield return "Stillness Interval must be greater than zero.";
+            if (_scoreAwardSource == null) yield return "Score Award Source is unassigned.";
+        }
         [Header("Reward Settings")]
         [SerializeField, Tooltip("Points added to the score each time the stillness interval completes.")]
         [Min(1)]

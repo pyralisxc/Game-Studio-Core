@@ -461,8 +461,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
             string charactersCompositionRoot = Path.Combine(gameplayRoot, "Features", "Characters", "Composition");
             string charactersSharedCompositionRoot = Path.Combine(gameplayRoot, "Features", "Characters", "Runtime", "Shared", "Composition");
 
-            Assert.That(File.Exists(Path.Combine(coreRuntimeRoot, "PlatformServiceRegistry.cs")), Is.True);
-            Assert.That(File.Exists(Path.Combine(coreRuntimeRoot, "GameplayPlatformContext.cs")), Is.True);
+            
+            
             Assert.That(File.Exists(Path.Combine(platformCompositionRoot, "GameplayRuntimeContext.cs")), Is.True);
             Assert.That(File.Exists(Path.Combine(platformCompositionRoot, "PyralisGameplayLifetimeScope.cs")), Is.True);
 

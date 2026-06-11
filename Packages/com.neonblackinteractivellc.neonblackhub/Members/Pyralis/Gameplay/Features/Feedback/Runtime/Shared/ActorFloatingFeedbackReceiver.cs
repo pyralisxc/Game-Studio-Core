@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Features.Combat;
 using NeonBlack.Gameplay.Features.Composition;
 using TMPro;
@@ -6,6 +7,19 @@ using UnityEngine;
 
 namespace NeonBlack.Gameplay.Features.Feedback
 {
+    [AuthoringContract(
+        Capability = AuthoringCapability.VFX,
+        Relevance = "Renders world-space damage, heal, score, combo, status, parry, stagger, guard-break, and finisher popups from actor feedback events.",
+        NativeSetup = new[] 
+        { 
+            "Attach to the actor root or a child visuals object.",
+            "Assign Damage Number Sink to DamageNumberSpawner if damage/heal numbers are enabled.",
+            "Assign Popup Camera when world-space popups should face a specific gameplay camera."
+        },
+        AssignmentFields = new[] { nameof(damageNumberSink), nameof(popupCamera) },
+        FirstProof = "Verify world-space popups appear above the actor during combat.",
+        ExpertAdvice = "Enable at least one feedback category. Use shorter popup lifetimes for actors that take frequent damage. For HUD-only games, prefer participant HUD presenters over world-space popups."
+    )]
     [AddComponentMenu("NeonBlack/Gameplay/Feedback/Actor Floating Feedback Receiver")]
     public class ActorFloatingFeedbackReceiver : MonoBehaviour, IActorFeedbackReceiver, IRuntimeValidationProvider
     {

@@ -20,6 +20,20 @@ namespace NeonBlack.Gameplay.Core.Contracts
 
         public static IReadOnlyList<PyralisAuthoringContract> All => _allContracts.Value;
 
+        public static PyralisAuthoringContract FindByType(Type type)
+        {
+            if (type == null)
+                return null;
+
+            for (int i = 0; i < All.Count; i++)
+            {
+                if (All[i].StableId.EndsWith(type.FullName))
+                    return All[i];
+            }
+
+            return null;
+        }
+
         public static PyralisAuthoringContract FindByModuleId(string moduleId)
         {
             if (string.IsNullOrWhiteSpace(moduleId))
@@ -203,7 +217,11 @@ namespace NeonBlack.Gameplay.Core.Contracts
                 requiredComponentNames: componentNames.ToArray(),
                 capability: attr.Capability,
                 priority: attr.Priority,
-                moduleId: attr.ModuleId
+                documentationURL: attr.DocumentationURL,
+                expertAdvice: attr.ExpertAdvice,
+                moduleId: attr.ModuleId,
+                relevance: attr.Relevance,
+                manualPath: attr.ManualPath
             );
         }
     }

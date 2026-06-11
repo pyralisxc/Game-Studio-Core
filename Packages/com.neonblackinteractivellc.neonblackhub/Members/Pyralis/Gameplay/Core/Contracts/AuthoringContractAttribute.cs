@@ -6,14 +6,6 @@ namespace NeonBlack.Gameplay.Core.Contracts
     /// <summary>
     /// Metadata attribute used to tag classes and interfaces for reflective discovery by the Pyralis Authoring Window.
     /// This allows the system to automatically surface features in the Guide and Facts tabs without manual registration.
-    /// 
-    /// The Pyralis "Brain" reflectively extracts the following from tagged types:
-    /// - <see cref="CreateAssetMenuAttribute"/>: Automatically generates "Create" native actions in the Project window.
-    /// - <see cref="AddComponentMenu"/>: Automatically generates "Add Component" native actions in the Inspector.
-    /// - <see cref="RequireComponent"/>: Automatically identifies required Unity component stacks.
-    /// - Serialized Fields: Automatically identifies "Assignment Fields" and "Customization Moments" based on type and heuristics.
-    /// 
-    /// Goals can be hierarchical using '/' (e.g., "Combat/Projectile" or "2D/Pawn").
     /// </summary>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true)]
     public class AuthoringContractAttribute : Attribute
@@ -25,15 +17,32 @@ namespace NeonBlack.Gameplay.Core.Contracts
         public AuthoringCapability Capability { get; set; }
 
         /// <summary>
-        /// Priority weight for this contract (0 is default). 
-/// Higher values are prioritized in the Authoring Window as "Primary Providers".
+        /// Categorized priority for this contract. 
+        /// Dynamic priority is calculated at runtime based on Axiom matches using this as the base.
         /// </summary>
-        public int Priority { get; set; }
+        public AuthoringPriority Priority { get; set; } = AuthoringPriority.Unspecified;
+
+        /// <summary>
+        /// Allows 1-99 for precise Auxiliary sorting. If set, this overrides the default enum value.
+        /// </summary>
+        public int PriorityValueOverride { get; set; } = -1;
+
+        /// <summary>
+        /// The package version string where this contract was marked as deprecated.
+        /// Surfaces HYG006 warnings.
+        /// </summary>
+        public string DeprecatedInVersion { get; set; }
+
+        /// <summary>
+        /// The package version string where this contract is scheduled for removal.
+        /// Enforced by automated unit tests.
+        /// </summary>
+        public string RemovableInVersion { get; set; }
 
         /// <summary>
         /// The ID of the legacy module this contract maps to during the refactor transition.
         /// </summary>
-public string ModuleId { get; set; }
+        public string ModuleId { get; set; }
 
         /// <summary>
         /// The presentation lane this contract belongs to (e.g., "Sprite2D", "Rigged3D").
@@ -49,6 +58,11 @@ public string ModuleId { get; set; }
         /// A direct link to the technical documentation or wiki for this contract.
         /// </summary>
         public string DocumentationURL { get; set; }
+
+        /// <summary>
+        /// A relative path to a manual file within the package documentation folder.
+        /// </summary>
+        public string ManualPath { get; set; }
 
         /// <summary>
         /// Context-sensitive advice or pro-tips for using this contract effectively.

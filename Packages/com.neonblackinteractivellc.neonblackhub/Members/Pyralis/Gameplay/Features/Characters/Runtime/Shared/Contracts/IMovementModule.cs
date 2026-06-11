@@ -15,9 +15,11 @@ namespace NeonBlack.Gameplay.Characters
         Axioms = AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.Dimensions3D,
         AssignmentFields = new[] { nameof(IMovementModule.MoveSpeed), nameof(IMovementModule.IsGrounded) },
         FirstProof = "Call Move and verify the character's world position changes.",
-        NativeSetup = new[] { "Implement interface in a movement component" }
+        NativeSetup = new[] { "Implement interface in a movement component" },
+        ExpertAdvice = "The universal runtime contract for movement. High-level systems (AI/Network) use this to drive the actor without knowing if it's 2D or 3D. Implement this to provide 'Velocity' and 'Grounded' data.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/movement"
     )]
-    public interface IMovementModule
+public interface IMovementModule
 {
         /// <summary>Current horizontal move speed in world-units per second.</summary>
         float MoveSpeed { get; }

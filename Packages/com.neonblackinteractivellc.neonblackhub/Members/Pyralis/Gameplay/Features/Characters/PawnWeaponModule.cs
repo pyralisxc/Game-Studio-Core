@@ -1,11 +1,20 @@
 using UnityEngine;
 using NeonBlack.Gameplay.Features.Combat;
 using NeonBlack.Gameplay.Presentation.Animation;
+using NeonBlack.Gameplay.Core.Contracts;
 
 namespace NeonBlack.Gameplay.Features.Characters
 {
+    [AuthoringContract(
+        Capability = AuthoringCapability.Combat | AuthoringCapability.Inventory,
+        Relevance = "Pawn module for managing equipped weapon data and animation overrides.",
+        AssignmentFields = new[] { nameof(attackWeapon), nameof(kickWeapon), nameof(aerialWeapon), nameof(equippedWeapons) },
+        FirstProof = "Assign a weapon and verify the pawn's animator controller is overridden at runtime.",
+        ExpertAdvice = "WeaponData assets can override the base animator controller. Ensure your weapon assets have the correct 'overrideController' assigned.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/combat"
+    )]
     public class PawnWeaponModule : MonoBehaviour
-    {
+{
         [Header("Weapons")]
         [SerializeField] private WeaponData attackWeapon;
         [SerializeField] private WeaponData kickWeapon;

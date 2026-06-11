@@ -4,8 +4,12 @@ using NeonBlack.Gameplay.Core.Contracts.Rpg;
 namespace NeonBlack.Gameplay.Core.Rpg
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Inventory,
+        Capability = AuthoringCapability.Vendors,
+        Priority = AuthoringPriority.Primary,
         Lane = "RPG",
+        Relevance = "Facilitates item transactions (buying and selling) between characters and vendors using currency.",
+        ExpertAdvice = "Vendor offers require valid Item IDs from the catalog. Ensure currency items are configured in the inventory service and catalog. Common pitfalls include missing item IDs or incorrect currency configuration.",
+        Axioms = AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.TurnBased,
         RequiredInterfaces = new[] { typeof(IVendorDefinition) },
         FirstProof = "Verify that TryBuy correctly subtracts currency and adds the item to the owner's inventory.",
         NativeSetup = new[]

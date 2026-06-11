@@ -2,6 +2,7 @@ using System.IO;
 using System.Linq;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Profiles;
+using NeonBlack.Gameplay.Editor;
 using NeonBlack.Gameplay.Editor.Inspectors;
 using NeonBlack.Gameplay.Features.Characters;
 using NeonBlack.Gameplay.Presentation.Animation;

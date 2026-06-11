@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Features.Scoring;
@@ -20,9 +21,32 @@ namespace NeonBlack.Gameplay.Features.Pickups
 ///      Wire them into _collectFX and _destroyFX.
 ///      Both systems are repositioned to the collectible's world position before Play() is called.
 /// </summary>
+[AuthoringContract(
+    Capability = AuthoringCapability.Audio | AuthoringCapability.VFX,
+    Relevance = "Manages audio and visual feedback (particles/sounds) for collectible actions.",
+    NativeSetup = new[] 
+    { 
+        "Attach to a FeedbackManager or Spawner GameObject.",
+        "Assign AudioClips and ParticleSystems.",
+        "Ensure AudioSource is routed to the SFX mixer group."
+    },
+    AssignmentFields = new[] { nameof(_collectClip), nameof(_collectFX), nameof(_destroyClip), nameof(_destroyFX), nameof(_scoreAwardSource) },
+    FirstProof = "Collect a pickup and verify the sparkle particles play and the collection sound triggers.",
+    ExpertAdvice = "Set SFX spatial blend to 0 (2D) for consistent UI-style feedback. Ensure Particle Systems have 'Stop Action' set to 'Disable' or 'None' for pooling."
+)]
 [AddComponentMenu("NeonBlack/Gameplay/Pickups/Collectible Feedback 2D")]
-public class CollectibleFeedback2D : MonoBehaviour, IPickupAwardSink
+public class CollectibleFeedback2D : MonoBehaviour, IPickupAwardSink, IRuntimeValidationProvider
 {
+    public IEnumerable<string> GetRuntimeValidationIssues()
+    {
+        if (_collectClip == null) yield return "Collect Clip is unassigned.";
+        if (_collectFX == null) yield return "Collect FX particle system is unassigned.";
+        if (_scoreAwardSource == null) yield return "Score Award Source is unassigned. No points will be awarded.";
+
+        AudioSource audio = GetComponent<AudioSource>();
+        if (audio != null && audio.outputAudioMixerGroup == null)
+            yield return "AudioSource is missing an Output Mixer Group. Volume settings will not apply.";
+    }
     [Header("Collect Feedback")]
     [SerializeField, Tooltip("Sound played when the player collects a collectible.")]
     private AudioClip _collectClip;

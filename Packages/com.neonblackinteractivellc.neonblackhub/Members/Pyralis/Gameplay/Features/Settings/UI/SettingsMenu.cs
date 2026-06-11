@@ -8,13 +8,20 @@ namespace NeonBlack.Gameplay.Features.Settings
 {
 /// <summary>
 /// Settings panel controller for the 3D main menu.
-/// Delegates all volume changes to an explicit settings service; fullscreen and resolution are handled locally.
-///
-/// Setup:
-///   1. Attach to the Settings Panel GameObject alongside MainMenuManager.
-///   2. Assign sliders, toggle, and dropdown in the Inspector.
-///   3. Assign Settings Source to SettingsManager or another IGameplaySettingsApplier.
 /// </summary>
+[AuthoringContract(
+    Capability = AuthoringCapability.UI | AuthoringCapability.Setup,
+    Relevance = "Drives the 3D main-menu settings panel: volume sliders, fullscreen state, and resolution selection.",
+    NativeSetup = new[] 
+    { 
+        "Place this on the settings panel that is shown from the main menu.",
+        "Assign Settings Source to SettingsManager or another IGameplaySettingsApplier.",
+        "Assign any sliders, toggle, and dropdown the panel actually exposes."
+    },
+    AssignmentFields = new[] { nameof(settingsSource), nameof(masterSlider), nameof(musicSlider), nameof(sfxSlider), nameof(fullscreenToggle), nameof(resolutionDropdown) },
+    FirstProof = "Open the settings panel and verify sliders modify volume and the resolution dropdown updates display.",
+    ExpertAdvice = "Do not leave every control empty; the panel will open but cannot change settings. Wire the resolution dropdown On Value Changed event only if another script needs to observe it; this script adds its own listener on enable."
+)]
 public class SettingsMenu : MonoBehaviour
 {
     private const string KEY_FULLSCREEN = "Fullscreen";

@@ -2,11 +2,19 @@ using System.Collections.Generic;
 using UnityEngine;
 using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Features.Combat;
+using NeonBlack.Gameplay.Core.Contracts;
 
 namespace NeonBlack.Gameplay.Features.Enemies
 {
+    [AuthoringContract(
+        Capability = AuthoringCapability.Animation,
+        Relevance = "Binds enemy gameplay states to visual signals and animator triggers.",
+        FirstProof = "Verify enemy plays walk, hurt, and attack animations.",
+        ExpertAdvice = "Ensure the child Animator has 'IsMoving' and 'IsGrounded' parameters.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/visuals"
+    )]
     public class EnemyAnimationModule : MonoBehaviour
-    {
+{
         private Animator _animator;
         private ActorAnimationDriver _animationDriver;
 

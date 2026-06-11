@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using NeonBlack.Gameplay.Core.Contracts;
@@ -5,32 +6,39 @@ using NeonBlack.Gameplay.Core.Contracts;
 namespace NeonBlack.Gameplay.Features.Combat
 {
 /// <summary>
-/// Universal health component - attach to any GameObject that can be damaged:
-/// the player, enemies, destructible props, etc.
-///
-/// Setup:
-///   - Add this component to the root of your character/object.
-///   - Set Max Health in the Inspector.
-///   - Set Faction to prevent friendly fire (Player, Enemy, Neutral).
-///   - Wire the UnityEvents (OnDamaged, OnHealed, OnDeath) in the Inspector
-///     OR subscribe to them in code from other scripts.
-///
-/// Dealing damage from other scripts:
-///   target.GetComponent<HealthComponent>().TakeDamage(10f, hitPoint, attacker);
+/// Universal health component - attach to any GameObject that can be damaged.
 /// </summary>
 [AuthoringContract(
-    Capability = AuthoringCapability.Combat, 
-    Priority = 10,
-    Relevance = "Inspector Add Component path for any damageable player, enemy, prop, or custom object.",
+    Capability = AuthoringCapability.CombatState, 
+    Priority = AuthoringPriority.Primary,
+    Lane = "Combat",
+    Relevance = "Universal health component for players, enemies, and destructible props.",
+    NativeSetup = new[] 
+    { 
+        "Add to the actor or prop root.",
+        "Set Max Health and Faction.",
+        "Wire OnDamaged, OnHealed, or OnDeath UnityEvents for visual feedback (HitFlash, UI)."
+    },
     AssignmentFields = new[] { nameof(maxHealth), nameof(faction), nameof(iFrameDuration) },
-    FirstProof = "Enter Play Mode and trigger TakeDamage via a custom script or trigger. Verify the CurrentHealth decreases in the Inspector and the OnDamaged UnityEvent fires.",
-    NativeSetup = new[] { "Add Component", "Wire UnityEvents for feedback" }
-,
-        ExpertAdvice = "The HealthComponent is a neutral actor. Use the Faction property to group players and enemies. It dispatches UnityEvents for visual feedback (HitFlash, UI).",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/health")]
+    FirstProof = "Trigger TakeDamage via a script or zone and verify CurrentHealth decreases.",
+    ExpertAdvice = "HealthComponent is a neutral actor. Use Faction to prevent friendly fire. Attach HitFlash or HitPause listeners to the OnDamaged event for standard combat feel. Use Faction.Neutral for props that should be destructible by everyone.",
+    DocumentationURL = "https://docs.neonblack.com/pyralis/health",
+    Axioms = AuthoringWorldAxiom.Realtime
+)]
 [AddComponentMenu("NeonBlack/Gameplay/Combat/Health Component")]
-public class HealthComponent : MonoBehaviour, IActorHealthModifierReceiver, IActorHealthState
+public class HealthComponent : MonoBehaviour, IActorHealthModifierReceiver, IActorHealthState, IRuntimeValidationProvider
 {
+    public IEnumerable<string> GetRuntimeValidationIssues()
+    {
+        if (maxHealth <= 0f)
+            yield return "Max Health must be greater than zero.";
+        
+        if (destroyOnDeath && deathDestroyDelay < 0f)
+            yield return "Death Destroy Delay cannot be negative.";
+
+        if (regenEnabled && regenRate <= 0f)
+            yield return "Regen is enabled but Regen Rate is <= 0.";
+    }
     // Inspector
     [Header("Stats")]
     [SerializeField] private float maxHealth = 100f;

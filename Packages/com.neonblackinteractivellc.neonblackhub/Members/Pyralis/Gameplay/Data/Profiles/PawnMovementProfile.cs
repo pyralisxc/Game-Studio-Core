@@ -1,4 +1,4 @@
-using NeonBlack.Gameplay.Core.Contracts;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Enums;
 using UnityEngine;
@@ -10,17 +10,24 @@ namespace NeonBlack.Gameplay.Data.Profiles
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Movement, 
-        Priority = 10,
-        Relevance = "Project-window creation path for pawn movement feel, speed, acceleration, dash, and jump tuning.",
-        AssignmentFields = new[] { nameof(walkSpeed), nameof(acceleration), nameof(dashSpeed) },
+        Priority = AuthoringPriority.AuxiliaryDefault,
+        Lane = "Movement",
+        Relevance = "Defines the movement feel, speed, acceleration, and damping for a pawn archetype.",
+        AssignmentFields = new[] { nameof(walkSpeed), nameof(acceleration), nameof(dashSpeed), nameof(movementMode), nameof(useCharacterController) },
         FirstProof = "Move the pawn in play mode and verify speed feel.",
-        ExpertAdvice = "The movement profile is your 'steering wheel'. It defines the responsiveness and agility of your actor. Different profiles should be created for different character classes.",
+        ExpertAdvice = "The movement profile is your 'steering wheel'. It defines the responsiveness and agility of your actor. For 2D games, set 'Use 2D Physics' to enable Rigidbody2D interaction.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/movement",
-        NativeSetup = new[] { "Create Asset" }
+        NativeSetup = new[] { "Create asset in Project window.", "Assign to a PawnDefinition." }
     )]
-    [CreateAssetMenu(menuName = "NeonBlack/Profiles/Pawn Movement Profile", fileName = "PawnMovementProfile", order = -60)]
-    public class PawnMovementProfile : ScriptableObject
+[CreateAssetMenu(menuName = "NeonBlack/Profiles/Pawn Movement Profile", fileName = "PawnMovementProfile", order = -60)]
+    public class PawnMovementProfile : ScriptableObject, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            if (walkSpeed < 0f) yield return "Walk Speed cannot be negative.";
+            if (acceleration < 0f) yield return "Acceleration cannot be negative.";
+        }
+
         public MovementMode movementMode = MovementMode.ThreeD;
         public float walkSpeed = 5f;
         public float sprintSpeed = 10f;

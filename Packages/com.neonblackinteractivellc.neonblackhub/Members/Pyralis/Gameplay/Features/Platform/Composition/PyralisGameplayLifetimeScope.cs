@@ -1,6 +1,5 @@
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Definitions.Rpg;
-using NeonBlack.Gameplay.Features.Rpg.Samples;
 using NeonBlack.Gameplay.Presentation.Camera;
 using NeonBlack.Gameplay.Presentation.Visuals;
 using NeonBlack.Gameplay.Core.Contracts.Networking;
@@ -22,8 +21,7 @@ namespace NeonBlack.Gameplay.Core.Runtime
 {
     /// <summary>
     /// Runtime VContainer scope for the Pyralis gameplay platform.
-    /// This wraps the existing service graph so the package can migrate
-    /// away from static resolution without breaking active systems.
+    /// This is the singular source of truth for service resolution in the session.
     /// </summary>
     [AddComponentMenu("NeonBlack/Gameplay/Setup/Pyralis Gameplay Lifetime Scope")]
     [DisallowMultipleComponent]
@@ -38,7 +36,6 @@ namespace NeonBlack.Gameplay.Core.Runtime
     public class PyralisGameplayLifetimeScope : LifetimeScope
     {
         private bool _isConfigured;
-        private GameplayPlatformContext _platformContext;
         private SessionDefinition _sessionDefinition;
         private SessionStateService _sessionStateService;
         private ParticipantRosterService _participantRosterService;
@@ -54,12 +51,10 @@ namespace NeonBlack.Gameplay.Core.Runtime
         [Header("RPG Definitions")]
         [SerializeField] private ItemCatalogDefinition itemCatalog;
         [SerializeField] private ProgressionCurveDefinition progressionCurve;
-        [SerializeField] private bool includeGoldenSample;
 
         public bool InjectLoadedScenesOnBuild { get; set; } = true;
 
         public void ConfigureRuntime(
-            GameplayPlatformContext platformContext,
             SessionDefinition sessionDefinition,
             SessionStateService sessionStateService,
             ParticipantRosterService participantRosterService,
@@ -72,7 +67,6 @@ namespace NeonBlack.Gameplay.Core.Runtime
             ISessionOwnershipService sessionOwnershipService,
             IParticipantAuthorityService participantAuthorityService)
         {
-            _platformContext = platformContext;
             _sessionDefinition = sessionDefinition;
             _sessionStateService = sessionStateService;
             _participantRosterService = participantRosterService;
@@ -97,12 +91,6 @@ namespace NeonBlack.Gameplay.Core.Runtime
 
         protected override void Configure(IContainerBuilder builder)
         {
-            if (_platformContext != null)
-            {
-                builder.RegisterInstance(_platformContext).AsSelf();
-                builder.RegisterInstance(_platformContext.Services).AsSelf();
-            }
-
             if (_sessionDefinition != null)
                 builder.RegisterInstance(_sessionDefinition).AsSelf();
 
@@ -119,9 +107,15 @@ namespace NeonBlack.Gameplay.Core.Runtime
 
             RegisterComponent(builder, _participantSpawnService);
             RegisterComponent(builder, _participantInputRouter);
-RegisterComponent(builder, _sceneLoader);
-            RegisterComponent(builder, _timeManager);
-            RegisterComponent(builder, _cameraShake);
+
+            // Core Services: Try to resolve from provided references, or find in hierarchy.
+            var sceneLoader = _sceneLoader != null ? _sceneLoader : FindServiceInHierarchy<SceneLoader>();
+            var timeManager = _timeManager != null ? _timeManager : FindServiceInHierarchy<TimeManager>();
+            var cameraShake = _cameraShake != null ? _cameraShake : FindServiceInHierarchy<CameraShake>();
+
+            RegisterComponent(builder, sceneLoader);
+            RegisterComponent(builder, timeManager);
+            RegisterComponent(builder, cameraShake);
             RegisterComponent(builder, _cameraRigController);
 
             builder.Register<PawnComboProcessor>(Lifetime.Transient);
@@ -149,29 +143,20 @@ RegisterComponent(builder, _sceneLoader);
             builder.Register<RpgOpenZoneService>(Lifetime.Singleton).AsSelf();
             builder.Register<HubInteractionService>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
 
-            if (includeGoldenSample)
-                RpgGoldenSampleFactory.RegisterTo(builder);
-
             if (_sessionOwnershipService != null)
-builder.RegisterInstance<ISessionOwnershipService>(_sessionOwnershipService);
+                builder.RegisterInstance<ISessionOwnershipService>(_sessionOwnershipService);
 
             if (_participantAuthorityService != null)
                 builder.RegisterInstance<IParticipantAuthorityService>(_participantAuthorityService);
 
-            if (_platformContext != null && _platformContext.Services.TryResolve(out IGameplaySettingsApplier settingsApplier) && settingsApplier != null)
+            var settingsApplier = FindServiceInHierarchy<IGameplaySettingsApplier>();
+            if (settingsApplier != null)
                 builder.RegisterInstance<IGameplaySettingsApplier>(settingsApplier);
             else
                 builder.RegisterInstance<IGameplaySettingsApplier>(new NullGameplaySettingsApplier());
 
-            if (_platformContext != null)
-                RegisterPlatformRegistryServices(builder, _platformContext.Services);
-
             builder.RegisterBuildCallback(container =>
             {
-                if (_platformContext == null)
-                    return;
-
-                _platformContext.Services.SetFallbackResolver(type => container.Resolve(type));
                 if (InjectLoadedScenesOnBuild)
                     InjectLoadedSceneObjects(container);
             });
@@ -179,12 +164,6 @@ builder.RegisterInstance<ISessionOwnershipService>(_sessionOwnershipService);
 
         protected override void OnDestroy()
         {
-            if (_platformContext != null)
-            {
-                if (!GameplayPlatformContext.ClearCurrentIf(_platformContext))
-                    _platformContext.Services.Unregister<IObjectResolver>();
-            }
-
             base.OnDestroy();
         }
 
@@ -197,22 +176,8 @@ builder.RegisterInstance<ISessionOwnershipService>(_sessionOwnershipService);
             builder.RegisterComponent(component).AsSelf().AsImplementedInterfaces();
         }
 
-        private static void RegisterPlatformRegistryServices(IContainerBuilder builder, PlatformServiceRegistry services)
-        {
-            foreach (KeyValuePair<System.Type, object> entry in services.Entries)
-            {
-                if (entry.Value == null || entry.Key == typeof(IObjectResolver))
-                    continue;
-
-                if (builder.Exists(entry.Key, includeInterfaceTypes: true, findParentScopes: true))
-                    continue;
-
-                builder.RegisterInstance(entry.Value, entry.Key);
-            }
-        }
-
         private void InjectLoadedSceneObjects(IObjectResolver container)
-        {
+{
             HashSet<GameObject> injectedRoots = new HashSet<GameObject>();
 
             for (int sceneIndex = 0; sceneIndex < SceneManager.sceneCount; sceneIndex++)
@@ -231,6 +196,32 @@ builder.RegisterInstance<ISessionOwnershipService>(_sessionOwnershipService);
                     container.InjectGameObject(root);
                 }
             }
+        }
+
+        private T FindServiceInHierarchy<T>() where T : class
+        {
+            // First check if it's already a child of this LifetimeScope (the Bootstrap usually)
+            T component = GetComponentInChildren<T>();
+            if (component != null)
+                return component;
+
+            // Otherwise check entire hierarchy (fallback)
+            // If T is a UnityEngine.Object, we can use the faster built-in search.
+            if (typeof(UnityEngine.Object).IsAssignableFrom(typeof(T)))
+            {
+                return Object.FindAnyObjectByType(typeof(T), FindObjectsInactive.Include) as T;
+            }
+
+            // Fallback for interfaces - search all MonoBehaviours.
+            // This is slightly slower but only runs during session initialization.
+            MonoBehaviour[] behaviours = Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include);
+            for (int i = 0; i < behaviours.Length; i++)
+            {
+                if (behaviours[i] is T t)
+                    return t;
+            }
+
+            return null;
         }
     }
 }

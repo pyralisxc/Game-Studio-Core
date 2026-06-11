@@ -19,7 +19,7 @@ namespace NeonBlack.Gameplay.Features.Traversal.Editor
                 new PyralisGuideSection(
                     "What This Is",
                     "PawnTraversalFeatureRuntime3D installs ledge probe, hang, shimmy, climb-up, and traversal interaction behavior as an actor feature runtime.",
-                    manualPath: PyralisInspectorGuide.SetupManualPath("RUNTIME_PATTERN_COOKBOOK.md")),
+                    manualPath: PyralisInspectorGuide.AuthoringDocPath("RUNTIME_PATTERN_COOKBOOK.md")),
                 new PyralisGuideSection(
                     "Feature Module Fields",
                     null,

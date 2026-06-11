@@ -7,19 +7,27 @@ using UnityEngine;
 
 namespace NeonBlack.Gameplay.Data.Profiles
 {
-    /// <summary>
-    /// Actor-level feature composition profile for enemies.
-    /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat | AuthoringCapability.Setup, 
-        Relevance = "Project-window creation path for enemy feature setup.",
-        AssignmentFields = new[] { nameof(combatProfile), nameof(reactionProfile), nameof(featureModules) },
-        FirstProof = "Assign this profile to an enemy and verify its combat modules are initialized.",
-        NativeSetup = new[] { "Create Asset" }
+        Capability = AuthoringCapability.Combat,
+        Relevance = "The central configuration for an enemy; binds combat and reaction profiles together.",
+        NativeSetup = new[] { "Create Asset.", "Assign Combat and Reaction profiles.", "Add optional Feature Modules (Ambient, etc)." },
+        AssignmentFields = new[] { nameof(combatProfile), nameof(reactionProfile) },
+        FirstProof = "Confirm the enemy uses all assigned profiles in its runtime behavior.",
+        ExpertAdvice = "Use modular profiles to share behaviors across multiple enemy types while keeping the root profile unique per archetype.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/enemies"
     )]
-    [CreateAssetMenu(menuName = "NeonBlack/Profiles/Enemy Feature Profile", fileName = "EnemyFeatureProfile")]
-    public class EnemyFeatureProfile : ScriptableObject
+[CreateAssetMenu(menuName = "NeonBlack/Profiles/Enemy Feature Profile", fileName = "EnemyFeatureProfile")]
+    public class EnemyFeatureProfile : ScriptableObject, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            if (combatProfile == null) yield return "Combat Profile is missing.";
+            if (reactionProfile == null) yield return "Reaction Profile is missing.";
+
+            foreach (var issue in GetValidationIssues())
+                yield return issue;
+        }
+
         public EnemyCombatProfile combatProfile;
         public EnemyReactionProfile reactionProfile;
         public FeatureModuleDefinition[] featureModules;

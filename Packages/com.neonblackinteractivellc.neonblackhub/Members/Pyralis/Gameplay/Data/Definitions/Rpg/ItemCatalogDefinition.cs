@@ -13,8 +13,13 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
         FirstProof = "Proof that the catalog contains valid item definitions and can resolve stack sizes."
     )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Item Catalog", fileName = "ItemCatalogDefinition")]
-    public class ItemCatalogDefinition : ScriptableObject, IItemCatalog
-{
+    public class ItemCatalogDefinition : ScriptableObject, IItemCatalog, IRuntimeValidationProvider
+    {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            return GetValidationIssues();
+        }
+
         public string catalogId = "items.default";
         public string displayName = "Default Item Catalog";
         public ItemDefinition[] items = System.Array.Empty<ItemDefinition>();

@@ -5,10 +5,13 @@ using NeonBlack.Gameplay.Core.Contracts.Rpg;
 namespace NeonBlack.Gameplay.Core.Rpg
 {
     [AuthoringContract(
+        Capability = AuthoringCapability.Progression,
+        Priority = AuthoringPriority.Primary,
         ModuleId = "rpg.progression",
-        Capability = AuthoringCapability.Stats,
-        Relevance = "Manages character progression, including experience points, leveling up, and skill point grants.",
         Lane = "RPG",
+        Relevance = "Manages character progression, including experience points, leveling up, and skill point grants.",
+        ExpertAdvice = "Progression curves define how XP maps to levels. Ensure your curves are assigned to the service for automatic level-up handling. You can also grant skill points directly for non-XP milestones.",
+        Axioms = AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.TurnBased,
         RequiredInterfaces = new[] { typeof(IProgressionCurve) },
         NativeSetup = new[]
         {
@@ -16,7 +19,8 @@ namespace NeonBlack.Gameplay.Core.Rpg
             "assign curves to ProgressionService",
             "configure StatSheets for classes"
         },
-        FirstProof = "Grant experience to an actor and verify they level up according to the progression curve."
+        FirstProof = "Grant experience to an actor and verify they level up according to the progression curve.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/rpg"
     )]
     public sealed class ProgressionService : IProgressionService
 {

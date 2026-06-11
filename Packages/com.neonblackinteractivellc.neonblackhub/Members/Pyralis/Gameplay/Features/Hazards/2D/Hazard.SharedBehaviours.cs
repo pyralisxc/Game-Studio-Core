@@ -32,14 +32,14 @@ public partial class Hazard
             PlayScreenShake();
             PlaySFX(_data.explosionClip);
 
-            yield return new WaitForSeconds(_data.explosionDuration);
+            yield return GetWait(_data.explosionDuration);
             _explosionEffect.SetActive(false);
         }
         else
         {
             // Config warning is already raised at Initialize() - just wait here so
             // the sequence timing stays correct even with a misconfigured prefab.
-            yield return new WaitForSeconds(_data.explosionDuration);
+            yield return GetWait(_data.explosionDuration);
         }
     }
 
@@ -128,11 +128,10 @@ public partial class Hazard
             _data.shakeDuration);
     }
 
-    // Wrapper kept for any future callers, but now uses a cached instance to avoid allocation.
+    // Wrapper kept for any future callers, but now uses a pooled instance to avoid allocation.
     private WaitForSeconds WaitSec(float seconds)
     {
-        _cachedWait = new WaitForSeconds(seconds);
-        return _cachedWait;
+        return GetWait(seconds);
     }
 
     private IEnumerator FadeOutRoutine(float duration)

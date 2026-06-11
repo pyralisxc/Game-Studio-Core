@@ -6,8 +6,16 @@ using NeonBlack.Gameplay.Core.Contracts;
 
 namespace NeonBlack.Gameplay.Features.Characters
 {
+    [AuthoringContract(
+        Capability = AuthoringCapability.Combat | AuthoringCapability.RangedFlow,
+        Relevance = "Pawn module for spawning and launching projectiles from weapons.",
+        AssignmentFields = new[] { nameof(projectileSpawnPoint), nameof(projectileLauncher) },
+        FirstProof = "Fire a ranged weapon and verify a projectile is spawned at the spawn point.",
+        ExpertAdvice = "The projectile spawn point should be positioned at the weapon muzzle. If null, the module defaults to a point above the pawn's feet.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/combat"
+    )]
     public class PawnProjectileModule : MonoBehaviour
-    {
+{
         [Header("Projectile")]
         [SerializeField] private Transform projectileSpawnPoint;
         [SerializeField] private ProjectileLauncher3D projectileLauncher;

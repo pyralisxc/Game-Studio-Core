@@ -1,4 +1,6 @@
-﻿using NeonBlack.Gameplay.Features.Combat;
+using System.Collections.Generic;
+using NeonBlack.Gameplay.Features.Combat;
+using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Data.Profiles
@@ -6,9 +8,24 @@ namespace NeonBlack.Gameplay.Data.Profiles
     /// <summary>
     /// Shared combat authoring profile for enemy attack selection and timing.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Combat,
+        Relevance = "Defines how an AI enemy chooses and sequences its attacks.",
+        NativeSetup = new[] { "Create Asset.", "Add EnemyAttacks to the attackSequence array.", "Set Attack Mode." },
+        AssignmentFields = new[] { nameof(attackSequence), nameof(attackMode) },
+        FirstProof = "Verify the enemy cycles through the defined attacks during combat.",
+        ExpertAdvice = "Use Sequential mode for boss phases or predictable combos. Use Priority or Weighted for dynamic combat behavior.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/enemies"
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Enemy Combat Profile", fileName = "EnemyCombatProfile")]
-    public class EnemyCombatProfile : ScriptableObject
+    public class EnemyCombatProfile : ScriptableObject, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            if (attackSequence == null || attackSequence.Length == 0)
+                yield return "Attack Sequence is empty. Enemy will not be able to attack.";
+        }
+
         public EnemyAttack[] attackSequence;
         public AttackMode attackMode = AttackMode.Sequential;
         public bool usePrioritySelection = true;

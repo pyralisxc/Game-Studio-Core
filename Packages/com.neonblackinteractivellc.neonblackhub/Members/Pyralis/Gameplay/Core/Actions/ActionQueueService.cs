@@ -12,11 +12,13 @@ namespace NeonBlack.Gameplay.Core.Actions
         Relevance = "Processes action execution requests and resolves them via registered resolvers.",
         Axioms = AuthoringWorldAxiom.TurnBased | AuthoringWorldAxiom.Realtime,
         RequiredInterfaces = new[] { typeof(IActionQueueService) },
-        SatisfactionReason = "Provides the central queue for processing gameplay actions."
-    ,
-        AssignmentFields = new[] { "_pendingActions", "_resolvers" },
+        SatisfactionReason = "Provides the central queue for processing gameplay actions.",
+        AssignmentFields = new[] { nameof(_pendingActions), nameof(_resolvers) },
         ExpertAdvice = "Register custom IActionResolvers to extend the engine's action vocabulary. The queue handles FIFO execution and validation.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/actions")]
+        FirstProof = "PendingCount increments when an action is successfully enqueued.",
+        NativeSetup = new[] { "Add ActionQueueService to the session dependency container.", "Register one or more IActionResolver implementations." },
+        DocumentationURL = "https://docs.neonblack.com/pyralis/actions"
+    )]
 public sealed class ActionQueueService : IActionQueueService
 {
         private readonly List<QueuedAction> _pendingActions;

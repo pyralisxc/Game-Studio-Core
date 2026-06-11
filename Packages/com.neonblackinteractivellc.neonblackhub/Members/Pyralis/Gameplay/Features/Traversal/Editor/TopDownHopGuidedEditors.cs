@@ -19,7 +19,7 @@ namespace NeonBlack.Gameplay.Features.Traversal.Editor
                 new PyralisGuideSection(
                     "What This Is",
                     "TopDownHopProfile tunes a top-down or isometric hop. The pawn remains on the map plane while a visual child lifts on an arc.",
-                    manualPath: PyralisInspectorGuide.SetupManualPath("Prefabs/Pawn_Setup.md")),
+                    manualPath: PyralisInspectorGuide.AuthoringDocPath("Prefabs/Pawn_Setup.md")),
                 new PyralisGuideSection(
                     "Use This For",
                     null,
@@ -73,7 +73,7 @@ namespace NeonBlack.Gameplay.Features.Traversal.Editor
                 new PyralisGuideSection(
                     "What This Is",
                     "TopDownHopFeatureRuntime handles an authored gameplay action such as Jump by lifting the actor visual while the map-plane body stays in place.",
-                    manualPath: PyralisInspectorGuide.SetupManualPath("Prefabs/Pawn_Setup.md")),
+                    manualPath: PyralisInspectorGuide.AuthoringDocPath("Prefabs/Pawn_Setup.md")),
                 new PyralisGuideSection(
                     "Required Route",
                     null,

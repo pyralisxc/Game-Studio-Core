@@ -6,18 +6,8 @@ namespace NeonBlack.Gameplay.Characters
 {
 /// <summary>
 /// Lightweight static registry that exposes the current player Transform.
-/// All systems that need the active player position (HazardSpawner, collectible spawners, Hazard, etc.)
-/// read from here instead of each running their own FindGameObjectWithTag("Player") call.
-///
-/// Additionally, this component can act as a local `IPlayerProvider` fallback
-/// when participant infrastructure is not present.
-///
-/// Setup:
-///   1. Attach this component to the Player GameObject in your game scene.
-///   2. All consumers will automatically pick up the registration on Awake.
-///
-/// On death / disable the entry is cleared so consumers receive null and can
-/// safely guard against a missing player.
+/// Preferred path for systems that need a quick global reference to the primary participant
+/// without participating in the full DI lifecycle.
 /// </summary>
 public class PlayerRegistry : MonoBehaviour, IPlayerProvider
 {

@@ -27,8 +27,7 @@ public partial class Hazard
         }
         else
         {
-            _cachedWait = new WaitForSeconds(shadowDur);
-            yield return _cachedWait;
+            yield return GetWait(shadowDur);
         }
 
         SetShadowAlpha(_warningAlpha);
@@ -112,7 +111,7 @@ public partial class Hazard
             yield return TriggerExplosionEffect();
 
         float slam = timing.slamDuration > 0f ? timing.slamDuration : _data.slamDuration;
-        yield return new WaitForSeconds(slam);
+        yield return GetWait(slam);
 
         DisableAllColliders();
 

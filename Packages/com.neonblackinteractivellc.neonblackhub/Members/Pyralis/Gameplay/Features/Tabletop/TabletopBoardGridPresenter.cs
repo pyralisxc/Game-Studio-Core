@@ -14,11 +14,13 @@ namespace NeonBlack.Gameplay.Features.Tabletop
     [AuthoringContract(
         Capability = AuthoringCapability.Tabletop | AuthoringCapability.Grid, 
         Relevance = "Inspector Add Component path for a board presenter that can build selectable tabletop spaces.",
-        AssignmentFields = new[] { "boardDefinition", "movePolicyDefinition", "spacePrefab" },
+        AssignmentFields = new[] { nameof(boardDefinition), nameof(movePolicyDefinition), nameof(spacePrefab), nameof(piecePrefab) },
         FirstProof = "Click 'Rebuild Board' in the inspector and verify the grid is generated.",
-        NativeSetup = new[] { "Add Component", "Assign Prefabs" }
+        NativeSetup = new[] { "Add TabletopBoardGridPresenter to a scene object.", "Assign Board, Move Policy, and Turn Order definitions.", "Assign Space and Piece prefabs." },
+        ExpertAdvice = "Bridges the abstract BoardDefinition to scene objects. It handles coordinate mapping (X,Y) to world positions. Ensure your cell size matches your visual assets.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/tabletop"
     )]
-    [AddComponentMenu("NeonBlack/Gameplay/Tabletop/Tabletop Board Grid Presenter")]
+[AddComponentMenu("NeonBlack/Gameplay/Tabletop/Tabletop Board Grid Presenter")]
     public sealed class TabletopBoardGridPresenter : MonoBehaviour
     {
         [SerializeField] private BoardDefinition boardDefinition;

@@ -12,34 +12,19 @@ namespace NeonBlack.Gameplay.Core.Runtime
         Capability = AuthoringCapability.Setup,
         Relevance = "Manages global time scale effects such as hit-pause and game freeze.",
         Axioms = AuthoringWorldAxiom.Realtime,
-        RequiredInterfaces = new[] { typeof(IGameService), typeof(IHitPauseSink) },
-        NativeSetup = new[] { "Add to a persistent Bootstrap or CoreServices GameObject" },
-        AssignmentFields = new string[0],
-        FirstProof = "Calling Freeze(duration) pauses the game for the specified time."
-    ,
-        ExpertAdvice = "Use TimeManager to create dramatic pauses during combat. It manages the global Unity Time.timeScale safely.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/time")]
-    public class TimeManager : MonoBehaviour, IGameService, IHitPauseSink
-{
-        [Obsolete("Use IObjectResolver to inject TimeManager or resolve it from the active session scope.")]
-        public static TimeManager Instance { get; private set; }
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStatics()
-        {
-            Instance = null;
-        }
-
+        RequiredInterfaces = new[] { typeof(IHitPauseSink) },
+        NativeSetup = new[] { "Add to a Bootstrap child GameObject or assign to GameplaySessionBootstrap." },
+        FirstProof = "Calling Freeze(duration) pauses the game for the specified time.",
+        ExpertAdvice = "Use TimeManager to create dramatic pauses during combat or UI events. It manages the global Unity Time.timeScale safely and resets it on disable.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/time"
+    )]
+public class TimeManager : MonoBehaviour, IHitPauseSink
+    {
         private Coroutine _freezeCoroutine;
 
-        private void Awake()
+        private void OnDisable()
         {
-            Initialize();
-        }
-
-        private void OnDestroy()
-        {
-            Shutdown();
+            ResetTimeScale();
         }
 
         public void Freeze(float duration)
@@ -52,15 +37,17 @@ namespace NeonBlack.Gameplay.Core.Runtime
             _freezeCoroutine = StartCoroutine(FreezeCoroutine(duration));
         }
 
-        public void Initialize()
-        {
-        }
-
-        public void Shutdown()
+        private void ResetTimeScale()
         {
             if (Time.timeScale == 0f)
             {
                 Time.timeScale = 1f;
+            }
+            
+            if (_freezeCoroutine != null)
+            {
+                StopCoroutine(_freezeCoroutine);
+                _freezeCoroutine = null;
             }
         }
 
@@ -69,6 +56,7 @@ namespace NeonBlack.Gameplay.Core.Runtime
             Time.timeScale = 0f;
             yield return new WaitForSecondsRealtime(duration);
             Time.timeScale = 1f;
+            _freezeCoroutine = null;
         }
     }
 }

@@ -4,142 +4,151 @@ using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Presentation.Camera;
 using NeonBlack.Gameplay.Features.Combat;
 using NeonBlack.Gameplay.Features.Spawning;
+using NeonBlack.Gameplay.Characters;
 using UnityEngine;
 using UnityEngine.Events;
 using VContainer;
 
 namespace NeonBlack.Gameplay.Features.Encounters
 {
-/// <summary>
-/// Defines a self-contained combat section. When the player enters the trigger:
-///   - Optionally switches the camera profile
-///   - Starts linked EnemySpawners
-///   - Blocks the exit until all tracked enemies are dead
-///   - Unlocks exit and fires OnCleared when the zone is finished
-/// </summary>
-[RequireComponent(typeof(BoxCollider))]
-public class ArenaZone : MonoBehaviour
-{
-    [Header("Runtime References")]
-    [Tooltip("Optional explicit camera rig reference. When left empty, Pyralis injects the active shared camera rig.")]
-    [SerializeField] private CinemachineCameraRigController cameraRigController;
-
-    [Header("Spawners")]
-    [Tooltip("EnemySpawner GameObjects to activate when the player enters.")]
-    [SerializeField] private EnemySpawner[] enemySpawners;
-
-    [Header("Exit Blockers")]
-    [Tooltip("GameObjects (walls, gates, barriers) that block the exit.")]
-    [SerializeField] private GameObject[] exitBlockers;
-
-    [Header("Camera Profile")]
-    [Tooltip("CameraRigProfile asset to switch to when the player enters. Leave empty to keep current.")]
-    [SerializeField] private CameraRigProfile onEnterCameraProfile;
-
-    [Tooltip("CameraRigProfile asset to switch to when the zone is cleared. Leave empty to keep current.")]
-    [SerializeField] private CameraRigProfile onClearCameraProfile;
-
-    [Tooltip("Blend duration in seconds for the camera profile transition.")]
-    [SerializeField] private float cameraTransitionDuration = 0.5f;
-
-    [Header("Events")]
-    [Tooltip("Fired the first time the player enters the zone.")]
-    public UnityEvent OnEntered;
-
-    [Tooltip("Fired once all enemies are dead and the zone is cleared.")]
-    public UnityEvent OnCleared;
-
-    [Header("Tag")]
-    [Tooltip("Tag used to identify the player GameObject.")]
-    [SerializeField] private string playerTag = "Player";
-
-    private bool _triggered;
-    private bool _cleared;
-    private readonly List<HealthComponent> _trackedEnemies = new List<HealthComponent>();
-
-    [Inject]
-    private void Construct(CinemachineCameraRigController injectedCameraRigController = null)
+    /// <summary>
+    /// Defines a self-contained combat section. When the player enters the trigger:
+    ///   - Optionally switches the camera profile
+    ///   - Starts linked EnemySpawners
+    ///   - Blocks the exit until all tracked enemies are dead
+    ///   - Unlocks exit and fires OnCleared when the zone is finished
+    /// </summary>
+    [RequireComponent(typeof(BoxCollider))]
+    public class ArenaZone : MonoBehaviour
     {
-        cameraRigController = injectedCameraRigController != null
-            ? injectedCameraRigController
-            : cameraRigController;
-    }
+        [Header("Runtime References")]
+        [Tooltip("Optional explicit camera rig reference. When left empty, Pyralis injects the active shared camera rig.")]
+        [SerializeField] private CinemachineCameraRigController cameraRigController;
 
-    private void Awake()
-    {
-        GetComponent<BoxCollider>().isTrigger = true;
+        [Header("Spawners")]
+        [Tooltip("EnemySpawner GameObjects to activate when the player enters.")]
+        [SerializeField] private EnemySpawner[] enemySpawners;
 
-        foreach (EnemySpawner spawner in enemySpawners)
+        [Header("Exit Blockers")]
+        [Tooltip("GameObjects (walls, gates, barriers) that block the exit.")]
+        [SerializeField] private GameObject[] exitBlockers;
+
+        [Header("Camera Profile")]
+        [Tooltip("CameraRigProfile asset to switch to when the player enters. Leave empty to keep current.")]
+        [SerializeField] private CameraRigProfile onEnterCameraProfile;
+
+        [Tooltip("CameraRigProfile asset to switch to when the zone is cleared. Leave empty to keep current.")]
+        [SerializeField] private CameraRigProfile onClearCameraProfile;
+
+        [Tooltip("Blend duration in seconds for the camera profile transition.")]
+        [SerializeField] private float cameraTransitionDuration = 0.5f;
+
+        [Header("Events")]
+        [Tooltip("Fired the first time the player enters the zone.")]
+        public UnityEvent OnEntered;
+
+        [Tooltip("Fired once all enemies are dead and the zone is cleared.")]
+        public UnityEvent OnCleared;
+
+        [Header("Tag")]
+        [Tooltip("Tag used to identify the player GameObject.")]
+        [SerializeField] private string playerTag = "Player";
+
+        private bool _triggered;
+        private bool _cleared;
+        private readonly List<HealthComponent> _trackedEnemies = new List<HealthComponent>();
+
+        [Inject]
+        private void Construct(CinemachineCameraRigController injectedCameraRigController = null)
         {
-            if (spawner == null)
-                continue;
-
-            spawner.gameObject.SetActive(false);
-            spawner.EnemySpawned += RegisterEnemy;
+            cameraRigController = injectedCameraRigController != null
+                ? injectedCameraRigController
+                : cameraRigController;
         }
 
-        foreach (GameObject blocker in exitBlockers)
+        private void Awake()
         {
-            if (blocker != null)
-                blocker.SetActive(false);
-        }
-    }
+            GetComponent<BoxCollider>().isTrigger = true;
 
-    private void OnDestroy()
-    {
-        foreach (EnemySpawner spawner in enemySpawners)
-        {
-            if (spawner != null)
-                spawner.EnemySpawned -= RegisterEnemy;
-        }
-    }
+            foreach (EnemySpawner spawner in enemySpawners)
+            {
+                if (spawner == null)
+                    continue;
 
-    private void OnTriggerEnter(Collider other)
-    {
-        if (_triggered || !other.CompareTag(playerTag))
-            return;
+                spawner.gameObject.SetActive(false);
+                spawner.EnemySpawned += RegisterEnemy;
+            }
 
-        _triggered = true;
-
-        foreach (GameObject blocker in exitBlockers)
-        {
-            if (blocker != null)
-                blocker.SetActive(true);
+            foreach (GameObject blocker in exitBlockers)
+            {
+                if (blocker != null)
+                    blocker.SetActive(false);
+            }
         }
 
-        SwitchCamera(onEnterCameraProfile);
-
-        foreach (EnemySpawner spawner in enemySpawners)
+        private void OnDestroy()
         {
-            if (spawner == null)
-                continue;
-
-            RegisterTrackedSpawnerEnemies(spawner);
-            spawner.gameObject.SetActive(true);
+            foreach (EnemySpawner spawner in enemySpawners)
+            {
+                if (spawner != null)
+                    spawner.EnemySpawned -= RegisterEnemy;
+            }
         }
 
-        OnEntered?.Invoke();
-        StartCoroutine(PollForClearRoutine());
-    }
-
-    private IEnumerator PollForClearRoutine()
-    {
-        yield return new WaitForSeconds(1.5f);
-
-        while (!_cleared)
+        private void OnTriggerEnter(Collider other)
         {
-            yield return new WaitForSeconds(0.5f);
+            if (_triggered || !IsPlayer(other.gameObject))
+                return;
 
-            if (!AllSpawnersFinished())
-                continue;
+            _triggered = true;
 
-            if (!AllTrackedEnemiesDead())
-                continue;
+            foreach (GameObject blocker in exitBlockers)
+            {
+                if (blocker != null)
+                    blocker.SetActive(true);
+            }
 
-            _cleared = true;
-            OnZoneCleared();
+            SwitchCamera(onEnterCameraProfile);
+
+            foreach (EnemySpawner spawner in enemySpawners)
+            {
+                if (spawner == null)
+                    continue;
+
+                RegisterTrackedSpawnerEnemies(spawner);
+                spawner.gameObject.SetActive(true);
+            }
+
+            OnEntered?.Invoke();
+            StartCoroutine(PollForClearRoutine());
         }
-    }
+
+        private bool IsPlayer(GameObject go)
+        {
+            if (go.CompareTag(playerTag))
+                return true;
+
+            return ParticipantQueryUtility.TryResolveParticipant(go, out _);
+        }
+
+        private IEnumerator PollForClearRoutine()
+        {
+            yield return new WaitForSeconds(1.5f);
+
+            while (!_cleared)
+            {
+                yield return new WaitForSeconds(0.5f);
+
+                if (!AllSpawnersFinished())
+                    continue;
+
+                if (!AllTrackedEnemiesDead())
+                    continue;
+
+                _cleared = true;
+                OnZoneCleared();
+            }
+        }
 
     private bool AllSpawnersFinished()
     {

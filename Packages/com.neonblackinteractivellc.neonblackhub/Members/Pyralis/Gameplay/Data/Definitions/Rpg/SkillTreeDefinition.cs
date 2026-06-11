@@ -13,8 +13,13 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
         FirstProof = "Proof that the skill tree contains valid nodes and prerequisites are correctly linked."
     )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Skill Tree", fileName = "SkillTreeDefinition")]
-    public class SkillTreeDefinition : ScriptableObject, ISkillTree
-{
+    public class SkillTreeDefinition : ScriptableObject, ISkillTree, IRuntimeValidationProvider
+    {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            return GetValidationIssues();
+        }
+
         public string treeId = "skilltree.new";
         public string displayName = "New Skill Tree";
         public SkillNodeDefinition[] nodes = System.Array.Empty<SkillNodeDefinition>();

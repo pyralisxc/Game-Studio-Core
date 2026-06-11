@@ -14,9 +14,9 @@ namespace NeonBlack.Gameplay.Features.Scoring
     /// </summary>
     [AddComponentMenu("NeonBlack/Gameplay/Scoring/Participant Score Service")]
     [AuthoringContract(
-        Capability = AuthoringCapability.Session,
+        Capability = AuthoringCapability.Scoring,
         Relevance = "Canonical scoring service; tracks participant scores, session points, survival time, and high-score persistence.",
-        Axioms = AuthoringWorldAxiom.None,
+Axioms = AuthoringWorldAxiom.None,
         RequiredInterfaces = new[] { typeof(IGameService), typeof(ISessionScoreService) },
         NativeSetup = new[]
         {
@@ -24,15 +24,17 @@ namespace NeonBlack.Gameplay.Features.Scoring
             "Reference the service from HUD or GameMode presenters to show score."
         },
         FirstProof = "Earn points during gameplay and verify the score updates in the UI.",
-        AssignmentFields = new[]
-        {
-            "OnPointsChanged event",
-            "HighScore persistence keys"
-        }
+        AssignmentFields = new[] { nameof(OnPointsChanged), nameof(OnHighScoreBeaten) },
+        ExpertAdvice = "The Scoring service stores high scores in PlayerPrefs. Use ISessionScoreService for cross-feature point collection and IParticipantRoster for multiplayer leaderboards."
     )]
     [DefaultExecutionOrder(-30)]
-public class ParticipantScoreService : MonoBehaviour, IGameService, ISessionScoreService
+public class ParticipantScoreService : MonoBehaviour, IGameService, ISessionScoreService, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            if (Object.FindObjectsByType<ParticipantScoreService>(FindObjectsSortMode.None).Length > 1)
+                yield return "Multiple ParticipantScoreService instances found. Only one global scoring service should be active.";
+        }
         // PlayerPrefs keys.
         public const string HighScorePointsKey   = "HighScore_Points";
         public const string HighScoreTimeKey     = "HighScore_Time";

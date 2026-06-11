@@ -6,9 +6,12 @@ using UnityEngine;
 namespace NeonBlack.Gameplay.Features.Combat
 {
     [AuthoringContract(
-        Capability = NeonBlack.Gameplay.Core.Contracts.AuthoringCapability.Combat,
+        Capability = AuthoringCapability.RangedFlow,
         Relevance = "Logic for planning projectile trajectories based on fire modes and spread rules.",
-        ExpertAdvice = "This class produces ProjectileSpawnCommands but does not execute them. Use it in conjunction with a Launcher."
+        ExpertAdvice = "This class produces ProjectileSpawnCommands but does not execute them. Use it in conjunction with a Launcher to decouple firing logic from physical spawning.",
+        FirstProof = "Observe correct spread patterns when firing weapons with multiple projectiles per shot.",
+        NativeSetup = new[] { "Ensure FireModeDefinition spread values are configured.", "Call BuildCommands from weapon or action logic." },
+        DocumentationURL = "https://docs.neonblack.com/pyralis/combat/projectiles"
     )]
     public static class ProjectileFirePlanner
     {

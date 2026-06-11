@@ -45,8 +45,13 @@ namespace NeonBlack.Gameplay.Data.Definitions
         FirstProof = "Assign this Runtime Pattern to a Game Setup Profile asset."
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Definitions/Runtime Pattern Definition", fileName = "RuntimePatternDefinition", order = 40)]
-    public class RuntimePatternDefinition : ScriptableObject
+    public class RuntimePatternDefinition : ScriptableObject, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            return GetValidationIssues();
+        }
+
         public string patternId = "pattern.runtime";
         public string displayName = "Runtime Pattern";
 

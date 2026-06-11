@@ -66,7 +66,7 @@ public partial class Hazard
         }
 
         if (_data.entryDelay > 0.01f)
-            yield return new WaitForSeconds(_data.entryDelay);
+            yield return GetWait(_data.entryDelay);
 
         _explosionTriggered = false;
         _pendingImpactExplosion = false;
@@ -82,7 +82,7 @@ public partial class Hazard
             if (_data.enableExplosion && _data.explosionTrigger == HazardData.ExplosionTrigger.OnExit)
                 yield return TriggerExplosionEffect();
             if (_data.hitLingerDuration > 0.01f)
-                yield return new WaitForSeconds(_data.hitLingerDuration);
+                yield return GetWait(_data.hitLingerDuration);
             if (_data.spawnsCollectibles)
             {
                 SpawnCollectiblesAt(transform.position, _data.collectibleSpawnCount, 0.5f);

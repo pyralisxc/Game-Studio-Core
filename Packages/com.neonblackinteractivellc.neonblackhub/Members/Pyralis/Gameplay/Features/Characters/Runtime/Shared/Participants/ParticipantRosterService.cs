@@ -16,12 +16,19 @@ namespace NeonBlack.Gameplay.Characters
     [AuthoringContract(
         Capability = AuthoringCapability.Session,
         Relevance = "Authoritative local roster of participants. Bridges compatibility for single-player lookups.",
-        AssignmentFields = new[] { "sessionDefinition" },
-        FirstProof = "Enter Play Mode and spawn a pawn. Verify the ParticipantRosterService 'Participants' list reflects the new character with the correct seat index.",
-        ExpertAdvice = "The Roster is the source of truth for who is currently in the game. Use it to find ParticipantHandles by ID or seat."
+        AssignmentFields = new[] { nameof(sessionDefinition) },
+        FirstProof = "Enter Play Mode and spawn a pawn. Verify the 'Participants' list reflects the character.",
+        NativeSetup = new[] { "Add to GameplaySessionBootstrap child." },
+        ExpertAdvice = "Source of truth for all active participants. Bridges Unity's PlayerInput system to the Pyralis 'Participant' model. Use it to iterate over players or find specific client authority.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/participants"
     )]
-    public class ParticipantRosterService : MonoBehaviour, IParticipantRoster, IPlayerProvider
+public class ParticipantRosterService : MonoBehaviour, IParticipantRoster, IPlayerProvider, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            if (sessionDefinition == null)
+                yield return "Session Definition is empty. This is expected when GameplaySessionBootstrap injects it at runtime.";
+        }
         [SerializeField] private SessionDefinition sessionDefinition;
 
         private readonly List<ParticipantHandle> _participants = new List<ParticipantHandle>();

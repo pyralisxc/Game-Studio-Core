@@ -34,10 +34,15 @@ namespace NeonBlack.Gameplay.Core.Contracts
             string[] customizationMoments = null,
             string[] requiredComponentNames = null,
             AuthoringCapability capability = AuthoringCapability.None,
-            int priority = 0,
+            AuthoringPriority priority = AuthoringPriority.Unspecified,
+            int priorityValueOverride = 0,
+            string deprecatedInVersion = null,
+            string removableInVersion = null,
             string documentationURL = null,
             string expertAdvice = null,
-            string moduleId = null)
+            string moduleId = null,
+            string relevance = null,
+            string manualPath = null)
         {
             StableId = stableId ?? string.Empty;
             DisplayName = displayName ?? string.Empty;
@@ -55,10 +60,15 @@ namespace NeonBlack.Gameplay.Core.Contracts
             CustomizationMoments = customizationMoments ?? Array.Empty<string>();
             RequiredComponentNames = requiredComponentNames ?? Array.Empty<string>();
             Capability = capability;
-            Priority = priority;
+            PriorityValueOverride = priorityValueOverride;
+            DeprecatedInVersion = deprecatedInVersion ?? string.Empty;
+            RemovableInVersion = removableInVersion ?? string.Empty;
+            Priority = (int)priority;
             DocumentationURL = documentationURL ?? string.Empty;
             ExpertAdvice = expertAdvice ?? string.Empty;
             ModuleId = moduleId ?? string.Empty;
+            Relevance = relevance ?? string.Empty;
+            ManualPath = manualPath ?? string.Empty;
         }
 
         public string StableId { get; }
@@ -66,7 +76,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
         public string AuthoringCategory { get; }
         public string ModuleId { get; }
         public Type RequiredProfileType { get; }
-public string[] RequiredRuntimeInterfaceNames { get; }
+        public string[] RequiredRuntimeInterfaceNames { get; }
         public ActorPresentationMode[] SupportedPresentationModes { get; }
         public ActorPresentationMode[] UnsupportedPresentationModes { get; }
         public string UnsupportedLaneMessage { get; }
@@ -79,8 +89,13 @@ public string[] RequiredRuntimeInterfaceNames { get; }
         public string[] RequiredComponentNames { get; }
         public AuthoringCapability Capability { get; }
         public int Priority { get; }
+        public int PriorityValueOverride { get; }
+        public string DeprecatedInVersion { get; }
+        public string RemovableInVersion { get; }
         public string DocumentationURL { get; }
         public string ExpertAdvice { get; }
+        public string Relevance { get; }
+        public string ManualPath { get; }
 
         public bool SupportsPresentationMode(ActorPresentationMode mode)
         {

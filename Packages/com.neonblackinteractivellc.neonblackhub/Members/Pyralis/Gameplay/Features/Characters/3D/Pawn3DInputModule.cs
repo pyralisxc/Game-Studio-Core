@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Config;
+using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Features.Input;
 using NeonBlack.Gameplay.Characters;
 
@@ -20,7 +21,17 @@ namespace NeonBlack.Gameplay.Features.Characters
     ///    Assign the InputSystem_Actions.inputactions asset, or let the session
     ///     configure it at runtime via <see cref="SetInputConfig"/>.
     /// </summary>
-    [AddComponentMenu("NeonBlack/Gameplay/3D/Pawn 3D Input Module")]
+    [AuthoringContract(
+        Capability = AuthoringCapability.Input,
+        Relevance = "Translates Unity Input System actions into Pawn-readable FrameInput data.",
+        Axioms = AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.Dimensions3D,
+        NativeSetup = new[] { "Attach to the same root as Motor3D.", "Assign an InputActionAsset." },
+        AssignmentFields = new[] { nameof(inputActions), nameof(inputConfig) },
+        FirstProof = "Verify movement and actions respond in Play Mode with the assigned Input Asset.",
+        ExpertAdvice = "Converts hardware signals into FrameInput. It uses the InputProfile to find action names. Ensure your InputActionAsset has the 'Player' map (or as defined in your profile).",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/input"
+    )]
+[AddComponentMenu("NeonBlack/Gameplay/3D/Pawn 3D Input Module")]
     public sealed class Pawn3DInputModule : MonoBehaviour, IPawnInputModule
     {
         [Header("Input")]
@@ -161,14 +172,28 @@ namespace NeonBlack.Gameplay.Features.Characters
         private InputActionAsset ResolveAsset()
         {
             _playerInput ??= GetComponent<PlayerInput>();
-            if (inputConfig?.actions != null)                        return inputConfig.actions;
+            
+            // Priority 1: PlayerInput. This is critical for local multi-device isolation.
+            // When PlayerInput is used, Unity creates a per-user instance of the asset.
+            if (_playerInput != null && _playerInput.actions != null) 
+                return _playerInput.actions;
+                
+            // Priority 2: Local inspector override (mostly for testing/special cases).
+            if (inputActions != null) 
+                return inputActions;
+
+            // Priority 3: Config-based override.
+            if (inputConfig?.actions != null) 
+                return inputConfig.actions;
+
+            // Priority 4: Global session default (Compatibility fallback).
             if (GameplayRuntimeContext.DefaultInputActions != null)
             {
                 _inputProfile ??= GameplayRuntimeContext.DefaultInputProfile;
                 return GameplayRuntimeContext.DefaultInputActions;
             }
-            if (_playerInput != null && _playerInput.actions != null) return _playerInput.actions;
-            return inputActions;
+
+            return null;
         }
 
         private void LogMissingRequiredAction(string actionRole, string actionName, InputAction action)

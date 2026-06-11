@@ -11,6 +11,7 @@ namespace NeonBlack.Gameplay.Features.Combat
     [AuthoringContract(
         ModuleId = "actor.status",
         Capability = AuthoringCapability.Combat,
+        Relevance = "Applies timed status effects, damage/heal ticks, action locks, movement modifiers, combat multipliers, and shield-style damage modifiers.",
         Lane = "Combat",
         ProfileType = typeof(ActorStatusEffectProfile),
         RequiredInterfaces = new[] { typeof(IFeatureModuleRuntime), typeof(IActorStatusEffectReceiver), typeof(IDamageModifier) },
@@ -23,19 +24,15 @@ namespace NeonBlack.Gameplay.Features.Combat
         RequiredComponentNames = new[] { "NeonBlack.Gameplay.Features.Combat.HealthComponent" },
         NativeSetup = new[]
         {
-            "create ActorStatusEffectProfile",
-            "create FeatureModuleDefinition",
-            "assign runtime prefab with ActorStatusEffectFeatureRuntime",
-            "assign profile asset",
-            "add module to PawnDefinition.featureModules"
+            "Create ActorStatusEffectProfile.",
+            "Create FeatureModuleDefinition.",
+            "Assign runtime prefab with ActorStatusEffectFeatureRuntime.",
+            "Assign profile asset.",
+            "Add module to PawnDefinition.featureModules."
         },
-        FirstProof = "proof.custom-object-effect",
-        AssignmentFields = new[]
-        {
-            "FeatureModuleDefinition.moduleId",
-            "FeatureModuleDefinition.runtimePrefab",
-            "FeatureModuleDefinition.profileAsset"
-        },
+        FirstProof = "Apply a status effect at runtime and verify it modifies actor stats as expected.",
+        AssignmentFields = new[] { nameof(statusProfile) },
+        ExpertAdvice = "Core implementation for status effects. Requires receivers for movement and combat multipliers to take effect.",
         CustomizationMoments = new[]
         {
             "ActorStatusEffectProfile.startingEffects",

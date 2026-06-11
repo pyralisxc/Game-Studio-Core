@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Enums;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
@@ -12,11 +13,20 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Relevance = "Project-window creation path for movement space, bounds, wrap, and arena-depth rules.",
         AssignmentFields = new[] { nameof(movementMode), nameof(minBounds), nameof(maxBounds) },
         FirstProof = "Verify that actors are clamped to the defined bounds in-game.",
-        NativeSetup = new[] { "Create Asset" }
+        NativeSetup = new[] { "Create Asset" },
+        ExpertAdvice = "The Playfield defines the physical boundaries of the simulation. Use 'Clamp To Bounds' for arena-style games to keep participants within the playable area.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/core"
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Playfield Profile", fileName = "PlayfieldProfile", order = -80)]
-    public class PlayfieldProfile : ScriptableObject
+    public class PlayfieldProfile : ScriptableObject, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            if (minBounds.x > maxBounds.x) yield return "Min X bound should not exceed Max X bound.";
+            if (minBounds.y > maxBounds.y) yield return "Min Y bound should not exceed Max Y bound.";
+            if (minDepth > maxDepth) yield return "Min Depth should not exceed Max Depth.";
+        }
+
         public MovementMode movementMode = MovementMode.ThreeD;
         [Header("Bounds")]
         public bool clampToBounds = false;

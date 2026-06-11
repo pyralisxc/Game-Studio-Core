@@ -7,23 +7,21 @@ namespace NeonBlack.Gameplay.Features.Settings
 {
 /// <summary>
 /// Controls the Settings screen as a full canvas page swap.
-/// When opened, the main menu page hides and the settings page shows (and vice versa).
-/// Reads current values from an explicit settings service when opened and saves them on close.
-///
-/// SETUP:
-///   1. In your Canvas create two root child GameObjects:
-///        - MainMenuPage  - holds your title, play button, settings button, etc.
-///        - SettingsPage  - holds all sliders and the Back button. Start it INACTIVE.
-///   2. Add Sliders inside SettingsPage:
-///        - MasterVolume      : min=0, max=1
-///        - MusicVolume       : min=0, max=1
-///        - SFXVolume         : min=0, max=1
-///        - JoystickDeadzone  : min=0, max=0.5
-///   3. Add a Back button inside SettingsPage.
-///   4. Attach this script to any persistent GameObject (e.g. the Canvas).
-///   5. Wire all references in the Inspector.
-///   6. Call Open() from MainMenuController's settings button.
 /// </summary>
+[AuthoringContract(
+    Capability = AuthoringCapability.UI | AuthoringCapability.Setup,
+    Relevance = "Swaps between a main menu page and a settings page, forwards slider/toggle values to a settings service, and can pause gameplay.",
+    NativeSetup = new[] 
+    { 
+        "Assign Main Menu Page and Settings Page roots from the same Canvas.",
+        "Assign Settings Source to SettingsManager.",
+        "Assign the Back Button so Close can save values.",
+        "Start the Settings Page inactive."
+    },
+    AssignmentFields = new[] { nameof(_mainMenuPage), nameof(_settingsPage), nameof(_settingsSource), nameof(_backButton) },
+    FirstProof = "Open settings from the menu and verify it pauses gameplay and populates sliders correctly.",
+    ExpertAdvice = "Do not assign child controls as page roots; page swapping should hide whole panels. Sliders will not save unless Settings Source is assigned."
+)]
 public class SettingsScreen : MonoBehaviour
 {
     [Header("Pages")]

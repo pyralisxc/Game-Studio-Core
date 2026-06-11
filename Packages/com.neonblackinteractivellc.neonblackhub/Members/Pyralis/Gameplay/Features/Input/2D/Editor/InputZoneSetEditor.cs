@@ -63,7 +63,7 @@ public class InputZoneSetEditor : Editor
                 "Gameplay input is ignored inside zones and works outside zones.",
                 "Both orientations are checked if the game supports rotation."
             },
-            manualPath: PyralisInspectorGuide.SetupManualPath("AUTHORING_MODEL.md")));
+            manualPath: PyralisInspectorGuide.AuthoringDocPath("AUTHORING_MODEL.md")));
 
         EditorGUILayout.Space(10f);
         EditorGUILayout.LabelField("Scene-View Zone Editor", EditorStyles.boldLabel);

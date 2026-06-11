@@ -51,7 +51,7 @@ namespace NeonBlack.Gameplay.Features.Traversal.Editor
                         "Skip it for games without actor traversal, such as board/card/tabletop, menu-only, or purely camera-driven games.",
                         "Keep movement input and animation on the pawn; this zone only describes where a climb can happen."
                     },
-                    PyralisInspectorGuide.SetupManualPath("Prefabs/Pawn_Setup.md")),
+                    PyralisInspectorGuide.AuthoringDocPath("Prefabs/Pawn_Setup.md")),
                 new PyralisGuideSection(
                     "Beginner wiring",
                     "The player needs a detector child, this zone needs trigger geometry, and the animator needs matching parameters.",
@@ -71,7 +71,7 @@ namespace NeonBlack.Gameplay.Features.Traversal.Editor
                         "Brawler path: use forward climbs or mantles to move between arena heights.",
                         "Camera/board/card path: omit traversal components and drive interaction through rules, selection, or camera controls."
                     },
-                    PyralisInspectorGuide.SetupManualPath("CANONICAL_SETUP.md")));
+                    PyralisInspectorGuide.AuthoringDocPath("CANONICAL_SETUP.md")));
 
             DrawDefaultInspector();
             DrawGrabDetectorSetup();

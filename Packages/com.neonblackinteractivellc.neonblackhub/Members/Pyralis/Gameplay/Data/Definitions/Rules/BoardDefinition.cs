@@ -16,8 +16,13 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
         NativeSetup = new[] { "Create Asset" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Rules/Board Definition", fileName = "BoardDefinition", order = -100)]
-    public class BoardDefinition : ScriptableObject
+    public class BoardDefinition : ScriptableObject, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            return GetValidationIssues();
+        }
+
         public string boardId = "board.default";
         public string displayName = "Board";
         public int width = 8;

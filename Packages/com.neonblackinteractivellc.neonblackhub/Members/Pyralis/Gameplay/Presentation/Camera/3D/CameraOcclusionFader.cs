@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Presentation.Camera
@@ -6,17 +7,20 @@ namespace NeonBlack.Gameplay.Presentation.Camera
 /// <summary>
 /// Fades out renderers that occlude the line of sight between the camera
 /// and a tracked target. Attach to the same GameObject as your Main Camera.
-///
-/// Uses URP-compatible material properties. Only affects renderers whose
-/// materials use a shader with _BaseColor and _Surface properties (standard
-/// URP Lit / Unlit shaders). Set Target to the player transform at runtime
-/// via <see cref="SetTarget"/>.
-///
-/// Setup:
-///   1. Attach to your Main Camera.
-///   2. Drag the player Transform into Target.
-///   3. Tune Fade Alpha and Fade Distance as needed.
 /// </summary>
+[AuthoringContract(
+    Capability = AuthoringCapability.Camera,
+    Relevance = "Fades renderers that block the line of sight between the camera and a tracked target.",
+    NativeSetup = new[] 
+    { 
+        "Attach to your Main Camera.",
+        "Drag the player Transform into Target (or set at runtime).",
+        "Limit Occlusion Mask to world geometry layers."
+    },
+    AssignmentFields = new[] { nameof(target), nameof(fadeAlpha), nameof(fadeDistance), nameof(occlusionMask) },
+    FirstProof = "Walk the player behind world geometry and verify it fades out.",
+    ExpertAdvice = "Keep the player layer out of Occlusion Mask. Use this for 3D line-of-sight fading; 2D sprite visibility is usually handled via sorting layers."
+)]
 [AddComponentMenu("NeonBlack/Gameplay/Camera/Camera Occlusion Fader 3D")]
 public class CameraOcclusionFader : MonoBehaviour
 {
@@ -95,6 +99,14 @@ public class CameraOcclusionFader : MonoBehaviour
         target = newTarget;
     }
 
+    private readonly List<Material> _materialBuffer = new List<Material>(8);
+    private MaterialPropertyBlock _propertyBlock;
+
+    private void Awake()
+    {
+        _propertyBlock = new MaterialPropertyBlock();
+    }
+
     private void LateUpdate()
     {
         if (target == null) return;
@@ -128,10 +140,10 @@ public class CameraOcclusionFader : MonoBehaviour
 
         // Restore any renderer that is no longer occluding.
         _restoreScratch.Clear();
-        foreach (var kvp in _fadedRenderers)
+        foreach (var pair in _fadedRenderers)
         {
-            if (!_currentlyOccluding.Contains(kvp.Key))
-                _restoreScratch.Add(kvp.Key);
+            if (!_currentlyOccluding.Contains(pair.Key))
+                _restoreScratch.Add(pair.Key);
         }
 
         for (int i = 0; i < _restoreScratch.Count; i++)
@@ -141,9 +153,15 @@ public class CameraOcclusionFader : MonoBehaviour
     private void FadeRenderer(Renderer r)
     {
         if (_fadedRenderers.ContainsKey(r)) return;   // Already faded.
-        if (r.sharedMaterials == null || r.sharedMaterials.Length == 0) return;
+        
+        _materialBuffer.Clear();
+        r.GetSharedMaterials(_materialBuffer);
+        if (_materialBuffer.Count == 0) return;
 
-        Material[] materials = r.materials;
+        // NOTE: We still need 'r.materials' if we want to change Surface Type/Render Queue 
+        // because PropertyBlocks cannot change shader keywords or render queues.
+        // However, we only do this ONCE per activation, and RendererState is pooled.
+        Material[] materials = r.materials; 
         RendererState state = GetStateFromPool(materials.Length);
         state.materials = materials;
 
@@ -205,8 +223,8 @@ public class CameraOcclusionFader : MonoBehaviour
     private void RestoreAll()
     {
         _restoreScratch.Clear();
-        foreach (Renderer renderer in _fadedRenderers.Keys)
-            _restoreScratch.Add(renderer);
+        foreach (var pair in _fadedRenderers)
+            _restoreScratch.Add(pair.Key);
 
         for (int i = 0; i < _restoreScratch.Count; i++)
             RestoreRenderer(_restoreScratch[i]);

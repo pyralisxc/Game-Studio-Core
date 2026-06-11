@@ -13,8 +13,13 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
         FirstProof = "Proof that the equipment slot has a valid id and display properties."
     )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Equipment Slot", fileName = "EquipmentSlotDefinition")]
-    public class EquipmentSlotDefinition : ScriptableObject, IEquipmentSlot
-{
+    public class EquipmentSlotDefinition : ScriptableObject, IEquipmentSlot, IRuntimeValidationProvider
+    {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            return GetValidationIssues();
+        }
+
         public string slotId = "slot.new";
         public string displayName = "New Slot";
         public string slotFamily = "General";

@@ -1,4 +1,5 @@
-﻿using NeonBlack.Gameplay.Core.Rules.Board;
+using NeonBlack.Gameplay.Core.Rules.Board;
+using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,9 +8,21 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
     /// <summary>
     /// Designer-authored terminal condition for board and tabletop games.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Tabletop | AuthoringCapability.Grid, 
+        Relevance = "Project-window creation path for tabletop round or game-end conditions.",
+        AssignmentFields = new[] { nameof(conditionId), nameof(kind), nameof(observedSeat), nameof(winningSeat) },
+        FirstProof = "Verify the game ends correctly when this condition is met.",
+        NativeSetup = new[] { "Create Asset" }
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/Rules/Board Terminal Condition", fileName = "BoardTerminalCondition", order = -50)]
-    public class BoardTerminalConditionDefinition : ScriptableObject
+    public class BoardTerminalConditionDefinition : ScriptableObject, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            return GetValidationIssues();
+        }
+
         public string conditionId = "condition.boardTerminal";
         public string displayName = "Board Terminal Condition";
         public BoardTerminalConditionKind kind = BoardTerminalConditionKind.SideEliminated;

@@ -50,7 +50,7 @@ public class HitBoxEditor : Editor
                     "Do not put player movement, AI choice, or turn rules here. Those should call into combat instead.",
                     "Use Owner to prevent friendly/self hits and to connect the hit back to the attacker."
                 },
-                PyralisInspectorGuide.SetupManualPath("Prefabs/Health_Combat_Setup.md")),
+                PyralisInspectorGuide.AuthoringDocPath("Prefabs/Health_Combat_Setup.md")),
             new PyralisGuideSection(
                 "Path choices",
                 "HitBox can sit under several combat styles without forcing one.",
@@ -61,7 +61,7 @@ public class HitBoxEditor : Editor
                     "Turn-based/menu path: skip scene hitboxes and apply damage from the selected action or card effect.",
                     "Board/card path: use hitboxes only when a piece has a spatial attack area on the board."
                 },
-                PyralisInspectorGuide.SetupManualPath("Prefabs/Combat_Definitions_Setup.md")),
+                PyralisInspectorGuide.AuthoringDocPath("Prefabs/Combat_Definitions_Setup.md")),
             new PyralisGuideSection(
                 "Beginner wiring",
                 "A reliable hitbox needs a collider, an owner, and a clear activation rule.",

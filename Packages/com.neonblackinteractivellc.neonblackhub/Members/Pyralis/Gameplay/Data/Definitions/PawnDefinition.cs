@@ -11,15 +11,24 @@ namespace NeonBlack.Gameplay.Data.Definitions
     /// Primary authored definition for a controllable or simulated pawn.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Movement, 
+        Capability = AuthoringCapability.Movement | AuthoringCapability.Combat, 
+        Priority = AuthoringPriority.Primary,
+        Lane = "Entity",
         Relevance = "Core definition for a controllable entity, linking its prefab to movement, combat, and animation profiles.",
-        AssignmentFields = new[] { nameof(pawnPrefab), nameof(movementProfile), nameof(combatProfile), nameof(animationProfile), nameof(featureModules) },
+        AssignmentFields = new[] { nameof(pawnPrefab), nameof(movementProfile), nameof(combatProfile), nameof(animationProfile), nameof(featureModules), nameof(defaultInputProfile) },
         NativeSetup = new[] { "PawnRoot" },
-        FirstProof = "Assign this Pawn Definition to a Participant Definition or a Spawner in the scene."
+        FirstProof = "Assign this Pawn Definition to a Participant Definition or a Spawner in the scene.",
+        ExpertAdvice = "PawnDefinition is the glue for your characters. Ensure you assign a PawnPrefab and appropriate profiles for Movement and Combat. Check 'First Proof' by spawning it in a test scene.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/pawn"
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Definitions/Pawn Definition", fileName = "PawnDefinition", order = 30)]
-    public class PawnDefinition : ScriptableObject
+    public class PawnDefinition : ScriptableObject, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            return GetValidationIssues();
+        }
+
         public GameObject pawnPrefab;
         public InputProfile defaultInputProfile;
         public PawnMovementProfile movementProfile;

@@ -6,9 +6,13 @@ using NeonBlack.Gameplay.Core.Contracts.Rpg;
 namespace NeonBlack.Gameplay.Core.Rpg
 {
     [AuthoringContract(
-        ModuleId = "rpg.inventory",
         Capability = AuthoringCapability.Inventory,
+        Priority = AuthoringPriority.Primary,
+        ModuleId = "rpg.inventory",
         Lane = "RPG",
+        Relevance = "Tracks and manages items for RPG owners, handling stack sizes and catalog validation.",
+        ExpertAdvice = "Works with RpgOwnerKey. Ensure item catalog stack sizes are respected.",
+        Axioms = AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.TurnBased,
         RequiredInterfaces = new[] { typeof(IItemCatalog) },
         NativeSetup = new[]
         {
@@ -16,7 +20,7 @@ namespace NeonBlack.Gameplay.Core.Rpg
             "define ItemDefinitions",
             "assign catalog to InventoryService"
         },
-        AssignmentFields = new[] { "_catalog" },
+        AssignmentFields = new[] { nameof(_catalog) },
         FirstProof = "Items can be added to and removed from a participant's inventory."
     )]
     public sealed class InventoryService : IInventoryService

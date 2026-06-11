@@ -12,12 +12,13 @@ namespace NeonBlack.Gameplay.Features.Pickups
         ModuleId = "actor.pickups.2d",
         Capability = AuthoringCapability.Inventory,
         Relevance = "Allows 2D actors to detect and collect pickups using 2D collider overlap detection.",
+        ExpertAdvice = "Optimized for Sprite2D pawns. Uses 2D collider overlap for zero-effort collection setup.",
         Lane = "Pickups",
         ProfileType = typeof(PickupFeatureProfile),
         RequiredInterfaces = new[] { typeof(IFeatureModuleRuntime), typeof(IActorInteractionHandler) },
         RequiredComponentNames = new[] { "UnityEngine.Collider2D" },
         SupportedLanes = new[] { ActorPresentationMode.Sprite2D },
-        UnsupportedLanes = new[] { ActorPresentationMode.Billboard2_5D, ActorPresentationMode.Rigged3D },
+        UnsupportedLanes = new[] { ActorPresentationMode.Billboard2_5D, ActorPresentationMode.ThirdPerson3D },
         ConsumedRoles = new[] { "Interact" },
         NativeSetup = new[]
         {
@@ -28,6 +29,7 @@ namespace NeonBlack.Gameplay.Features.Pickups
             "add module to PawnDefinition.featureModules"
         },
         FirstProof = "Walk a 2D actor into a pickup and verify it is collected.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/actor-pickups",
         AssignmentFields = new[]
         {
             "FeatureModuleDefinition.moduleId",

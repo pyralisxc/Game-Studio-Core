@@ -15,7 +15,6 @@ namespace NeonBlack.Gameplay.Features.Composition
     {
         public ActorFeatureContext ActorContext { get; }
         public FeatureModuleDefinition Definition { get; }
-        public PlatformServiceRegistry Services { get; }
         public IObjectResolver Resolver { get; }
 
         public GameObject ActorObject => ActorContext != null ? ActorContext.ActorObject : null;
@@ -28,18 +27,6 @@ namespace NeonBlack.Gameplay.Features.Composition
         {
             ActorContext = actorContext;
             Definition = definition;
-            Resolver = resolver;
-        }
-
-        [Obsolete("Use IObjectResolver constructor instead.")]
-        public FeatureRuntimeInitializationContext(ActorFeatureContext actorContext, FeatureModuleDefinition definition, PlatformServiceRegistry services)
-        {
-            ActorContext = actorContext;
-            Definition = definition;
-            Services = services;
-            IObjectResolver resolver = null;
-            if (services != null)
-                services.TryResolve(out resolver);
             Resolver = resolver;
         }
 

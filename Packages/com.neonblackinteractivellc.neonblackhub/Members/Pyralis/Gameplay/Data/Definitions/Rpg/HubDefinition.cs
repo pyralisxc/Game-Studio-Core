@@ -15,8 +15,13 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
         FirstProof = "Proof that the hub contains valid interactables and correctly links to a scene."
     )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Hub Definition", fileName = "HubDefinition")]
-    public class HubDefinition : ScriptableObject, IHubDefinition
-{
+    public class HubDefinition : ScriptableObject, IHubDefinition, IRuntimeValidationProvider
+    {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            return GetValidationIssues();
+        }
+
         public string hubId = "hub.new";
         public string displayName = "New Hub";
         public string sceneId = "scene.hub";

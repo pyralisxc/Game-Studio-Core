@@ -1,4 +1,6 @@
-﻿using NeonBlack.Gameplay.Presentation.Animation;
+using System.Collections.Generic;
+using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Presentation.Animation;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Features.Combat
@@ -28,9 +30,24 @@ namespace NeonBlack.Gameplay.Features.Combat
         RegenBoost
     }
 
+    [AuthoringContract(
+        Capability = AuthoringCapability.Combat,
+        Relevance = "Defines a status effect (buff or debuff) that can be applied to actors.",
+        NativeSetup = new[] { "Create Asset.", "Set Effect Kind and Duration.", "Configure stack mode." },
+        AssignmentFields = new[] { nameof(effectId), nameof(displayName), nameof(duration) },
+        FirstProof = "Apply the effect to an actor and verify its magnitude and duration match the definition.",
+        ExpertAdvice = "Use tickInterval for effects that apply over time (e.g., Poison, Heal)."
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/Combat/Status Effect", fileName = "StatusEffectDefinition")]
-    public class StatusEffectDefinition : ScriptableObject
+    public class StatusEffectDefinition : ScriptableObject, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            if (string.IsNullOrWhiteSpace(effectId)) yield return "Effect Id is required.";
+            if (duration < 0f) yield return "Duration cannot be negative.";
+            if (tickInterval <= 0f) yield return "Tick Interval must be greater than zero.";
+        }
+
         public string effectId = "status.effect";
         public string displayName = "Status Effect";
         public StatusEffectKind effectKind = StatusEffectKind.Stun;

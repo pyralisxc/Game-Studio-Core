@@ -15,8 +15,13 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
         FirstProof = "Proof that the NPC can initiate dialogue and has a valid profile."
     )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/NPC", fileName = "NpcDefinition")]
-    public class NpcDefinition : ScriptableObject, INpcProfile
-{
+    public class NpcDefinition : ScriptableObject, INpcProfile, IRuntimeValidationProvider
+    {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            return GetValidationIssues();
+        }
+
         public string npcId = "npc.new";
         public string displayName = "New NPC";
         public string role = "npc";

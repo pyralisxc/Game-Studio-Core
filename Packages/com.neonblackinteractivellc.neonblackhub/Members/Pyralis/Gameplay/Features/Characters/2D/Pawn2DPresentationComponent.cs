@@ -1,23 +1,34 @@
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Features.Composition;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Features.Characters
 {
     [AuthoringContract(
         Capability = AuthoringCapability.Animation | AuthoringCapability.VFX, 
-        Relevance = "Inspector Add Component path for the 2D pawn visual and presentation module.",
-        AssignmentFields = new[] { nameof(spriteRenderer), nameof(movingTint), nameof(tiltEnabled) },
-        FirstProof = "Move the pawn and verify the sprite tilts and tints according to the velocity.",
-        NativeSetup = new[] { "Add Component", "Assign SpriteRenderer" }
+        Relevance = "Maps movement and dash/death state to sprite tinting, facing, squash/stretch, and animation signals.",
+        Axioms = AuthoringWorldAxiom.Dimensions2D,
+        NativeSetup = new[] { "Add on the same root as Motor2D.", "Assign SpriteRenderer." },
+        AssignmentFields = new[] { nameof(spriteRenderer), nameof(movingTint), nameof(tiltEnabled), nameof(stretchAmount), nameof(squashSnapSpeed), nameof(tiltSpeed) },
+        FirstProof = "Move the pawn and verify the sprite tilts and tints according to velocity.",
+        ExpertAdvice = "Do not leave both moving and idle tint invisible. Do not enable tilt or squash/stretch until the visual pivot is correct."
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Characters/2D/Pawn 2D Presentation Component")]
     [RequireComponent(typeof(Pawn2DMovementComponent))]
     [RequireComponent(typeof(ActorAnimationDriver))]
-    public sealed class Pawn2DPresentationComponent : MonoBehaviour, IPawnPresentationModule
+    public sealed class Pawn2DPresentationComponent : MonoBehaviour, IPawnPresentationModule, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            if (spriteRenderer == null && GetComponentInChildren<SpriteRenderer>(true) == null)
+                yield return "Sprite Renderer is empty and no child SpriteRenderer was found.";
+            if (stretchAmount < 1f)
+                yield return "Stretch Amount should be at least 1.";
+        }
         [Header("Sprite")]
         [SerializeField] private SpriteRenderer spriteRenderer;
         [SerializeField] private bool spriteDefaultFacesRight = true;

@@ -13,8 +13,13 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
         FirstProof = "Proof that the item can exist in an inventory and has correct display properties."
     )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Item Definition", fileName = "ItemDefinition")]
-    public class ItemDefinition : ScriptableObject
-{
+    public class ItemDefinition : ScriptableObject, IRuntimeValidationProvider
+    {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            return GetValidationIssues();
+        }
+
         public string itemId = "item.new";
         public string displayName = "New Item";
         public string category = "General";

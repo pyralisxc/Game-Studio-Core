@@ -11,15 +11,26 @@ namespace NeonBlack.Gameplay.Characters
     /// </summary>
     public static class ParticipantQueryUtility
     {
+        private static IParticipantRoster _roster;
+        private static IPlayerProvider _playerProvider;
         private static readonly List<Transform> CachedTransforms = new List<Transform>(8);
+
+        public static void Initialize(IParticipantRoster roster, IPlayerProvider playerProvider)
+        {
+            _roster = roster;
+            _playerProvider = playerProvider;
+        }
+
         public static bool TryResolveRoster(out IParticipantRoster roster)
         {
-            return GameplayPlatformContext.TryResolve(out roster);
+            roster = _roster;
+            return roster != null;
         }
 
         public static bool TryResolvePlayerProvider(out IPlayerProvider playerProvider)
         {
-            return GameplayPlatformContext.TryResolve(out playerProvider);
+            playerProvider = _playerProvider;
+            return playerProvider != null;
         }
 
         public static bool TryGetClosestParticipantTransform(Vector3 worldPosition, out Transform closest, out float distance)

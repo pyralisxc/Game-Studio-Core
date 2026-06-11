@@ -26,19 +26,23 @@ namespace NeonBlack.Gameplay.Features.Settings
 [AuthoringContract(
     Capability = AuthoringCapability.Audio | AuthoringCapability.UI,
     Relevance = "Manages global audio volume levels and mixer integration. Connects settings profiles to the active Unity AudioMixer.",
-    FirstProof = "Verify AudioMixer parameters 'MusicVolume' and 'SFXVolume' change when sliders are moved in the Settings UI."
+    NativeSetup = new[] { "Attach to a persistent root GameObject.", "Assign a SettingsProfile asset." },
+    AssignmentFields = new[] { nameof(settingsProfile), nameof(_mixerOverride) },
+    FirstProof = "Verify AudioMixer parameters 'MusicVolume' and 'SFXVolume' change when sliders are moved in the Settings UI.",
+    ExpertAdvice = "Ensure your AudioMixer has exposed parameters named 'MusicVolume' and 'SFXVolume' (case sensitive) for the manager to drive. This component persists across scenes if placed on a DontDestroyOnLoad root.",
+    DocumentationURL = "https://docs.neonblack.com/pyralis/settings"
 )]
 [DefaultExecutionOrder(-40)]
-public class SettingsManager : MonoBehaviour, IGameplaySettingsApplier, IInputSettingsRegistrar
+public class SettingsManager : MonoBehaviour, IGameplaySettingsApplier, IInputSettingsRegistrar, IRuntimeValidationProvider
 {
-    public static SettingsManager Instance { get; private set; }
-
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void ResetStatics()
+    public IEnumerable<string> GetRuntimeValidationIssues()
     {
-        Instance = null;
+        if (settingsProfile == null)
+            yield return "Settings Profile is required for default volume and deadzone values.";
+        
+        if (Mixer == null)
+            yield return "No AudioMixer found. Assign one in the Settings Profile or use the Mixer Override field.";
     }
-
     [Header("Profile")]
     [SerializeField, Tooltip("Provides AudioMixer, default volumes, and deadzone values. Required for clean defaults.")]
     private SettingsProfile settingsProfile;
@@ -73,26 +77,12 @@ public class SettingsManager : MonoBehaviour, IGameplaySettingsApplier, IInputSe
 
     private void Awake()
     {
-        // Register with platform context for dependency injection.
-        if (GameplayPlatformContext.TryGetServices(out PlatformServiceRegistry services))
-        {
-            services.Register<IGameplaySettingsApplier>(this);
-            services.Register<IInputSettingsRegistrar>(this);
-            services.Register(this);
-        }
-
         Load();
         ApplyMixer();
     }
 
     private void OnDestroy()
     {
-        if (GameplayPlatformContext.TryGetServices(out PlatformServiceRegistry services))
-        {
-            services.Unregister<IGameplaySettingsApplier>();
-            services.Unregister<IInputSettingsRegistrar>();
-            services.Unregister<SettingsManager>();
-        }
     }
 
     private void Start()

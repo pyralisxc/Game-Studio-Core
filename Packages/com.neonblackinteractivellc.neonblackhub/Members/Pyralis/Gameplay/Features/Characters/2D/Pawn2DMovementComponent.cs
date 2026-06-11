@@ -1,9 +1,11 @@
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Runtime;
 using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Features.Combat;
+using NeonBlack.Gameplay.Features.Composition;
 using NeonBlack.Gameplay.Features.Input;
 using UnityEngine;
 using VContainer;
@@ -12,16 +14,41 @@ namespace NeonBlack.Gameplay.Features.Characters
 {
     [AuthoringContract(
         Capability = AuthoringCapability.Movement, 
+        PriorityValueOverride = 50,
         Relevance = "Tunable 2D movement module supporting top-down and platformer (side-view) modes.",
-        NativeSetup = new[] { "Add Rigidbody2D and Collider2D", "Configure LayerMasks for ground check if Jump is enabled" },
-        AssignmentFields = new[] { nameof(moveSpeed), nameof(acceleration), nameof(jumpEnabled), nameof(groundLayer) },
-        FirstProof = "Pawn moves at the specified speed in the scene."
+        Axioms = AuthoringWorldAxiom.Dimensions2D,
+        NativeSetup = new[] 
+        { 
+            "Add Rigidbody2D and Collider2D.",
+            "Keep on the same root as Motor2D.",
+            "Configure LayerMasks for ground check if Jump is enabled."
+        },
+        AssignmentFields = new[] { nameof(moveSpeed), nameof(dashEnabled), nameof(dashSpeed), nameof(dashCooldown), nameof(jumpEnabled), nameof(jumpVelocity), nameof(groundLayer), nameof(cameraBoundsSource), nameof(targetCamera), nameof(gameplayStateSource) },
+        FirstProof = "Pawn responds to input in the scene. Use the Scene View to verify the Ground Check raycast (if side-view) is hitting the correct layer.",
+        ExpertAdvice = "Top-down route: leave Jump Enabled off and set Gravity Scale to 0. Side-view route: enable Jump, set Ground Layer, and ensure Rigidbody2D 'Collision Detection' is set to Continuous for high-speed dashes."
     )]
-    [AddComponentMenu("NeonBlack/Gameplay/Characters/2D/Pawn 2D Movement Component")]
+[AddComponentMenu("NeonBlack/Gameplay/Characters/2D/Pawn 2D Movement Component")]
     [RequireComponent(typeof(Rigidbody2D))]
     [RequireComponent(typeof(PolygonCollider2D))]
-    public sealed class Pawn2DMovementComponent : MonoBehaviour, IPawnMotor, IMovementModule, IActorReactionResponder, IActorMovementModifierReceiver
+    public sealed class Pawn2DMovementComponent : MonoBehaviour, IPawnMotor, IMovementModule, IActorReactionResponder, IActorMovementModifierReceiver, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            if (moveSpeed <= 0f)
+                yield return "Move Speed must be greater than zero.";
+            if (dashEnabled)
+            {
+                if (dashSpeed <= 0f) yield return "Dash Speed must be greater than zero when dash is enabled.";
+                if (dashCooldown <= 0f) yield return "Dash Cooldown must be greater than zero when dash is enabled.";
+            }
+            if (jumpEnabled)
+            {
+                if (jumpVelocity <= 0f) yield return "Jump Velocity must be greater than zero when side-view jump is enabled.";
+                if (gravityScale <= 0f) yield return "Gravity Scale must be greater than zero when side-view jump is enabled.";
+            }
+            if (cameraBoundsSource == null && targetCamera == null)
+                yield return "Camera Bounds Source and Target Camera are empty. This is okay if the session injects them.";
+        }
         [Header("Movement - Speed")]
         [SerializeField] private float moveSpeed = 4f;
         [SerializeField, Range(0f, 50f)] private float acceleration = 20f;
@@ -110,14 +137,12 @@ namespace NeonBlack.Gameplay.Features.Characters
 
         public bool TryGetRuntimeGameplayActive(out bool isGameplayActive)
         {
-            ResolveRuntimeServices();
             isGameplayActive = gameplayStateReader != null && gameplayStateReader.IsGameplayActive;
             return gameplayStateReader != null;
         }
 
         public bool TryGetRuntimeCameraBounds(out CameraBounds2D bounds)
         {
-            ResolveRuntimeServices();
             return TryGetBounds(out bounds) && bounds.IsValid;
         }
 
@@ -155,7 +180,6 @@ namespace NeonBlack.Gameplay.Features.Characters
 
         private void FixedUpdate()
         {
-            ResolveRuntimeServices();
             if (!HasRequiredRuntimeServices())
                 return;
             if (!gameplayStateReader.IsGameplayActive)
@@ -476,17 +500,8 @@ namespace NeonBlack.Gameplay.Features.Characters
             return false;
         }
 
-        private void ResolveRuntimeServices()
-        {
-            if (gameplayStateReader == null)
-                GameplayPlatformContext.TryResolve(out gameplayStateReader);
-
-            if (cameraBoundsProvider == null)
-                GameplayPlatformContext.TryResolve(out cameraBoundsProvider);
-        }
-
         private Motor2DInput BuildMotorInput() => new Motor2DInput
-        {
+{
             MoveDirection = IsActionLocked ? Vector2.zero : moveDirection
         };
 

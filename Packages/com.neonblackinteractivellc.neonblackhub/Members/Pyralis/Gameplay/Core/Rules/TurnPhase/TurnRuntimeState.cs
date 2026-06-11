@@ -11,9 +11,11 @@ namespace NeonBlack.Gameplay.Core.Rules.TurnPhase
     [AuthoringContract(
         Capability = AuthoringCapability.TurnBased,
         Relevance = "Runtime cursor for seat-based turn order tracking.",
-        FirstProof = "Advancing the turn correctly moves the active seat index through the defined order."
+        FirstProof = "Advancing the turn correctly moves the active seat index through the defined order.",
+        ExpertAdvice = "Pure data class representing the cursor in a round. It handles the wrap-around logic from the last participant back to the first.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/tabletop"
     )]
-    public sealed class TurnRuntimeState
+public sealed class TurnRuntimeState
     {
         private readonly int[] _seatOrder;
         private int _activeSeatIndex;

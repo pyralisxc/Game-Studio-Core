@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Features.Combat;
@@ -9,10 +10,31 @@ using UnityEngine;
 
 namespace NeonBlack.Gameplay.Features.Characters
 {
+    [AuthoringContract(
+        Capability = AuthoringCapability.Combat,
+        Relevance = "2D pawn combat; receives attack input, resolves combos, activates HitBox2D, and fires projectiles.",
+        Axioms = AuthoringWorldAxiom.Dimensions2D,
+        NativeSetup = new[] 
+        { 
+            "Attach to the same root as Motor2D.",
+            "Assign HitBox2D zones for melee attacks.",
+            "Assign CombatSequenceDefinition for authored combos.",
+            "Assign Projectile Launcher for ranged attacks."
+        },
+        AssignmentFields = new[] { nameof(hitBoxZones), nameof(equippedWeapons), nameof(startingWeaponIndex), nameof(attackCooldown), nameof(kickCooldown), nameof(projectileLauncher) },
+        FirstProof = "Verify attacks trigger animations and hitboxes detect targets.",
+        ExpertAdvice = "For 2D-only combat, prefer PawnCombatBehaviour2D. Do not leave hitbox zone names mismatched with WeaponData fallback zones."
+    )]
     [AddComponentMenu("NeonBlack/Gameplay/Characters/2D/Pawn Combat Behaviour 2D")]
     [RequireComponent(typeof(Motor2D))]
-    public class PawnCombatBehaviour2D : MonoBehaviour, IPawnCombatModule, IPawnCombatInputReceiver2D, IActorCombatModifierReceiver
+    public class PawnCombatBehaviour2D : MonoBehaviour, IPawnCombatModule, IPawnCombatInputReceiver2D, IActorCombatModifierReceiver, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            if (hitBoxZones == null || hitBoxZones.Length == 0)
+                yield return "Hit Box Zones is empty. Melee attacks need HitBox2D slots.";
+            if (attackCooldown < 0f) yield return "Attack Cooldown cannot be negative.";
+        }
         private sealed class ComboRuntimeState
         {
             public CombatSequenceDefinition Sequence;
@@ -311,9 +333,7 @@ namespace NeonBlack.Gameplay.Features.Characters
                 yield return new WaitForSeconds(delay);
 
             box.ConfigureDamage(damage, knockback);
-            box.Enable();
-            yield return new WaitForSeconds(Mathf.Max(duration, 0.01f));
-            box.Disable();
+            box.Fire(duration);
         }
 
         private void FireProjectile(WeaponData weapon)

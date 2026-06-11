@@ -13,8 +13,30 @@ namespace NeonBlack.Gameplay.Data.Definitions
         NativeSetup = new[] { "Create Asset" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Definitions/Action Definition", fileName = "ActionDefinition", order = 60)]
-    public class ActionDefinition : ScriptableObject
+    public class ActionDefinition : ScriptableObject, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            if (string.IsNullOrWhiteSpace(actionId))
+                yield return "Action id is required.";
+
+            if (string.IsNullOrWhiteSpace(displayName))
+                yield return "Display name is required.";
+
+            if (string.IsNullOrWhiteSpace(actionFamily))
+                yield return "Action family is required so tools can group related actions.";
+
+            if (cooldown < 0f)
+                yield return "Cooldown cannot be negative.";
+
+            if (resourceCost < 0)
+                yield return "Resource cost cannot be negative.";
+
+            List<string> targetIssues = targetRule.GetValidationIssues();
+            foreach (var issue in targetIssues)
+                yield return issue;
+        }
+
         public string actionId = "action.new";
         public string displayName = "Action";
         public string actionFamily = "General";

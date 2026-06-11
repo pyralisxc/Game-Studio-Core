@@ -11,9 +11,17 @@ namespace NeonBlack.Gameplay.Core.Navigation
     /// Drives the optional LoadingScreen intermediate scene.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.UI,
-        Relevance = "Handles the presentation and progress tracking of the loading screen.",
-        AssignmentFields = new[] { "loadingBar", "statusText" }
+        Capability = AuthoringCapability.UI | AuthoringCapability.Setup,
+        Relevance = "LoadingScreenController reads SceneFader.PendingScene and shows optional progress UI.",
+        NativeSetup = new[] 
+        { 
+            "Use this only in the loading scene referenced by SceneNames.LoadingScreen.",
+            "Route into it through SceneFader.FadeToSceneViaLoader so PendingScene is set.",
+            "Assign Progress Bar and Label when the loading scene should display progress."
+        },
+        AssignmentFields = new[] { nameof(_progressBar), nameof(_label) },
+        FirstProof = "Load a scene via SceneFader and verify the loading screen displays progress before activation.",
+        ExpertAdvice = "Do not open the loading scene directly unless falling back to MainMenu is acceptable. Do not put gameplay-only startup logic here; this scene should remain transitional."
     )]
     public class LoadingScreenController : MonoBehaviour
     {

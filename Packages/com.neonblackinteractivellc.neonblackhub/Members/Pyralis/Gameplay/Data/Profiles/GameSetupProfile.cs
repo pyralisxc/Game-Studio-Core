@@ -29,15 +29,23 @@ namespace NeonBlack.Gameplay.Data.Profiles
      /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Setup | AuthoringCapability.Session, 
+        Priority = AuthoringPriority.AuxiliaryDefault,
+        Lane = "Setup",
         Relevance = "Project-window creation path for the runtime pattern setup profile.",
         AssignmentFields = new[] { nameof(setupName), nameof(runtimeCapabilities), nameof(runtimePatterns) },
         FirstProof = "Validate that the selected runtime patterns correctly bootstrap the game session.",
         ExpertAdvice = "GameSetupProfile is your 'Recipe' for a specific route. Use it to select high-level capability families and the specific RuntimePatternDefinitions that implement them.",
-        NativeSetup = new[] { "Create Asset" }
+        NativeSetup = new[] { "Create Asset" },
+        DocumentationURL = "https://docs.neonblack.com/pyralis/game-setup"
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Game Setup Profile", fileName = "GameSetupProfile", order = -100)]
-    public class GameSetupProfile : ScriptableObject
+    public class GameSetupProfile : ScriptableObject, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            return GetValidationIssues();
+        }
+
         public string setupName = "Game Setup";
 
         [TextArea(2, 5)]

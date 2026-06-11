@@ -15,8 +15,8 @@ This folder is not the live Pyralis product manual. It holds repository-level au
 
 Use these package docs as the source of truth for current gameplay setup and architecture:
 
-- `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/Setup/START_HERE.md`
-- `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/Setup/MANUAL.md`
+- `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/Authoring/START_HERE.md`
+- `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/Authoring/README.md`
 - `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/CURRENT_STATE_AUDIT.md`
 - `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/CURRENT_ARCHETYPE_QUALITY_AUDIT_2026-05-23.md`
 

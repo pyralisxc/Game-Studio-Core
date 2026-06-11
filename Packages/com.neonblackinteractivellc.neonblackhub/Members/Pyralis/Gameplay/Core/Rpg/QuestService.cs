@@ -6,17 +6,22 @@ using NeonBlack.Gameplay.Core.Contracts.Rpg;
 namespace NeonBlack.Gameplay.Core.Rpg
 {
     [AuthoringContract(
+        Capability = AuthoringCapability.Quests,
+        Priority = AuthoringPriority.Primary,
         ModuleId = "rpg.quest",
-        Capability = AuthoringCapability.Dialogue,
         Lane = "RPG",
+        Relevance = "Manages quest lifecycles, objective tracking, and reward distribution.",
+        ExpertAdvice = "Quest rewards can grant XP, items, or skill points. Use objectives to gate progression. Objectives are tracked by ID and should match the events reported by other systems.",
+        Axioms = AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.TurnBased,
         NativeSetup = new[]
         {
             "create QuestDefinitions",
             "define QuestObjectives",
             "link quest start/end to Dialogue or Hub interaction"
         },
-        AssignmentFields = new[] { "_progression", "_inventory" },
-        FirstProof = "Quests can be started and objectives can be progressed."
+        AssignmentFields = new[] { nameof(_progression), nameof(_inventory) },
+        FirstProof = "Quests can be started and objectives can be progressed.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/rpg"
     )]
     public sealed class QuestService : IQuestService
 {

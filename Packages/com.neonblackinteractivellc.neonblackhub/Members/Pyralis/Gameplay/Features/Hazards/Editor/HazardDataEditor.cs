@@ -159,7 +159,7 @@ public class HazardDataEditor : Editor
                 "Selected hazard type has sensible movement values.",
                 "Impossible modifier combinations are resolved."
             },
-            manualPath: PyralisInspectorGuide.SetupManualPath("Prefabs/Hazard_Difficulty_Setup.md")));
+            manualPath: PyralisInspectorGuide.AuthoringDocPath("Prefabs/Hazard_Difficulty_Setup.md")));
 
         var type    = (HazardData.HazardType)_pType.enumValueIndex;
         var variant = (HazardData.CrossingVariant)_pVariant.enumValueIndex;

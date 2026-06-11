@@ -13,9 +13,38 @@ namespace NeonBlack.Gameplay.Features.Zones
     /// run from local fallback values, but the preferred path is a shared
     /// HazardImpactProfile so 2D and 3D hazards use the same authored payload.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Combat | AuthoringCapability.Puzzle,
+        Axioms = AuthoringWorldAxiom.Dimensions3D,
+        Relevance = "3D trigger volume that repeatedly damages overlapping actors.",
+        NativeSetup = new[] 
+        { 
+            "Place on a 3D volume.",
+            "Assign BoxCollider (Awake forces Is Trigger).",
+            "Assign Hazard Impact Profile for shared data, or use fallback fields."
+        },
+        AssignmentFields = new[] { nameof(impactProfile), nameof(damagePerTick), nameof(tickInterval), nameof(knockbackForce) },
+        FirstProof = "Walk an actor into the zone and verify it takes repeated damage.",
+        ExpertAdvice = "Do not set Tick Interval too low. Ensure target actors have a HealthComponent. Use Hazard Impact Profile if you want this hazard to behave identically to others.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/combat/hazards"
+    )]
     [RequireComponent(typeof(BoxCollider))]
-    public class DamageZone : MonoBehaviour
+    public class DamageZone : MonoBehaviour, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            BoxCollider box = GetComponent<BoxCollider>();
+            if (box == null)
+                yield return "BoxCollider is required for 3D trigger damage.";
+            else if (!box.isTrigger)
+                yield return "BoxCollider is not set to Is Trigger. Awake will force it on.";
+
+            if (impactProfile == null && damagePerTick <= 0f)
+                yield return "Fallback Damage Per Tick must be greater than zero when Impact Profile is empty.";
+
+            if (tickInterval <= 0f)
+                yield return "Tick Interval must be greater than zero.";
+        }
         [Header("Profile")]
         [SerializeField] private HazardImpactProfile impactProfile;
         [Header("Fallback Damage")]
@@ -40,6 +69,8 @@ namespace NeonBlack.Gameplay.Features.Zones
         private struct TargetState
         {
             public HealthComponent health;
+            public IActorStatusEffectReceiver statusReceiver;
+            public KnockbackReceiver knockback;
             public float timer;
         }
 
@@ -59,7 +90,15 @@ namespace NeonBlack.Gameplay.Features.Zones
                 return;
 
             _targetLookup.Add(health);
-            _targets.Add(new TargetState { health = health, timer = 0f });
+            
+            _targets.Add(new TargetState 
+            { 
+                health = health, 
+                statusReceiver = health.GetComponent<IActorStatusEffectReceiver>() ?? health.GetComponentInParent<IActorStatusEffectReceiver>(),
+                knockback = health.GetComponent<KnockbackReceiver>() ?? health.GetComponentInParent<KnockbackReceiver>(),
+                timer = 0f 
+            });
+            
             OnTargetEntered?.Invoke(health.gameObject);
         }
 
@@ -111,16 +150,37 @@ namespace NeonBlack.Gameplay.Features.Zones
 
                 if (impactProfile != null)
                 {
-                    HazardImpactUtility.TryApplyImpact(health.gameObject, impactProfile, gameObject, health.transform.position);
+                    ApplyImpactRefined(state, impactProfile);
                     continue;
                 }
 
                 health.TakeDamage(damagePerTick, health.transform.position, gameObject);
-                if (knockbackForce > 0f)
+                if (knockbackForce > 0f && state.knockback != null)
                 {
-                    KnockbackReceiver knockback = health.GetComponent<KnockbackReceiver>() ?? health.GetComponentInParent<KnockbackReceiver>();
-                    if (knockback != null)
-                        knockback.ApplyKnockback(Vector3.up * knockbackForce);
+                    state.knockback.ApplyKnockback(Vector3.up * knockbackForce);
+                }
+            }
+        }
+
+        private void ApplyImpactRefined(TargetState state, HazardImpactProfile profile)
+        {
+            if (profile.damagePerTick > 0f)
+                state.health.TakeDamage(profile.damagePerTick, state.health.transform.position, gameObject);
+
+            if (profile.knockbackForce > 0f && state.knockback != null)
+            {
+                Vector3 delta = state.health.transform.position - transform.position;
+                delta.z = 0f;
+                Vector3 dir = delta.sqrMagnitude > 0.0001f ? delta.normalized : (profile.useUpwardKnockback ? Vector3.up : Vector3.right);
+                state.knockback.ApplyKnockback(dir * profile.knockbackForce);
+            }
+
+            if (state.statusReceiver != null && profile.statusEffects != null)
+            {
+                for (int i = 0; i < profile.statusEffects.Length; i++)
+                {
+                    if (profile.statusEffects[i] != null)
+                        state.statusReceiver.ApplyStatusEffect(profile.statusEffects[i], gameObject);
                 }
             }
         }

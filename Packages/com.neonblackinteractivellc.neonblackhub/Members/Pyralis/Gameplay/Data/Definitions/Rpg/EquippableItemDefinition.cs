@@ -1,13 +1,27 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
+using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Rpg;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rpg
 {
+    [AuthoringContract(
+        Capability = AuthoringCapability.Inventory | AuthoringCapability.Stats,
+        Relevance = "Extends standard items with equipment slots and stat modifiers.",
+        NativeSetup = new[] { "Create Asset.", "Add Allowed Slot Ids.", "Add Stat Modifiers." },
+        AssignmentFields = new[] { nameof(allowedSlotIds) },
+        FirstProof = "Verify the item can be equipped into the specified slots and correctly modifies stats.",
+        ExpertAdvice = "Use stat modifiers to provide meaningful progression and customization through equipment."
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Equippable Item", fileName = "EquippableItemDefinition")]
-    public class EquippableItemDefinition : ItemDefinition, IEquippableItem
+    public class EquippableItemDefinition : ItemDefinition, IEquippableItem, IRuntimeValidationProvider
     {
+        public new IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            return GetValidationIssues();
+        }
+
         public string[] allowedSlotIds = System.Array.Empty<string>();
         public StatModifierDefinition[] statModifiers = System.Array.Empty<StatModifierDefinition>();
         public string ItemId => string.IsNullOrWhiteSpace(itemId) ? string.Empty : itemId.Trim();

@@ -7,7 +7,7 @@ namespace NeonBlack.Gameplay.Samples
     /// </summary>
     public sealed class PyralisSampleMarker : MonoBehaviour
     {
-        [SerializeField] private string setupGuidePath = "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/Setup/START_HERE.md";
+        [SerializeField] private string setupGuidePath = "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/Authoring/START_HERE.md";
 
         public string SetupGuidePath => setupGuidePath;
     }

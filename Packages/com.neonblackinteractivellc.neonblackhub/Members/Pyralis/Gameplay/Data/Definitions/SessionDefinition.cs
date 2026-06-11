@@ -18,17 +18,22 @@ namespace NeonBlack.Gameplay.Data.Definitions
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Session, 
-        Relevance = "Top-level session configuration for local and networked gameplay setup.",
-        Priority = 10,
-        AssignmentFields = new[] { nameof(sessionName), nameof(defaultGameMode), nameof(defaultParticipants) },
+        Priority = AuthoringPriority.Primary,
+        Relevance = "Root configuration for a gameplay session. Defines the boundary of your game world and network authority.",
+        AssignmentFields = new[] { nameof(sessionName), nameof(defaultGameMode), nameof(defaultParticipants), nameof(defaultInputProfile), nameof(networkMode), nameof(maxParticipants) },
         NativeSetup = new[] { "GameplaySessionBootstrap" },
-        FirstProof = "Create a Session Definition asset in the Project window and assign it to a Gameplay Session Bootstrap component.",
-        ExpertAdvice = "SessionDefinition controls the scope of your session. For multiplayer, ensure 'Local First' is false if using NGO.",
+        FirstProof = "Assign this to a GameplaySessionBootstrap in a new scene. It should be the first asset you create.",
+        ExpertAdvice = "SessionDefinition is your session's 'Law'. For local-only prototypes, keep 'Local First' checked to bypass networking overhead. Assign a Default Input Profile here to save time on per-pawn setup.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/session"
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Definitions/Session Definition", fileName = "SessionDefinition", order = 0)]
-    public class SessionDefinition : ScriptableObject
+    public class SessionDefinition : ScriptableObject, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            return GetValidationIssues();
+        }
+
         public string sessionName = "NeonBlack Gameplay Session";
         public GameplayNetworkMode networkMode = GameplayNetworkMode.LocalOnly;
         public bool localFirst = true;

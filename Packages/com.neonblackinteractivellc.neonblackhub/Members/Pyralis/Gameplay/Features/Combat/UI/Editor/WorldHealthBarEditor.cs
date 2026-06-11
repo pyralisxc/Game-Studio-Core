@@ -35,7 +35,7 @@ public class WorldHealthBarEditor : Editor
                     "Skip it for board/card/tabletop games unless pieces need world-space status markers.",
                     "Keep the health data on HealthComponent; this script is presentation only."
                 },
-                PyralisInspectorGuide.SetupManualPath("Prefabs/Health_Combat_Setup.md")),
+                PyralisInspectorGuide.AuthoringDocPath("Prefabs/Health_Combat_Setup.md")),
             new PyralisGuideSection(
                 "Beginner wiring",
                 "Most issues are references or render ordering.",
@@ -46,7 +46,7 @@ public class WorldHealthBarEditor : Editor
                     "Pick a Sorting Layer that exists in Project Settings so the bar renders above sprites.",
                     "Use Sorting Order In Layer to resolve overlap between characters, hit effects, and UI."
                 },
-                PyralisInspectorGuide.SetupManualPath("Prefabs/UI_HUD_Setup.md")),
+                PyralisInspectorGuide.AuthoringDocPath("Prefabs/UI_HUD_Setup.md")),
             new PyralisGuideSection(
                 "Path choices",
                 "Health can be shown in different places depending on genre.",

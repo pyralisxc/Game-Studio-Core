@@ -16,15 +16,15 @@ namespace NeonBlack.Gameplay.Characters
     /// Composition root for participant-owned pawns.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Movement,
+        Capability = AuthoringCapability.Movement | AuthoringCapability.Session,
         Relevance = "The root coordinator for participant-owned pawns. Handles profile application and feature installation.",
         NativeSetup = new[] { "Add to Pawn prefab root", "Assign PawnDefinition" },
         AssignmentFields = new[] { nameof(pawnDefinition) },
-        FirstProof = "Pawn spawns and receives its defined movement/combat profiles."
-    ,
-        ExpertAdvice = "The PawnRoot is the composition root. It reads the PawnDefinition and installs requested feature modules (Combat, Traversal, etc.) at runtime.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/pawns")]
-    [AddComponentMenu("NeonBlack/Gameplay/Characters/Pawn Root")]
+        FirstProof = "Pawn spawns and receives its defined movement/combat profiles.",
+        ExpertAdvice = "The PawnRoot is the composition root. It reads the PawnDefinition and installs requested feature modules (Combat, Traversal, etc.) at runtime. Pawn prefabs should not carry their own scene cameras.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/pawns"
+    )]
+[AddComponentMenu("NeonBlack/Gameplay/Characters/Pawn Root")]
     public class PawnRoot : MonoBehaviour, IPawnParticipantInitializer
     {
         [SerializeField] private PawnDefinition pawnDefinition;
@@ -33,9 +33,16 @@ namespace NeonBlack.Gameplay.Characters
         public GameModeDefinition ActiveGameMode { get; private set; }
 
         private ActorFeatureHost _featureHost;
+        private IObjectResolver _resolver;
+
+        [Inject]
+        public void Construct(IObjectResolver resolver)
+        {
+            _resolver = resolver;
+        }
 
         public void InitializeForParticipant(ParticipantHandle participant, GameModeDefinition gameMode)
-        {
+{
             Participant = participant;
             ActiveGameMode = gameMode;
 
@@ -79,12 +86,8 @@ namespace NeonBlack.Gameplay.Characters
             if (_featureHost == null)
                 _featureHost = gameObject.AddComponent<ActorFeatureHost>();
 
-            IObjectResolver resolver = null;
-            if (GameplayPlatformContext.TryResolve(out IObjectResolver currentResolver))
-                resolver = currentResolver;
-
             _featureHost.InitializeFeatures(
-                new FeatureHostInitializationContext(BuildFeatureContext(), resolver),
+                new FeatureHostInitializationContext(BuildFeatureContext(), _resolver),
                 pawnDefinition != null ? pawnDefinition.featureModules : null);
         }
 

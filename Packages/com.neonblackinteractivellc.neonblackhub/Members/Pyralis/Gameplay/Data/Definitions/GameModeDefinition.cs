@@ -10,14 +10,23 @@ namespace NeonBlack.Gameplay.Data.Definitions
     /// Data-authored game mode composition and session rules.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Session, 
+        Capability = AuthoringCapability.Rules, 
+        Priority = AuthoringPriority.Primary,
+        Lane = "Rules",
         Relevance = "Defines the specific game rules, required features, and scene setup for a gameplay session.",
-        AssignmentFields = new[] { nameof(setupProfile), nameof(cameraRigProfile), nameof(requiredFeatureModules), nameof(boardDefinition), nameof(turnOrderDefinition) },
-        FirstProof = "Assign this Game Mode Definition to a Session Definition asset."
+        AssignmentFields = new[] { nameof(setupProfile), nameof(cameraRigProfile), nameof(requiredFeatureModules), nameof(boardDefinition), nameof(turnOrderDefinition), nameof(gameplayScene) },
+        FirstProof = "Assign this Game Mode Definition to a Session Definition asset.",
+        ExpertAdvice = "GameModeDefinition is your 'Ruleset' bridge. Use 'Required Feature Modules' to inject global systems like Scoring or Weather. Ensure the 'Gameplay Scene' matches the level design intended for this mode.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/game-mode"
     )]
-    [CreateAssetMenu(menuName = "NeonBlack/Definitions/Game Mode Definition", fileName = "GameModeDefinition", order = 10)]
-    public class GameModeDefinition : ScriptableObject
+[CreateAssetMenu(menuName = "NeonBlack/Definitions/Game Mode Definition", fileName = "GameModeDefinition", order = 10)]
+    public class GameModeDefinition : ScriptableObject, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            return GetValidationIssues();
+        }
+
         [Header("Scenes")]
         public string mainMenuScene = "MainMenu";
         public string gameplayScene = "Opening";

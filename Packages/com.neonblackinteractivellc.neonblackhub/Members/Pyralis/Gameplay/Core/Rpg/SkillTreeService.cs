@@ -5,9 +5,13 @@ using NeonBlack.Gameplay.Core.Contracts.Rpg;
 namespace NeonBlack.Gameplay.Core.Rpg
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Stats | AuthoringCapability.Session,
+        Capability = AuthoringCapability.SkillTree,
+        Priority = AuthoringPriority.Primary,
         ModuleId = "rpg.skilltree",
         Lane = "RPG",
+        Relevance = "Manages character skill nodes, unlocks, and prerequisite validation.",
+        ExpertAdvice = "Rely on RpgOwnerKey for unique progression. Nodes must have unique IDs.",
+        Axioms = AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.TurnBased,
         RequiredInterfaces = new[] { typeof(ISkillTree) },
         FirstProof = "Unlock a skill and verify that its stat modifiers are applied to the character.",
         NativeSetup = new[]

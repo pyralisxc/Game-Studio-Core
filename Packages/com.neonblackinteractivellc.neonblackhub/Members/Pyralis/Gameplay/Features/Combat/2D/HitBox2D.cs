@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections;
 using System;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
@@ -17,6 +18,15 @@ namespace NeonBlack.Gameplay.Features.Combat
 ///   5. Optionally assign a WeaponData asset.
 ///   6. Call Enable() / Disable() from PlayerActions2D or via Coroutine.
 /// </summary>
+[AuthoringContract(
+    Capability = AuthoringCapability.CombatSensors,
+    Relevance = "Trigger-based 2D hitbox for melee attacks in Tilemap or 2D physics scenes.",
+    Axioms = AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.Dimensions2D,
+    NativeSetup = new[] { "Add to a child GameObject of a 2D actor.", "Assign a Trigger Collider2D." },
+    AssignmentFields = new[] { nameof(owner), nameof(weapon), nameof(hitFXPrefab), nameof(hitSFX), nameof(hitPauseSink) },
+    FirstProof = "Enable() the hitbox during an attack and verify it triggers damage on HealthComponents.",
+    ExpertAdvice = "HitBox2D uses OnTriggerEnter2D. Ensure the root actor has a Rigidbody2D and correct LayerMasks to detect the intended targets. Use 'Freeze Frame Duration' for impact weight."
+)]
 [RequireComponent(typeof(Collider2D))]
 public class HitBox2D : MonoBehaviour
 {
@@ -53,26 +63,47 @@ public class HitBox2D : MonoBehaviour
         _audio         = GetComponent<AudioSource>();
         owner        ??= GetComponentInParent<HealthComponent>()?.gameObject;
         _hitPauseSink = ResolveHitPauseSink();
-        Disable();
+        _col.enabled = false;
     }
 
-    /// <summary>Activate the hitbox for one swing - clears the already-hit set.</summary>
-    public void Enable()
+    private Coroutine _fireRoutine;
+
+    /// <summary>
+    /// Fires the hitbox for a specified duration.
+    /// If repeatRate > 0, the hit list is cleared periodically allowing multiple hits on the same target.
+    /// </summary>
+    public void Fire(float duration = 0.1f, float repeatRate = 0f)
+    {
+        if (_fireRoutine != null)
+            StopCoroutine(_fireRoutine);
+
+        _fireRoutine = StartCoroutine(FireRoutine(duration, repeatRate));
+    }
+
+    private IEnumerator FireRoutine(float duration, float repeatRate)
     {
         _hitIds.Clear();
         _col.enabled = true;
-    }
 
-    /// <summary>Deactivate the hitbox at the end of a swing.</summary>
-    public void Disable()
-    {
+        float elapsed = 0f;
+        float nextRepeatTime = repeatRate > 0f ? repeatRate : float.MaxValue;
+
+        while (elapsed < duration)
+        {
+            yield return null;
+            elapsed += Time.deltaTime;
+
+            if (elapsed >= nextRepeatTime)
+            {
+                _hitIds.Clear();
+                nextRepeatTime += repeatRate;
+            }
+        }
+
         _col.enabled = false;
         _hitIds.Clear();
+        _fireRoutine = null;
     }
-
-    // Animation event relay.
-    public void EnableHitBox()  => Enable();
-    public void DisableHitBox() => Disable();
 
     public void ConfigureDamage(float damage, float knockback)
     {

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
@@ -16,10 +17,23 @@ namespace NeonBlack.Gameplay.Features.Spawning
         "Assign prefabs or sprites.",
         "Enable Patrol if movement is needed."
     },
-    FirstProof = "Enable Auto Spawn and enter Play Mode. Verify objects appear at the spawner's location or within the spawn radius and move if Patrol is enabled."
+    FirstProof = "Enable Auto Spawn and enter Play Mode. Verify objects appear at the spawner's location.",
+    AssignmentFields = new[] { nameof(prefabs), nameof(sprites), nameof(spawnRadius), nameof(spawnInterval), nameof(maxAlive), nameof(maxTotal), nameof(patrolDistance), nameof(patrolSpeed) },
+    ExpertAdvice = "Do not enable Patrol with zero distance. Ensure at least one prefab or sprite is assigned."
 )]
-public class Spawner : MonoBehaviour
+public class Spawner : MonoBehaviour, IRuntimeValidationProvider
 {
+    public IEnumerable<string> GetRuntimeValidationIssues()
+    {
+        if ((prefabs == null || prefabs.Length == 0) && (sprites == null || sprites.Length == 0))
+            yield return "Spawner needs at least one prefab or sprite option.";
+
+        if (autoSpawn && spawnInterval <= 0f)
+            yield return "Auto Spawn enabled but Spawn Interval is <= 0.";
+
+        if (patrol && patrolDistance <= 0f)
+            yield return "Patrol enabled but Patrol Distance is <= 0.";
+    }
     [Header("Prefabs  (drag full prefabs here)")]
     [Tooltip("Drag any prefabs or sprite GameObjects here.")]
     [SerializeField] private GameObject[] prefabs;
@@ -237,8 +251,20 @@ public class Spawner : MonoBehaviour
 /// Lightweight component automatically added to every spawned object so the
 /// Spawner can track how many are still alive without needing a list.
 /// </summary>
-public class SpawnTracker : MonoBehaviour
+[AuthoringContract(
+    Capability = AuthoringCapability.Setup,
+    Relevance = "Tracks destruction of spawned objects for Spawner accounting.",
+    NativeSetup = new[] { "Automatically added by Spawner at runtime." },
+    ExpertAdvice = "Do not add this component manually to scene objects unless you are implementing a custom spawn tracker logic."
+)]
+public class SpawnTracker : MonoBehaviour, IRuntimeValidationProvider
 {
+    public IEnumerable<string> GetRuntimeValidationIssues()
+    {
+        if (GetComponents<SpawnTracker>().Length > 1)
+            yield return "Multiple SpawnTrackers on this object.";
+    }
+
     public System.Action OnDestroyed;
 
     private void OnDestroy()

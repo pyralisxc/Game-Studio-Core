@@ -19,7 +19,17 @@ namespace NeonBlack.Gameplay.Characters
     ///    Tune movement, jump, and gravity fields in the Inspector.
     ///    Assign the ground layer mask to match your terrain layer.
     /// </summary>
-    [AddComponentMenu("NeonBlack/Gameplay/3D/Pawn 3D Movement Component")]
+    [AuthoringContract(
+        Capability = AuthoringCapability.Movement,
+        PriorityValueOverride = 50,
+        Relevance = "Core 3D movement motor; handles walking, jumping, gravity, and ground detection.",
+        Axioms = AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.Dimensions3D,
+        NativeSetup = new[] { "Attach to a Pawn root with CharacterController.", "Assign Ground Layer mask." },
+        AssignmentFields = new[] { nameof(movementMode), nameof(groundLayer), nameof(walkSpeed), nameof(jumpHeight) },
+        FirstProof = "Verify the pawn can walk and jump in Play Mode.",
+        ExpertAdvice = "Movement Component uses CharacterController.Move(). Ensure the Ground Layer mask does not include the 'Player' layer to prevent the pawn from trying to ground itself on its own collider."
+    )]
+[AddComponentMenu("NeonBlack/Gameplay/3D/Pawn 3D Movement Component")]
     [RequireComponent(typeof(CharacterController))]
     public sealed class Pawn3DMovementComponent : MonoBehaviour, IPawnMotor, IMovementModule
     {

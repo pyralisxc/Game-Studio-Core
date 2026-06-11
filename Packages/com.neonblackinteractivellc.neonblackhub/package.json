@@ -1,7 +1,7 @@
 {
 	"name": "com.neonblackinteractivellc.neonblackhub",
 	"displayName":"Neon Black Hub",
-	"version": "0.1.2",
+	"version": "0.2.0",
 	"unity": "6000.4",
 	"unityRelease": "0f1",
 	"description": "Neon Black Hub is the shared gameplay package in this project. \n Its active game-facing toolkit is NeonBlack Gameplay, which now physically lives under Members/Pyralis/Gameplay. \n\n Read the README.md for setup instructions.",

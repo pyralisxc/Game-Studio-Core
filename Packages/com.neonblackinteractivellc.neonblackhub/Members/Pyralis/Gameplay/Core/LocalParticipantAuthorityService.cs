@@ -13,9 +13,11 @@ namespace NeonBlack.Gameplay.Core.Runtime
         Axioms = AuthoringWorldAxiom.None,
         RequiredInterfaces = new[] { typeof(IParticipantAuthorityService) },
         FirstProof = "Verify that IsLocalParticipant returns true in a single-player session.",
-        NativeSetup = new[] { "Implement interface in a service component" }
+        NativeSetup = new[] { "Add to Scene Service Registry or Bootstrap." },
+        ExpertAdvice = "The Local Authority service is a 'dumb' pass-through for same-machine play. It identifies all inputs as local. Use the Networked variant for online multiplayer projects.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/authority"
     )]
-    public sealed class LocalParticipantAuthorityService : IParticipantAuthorityService
+public sealed class LocalParticipantAuthorityService : IParticipantAuthorityService
 {
         public bool IsLocalParticipant(PlayerInput playerInput, int seatIndex)
         {

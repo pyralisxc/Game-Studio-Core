@@ -11,9 +11,11 @@ namespace NeonBlack.Gameplay.Features.Characters
     /// Movement, presentation, and reaction ownership live in dedicated 2D components.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Movement,
+        Capability = AuthoringCapability.KineticMotor2D,
+        Priority = AuthoringPriority.Primary,
+Lane = "Sprite2D",
         Relevance = "Canonical 2D pawn motor; coordinates movement, animations, and reactions.",
-        Axioms = AuthoringWorldAxiom.Dimensions2D,
+        Axioms = AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.Realtime,
         RequiredComponents = new[] { typeof(Pawn2DMovementComponent), typeof(Pawn2DPresentationComponent) },
         NativeSetup = new[]
         {
@@ -21,8 +23,10 @@ namespace NeonBlack.Gameplay.Features.Characters
             "Ensure Pawn2DMovementComponent and Pawn2DPresentationComponent are present.",
             "Wire sprite renderers and animators into the presentation component."
         },
-        AssignmentFields = new[] { "movement", "presentation" },
-        FirstProof = "Enter Play Mode and move the character. Verify the pawn responds to input, plays the correct 'Move' animation, and flips facing direction when changing movement horizontal intent."
+        AssignmentFields = new[] { nameof(movement), nameof(presentation) },
+        FirstProof = "Enter Play Mode and move the character. Verify the pawn responds to input and flips facing direction correctly.",
+        ExpertAdvice = "Ensure your Rigidbody2D is set to 'Interpolate' for smooth camera follow. If using Top-Down, set Gravity Scale to 0. Motor2D delegates to Movement and Presentation modules.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/movement"
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Runtime 2D/Motor 2D")]
 [RequireComponent(typeof(Pawn2DMovementComponent))]

@@ -1,42 +1,39 @@
 # Pyralis Gameplay Docs
 
-This folder contains the maintained Pyralis product, architecture, audit, roadmap, and setup documentation.
+This folder contains the living Pyralis product, setup, architecture, readiness, and validation documentation.
+
+Active docs should describe the current product truth. Dated audits, superseded plans, and historical notes belong in `_Archive/`.
 
 ## Start Here
 
-- `Setup/START_HERE.md` - beginner first-scene path.
-- `Setup/MANUAL.md` - book-style setup index.
-- `Setup/CANONICAL_SETUP.md` - technical setup contract.
-- `Setup/AUTHORING_BLUEPRINT.md` - canonical Authoring Window product and implementation blueprint.
-- `Setup/AUTHORING_MODEL.md` - asset and runtime relationship map.
-- `Setup/RUNTIME_PATTERN_COOKBOOK.md` - how to combine setup patterns honestly.
+- `Authoring/START_HERE.md` - beginner first-scene path.
+- `Authoring/README.md` - authoring-doc index.
+- `Authoring/CANONICAL_SETUP.md` - technical setup contract.
+- `Authoring/AUTHORING_MODEL.md` - asset, profile, runtime, and authoring relationship map.
+- `Authoring/AUTHORING_BLUEPRINT.md` - Authoring Window product and implementation blueprint.
+- `Authoring/RUNTIME_PATTERN_COOKBOOK.md` - composable runtime-pattern guidance.
 
-## Current Status
+## Current State And Readiness
 
-- `CURRENT_STATE_AUDIT.md` - current platform architecture status.
-- `CURRENT_ARCHETYPE_QUALITY_AUDIT_2026-05-23.md` - current mechanics/tooling quality audit by supported lane.
-
-## Current Direction
-
-- `FEATURE_DEVELOPMENT_ROADMAP.md` - executable route-completeness roadmap and priority order.
+- `CURRENT_STATE_AUDIT.md` - current platform architecture status and top risks.
+- `CORE_PACKAGE_READINESS_CHECKPOINTS.md` - near-term route gates and validation workflow.
+- `RUNTIME_PARITY_MATRIX.md` - lane and route status matrix.
+- `FEATURE_DEVELOPMENT_ROADMAP.md` - executable route-completeness roadmap.
 - `FEATURE_DEVELOPMENT_SCOPE.md` - intended platform capability scope.
-- `FEATURE_INVENTORY.md` - broad feature inventory.
-- `CORE_PACKAGE_READINESS_CHECKPOINTS.md` - near-term readiness gates and validation workflow.
+- `FEATURE_INVENTORY.md` - broad capability inventory.
+- `RPG_SYSTEMS_ROADMAP.md` - RPG platform program scope and sequencing.
 
 ## Standards
 
-- `WORK_PRODUCT_EXPECTATIONS.md` - development and quality expectations.
 - `ARCHITECTURE_BLUEPRINT.md` - target architecture and vocabulary.
 - `PLATFORM_GOVERNANCE.md` - ownership and feature-folder rules.
+- `WORK_PRODUCT_EXPECTATIONS.md` - development and quality expectations.
+- `PROOF_SCENE_POLICY.md` - temporary proof-scene policy and promotion rules.
 - `Setup/Systems/Migration_and_Readability_Standard.md` - cleanup and readability rules.
 
-## Historical Records
+## Archive
 
-These files are retained as dated history, not current source-of-truth backlog:
+- `_Archive/Plans/` - superseded planning notes.
+- `_Archive/History/` - dated audits, specs, and historical records.
 
-- `PRODUCT_DIRECTION_AUDIT_2026-05-21.md`
-- `MARKDOWN_AUDIT_2026-05-20.md`
-- `REFACTOR_WORKSPACE.md`
-- `2D_Brawler_Combo_Animation_Spec.md`
-
-When current docs and dated historical records disagree, prefer the current status and setup docs.
+When active docs and archive files disagree, follow the active docs.

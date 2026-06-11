@@ -1,11 +1,25 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
+using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rpg
 {
+    [AuthoringContract(
+        Capability = AuthoringCapability.Stats,
+        Relevance = "Defines a reusable RPG stat (e.g., Strength, Wisdom, Health).",
+        NativeSetup = new[] { "Create Asset.", "Set Stat Id and Display Name.", "Choose Category." },
+        AssignmentFields = new[] { nameof(statId), nameof(displayName), nameof(category) },
+        FirstProof = "Verify the stat is correctly displayed in character profiles and modified by equipment.",
+        ExpertAdvice = "Use categories to group related stats (e.g., 'Primary', 'Combat', 'Social') in UI and tools."
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Stat Definition", fileName = "StatDefinition")]
-    public class StatDefinition : ScriptableObject
+    public class StatDefinition : ScriptableObject, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            return GetValidationIssues();
+        }
+
         public string statId = "stat.new";
         public string displayName = "New Stat";
         public string category = "General";

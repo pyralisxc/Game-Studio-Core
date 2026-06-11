@@ -11,9 +11,17 @@ namespace NeonBlack.Gameplay.Core.Navigation
     /// Drives the company splash/intro scene.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.UI,
-        Relevance = "Handles the timed or video-backed splash screen flow.",
-        AssignmentFields = new[] { "splashVideo", "splashDuration" }
+        Capability = AuthoringCapability.Setup | AuthoringCapability.UI,
+        Relevance = "Drives the optional intro scene, plays a video or static fallback, preloads the next scene, and fades out.",
+        NativeSetup = new[] 
+        { 
+            "Assign Next Scene Name to the menu or first playable scene.",
+            "Assign Black Overlay if the splash should fade to black before activation.",
+            "For video splash, assign Video Player, Video Display, and Video Clip together."
+        },
+        AssignmentFields = new[] { nameof(_nextSceneName), nameof(_blackOverlay), nameof(_videoClip), nameof(_videoPlayer), nameof(_videoDisplay) },
+        FirstProof = "Verify the intro splash plays and transitions to the main menu successfully.",
+        ExpertAdvice = "Do not leave Next Scene Name blank; async loading will fail. Do not assign a video display without a video clip unless a static image is intentionally shown."
     )]
     public class SplashScreenController : MonoBehaviour
     {

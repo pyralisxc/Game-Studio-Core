@@ -10,13 +10,14 @@ namespace NeonBlack.Gameplay.Features.Composition
         ModuleId = "actor.feedback",
         Capability = AuthoringCapability.VFX,
         Relevance = "Publishes feedback events (damage, heal, death, status) for visual and audio presentation.",
+        ExpertAdvice = "Publish signals from logic (Combat, Pickups) to trigger visual/audio feedback on the actor.",
         ProfileType = typeof(ActorFeedbackProfile),
         RequiredInterfaces = new[] { typeof(IFeatureModuleRuntime), typeof(IActorFeedbackPublisher) },
         SupportedLanes = new[]
         {
             ActorPresentationMode.Sprite2D,
             ActorPresentationMode.Billboard2_5D,
-            ActorPresentationMode.Rigged3D
+            ActorPresentationMode.ThirdPerson3D
         },
         NativeSetup = new[]
         {
@@ -28,6 +29,7 @@ namespace NeonBlack.Gameplay.Features.Composition
             "add at least one IActorFeedbackReceiver in the actor hierarchy"
         },
         FirstProof = "Trigger a damage event and verify visual feedback (flash, popup) occurs.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/actor-feedback",
         AssignmentFields = new[]
         {
             "FeatureModuleDefinition.moduleId",

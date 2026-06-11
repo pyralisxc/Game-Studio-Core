@@ -63,14 +63,6 @@ namespace NeonBlack.Gameplay.Features.Feedback
 
         private IParticipantFeedbackPublisher ResolvePublisher()
         {
-            if (_publisher != null)
-                return _publisher;
-
-            if (GameplayPlatformContext.TryResolve(out IParticipantFeedbackPublisher publisher))
-            {
-                _publisher = publisher;
-            }
-
             return _publisher;
         }
     }

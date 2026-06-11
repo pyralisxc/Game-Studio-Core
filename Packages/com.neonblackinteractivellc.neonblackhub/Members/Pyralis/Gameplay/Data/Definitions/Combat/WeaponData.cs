@@ -1,10 +1,33 @@
-﻿using UnityEngine;
+using System.Collections.Generic;
+using NeonBlack.Gameplay.Core.Contracts;
+using UnityEngine;
 
 namespace NeonBlack.Gameplay.Features.Combat
 {
+    [AuthoringContract(
+        Capability = AuthoringCapability.Combat,
+        Relevance = "The primary definition for an actor's weapon; defines damage, timing, range, and presentation.",
+        NativeSetup = new[] { "Create Asset.", "Set Weapon Type.", "Assign Projectile or Hitbox Zone." },
+        AssignmentFields = new[] { nameof(weaponName), nameof(damage), nameof(attackCooldown) },
+        FirstProof = "Assign to a Pawn or Enemy and verify attacks trigger animations and deal damage.",
+        ExpertAdvice = "Use overrideController to change actor animations when this weapon is equipped."
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/Combat/Weapon Data", fileName = "NewWeapon")]
-    public class WeaponData : ScriptableObject
+    public class WeaponData : ScriptableObject, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            if (string.IsNullOrWhiteSpace(weaponName)) yield return "Weapon Name is required.";
+            if (damage < 0f) yield return "Damage cannot be negative.";
+            if (attackCooldown <= 0f) yield return "Attack Cooldown must be greater than zero.";
+            
+            if ((weaponType == WeaponType.Ranged || weaponType == WeaponType.Thrown) && projectileDefinition == null)
+                yield return "Ranged/thrown weapons require a Projectile Definition.";
+            
+            if (weaponType == WeaponType.Melee && string.IsNullOrWhiteSpace(hitBoxZone))
+                yield return "Melee weapons should name the actor Hit Box Zone they use.";
+        }
+
         [Header("Identity")]
         public string weaponName = "Unnamed Weapon";
         [TextArea(2, 4)] public string description = "";

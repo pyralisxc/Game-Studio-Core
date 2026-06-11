@@ -8,10 +8,18 @@ namespace NeonBlack.Gameplay.Core.Navigation
     /// Main menu controller for a panel-driven gameplay menu scene.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.UI,
-        Relevance = "Main menu controller for a panel-driven gameplay menu scene.",
-        AssignmentFields = new[] { "mainPanel", "settingsPanel", "newGameButton", "exitButton" },
-        FirstProof = "Menu buttons correctly navigate between panels or trigger scene transitions."
+        Capability = AuthoringCapability.UI | AuthoringCapability.Setup,
+        Relevance = "Main menu controller for a panel-driven gameplay menu scene; handles play/load/exit navigation.",
+        NativeSetup = new[] 
+        { 
+            "Assign Main Panel and every main menu button that should be clickable.",
+            "Assign Game Scene Name to the scene loaded by New Game.",
+            "Assign Scene Navigator Source to SceneFader or SceneLoader.",
+            "Assign each panel Back button so they can return to Main Panel."
+        },
+        AssignmentFields = new[] { nameof(mainPanel), nameof(newGameButton), nameof(exitButton), nameof(gameSceneName), nameof(sceneNavigatorSource) },
+        FirstProof = "Menu buttons correctly navigate between panels or trigger scene transitions.",
+        ExpertAdvice = "Do not leave New Game, Settings, or Exit buttons empty unless disabled. Navigation services cannot load an unnamed scene. Ensure the Scene Navigator Source is present in the menu scene."
     )]
     public class MainMenuManager : MonoBehaviour
     {

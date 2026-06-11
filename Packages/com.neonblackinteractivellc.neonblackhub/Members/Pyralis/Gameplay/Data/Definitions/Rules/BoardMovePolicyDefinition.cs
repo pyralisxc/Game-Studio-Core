@@ -34,8 +34,13 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
         NativeSetup = new[] { "Create Asset" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Rules/Board Move Policy", fileName = "BoardMovePolicy", order = -80)]
-    public class BoardMovePolicyDefinition : ScriptableObject
+    public class BoardMovePolicyDefinition : ScriptableObject, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            return GetValidationIssues();
+        }
+
         public string policyId = "policy.boardMove";
         public string displayName = "Board Move Policy";
         public BoardMoveShape shape = BoardMoveShape.OrthogonalOrDiagonal;

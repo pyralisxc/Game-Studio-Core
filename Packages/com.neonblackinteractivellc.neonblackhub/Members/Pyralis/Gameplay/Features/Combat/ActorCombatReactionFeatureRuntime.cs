@@ -10,6 +10,7 @@ namespace NeonBlack.Gameplay.Features.Combat
     [AuthoringContract(
         ModuleId = "actor.combat.reaction",
         Capability = AuthoringCapability.Combat,
+        Relevance = "Adds guard, parry, damage modification, hurt/stagger locks, and combat reaction feedback for an actor.",
         Lane = "Combat",
         ProfileType = typeof(ActorCombatReactionProfile),
         RequiredInterfaces = new[] { typeof(IFeatureModuleRuntime), typeof(IActorGuardFeature), typeof(IDamageModifier) },
@@ -18,20 +19,16 @@ namespace NeonBlack.Gameplay.Features.Combat
         ConsumedRoles = new[] { "Guard" },
         NativeSetup = new[]
         {
-            "create ActorCombatReactionProfile",
-            "create FeatureModuleDefinition",
-            "assign runtime prefab with ActorCombatReactionFeatureRuntime",
-            "assign profile asset",
-            "add module to PawnDefinition.featureModules",
-            "bind Guard in InputProfile"
+            "Create ActorCombatReactionProfile.",
+            "Create FeatureModuleDefinition.",
+            "Assign runtime prefab with ActorCombatReactionFeatureRuntime.",
+            "Assign profile asset.",
+            "Add module to PawnDefinition.featureModules.",
+            "Bind Guard in InputProfile."
         },
-        FirstProof = "proof.npc-enemy-behavior",
-        AssignmentFields = new[]
-        {
-            "FeatureModuleDefinition.moduleId",
-            "FeatureModuleDefinition.runtimePrefab",
-            "FeatureModuleDefinition.profileAsset"
-        },
+        FirstProof = "Enter Play Mode and verify guard/parry triggers correctly against enemy attacks.",
+        AssignmentFields = new[] { nameof(reactionProfile) },
+        ExpertAdvice = "Pair the actor root with HealthComponent, a movement/reaction responder, KnockbackReceiver when knockback is used, ActorAnimationDriver for guard/hurt/stagger signals, and impact feedback sinks when hit pause or camera shake is enabled.",
         CustomizationMoments = new[]
         {
             "ActorCombatReactionProfile.blockDamageReduction",

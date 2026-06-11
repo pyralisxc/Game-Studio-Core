@@ -42,7 +42,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             StringAssert.Contains("root.AddComponent<Motor3D>()", source);
             StringAssert.Contains("ActorPresentationMode.Sprite2D", source);
             StringAssert.Contains("ActorPresentationMode.Billboard2_5D", source);
-            StringAssert.Contains("ActorPresentationMode.Rigged3D", source);
+            StringAssert.Contains("ActorPresentationMode.ThirdPerson3D", source);
         }
 
         [Test]

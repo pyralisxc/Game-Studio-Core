@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Runtime;
 using UnityEngine;
@@ -5,10 +6,29 @@ using VContainer;
 
 namespace NeonBlack.Gameplay.Features.Pickups
 {
+    [AuthoringContract(
+        Capability = AuthoringCapability.Inventory,
+        Relevance = "3D collectible item that awards points and bobs in world space.",
+        Axioms = AuthoringWorldAxiom.Dimensions3D,
+        NativeSetup = new[] 
+        { 
+            "Add to a 3D prefab with a Collider (Is Trigger).",
+            "Assign an award sink if not using the global service."
+        },
+        FirstProof = "Walk an actor into the collectible and verify it disappears and awards points.",
+        AssignmentFields = new[] { nameof(bobSpeed), nameof(bobHeight), nameof(awardSinkSource) }
+    )]
     [AddComponentMenu("NeonBlack/Gameplay/Pickups/Collectible 3D")]
     [RequireComponent(typeof(Collider))]
-    public class Collectible3D : MonoBehaviour, IPickupCollectible
+    public class Collectible3D : MonoBehaviour, IPickupCollectible, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            if (GetComponent<Collider>() == null)
+                yield return "Collider is required for collection detection.";
+            else if (!GetComponent<Collider>().isTrigger)
+                yield return "Collider must be set to Is Trigger.";
+        }
         public int FeedbackScoreValue => 1;
         [SerializeField] private float bobSpeed = 2f;
         [SerializeField] private float bobHeight = 0.05f;
@@ -73,9 +93,6 @@ namespace NeonBlack.Gameplay.Features.Pickups
             IPickupAwardSink parentSink = GetComponentInParent<IPickupAwardSink>();
             if (parentSink != null)
                 return parentSink;
-
-            if (GameplayPlatformContext.TryResolve(out IPickupAwardSink serviceSink))
-                return serviceSink;
 
             return null;
         }

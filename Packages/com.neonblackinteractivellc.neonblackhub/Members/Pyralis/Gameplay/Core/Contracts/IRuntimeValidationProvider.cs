@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace NeonBlack.Gameplay.Features.Composition
+namespace NeonBlack.Gameplay.Core.Contracts
 {
     /// <summary>
     /// Optional validation surface for authored runtime components that need

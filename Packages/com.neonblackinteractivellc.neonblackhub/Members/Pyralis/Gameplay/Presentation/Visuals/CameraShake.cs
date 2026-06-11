@@ -12,18 +12,20 @@ namespace NeonBlack.Gameplay.Presentation.Visuals
         Capability = AuthoringCapability.VFX,
         Relevance = "Canonical camera shake service for gameplay impact feedback.",
         Axioms = AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.Dimensions3D,
-        RequiredInterfaces = new[] { typeof(IGameService), typeof(ICameraShakeSink) },
+        RequiredInterfaces = new[] { typeof(ICameraShakeSink) },
         NativeSetup = new[]
         {
-            "Add CameraShake to a global service GameObject.",
+            "Add CameraShake to a Bootstrap child GameObject or assign to GameplaySessionBootstrap.",
             "Assign Target Transform (camera rig root or main camera).",
             "Set Default Shake Mode (Planar2D for most games)."
         },
         AssignmentFields = new[] { nameof(targetTransform), nameof(defaultShakeMode), nameof(positionInfluence), nameof(rotationInfluence) },
-        FirstProof = "Calling Shake(intensity, duration) causes the target transform to vibrate."
+        FirstProof = "Calling Shake(intensity, duration) causes the target transform to vibrate.",
+        ExpertAdvice = "2D path: use Planar2D and mostly position influence. 3D path: use Spatial3D or PositionAndRotation with lower intensity.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/visuals"
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Camera/Camera Shake")]
-public class CameraShake : MonoBehaviour, IGameService, ICameraShakeSink
+    public class CameraShake : MonoBehaviour, ICameraShakeSink
     {
         public enum ShakeMode
         {
@@ -32,11 +34,6 @@ public class CameraShake : MonoBehaviour, IGameService, ICameraShakeSink
             RotationOnly,
             PositionAndRotation
         }
-
-        public static CameraShake Instance { get; private set; }
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStatics() => Instance = null;
 
         [Header("Target")]
         [Tooltip("Transform to shake. Assign the camera rig root, virtual camera follow root, or Camera transform that should receive shake.")]
@@ -64,19 +61,13 @@ public class CameraShake : MonoBehaviour, IGameService, ICameraShakeSink
         private void Awake()
         {
             ResolveTarget();
-            Initialize();
         }
 
-        private void OnDestroy()
+        private void OnDisable()
         {
-            Shutdown();
+            StopShake();
         }
 
-        /// <summary>
-        /// Shakes the resolved target with the default shake mode.
-        /// </summary>
-        /// <param name="intensity">Peak displacement or rotation strength. 0.15 to 0.4 is a good combat range.</param>
-        /// <param name="duration">Seconds the shake lasts. 0.1 to 0.3 for hits, 0.5+ for explosions.</param>
         public void Shake(float intensity, float duration) => Shake(intensity, duration, defaultShakeMode);
 
         public void Shake(float intensity, float duration, ShakeMode mode)
@@ -106,14 +97,21 @@ public class CameraShake : MonoBehaviour, IGameService, ICameraShakeSink
             _shakeCoroutine = StartCoroutine(ShakeRoutine(scaled, duration, mode));
         }
 
-        public void SetTarget(Transform target)
+        public void StopShake()
         {
             if (_shakeCoroutine != null)
-            {
                 StopCoroutine(_shakeCoroutine);
-                RestoreTarget();
-            }
 
+            if (_isShaking)
+                RestoreTarget();
+
+            _shakeCoroutine = null;
+            _isShaking = false;
+        }
+
+        public void SetTarget(Transform target)
+        {
+            StopShake();
             targetTransform = target;
             _activeTarget = target;
         }
@@ -194,9 +192,6 @@ public class CameraShake : MonoBehaviour, IGameService, ICameraShakeSink
 
             _shakeCoroutine = null;
             _isShaking = false;
-
-            if (Instance == this)
-                Instance = null;
         }
     }
 }

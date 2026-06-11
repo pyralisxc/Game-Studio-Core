@@ -1,4 +1,4 @@
-﻿using NeonBlack.Gameplay.Data.Definitions;
+using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Actions;
 using NeonBlack.Gameplay.Presentation.Animation;
@@ -22,9 +22,9 @@ namespace NeonBlack.Gameplay.Tests.Editor
     public class SetupDocsContractTests : PyralisEditorTestSupport
     {
         [Test]
-        public void PyralisSetupDocs_TeachSetupFlowAndStartHereBeforeManual()
+        public void PyralisAuthoringDocs_TeachSetupFlowAndStartHereAsLivingPath()
         {
-            string setupRoot = Path.Combine(
+            string authoringRoot = Path.Combine(
                 Application.dataPath,
                 "..",
                 "Packages",
@@ -33,12 +33,12 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 "Pyralis",
                 "Gameplay",
                 "Docs",
-                "Setup");
+                "Authoring");
 
-            string startHerePath = Path.Combine(setupRoot, "START_HERE.md");
-            string canonicalPath = Path.Combine(setupRoot, "CANONICAL_SETUP.md");
-            string prefabReadmePath = Path.Combine(setupRoot, "Prefabs", "README.md");
-            string bootstrapPath = Path.Combine(setupRoot, "Prefabs", "Bootstrap_Example_Setup.md");
+            string startHerePath = Path.Combine(authoringRoot, "START_HERE.md");
+            string canonicalPath = Path.Combine(authoringRoot, "CANONICAL_SETUP.md");
+            string prefabReadmePath = Path.Combine(authoringRoot, "Prefabs", "README.md");
+            string bootstrapPath = Path.Combine(authoringRoot, "Prefabs", "Bootstrap_Example_Setup.md");
 
             string startHere = File.ReadAllText(startHerePath);
             string canonical = File.ReadAllText(canonicalPath);
@@ -47,11 +47,12 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             Assert.That(startHere.Contains("Setup Flow"), Is.True);
             Assert.That(startHere.Contains("Create new `RuntimePatternDefinition` assets only when"), Is.True);
-            Assert.That(canonical.IndexOf("`Docs/Setup/START_HERE.md`", System.StringComparison.Ordinal), Is.LessThan(canonical.IndexOf("`Docs/Setup/MANUAL.md`", System.StringComparison.Ordinal)));
+            Assert.That(canonical.Contains("`Docs/Authoring/START_HERE.md`"), Is.True);
+            Assert.That(canonical.Contains("MANUAL.md"), Is.False);
             Assert.That(canonical.Contains("map Pyralis gameplay roles to your project's action names"), Is.True);
             Assert.That(canonical.Contains("The 2D input stack reads movement, dash/jump, attack"), Is.True);
             Assert.That(canonical.Contains("The 3D input stack also reads action names from the effective `InputProfile`"), Is.True);
-            Assert.That(prefabReadme.Contains("after `Docs/Setup/MANUAL.md`"), Is.False);
+            Assert.That(prefabReadme.Contains("MANUAL.md"), Is.False);
             Assert.That(bootstrap.Contains("Use manual native authoring for validation passes"), Is.True);
             Assert.That(bootstrap.Contains("Future scaffold tooling can capture a proven route later"), Is.True);
             Assert.That(startHere.Contains("Template or scaffold tooling is not the current first-test path"), Is.True);
@@ -59,9 +60,9 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void PyralisSetupDocs_DefineSetupMaintenanceContract()
+        public void PyralisAuthoringDocs_DefineSetupMaintenanceContract()
         {
-            string setupRoot = Path.Combine(
+            string authoringRoot = Path.Combine(
                 Application.dataPath,
                 "..",
                 "Packages",
@@ -70,19 +71,19 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 "Pyralis",
                 "Gameplay",
                 "Docs",
-                "Setup");
+                "Authoring");
 
-            string readme = File.ReadAllText(Path.Combine(setupRoot, "README.md"));
-            string migration = File.ReadAllText(Path.Combine(setupRoot, "Systems", "Migration_and_Readability_Standard.md"));
-            string architecture = File.ReadAllText(Path.Combine(setupRoot, "Systems", "Architecture_Overview.md"));
-            string brawlerMenu = File.ReadAllText(Path.Combine(setupRoot, "Prefabs", "Brawler_Menu_Example_Setup.md"));
+            string readme = File.ReadAllText(Path.Combine(authoringRoot, "README.md"));
+            string migration = File.ReadAllText(Path.Combine(authoringRoot, "Systems", "Migration_and_Readability_Standard.md"));
+            string architecture = File.ReadAllText(Path.Combine(authoringRoot, "Systems", "Architecture_Overview.md"));
+            string brawlerMenu = File.ReadAllText(Path.Combine(authoringRoot, "Prefabs", "Brawler_Menu_Example_Setup.md"));
 
             Assert.That(readme.Contains("Setup Maintenance Contract"), Is.True);
             Assert.That(readme.Contains("PyralisSetupRouteAnalysis"), Is.True);
             Assert.That(migration.Contains("setup guidance is product code"), Is.True);
             Assert.That(migration.Contains("shared route analysis"), Is.True);
             Assert.That(architecture.Contains("Unity-facing entry point"), Is.True);
-            Assert.That(architecture.Contains("bridges remaining `PlatformServiceRegistry` entries into VContainer"), Is.True);
+            Assert.That(architecture.Contains("PyralisGameplayLifetimeScope as the singular source of truth"), Is.True);
             Assert.That(architecture.Contains("Static `Instance` properties"), Is.True);
             AssertNoMojibake(architecture, "Architecture_Overview.md");
             Assert.That(brawlerMenu.Contains("SceneLoader.Instance.LoadScene"), Is.False);
@@ -100,7 +101,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             string readme = File.ReadAllText(Path.Combine(packageRoot, "README.md"));
 
-            Assert.That(readme.Contains("Members/Pyralis/Gameplay/Docs/Setup/START_HERE.md"), Is.True);
+            Assert.That(readme.Contains("Members/Pyralis/Gameplay/Docs/Authoring/START_HERE.md"), Is.True);
             Assert.That(readme.Contains("Setup Flow"), Is.True);
             Assert.That(readme.Contains("Project window"), Is.True);
             Assert.That(readme.Contains("right-click"), Is.True);
@@ -169,7 +170,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void SetupDocs_IncludeNoPawnTabletopGuideAndAvoidPawnRequiredContradiction()
         {
-            string setupRoot = Path.Combine(
+            string authoringRoot = Path.Combine(
                 Application.dataPath,
                 "..",
                 "Packages",
@@ -178,23 +179,19 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 "Pyralis",
                 "Gameplay",
                 "Docs",
-                "Setup");
+                "Authoring");
 
-            string canonicalPath = Path.Combine(setupRoot, "CANONICAL_SETUP.md");
-            string manualPath = Path.Combine(setupRoot, "MANUAL.md");
-            string tabletopPath = Path.Combine(setupRoot, "Prefabs", "Board_Card_Tabletop_Setup.md");
+            string canonicalPath = Path.Combine(authoringRoot, "CANONICAL_SETUP.md");
+            string tabletopPath = Path.Combine(authoringRoot, "Prefabs", "Board_Card_Tabletop_Setup.md");
 
             Assert.That(File.Exists(canonicalPath), Is.True);
-            Assert.That(File.Exists(manualPath), Is.True);
             Assert.That(File.Exists(tabletopPath), Is.True);
 
             string canonical = File.ReadAllText(canonicalPath);
-            string manual = File.ReadAllText(manualPath);
             string tabletop = File.ReadAllText(tabletopPath);
 
             Assert.That(canonical.Contains("at least one `PawnDefinition`"), Is.False);
             Assert.That(canonical.Contains("Create pawn assets only when a participant needs an actor body"), Is.True);
-            Assert.That(manual.Contains("Board_Card_Tabletop_Setup.md"), Is.True);
             Assert.That(tabletop.Contains("a player does not require a pawn"), Is.True);
             Assert.That(tabletop.Contains("leave `Default Pawn` empty"), Is.True);
             Assert.That(tabletop.Contains("TabletopBoardSelectionBridge"), Is.True);
@@ -213,7 +210,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 "Pyralis",
                 "Gameplay",
                 "Docs",
-                "Setup",
+                "Authoring",
                 "Prefabs",
                 "Pawn_Setup.md");
 

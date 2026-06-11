@@ -5,8 +5,14 @@ using NeonBlack.Gameplay.Features.Combat;
 
 namespace NeonBlack.Gameplay.Features.Characters
 {
+    [AuthoringContract(
+        Capability = AuthoringCapability.Combat | AuthoringCapability.CombatState,
+        Relevance = "Pawn module for managing outgoing damage and knockback multipliers.",
+        ExpertAdvice = "This module coordinates with the PawnDamageHandler to apply status-effect-based multipliers to all outgoing attacks.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/combat"
+    )]
     public class PawnDamageModule : MonoBehaviour, IDamageModifier, IActorCombatModifierReceiver
-    {
+{
         private PawnDamageHandler _damageHandler;
 
         public PawnDamageHandler DamageHandler => _damageHandler;

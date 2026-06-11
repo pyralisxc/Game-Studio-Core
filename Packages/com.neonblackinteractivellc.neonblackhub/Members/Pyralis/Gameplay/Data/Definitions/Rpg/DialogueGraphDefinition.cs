@@ -15,8 +15,13 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
         FirstProof = "Proof that the dialogue graph can be traversed and contains at least one terminal node."
     )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Dialogue Graph", fileName = "DialogueGraphDefinition")]
-    public class DialogueGraphDefinition : ScriptableObject, IDialogueGraph
-{
+    public class DialogueGraphDefinition : ScriptableObject, IDialogueGraph, IRuntimeValidationProvider
+    {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            return GetValidationIssues();
+        }
+
         public string graphId = "dialogue.new";
         public string displayName = "New Dialogue";
         public string startNodeId = "node.start";

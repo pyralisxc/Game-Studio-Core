@@ -1,10 +1,25 @@
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Features.Composition;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Features.Combat
 {
-    public sealed class ProjectileLauncher3D : ProjectileLauncherBase
+    [AuthoringContract(
+        Capability = AuthoringCapability.Combat,
+        Relevance = "3D projectile launcher; supports physics-based projectiles and raycast hitscan.",
+        Axioms = AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.Dimensions3D,
+        NativeSetup = new[] { "Add to a 3D scene.", "Configure Hit Mask for world geometry." },
+        AssignmentFields = new[] { nameof(hitMask) },
+        FirstProof = "Fire a hitscan attack and verify it registers on a 3D HealthComponent.",
+        ExpertAdvice = "Set Hit Mask to exclude the shooter's layer. Ensure projectile prefabs have a Rigidbody or IProjectileRuntimeBody for movement."
+    )]
+    public sealed class ProjectileLauncher3D : ProjectileLauncherBase, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            if (hitMask == 0) yield return "Hit Mask is empty. No collisions will be detected.";
+        }
         [Header("Hitscan")]
         [SerializeField] private LayerMask hitMask = Physics.DefaultRaycastLayers;
         [SerializeField] private QueryTriggerInteraction triggerInteraction = QueryTriggerInteraction.Collide;

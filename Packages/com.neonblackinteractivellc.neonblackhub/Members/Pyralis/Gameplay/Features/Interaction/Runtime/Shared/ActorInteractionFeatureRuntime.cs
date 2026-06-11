@@ -11,6 +11,7 @@ namespace NeonBlack.Gameplay.Features.Interaction
     [AuthoringContract(
         Capability = AuthoringCapability.Puzzle | AuthoringCapability.Input,
         ModuleId = "actor.interaction",
+        Relevance = "Receives interaction input and delegates it to IActorInteractionHandler components on the runtime prefab.",
         Lane = "Interaction",
         ProfileType = typeof(InteractionFeatureProfile),
         RequiredInterfaces = new[] { typeof(IFeatureModuleRuntime), typeof(IActorInteractionFeature) },
@@ -19,12 +20,13 @@ namespace NeonBlack.Gameplay.Features.Interaction
         FirstProof = "Verify that TryHandleInteraction triggers one of the attached IActorInteractionHandlers.",
         NativeSetup = new[]
         {
-            "create InteractionFeatureProfile",
-            "create FeatureModuleDefinition",
-            "assign runtime prefab with ActorInteractionFeatureRuntime",
-            "assign profile asset",
-            "add module to PawnDefinition.featureModules"
+            "Create InteractionFeatureProfile.",
+            "Create FeatureModuleDefinition.",
+            "Assign runtime prefab with ActorInteractionFeatureRuntime.",
+            "Assign profile asset.",
+            "Add module to PawnDefinition.featureModules."
         },
+        ExpertAdvice = "Sprite2D actors usually also need ActorInteractionInputBridge2D on the actor root so pawn input can reach this feature.",
         CustomizationMoments = new[]
         {
             "InteractionFeatureProfile.enableInteraction",

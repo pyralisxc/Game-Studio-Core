@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Contracts.Networking;
@@ -15,13 +16,22 @@ namespace NeonBlack.Gameplay.Characters
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Session,
-        Relevance = "Global service for tracking and broadcasting high-level gameplay session states (Playing, Paused, lobby).",
+        Relevance = "Global service for tracking high-level gameplay session states (Playing, Paused, Lobby).",
         Axioms = AuthoringWorldAxiom.None,
         RequiredInterfaces = new[] { typeof(IGameService), typeof(IGameplayStateReader) },
-        FirstProof = "Verify the session transitions from Boot to Gameplay state upon startup."
+        AssignmentFields = new[] { nameof(sessionDefinition) },
+        FirstProof = "Verify the session transitions from Boot to Gameplay state upon startup.",
+        ExpertAdvice = "SessionStateService tracks the high-level flow (Lobby -> Gameplay). Inject IGameplayStateReader to listen for phase changes in your UI or Game Logic scripts.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/session",
+        NativeSetup = new[] { "Add to GameplaySessionBootstrap child." }
     )]
-    public class SessionStateService : MonoBehaviour, IGameService, IGameplayStateReader
-{
+public class SessionStateService : MonoBehaviour, IGameService, IGameplayStateReader, IRuntimeValidationProvider
+    {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            if (sessionDefinition == null)
+                yield return "Session Definition is empty. This is expected when GameplaySessionBootstrap injects the session at runtime.";
+        }
         public enum SessionPhase
         {
             Boot,

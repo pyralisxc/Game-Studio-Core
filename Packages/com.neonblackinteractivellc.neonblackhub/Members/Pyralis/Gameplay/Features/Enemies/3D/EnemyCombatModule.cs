@@ -4,11 +4,20 @@ using UnityEngine;
 using NeonBlack.Gameplay.Features.Combat;
 using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Data.Profiles;
+using NeonBlack.Gameplay.Core.Contracts;
 
 namespace NeonBlack.Gameplay.Features.Enemies
 {
+    [AuthoringContract(
+        Capability = AuthoringCapability.Combat,
+        Relevance = "Manages enemy combat AI, attack sequencing, and hitboxes.",
+        AssignmentFields = new[] { nameof(combatProfile), nameof(hitBoxZones), nameof(attackSequence), nameof(attackMode) },
+        FirstProof = "Verify enemy attacks when player is in range.",
+        ExpertAdvice = "Use attackRangeOverride if the calculated hitbox range is inaccurate. Sequential mode is best for simple bosses.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/enemies"
+    )]
     public class EnemyCombatModule : MonoBehaviour
-    {
+{
         [Header("Combat Settings")]
         [SerializeField] private EnemyCombatProfile combatProfile;
         [SerializeField] private HitBoxSlot[] hitBoxZones;
@@ -185,8 +194,6 @@ namespace NeonBlack.Gameplay.Features.Enemies
         
         public void DisableAllHitBoxes()
         {
-            foreach (var hb in GetComponentsInChildren<HitBox>())
-                hb.Disable();
         }
     }
 }

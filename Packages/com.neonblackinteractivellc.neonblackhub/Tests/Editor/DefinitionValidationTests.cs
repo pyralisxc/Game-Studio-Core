@@ -1,4 +1,4 @@
-﻿using NeonBlack.Gameplay.Data.Definitions;
+using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Actions;
 using NeonBlack.Gameplay.Core.Contracts;
@@ -498,7 +498,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 }
             };
 
-            System.Collections.Generic.List<string> issues = PawnAnimationProfileValidation.GetValidationIssues(profile);
+            System.Collections.Generic.List<string> issues = NeonBlack.Gameplay.Editor.PawnAnimationProfileValidation.GetValidationIssues(profile);
 
             Assert.That(issues.Exists(issue => issue.Contains("IsMoving")), Is.False);
             Assert.That(issues.Exists(issue => issue.Contains("Speed") && issue.Contains("Float")), Is.True);
@@ -520,7 +520,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             profile.baseController = controller;
             profile.bindings = System.Array.Empty<ActorAnimationBinding>();
 
-            PawnAnimationProfileValidation.AppendSuggestedBindings(profile);
+            NeonBlack.Gameplay.Editor.PawnAnimationProfileValidation.AppendSuggestedBindings(profile);
 
             Assert.That(profile.bindings.Any(binding =>
                 binding.signal == ActorAnimationSignal.Move
@@ -800,10 +800,10 @@ namespace NeonBlack.Gameplay.Tests.Editor
             FeatureModuleDefinition definition = ScriptableObject.CreateInstance<FeatureModuleDefinition>();
             Assert.That(definition.SupportsPresentationMode(ActorPresentationMode.Sprite2D), Is.True);
 
-            definition.supportedPresentationModes = new[] { ActorPresentationMode.Rigged3D };
+            definition.supportedPresentationModes = new[] { ActorPresentationMode.ThirdPerson3D };
 
             Assert.That(definition.SupportsPresentationMode(ActorPresentationMode.Sprite2D), Is.False);
-            Assert.That(definition.SupportsPresentationMode(ActorPresentationMode.Rigged3D), Is.True);
+            Assert.That(definition.SupportsPresentationMode(ActorPresentationMode.ThirdPerson3D), Is.True);
 
             Object.DestroyImmediate(definition);
         }
@@ -1007,7 +1007,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             definition.moduleId = "actor.traversal.topdown-hop";
             definition.authoringCategory = "Traversal";
             definition.profileAsset = ScriptableObject.CreateInstance<PickupFeatureProfile>();
-            definition.supportedPresentationModes = new[] { ActorPresentationMode.Rigged3D };
+            definition.supportedPresentationModes = new[] { ActorPresentationMode.ThirdPerson3D };
             definition.runtimePrefab = new GameObject("TopDownHopRuntime");
             definition.runtimePrefab.AddComponent<TestFeatureRuntime>();
 
@@ -1161,7 +1161,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             FeatureModuleDefinition first = ScriptableObject.CreateInstance<FeatureModuleDefinition>();
             first.moduleId = "actor.pickups.2d";
-            first.supportedPresentationModes = new[] { ActorPresentationMode.Rigged3D };
+            first.supportedPresentationModes = new[] { ActorPresentationMode.ThirdPerson3D };
 
             FeatureModuleDefinition second = ScriptableObject.CreateInstance<FeatureModuleDefinition>();
             second.moduleId = "actor.pickups.2d";

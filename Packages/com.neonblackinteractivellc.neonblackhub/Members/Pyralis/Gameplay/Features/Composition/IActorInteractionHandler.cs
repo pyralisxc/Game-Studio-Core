@@ -10,8 +10,9 @@ namespace NeonBlack.Gameplay.Features.Composition
         Relevance = "Allows actors to detect and collect pickups (items, resources) in 2D space.",
         ProfileType = typeof(PickupFeatureProfile),
         RequiredInterfaces = new[] { typeof(IFeatureModuleRuntime), typeof(IActorInteractionHandler) },
+        ExpertAdvice = "Implementations should define how the actor reacts to nearest interactables or auto-collects pickups.",
         SupportedLanes = new[] { ActorPresentationMode.Sprite2D },
-        UnsupportedLanes = new[] { ActorPresentationMode.Billboard2_5D, ActorPresentationMode.Rigged3D },
+        UnsupportedLanes = new[] { ActorPresentationMode.Billboard2_5D, ActorPresentationMode.ThirdPerson3D },
         UnsupportedLaneMessage = "Pickups 2D should use Sprite2D-only setup when collection is authored on 2D pawns.",
         ConsumedRoles = new[] { "Interact" },
         NativeSetup = new[]
@@ -24,6 +25,7 @@ namespace NeonBlack.Gameplay.Features.Composition
             "bind Interact in InputProfile"
         },
         FirstProof = "Walk into a pickup object and verify it is collected/removed.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/actor-interaction",
         AssignmentFields = new[]
         {
             "FeatureModuleDefinition.moduleId",
@@ -48,7 +50,7 @@ namespace NeonBlack.Gameplay.Features.Composition
         Relevance = "Allows actors to detect and collect pickups (items, resources) in 3D space.",
         ProfileType = typeof(PickupFeatureProfile),
         RequiredInterfaces = new[] { typeof(IFeatureModuleRuntime), typeof(IActorInteractionHandler) },
-        SupportedLanes = new[] { ActorPresentationMode.Billboard2_5D, ActorPresentationMode.Rigged3D },
+        SupportedLanes = new[] { ActorPresentationMode.Billboard2_5D, ActorPresentationMode.ThirdPerson3D },
         UnsupportedLanes = new[] { ActorPresentationMode.Sprite2D },
         UnsupportedLaneMessage = "Pickups 3D should target Billboard2.5D and/or Rigged3D presentation modes.",
         ConsumedRoles = new[] { "Interact" },
@@ -62,6 +64,7 @@ namespace NeonBlack.Gameplay.Features.Composition
             "bind Interact in InputProfile"
         },
         FirstProof = "Walk into a pickup object and verify it is collected/removed.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/actor-interaction",
         AssignmentFields = new[]
         {
             "FeatureModuleDefinition.moduleId",

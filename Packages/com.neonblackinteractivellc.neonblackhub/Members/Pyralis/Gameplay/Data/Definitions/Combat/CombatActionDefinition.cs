@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
@@ -12,11 +13,19 @@ namespace NeonBlack.Gameplay.Features.Combat
         Relevance = "Project-window creation path for one combat action.",
         AssignmentFields = new[] { nameof(displayName), nameof(inputType), nameof(animationSignal) },
         FirstProof = "Verify the combat action triggers the correct animation and applies damage/weapon effects.",
-        NativeSetup = new[] { "Create Asset" }
+        NativeSetup = new[] { "Create Asset" },
+        ExpertAdvice = "Use comboStep to sequence multi-hit attacks. Use cooldownOverride if this move should be slower or faster than the weapon default."
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Combat/Combat Action Definition", fileName = "CombatActionDefinition")]
-    public class CombatActionDefinition : ScriptableObject
+    public class CombatActionDefinition : ScriptableObject, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            if (comboStep < 1) yield return "Combo Step must be at least 1.";
+            if (comboWindow < 0f) yield return "Combo Window cannot be negative.";
+            if (weapon == null) yield return "No Weapon Data assigned. Attack may not have damage or range stats.";
+        }
+
         public string displayName = "Combat Action";
         public CombatInputType inputType = CombatInputType.Primary;
         public CombatActionArchetype archetype = CombatActionArchetype.Strike;

@@ -9,13 +9,16 @@ using UnityEngine.Events;
 namespace NeonBlack.Gameplay.Features.Zones
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat, 
-        Relevance = "Inspector Add Component path for a 2D hazard or damage trigger.",
-        AssignmentFields = new[] { "impactProfile", "damagePerTick", "tickInterval" },
-        FirstProof = "Place the zone on a pawn and verify it takes damage over time.",
-        NativeSetup = new[] { "Add Component", "Configure Collider2D as Trigger" }
+        Capability = AuthoringCapability.Combat | AuthoringCapability.Puzzle, 
+        Axioms = AuthoringWorldAxiom.Dimensions2D,
+        Relevance = "2D trigger volume that repeatedly damages overlapping actors.",
+        AssignmentFields = new[] { nameof(impactProfile), nameof(damagePerTick), nameof(tickInterval), nameof(knockbackForce), nameof(targeting) },
+        FirstProof = "Walk an actor into the zone and verify it takes repeated damage.",
+        NativeSetup = new[] { "Place on a 2D volume.", "Assign Collider2D (Awake forces Is Trigger).", "Assign Hazard Impact Profile or use fallback fields." },
+        ExpertAdvice = "Use for floor spikes, poison gas, or area-of-effect hazards. Set Tick Interval to 0.5s for standard 'lava' feel. Ensure actors have a Rigidbody2D to trigger 2D physics events.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/combat/hazards"
     )]
-    [RequireComponent(typeof(Collider2D))]
+[RequireComponent(typeof(Collider2D))]
     [AddComponentMenu("NeonBlack/Gameplay/Zones/Damage Zone 2D")]
     public class DamageZone2D : MonoBehaviour
     {
@@ -34,6 +37,8 @@ namespace NeonBlack.Gameplay.Features.Zones
         private struct TargetState
         {
             public HealthComponent health;
+            public IActorStatusEffectReceiver statusReceiver;
+            public KnockbackReceiver knockback;
             public float timer;
         }
 
@@ -44,6 +49,7 @@ namespace NeonBlack.Gameplay.Features.Zones
         {
             Collider2D collider = GetComponent<Collider2D>();
             collider.isTrigger = true;
+            impactProfile?.Sanitize();
         }
 
         private void OnTriggerEnter2D(Collider2D other)
@@ -53,7 +59,15 @@ namespace NeonBlack.Gameplay.Features.Zones
                 return;
 
             _targetLookup.Add(health);
-            _targets.Add(new TargetState { health = health, timer = 0f });
+            
+            _targets.Add(new TargetState 
+            { 
+                health = health, 
+                statusReceiver = health.GetComponent<IActorStatusEffectReceiver>() ?? health.GetComponentInParent<IActorStatusEffectReceiver>(),
+                knockback = health.GetComponent<KnockbackReceiver>() ?? health.GetComponentInParent<KnockbackReceiver>(),
+                timer = 0f 
+            });
+            
             OnTargetEntered?.Invoke(health.gameObject);
         }
 
@@ -104,15 +118,38 @@ namespace NeonBlack.Gameplay.Features.Zones
                 _targets[i] = state;
 
                 if (impactProfile != null)
-                    HazardImpactUtility.TryApplyImpact(health.gameObject, impactProfile, gameObject, health.transform.position);
-                else
                 {
-                    health.TakeDamage(damagePerTick, health.transform.position, gameObject);
-                    if (knockbackForce > 0f)
-                    {
-                        KnockbackReceiver knockback = health.GetComponent<KnockbackReceiver>() ?? health.GetComponentInParent<KnockbackReceiver>();
-                        knockback?.ApplyKnockback(Vector3.up * knockbackForce);
-                    }
+                    ApplyImpactRefined(state, impactProfile);
+                    continue;
+                }
+
+                health.TakeDamage(damagePerTick, health.transform.position, gameObject);
+                if (knockbackForce > 0f && state.knockback != null)
+                {
+                    state.knockback.ApplyKnockback(Vector3.up * knockbackForce);
+                }
+            }
+        }
+
+        private void ApplyImpactRefined(TargetState state, HazardImpactProfile profile)
+        {
+            if (profile.damagePerTick > 0f)
+                state.health.TakeDamage(profile.damagePerTick, state.health.transform.position, gameObject);
+
+            if (profile.knockbackForce > 0f && state.knockback != null)
+            {
+                Vector3 delta = state.health.transform.position - transform.position;
+                delta.z = 0f;
+                Vector3 dir = delta.sqrMagnitude > 0.0001f ? delta.normalized : (profile.useUpwardKnockback ? Vector3.up : Vector3.right);
+                state.knockback.ApplyKnockback(dir * profile.knockbackForce);
+            }
+
+            if (state.statusReceiver != null && profile.statusEffects != null)
+            {
+                for (int i = 0; i < profile.statusEffects.Length; i++)
+                {
+                    if (profile.statusEffects[i] != null)
+                        state.statusReceiver.ApplyStatusEffect(profile.statusEffects[i], gameObject);
                 }
             }
         }

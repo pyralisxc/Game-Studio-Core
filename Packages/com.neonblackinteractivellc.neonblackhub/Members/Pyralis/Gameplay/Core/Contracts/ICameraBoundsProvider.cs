@@ -19,7 +19,12 @@ namespace NeonBlack.Gameplay.Core.Contracts
         public bool IsValid => Camera != null && HalfWidth > 0f && HalfHeight > 0f;
     }
 
-    [AuthoringContract(Capability = AuthoringCapability.Camera, Relevance = "Provides world-space boundaries for camera framing and containment.", Axioms = AuthoringWorldAxiom.BoundedSpace)]
+    [AuthoringContract(
+        Capability = AuthoringCapability.Camera, 
+        Relevance = "Provides world-space boundaries for camera framing and containment.", 
+        ExpertAdvice = "Used by the camera system to constrain movement. Ensure bounds are updated if the world changes dynamically.",
+        Axioms = AuthoringWorldAxiom.BoundedSpace,
+        DocumentationURL = "https://docs.neonblack.com/pyralis/camera-bounds")]
 public interface ICameraBoundsProvider
 {
         bool TryGetCameraBounds2D(float margin, out CameraBounds2D bounds);

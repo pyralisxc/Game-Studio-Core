@@ -51,10 +51,29 @@ namespace NeonBlack.Gameplay.Features.Hazards
         "Assign a HazardData ScriptableObject."
     },
     FirstProof = "Place a hazard in the scene and verify it executes its sequence (Slam, Crossing, etc.) on start.",
-    AssignmentFields = new[] { "_data", "_hitColliders", "_shadowRenderer" }
+    AssignmentFields = new[] { nameof(_data), nameof(_hitColliders), nameof(_shadowRenderer), nameof(_outlineRenderer), nameof(_laneRenderer), nameof(_explosionEffect), nameof(_cameraShakeSink), nameof(_settingsSource) },
+    ExpertAdvice = "Ensure a Kinematic Rigidbody2D is on the root for explosive hazards. Keep Shadow and Outline renderers on separate child objects."
 )]
-public partial class Hazard : MonoBehaviour
+public partial class Hazard : MonoBehaviour, IRuntimeValidationProvider
 {
+    public IEnumerable<string> GetRuntimeValidationIssues()
+    {
+        if (_data == null) yield return "Hazard Data is unassigned.";
+        if (_shadowRenderer == null) yield return "Shadow Renderer is unassigned.";
+        if (_hitColliders == null || _hitColliders.Count == 0) yield return "Hit Colliders list is empty.";
+
+        if (_outlineRenderer != null && _shadowRenderer != null && _outlineRenderer.gameObject == _shadowRenderer.gameObject)
+            yield return "Outline and Shadow renderers are on the same GameObject.";
+
+        if (_data != null && _data.enableExplosion)
+        {
+            if (_explosionEffect == null) yield return "Explosive hazard needs an Explosion Effect child.";
+            if (GetComponent<Rigidbody2D>() == null) yield return "Explosive hazard needs a Kinematic Rigidbody2D on root.";
+        }
+
+        if (_data != null && _data.hazardType == HazardData.HazardType.Crossing && _laneRenderer == null)
+            yield return "Crossing hazard needs a Lane Renderer.";
+    }
     [Header("Child Renderers")]
     [SerializeField] private SpriteRenderer _shadowRenderer;
     [SerializeField] private SpriteRenderer _outlineRenderer;
@@ -124,6 +143,19 @@ public partial class Hazard : MonoBehaviour
     // and breaks sprite batching, which is expensive on mobile.
     private float _outlineAlphaTimer;
     private bool _loggedFeedbackValidationIssues;
+
+    private static readonly Dictionary<float, WaitForSeconds> _waitPool = new Dictionary<float, WaitForSeconds>();
+
+    private static WaitForSeconds GetWait(float seconds)
+    {
+        seconds = (float)System.Math.Round(seconds, 2); // Round to avoid tiny variations
+        if (!_waitPool.TryGetValue(seconds, out var wait))
+        {
+            wait = new WaitForSeconds(seconds);
+            _waitPool[seconds] = wait;
+        }
+        return wait;
+    }
 
     private void Awake()
     {

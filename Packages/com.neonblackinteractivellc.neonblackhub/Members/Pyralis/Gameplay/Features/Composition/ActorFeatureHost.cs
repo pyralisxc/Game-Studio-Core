@@ -12,18 +12,48 @@ namespace NeonBlack.Gameplay.Features.Composition
     /// Installs and manages authored feature runtimes for an actor.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Setup | AuthoringCapability.Session, 
-        Relevance = "Inspector Add Component path for installing custom feature modules on an actor.",
-        AssignmentFields = new[] { "InstalledModules" },
-        FirstProof = "Assign feature module definitions and verify they are instantiated at runtime.",
-        NativeSetup = new[] { "Add Component" }
+        Capability = AuthoringCapability.Setup | AuthoringCapability.Session,
+        Relevance = "Installs runtime feature prefabs declared by actor definitions or profiles.",
+        NativeSetup = new[] 
+        { 
+            "Add one host to the actor root.", 
+            "Modules are assigned by the actor definition during initialization.",
+            "Runtime feature prefabs should contain IFeatureModuleRuntime components."
+        },
+        FirstProof = "Check the host state at runtime to verify installed modules appear in the 'Installed Modules' list.",
+        ExpertAdvice = "The ActorFeatureHost is the central manager for dynamic actor capabilities. It handles dependency injection (VContainer) for newly instantiated feature prefabs.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/composition"
     )]
-    [AddComponentMenu("NeonBlack/Gameplay/Features/Actor Feature Host")]
-    public class ActorFeatureHost : MonoBehaviour
+[AddComponentMenu("NeonBlack/Gameplay/Composition/Actor Feature Host")]
+    [DisallowMultipleComponent]
+    public class ActorFeatureHost : MonoBehaviour, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            if (GetComponents<ActorFeatureHost>().Length > 1)
+                yield return "This actor has multiple ActorFeatureHost components. Keep one host on the actor root.";
+
+            if (GetComponent("PawnRoot") == null
+                && GetComponent("Motor3D") == null
+                && GetComponent("EnemyAI") == null)
+            {
+                yield return "No known actor bootstrap component found. Ensure something calls InitializeFeatures at runtime.";
+            }
+
+            if (Application.isPlaying && InstalledModules.Count == 0)
+                yield return "No feature modules are currently installed. Check the actor definition/profile feature list.";
+        }
         private readonly List<IFeatureModuleRuntime> _featureModules = new List<IFeatureModuleRuntime>();
         private readonly List<GameObject> _featureInstances = new List<GameObject>();
         public IReadOnlyList<IFeatureModuleRuntime> InstalledModules => _featureModules;
+
+        private IObjectResolver _resolver;
+
+        [Inject]
+        public void Construct(IObjectResolver resolver)
+        {
+            _resolver = resolver;
+        }
 
         public void InitializeFeatures(FeatureHostInitializationContext initializationContext, FeatureModuleDefinition[] definitions)
         {
@@ -35,9 +65,7 @@ namespace NeonBlack.Gameplay.Features.Composition
             FeatureModuleDefinition[] orderedDefinitions = (FeatureModuleDefinition[])definitions.Clone();
             System.Array.Sort(orderedDefinitions, CompareDefinitions);
 
-            IObjectResolver resolver = null;
-            if (initializationContext.Services != null)
-                initializationContext.Services.TryResolve(out resolver);
+            IObjectResolver resolver = initializationContext.Resolver ?? _resolver;
 
             foreach (FeatureModuleDefinition definition in orderedDefinitions)
             {
@@ -47,14 +75,11 @@ namespace NeonBlack.Gameplay.Features.Composition
                 if (!definition.SupportsPresentationMode(initializationContext.ActorContext.PresentationMode))
                     continue;
 
-                GameObject instance = Instantiate(definition.runtimePrefab, transform);
+                GameObject instance = resolver != null 
+                    ? resolver.Instantiate(definition.runtimePrefab, transform)
+                    : Instantiate(definition.runtimePrefab, transform);
                 _featureInstances.Add(instance);
                 
-                if (resolver != null)
-                {
-                    resolver.InjectGameObject(instance);
-                }
-
                 MonoBehaviour[] behaviours = instance.GetComponentsInChildren<MonoBehaviour>(true);
                 for (int i = 0; i < behaviours.Length; i++)
                 {
@@ -70,17 +95,8 @@ namespace NeonBlack.Gameplay.Features.Composition
             }
         }
 
-        public void InitializeFeatures(ActorFeatureContext context, FeatureModuleDefinition[] definitions)
-        {
-            IObjectResolver resolver = null;
-            if (GameplayPlatformContext.TryResolve(out IObjectResolver currentResolver))
-                resolver = currentResolver;
-
-            InitializeFeatures(new FeatureHostInitializationContext(context, resolver), definitions);
-        }
-
         public bool TryGetInstalledFeature<T>(out T feature) where T : class
-        {
+{
             for (int i = 0; i < _featureModules.Count; i++)
             {
                 if (_featureModules[i] is T typedFeature)

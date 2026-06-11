@@ -15,10 +15,31 @@ namespace NeonBlack.Gameplay.Features.Pickups
 /// Setup: Attach to the "Spawners" GameObject.
 /// Assign _crumbPrefab (a prefab with Collectible2D component) in the Inspector.
 /// </summary>
+[AuthoringContract(
+    Capability = AuthoringCapability.Session,
+    Relevance = "Manages the collectible object pool and spawn logic for 2D sessions.",
+    Axioms = AuthoringWorldAxiom.Dimensions2D,
+    NativeSetup = new[] 
+    { 
+        "Add to the scene Spawners root.",
+        "Assign a Collectible2D prefab.",
+        "Assign Camera Bounds Source and Gameplay State Source."
+    },
+    AssignmentFields = new[] { nameof(_crumbPrefab), nameof(_poolSize), nameof(_initialCrumbCount), nameof(_spawnInterval), nameof(_minimumOnScreen), nameof(_spawnMargin), nameof(_cameraBoundsSource), nameof(_targetCamera), nameof(_gameplayStateSource) },
+    FirstProof = "Enter Play Mode and verify collectibles appear across the screen.",
+    ExpertAdvice = "Use a pool size that covers the maximum expected collectibles. Higher minimum on-screen counts ensure the player always has something to collect."
+)]
 [DefaultExecutionOrder(-10)]
 [AddComponentMenu("NeonBlack/Gameplay/Pickups/Collectible Spawner 2D")]
-public class CollectibleSpawner2D : MonoBehaviour, IPickupSpawnSurface, IPickupBurstSpawnSurface
+public class CollectibleSpawner2D : MonoBehaviour, IPickupSpawnSurface, IPickupBurstSpawnSurface, IRuntimeValidationProvider
 {
+    public IEnumerable<string> GetRuntimeValidationIssues()
+    {
+        if (_crumbPrefab == null) yield return "Crumb Prefab is unassigned.";
+        if (_poolSize < _initialCrumbCount) yield return "Pool Size is smaller than Initial Crumb Count.";
+        if (_cameraBoundsSource == null && _targetCamera == null) yield return "No camera or camera bounds source assigned.";
+        if (_gameplayStateSource == null) yield return "Gameplay State Source is unassigned.";
+    }
     [Header("Collectible Prefab")]
     [SerializeField, Tooltip("The collectible prefab (must have Collectible2D component).")]
     private GameObject _crumbPrefab;

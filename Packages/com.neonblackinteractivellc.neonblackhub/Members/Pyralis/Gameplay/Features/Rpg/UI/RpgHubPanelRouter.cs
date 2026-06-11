@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Rpg;
 using NeonBlack.Gameplay.Features.Composition;
 using UnityEngine;

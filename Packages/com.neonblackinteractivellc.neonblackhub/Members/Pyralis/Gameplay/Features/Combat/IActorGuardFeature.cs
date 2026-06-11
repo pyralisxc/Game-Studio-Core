@@ -10,6 +10,7 @@ namespace NeonBlack.Gameplay.Features.Combat
         Capability = AuthoringCapability.Combat,
         ModuleId = "actor.combat.reaction",
         Relevance = "Enables combat reactions like guarding, blocking, and parrying to reduce incoming damage.",
+        ExpertAdvice = "Requires ActorCombatReactionProfile. Ensure frontal angle is tuned for different actor orientations.",
         ProfileType = typeof(ActorCombatReactionProfile),
         RequiredInterfaces = new Type[]
         {
@@ -21,7 +22,7 @@ namespace NeonBlack.Gameplay.Features.Combat
         {
             ActorPresentationMode.Sprite2D,
             ActorPresentationMode.Billboard2_5D,
-            ActorPresentationMode.Rigged3D
+            ActorPresentationMode.ThirdPerson3D
         },
         ConsumedRoles = new[] { "Guard" },
         NativeSetup = new[]
@@ -34,6 +35,7 @@ namespace NeonBlack.Gameplay.Features.Combat
             "ensure HealthComponent and IActorReactionResponder are present on the actor root"
         },
         FirstProof = "Hold the Guard button and verify the actor's IsGuarding state becomes true.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/actor-guard",
         AssignmentFields = new[]
         {
             "FeatureModuleDefinition.moduleId",

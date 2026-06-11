@@ -11,7 +11,7 @@ namespace NeonBlack.Gameplay.Features.Feedback
     [AuthoringContract(
         ModuleId = "actor.feedback",
         Capability = AuthoringCapability.VFX,
-        Relevance = "Runtime implementation for actor feedback events, bridging health state to visual receivers.",
+        Relevance = "Listens to actor health and publishes damage, heal, death, status, score, combo, parry, stagger, guard-break, and finisher events to feedback receivers.",
         Lane = "Feedback",
         ProfileType = typeof(ActorFeedbackProfile),
         RequiredInterfaces = new[] { typeof(IFeatureModuleRuntime), typeof(IActorFeedbackPublisher) },
@@ -19,19 +19,15 @@ namespace NeonBlack.Gameplay.Features.Feedback
         RequiredComponentNames = new[] { "NeonBlack.Gameplay.Features.Combat.HealthComponent" },
         NativeSetup = new[]
         {
-            "create ActorFeedbackProfile",
-            "create FeatureModuleDefinition",
-            "assign runtime prefab with ActorFeedbackFeatureRuntime",
-            "assign profile asset",
-            "add module to PawnDefinition.featureModules"
+            "Create ActorFeedbackProfile.",
+            "Create FeatureModuleDefinition.",
+            "Assign runtime prefab with ActorFeedbackFeatureRuntime.",
+            "Assign profile asset.",
+            "Add module to PawnDefinition.featureModules."
         },
         FirstProof = "Trigger a damage event and verify visual feedback (flash, popup) occurs.",
-        AssignmentFields = new[]
-        {
-            "FeatureModuleDefinition.moduleId",
-            "FeatureModuleDefinition.runtimePrefab",
-            "FeatureModuleDefinition.profileAsset"
-        },
+        AssignmentFields = new[] { nameof(feedbackProfile) },
+        ExpertAdvice = "Add at least one IActorFeedbackReceiver, such as ActorFloatingFeedbackReceiver or ParticipantFeedbackRelay, in the actor hierarchy.",
         CustomizationMoments = new[]
         {
             "ActorFeedbackProfile.publishDamageEvents",

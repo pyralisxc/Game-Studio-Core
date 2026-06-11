@@ -1,5 +1,7 @@
+using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Presentation.Camera;
+using NeonBlack.Gameplay.Characters;
 using UnityEngine;
 using UnityEngine.Events;
 using VContainer;
@@ -8,18 +10,22 @@ namespace NeonBlack.Gameplay.Features.Zones
 {
 /// <summary>
 /// Trigger volume that switches the CinemachineCameraRigController to a chosen
-/// CameraRigProfile when the player enters, and optionally reverts to another
-/// profile on exit. Useful for transitioning between wide establishing shots
-/// and tight combat framing.
-///
-/// Setup:
-///   1. Create an empty GameObject, add a BoxCollider (Is Trigger = ON).
-///   2. Add this component.
-///   3. Assign On Enter Profile - the CameraRigProfile asset to activate on entry.
-///   4. Optionally assign On Exit Profile to revert when the player leaves.
-///      Leave empty for no revert.
-///   5. The player GameObject must have the tag: Player.
+/// CameraRigProfile when the player enters.
 /// </summary>
+[AuthoringContract(
+    Capability = AuthoringCapability.Camera | AuthoringCapability.Puzzle,
+    Relevance = "3D trigger volume that switches CameraRigProfile when the player enters.",
+    NativeSetup = new[] 
+    { 
+        "Assign On Enter Profile to the camera framing this zone should activate.",
+        "Assign Camera Rig Controller manually, or let dependency injection provide it.",
+        "Set Player Tag to the tag used by entering pawn objects."
+    },
+    AssignmentFields = new[] { nameof(onEnterProfile), nameof(onExitProfile), nameof(transitionDuration), nameof(_playerTag) },
+    FirstProof = "Enter the trigger volume with a Player-tagged object and verify the camera switches profiles.",
+    ExpertAdvice = "Combat arena path: enter a tighter profile and exit back to the default profile. Cutscene path: enable One Shot and leave On Exit Profile empty. Exploration path: use wider profiles for overlooks or large platforming spaces.",
+    DocumentationURL = "https://docs.neonblack.com/pyralis/camera"
+)]
 [AddComponentMenu("NeonBlack/Gameplay/Camera/Camera Zone 3D")]
 [RequireComponent(typeof(BoxCollider))]
 public class CameraZone : MonoBehaviour
@@ -69,7 +75,7 @@ public class CameraZone : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (!other.CompareTag(_playerTag)) return;
+        if (!IsPlayer(other.gameObject)) return;
         if (oneShot && _fired)           return;
         _fired = true;
 
@@ -79,11 +85,20 @@ public class CameraZone : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        if (!other.CompareTag(_playerTag)) return;
+        if (!IsPlayer(other.gameObject)) return;
         if (onExitProfile == null)        return;
 
         SwitchCamera(onExitProfile);
         OnPlayerExited?.Invoke();
+    }
+
+    private bool IsPlayer(GameObject go)
+    {
+        if (go.CompareTag(_playerTag))
+            return true;
+
+        // Multi-participant support: check if the object belongs to any registered participant.
+        return ParticipantQueryUtility.TryResolveParticipant(go, out _);
     }
 
     private void SwitchCamera(CameraRigProfile profile)

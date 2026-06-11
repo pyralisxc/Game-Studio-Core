@@ -156,7 +156,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             Assert.That(step.Status, Is.EqualTo(PyralisSetupFlowStepStatus.Ready));
             Assert.That(step.Message, Does.Contain("GameplaySessionBootstrap"));
-            Assert.That(step.Message, Does.Contain("PlatformServiceRegistry"));
+            Assert.That(step.Message, Does.Contain("PyralisGameplayLifetimeScope"));
             Assert.That(step.Message, Does.Contain("PyralisGameplayLifetimeScope"));
             Assert.That(step.Message, Does.Contain("not hidden global lookups"));
 
@@ -1777,7 +1777,7 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
         {
             PyralisAuthoringIntentModel tabletop = PyralisAuthoringIntentAdvisor.Build(
                 new PyralisAuthoringIntentSelection(
-                    RuntimeCapabilityLaneTag.TabletopNoPawn,
+                    RuntimeCapabilityLaneTag.TabletopBoard,
                     AuthoringCapability.Tabletop | AuthoringCapability.Camera,
                     AuthoringWorldAxiom.TurnBased));
 
@@ -1789,7 +1789,7 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
 
             PyralisAuthoringIntentModel networking = PyralisAuthoringIntentAdvisor.Build(
                 new PyralisAuthoringIntentSelection(
-                    RuntimeCapabilityLaneTag.Networked,
+                    RuntimeCapabilityLaneTag.Mixed,
                     AuthoringCapability.Networking,
                     AuthoringWorldAxiom.None));
 
@@ -1812,7 +1812,7 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
                 "Proof",
                 goalTags: new[] { "Movement" },
                 laneTags: new[] { RuntimeCapabilityLaneTag.Sprite2D.ToString() },
-                unsupportedLaneTags: new[] { RuntimeCapabilityLaneTag.Rigged3D.ToString() },
+                unsupportedLaneTags: new[] { RuntimeCapabilityLaneTag.ThirdPerson3D.ToString() },
                 capability: AuthoringCapability.Movement);
             PyralisAuthoringFact rigged = new PyralisAuthoringFact(
                 "test.rigged-capability",
@@ -1824,11 +1824,11 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
                 "Used to prove lane ranking.",
                 "Proof",
                 goalTags: new[] { "Movement" },
-                laneTags: new[] { RuntimeCapabilityLaneTag.Rigged3D.ToString() },
+                laneTags: new[] { RuntimeCapabilityLaneTag.ThirdPerson3D.ToString() },
                 capability: AuthoringCapability.Movement);
 
             PyralisAuthoringIntentModel model = PyralisAuthoringIntentAdvisor.Build(
-                new PyralisAuthoringIntentSelection(RuntimeCapabilityLaneTag.Rigged3D, AuthoringCapability.Movement, AuthoringWorldAxiom.None),
+                new PyralisAuthoringIntentSelection(RuntimeCapabilityLaneTag.ThirdPerson3D, AuthoringCapability.Movement, AuthoringWorldAxiom.None),
                 new[] { spriteOnly, rigged });
 
             Assert.That(FindIntentRow(model.Recommendations, "test.rigged-capability"), Is.Not.Null);

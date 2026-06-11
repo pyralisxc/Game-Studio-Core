@@ -32,7 +32,7 @@ namespace NeonBlack.Gameplay.Features.Enemies.Editor
                 new PyralisGuideSection(
                     "What This Is",
                     whatThisIs,
-                    manualPath: PyralisInspectorGuide.SetupManualPath("RUNTIME_PATTERN_COOKBOOK.md")),
+                    manualPath: PyralisInspectorGuide.AuthoringDocPath("RUNTIME_PATTERN_COOKBOOK.md")),
                 new PyralisGuideSection(
                     "Feature Module Fields",
                     null,

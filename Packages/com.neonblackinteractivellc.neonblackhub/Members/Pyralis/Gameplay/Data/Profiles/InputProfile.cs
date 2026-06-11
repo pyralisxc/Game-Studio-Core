@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -5,7 +6,7 @@ using UnityEngine.InputSystem;
 namespace NeonBlack.Gameplay.Data.Profiles
 {
     public enum GameplayInputActionRole
-{
+    {
         Move,
         Look,
         Jump,
@@ -108,15 +109,16 @@ namespace NeonBlack.Gameplay.Data.Profiles
     }
 
     /// <summary>
-     /// Authoring profile for participant input ownership and preferred control schemes.
-     /// </summary>
+    /// Authoring profile for participant input ownership and preferred control schemes.
+    /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Input,
+        Priority = AuthoringPriority.AuxiliaryDefault,
+        Lane = "Input",
         Relevance = "Maps high-level gameplay actions (Move, Jump, Interact) to Unity Input System actions.",
         Axioms = AuthoringWorldAxiom.None,
-        Priority = 10,
         ProfileType = typeof(InputProfile),
-        AssignmentFields = new[] { nameof(actions), nameof(actionBindings) },
+        AssignmentFields = new[] { nameof(actions), nameof(actionBindings), nameof(primaryActionMap) },
         FirstProof = "Verify that input actions mapped in this profile correctly drive character movement and actions.",
         ExpertAdvice = "InputProfile decouples gameplay logic from physical keys. Use the action role to map common verbs (Jump, Dash) across different control schemes.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/input",
@@ -128,8 +130,86 @@ namespace NeonBlack.Gameplay.Data.Profiles
         }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Input Profile", fileName = "InputProfile", order = -90)]
-    public class InputProfile : ScriptableObject
-{
+    public class InputProfile : ScriptableObject, IRuntimeValidationProvider
+    {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            List<string> issues = new List<string>();
+
+            if (actions == null)
+                issues.Add("Actions should be assigned for player-owned input. Leave it empty only for AI/system-only usage.");
+
+            if (string.IsNullOrWhiteSpace(primaryActionMap))
+                issues.Add("Primary Action Map should name the gameplay action map.");
+            else if (actions != null)
+            {
+                InputActionMap map = actions.FindActionMap(primaryActionMap, throwIfNotFound: false);
+                if (map == null)
+                    issues.Add($"Primary Action Map '{primaryActionMap}' was not found in Actions.");
+                else
+                {
+                    AddBindingIssues(issues);
+                }
+            }
+
+            if (!supportsGamepad && !supportsKeyboardMouse && !touchFriendly)
+                issues.Add("At least one input surface should be supported for player-owned input.");
+
+            return issues;
+        }
+
+        private void AddBindingIssues(List<string> issues)
+        {
+            if (actionBindings == null || actionBindings.Length == 0)
+            {
+                issues.Add("Add at least one Gameplay Action row. Player-owned pawn proofs require Move.");
+                return;
+            }
+
+            HashSet<string> keys = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+            bool hasRequiredMove = false;
+
+            for (int i = 0; i < actionBindings.Length; i++)
+            {
+                GameplayInputActionBinding binding = actionBindings[i];
+                if (binding == null)
+                {
+                    issues.Add($"Gameplay Actions[{i}] is empty.");
+                    continue;
+                }
+
+                string key = binding.EffectiveKey;
+                if (!string.IsNullOrWhiteSpace(key) && !keys.Add(key))
+                    issues.Add($"Gameplay Actions contains duplicate role/key '{key}'. Remove the duplicate row.");
+
+                if (binding.role == GameplayInputActionRole.Move && binding.requiredForProof)
+                    hasRequiredMove = true;
+
+                if (string.IsNullOrWhiteSpace(binding.actionName))
+                {
+                    issues.Add($"Gameplay Actions[{i}] has no Unity Action Name.");
+                    continue;
+                }
+
+                string mapName = binding.GetActionMap(primaryActionMap);
+                InputActionMap map = actions.FindActionMap(mapName, throwIfNotFound: false);
+                if (map == null)
+                {
+                    issues.Add($"Gameplay Actions[{i}] uses Action Map '{mapName}', but that map was not found in Actions.");
+                    continue;
+                }
+
+                if (map.FindAction(binding.actionName, throwIfNotFound: false) == null)
+                {
+                    string severity = binding.requiredForProof ? "Required" : "Optional";
+                    issues.Add($"{severity} action '{binding.actionName}' for {key} was not found in Action Map '{map.name}'. Update the row or add the action to the Input Action Asset.");
+                }
+            }
+
+            if (!hasRequiredMove)
+                issues.Add("Player-owned pawn proofs need a required Move action row. Add Built-In Action > Move or mark the existing Move row required.");
+        }
+
         [Tooltip("Primary input action asset used by this participant or pawn definition.")]
         public InputActionAsset actions;
         [Tooltip("Default action map name expected by shared and compatibility input bridges.")]
@@ -165,8 +245,8 @@ namespace NeonBlack.Gameplay.Data.Profiles
             if (preferredControlSchemes == null)
                 return;
 
-            System.Collections.Generic.HashSet<string> seenSchemes = new System.Collections.Generic.HashSet<string>();
-            System.Collections.Generic.List<string> sanitizedSchemes = new System.Collections.Generic.List<string>();
+            HashSet<string> seenSchemes = new HashSet<string>();
+            List<string> sanitizedSchemes = new List<string>();
             for (int i = 0; i < preferredControlSchemes.Length; i++)
             {
                 string scheme = preferredControlSchemes[i];

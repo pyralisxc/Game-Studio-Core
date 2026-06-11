@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Rpg;
 using NeonBlack.Gameplay.Data.Definitions.Rpg;
 using NeonBlack.Gameplay.Features.Composition;

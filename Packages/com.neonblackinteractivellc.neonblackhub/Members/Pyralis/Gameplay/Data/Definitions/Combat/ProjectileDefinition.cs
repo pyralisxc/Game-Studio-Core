@@ -13,8 +13,13 @@ namespace NeonBlack.Gameplay.Features.Combat
         NativeSetup = new[] { "Create Asset" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Combat/Projectile Definition", fileName = "ProjectileDefinition")]
-    public class ProjectileDefinition : ScriptableObject
+    public class ProjectileDefinition : ScriptableObject, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            return GetValidationIssues();
+        }
+
         public string projectileId = "projectile.new";
         public string displayName = "Projectile";
         public ProjectileDeliveryMode deliveryMode = ProjectileDeliveryMode.ProjectilePrefab;

@@ -15,8 +15,13 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
         NativeSetup = new[] { "Create Asset" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Rules/Board Piece Definition", fileName = "BoardPieceDefinition", order = -90)]
-    public class BoardPieceDefinition : ScriptableObject
+    public class BoardPieceDefinition : ScriptableObject, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            return GetValidationIssues();
+        }
+
         public string pieceId = "piece.default";
         public string displayName = "Piece";
         public string pieceFamily = "General";

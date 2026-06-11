@@ -11,7 +11,7 @@ namespace NeonBlack.Gameplay.Features.Enemies
         ModuleId = "enemy.reaction",
         ProfileType = typeof(EnemyReactionProfile),
         RequiredInterfaces = new[] { typeof(IFeatureModuleRuntime), typeof(IEnemyReactionState) },
-        SupportedLanes = new[] { ActorPresentationMode.Billboard2_5D, ActorPresentationMode.Rigged3D },
+        SupportedLanes = new[] { ActorPresentationMode.Billboard2_5D, ActorPresentationMode.ThirdPerson3D },
         FirstProof = "Verify that IsReactionLocked is true when the enemy is staggered or hit.",
         NativeSetup = new[]
         {

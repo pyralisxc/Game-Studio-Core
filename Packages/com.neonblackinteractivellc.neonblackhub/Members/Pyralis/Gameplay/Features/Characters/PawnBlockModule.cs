@@ -1,11 +1,20 @@
 using UnityEngine;
 using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Characters;
+using NeonBlack.Gameplay.Core.Contracts;
 
 namespace NeonBlack.Gameplay.Features.Characters
 {
+    [AuthoringContract(
+        Capability = AuthoringCapability.Combat | AuthoringCapability.TacticsDefensive,
+        Relevance = "Pawn module for blocking and damage reduction.",
+        AssignmentFields = new[] { nameof(blockDamageReduction), nameof(blockFrontalAngle) },
+        FirstProof = "Hold the block button and verify damage from the front is reduced.",
+        ExpertAdvice = "Block frontal angle defines the 'safe zone' for incoming damage. 90 degrees covers the entire forward hemisphere.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/combat"
+    )]
     public class PawnBlockModule : MonoBehaviour
-    {
+{
         [Header("Block Settings")]
         [Range(0f, 1f)]
         [SerializeField] private float blockDamageReduction = 0.2f;

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
 using NeonBlack.Gameplay.Core.Contracts;
@@ -12,11 +13,18 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Relevance = "Project-window creation path for settings and menu defaults.",
         AssignmentFields = new[] { nameof(mixer), nameof(defaultMusicVolume), nameof(defaultSfxVolume) },
         FirstProof = "Check that volumes are applied correctly in the main menu.",
-        NativeSetup = new[] { "Create Asset" }
+        NativeSetup = new[] { "Create Asset" },
+        ExpertAdvice = "SettingsProfile provides initial values for the user's preferences. Ensure your AudioMixer has parameters exposed with the names 'MusicVolume' and 'SfxVolume'.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/core"
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Settings Profile", fileName = "SettingsProfile", order = -10)]
-    public class SettingsProfile : ScriptableObject
+    public class SettingsProfile : ScriptableObject, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            if (mixer == null) yield return "Audio Mixer is missing.";
+        }
+
         public AudioMixer mixer;
         public float defaultMusicVolume = 1f;
         public float defaultSfxVolume = 1f;

@@ -16,7 +16,7 @@ namespace NeonBlack.Gameplay.Features.Pickups
         ProfileType = typeof(PickupFeatureProfile),
         RequiredInterfaces = new[] { typeof(IFeatureModuleRuntime), typeof(IActorInteractionHandler) },
         RequiredComponentNames = new[] { "UnityEngine.Collider" }, // Or CharacterController
-        SupportedLanes = new[] { ActorPresentationMode.Billboard2_5D, ActorPresentationMode.Rigged3D },
+        SupportedLanes = new[] { ActorPresentationMode.Billboard2_5D, ActorPresentationMode.ThirdPerson3D },
         UnsupportedLanes = new[] { ActorPresentationMode.Sprite2D },
         NativeSetup = new[]
         {

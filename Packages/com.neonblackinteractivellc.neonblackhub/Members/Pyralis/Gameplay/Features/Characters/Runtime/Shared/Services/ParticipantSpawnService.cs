@@ -1,7 +1,9 @@
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using VContainer;
+using VContainer.Unity;
 
 namespace NeonBlack.Gameplay.Characters
 {
@@ -16,25 +18,41 @@ namespace NeonBlack.Gameplay.Characters
         Relevance = "Orchestrates participant spawning at designated spawn points during session initialization.",
         Axioms = AuthoringWorldAxiom.None,
         RequiredInterfaces = new[] { typeof(IGameService) },
-        FirstProof = "Register a participant and verify their pawn is spawned at the correct spawn point."
+        AssignmentFields = new[] { nameof(rosterService), nameof(sessionStateService), nameof(spawnPoints) },
+        FirstProof = "Register a participant and verify their pawn is spawned at the correct spawn point.",
+        NativeSetup = new[] { "Add to GameplaySessionBootstrap child.", "Assign Spawn Point transforms." },
+        ExpertAdvice = "Spawns pawns based on ParticipantDefinitions. If your game doesn't use physical pawns (e.g., pure UI or Card games), you can leave Spawn Points empty or disable 'Spawn On Register'.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/participants"
     )]
-    public class ParticipantSpawnService : MonoBehaviour, IGameService
-{
+public class ParticipantSpawnService : MonoBehaviour, IGameService, IRuntimeValidationProvider
+    {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            if (rosterService == null)
+                yield return "Roster Service is empty. This is expected when GameplaySessionBootstrap injects it at runtime.";
+            if (sessionStateService == null)
+                yield return "Session State Service is empty. This is expected when GameplaySessionBootstrap injects it at runtime.";
+            if (spawnPoints == null || spawnPoints.Length == 0)
+                yield return "Spawn Points is empty. Add spawn points for pawn-backed games.";
+        }
         [SerializeField] private ParticipantRosterService rosterService;
         [SerializeField] private SessionStateService sessionStateService;
         [SerializeField] private Transform[] spawnPoints;
         [SerializeField] private bool spawnOnRegister = true;
         [SerializeField] private bool replaceExistingPawn = true;
 
+        private IObjectResolver _resolver;
+
         [Inject]
-        private void Construct(ParticipantRosterService injectedRosterService = null, SessionStateService injectedSessionStateService = null)
+        private void Construct(IObjectResolver resolver, ParticipantRosterService injectedRosterService = null, SessionStateService injectedSessionStateService = null)
         {
+            _resolver = resolver;
             rosterService ??= injectedRosterService;
             sessionStateService ??= injectedSessionStateService;
         }
 
         private void Start()
-        {
+{
             Initialize();
         }
 
@@ -112,7 +130,9 @@ namespace NeonBlack.Gameplay.Characters
             }
 
             Vector3 spawnPosition = ResolveSpawnPosition(participant.SeatIndex);
-            GameObject instance = Instantiate(participant.PawnDefinition.pawnPrefab, spawnPosition, Quaternion.identity);
+            GameObject instance = _resolver != null 
+                ? _resolver.Instantiate(participant.PawnDefinition.pawnPrefab, spawnPosition, Quaternion.identity)
+                : Instantiate(participant.PawnDefinition.pawnPrefab, spawnPosition, Quaternion.identity);
             participant.AttachPawn(instance);
             InitializePawnInstance(instance, participant);
 

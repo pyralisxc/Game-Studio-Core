@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -93,7 +94,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(contract.RequiredRuntimeInterfaceNames, Does.Contain("NeonBlack.Gameplay.Core.Contracts.IActorGameplayActionReceiver"));
             Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Sprite2D), Is.True);
             Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Billboard2_5D), Is.True);
-            Assert.That(contract.IsExplicitlyUnsupported(ActorPresentationMode.Rigged3D), Is.True);
+            Assert.That(contract.IsExplicitlyUnsupported(ActorPresentationMode.ThirdPerson3D), Is.True);
             Assert.That(contract.ConsumedActionRoles, Does.Contain("Jump"));
             Assert.That(contract.FirstProofTargetId, Is.EqualTo("proof.1p-pawn-movement"));
             Assert.That(contract.Confidence, Is.EqualTo(PyralisAuthoringConfidence.Explicit));
@@ -112,7 +113,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(fact.RequiredPrefabComponents, Does.Contain("IActorGameplayActionReceiver"));
             Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Sprite2D)));
             Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Billboard2_5D)));
-            Assert.That(fact.UnsupportedLaneTags, Does.Contain(nameof(ActorPresentationMode.Rigged3D)));
+            Assert.That(fact.UnsupportedLaneTags, Does.Contain(nameof(ActorPresentationMode.ThirdPerson3D)));
             Assert.That(fact.RelatedStableIds, Does.Contain("proof.1p-pawn-movement"));
             Assert.That(fact.FirstProof, Is.EqualTo("proof.1p-pawn-movement"));
         }
@@ -127,7 +128,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(contract.RequiredRuntimeInterfaceNames, Does.Contain("NeonBlack.Gameplay.Features.Composition.IFeatureModuleRuntime"));
             Assert.That(contract.RequiredRuntimeInterfaceNames, Does.Contain("NeonBlack.Gameplay.Features.Traversal.IActorTraversalFeature"));
             Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Billboard2_5D), Is.True);
-            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Rigged3D), Is.True);
+            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.ThirdPerson3D), Is.True);
             Assert.That(contract.IsExplicitlyUnsupported(ActorPresentationMode.Sprite2D), Is.True);
             Assert.That(contract.FirstProofTargetId, Is.EqualTo("proof.npc-enemy-behavior"));
             Assert.That(contract.Confidence, Is.EqualTo(PyralisAuthoringConfidence.Explicit));
@@ -144,7 +145,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(fact.RequiredPrefabComponents, Does.Contain("IFeatureModuleRuntime"));
             Assert.That(fact.RequiredPrefabComponents, Does.Contain("IActorTraversalFeature"));
             Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Billboard2_5D)));
-            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Rigged3D)));
+            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.ThirdPerson3D)));
             Assert.That(fact.UnsupportedLaneTags, Does.Contain(nameof(ActorPresentationMode.Sprite2D)));
             Assert.That(fact.RelatedStableIds, Does.Contain("proof.npc-enemy-behavior"));
         }
@@ -187,7 +188,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(contract.StableId, Is.EqualTo("feature.enemy.reaction"));
             Assert.That(contract.FirstProofTargetId, Is.EqualTo("proof.npc-enemy-behavior"));
             Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Billboard2_5D), Is.True);
-            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Rigged3D), Is.True);
+            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.ThirdPerson3D), Is.True);
             Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Sprite2D), Is.False);
             Assert.That(contract.Confidence, Is.EqualTo(PyralisAuthoringConfidence.Explicit));
         }
@@ -204,7 +205,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(fact.RequiredPrefabComponents, Does.Contain("IFeatureModuleRuntime"));
             Assert.That(fact.RequiredPrefabComponents, Does.Contain("IEnemyReactionState"));
             Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Billboard2_5D)));
-            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Rigged3D)));
+            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.ThirdPerson3D)));
             Assert.That(fact.LaneTags, Does.Not.Contain(nameof(ActorPresentationMode.Sprite2D)));
             Assert.That(fact.RelatedStableIds, Does.Contain("proof.npc-enemy-behavior"));
             Assert.That(fact.FirstProof, Is.EqualTo("proof.npc-enemy-behavior"));
@@ -221,7 +222,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(contract.StableId, Is.EqualTo("feature.enemy.ambient"));
             Assert.That(contract.FirstProofTargetId, Is.EqualTo("proof.npc-enemy-behavior"));
             Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Billboard2_5D), Is.True);
-            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Rigged3D), Is.True);
+            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.ThirdPerson3D), Is.True);
             Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Sprite2D), Is.False);
             Assert.That(contract.Confidence, Is.EqualTo(PyralisAuthoringConfidence.Explicit));
         }
@@ -237,7 +238,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(fact.RequiredProfiles, Does.Contain(nameof(EnemyAmbientFeatureProfile)));
             Assert.That(fact.RequiredPrefabComponents, Does.Contain("IFeatureModuleRuntime"));
             Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Billboard2_5D)));
-            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Rigged3D)));
+            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.ThirdPerson3D)));
             Assert.That(fact.LaneTags, Does.Not.Contain(nameof(ActorPresentationMode.Sprite2D)));
             Assert.That(fact.RelatedStableIds, Does.Contain("proof.npc-enemy-behavior"));
             Assert.That(fact.FirstProof, Is.EqualTo("proof.npc-enemy-behavior"));
@@ -254,7 +255,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(contract.RequiredRuntimeInterfaceNames, Does.Contain("NeonBlack.Gameplay.Features.Composition.IActorInteractionHandler"));
             Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Sprite2D), Is.True);
             Assert.That(contract.IsExplicitlyUnsupported(ActorPresentationMode.Billboard2_5D), Is.True);
-            Assert.That(contract.IsExplicitlyUnsupported(ActorPresentationMode.Rigged3D), Is.True);
+            Assert.That(contract.IsExplicitlyUnsupported(ActorPresentationMode.ThirdPerson3D), Is.True);
             Assert.That(contract.FirstProofTargetId, Is.EqualTo("proof.custom-object-effect"));
             Assert.That(contract.ConsumedActionRoles, Does.Contain("Interact"));
             Assert.That(contract.Confidence, Is.EqualTo(PyralisAuthoringConfidence.Explicit));
@@ -273,7 +274,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(fact.RequiredPrefabComponents, Does.Contain("IActorInteractionHandler"));
             Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Sprite2D)));
             Assert.That(fact.UnsupportedLaneTags, Does.Contain(nameof(ActorPresentationMode.Billboard2_5D)));
-            Assert.That(fact.UnsupportedLaneTags, Does.Contain(nameof(ActorPresentationMode.Rigged3D)));
+            Assert.That(fact.UnsupportedLaneTags, Does.Contain(nameof(ActorPresentationMode.ThirdPerson3D)));
             Assert.That(fact.RelatedStableIds, Does.Contain("proof.custom-object-effect"));
             Assert.That(fact.FirstProof, Is.EqualTo("proof.custom-object-effect"));
         }
@@ -288,7 +289,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(contract.RequiredRuntimeInterfaceNames, Does.Contain("NeonBlack.Gameplay.Features.Composition.IFeatureModuleRuntime"));
             Assert.That(contract.RequiredRuntimeInterfaceNames, Does.Contain("NeonBlack.Gameplay.Features.Composition.IActorInteractionHandler"));
             Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Billboard2_5D), Is.True);
-            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Rigged3D), Is.True);
+            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.ThirdPerson3D), Is.True);
             Assert.That(contract.IsExplicitlyUnsupported(ActorPresentationMode.Sprite2D), Is.True);
             Assert.That(contract.FirstProofTargetId, Is.EqualTo("proof.custom-object-effect"));
             Assert.That(contract.Confidence, Is.EqualTo(PyralisAuthoringConfidence.Explicit));
@@ -306,7 +307,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(fact.RequiredPrefabComponents, Does.Contain("IFeatureModuleRuntime"));
             Assert.That(fact.RequiredPrefabComponents, Does.Contain("IActorInteractionHandler"));
             Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Billboard2_5D)));
-            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Rigged3D)));
+            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.ThirdPerson3D)));
             Assert.That(fact.UnsupportedLaneTags, Does.Contain(nameof(ActorPresentationMode.Sprite2D)));
             Assert.That(fact.RelatedStableIds, Does.Contain("proof.custom-object-effect"));
             Assert.That(fact.FirstProof, Is.EqualTo("proof.custom-object-effect"));
@@ -324,7 +325,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(contract.RequiredRuntimeInterfaceNames, Does.Contain("NeonBlack.Gameplay.Core.Contracts.IDamageModifier"));
             Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Sprite2D), Is.True);
             Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Billboard2_5D), Is.True);
-            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Rigged3D), Is.True);
+            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.ThirdPerson3D), Is.True);
             Assert.That(contract.ConsumedActionRoles, Does.Contain("Guard"));
             Assert.That(contract.FirstProofTargetId, Is.EqualTo("proof.npc-enemy-behavior"));
             Assert.That(contract.Confidence, Is.EqualTo(PyralisAuthoringConfidence.Explicit));
@@ -343,7 +344,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(fact.RequiredPrefabComponents, Does.Contain("IDamageModifier"));
             Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Sprite2D)));
             Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Billboard2_5D)));
-            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Rigged3D)));
+            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.ThirdPerson3D)));
             Assert.That(fact.RelatedStableIds, Does.Contain("proof.npc-enemy-behavior"));
         }
 
@@ -359,7 +360,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(contract.RequiredRuntimeInterfaceNames, Does.Contain("NeonBlack.Gameplay.Core.Contracts.IDamageModifier"));
             Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Sprite2D), Is.True);
             Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Billboard2_5D), Is.True);
-            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Rigged3D), Is.True);
+            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.ThirdPerson3D), Is.True);
             Assert.That(contract.FirstProofTargetId, Is.EqualTo("proof.custom-object-effect"));
             Assert.That(contract.Confidence, Is.EqualTo(PyralisAuthoringConfidence.Explicit));
         }
@@ -377,7 +378,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(fact.RequiredPrefabComponents, Does.Contain("IDamageModifier"));
             Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Sprite2D)));
             Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Billboard2_5D)));
-            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Rigged3D)));
+            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.ThirdPerson3D)));
             Assert.That(fact.RelatedStableIds, Does.Contain("proof.custom-object-effect"));
         }
 
@@ -392,7 +393,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(contract.RequiredRuntimeInterfaceNames, Does.Contain("NeonBlack.Gameplay.Features.Composition.IActorFeedbackPublisher"));
             Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Sprite2D), Is.True);
             Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Billboard2_5D), Is.True);
-            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.Rigged3D), Is.True);
+            Assert.That(contract.SupportsPresentationMode(ActorPresentationMode.ThirdPerson3D), Is.True);
             Assert.That(contract.FirstProofTargetId, Is.EqualTo("proof.ui-hud-menu"));
             Assert.That(contract.Confidence, Is.EqualTo(PyralisAuthoringConfidence.Explicit));
         }
@@ -409,7 +410,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(fact.RequiredPrefabComponents, Does.Contain("IActorFeedbackPublisher"));
             Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Sprite2D)));
             Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Billboard2_5D)));
-            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.Rigged3D)));
+            Assert.That(fact.LaneTags, Does.Contain(nameof(ActorPresentationMode.ThirdPerson3D)));
             Assert.That(fact.RelatedStableIds, Does.Contain("proof.ui-hud-menu"));
         }
 
@@ -424,8 +425,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             Assert.That(issues.Exists(issue => issue.Contains("TopDownHopProfile")), Is.True);
 
-            Object.DestroyImmediate(definition.profileAsset);
-            Object.DestroyImmediate(definition);
+            UnityEngine.Object.DestroyImmediate(definition.profileAsset);
+            UnityEngine.Object.DestroyImmediate(definition);
         }
 
         [Test]
@@ -433,13 +434,13 @@ namespace NeonBlack.Gameplay.Tests.Editor
         {
             FeatureModuleDefinition definition = ScriptableObject.CreateInstance<FeatureModuleDefinition>();
             definition.moduleId = "actor.traversal.topdown-hop";
-            definition.supportedPresentationModes = new[] { ActorPresentationMode.Rigged3D };
+            definition.supportedPresentationModes = new[] { ActorPresentationMode.ThirdPerson3D };
 
             List<string> issues = NeonBlack.Gameplay.Editor.PyralisFeatureModuleContractValidator.GetValidationIssues(definition);
 
             Assert.That(issues.Exists(issue => issue.Contains("Rigged3D actors should use the 3D traversal jump path")), Is.True);
 
-            Object.DestroyImmediate(definition);
+            UnityEngine.Object.DestroyImmediate(definition);
         }
 
         [Test]
@@ -503,8 +504,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(rows[0].State, Is.EqualTo(PyralisAuthoringContractProofState.ProofNotRunInPlayMode));
             Assert.That(rows[0].PlayModeProofRequired, Is.True);
 
-            Object.DestroyImmediate(mode);
-            Object.DestroyImmediate(module);
+            UnityEngine.Object.DestroyImmediate(mode);
+            UnityEngine.Object.DestroyImmediate(module);
         }
 
         [Test]
@@ -525,9 +526,9 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(rows[0].HasUnsupportedLaneCaution, Is.True);
             Assert.That(rows[0].ActiveLane, Is.EqualTo(ActorPresentationMode.Sprite2D));
 
-            Object.DestroyImmediate(pawn);
-            Object.DestroyImmediate(presentation);
-            Object.DestroyImmediate(module);
+            UnityEngine.Object.DestroyImmediate(pawn);
+            UnityEngine.Object.DestroyImmediate(presentation);
+            UnityEngine.Object.DestroyImmediate(module);
         }
 
         [Test]
@@ -542,5 +543,34 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(definitionSource.Contains("expects an ActorCombatReactionProfile profile asset"), Is.False);
             Assert.That(definitionSource.Contains("runtime prefab should expose IActorGuardFeature"), Is.False);
         }
+
+        [Test]
+        public void DeprecatedContracts_EnforceHardDeletionDeadlines()
+        {
+            string path = Path.Combine(GameplayRoot, "..", "..", "package.json");
+            Assert.That(File.Exists(path), Is.True);
+            
+            string jsonRaw = File.ReadAllText(path);
+            var packageDef = JsonUtility.FromJson<PackageJsonRaw>(jsonRaw);
+            Version currentPackageVersion = new Version(packageDef.version);
+
+            foreach (var fact in PyralisAuthoringFactRegistry.AllFacts)
+            {
+                if (fact.Priority >= (int)AuthoringPriority.Deprecated)
+                {
+                    if (!string.IsNullOrEmpty(fact.RemovableInVersion))
+                    {
+                        Version expirationVersion = new Version(fact.RemovableInVersion);
+                        
+                        Assert.That(currentPackageVersion, Is.LessThan(expirationVersion),
+                            $"DEPRECATION DEADLINE REACHED: '{fact.DisplayName}' was scheduled for physical deletion in version {expirationVersion}. " +
+                            $"Active package version is {currentPackageVersion}. Physically delete this script to restore build compliance.");
+                    }
+                }
+            }
+        }
+
+        [Serializable]
+        private class PackageJsonRaw { public string version; }
     }
 }

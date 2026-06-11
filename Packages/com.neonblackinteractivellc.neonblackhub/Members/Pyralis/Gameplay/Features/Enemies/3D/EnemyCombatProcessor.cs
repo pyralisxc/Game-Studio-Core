@@ -240,9 +240,8 @@ namespace NeonBlack.Gameplay.Features.Enemies
                 col.transform.localScale = originalScale * radiusScale;
             }
 
-            box.Enable(damage, knockback);
+            box.Fire(damage, knockback);
             yield return new WaitForSeconds(Mathf.Max(duration, 0.01f));
-            box.Disable();
 
             if (col != null)
                 col.transform.localScale = originalScale;

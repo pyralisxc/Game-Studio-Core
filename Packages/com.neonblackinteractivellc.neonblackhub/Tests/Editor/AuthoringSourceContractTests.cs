@@ -23,6 +23,56 @@ namespace NeonBlack.Gameplay.Tests.Editor
 {
     public class AuthoringSourceContractTests : PyralisEditorTestSupport
     {
+        private static string GameplayEditorRoot => Path.Combine(
+            Application.dataPath,
+            "..",
+            "Packages",
+            "com.neonblackinteractivellc.neonblackhub",
+            "Members",
+            "Pyralis",
+            "Gameplay",
+            "Editor");
+
+        private static string FindGameplayEditorFile(string fileName)
+        {
+            string[] matches = Directory.GetFiles(GameplayEditorRoot, fileName, SearchOption.AllDirectories);
+            Assert.That(matches.Length, Is.EqualTo(1), $"Expected one Gameplay Editor file named {fileName}.");
+            return matches[0];
+        }
+
+        private static string GameplayEditorLayer(params string[] segments)
+        {
+            string path = GameplayEditorRoot;
+            foreach (string segment in segments)
+            {
+                path = Path.Combine(path, segment);
+            }
+
+            return path;
+        }
+
+        [Test]
+        public void PyralisEditor_Source_OrganizesAuthoringBySpineAndSurface()
+        {
+            Assert.That(Directory.Exists(GameplayEditorLayer("Authoring", "Spine", "Facts")), Is.True);
+            Assert.That(Directory.Exists(GameplayEditorLayer("Authoring", "Spine", "Routes")), Is.True);
+            Assert.That(Directory.Exists(GameplayEditorLayer("Authoring", "Spine", "Validation")), Is.True);
+            Assert.That(Directory.Exists(GameplayEditorLayer("Authoring", "Spine", "Evidence")), Is.True);
+            Assert.That(Directory.Exists(GameplayEditorLayer("Authoring", "Surfaces", "AuthoringWindow")), Is.True);
+            Assert.That(Directory.Exists(GameplayEditorLayer("Authoring", "Surfaces", "Inspectors")), Is.True);
+            Assert.That(Directory.Exists(GameplayEditorLayer("Authoring", "Surfaces", "Tools")), Is.True);
+
+            Assert.That(File.Exists(GameplayEditorLayer("Authoring", "README.md")), Is.True);
+            Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Spine", "README.md")), Is.True);
+            Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Surfaces", "README.md")), Is.True);
+            Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Spine", "Facts", "PyralisAuthoringFactRegistry.cs")), Is.True);
+            Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Spine", "Routes", "PyralisAuthoringRouteProof.cs")), Is.True);
+            Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Spine", "Validation", "PyralisSetupFlowValidator.cs")), Is.True);
+            Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Surfaces", "AuthoringWindow", "PyralisAuthoringWindow.cs")), Is.True);
+            Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Surfaces", "AuthoringWindow", "UI", "PyralisAuthoringWindow.uxml")), Is.True);
+            Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Surfaces", "Inspectors", "PyralisInspectorGuide.cs")), Is.True);
+        }
+
         [Test]
         public void PyralisEditor_Source_ExposesRuntimePatternAndGameSetupInspectors()
         {
@@ -36,14 +86,14 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 "Gameplay",
                 "Editor");
 
-            string runtimePatternEditorPath = Path.Combine(editorRoot, "RuntimePatternDefinitionEditor.cs");
-            string gameSetupEditorPath = Path.Combine(editorRoot, "GameSetupProfileEditor.cs");
-            string authoringWindowPath = Path.Combine(editorRoot, "PyralisAuthoringWindow.cs");
-            string routeReportPath = Path.Combine(editorRoot, "PyralisAuthoringRouteReport.cs");
-            string setupRouteAnalysisPath = Path.Combine(editorRoot, "PyralisSetupRouteAnalysis.cs");
-            string overviewPath = Path.Combine(editorRoot, "PyralisAuthoringOverviewSnapshot.cs");
-            string sceneSurfaceGuidancePath = Path.Combine(editorRoot, "PyralisAuthoringSceneSurfaceGuidance.cs");
-            string setupFlowMonitorPath = Path.Combine(editorRoot, "PyralisSetupFlowMonitor.cs");
+            string runtimePatternEditorPath = FindGameplayEditorFile("RuntimePatternDefinitionEditor.cs");
+            string gameSetupEditorPath = FindGameplayEditorFile("GameSetupProfileEditor.cs");
+            string authoringWindowPath = FindGameplayEditorFile("PyralisAuthoringWindow.cs");
+            string routeReportPath = FindGameplayEditorFile("PyralisAuthoringRouteReport.cs");
+            string setupRouteAnalysisPath = FindGameplayEditorFile("PyralisSetupRouteAnalysis.cs");
+            string overviewPath = FindGameplayEditorFile("PyralisAuthoringOverviewSnapshot.cs");
+            string sceneSurfaceGuidancePath = FindGameplayEditorFile("PyralisAuthoringSceneSurfaceGuidance.cs");
+            string setupFlowMonitorPath = FindGameplayEditorFile("PyralisSetupFlowMonitor.cs");
 
             Assert.That(File.Exists(runtimePatternEditorPath), Is.True);
             Assert.That(File.Exists(gameSetupEditorPath), Is.True);
@@ -61,10 +111,10 @@ namespace NeonBlack.Gameplay.Tests.Editor
             string overviewSource = File.ReadAllText(overviewPath);
             string sceneSurfaceGuidanceSource = File.ReadAllText(sceneSurfaceGuidancePath);
             string setupFlowMonitorSource = File.ReadAllText(setupFlowMonitorPath);
-            string routeProofSource = File.ReadAllText(Path.Combine(editorRoot, "PyralisAuthoringRouteProof.cs"));
-            string factorySource = File.ReadAllText(Path.Combine(editorRoot, "GameplayStarterPackFactory.cs"));
-            string runtimePatternAuthoringText = File.ReadAllText(Path.Combine(editorRoot, "RuntimePatternAuthoringText.cs"));
-            string inputProfileEditorSource = File.ReadAllText(Path.Combine(editorRoot, "InputProfileEditor.cs"));
+            string routeProofSource = File.ReadAllText(FindGameplayEditorFile("PyralisAuthoringRouteProof.cs"));
+            string factorySource = File.ReadAllText(FindGameplayEditorFile("GameplayStarterPackFactory.cs"));
+            string runtimePatternAuthoringText = File.ReadAllText(FindGameplayEditorFile("RuntimePatternAuthoringText.cs"));
+            string inputProfileEditorSource = File.ReadAllText(FindGameplayEditorFile("InputProfileEditor.cs"));
             string inputProfileSource = File.ReadAllText(Path.Combine(
                 Application.dataPath,
                 "..",
@@ -146,7 +196,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(authoringWindow.Contains("Open In Inspector"), Is.True);
             Assert.That(authoringWindow.Contains("Pyralis components on this GameObject"), Is.True);
             Assert.That(authoringWindow.Contains("RuntimePatternAuthoringText.GetSuggestedDescription"), Is.True);
-            Assert.That(File.ReadAllText(Path.Combine(editorRoot, "GameplaySessionBootstrapEditor.cs")).Contains("defaultOpen: true"), Is.True);
+            Assert.That(File.ReadAllText(FindGameplayEditorFile("GameplaySessionBootstrapEditor.cs")).Contains("defaultOpen: true"), Is.True);
             Assert.That(inputProfileSource.Contains("Gameplay Actions"), Is.True);
             Assert.That(inputProfileSource.Contains("actionBindings"), Is.True);
             Assert.That(inputProfileSource.Contains("GameplayInputActionRole"), Is.True);
@@ -217,7 +267,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(authoringWindow.Contains("Use Suggested"), Is.False);
             Assert.That(authoringWindow.Contains("Mark Common"), Is.False);
             Assert.That(authoringWindow.Contains("ApplyIntentGoalDefaults"), Is.False);
-            Assert.That(File.ReadAllText(Path.Combine(editorRoot, "PyralisAuthoringIntentAdvisor.cs")).Contains("GetDefaultGoals"), Is.False);
+            Assert.That(File.ReadAllText(FindGameplayEditorFile("PyralisAuthoringIntentAdvisor.cs")).Contains("GetDefaultGoals"), Is.False);
             Assert.That(authoringWindow.Contains("Matched Intent Families"), Is.True);
             Assert.That(authoringWindow.Contains("Active Authoring Focus"), Is.True);
             Assert.That(authoringWindow.Contains("DrawSemanticHelpBox(report.NextStep"), Is.True);
@@ -445,7 +495,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 "Gameplay",
                 "Editor");
 
-            string guidePath = Path.Combine(editorRoot, "PyralisInspectorGuide.cs");
+            string guidePath = FindGameplayEditorFile("PyralisInspectorGuide.cs");
 
             Assert.That(File.Exists(guidePath), Is.True);
 
@@ -485,7 +535,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             for (int i = 0; i < guidedInspectorFiles.Length; i++)
             {
-                string inspectorPath = Path.Combine(editorRoot, guidedInspectorFiles[i]);
+                string inspectorPath = FindGameplayEditorFile(guidedInspectorFiles[i]);
                 Assert.That(File.Exists(inspectorPath), Is.True, guidedInspectorFiles[i]);
 
                 string inspectorSource = File.ReadAllText(inspectorPath);
@@ -521,7 +571,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             for (int i = 0; i < guidedProfileInspectors.Length; i++)
             {
-                string inspectorPath = Path.Combine(editorRoot, guidedProfileInspectors[i]);
+                string inspectorPath = FindGameplayEditorFile(guidedProfileInspectors[i]);
                 Assert.That(File.Exists(inspectorPath), Is.True, guidedProfileInspectors[i]);
 
                 string inspectorSource = File.ReadAllText(inspectorPath);
@@ -550,7 +600,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             for (int i = 0; i < routeHelperInspectors.Length; i++)
             {
-                string inspectorPath = Path.Combine(editorRoot, routeHelperInspectors[i]);
+                string inspectorPath = FindGameplayEditorFile(routeHelperInspectors[i]);
                 Assert.That(File.Exists(inspectorPath), Is.True, routeHelperInspectors[i]);
 
                 string inspectorSource = File.ReadAllText(inspectorPath);
@@ -601,7 +651,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             for (int i = 0; i < guidedFeatureAndCombatInspectors.Length; i++)
             {
-                string inspectorPath = Path.Combine(editorRoot, guidedFeatureAndCombatInspectors[i]);
+                string inspectorPath = FindGameplayEditorFile(guidedFeatureAndCombatInspectors[i]);
                 Assert.That(File.Exists(inspectorPath), Is.True, guidedFeatureAndCombatInspectors[i]);
 
                 string inspectorSource = File.ReadAllText(inspectorPath);
@@ -636,7 +686,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             for (int i = 0; i < guidedMainEditorInspectors.Length; i++)
             {
-                string inspectorPath = Path.Combine(editorRoot, guidedMainEditorInspectors[i]);
+                string inspectorPath = FindGameplayEditorFile(guidedMainEditorInspectors[i]);
                 Assert.That(File.Exists(inspectorPath), Is.True, guidedMainEditorInspectors[i]);
 
                 string inspectorSource = File.ReadAllText(inspectorPath);
@@ -671,7 +721,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 "Gameplay",
                 "Editor");
 
-            string inspectorPath = Path.Combine(editorRoot, "GameplaySessionBootstrapEditor.cs");
+            string inspectorPath = FindGameplayEditorFile("GameplaySessionBootstrapEditor.cs");
             string gameplayRoot = Path.Combine(
                 Application.dataPath,
                 "..",
@@ -725,14 +775,14 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 "Gameplay",
                 "Editor");
 
-            string typesPath = Path.Combine(editorRoot, "PyralisSetupFlowTypes.cs");
-            string guidancePath = Path.Combine(editorRoot, "PyralisSetupFlowGuidance.cs");
-            string validatorPath = Path.Combine(editorRoot, "PyralisSetupFlowValidator.cs");
-            string resolverPath = Path.Combine(editorRoot, "PyralisRuntimeSystemClaimResolver.cs");
-            string sceneReadinessPath = Path.Combine(editorRoot, "PyralisSceneReadinessValidator.cs");
-            string bootstrapEditorPath = Path.Combine(editorRoot, "GameplaySessionBootstrapEditor.cs");
-            string authoringWindowPath = Path.Combine(editorRoot, "PyralisAuthoringWindow.cs");
-            string routeReportPath = Path.Combine(editorRoot, "PyralisAuthoringRouteReport.cs");
+            string typesPath = FindGameplayEditorFile("PyralisSetupFlowTypes.cs");
+            string guidancePath = FindGameplayEditorFile("PyralisSetupFlowGuidance.cs");
+            string validatorPath = FindGameplayEditorFile("PyralisSetupFlowValidator.cs");
+            string resolverPath = FindGameplayEditorFile("PyralisRuntimeSystemClaimResolver.cs");
+            string sceneReadinessPath = FindGameplayEditorFile("PyralisSceneReadinessValidator.cs");
+            string bootstrapEditorPath = FindGameplayEditorFile("GameplaySessionBootstrapEditor.cs");
+            string authoringWindowPath = FindGameplayEditorFile("PyralisAuthoringWindow.cs");
+            string routeReportPath = FindGameplayEditorFile("PyralisAuthoringRouteReport.cs");
 
             Assert.That(File.Exists(typesPath), Is.True);
             Assert.That(File.Exists(guidancePath), Is.True);
@@ -806,7 +856,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 "Pyralis",
                 "Gameplay");
             string bridgePath = Path.Combine(gameplayRoot, "Core", "Rules", "Board", "TabletopBoardSelectionBridge.cs");
-            string editorPath = Path.Combine(gameplayRoot, "Editor", "TabletopBoardSelectionBridgeEditor.cs");
+            string editorPath = FindGameplayEditorFile("TabletopBoardSelectionBridgeEditor.cs");
 
             Assert.That(File.Exists(bridgePath), Is.True);
             Assert.That(File.Exists(editorPath), Is.True);
@@ -837,7 +887,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 "Pyralis",
                 "Gameplay");
             string presenterPath = Path.Combine(gameplayRoot, "Features", "Tabletop", "TabletopBoardGridPresenter.cs");
-            string editorPath = Path.Combine(gameplayRoot, "Editor", "TabletopBoardGridPresenterEditor.cs");
+            string editorPath = FindGameplayEditorFile("TabletopBoardGridPresenterEditor.cs");
             string setupDocPath = Path.Combine(gameplayRoot, "Docs", "Setup", "Prefabs", "Board_Card_Tabletop_Setup.md");
 
             Assert.That(File.Exists(presenterPath), Is.True);
@@ -946,16 +996,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void PyralisAuthoringWindow_Source_PrioritizesRouteAndStarterPacksOverRawRuntimePatternCreation()
         {
-            string authoringWindowPath = Path.Combine(
-                Application.dataPath,
-                "..",
-                "Packages",
-                "com.neonblackinteractivellc.neonblackhub",
-                "Members",
-                "Pyralis",
-                "Gameplay",
-                "Editor",
-                "PyralisAuthoringWindow.cs");
+            string authoringWindowPath = FindGameplayEditorFile("PyralisAuthoringWindow.cs");
 
             string source = File.ReadAllText(authoringWindowPath);
             Assert.That(source.Contains("Guided Setup Route"), Is.True);
@@ -980,13 +1021,13 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 "Gameplay",
                 "Editor");
 
-            string analysisPath = Path.Combine(editorRoot, "PyralisSetupRouteAnalysis.cs");
-            string monitorPath = Path.Combine(editorRoot, "PyralisSetupFlowMonitor.cs");
-            string authoringPath = Path.Combine(editorRoot, "PyralisAuthoringWindow.cs");
-            string routeReportPath = Path.Combine(editorRoot, "PyralisAuthoringRouteReport.cs");
-            string routeDescriptorPath = Path.Combine(editorRoot, "PyralisAuthoringRouteDescriptor.cs");
-            string featureAdvisorPath = Path.Combine(editorRoot, "PyralisAuthoringFeatureAdvisor.cs");
-            string sceneSurfacePath = Path.Combine(editorRoot, "PyralisAuthoringSceneSurfaceSnapshot.cs");
+            string analysisPath = FindGameplayEditorFile("PyralisSetupRouteAnalysis.cs");
+            string monitorPath = FindGameplayEditorFile("PyralisSetupFlowMonitor.cs");
+            string authoringPath = FindGameplayEditorFile("PyralisAuthoringWindow.cs");
+            string routeReportPath = FindGameplayEditorFile("PyralisAuthoringRouteReport.cs");
+            string routeDescriptorPath = FindGameplayEditorFile("PyralisAuthoringRouteDescriptor.cs");
+            string featureAdvisorPath = FindGameplayEditorFile("PyralisAuthoringFeatureAdvisor.cs");
+            string sceneSurfacePath = FindGameplayEditorFile("PyralisAuthoringSceneSurfaceSnapshot.cs");
 
             Assert.That(File.Exists(analysisPath), Is.True);
             Assert.That(File.Exists(routeReportPath), Is.True);
@@ -1026,7 +1067,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 "Pyralis",
                 "Gameplay");
 
-            string inspectorGuidePath = Path.Combine(gameplayRoot, "Editor", "PyralisInspectorGuide.cs");
+            string inspectorGuidePath = FindGameplayEditorFile("PyralisInspectorGuide.cs");
             string pawnStackEditorPath = Path.Combine(gameplayRoot, "Editor", "Pawn3DStackEditors.cs");
             string traversalEditorPath = Path.Combine(gameplayRoot, "Features", "Traversal", "Editor", "Pawn3DTraversalComponentEditor.cs");
             string motorPath = Path.Combine(gameplayRoot, "Features", "Characters", "3D", "Motor3D.cs");
@@ -1089,8 +1130,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 "Gameplay",
                 "Editor");
 
-            string projectileEditorSource = File.ReadAllText(Path.Combine(editorRoot, "ProjectileDefinitionEditor.cs"));
-            string fireModeEditorSource = File.ReadAllText(Path.Combine(editorRoot, "FireModeDefinitionEditor.cs"));
+            string projectileEditorSource = File.ReadAllText(FindGameplayEditorFile("ProjectileDefinitionEditor.cs"));
+            string fireModeEditorSource = File.ReadAllText(FindGameplayEditorFile("FireModeDefinitionEditor.cs"));
 
             Assert.That(projectileEditorSource.Contains("IProjectileRuntimeBody"), Is.True);
             Assert.That(projectileEditorSource.Contains("Projectile for 3D prefabs or Projectile2D"), Is.True);
@@ -1264,7 +1305,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 "Gameplay");
 
             string editorPath = Path.Combine(gameplayRoot, "Editor", "ActorFeatureRuntimeGuidedEditors.cs");
-            string contractGuideTextPath = Path.Combine(gameplayRoot, "Editor", "PyralisInspectorGuide.cs");
+            string contractGuideTextPath = FindGameplayEditorFile("PyralisInspectorGuide.cs");
             string editorAsmdefPath = Path.Combine(gameplayRoot, "Editor", "NeonBlack.Gameplay.Editor.asmdef");
             string hostPath = Path.Combine(gameplayRoot, "Features", "Composition", "ActorFeatureHost.cs");
             string combatReactionPath = Path.Combine(gameplayRoot, "Features", "Combat", "ActorCombatReactionFeatureRuntime.cs");
@@ -1818,7 +1859,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 "Gameplay",
                 "Editor");
 
-            string inspectorPath = Path.Combine(editorRoot, "PrefabRuntimeGuidedEditors.cs");
+            string inspectorPath = FindGameplayEditorFile("PrefabRuntimeGuidedEditors.cs");
             string asmdefPath = Path.Combine(editorRoot, "NeonBlack.Gameplay.Editor.asmdef");
             string gameplayRoot = Directory.GetParent(editorRoot).FullName;
             string enemyEditorPath = Path.Combine(gameplayRoot, "Features", "Enemies", "3D", "Editor", "EnemyAIEditor.cs");
@@ -1901,7 +1942,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 "Pyralis",
                 "Gameplay");
 
-            string sceneViewToolsPath = Path.Combine(gameplayRoot, "Editor", "SceneViewTools.cs");
+            string sceneViewToolsPath = FindGameplayEditorFile("SceneViewTools.cs");
             string inputZoneSetPath = Path.Combine(gameplayRoot, "Features", "Input", "2D", "InputZoneSet.cs");
             string inputZoneEditorPath = Path.Combine(gameplayRoot, "Features", "Input", "2D", "Editor", "InputZoneSetEditor.cs");
             string orientationHandlerPath = Path.Combine(gameplayRoot, "Features", "UI", "UIOrientationHandler.cs");
@@ -2027,18 +2068,18 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 "Gameplay");
 
             string editorRoot = Path.Combine(gameplayRoot, "Editor");
-            string catalogPath = Path.Combine(editorRoot, "PyralisRuntimeCapabilityCatalog.cs");
-            string factTypesPath = Path.Combine(editorRoot, "Authoring", "Facts", "PyralisAuthoringFactTypes.cs");
-            string factRegistryPath = Path.Combine(editorRoot, "Authoring", "Facts", "PyralisAuthoringFactRegistry.cs");
-            string conventionRegistryPath = Path.Combine(editorRoot, "Authoring", "Facts", "PyralisAuthoringConventionFactRegistry.cs");
-            string conventionFactsPath = Path.Combine(editorRoot, "Authoring", "Facts", "PyralisConventionAuthoringFacts.cs");
-            string routeCoverageFactsPath = Path.Combine(editorRoot, "Authoring", "Facts", "PyralisRouteCoverageFacts.cs");
-            string sceneSurfaceFactsPath = Path.Combine(editorRoot, "Authoring", "Facts", "PyralisSceneSurfaceEvidenceFacts.cs");
-            string inspectorHandoffFactsPath = Path.Combine(editorRoot, "Authoring", "Facts", "PyralisInspectorHandoffFacts.cs");
-            string setupFlowMonitorPath = Path.Combine(editorRoot, "PyralisSetupFlowMonitor.cs");
-            string routeProofPath = Path.Combine(editorRoot, "PyralisAuthoringRouteProof.cs");
-            string authoringWindowPath = Path.Combine(editorRoot, "PyralisAuthoringWindow.cs");
-            string intentAdvisorPath = Path.Combine(editorRoot, "PyralisAuthoringIntentAdvisor.cs");
+            string catalogPath = FindGameplayEditorFile("PyralisRuntimeCapabilityCatalog.cs");
+            string factTypesPath = Path.Combine(editorRoot, "Authoring", "Spine", "Facts", "PyralisAuthoringFactTypes.cs");
+            string factRegistryPath = Path.Combine(editorRoot, "Authoring", "Spine", "Facts", "PyralisAuthoringFactRegistry.cs");
+            string conventionRegistryPath = Path.Combine(editorRoot, "Authoring", "Spine", "Facts", "PyralisAuthoringConventionFactRegistry.cs");
+            string conventionFactsPath = Path.Combine(editorRoot, "Authoring", "Spine", "Facts", "PyralisConventionAuthoringFacts.cs");
+            string routeCoverageFactsPath = Path.Combine(editorRoot, "Authoring", "Spine", "Facts", "PyralisRouteCoverageFacts.cs");
+            string sceneSurfaceFactsPath = Path.Combine(editorRoot, "Authoring", "Spine", "Facts", "PyralisSceneSurfaceEvidenceFacts.cs");
+            string inspectorHandoffFactsPath = Path.Combine(editorRoot, "Authoring", "Spine", "Facts", "PyralisInspectorHandoffFacts.cs");
+            string setupFlowMonitorPath = FindGameplayEditorFile("PyralisSetupFlowMonitor.cs");
+            string routeProofPath = FindGameplayEditorFile("PyralisAuthoringRouteProof.cs");
+            string authoringWindowPath = FindGameplayEditorFile("PyralisAuthoringWindow.cs");
+            string intentAdvisorPath = FindGameplayEditorFile("PyralisAuthoringIntentAdvisor.cs");
             string authoringBlueprintPath = Path.Combine(gameplayRoot, "Docs", "Setup", "AUTHORING_BLUEPRINT.md");
             string roadmapPath = Path.Combine(gameplayRoot, "Docs", "FEATURE_DEVELOPMENT_ROADMAP.md");
 
@@ -2063,7 +2104,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             string routeProofSource = File.ReadAllText(routeProofPath);
             string authoringWindowSource = File.ReadAllText(authoringWindowPath);
             string intentAdvisorSource = File.ReadAllText(intentAdvisorPath);
-            string sceneSurfaceGuidanceSource = File.ReadAllText(Path.Combine(editorRoot, "PyralisAuthoringSceneSurfaceGuidance.cs"));
+            string sceneSurfaceGuidanceSource = File.ReadAllText(FindGameplayEditorFile("PyralisAuthoringSceneSurfaceGuidance.cs"));
             string authoringBlueprint = File.ReadAllText(authoringBlueprintPath);
             string roadmap = File.ReadAllText(roadmapPath);
 

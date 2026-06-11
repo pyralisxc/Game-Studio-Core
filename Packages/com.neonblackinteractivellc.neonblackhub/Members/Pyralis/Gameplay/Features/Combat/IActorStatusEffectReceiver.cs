@@ -11,6 +11,7 @@ namespace NeonBlack.Gameplay.Features.Combat
         Capability = AuthoringCapability.Combat | AuthoringCapability.Stats,
         ModuleId = "actor.status",
         Relevance = "Handles the application and management of combat status effects and stat modifiers on actors.",
+        ExpertAdvice = "Receives timed effects like Burn or Slow. Pair with ActorStatusEffectFeatureRuntime for implementation.",
         ProfileType = typeof(ActorStatusEffectProfile),
         RequiredInterfaces = new Type[]
         {
@@ -22,7 +23,7 @@ namespace NeonBlack.Gameplay.Features.Combat
         {
             ActorPresentationMode.Sprite2D,
             ActorPresentationMode.Billboard2_5D,
-            ActorPresentationMode.Rigged3D
+            ActorPresentationMode.ThirdPerson3D
         },
         NativeSetup = new[]
         {
@@ -34,6 +35,7 @@ namespace NeonBlack.Gameplay.Features.Combat
             "ensure HealthComponent and status modifier receivers are present on actors that consume status effects"
         },
         FirstProof = "Apply a status effect to an actor and verify it appears in the active effect list.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/actor-status",
         AssignmentFields = new[]
         {
             "FeatureModuleDefinition.moduleId",

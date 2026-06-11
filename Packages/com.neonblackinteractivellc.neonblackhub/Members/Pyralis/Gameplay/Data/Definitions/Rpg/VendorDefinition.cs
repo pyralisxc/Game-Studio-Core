@@ -15,8 +15,13 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
         FirstProof = "Proof that the vendor offers valid items and prices are correctly defined."
     )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Vendor", fileName = "VendorDefinition")]
-    public class VendorDefinition : ScriptableObject, IVendorDefinition
-{
+    public class VendorDefinition : ScriptableObject, IVendorDefinition, IRuntimeValidationProvider
+    {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            return GetValidationIssues();
+        }
+
         public string vendorId = "vendor.new";
         public string displayName = "New Vendor";
         public VendorOfferDefinition[] offers = Array.Empty<VendorOfferDefinition>();

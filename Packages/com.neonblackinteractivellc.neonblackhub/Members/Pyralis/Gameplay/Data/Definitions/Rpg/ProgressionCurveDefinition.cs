@@ -13,8 +13,13 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
         FirstProof = "Proof that the curve correctly resolves levels from experience points."
     )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Progression Curve", fileName = "ProgressionCurveDefinition")]
-    public class ProgressionCurveDefinition : ScriptableObject, IProgressionCurve
-{
+    public class ProgressionCurveDefinition : ScriptableObject, IProgressionCurve, IRuntimeValidationProvider
+    {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            return GetValidationIssues();
+        }
+
         public string curveId = "progression.default";
         public string displayName = "Default Progression";
         public int[] levelExperienceThresholds = { 0 };

@@ -25,8 +25,32 @@ namespace NeonBlack.Gameplay.Features.Hazards
         AssignmentFields = new[] { "_hazardEntries", "_difficultyManager", "_targetCamera" }
     )]
     [DefaultExecutionOrder(-10)]
-    public class HazardSpawner : MonoBehaviour
-{
+    public class HazardSpawner : MonoBehaviour, IRuntimeValidationProvider
+    {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            if (_hazardEntries == null || _hazardEntries.Length == 0)
+                yield return "Hazard Entries needs at least one entry.";
+            else
+            {
+                for (int i = 0; i < _hazardEntries.Length; i++)
+                {
+                    if (_hazardEntries[i].prefab == null)
+                        yield return $"Hazard Entry {i} needs a prefab.";
+                    if (_hazardEntries[i].weight <= 0)
+                        yield return $"Hazard Entry {i} weight must be greater than zero.";
+                }
+            }
+
+            if (_difficultyManager == null)
+                yield return "Difficulty Manager is unassigned. Fallback timing will be used.";
+
+            if (_gameplayStateSource == null)
+                yield return "Gameplay State Source is unassigned. GameManager must provide it at runtime.";
+
+            if (_cameraBoundsSource == null && _targetCamera == null)
+                yield return "No camera or camera bounds source assigned.";
+        }
         [System.Serializable]
         public class HazardEntry
         {

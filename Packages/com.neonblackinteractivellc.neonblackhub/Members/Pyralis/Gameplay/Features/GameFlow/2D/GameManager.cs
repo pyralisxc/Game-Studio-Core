@@ -54,14 +54,6 @@ public class GameManager : MonoBehaviour
     , IGameplaySessionFlow
     , IHazardOutcomeSink
 {
-    public static GameManager Instance { get; private set; }
-
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void ResetStatics()
-    {
-        Instance = null;
-    }
-
     [Header("System References")]
     [SerializeField, Tooltip("ParticipantScoreService colocated with this manager or explicitly assigned.")]
     private ParticipantScoreService scoreManager;
@@ -273,9 +265,22 @@ public class GameManager : MonoBehaviour
         LoadScene(mainMenuSceneName);
     }
 
+    private static readonly Dictionary<float, WaitForSecondsRealtime> _realtimeWaitPool = new Dictionary<float, WaitForSecondsRealtime>();
+
+    private static WaitForSecondsRealtime GetWaitRealtime(float seconds)
+    {
+        seconds = (float)System.Math.Round(seconds, 2);
+        if (!_realtimeWaitPool.TryGetValue(seconds, out var wait))
+        {
+            wait = new WaitForSecondsRealtime(seconds);
+            _realtimeWaitPool[seconds] = wait;
+        }
+        return wait;
+    }
+
     private IEnumerator GameOverRoutine()
     {
-        yield return new WaitForSecondsRealtime(Mathf.Max(0.1f, deathAnimDuration));
+        yield return GetWaitRealtime(Mathf.Max(0.1f, deathAnimDuration));
         scoreManager?.SaveHighScore();
         pickupSpawner?.ClearAllCollectibles();
         hazardSpawner?.ClearAllHazards();

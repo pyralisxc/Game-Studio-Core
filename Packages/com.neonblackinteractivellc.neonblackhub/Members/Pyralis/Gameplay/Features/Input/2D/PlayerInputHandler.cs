@@ -513,8 +513,6 @@ public class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver, IPawnIn
 
     private bool IsGameplayActive()
     {
-        ResolveRuntimeServices();
-
         if (_gameplayStateReader != null)
             return _gameplayStateReader.IsGameplayActive;
 
@@ -525,19 +523,6 @@ public class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver, IPawnIn
         }
 
         return false;
-    }
-
-    private void ResolveRuntimeServices()
-    {
-        if (_gameplayStateReader == null)
-            GameplayPlatformContext.TryResolve(out _gameplayStateReader);
-
-        if (_gameplayStateReader != null || _gameplayStateSource == null)
-            return;
-
-        _gameplayStateReader = _gameplayStateSource as IGameplayStateReader;
-        if (_gameplayStateReader == null)
-            _gameplayStateReader = _gameplayStateSource.GetComponent<IGameplayStateReader>();
     }
 
     private IInputSettingsRegistrar ResolveInputSettingsRegistrar()
@@ -577,7 +562,7 @@ public class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver, IPawnIn
         if (_moveAction?.activeControl?.device is Gamepad activeGamepad)
             return activeGamepad;
 
-        return Gamepad.current;
+        return null;
     }
 
     /// <summary>

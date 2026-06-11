@@ -2,11 +2,20 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using NeonBlack.Gameplay.Features.Combat;
+using NeonBlack.Gameplay.Core.Contracts;
 
 namespace NeonBlack.Gameplay.Features.Characters
 {
+    [AuthoringContract(
+        Capability = AuthoringCapability.Combat | AuthoringCapability.CombatSensors,
+        Relevance = "Pawn module for managing and triggering melee hitboxes by zone name.",
+        AssignmentFields = new[] { nameof(hitBoxZones) },
+        FirstProof = "Verify hitboxes are correctly mirrored when the pawn flips direction.",
+        ExpertAdvice = "Each HitBoxSlot maps a 'Zone Name' to a physical HitBox component. Ensure the zone names match your attack definitions.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/combat"
+    )]
     public class PawnHitBoxModule : MonoBehaviour
-    {
+{
         [SerializeField] private HitBoxSlot[] hitBoxZones;
 
         public HitBoxSlot[] HitBoxZones => hitBoxZones;

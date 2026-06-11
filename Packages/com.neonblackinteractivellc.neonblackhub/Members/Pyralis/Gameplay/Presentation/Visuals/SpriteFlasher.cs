@@ -1,4 +1,5 @@
 using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Presentation.Animation;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -14,7 +15,7 @@ namespace NeonBlack.Gameplay.Presentation.Visuals
 [AuthoringContract(
     Capability = AuthoringCapability.VFX,
     Relevance = "Coroutine-driven color flash effects on SpriteRenderers.",
-    Axioms = AuthoringWorldAxiom.SpriteVisuals | AuthoringWorldAxiom.BillboardVisuals,
+    SupportedLanes = new[] { ActorPresentationMode.Sprite2D, ActorPresentationMode.Billboard2_5D },
     AssignmentFields = new[] { "_renderers", "_defaultPreset", "_playOnStart" },
     FirstProof = "Assign a FlashPresetSO and call Play() from a script or UnityEvent.",
     NativeSetup = new[]
@@ -22,7 +23,9 @@ namespace NeonBlack.Gameplay.Presentation.Visuals
         "Add SpriteFlasher to an actor or object prefab.",
         "Enable Auto Find Renderers or assign targets manually.",
         "Assign a FlashPresetSO for common effects (Hit, Flash)."
-    }
+    },
+    ExpertAdvice = "Use SpriteFlasher for hit reactions and status effects. For best performance, group multiple renderers into one flasher if they should flash in sync.",
+    DocumentationURL = "https://docs.neonblack.com/pyralis/visuals"
 )]
 public class SpriteFlasher : MonoBehaviour
 {

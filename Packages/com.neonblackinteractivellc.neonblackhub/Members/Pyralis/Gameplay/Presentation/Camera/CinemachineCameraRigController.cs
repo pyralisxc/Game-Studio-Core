@@ -16,12 +16,20 @@ namespace NeonBlack.Gameplay.Presentation.Camera
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Camera,
-        Relevance = "Canonical shared camera rig controller. Handles participant framing, 2D/3D bounds, and profile switching.",
-        NativeSetup = new[] { "Add to CameraRig root", "Assign Target Camera", "Assign CameraRigProfile" },
-        AssignmentFields = new[] { nameof(cameraRigProfile), nameof(playfieldProfile), nameof(targetCamera) },
-        FirstProof = "The camera follows and frames active participants in the scene."
+        Relevance = "Cinemachine Camera Rig Controller is the Pyralis scene camera runtime. Use this Inspector for assigned references and tuning values.",
+        NativeSetup = new[] 
+        { 
+            "Add to CameraRig root.",
+            "Assign Target Camera (physical Unity Camera with Cinemachine Brain).",
+            "Assign Camera Rig Profile (shared/split behavior, zoom, damping).",
+            "Assign Shared Camera Behaviour (Cinemachine virtual camera)."
+        },
+        AssignmentFields = new[] { nameof(cameraRigProfile), nameof(sharedCameraBehaviour), nameof(targetCamera) },
+        FirstProof = "Enter Play Mode. Verify the camera rig frames the spawned player pawn automatically. In Split-Screen, verify two viewports are created.",
+        ExpertAdvice = "The Camera Rig handles multi-user framing. For 2D projects, ensure your 'Target Camera' is set to Orthographic. Use '2D Bounds Framing' on the rig root to keep the camera within the designed level boundaries.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/camera"
     )]
-    [AddComponentMenu("NeonBlack/Gameplay/Camera/Cinemachine Camera Rig Controller")]
+[AddComponentMenu("NeonBlack/Gameplay/Camera/Cinemachine Camera Rig Controller")]
     [ExecuteAlways]
     public class CinemachineCameraRigController : MonoBehaviour, ICameraBoundsProvider
 {

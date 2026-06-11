@@ -19,13 +19,18 @@ namespace NeonBlack.Gameplay.Features.Enemies
     /// Decomposed into specific modules for movement, combat, detection, and animation.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat | AuthoringCapability.Movement, 
-        Relevance = "Inspector Add Component path for enemy AI behavior.",
-        AssignmentFields = new[] { "aggroRange", "moveSpeed", "enemyFeatureProfile" },
-        FirstProof = "Place the enemy in a scene with a player and verify it aggros and attacks when in range.",
-        NativeSetup = new[] { "Add Component", "Assign HitBox Zones", "Configure Attack Sequence" }
+        Capability = AuthoringCapability.TacticsAggressive | AuthoringCapability.Steering3D, 
+        Priority = AuthoringPriority.Primary,
+        Lane = "AI",
+        Relevance = "Canonical 3D/2.5D AI controller; handles patrol, detection, and attack states.",
+        AssignmentFields = new[] { nameof(moveSpeed), nameof(enemyFeatureProfile), nameof(patrolPoints) },
+        FirstProof = "Place enemy and player in scene. Verify enemy enters 'Chase' state when player enters detection range.",
+        NativeSetup = new[] { "Add EnemyAI to 3D actor.", "Assign EnemyFeatureProfile.", "Configure Detection Module ranges." },
+        ExpertAdvice = "EnemyAI separates 'Tactics' and 'Steering'. Use 'EnemyFeatureProfile' to define shared stats like Aggro Range and Attack Cooldowns.",
+        Axioms = AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.Dimensions3D,
+        DocumentationURL = "https://docs.neonblack.com/pyralis/enemy-ai"
     )]
-    [AddComponentMenu("NeonBlack/Gameplay/Enemies/Enemy AI")]
+[AddComponentMenu("NeonBlack/Gameplay/Enemies/Enemy AI")]
     [RequireComponent(typeof(CharacterController))]
     [RequireComponent(typeof(EnemyMovementModule))]
     [RequireComponent(typeof(EnemyDetectionModule))]
@@ -213,12 +218,20 @@ namespace NeonBlack.Gameplay.Features.Enemies
             if (profile.combatProfile != null) _combatModule.ApplyCombatProfile(profile.combatProfile);
         }
 
+        private IObjectResolver _resolver;
+
+        [Inject]
+        public void Construct(IObjectResolver resolver)
+        {
+            _resolver = resolver;
+        }
+
         private void InitializeFeatureModules()
         {
             FeatureModuleDefinition[] definitions = enemyFeatureProfile != null ? enemyFeatureProfile.featureModules : null;
             if (definitions == null || definitions.Length == 0) return;
             _featureHost ??= gameObject.AddComponent<ActorFeatureHost>();
-            _featureHost.InitializeFeatures(BuildFeatureContext(), definitions);
+            _featureHost.InitializeFeatures(new FeatureHostInitializationContext(BuildFeatureContext(), _resolver), definitions);
             _featureHost.TryGetInstalledFeature(out _reactionState);
         }
 

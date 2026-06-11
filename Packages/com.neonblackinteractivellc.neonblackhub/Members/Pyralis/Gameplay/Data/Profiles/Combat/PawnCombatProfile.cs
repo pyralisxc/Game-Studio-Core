@@ -1,4 +1,6 @@
-﻿using NeonBlack.Gameplay.Features.Combat;
+using System.Collections.Generic;
+using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Features.Combat;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Data.Profiles
@@ -6,9 +8,26 @@ namespace NeonBlack.Gameplay.Data.Profiles
     /// <summary>
     /// Shared combat authoring profile for pawn composition.
     /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.Combat,
+        Priority = AuthoringPriority.AuxiliaryDefault,
+        Lane = "Combat",
+        Relevance = "Defines the core combat parameters for a pawn archetype.",
+        NativeSetup = new[] { "Create Asset.", "Set base damage and cooldowns.", "Configure block reduction." },
+        AssignmentFields = new[] { nameof(baseDamage), nameof(attackCooldown), nameof(attackWeapon), nameof(primarySequence) },
+        FirstProof = "Verify the pawn can attack and take damage in-game.",
+        ExpertAdvice = "Use comboResetTime to control the window for continuing a combo. Assign a WeaponData asset to define the hitboxes and visual effects of the attack.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/combat"
+    )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Pawn Combat Profile", fileName = "PawnCombatProfile", order = -20)]
-    public class PawnCombatProfile : ScriptableObject
+    public class PawnCombatProfile : ScriptableObject, IRuntimeValidationProvider
     {
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            if (baseDamage < 0f) yield return "Base Damage cannot be negative.";
+            if (attackCooldown <= 0f) yield return "Attack Cooldown must be greater than zero.";
+        }
+
         public bool enableCombat = true;
         public float baseDamage = 10f;
         public float baseKnockback = 5f;
