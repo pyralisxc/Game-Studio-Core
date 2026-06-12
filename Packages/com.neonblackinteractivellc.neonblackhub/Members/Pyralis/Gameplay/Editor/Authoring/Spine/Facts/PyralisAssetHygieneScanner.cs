@@ -13,9 +13,9 @@ namespace NeonBlack.Gameplay.Editor.Authoring
         public Object Asset { get; }
         public string PropertyPath { get; }
         public string Message { get; }
-        public PyralisAuthoringContract Contract { get; }
+        public ResolvedAuthoringContract Contract { get; }
 
-        public PyralisHygieneIssue(Object asset, string propertyPath, string message, PyralisAuthoringContract contract = null)
+        public PyralisHygieneIssue(Object asset, string propertyPath, string message, ResolvedAuthoringContract contract = null)
         {
             Asset = asset;
             PropertyPath = propertyPath;
@@ -43,7 +43,7 @@ namespace NeonBlack.Gameplay.Editor.Authoring
                 return;
 
             // 1. Check contracts for this asset type
-            var contract = PyralisAuthoringContractRegistry.FindByType(asset.GetType());
+            var contract = ResolvedAuthoringContractRegistry.FindByType(asset.GetType());
             if (contract != null && contract.AssignmentFields != null)
             {
                 SerializedObject so = new SerializedObject(asset);

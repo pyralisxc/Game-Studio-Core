@@ -37,16 +37,16 @@ This path is built around:
 ### Composition Root
 
 `GameplaySessionBootstrap` is the Unity-facing entry point. It reads `SessionDefinition`,
-creates or connects the core persistent scene services, registers platform defaults, and configures
+creates or connects the core persistent scene services, applies session-owned defaults, and configures
 `PyralisGameplayLifetimeScope`.
 
 `PyralisGameplayLifetimeScope` is the runtime DI graph. It registers scope-owned components and
-explicit contracts first, then bridges remaining `PlatformServiceRegistry` entries into VContainer
-so injected scene objects and transition-era registry consumers resolve the same owned services.
+explicit contracts so injected scene objects resolve the same bootstrap-owned services.
+Treat `PyralisGameplayLifetimeScope as the singular source of truth` for runtime dependency composition.
 
-`PlatformServiceRegistry` remains migration support. New runtime dependencies should prefer
-constructor or method injection, explicit service contracts, or `GameplayPlatformContext.TryResolve`
-only when a non-DI bridge is still required.
+New runtime dependencies should prefer constructor or method injection, explicit service contracts,
+bootstrap configuration, participant/session services, or feature-owned runtime contexts. Do not add
+a second platform service registry or broad static service locator beside VContainer.
 
 Static `Instance` properties on persistence helpers are compatibility and duplicate-control surfaces.
 They are not the beginner dependency path and should clear themselves on teardown or subsystem

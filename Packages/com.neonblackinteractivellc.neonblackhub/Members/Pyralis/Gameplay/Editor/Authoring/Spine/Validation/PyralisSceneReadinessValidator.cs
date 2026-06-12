@@ -619,13 +619,13 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 AppendMissingScriptIssue(prefab, $"Pawn prefab `{prefab.name}`", requiredIssues);
 
                 if (prefab.GetComponent<PawnRoot>() == null)
-                    requiredIssues.Add($"Participant slot {participantSlot} pawn prefab `{prefab.name}` needs PawnRoot on its root GameObject.");
+                    requiredIssues.Add($"Participant slot {participantSlot} pawn prefab `{prefab.name}` is missing PawnRoot on its root GameObject.");
 
                 if (!HasComponentImplementing<IPawnMotor>(prefab))
-                    requiredIssues.Add($"Participant slot {participantSlot} pawn prefab `{prefab.name}` needs a component implementing IPawnMotor.");
+                    requiredIssues.Add($"Participant slot {participantSlot} pawn prefab `{prefab.name}` is missing a lane motor component implementing IPawnMotor.");
 
                 if (!HasComponentImplementing<IPawnInputModule>(prefab))
-                    requiredIssues.Add($"Participant slot {participantSlot} pawn prefab `{prefab.name}` needs a component implementing IPawnInputModule so InputProfile actions can reach movement.");
+                    requiredIssues.Add($"Participant slot {participantSlot} pawn prefab `{prefab.name}` is missing an input adapter component implementing IPawnInputModule so the selected InputProfile can reach movement.");
 
                 if (!HasComponentImplementing<IPawnPresentationModule>(prefab))
                     requiredIssues.Add($"Participant slot {participantSlot} pawn prefab `{prefab.name}` needs a component implementing IPawnPresentationModule.");

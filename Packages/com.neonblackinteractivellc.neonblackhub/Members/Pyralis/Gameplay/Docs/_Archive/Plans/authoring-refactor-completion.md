@@ -3,7 +3,7 @@
 This plan outlines the final steps to achieve 100% 'Authored' status for the Neon Black/Pyralis package, moving from manual logic to a fully reflective, contract-backed system.
 
 ## Phase 1: Scene Evidence & Contract Bridge
-*   Refactor `PyralisSceneSurfaceEvidenceFacts` to query the `PyralisAuthoringContractRegistry`.
+*   Refactor `PyralisSceneSurfaceEvidenceFacts` to query the `ResolvedAuthoringContractRegistry`.
 *   Implement logic to verify if discovered scene objects satisfy the `RequiredComponents` or `RequiredInterfaces` of active contracts.
 *   Update UI to show 'Contract Satisfied' when a valid GameObject is found.
 

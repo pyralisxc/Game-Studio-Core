@@ -95,20 +95,13 @@ namespace NeonBlack.Gameplay.Core.Runtime
                 builder.RegisterInstance(_sessionDefinition).AsSelf();
 
             RegisterComponent(builder, _sessionStateService);
-            if (_sessionStateService != null)
-                builder.RegisterInstance<IGameplayStateReader>(_sessionStateService);
 
             RegisterComponent(builder, _participantRosterService);
-            if (_participantRosterService != null)
-            {
-                builder.RegisterInstance<IParticipantRoster>(_participantRosterService);
-                builder.RegisterInstance<IPlayerProvider>(_participantRosterService);
-            }
 
             RegisterComponent(builder, _participantSpawnService);
             RegisterComponent(builder, _participantInputRouter);
 
-            // Core Services: Try to resolve from provided references, or find in hierarchy.
+            // Core Services: resolve from configured references or owned child hierarchy.
             var sceneLoader = _sceneLoader != null ? _sceneLoader : FindServiceInHierarchy<SceneLoader>();
             var timeManager = _timeManager != null ? _timeManager : FindServiceInHierarchy<TimeManager>();
             var cameraShake = _cameraShake != null ? _cameraShake : FindServiceInHierarchy<CameraShake>();
@@ -123,7 +116,7 @@ namespace NeonBlack.Gameplay.Core.Runtime
 
             builder.Register<EnemyDetectionService>(Lifetime.Singleton);
             builder.Register<EnemyCombatProcessor>(Lifetime.Singleton);
-            builder.RegisterComponentInHierarchy<BattleManager>().AsSelf();
+            RegisterComponent(builder, FindServiceInHierarchy<BattleManager>());
 
             builder.Register<LocalRpgPersistenceService>(Lifetime.Singleton).As<IRpgPersistenceService>();
 
@@ -200,28 +193,7 @@ namespace NeonBlack.Gameplay.Core.Runtime
 
         private T FindServiceInHierarchy<T>() where T : class
         {
-            // First check if it's already a child of this LifetimeScope (the Bootstrap usually)
-            T component = GetComponentInChildren<T>();
-            if (component != null)
-                return component;
-
-            // Otherwise check entire hierarchy (fallback)
-            // If T is a UnityEngine.Object, we can use the faster built-in search.
-            if (typeof(UnityEngine.Object).IsAssignableFrom(typeof(T)))
-            {
-                return Object.FindAnyObjectByType(typeof(T), FindObjectsInactive.Include) as T;
-            }
-
-            // Fallback for interfaces - search all MonoBehaviours.
-            // This is slightly slower but only runs during session initialization.
-            MonoBehaviour[] behaviours = Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include);
-            for (int i = 0; i < behaviours.Length; i++)
-            {
-                if (behaviours[i] is T t)
-                    return t;
-            }
-
-            return null;
+            return GetComponentInChildren<T>(true);
         }
     }
 }

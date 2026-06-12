@@ -23,7 +23,7 @@ Instead of loose strings, we define a formal `AuthoringCapability` registry.
 # Key Asset & Context
 - **`PyralisAuthoringSpine.cs`**: (New) Central registry for all capability definitions and tooltips.
 - **`AuthoringContractAttribute.cs`**: (Modify) Update `Goal` to use typed Spine identifiers and support multiple tags.
-- **`PyralisAuthoringContractRegistry.cs`**: (Modify) Update the harvester to group contracts by Spine identifiers.
+- **`ResolvedAuthoringContractRegistry.cs`**: (Modify) Update the harvester to group contracts by Spine identifiers.
 - **`PyralisAuthoringWindow.cs`**: (Modify) Refresh the Intent tab to draw from the Spine rather than raw string discovery.
 
 # Implementation Steps
@@ -41,7 +41,7 @@ Instead of loose strings, we define a formal `AuthoringCapability` registry.
    - Add a `Priority` field (int) to help the UI decide which script is the "Platform Default" when duplication exists.
    - **Role**: Developer
    - **Dependencies**: Step 1
-4. **Update `PyralisAuthoringContractRegistry`**:
+4. **Update `ResolvedAuthoringContractRegistry`**:
    - Refactor the `TypeCache` harvesting to use the new typed goals.
    - **Role**: Developer
    - **Dependencies**: Step 3

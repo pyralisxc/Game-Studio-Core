@@ -23,7 +23,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 EditorGUILayout.LabelField("Camera Starting Points", EditorStyles.miniBoldLabel);
-                EditorGUILayout.LabelField("These apply editable camera starter values to this profile only; tune every field below for the actual game view.", EditorStyles.wordWrappedMiniLabel);
+                EditorGUILayout.LabelField("These apply editable camera defaults to this profile only; tune every field below for the actual game view.", EditorStyles.wordWrappedMiniLabel);
                 if (GUILayout.Button("Apply 2D Orthographic Start"))
                 {
                     serializedObject.FindProperty("presentationMode").enumValueIndex = (int)CameraRigProfile.CameraPresentationMode.Shared;

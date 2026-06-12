@@ -245,4 +245,4 @@ Blend trees are supported through float parameters. The presentation stack emits
 
 If an imported controller has float parameters such as `Speed`, `MoveX`, `MoveY`, `Forward`, `VelocityY`, or `Speed01`, the profile Inspector can suggest custom float bindings for them. Review these like any other generated mapping.
 
-The package test suite uses the included Apocalyptia player Animator Controller as an imported-controller compatibility fixture. Pyralis runtime and editor mapping code should not depend on that controller, its folder path, or legacy gameplay scripts.
+The package test suite uses the included Apocalyptia player Animator Controller as an imported-controller compatibility fixture. Pyralis runtime and editor mapping code should not depend on that controller, its folder path, or prior project-specific gameplay scripts.

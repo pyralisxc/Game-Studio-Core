@@ -86,7 +86,8 @@ namespace NeonBlack.Gameplay.Editor
             AddRange(PyralisAuthoringRouteProof.GetAuthoringFacts());
             AddRange(PyralisRouteCoverageFacts.GetAuthoringFacts());
             AddRange(PyralisInspectorHandoffFacts.GetAuthoringFacts());
-            AddRange(PyralisAuthoringConventionFactRegistry.AllFacts);
+            AddRange(PyralisConventionAuthoringFacts.GetAuthoringFacts());
+            AddRange(PyralisRouteIntentAuthoringFactProvider.GetAuthoringFacts());
             AddRange(PyralisSceneSurfaceEvidenceFacts.GetAuthoringFacts());
 
             return facts;

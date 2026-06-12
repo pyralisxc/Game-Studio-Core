@@ -4,7 +4,7 @@ This is the technical contract for new Pyralis gameplay scenes after the platfor
 
 If you are wiring your first scene, use the Pyralis Authoring Window for route setup and use Inspector Field Guides only for the asset or component you are editing. Read `START_HERE.md` when you need the written first-scene path. Use this file as the technical contract once the basic setup flow makes sense. The manual, prefab, and subsystem setup docs support it; they should not contradict it.
 
-For feature-driven authoring contracts, add contracts in the feature package and let `PyralisAuthoringContractRegistry` discover them reflectively. New package scripts/assets must carry `.meta` files and should be refreshed in Unity before relying on CLI build gates.
+For feature-driven authoring contracts, add contracts in the feature package and let `ResolvedAuthoringContractRegistry` discover them reflectively. New package scripts/assets must carry `.meta` files and should be refreshed in Unity before relying on CLI build gates.
 
 ## 1. Core Scene Root
 
@@ -32,14 +32,14 @@ On `GameplaySessionBootstrap`, assign:
 
 - `Session Definition` - your `SessionDefinition` asset
 - `Dont Destroy On Load` - on for persistent bootstrap scenes, off for isolated test scenes
-- `Auto Create Core Services` - on for first-scene proofs
+- `Auto Create Core Services` - on for first-scene proofs that use the standard bootstrap-owned service path
 - `Inject Loaded Scenes On Build` - on unless you have a custom injection flow
 - `Spawn Points` - optional Transforms where pawn-backed participants should appear
 - `Player Input Manager` - optional, only when using local join or Unity Input System player joining
 - `Camera Rig Controller` - optional, assign the `Camera Root` when using Pyralis camera control or camera-aware 2D bounds
 - `Camera Bounds Source` - optional, use only for specialized custom `ICameraBoundsProvider` services; the `CinemachineCameraRigController` provides bounds when assigned as the camera rig
 
-With `Auto Create Core Services` enabled, the bootstrap creates these child objects at runtime when they are not assigned:
+With the standard bootstrap-owned service path enabled, the bootstrap creates these child objects at runtime when they are not assigned:
 
 - `SceneLoader`
 - `TimeManager`
@@ -65,17 +65,18 @@ Create additional root objects only when the selected runtime patterns need them
 
 `GameplaySessionBootstrap` is the supported composition root. New scenes should not build their own global service wiring.
 
-Beginner rule: start with only `Gameplay Root`, then add the optional roots that match the patterns in your `GameSetupProfile`.
+Beginner rule: start with only `Gameplay Root`, then add the optional roots that match the capability ingredients in your `GameSetupProfile`.
 
 ## 2. Required Authoring Chain
 
 Create these authored assets for every new setup:
 
 - `GameSetupProfile`
-- one or more `RuntimePatternDefinition` assets
 - `SessionDefinition`
 - `GameModeDefinition`
 - at least one `ParticipantDefinition`
+
+Select one or more runtime capability families in `GameSetupProfile.runtimeCapabilities`. Optional `RuntimePatternDefinition` contracts are advanced metadata only; create or assign them when a capability needs reusable route detail that the generic family cannot express.
 
 Create pawn assets only when a participant needs an actor body in the scene:
 
@@ -86,7 +87,7 @@ Create pawn assets only when a participant needs an actor body in the scene:
 - `PawnAnimationProfile` and `ActorAnimationDefinition` when the pawn has Animator-driven visuals
 - supporting pawn profiles as needed: combat, traversal, pickups, feedback, interaction, status
 
-Create non-pawn setup assets only when the selected patterns need them:
+Create non-pawn setup assets only when the selected capabilities need them:
 
 - camera, cursor, UI, board, card, scoring, settings, scene-flow, or playfield profiles and scene roots
 
@@ -94,11 +95,11 @@ Template or scaffold tooling is not the active first-test path. The primary lear
 
 Before wiring scenes or prefabs, use the `GameSetupProfile` inspector to confirm:
 
-- the setup selects the intended overlapping runtime patterns
-- pawn-backed games include a pawn-compatible pattern
+- the setup selects the intended overlapping runtime capabilities
+- pawn-backed games include a pawn-compatible capability
 - board, card, tabletop, camera, cursor, or menu games include non-pawn control surfaces
-- projectile-heavy games include a projectile combat pattern
-- turn/menu games include an action or targeting pattern
+- projectile-heavy games include projectile or combat capabilities
+- turn/menu games include action or targeting capabilities
 - validation issues are resolved or intentionally deferred
 
 Assign the setup profile to `GameModeDefinition.setupProfile` so game-mode validation can surface setup problems early.
@@ -120,6 +121,8 @@ For pawn-backed games, each spawned participant should resolve through:
 
 `PawnRoot` is the runtime composition root for a pawn. It applies authored profiles and installs feature modules from `FeatureModuleDefinition`.
 
+A pawn prefab is normal Unity content, not a Pyralis preset. Create it in the Hierarchy or Prefab Mode, add the lane components your intent requires, wire visible Inspector fields, then drag the finished prefab into `PawnDefinition > Pawn Prefab`. The authoring system should explain and validate that shape; it should not silently choose the user's art, map, animation controller, combat feel, or local-multiplayer ownership.
+
 Supported presentation targets:
 
 - `Sprite2D`
@@ -132,15 +135,29 @@ Supported presentation targets:
 
 The current supported 2D stack is:
 
+- `PawnRoot`
 - `Motor2D`
 - `Motor2DInputAdapter`
 - `Pawn2DMovementComponent`
 - `Pawn2DPresentationComponent`
+- `SpriteRenderer`
+- `Animator`
 - `PawnCombatBehaviour2D` when combat is required
 
 `Motor2DInputAdapter` is the preferred player-input bridge for this stack. `PlayerInputHandler` remains the lower-level keyboard, gamepad, and touch input reader used by that route when direct input handling is needed.
 
 For new 2D player pawns, do not add both `Motor2DInputAdapter` and a separate `PlayerInputHandler` to the same prefab. `Motor2DInputAdapter` already provides the supported input-handler bridge for the first movement proof, and duplicate handlers make input ownership harder to reason about.
+
+For a beginner 2D movement proof, the clean prefab route is:
+
+1. Create a Hierarchy GameObject and name it for the pawn.
+2. Add `SpriteRenderer` and assign a visible sprite before Play Mode.
+3. Add `Animator` even if the controller will be assigned later; this keeps the animation route explicit.
+4. Add `PawnRoot`, then assign the matching `PawnDefinition`.
+5. Add `Motor2D`; Unity adds `Pawn2DMovementComponent` and `Pawn2DPresentationComponent`.
+6. Add `Motor2DInputAdapter`.
+7. Add Unity `PlayerInput` only when the proof needs explicit local keyboard/gamepad ownership, and assign the same Input Actions asset used by the `InputProfile`.
+8. Save the GameObject as a prefab and assign it to `PawnDefinition > Pawn Prefab`.
 
 `Motor2D` is the shared 2D pawn motor surface. Movement, presentation, and input live in focused sibling components so the stack stays inspectable and profile-driven.
 
@@ -167,14 +184,14 @@ Feature modules are authored through `FeatureModuleDefinition` and installed thr
 Important rules:
 
 - every reusable feature module should provide an explicit `IAuthoringContractProvider` in the owning feature editor assembly
-- `PyralisAuthoringContractRegistry` discovers contracts reflectively; do not add central hardcoded module-id registries
+- `ResolvedAuthoringContractRegistry` discovers contracts reflectively; do not add central hardcoded module-id registries
 - the provider must declare required profile type, runtime prefab interfaces, supported lanes, unsupported lanes, action roles, native setup actions, assignment fields, customization moments, and first proof target
 - every declared `FirstProofTargetId` must map to a real `PyralisAuthoringRouteProof` fact
 - every feature module must declare network intent
 - runtime prefabs must expose the required feature runtime contracts
 - feature-owned authored profiles should live with the feature whenever practical
 
-The Authoring Window reads these contracts for setup recipes, proof target guidance, and unsupported lane cautions. The feature module Inspector and contract validator use the same contract data for profile, runtime-interface, and lane validation. Keep feature-specific authoring rules in the feature provider; central definitions should only keep generic `FeatureModuleDefinition` rules.
+The Authoring Window reads these contracts for setup guidance, proof target guidance, and unsupported lane cautions. The feature module Inspector and contract validator use the same contract data for profile, runtime-interface, and lane validation. Keep feature-specific authoring rules in the feature provider; central definitions should only keep generic `FeatureModuleDefinition` rules.
 
 When adding a module, add the provider, asmdef references, `.meta` files, registry tests, validation tests, proof-target tests, and docs update in the same slice. Do not patch generated `.csproj` files; refresh Unity so project files are regenerated from the package assets.
 

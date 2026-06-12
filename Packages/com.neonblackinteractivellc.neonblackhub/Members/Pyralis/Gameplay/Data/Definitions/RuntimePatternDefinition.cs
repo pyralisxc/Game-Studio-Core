@@ -35,14 +35,14 @@ namespace NeonBlack.Gameplay.Data.Definitions
     }
 
     /// <summary>
-    /// Authoring asset for one reusable runtime setup recipe.
-    /// Patterns are composable; they describe capability expectations rather than exclusive genres.
+    /// Optional authoring asset for one reusable advanced route contract.
+    /// Runtime patterns enrich capability expectations rather than defining exclusive genres or presets.
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Setup, 
-        Relevance = "Defines a reusable recipe for runtime system expectations and presentation requirements.",
+        Relevance = "Defines reusable advanced metadata for runtime system expectations and presentation requirements.",
         AssignmentFields = new[] { nameof(patternId), nameof(displayName), nameof(capabilityFamily), nameof(supportedControlSurfaces) },
-        FirstProof = "Assign this Runtime Pattern to a Game Setup Profile asset."
+        FirstProof = "Use only when a Game Setup Profile capability needs advanced route-contract metadata."
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Definitions/Runtime Pattern Definition", fileName = "RuntimePatternDefinition", order = 40)]
     public class RuntimePatternDefinition : ScriptableObject, IRuntimeValidationProvider

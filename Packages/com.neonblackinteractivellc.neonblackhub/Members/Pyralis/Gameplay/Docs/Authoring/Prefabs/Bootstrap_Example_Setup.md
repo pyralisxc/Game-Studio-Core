@@ -57,8 +57,8 @@ Keep the bootstrap selected after this assignment. The **Setup Flow** monitor wi
 - missing `GameSetupProfile`
 - missing runtime patterns
 - missing participants
-- pawn and spawn-point requirements only when selected patterns require pawns
-- camera, input, playfield, and scoring recommendations only when selected patterns imply them
+- pawn and spawn-point requirements only when selected capabilities require pawns
+- camera, input, playfield, and scoring recommendations only when selected capabilities imply them
 
 The monitor is a safe checklist, not a scene generator. It can select and ping existing objects, copy the checklist, open the authoring window, add a visible `PyralisGameplayLifetimeScope` to this root, and restore first-scene bootstrap defaults. It does not create a whole scene, edit prefabs, or automatically wire referenced assets.
 

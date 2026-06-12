@@ -89,8 +89,8 @@ namespace NeonBlack.Gameplay.Editor
             if (route == null || route.SetupProfile == null)
             {
                 return new PyralisAuthoringFeatureAdvisor(
-                    "No setup recipe is selected yet.",
-                    "Choose Capability Patterns",
+                    "No setup profile is selected yet.",
+                    "Choose Capability Ingredients",
                     "Assign a GameSetupProfile before choosing feature wiring.",
                     "First Unity focus: assign a GameSetupProfile before choosing feature wiring.",
                     new List<PyralisAuthoringFeatureRow>(),
@@ -113,7 +113,7 @@ namespace NeonBlack.Gameplay.Editor
             bool hasNetworking = route.HasNetworking;
             PyralisAuthoringRouteProof proof = PyralisAuthoringRouteProof.Build(route);
 
-            AddSelectedRows(patterns, selected);
+            AddSelectedRows(route, patterns, selected);
 
             List<PyralisAuthoringFeatureRow> recommended = PyralisAuthoringCapabilityGuidance.BuildRecommendedRows(route);
             List<PyralisAuthoringFeatureRow> environmentGuidance = PyralisAuthoringCapabilityGuidance.BuildEnvironmentRows(route);
@@ -139,20 +139,31 @@ namespace NeonBlack.Gameplay.Editor
                 designPrompts);
         }
 
-        private static void AddSelectedRows(RuntimePatternDefinition[] patterns, List<PyralisAuthoringFeatureRow> selected)
+        private static void AddSelectedRows(PyralisAuthoringRouteDescriptor route, RuntimePatternDefinition[] patterns, List<PyralisAuthoringFeatureRow> selected)
         {
-            if (patterns == null)
-                return;
-
             HashSet<RuntimeCapabilityFamily> emitted = new HashSet<RuntimeCapabilityFamily>();
-            for (int i = 0; i < patterns.Length; i++)
+            if (patterns != null)
             {
-                RuntimePatternDefinition pattern = patterns[i];
-                if (pattern == null || emitted.Contains(pattern.capabilityFamily))
+                for (int i = 0; i < patterns.Length; i++)
+                {
+                    RuntimePatternDefinition pattern = patterns[i];
+                    if (pattern == null || emitted.Contains(pattern.capabilityFamily))
+                        continue;
+
+                    emitted.Add(pattern.capabilityFamily);
+                    selected.Add(PyralisAuthoringCapabilityGuidance.BuildSelectedRow(pattern));
+                }
+            }
+
+            RuntimeCapabilityFamily[] families = route?.CapabilityFamilies ?? System.Array.Empty<RuntimeCapabilityFamily>();
+            for (int i = 0; i < families.Length; i++)
+            {
+                RuntimeCapabilityFamily family = families[i];
+                if (emitted.Contains(family))
                     continue;
 
-                emitted.Add(pattern.capabilityFamily);
-                selected.Add(PyralisAuthoringCapabilityGuidance.BuildSelectedRow(pattern));
+                emitted.Add(family);
+                selected.Add(PyralisAuthoringCapabilityGuidance.BuildSelectedRow(family));
             }
         }
 
@@ -176,7 +187,7 @@ namespace NeonBlack.Gameplay.Editor
                     : hasPawn
                         ? "Pawn actor first, with optional camera, cursor, menu, or action command surfaces."
                         : "Camera, cursor, board/card surface, menu command, faction, AI director, or later a pawn.",
-                "This decides whether ParticipantDefinition needs a PawnDefinition or whether empty pawn fields are correct.",
+                "This decides whether the selected intent asks ParticipantDefinition for a PawnDefinition or whether empty pawn fields are correct.",
                 "Pick the control surface before creating pawn prefabs, PlayerInputManager, board presenters, or action UI."));
 
             prompts.Add(new PyralisAuthoringDesignPrompt(
@@ -214,8 +225,8 @@ namespace NeonBlack.Gameplay.Editor
                 prompts.Add(new PyralisAuthoringDesignPrompt(
                     "Which capability should be selected first?",
                     "Pawn action, board/card/tabletop, camera/cursor, action selection, combat, projectiles, scoring, animation/presentation, procedural, or networking.",
-                    "Runtime patterns are the authoring contract that turns design intent into route-aware setup guidance.",
-                    "Choose existing patterns before wiring scene roots. Create new patterns only when the existing capability language cannot describe the game."));
+                    "Capability ingredients are the authoring contract that turns design intent into route-aware setup guidance.",
+                    "Choose capability families before wiring scene roots. Add optional route contracts only when the existing capability language cannot describe the game."));
             }
 
             return prompts;

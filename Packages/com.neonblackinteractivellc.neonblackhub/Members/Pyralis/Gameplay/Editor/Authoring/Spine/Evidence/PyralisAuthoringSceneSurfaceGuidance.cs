@@ -339,11 +339,11 @@ namespace NeonBlack.Gameplay.Editor
             return surface switch
             {
                 EnvironmentPlayfield => recommended
-                    ? "Create an Environment or Playfield Root with the world art and gameplay surfaces this route needs. Backgrounds can be flat sprites/PNGs, tilemaps, terrain, meshes, skyboxes, UI canvas art, or custom scene objects. Pyralis only needs intentional colliders, layers, bounds, zones, anchors, board spaces, or selectable surfaces when gameplay depends on them."
-                    : "Optional until the selected route needs walkable ground, board spaces, camera bounds, spawn areas, hazards, pickups, or generated content.",
+                    ? "Create an Environment or Playfield Root with the world art and gameplay surfaces this selected intent is proving now. Backgrounds can be flat sprites/PNGs, tilemaps, terrain, meshes, skyboxes, UI canvas art, or custom scene objects. Pyralis only reads intentional colliders, layers, bounds, zones, anchors, board spaces, or selectable surfaces when gameplay depends on them."
+                    : "Optional until the selected intent uses walkable ground, board spaces, camera bounds, spawn areas, hazards, pickups, or generated content.",
                 CameraBounds => recommended
-                    ? "Create a Camera Root with CinemachineCameraRigController, create or assign a CameraRigProfile in your project folderbase, create or choose a separate Cinemachine Camera for Shared Camera Behaviour, keep or create exactly one enabled physical Unity Camera for this shared proof, usually Main Camera, verify it is tagged MainCamera with Cinemachine Brain, and assign that physical camera as Target Camera. Disable or remove accidental extra physical Camera objects only when they were created by mistake; keep intentional overlay, split-screen, minimap, or render-texture cameras. Then drag the Camera Root object from Hierarchy into GameplaySessionBootstrap > Camera Rig Controller. For 2D, set the physical Target Camera Projection to Orthographic or use an orthographic CameraRigProfile, then tune Orthographic Size and 2D Bounds Framing. For angled 3D/2.5D, shape the shot with the physical Target Camera transform and the Cinemachine Camera Inspector."
-                    : "Optional unless the game uses camera/cursor control, camera-aware spawning, board view, or bounded framing.",
+                    ? "When the selected intent includes camera or bounds behavior, create a Camera Root with CinemachineCameraRigController, create or assign a CameraRigProfile in your project folderbase, create or choose a separate Cinemachine Camera for Shared Camera Behaviour, keep or create exactly one enabled physical Unity Camera for this shared proof, usually Main Camera, verify it is tagged MainCamera with Cinemachine Brain, and assign that physical camera as Target Camera. Disable or remove accidental extra physical Camera objects only when they were created by mistake; keep intentional overlay, split-screen, minimap, or render-texture cameras. Then drag the Camera Root object from Hierarchy into GameplaySessionBootstrap > Camera Rig Controller. For 2D, set the physical Target Camera Projection to Orthographic or use orthographic CameraRigProfile values, then tune Orthographic Size and 2D Bounds Framing. For angled 3D/2.5D, shape the shot with the physical Target Camera transform and the Cinemachine Camera Inspector."
+                    : "Optional until the selected intent uses camera/cursor control, camera-aware spawning, board view, or bounded framing.",
                 UiHudMenus => recommended
                     ? "Create UI Root with Canvas and EventSystem, then add HUD/menu presenters such as UIManager, ParticipantHealthHudBinder, ParticipantFeedbackHudPresenter, or board/action presenters."
                     : "Optional until the route needs HUD, action buttons, turn prompts, menus, settings, card hands, board UI, or visible scoring.",
@@ -357,8 +357,8 @@ namespace NeonBlack.Gameplay.Editor
                     ? "Treat these as feature cards after the first route works: CollectibleSpawner2D, hazard zones/spawners, EnemyAI, EnemySpawner, ArenaZone, or encounter anchors."
                     : "Optional later unless this loop uses pickups, hazards, enemies, combat arenas, or generated encounters.",
                 _ => recommended
-                    ? "Add the route-owned Unity scene surface required by the selected setup recipe."
-                    : "Optional unless a selected setup recipe needs this scene surface."
+                    ? "Add the route-owned Unity scene surface selected by the current intent."
+                    : "Optional unless the current intent selects a capability that reads this scene surface."
             };
         }
 
@@ -369,10 +369,10 @@ namespace NeonBlack.Gameplay.Editor
                 EnvironmentPlayfield => "A deliberate world, board, arena, backdrop, bounds, collider, tilemap, mesh, terrain, spawn, zone, or selectable playfield surface that belongs to this route.",
                 CameraBounds => "A Cinemachine-backed Pyralis camera route: Camera Root + CinemachineCameraRigController + CameraRigProfile + Shared Cinemachine Camera + physical Target Camera.",
                 UiHudMenus => "A route-owned UI surface such as Canvas plus EventSystem, HUD presenter, menu presenter, board UI, action buttons, or equivalent project-owned UI.",
-                ScoringObjectives => "A score, objective, timer, resource, result, or win/loss service when the route's capability patterns claim scoring.",
+                ScoringObjectives => "A score, objective, timer, resource, result, or win/loss service when the route's capability ingredients claim scoring.",
                 BoardActionSelection => "A selection surface the player can actually use: board grid presenter, card hand, action/menu presenter, UI buttons, cursor bridge, or collider/raycast target.",
                 PickupsHazardsEnemies => "Encounter surfaces such as pickup spawners, hazard zones, enemy spawners, arena zones, or authored encounter anchors.",
-                _ => "A route-owned Unity scene surface that matches the selected setup recipe."
+                _ => "A route-owned Unity scene surface that matches the selected setup profile."
             };
         }
 

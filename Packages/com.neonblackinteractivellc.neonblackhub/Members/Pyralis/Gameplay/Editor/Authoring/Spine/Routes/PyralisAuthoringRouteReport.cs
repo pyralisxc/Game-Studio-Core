@@ -17,7 +17,7 @@ namespace NeonBlack.Gameplay.Editor
     {
         SessionSetup,
         GameRules,
-        SetupRecipe,
+        SetupProfile,
         PlayersSeats,
         PawnsActors,
         SceneObjects,
@@ -310,7 +310,7 @@ namespace NeonBlack.Gameplay.Editor
 
             if (mode.setupProfile == null)
             {
-                issues.Add(CreateIssue("gameMode.setupProfile.missing", PyralisAuthoringValidationCategory.SetupRecipe, "Setup profile is not assigned.", "GameModeDefinition.setupProfile", mode));
+                issues.Add(CreateIssue("gameMode.setupProfile.missing", PyralisAuthoringValidationCategory.SetupProfile, "Setup profile is not assigned.", "GameModeDefinition.setupProfile", mode));
             }
             else
             {
@@ -344,13 +344,37 @@ namespace NeonBlack.Gameplay.Editor
                 return issues;
 
             if (string.IsNullOrWhiteSpace(setup.setupName))
-                issues.Add(CreateIssue("setupProfile.name.required", PyralisAuthoringValidationCategory.SetupRecipe, "Setup name is required.", "GameSetupProfile.setupName", setup));
+                issues.Add(CreateIssue("setupProfile.name.required", PyralisAuthoringValidationCategory.SetupProfile, "Setup name is required.", "GameSetupProfile.setupName", setup));
 
-            if (setup.runtimePatterns == null || setup.runtimePatterns.Length == 0)
+            if ((setup.runtimeCapabilities == null || setup.runtimeCapabilities.Length == 0)
+                && (setup.runtimePatterns == null || setup.runtimePatterns.Length == 0))
             {
-                issues.Add(CreateIssue("setupProfile.runtimePatterns.missing", PyralisAuthoringValidationCategory.SetupRecipe, "At least one runtime pattern should be assigned.", "GameSetupProfile.runtimePatterns", setup));
+                issues.Add(CreateIssue("setupProfile.runtimeCapabilities.missing", PyralisAuthoringValidationCategory.SetupProfile, "At least one runtime capability family should be selected.", "GameSetupProfile.runtimeCapabilities", setup));
                 return issues;
             }
+
+            var capabilityFamilies = new HashSet<RuntimeCapabilityFamily>();
+            if (setup.runtimeCapabilities != null)
+            {
+                for (int i = 0; i < setup.runtimeCapabilities.Length; i++)
+                {
+                    RuntimeCapabilitySelection selection = setup.runtimeCapabilities[i];
+                    if (selection == null)
+                    {
+                        issues.Add(CreateIssue("setupProfile.runtimeCapabilities.slot.empty", PyralisAuthoringValidationCategory.SetupProfile, $"Runtime Capabilities[{i}] is empty.", $"GameSetupProfile.runtimeCapabilities[{i}]", setup));
+                        continue;
+                    }
+
+                    if (!capabilityFamilies.Add(selection.capabilityFamily))
+                        issues.Add(CreateIssue("setupProfile.runtimeCapabilities.duplicate", PyralisAuthoringValidationCategory.SetupProfile, $"Runtime capability `{selection.capabilityFamily}` is selected more than once.", "GameSetupProfile.runtimeCapabilities", setup));
+
+                    if (selection.patternDefinition != null && selection.patternDefinition.capabilityFamily != selection.capabilityFamily)
+                        issues.Add(CreateIssue("setupProfile.runtimeCapabilities.patternFamilyMismatch", PyralisAuthoringValidationCategory.SetupProfile, $"Runtime capability `{selection.capabilityFamily}` references pattern `{selection.patternDefinition.name}` with family `{selection.patternDefinition.capabilityFamily}`.", $"GameSetupProfile.runtimeCapabilities[{i}]", setup));
+                }
+            }
+
+            if (setup.runtimePatterns == null || setup.runtimePatterns.Length == 0)
+                return issues;
 
             var patternIds = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
             for (int i = 0; i < setup.runtimePatterns.Length; i++)
@@ -358,12 +382,12 @@ namespace NeonBlack.Gameplay.Editor
                 RuntimePatternDefinition pattern = setup.runtimePatterns[i];
                 if (pattern == null)
                 {
-                    issues.Add(CreateIssue("setupProfile.runtimePatterns.slot.empty", PyralisAuthoringValidationCategory.SetupRecipe, $"Runtime Patterns[{i}] is null.", $"GameSetupProfile.runtimePatterns[{i}]", setup));
+                    issues.Add(CreateIssue("setupProfile.runtimePatterns.slot.empty", PyralisAuthoringValidationCategory.SetupProfile, $"Optional Runtime Patterns[{i}] is null.", $"GameSetupProfile.runtimePatterns[{i}]", setup));
                     continue;
                 }
 
                 if (!string.IsNullOrWhiteSpace(pattern.patternId) && !patternIds.Add(pattern.patternId))
-                    issues.Add(CreateIssue("setupProfile.runtimePatterns.duplicate", PyralisAuthoringValidationCategory.SetupRecipe, $"Runtime pattern `{pattern.patternId}` is assigned more than once.", "GameSetupProfile.runtimePatterns", setup));
+                    issues.Add(CreateIssue("setupProfile.runtimePatterns.duplicate", PyralisAuthoringValidationCategory.SetupProfile, $"Runtime pattern `{pattern.patternId}` is assigned more than once.", "GameSetupProfile.runtimePatterns", setup));
             }
 
             return issues;
@@ -558,8 +582,8 @@ namespace NeonBlack.Gameplay.Editor
             return new PyralisAuthoringValidationIssue(
                 issueCode,
                 PyralisAuthoringValidationCategory.SceneObjects,
-                $"{row.Surface} is a proof enhancer for this route but was not detected.",
-                $"Validate found: {row.Current}. This scene surface can make the proof easier to read, but it should not stop a narrow Play Mode attempt when required setup is clear.",
+                $"{row.Surface} is a proof enhancer for the selected intent but was not detected.",
+                $"Validate found: {row.Current}. This scene surface can make the proof easier to read, but it should not stop a narrow Play Mode attempt when the selected intent's Do Now setup is clear.",
                 row.NextFix,
                 $"Scene surface: {row.Surface}",
                 bootstrap,
@@ -890,7 +914,7 @@ namespace NeonBlack.Gameplay.Editor
             if (lower.Contains("missing script"))
                 return "No missing MonoBehaviour references on scene roots, linked prefabs, feature runtime prefabs, or projectile prefabs.";
 
-            return "Scene and prefab references should satisfy the contracts claimed by the selected setup recipe.";
+            return "Scene and prefab references should satisfy the contracts claimed by the selected setup profile.";
         }
 
         private static string GetPrefabReadinessSuccess(string readinessIssue)
@@ -978,7 +1002,7 @@ namespace NeonBlack.Gameplay.Editor
                 return PyralisAuthoringValidationCategory.GameRules;
 
             if (lower.Contains("setup") || lower.Contains("runtime pattern") || lower.Contains("pattern"))
-                return PyralisAuthoringValidationCategory.SetupRecipe;
+                return PyralisAuthoringValidationCategory.SetupProfile;
 
             if (lower.Contains("participant") || lower.Contains("player") || lower.Contains("seat") || lower.Contains("hand") || lower.Contains("faction"))
                 return PyralisAuthoringValidationCategory.PlayersSeats;
@@ -1001,7 +1025,7 @@ namespace NeonBlack.Gameplay.Editor
             {
                 PyralisAuthoringValidationCategory.SessionSetup => "Session Setup",
                 PyralisAuthoringValidationCategory.GameRules => "Game Rules",
-                PyralisAuthoringValidationCategory.SetupRecipe => "Setup Recipe",
+                PyralisAuthoringValidationCategory.SetupProfile => "Setup Profile",
                 PyralisAuthoringValidationCategory.PlayersSeats => "Players / Seats",
                 PyralisAuthoringValidationCategory.PawnsActors => "Pawns & Actors",
                 PyralisAuthoringValidationCategory.SceneObjects => "Scene Objects",
@@ -1016,7 +1040,7 @@ namespace NeonBlack.Gameplay.Editor
             {
                 PyralisAuthoringValidationCategory.SessionSetup => "The session chain decides which game mode, participants, and ownership rules the bootstrap can start.",
                 PyralisAuthoringValidationCategory.GameRules => "Game rules define the playable loop the route is trying to prove.",
-                PyralisAuthoringValidationCategory.SetupRecipe => "The setup recipe tells Pyralis which capability surfaces this route needs before scene wiring starts.",
+                PyralisAuthoringValidationCategory.SetupProfile => "The setup profile tells Pyralis which capability surfaces this route needs before scene wiring starts.",
                 PyralisAuthoringValidationCategory.PlayersSeats => "Participants describe who can act in the session, including players, seats, hands, factions, and AI.",
                 PyralisAuthoringValidationCategory.PawnsActors => "Pawn-backed routes cannot spawn or drive actor bodies until pawn definitions and prefabs are coherent.",
                 PyralisAuthoringValidationCategory.SceneObjects => "Scene objects are the runtime anchors that let the authored route exist when Play starts.",
@@ -1031,7 +1055,7 @@ namespace NeonBlack.Gameplay.Editor
             {
                 PyralisAuthoringValidationCategory.SessionSetup => "Inspect the GameplaySessionBootstrap, SessionDefinition, and Default Game Mode assignments.",
                 PyralisAuthoringValidationCategory.GameRules => "Inspect the GameModeDefinition and its rule assets.",
-                PyralisAuthoringValidationCategory.SetupRecipe => "Inspect the GameSetupProfile and RuntimePatternDefinition assets assigned to it.",
+                PyralisAuthoringValidationCategory.SetupProfile => "Inspect the GameSetupProfile runtime capability selections and any optional RuntimePatternDefinition contracts assigned to it.",
                 PyralisAuthoringValidationCategory.PlayersSeats => "Inspect SessionDefinition participants and each ParticipantDefinition.",
                 PyralisAuthoringValidationCategory.PawnsActors => "Inspect ParticipantDefinition pawn links, PawnDefinition fields, and pawn prefab roots.",
                 PyralisAuthoringValidationCategory.SceneObjects => "Inspect Bootstrap scene references, spawn points, camera, playfield, and scene-root helpers.",
@@ -1080,7 +1104,7 @@ namespace NeonBlack.Gameplay.Editor
             {
                 PyralisAuthoringValidationCategory.SessionSetup => "Session setup chain",
                 PyralisAuthoringValidationCategory.GameRules => "GameModeDefinition rules",
-                PyralisAuthoringValidationCategory.SetupRecipe => "GameSetupProfile runtime patterns",
+                PyralisAuthoringValidationCategory.SetupProfile => "GameSetupProfile runtime capabilities",
                 PyralisAuthoringValidationCategory.PlayersSeats => "Participant definitions",
                 PyralisAuthoringValidationCategory.PawnsActors => "Pawn or actor setup",
                 PyralisAuthoringValidationCategory.SceneObjects => "Scene object setup",
@@ -1097,7 +1121,7 @@ namespace NeonBlack.Gameplay.Editor
             {
                 PyralisAuthoringValidationCategory.SessionSetup => "Inspect Session Chain",
                 PyralisAuthoringValidationCategory.GameRules => "Inspect Rule Asset",
-                PyralisAuthoringValidationCategory.SetupRecipe => "Inspect Setup Recipe",
+                PyralisAuthoringValidationCategory.SetupProfile => "Inspect Setup Profile",
                 PyralisAuthoringValidationCategory.PlayersSeats => "Inspect Participant Setup",
                 PyralisAuthoringValidationCategory.PawnsActors => "Inspect Pawn Setup",
                 PyralisAuthoringValidationCategory.SceneObjects => "Inspect Scene Target",
@@ -1114,9 +1138,13 @@ namespace NeonBlack.Gameplay.Editor
                 "session.defaultParticipants.missing" => "Open Participant Guide",
                 "session.defaultParticipants.slot.empty" => "Open Participant Guide",
                 "gameMode.setupProfile.missing" => "Open Game Rules Guide",
-                "setupProfile.runtimePatterns.missing" => "Open Setup Recipe Picker",
-                "setupProfile.runtimePatterns.slot.empty" => "Open Setup Recipe Picker",
-                "setupProfile.runtimePatterns.duplicate" => "Open Setup Recipe Picker",
+                "setupProfile.runtimeCapabilities.missing" => "Open Setup Profile",
+                "setupProfile.runtimeCapabilities.slot.empty" => "Open Setup Profile",
+                "setupProfile.runtimeCapabilities.duplicate" => "Open Setup Profile",
+                "setupProfile.runtimeCapabilities.patternFamilyMismatch" => "Open Setup Profile",
+                "setupProfile.runtimePatterns.missing" => "Open Setup Profile",
+                "setupProfile.runtimePatterns.slot.empty" => "Open Setup Profile",
+                "setupProfile.runtimePatterns.duplicate" => "Open Setup Profile",
                 "pawn.pawnPrefab.missing" => "Open Pawn Guide",
                 _ => string.Empty
             };
@@ -1277,7 +1305,7 @@ namespace NeonBlack.Gameplay.Editor
                     return "Session setup chain";
                 case PyralisAuthoringValidationCategory.GameRules:
                     return "GameModeDefinition";
-                case PyralisAuthoringValidationCategory.SetupRecipe:
+                case PyralisAuthoringValidationCategory.SetupProfile:
                     return "GameSetupProfile";
                 case PyralisAuthoringValidationCategory.PlayersSeats:
                     return "ParticipantDefinition or SessionDefinition";
@@ -1414,30 +1442,25 @@ PyralisAuthoringRouteDescriptor descriptor = PyralisAuthoringRouteDescriptor.Bui
                 return new PyralisAuthoringRouteReport(
                     "No setup route selected",
                     "Create or choose a Game Setup Profile asset, then select/open the GameModeDefinition asset and assign Setup Profile by drag/drop or the field's object picker circle.",
-                    "The setup profile is the route recipe. Create it from the Project window when wiring manually, then choose runtime patterns before adding scene extras.",
+                    "The setup profile is the editable route intent. Create it from the Project window when wiring manually, then choose capability ingredients before adding scene extras.",
                     issues);
             }
 
             if (!analysis.HasAssignedPatterns)
             {
-                bool hasExistingPatterns = AssetDatabase.FindAssets("t:RuntimePatternDefinition").Length > 0;
                 return new PyralisAuthoringRouteReport(
                     "No setup route selected",
-                    hasExistingPatterns
-                        ? "Select/open the GameSetupProfile asset, choose a route family in Runtime Capabilities -> Capability To Add, then click Add Capability."
-                        : "Create or import a Runtime Pattern Definition, then select/open the GameSetupProfile asset and add it through Runtime Capabilities -> Add Capability.",
-                    hasExistingPatterns
-                        ? "Use existing runtime patterns for first proofs; create new capability patterns only for advanced custom setup categories."
-                        : "No Runtime Pattern Definition assets were found in the project. For a 1P movement proof, create a Runtime Pattern Definition, select it, and use Pawn Action defaults before participant and pawn wiring can become route-aware.",
+                    "Select/open the GameSetupProfile asset, then use Authoring Window -> Intent to set DNA axioms, presentation lane, and Engine Spine capabilities.",
+                    "Capability families are enough for first-proof guidance. Add an optional RuntimePatternDefinition contract only when the generic capability language cannot describe this route.",
                     issues);
             }
 
             if (!analysis.HasValidPatterns)
             {
                 return new PyralisAuthoringRouteReport(
-                    "Incomplete capability pattern",
-                    "Select the assigned Runtime Pattern Definition and clear its Inspector validation issues before adding participants.",
-                    "A Runtime Pattern Definition is assigned, but Pyralis cannot use default placeholder metadata as the route source of truth. Fill its id, display name, description, setup notes, capability family, embodiment, and control surfaces first.",
+                    "Incomplete setup capability",
+                    "Open the GameSetupProfile and fix its runtime capability rows before adding participants.",
+                    "A setup capability or optional RuntimePatternDefinition contract is invalid. Capability rows are the route source of truth; optional contracts can enrich guidance after their metadata is valid.",
                     issues);
             }
 
@@ -1469,7 +1492,7 @@ PyralisAuthoringRouteDescriptor descriptor = PyralisAuthoringRouteDescriptor.Bui
                     return new PyralisAuthoringRouteReport(
                         "Pawn-backed route",
                         pawnIssue,
-                        "Pawn-backed routes need ParticipantDefinition > PawnDefinition > pawn prefab with PawnRoot before they can spawn actors.",
+                        "Pawn-backed routes need ParticipantDefinition > PawnDefinition > pawn prefab before they can spawn actors. For a 2D proof, the prefab root should carry PawnRoot, Motor2D, Motor2DInputAdapter, SpriteRenderer, and Animator, with art and input assigned in visible Inspector fields.",
                         issues);
                 }
 
@@ -1488,8 +1511,8 @@ PyralisAuthoringRouteDescriptor descriptor = PyralisAuthoringRouteDescriptor.Bui
                 {
                     return new PyralisAuthoringRouteReport(
                         "Pawn-backed route",
-                        "Add a scene Transform to GameplaySessionBootstrap > Spawn Points, then run the first proof.",
-                        proof.Guidance,
+                        "Create SpawnPoint_1 in the Hierarchy, then select Gameplay Root, expand GameplaySessionBootstrap > Spawn Points, click +, and drag SpawnPoint_1 into Element 0 before the first proof.",
+                        "Unity list fields need an element slot before a drag can land. Keep this route manual: the spawn Transform is scene-authored placement, not a preset.",
                         issues);
                 }
 

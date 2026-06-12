@@ -12,7 +12,9 @@ namespace NeonBlack.Gameplay.Characters
         Relevance = "3D presentation module; maps movement state to Animator signals and handles billboarding.",
         Axioms = AuthoringWorldAxiom.Dimensions3D,
         NativeSetup = new[] { "Attach to a Pawn with ActorAnimationDriver.", "Ensure Animator parameters match signal names." },
-        FirstProof = "Verify the pawn's animations respond correctly to movement and action states.",
+        AssignmentFields = new[] { nameof(showDebugHUD) },
+        CustomizationMoments = new[] { "Animator signal mapping", "Billboard presentation", "debug HUD visibility" },
+        FirstProof = "proof.1p-pawn-movement",
         ExpertAdvice = "Presentation logic should be visual-only. It reads from movement/combat state and writes to the Animator. Use Billboarding settings if your 3D pawn uses 2D sprites."
     )]
     [AddComponentMenu("NeonBlack/Gameplay/3D/Pawn 3D Presentation Component")]

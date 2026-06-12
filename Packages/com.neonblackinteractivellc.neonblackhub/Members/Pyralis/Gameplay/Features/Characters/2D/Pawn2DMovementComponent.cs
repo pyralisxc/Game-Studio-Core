@@ -159,10 +159,9 @@ namespace NeonBlack.Gameplay.Features.Characters
         }
 
         [Inject]
-        private void Construct(IGameplayStateReader stateReader = null, ICameraBoundsProvider boundsProvider = null)
+        private void Construct(IGameplayStateReader stateReader = null)
         {
             gameplayStateReader ??= stateReader;
-            cameraBoundsProvider ??= boundsProvider;
         }
 
         public void ConfigureRuntime(IGameplayStateReader stateReader, ICameraBoundsProvider boundsProvider)

@@ -30,7 +30,7 @@ Most game setups use this chain:
 
 Create assets through the native Project-window Create menu under `NeonBlack`. Use the Authoring Window and Inspector field guides for route state, field handoff, validation, and first proof guidance.
 
-## Maintenance Contract
+## Setup Maintenance Contract
 
 Authoring guidance is product code. When changing first-scene or route-guided setup behavior, keep these surfaces aligned in the same maintenance slice:
 

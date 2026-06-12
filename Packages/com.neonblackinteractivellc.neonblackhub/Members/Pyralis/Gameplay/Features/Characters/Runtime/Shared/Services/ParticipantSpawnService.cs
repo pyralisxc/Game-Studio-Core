@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Reflection;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
@@ -42,6 +43,7 @@ public class ParticipantSpawnService : MonoBehaviour, IGameService, IRuntimeVali
         [SerializeField] private bool replaceExistingPawn = true;
 
         private IObjectResolver _resolver;
+        private ICameraBoundsProvider _cameraBoundsProvider;
 
         [Inject]
         private void Construct(IObjectResolver resolver, ParticipantRosterService injectedRosterService = null, SessionStateService injectedSessionStateService = null)
@@ -106,6 +108,11 @@ public class ParticipantSpawnService : MonoBehaviour, IGameService, IRuntimeVali
             spawnPoints = points;
         }
 
+        public void SetCameraBoundsProvider(ICameraBoundsProvider provider)
+        {
+            _cameraBoundsProvider = provider;
+        }
+
         public virtual GameObject SpawnParticipantPawn(ParticipantHandle participant)
         {
             if (participant == null || participant.PawnDefinition == null || participant.PawnDefinition.pawnPrefab == null)
@@ -163,6 +170,46 @@ public class ParticipantSpawnService : MonoBehaviour, IGameService, IRuntimeVali
             IPawnParticipantInitializer pawnInitializer = instance.GetComponent<IPawnParticipantInitializer>();
             if (pawnInitializer != null)
                 pawnInitializer.InitializeForParticipant(participant, sessionStateService != null ? sessionStateService.ActiveGameMode : null);
+
+            ConfigureSpawnedPawnRuntime(instance);
+        }
+
+        private void ConfigureSpawnedPawnRuntime(GameObject instance)
+        {
+            if (instance == null)
+                return;
+
+            MonoBehaviour[] behaviours = instance.GetComponentsInChildren<MonoBehaviour>(true);
+            for (int i = 0; i < behaviours.Length; i++)
+            {
+                ConfigureOptionalPawnRuntime(behaviours[i]);
+            }
+        }
+
+        private void ConfigureOptionalPawnRuntime(MonoBehaviour behaviour)
+        {
+            if (behaviour == null)
+                return;
+
+            MethodInfo configureRuntime = behaviour.GetType().GetMethod(
+                "ConfigureRuntime",
+                BindingFlags.Instance | BindingFlags.Public,
+                null,
+                new[] { typeof(IGameplayStateReader), typeof(ICameraBoundsProvider) },
+                null);
+            if (configureRuntime != null)
+            {
+                configureRuntime.Invoke(behaviour, new object[] { sessionStateService, _cameraBoundsProvider });
+                return;
+            }
+
+            configureRuntime = behaviour.GetType().GetMethod(
+                "ConfigureRuntime",
+                BindingFlags.Instance | BindingFlags.Public,
+                null,
+                new[] { typeof(IGameplayStateReader) },
+                null);
+            configureRuntime?.Invoke(behaviour, new object[] { sessionStateService });
         }
 
         private void HandleParticipantRegistered(ParticipantHandle participant)

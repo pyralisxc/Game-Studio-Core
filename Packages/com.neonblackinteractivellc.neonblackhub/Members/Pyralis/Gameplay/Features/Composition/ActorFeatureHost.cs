@@ -20,7 +20,8 @@ namespace NeonBlack.Gameplay.Features.Composition
             "Modules are assigned by the actor definition during initialization.",
             "Runtime feature prefabs should contain IFeatureModuleRuntime components."
         },
-        FirstProof = "Check the host state at runtime to verify installed modules appear in the 'Installed Modules' list.",
+        RequiredInterfaces = new[] { typeof(IRuntimeValidationProvider) },
+        FirstProof = "proof.custom-object-effect",
         ExpertAdvice = "The ActorFeatureHost is the central manager for dynamic actor capabilities. It handles dependency injection (VContainer) for newly instantiated feature prefabs.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/composition"
     )]

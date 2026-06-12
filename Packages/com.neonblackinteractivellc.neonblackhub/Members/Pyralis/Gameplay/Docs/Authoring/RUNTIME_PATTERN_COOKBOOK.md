@@ -1,16 +1,16 @@
-# Runtime Pattern Cookbook
+# Optional Runtime Contract Cookbook
 
-Use this guide before wiring Unity scenes or prefabs. It helps choose the `RuntimePatternDefinition` assets that belong in a `GameSetupProfile`.
+Use this guide only when a selected `GameSetupProfile.runtimeCapabilities` row needs advanced reusable metadata. First-shape setup through Runtime Capabilities; optional `RuntimePatternDefinition` assets can enrich a route with presentation/runtime lanes, control surfaces, and first-proof requirements when the generic capability language is not enough.
 
 ## Core Rule
 
-A game setup can use more than one runtime pattern. Patterns describe capabilities and control surfaces, not exclusive genres.
+A game setup can use more than one runtime capability. Optional runtime contracts describe additional control surfaces and proof requirements, not exclusive genres or presets.
 
-Assign the selected patterns to a `GameSetupProfile`, then assign that setup profile to `GameModeDefinition.setupProfile`. Each pattern should also declare its presentation/runtime lanes and first-proof requirements so Overview, Guide, Map, and Validate can explain the same setup facts without text guessing.
+Select capability families in `GameSetupProfile`, then assign that setup profile to `GameModeDefinition.setupProfile`. When an optional runtime contract is used, it should declare presentation/runtime lanes and first-proof requirements so Overview, Guide, Map, and Validate can explain the same setup facts without text guessing.
 
-Authoring should react to those selected patterns. A pawn action setup should prioritize pawn prefab, input, spawn, camera, and movement proof. A tabletop setup should not ask for pawn fields; it should prioritize board/card/action/cursor surfaces. A scoring setup should not block Play Mode before one score-changing event exists. The route should guide the developer's creative choices instead of forcing every game through one starter scene.
+Authoring should react to selected capabilities first and optional contracts second. A pawn action setup should prioritize pawn prefab, input, spawn, camera, and movement proof. A tabletop setup should not ask for pawn fields; it should prioritize board/card/action/cursor surfaces. A scoring setup should not block Play Mode before one score-changing event exists. The route should guide the developer's creative choices instead of forcing every game through one starter scene.
 
-## Common Setup Recipes
+## Common Optional Contract Overlaps
 
 | Game direction | Recommended patterns | Pawn required? |
 |---|---|---|

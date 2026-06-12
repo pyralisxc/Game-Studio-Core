@@ -33,7 +33,7 @@ The current refactor pass now includes these concrete shared-core building block
 - `InputProfile`
 - `SettingsProfile`
 - feature module definitions and pawn-module interfaces
-- `PyralisAuthoringContractRegistry` discovery for `IAuthoringContractProvider` contract providers
+- `ResolvedAuthoringContractRegistry` discovery for `IAuthoringContractProvider` contract providers
 
 This means the package has a real Inspector-driven shared-core startup path. New gameplay and authoring work should extend this path directly instead of preserving abandoned setup routes.
 
@@ -79,7 +79,7 @@ The maintainable path is:
 
 ### 3.5. Feature Contracts Own Feature Setup Truth
 
-Reusable feature modules declare their authoring requirements beside the owning feature through `IAuthoringContractProvider`. `PyralisAuthoringContractRegistry` discovers those providers reflectively. Central authoring code aggregates and displays contracts; it should not maintain parallel switch statements or manual module-id lists for feature-specific profile, lane, action, runtime-interface, or first-proof rules.
+Reusable feature modules declare their authoring requirements beside the owning feature through `IAuthoringContractProvider`. `ResolvedAuthoringContractRegistry` discovers those providers reflectively. Central authoring code aggregates and displays contracts; it should not maintain parallel switch statements or manual module-id lists for feature-specific profile, lane, action, runtime-interface, or first-proof rules.
 
 A complete feature contract names:
 
@@ -111,7 +111,7 @@ The runtime model should keep participant identity, pawn identity, and input own
 
 ### 6. Networking Is An Optional Extension Layer
 
-`NeonBlack.Gameplay` has no NGO dependency. NGO-dependent behaviour lives in the separate `NeonBlack.Gameplay.Networking` assembly in the `Networking/` folder. That assembly references the stable gameplay seams it needs (`Core`, `Data`, and `Characters`) rather than forcing core gameplay to reference NGO.
+`NeonBlack.Gameplay` does not reference the optional `NeonBlack.Gameplay.Networking` assembly. NGO-dependent session, authority, spawn, validation, and NetworkManager behaviour lives in the separate Networking assembly. One current shared character seam, `MovementStateSnapshot`, still uses NGO serialization types so movement replication can share DTOs with networked adapters; keep that exception narrow or move it behind a dedicated networking contract before expanding prediction/reconciliation work.
 
 The three participant services expose protected virtual override points:
 
@@ -247,7 +247,7 @@ Control surfaces should route through participant ownership and input/action con
 
 ### Runtime Pattern
 
-A reusable setup recipe that describes a capability family and its participant/control-surface expectations.
+A reusable optional route contract that describes a capability family and its participant/control-surface expectations.
 
 Examples:
 
@@ -487,7 +487,7 @@ Preferred starting points:
 
 Current implementation note:
 
-- the package manifest declares Cinemachine, Netcode for GameObjects, and Unity Transport as package dependencies; NGO runtime remains an opt-in gameplay route isolated behind `NeonBlack.Gameplay.Networking.asmdef`.
+- the package manifest declares Cinemachine, Netcode for GameObjects, and Unity Transport as package dependencies; NGO gameplay behaviour remains an opt-in route isolated behind `NeonBlack.Gameplay.Networking.asmdef`, with only narrow shared serialization DTOs allowed outside the Networking folder.
 
 Avoid building custom replacements for these unless there is a clear documented limitation.
 
@@ -520,7 +520,7 @@ The architecture is coherent enough for active route development, but several ar
 
 Highest-risk areas:
 
-- runtime services still include transition-facing registry and static surfaces that should keep shrinking toward explicit lifetime-scope ownership
+- runtime services still include narrow static compatibility/query surfaces, especially participant lookup helpers, that should keep shrinking toward explicit lifetime-scope ownership and participant/session references
 - some older scene-facing flows still need participant-native proof in Play Mode
 - `CameraOcclusionFader` and a few polling/ticking systems need hot-path allocation cleanup before content density grows
 - several large MonoBehaviours and editor classes remain change hotspots
@@ -562,7 +562,7 @@ Break large pawn scripts into modules with clear responsibilities.
 
 Move mode identity out of folders and into authored definitions.
 
-Arcade and brawler should become presets and example assemblies of shared parts.
+Arcade and brawler should remain example assemblies of shared parts, with reusable learning captured as capability facts, validation rules, optional route contracts, and generic setup guidance rather than presets.
 
 ### Target 5: Documentation As Source Of Truth
 
@@ -574,7 +574,7 @@ Docs should describe the supported path directly. Keep compatibility notes only 
 
 The long-term runtime service ownership model should have one primary composition root.
 
-`GameplaySessionBootstrap` remains the supported scene entrypoint, but it should feed a clear service graph rather than becoming a second service container. `PyralisGameplayLifetimeScope` should become the durable owner for dependency registration. `GameplayPlatformContext.Current`, `PlatformServiceRegistry`, and static singleton accessors should shrink toward migration support or narrow facades.
+`GameplaySessionBootstrap` remains the supported scene entrypoint, but it should feed a clear service graph rather than becoming a second service container. `PyralisGameplayLifetimeScope` should be the durable owner for dependency registration. Static singleton accessors and compatibility query helpers such as participant lookup should shrink toward narrow facades rather than becoming a second service-location model.
 
 This matters because Unity scenes already have enough implicit state. The gameplay platform should not add several hidden service-resolution models on top of that.
 

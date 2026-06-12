@@ -17,6 +17,7 @@ namespace NeonBlack.Gameplay.Editor
         public GameModeDefinition Mode => Analysis.Mode;
         public GameSetupProfile SetupProfile => Analysis.SetupProfile;
         public RuntimePatternDefinition[] Patterns => Analysis.Patterns ?? System.Array.Empty<RuntimePatternDefinition>();
+        public RuntimeCapabilityFamily[] CapabilityFamilies => Analysis.CapabilityFamilies ?? System.Array.Empty<RuntimeCapabilityFamily>();
         public string[] RequiredRuntimeSystems => Analysis.RequiredRuntimeSystems ?? System.Array.Empty<string>();
         public PyralisAuthoringRouteFact[] RouteFacts => Analysis.RouteFacts ?? System.Array.Empty<PyralisAuthoringRouteFact>();
         public PyralisAuthoringRouteFact PrimaryRouteFact => Analysis.PrimaryRouteFact;
@@ -26,6 +27,7 @@ namespace NeonBlack.Gameplay.Editor
         public bool HasParticipants => Analysis.HasParticipants;
         public bool HasAnyDefaultPawn => Analysis.HasAnyDefaultPawn;
         public string ParticipantPawnIssue => Analysis.ParticipantPawnIssue;
+        public PyralisParticipantPawnIssueKind ParticipantPawnIssueKind => Analysis.ParticipantPawnIssueKind;
         public string RouteName => Analysis.RouteName;
 
         public bool HasPawn => HasFamily(RuntimeCapabilityFamily.CharacterPawnGameplay);
@@ -39,15 +41,15 @@ namespace NeonBlack.Gameplay.Editor
         public bool HasProcedural => HasFamily(RuntimeCapabilityFamily.ProceduralGeneration);
         public bool HasNetworking => HasFamily(RuntimeCapabilityFamily.Networking);
         public bool HasPlatformCore => HasFamily(RuntimeCapabilityFamily.PlatformCore);
-        public bool HasSelectedCapabilities => HasValidPatterns;
+        public bool HasSelectedCapabilities => CapabilityFamilies.Length > 0 || HasValidPatterns;
 
-        public bool UsesWorld => HasValidPatterns && (Analysis.UsesPlayfield() || Analysis.UsesPawnGameplay() || Analysis.UsesProjectileCombat());
-        public bool UsesCamera => HasValidPatterns && Analysis.UsesCamera();
-        public bool UsesUi => HasValidPatterns && (Analysis.UsesActionSelection() || Analysis.UsesScoring() || Analysis.UsesTabletopContract() || Analysis.UsesPawnGameplay());
-        public bool UsesScoring => HasValidPatterns && Analysis.UsesScoring();
-        public bool UsesActionOrTabletop => HasValidPatterns && (Analysis.UsesActionSelection() || Analysis.UsesTabletopContract());
-        public bool UsesHazardsOrPickups => HasValidPatterns && (Analysis.UsesPawnGameplay() || Analysis.UsesProjectileCombat() || Analysis.UsesScoring());
-        public bool LikelyUsesInputManager => HasValidPatterns && Analysis.LikelyUsesInputManager();
+        public bool UsesWorld => HasSelectedCapabilities && (Analysis.UsesPlayfield() || Analysis.UsesPawnGameplay() || Analysis.UsesProjectileCombat());
+        public bool UsesCamera => HasSelectedCapabilities && Analysis.UsesCamera();
+        public bool UsesUi => HasSelectedCapabilities && (Analysis.UsesActionSelection() || Analysis.UsesScoring() || Analysis.UsesTabletopContract() || Analysis.UsesPawnGameplay());
+        public bool UsesScoring => HasSelectedCapabilities && Analysis.UsesScoring();
+        public bool UsesActionOrTabletop => HasSelectedCapabilities && (Analysis.UsesActionSelection() || Analysis.UsesTabletopContract());
+        public bool UsesHazardsOrPickups => HasSelectedCapabilities && (Analysis.UsesPawnGameplay() || Analysis.UsesProjectileCombat() || Analysis.UsesScoring());
+        public bool LikelyUsesInputManager => HasSelectedCapabilities && Analysis.LikelyUsesInputManager();
 
         public static PyralisAuthoringRouteDescriptor Build(Object activeSetup)
         {
@@ -70,6 +72,12 @@ namespace NeonBlack.Gameplay.Editor
 
         public bool HasFamily(RuntimeCapabilityFamily family)
         {
+            for (int i = 0; i < CapabilityFamilies.Length; i++)
+            {
+                if (CapabilityFamilies[i] == family)
+                    return true;
+            }
+
             for (int i = 0; i < Patterns.Length; i++)
             {
                 RuntimePatternDefinition pattern = Patterns[i];

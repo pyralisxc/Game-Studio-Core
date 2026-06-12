@@ -17,14 +17,14 @@ namespace NeonBlack.Gameplay.Editor
     [CanEditMultipleObjects]
     public sealed class PyralisReflectiveInspectorOverlay : UnityEditor.Editor
     {
-        private PyralisAuthoringContract _contract;
+        private ResolvedAuthoringContract _contract;
         private bool _checkedContract;
 
         private void OnEnable()
         {
             if (target == null) return;
             
-            _contract = PyralisAuthoringContractRegistry.FindByType(target.GetType());
+            _contract = ResolvedAuthoringContractRegistry.FindByType(target.GetType());
             _checkedContract = true;
         }
 
@@ -34,51 +34,52 @@ namespace NeonBlack.Gameplay.Editor
 
             if (_contract != null)
             {
-                DrawPyralisOverlay();
+                PyralisResolvedInspectorGuide.DrawHeader(_contract);
             }
 
             DrawDefaultInspector();
 
             if (_contract != null)
             {
-                DrawValidationFooter();
+                PyralisResolvedInspectorGuide.DrawValidationFooter(_contract, target, serializedObject);
             }
         }
+    }
 
-        private void DrawPyralisOverlay()
+    internal static class PyralisResolvedInspectorGuide
+    {
+        public static void DrawHeader(ResolvedAuthoringContract contract)
         {
             List<PyralisGuideSection> sections = new List<PyralisGuideSection>();
             
-            if (!string.IsNullOrEmpty(_contract.Relevance))
-                sections.Add(new PyralisGuideSection("Relevance", _contract.Relevance));
+            if (!string.IsNullOrEmpty(contract.Relevance))
+                sections.Add(new PyralisGuideSection("Relevance", contract.Relevance));
             
-            if (!string.IsNullOrEmpty(_contract.ExpertAdvice))
-                sections.Add(new PyralisGuideSection("Expert Advice", _contract.ExpertAdvice));
+            if (!string.IsNullOrEmpty(contract.ExpertAdvice))
+                sections.Add(new PyralisGuideSection("Expert Advice", contract.ExpertAdvice));
 
-            if (_contract.NativeSetup != null && _contract.NativeSetup.Length > 0)
-                sections.Add(new PyralisGuideSection("Setup Steps", null, _contract.NativeSetup));
+            if (contract.NativeSetup != null && contract.NativeSetup.Length > 0)
+                sections.Add(new PyralisGuideSection("Setup Steps", null, contract.NativeSetup));
 
-            if (!string.IsNullOrEmpty(_contract.FirstProofTargetId))
-                sections.Add(new PyralisGuideSection("First Proof", _contract.FirstProofTargetId));
+            if (!string.IsNullOrEmpty(contract.FirstProofTargetId))
+                sections.Add(new PyralisGuideSection("First Proof", contract.FirstProofTargetId));
 
             PyralisInspectorGuide.DrawFieldGuide(
-                _contract.DisplayName + " (Pyralis Guide)",
+                contract.DisplayName + " (Pyralis Guide)",
                 false, 
                 sections.ToArray());
         }
 
-        private void DrawValidationFooter()
+        public static void DrawValidationFooter(ResolvedAuthoringContract contract, Object target, SerializedObject serializedObject)
         {
             List<string> errors = new List<string>();
             List<string> warnings = new List<string>();
 
-            // 1. Validate AssignmentFields
-            if (_contract.AssignmentFields != null && _contract.AssignmentFields.Length > 0)
+            if (contract.AssignmentFields != null && contract.AssignmentFields.Length > 0)
             {
-                SerializedObject so = new SerializedObject(target);
-                foreach (var field in _contract.AssignmentFields)
+                foreach (var field in contract.AssignmentFields)
                 {
-                    SerializedProperty prop = so.FindProperty(field);
+                    SerializedProperty prop = serializedObject.FindProperty(field);
                     if (prop == null) continue;
                     
                     if (IsPropertyUnassigned(prop))
@@ -86,7 +87,6 @@ namespace NeonBlack.Gameplay.Editor
                 }
             }
 
-            // 2. Support IRuntimeValidationProvider
             if (target is IRuntimeValidationProvider provider)
             {
                 foreach (var issue in provider.GetRuntimeValidationIssues())
@@ -95,7 +95,6 @@ namespace NeonBlack.Gameplay.Editor
                 }
             }
 
-            // 3. Draw Messages
             foreach (var error in errors)
                 EditorGUILayout.HelpBox(error, MessageType.Error);
             
@@ -104,11 +103,11 @@ namespace NeonBlack.Gameplay.Editor
 
             if (errors.Count == 0 && warnings.Count == 0)
             {
-                EditorGUILayout.HelpBox(_contract.DisplayName + " is ready for runtime.", MessageType.Info);
+                EditorGUILayout.HelpBox(contract.DisplayName + " is ready for runtime.", MessageType.Info);
             }
         }
 
-        private bool IsPropertyUnassigned(SerializedProperty prop)
+        private static bool IsPropertyUnassigned(SerializedProperty prop)
         {
             switch (prop.propertyType)
             {

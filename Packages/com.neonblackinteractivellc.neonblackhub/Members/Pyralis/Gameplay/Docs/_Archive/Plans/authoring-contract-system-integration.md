@@ -24,14 +24,14 @@ The system primarily manifests in the **Pyralis Authoring Window**, which uses t
 # Key Asset & Context
 - `AuthoringContractAttribute.cs`: Metadata for reflective discovery.
 - `IAuthoringContractProvider.cs`: Interface for dynamic contract provision (to be created).
-- `PyralisAuthoringContractRegistry`: Central registry for discovered contracts.
+- `ResolvedAuthoringContractRegistry`: Central registry for discovered contracts.
 - `FeatureModuleDefinition.cs`: Asset that defines a feature; will be refactored to use contracts for validation.
 - `PyralisReflectiveContractSolver.cs`: Logic that matches scene state against contracts.
 
 # Implementation Steps
 
 ## 1. Core Foundation: IAuthoringContractProvider & Registry Update
-- **Description**: Define the `IAuthoringContractProvider` interface and update `PyralisAuthoringContractRegistry` to support it. This ensures both attribute-based and interface-based discovery work in unison.
+- **Description**: Define the `IAuthoringContractProvider` interface and update `ResolvedAuthoringContractRegistry` to support it. This ensures both attribute-based and interface-based discovery work in unison.
 - **Assigned role**: developer
 - **Dependencies**: None
 - **Parallelizable**: No
@@ -67,6 +67,6 @@ The system primarily manifests in the **Pyralis Authoring Window**, which uses t
 - **Parallelizable**: No
 
 # Verification & Testing
-- **Unit Tests**: Run tests for `PyralisAuthoringContractRegistry` to ensure all tagged classes appear in the `All` list.
+- **Unit Tests**: Run tests for `ResolvedAuthoringContractRegistry` to ensure all tagged classes appear in the `All` list.
 - **Validation Audit**: Create a test scene with various "broken" Pawn configurations and verify the **Authoring Window** (Facts/Guide tabs) reports the exact missing types defined in the contracts.
 - **CLI Gate**: Run `dotnet build` and the `Run-PreSceneValidation.ps1` script to ensure no compilation errors or regressions.

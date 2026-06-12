@@ -92,7 +92,7 @@ Available profiles:
 
 What this gives us:
 
-- authored setup recipes for overlapping game-loop expectations
+- authored setup profiles for overlapping game-loop expectations
 - a profile-level way to say a game is, for example, realtime character plus projectile combat rather than one exclusive genre
 - validation for participant embodiment expectations, including non-pawn control surfaces such as camera, cursor, board seat, card hand, menu selection, faction, or system/AI
 - optional `GameModeDefinition.setupProfile` linkage so game-mode validation can surface setup-profile issues before scene wiring
@@ -440,7 +440,7 @@ What this gives us:
 - optional launcher-owned prefab pooling for pooled projectile instances
 - plain runtime magazine state for clipped or unlimited fire modes
 - authored hit/miss impact effects, hit pause, camera shake, and audio hooks through `ProjectileImpactDefinition`
-- pawn starter pack output for a sample hitscan projectile, fire mode, and impact definition
+- generic projectile authoring guidance for sample hitscan, fire mode, and impact definitions
 
 Gameplay implications:
 

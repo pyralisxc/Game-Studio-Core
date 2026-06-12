@@ -36,7 +36,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             string[] offenders = forbiddenPaths.Where(Directory.Exists).ToArray();
             Assert.That(offenders, Is.Empty,
-                "The active Assets root should stay clear for scene/prefab launch-pad work. Archive generated starter packs or test scratch folders outside Unity import paths: " + string.Join(", ", offenders));
+                "The active Assets root should stay clear for scene/prefab launch-pad work. Archive generated proof content or test scratch folders outside Unity import paths: " + string.Join(", ", offenders));
 
             string[] initTestScenes = Directory.GetFiles(assetsRoot, "InitTestScene*.unity", SearchOption.TopDirectoryOnly);
             Assert.That(initTestScenes, Is.Empty,
@@ -130,6 +130,41 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             Assert.That(source.Contains("NeonBlack.Gameplay.Networking"), Is.False,
                 "Core gameplay startup should stay local-first; backend networking belongs behind the optional Networking assembly.");
+        }
+
+        [Test]
+        public void RuntimeNetcodeUsage_StaysInNetworkingOrSharedMovementSerialization()
+        {
+            string gameplayRoot = Path.Combine(
+                Application.dataPath,
+                "..",
+                "Packages",
+                "com.neonblackinteractivellc.neonblackhub",
+                "Members",
+                "Pyralis",
+                "Gameplay");
+
+            string networkingSegment = Path.DirectorySeparatorChar + "Networking" + Path.DirectorySeparatorChar;
+            string editorSegment = Path.DirectorySeparatorChar + "Editor" + Path.DirectorySeparatorChar;
+            string allowedSharedDtoPath = Path.Combine(
+                gameplayRoot,
+                "Features",
+                "Characters",
+                "Runtime",
+                "Shared",
+                "Movement",
+                "3D",
+                "MovementStateSnapshot.cs");
+
+            string[] offenders = Directory.GetFiles(gameplayRoot, "*.cs", SearchOption.AllDirectories)
+                .Where(path => !path.Contains(editorSegment))
+                .Where(path => !path.Contains(networkingSegment))
+                .Where(path => !Path.GetFullPath(path).Equals(Path.GetFullPath(allowedSharedDtoPath), System.StringComparison.OrdinalIgnoreCase))
+                .Where(path => File.ReadAllText(path).Contains("Unity.Netcode"))
+                .ToArray();
+
+            Assert.That(offenders, Is.Empty,
+                "NGO dependencies should stay in the Networking assembly except the shared movement serialization DTO until that seam is isolated. Offenders: " + string.Join(", ", offenders));
         }
 
         [Test]
@@ -469,7 +504,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(Directory.Exists(charactersCompositionRoot), Is.False,
                 "Bootstrap-owned platform composition helpers should not live under the Characters feature.");
             Assert.That(Directory.Exists(charactersSharedCompositionRoot), Is.False,
-                "GameplayPlatformContext is core service-composition state, not Characters shared runtime.");
+                "Bootstrap-owned platform composition helpers should not return to Characters shared runtime.");
         }
 
         [Test]
@@ -674,7 +709,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(File.Exists(Path.Combine(traversalRoot, "3D", "GrabDetector.cs")), Is.True);
             Assert.That(File.Exists(Path.Combine(traversalRoot, "3D", "ClimbZone.cs")), Is.True);
             Assert.That(File.Exists(Path.Combine(traversalRoot, "3D", "Pawn3DTraversalComponent.cs")), Is.True);
-            Assert.That(File.Exists(Path.Combine(Path.GetDirectoryName(traversalRoot)!, "Editor", "ClimbZoneEditor.cs")), Is.True);
+            Assert.That(File.Exists(Path.Combine(Path.GetDirectoryName(traversalRoot)!, "Editor", "Authoring", "ClimbZoneEditor.cs")), Is.True);
 
             string ledgeProbeSource = File.ReadAllText(Path.Combine(traversalRoot, "3D", "LedgeProbe3D.cs"));
             string traversalComponentSource = File.ReadAllText(Path.Combine(traversalRoot, "3D", "Pawn3DTraversalComponent.cs"));
@@ -1035,6 +1070,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             string weaponSource = File.ReadAllText(Path.Combine(gameplayRoot, "Data", "Definitions", "Combat", "WeaponData.cs"));
             string pawnCombatSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Characters", "PawnCombatBehaviour.cs"));
             string pawnCombat2DSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Characters", "2D", "PawnCombatBehaviour2D.cs"));
+            string pawnProjectileModuleSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Characters", "PawnProjectileModule.cs"));
             string damageZone2DSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Zones", "2D", "DamageZone2D.cs"));
             string damageZone3DSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Zones", "3D", "DamageZone.cs"));
 
@@ -1058,11 +1094,12 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(weaponSource.Contains("projectileMaxDistance"), Is.False);
             Assert.That(weaponSource.Contains("projectileLifetime"), Is.False);
             Assert.That(weaponSource.Contains("projectileImpactDefinition"), Is.False);
-            Assert.That(pawnCombatSource.Contains("ProjectileFireRequest"), Is.True);
             Assert.That(pawnCombatSource.Contains("weapon.projectileDefinition"), Is.True);
-            Assert.That(pawnCombatSource.Contains("damageMultiplier: _outgoingDamageMultiplier"), Is.True);
-            Assert.That(pawnCombatSource.Contains("knockbackMultiplier: _outgoingKnockbackMultiplier"), Is.True);
-            Assert.That(pawnCombatSource.Contains("launcher.Fire(request)"), Is.True);
+            Assert.That(pawnProjectileModuleSource.Contains("ProjectileFireRequest"), Is.True);
+            Assert.That(pawnProjectileModuleSource.Contains("weapon.projectileDefinition"), Is.True);
+            Assert.That(pawnProjectileModuleSource.Contains("damageMultiplier: damageMultiplier"), Is.True);
+            Assert.That(pawnProjectileModuleSource.Contains("knockbackMultiplier: knockbackMultiplier"), Is.True);
+            Assert.That(pawnProjectileModuleSource.Contains("launcher.Fire(request)"), Is.True);
             Assert.That(pawnCombatSource.Contains("Instantiate(weapon.projectilePrefab"), Is.False);
             Assert.That(pawnCombat2DSource.Contains("ProjectileFireRequest"), Is.True);
             Assert.That(pawnCombat2DSource.Contains("weapon.projectileDefinition"), Is.True);
@@ -1071,10 +1108,10 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(pawnCombat2DSource.Contains("launcher.Fire(request)"), Is.True);
             Assert.That(pawnCombat2DSource.Contains("Instantiate(weapon.projectilePrefab"), Is.False);
 
-            Assert.That(damageZone2DSource.Contains("_targetSnapshot.Add(health)"), Is.True);
-            Assert.That(damageZone2DSource.Contains("for (int i = 0; i < _targetSnapshot.Count; i++)"), Is.True);
-            Assert.That(damageZone3DSource.Contains("_targetSnapshot.Add(health)"), Is.True);
-            Assert.That(damageZone3DSource.Contains("for (int i = 0; i < _targetSnapshot.Count; i++)"), Is.True);
+            Assert.That(damageZone2DSource.Contains("_targetLookup"), Is.True);
+            Assert.That(damageZone2DSource.Contains("_targets.Count - 1"), Is.True);
+            Assert.That(damageZone3DSource.Contains("_targetLookup"), Is.True);
+            Assert.That(damageZone3DSource.Contains("_targets.Count - 1"), Is.True);
         }
 
         [Test]
@@ -1615,25 +1652,6 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void PawnStarterPack_DoesNotShipEmptyPlayerTwoPrefab()
-        {
-            string playerTwoPrefabPath = Path.Combine(
-                Application.dataPath,
-                "..",
-                "Packages",
-                "com.neonblackinteractivellc.neonblackhub",
-                "Members",
-                "Pyralis",
-                "PawnStarterPack",
-                "Prefabs",
-                "Players",
-                "Player 2.prefab");
-
-            Assert.That(File.Exists(playerTwoPrefabPath), Is.False,
-                "Player Two intentionally uses SharedPawnDefinition; do not ship an empty Player 2 prefab that looks playable but has no runtime stack.");
-        }
-
-        [Test]
         public void CoreNetworkingContracts_UseCoreNamespace()
         {
             string contractsPath = Path.Combine(
@@ -1741,7 +1759,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void GameplayRuntime_Source_DoesNotReadGameplayPlatformContextCurrentOutsideContextOwner()
+        public void GameplayRuntime_Source_DoesNotReintroduceGameplayPlatformContext()
         {
             string gameplayRoot = Path.Combine(
                 Application.dataPath,
@@ -1752,20 +1770,16 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 "Pyralis",
                 "Gameplay");
 
-            string editorDirectorySegment = Path.DirectorySeparatorChar + "Editor" + Path.DirectorySeparatorChar;
-            string contextOwnerPath = Path.Combine(gameplayRoot, "Core", "Runtime", "GameplayPlatformContext.cs");
             string[] offenders = Directory.GetFiles(gameplayRoot, "*.cs", SearchOption.AllDirectories)
-                .Where(path => !path.Contains(editorDirectorySegment))
-                .Where(path => !Path.GetFullPath(path).Equals(Path.GetFullPath(contextOwnerPath), System.StringComparison.OrdinalIgnoreCase))
-                .Where(path => File.ReadAllText(path).Contains("GameplayPlatformContext.Current"))
+                .Where(path => File.ReadAllText(path).Contains("GameplayPlatformContext"))
                 .ToArray();
 
             Assert.That(offenders, Is.Empty,
-                "Runtime code should use GameplayPlatformContext.TryResolve, TryGetServices, or TryGetCurrent instead of reading Current directly. Offenders: " + string.Join(", ", offenders));
+                "Current runtime service ownership should stay on GameplaySessionBootstrap, PyralisGameplayLifetimeScope, explicit services, and narrow compatibility query utilities. Offenders: " + string.Join(", ", offenders));
         }
 
         [Test]
-        public void GameplayRuntime_Source_DoesNotCreateAnonymousPlatformServiceRegistries()
+        public void GameplayRuntime_Source_DoesNotReintroducePlatformServiceRegistry()
         {
             string gameplayRoot = Path.Combine(
                 Application.dataPath,
@@ -1776,16 +1790,12 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 "Pyralis",
                 "Gameplay");
 
-            string editorDirectorySegment = Path.DirectorySeparatorChar + "Editor" + Path.DirectorySeparatorChar;
-            string contextOwnerPath = Path.Combine(gameplayRoot, "Core", "Runtime", "GameplayPlatformContext.cs");
             string[] offenders = Directory.GetFiles(gameplayRoot, "*.cs", SearchOption.AllDirectories)
-                .Where(path => !path.Contains(editorDirectorySegment))
-                .Where(path => !Path.GetFullPath(path).Equals(Path.GetFullPath(contextOwnerPath), System.StringComparison.OrdinalIgnoreCase))
-                .Where(path => File.ReadAllText(path).Contains("GameplayPlatformContext.GetServicesOrEmpty"))
+                .Where(path => File.ReadAllText(path).Contains("PlatformServiceRegistry"))
                 .ToArray();
 
             Assert.That(offenders, Is.Empty,
-                "Runtime code should use TryGetServices and handle missing platform setup explicitly instead of creating anonymous PlatformServiceRegistry fallbacks. Offenders: " + string.Join(", ", offenders));
+                "Do not reintroduce a second platform service registry beside VContainer and bootstrap-owned services. Offenders: " + string.Join(", ", offenders));
         }
 
         [Test]
@@ -1889,55 +1899,6 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void GameplayStarterPackFactory_Source_CreatesProjectileAuthoringAssets()
-        {
-            string factoryPath = Path.Combine(
-                Application.dataPath,
-                "..",
-                "Packages",
-                "com.neonblackinteractivellc.neonblackhub",
-                "Members",
-                "Pyralis",
-                "Gameplay",
-                "Editor",
-                "GameplayStarterPackFactory.cs");
-
-            string source = File.ReadAllText(factoryPath);
-
-            Assert.That(source.Contains("SampleHitscanFireMode"), Is.True);
-            Assert.That(source.Contains("SampleProjectileImpact"), Is.True);
-            Assert.That(source.Contains("SampleHitscanProjectile"), Is.True);
-            Assert.That(source.Contains("ProjectileDeliveryMode.Hitscan"), Is.True);
-            Assert.That(source.Contains("SaveAsPrefabAsset"), Is.True);
-            Assert.That(source.Contains("Pawn3DMovementComponent"), Is.True);
-            Assert.That(source.Contains("Pawn3DPresentationComponent"), Is.True);
-        }
-
-        [Test]
-        public void GameplayStarterPackFactory_Source_CreatesRuntimePatternSetupAssets()
-        {
-            string factoryPath = Path.Combine(
-                Application.dataPath,
-                "..",
-                "Packages",
-                "com.neonblackinteractivellc.neonblackhub",
-                "Members",
-                "Pyralis",
-                "Gameplay",
-                "Editor",
-                "GameplayStarterPackFactory.cs");
-
-            string source = File.ReadAllText(factoryPath);
-
-            Assert.That(source.Contains("RuntimePatternDefinition"), Is.True);
-            Assert.That(source.Contains("GameSetupProfile"), Is.True);
-            Assert.That(source.Contains("PatternRealtimeCharacter"), Is.True);
-            Assert.That(source.Contains("PatternProjectileCombat"), Is.True);
-            Assert.That(source.Contains("PatternBoardCardTabletop"), Is.True);
-            Assert.That(source.Contains("SetupBrawlerWithProjectiles"), Is.True);
-        }
-
-        [Test]
         public void SceneAndInputFlow_Source_UsesExplicitServicesInsteadOfRuntimeSingletons()
         {
             string gameplayRoot = Path.Combine(
@@ -1957,7 +1918,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             string mainMenuSource = File.ReadAllText(Path.Combine(gameplayRoot, "Core", "Navigation", "UI", "MainMenuManager.cs"));
             string gameManagerSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "GameFlow", "2D", "GameManager.cs"));
             string inputHandlerSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Input", "2D", "PlayerInputHandler.cs"));
-            string inputZoneEditorSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Input", "2D", "Editor", "InputZoneSetEditor.cs"));
+            string inputZoneEditorSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Input", "2D", "Editor", "Authoring", "InputZoneSetEditor.cs"));
             string hazardSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Hazards", "2D", "Hazard.cs"));
             string hazardSlamSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Hazards", "2D", "Hazard.SlamSequence.cs"));
 
@@ -1969,8 +1930,10 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             Assert.That(mainMenuSource.Contains("sceneNavigatorSource"), Is.True);
             Assert.That(mainMenuSource.Contains("SceneLoader.Instance"), Is.False);
-            Assert.That(gameManagerSource.Contains("sceneNavigatorSource"), Is.True);
-            Assert.That(gameManagerSource.Contains("settingsSource"), Is.True);
+            Assert.That(gameManagerSource.Contains("ISceneNavigator"), Is.True);
+            Assert.That(gameManagerSource.Contains("SetSceneNavigator"), Is.True);
+            Assert.That(gameManagerSource.Contains("IGameplaySettingsApplier _settings"), Is.True);
+            Assert.That(gameManagerSource.Contains("SetSettings(IGameplaySettingsApplier"), Is.True);
             Assert.That(gameManagerSource.Contains("SceneFader.Instance"), Is.False);
             Assert.That(gameManagerSource.Contains("SettingsManager.Instance"), Is.False);
 

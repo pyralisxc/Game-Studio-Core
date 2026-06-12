@@ -76,7 +76,7 @@ Use the Authoring Window as a senior setup companion, not a scene generator. It 
 
 When a `GameSetupProfile` is active, the Authoring Window also shows a **Game Type And Feature Guide**. It reads the selected runtime capabilities and resolved runtime patterns, then explains:
 
-  - a **Design Capabilities** picker that lets developers choose capability families with checkboxes/dropdowns backed by existing `RuntimePatternDefinition` assets
+- the **Intent** tab DNA axioms, presentation lane, and Engine Spine capabilities that define what kind of game route is being authored
 - design questions to answer before setup, such as what the player controls, what kind of space the game happens in, and what the first proof of interaction should be
 - what kind of route the setup currently resembles, such as pawn action, brawler/fighter, tabletop, action-selection, projectile, or scoring loop
 - what each selected capability changes in the game
@@ -87,7 +87,8 @@ When a `GameSetupProfile` is active, the Authoring Window also shows a **Game Ty
 
 The Authoring Window guidance is route-aware:
 
-- `GameSetupProfile` looks at the runtime capabilities you selected and resolves them into runtime pattern recipes.
+- `GameSetupProfile` stores the runtime capability ingredients you selected. Optional `RuntimePatternDefinition` assets can enrich advanced route metadata, but they are not required for the generic setup path.
+- Intent is the visible route-shaping surface. When a setup profile is active, Intent writes matching runtime capability rows so Overview, Guide, Map, and Validate read one shared contract.
 - `GameModeDefinition` uses its setup profile to explain the active route.
 - `SessionDefinition` explains whether participants need pawns, input, seats, hands, factions, camera, cursor, or menu surfaces.
 - `GameplaySessionBootstrap` checks the assigned session chain and shows the consolidated Setup Flow checklist.
@@ -109,7 +110,7 @@ Use the visible Authoring Window summary for route progress, first proof, setup-
    - `SessionDefinition` -> your session asset
    - one default participant
    - for pawn routes: one `Default Pawn` and one `PawnDefinition`
-   - keep `Auto Create Core Services` enabled for this first proof so required gameplay-state services are created automatically.
+   - keep the standard bootstrap-owned service path enabled for this first proof so gameplay-state services are created automatically.
 7. Add only the required proof objects:
    - pawn routes: one `Spawn Point` transform and assign it to `Spawn Points`
    - input route for the route (`InputProfile` on participant; keep `Player Input Manager` empty unless you need local join)
@@ -135,7 +136,7 @@ Think of it this way: `GameplaySessionBootstrap` is the first runtime object. `S
   - the pawn prefab inspected in Prefab Mode or Inspector so every required component/reference is understood and editable. The guided proof should treat the prefab as user-owned setup, not a hidden generated answer;
   - one `PawnDefinition.pawnPrefab`;
   - one `GameplaySessionBootstrap.SpawnPoints` transform;
-  - `Auto Create Core Services` on.
+  - the standard bootstrap-owned service path on.
 - Optional for this pass:
   - HUD, scoring, combat, hazards, scene flow, pickups, projectiles, networking, local join.
 - Validation:
@@ -167,18 +168,18 @@ Before creating assets, remember:
 Manual path:
 
 - `GameSetupProfile`
-- existing `RuntimePatternDefinition` assets that match your chosen setup surface, selected directly or through the Authoring Window's Design Capabilities picker
+- existing `RuntimePatternDefinition` assets that match your chosen setup surface when the generic runtime capability rows need advanced reusable metadata
 - `SessionDefinition`
 - `GameModeDefinition`
 - `ParticipantDefinition`
 - `PawnDefinition` only for pawn-backed games
 - supporting profiles such as input, movement, combat, camera, settings, presentation, and animation
 
-Create new `RuntimePatternDefinition` assets only when the starter patterns do not describe the kind of setup you are building. For a first afternoon game, choose or reuse existing patterns; do not begin by designing a new setup taxonomy.
+Create new `RuntimePatternDefinition` assets only when the cookbook facts do not describe the kind of setup you are building. For a first afternoon game, start with Intent capabilities and existing route contracts; do not begin by designing a new setup taxonomy.
 
 Wire the assets in this order:
 
-1. Use `GameSetupProfile` Runtime Capabilities, or the Authoring Window's Design Capabilities picker, to add/remove capability families. The resolved `RuntimePatternDefinition` assets are the recipe output.
+1. Use the Authoring Window **Intent** tab to choose DNA axioms, presentation lane, and Engine Spine capabilities. When a `GameSetupProfile` is active, those choices save to `runtimeCapabilities`. Optional `RuntimePatternDefinition` assets are advanced route contracts, not preset output.
 2. Assign `GameSetupProfile` to `GameModeDefinition.setupProfile`.
 3. Assign `GameModeDefinition` to `SessionDefinition.defaultGameMode`.
 4. Assign participant definitions to the `SessionDefinition`.
@@ -204,22 +205,22 @@ On `GameplaySessionBootstrap`, assign the `SessionDefinition` you just wired. Th
 - `Player Input Manager` only for local player joining
 - `Camera Rig Controller` only if using the shared Pyralis camera flow
 
-Leave these on for first-scene proofs:
+Leave these on for first-scene proofs that use the standard bootstrap-owned service path:
 
 - `Auto Create Core Services`
 - `Inject Loaded Scenes On Build`
 
 At runtime, the bootstrap creates service children for scene loading, time, camera shake, session state, participant roster, spawning, and input routing.
 
-After assigning the `SessionDefinition`, keep the `GameplaySessionBootstrap` selected and work down the **Setup Flow** list. Fix required missing items first. Treat recommended items as setup-specific prompts, not universal requirements. Optional items can stay empty until the selected runtime patterns need them.
+After assigning the `SessionDefinition`, keep the `GameplaySessionBootstrap` selected and work down the **Setup Flow** list. Fix the selected intent's Do Now items first. Treat recommended items as proof enhancers, not universal requirements. Optional items can stay empty until the selected intent needs them.
 
-For the first route proof, treat these as required:
+For the first route proof, treat these as Do Now only when the selected intent asks for them:
 
 - `Session Definition`
 - one participant with required input profile for that route
 - pawn routes: one participant with `Default Pawn` and one `Spawn Point`
 - no-pawn routes: required control-surface assets (camera/cursor/menu/board/action)
-- `Auto Create Core Services`
+- `Auto Create Core Services` for the standard bootstrap-owned service path
 
 Treat these as optional until route proof works:
 

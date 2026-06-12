@@ -14,7 +14,7 @@ Avoid adding new tests to a catch-all file. If a new test protects a different k
 
 ## Verification Gates
 
-Use `dotnet build "Game Studio Core.slnx" --no-restore` as the fast compile gate for C#/asmdef changes. It should finish with 0 project errors before handing off foundation work. Warnings from package cache or vendor code should be reviewed but are not the same as project-code failures.
+Use `.\Tools\Validation\Run-PreSceneValidation.ps1 -SkipUnity -SkipResidueScan` as the fast compile gate for C#/asmdef changes. It restores and builds the owned `NeonBlack.Gameplay*` and `Neonblackinteractivellc.Neonblackhub*` projects from `Game Studio Core.slnx` instead of treating every generated vendor package project as Pyralis validation scope. It skips the final post-Unity build when Unity is skipped because that pass only protects against Unity Test Runner disturbing `Temp/obj`. Warnings or errors from package cache/vendor code should be reviewed separately when they affect Unity import or Editor behavior.
 
 Use `dotnet test "Game Studio Core.slnx" --no-build` only as a CLI smoke check unless it prints real Unity/NUnit result summaries. Unity package tests still need the Unity Test Runner for authoritative EditMode and PlayMode results.
 
@@ -24,6 +24,6 @@ For foundation-ready Unity work, run the project-owned pre-scene validation gate
 & ".\Tools\Validation\Run-PreSceneValidation.ps1"
 ```
 
-That script first checks package portability, including the embedded `com.neonblackinteractivellc.neonblackhub` package name/version, stale `com.studiotools.core` manifest references, and stale legacy `Runtime/Members` package content. It then runs `dotnet restore`, `dotnet build`, Unity EditMode, Unity PlayMode, then a final restore/build because Unity test runs can disturb `Temp/obj`. It intentionally runs Unity Test Runner without `-quit`; Unity Test Framework 1.6 skips command-line tests when `-quit` is supplied.
+That script first checks package portability, including the embedded `com.neonblackinteractivellc.neonblackhub` package name/version, stale `com.studiotools.core` manifest references, and stale legacy `Runtime/Members` package content. It then runs `dotnet restore`, `dotnet build`, Unity EditMode, Unity PlayMode, then a final restore/build against the owned NeonBlack/Pyralis project set because Unity test runs can disturb `Temp/obj`. It intentionally runs Unity Test Runner without `-quit`; Unity Test Framework 1.6 skips command-line tests when `-quit` is supplied.
 
 If the GUI Editor is open, close it before running the full gate. Use the Unity stewardship helper's `-Mode Refresh` path only for compile/log refresh while the Editor is open.

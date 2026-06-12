@@ -69,7 +69,7 @@ Required before this checkpoint is `Ready`:
 
 Current slice status:
 
-- The pawn starter pack now generates lane-specific presentation profiles, pawn definitions, and prefabs for `Sprite2D`, `Billboard2_5D`, and `Rigged3D`.
+- Generic capability setup now guides lane-specific presentation profiles, pawn definitions, and prefabs for `Sprite2D`, `Billboard2_5D`, and `Rigged3D` without relying on starter-pack generation.
 - Pawn-Backed Action remains `Guided Needs Proof` until each lane has an end-to-end playable-loop proof covering movement, camera, presentation, health/damage, projectile/combat, scoring/HUD, and scene flow.
 
 ## Checkpoint 3: Non-Pawn Tabletop MVP
@@ -169,7 +169,7 @@ Already present:
 
 Still useful before tabletop reaches `Ready`:
 
-- expanded legal move policy coverage for named baseline board styles such as directional token movement and bundled board-rule presets
+- expanded legal move policy coverage for named board-rule contracts such as directional token movement without bundled route generators
 - richer capture and occupancy policy combinations that can be authored without code
 - expanded terminal conditions such as no legal moves, score threshold, round limit, and multi-objective states
 - setup docs that walk a beginner through creating a simple two-seat board game in Unity
@@ -193,11 +193,11 @@ Already present:
 
 Still useful before the Sprite2D pawn action lane reaches `Ready`:
 
-- local two-player setup profile and starter assets
+- local two-player setup profile and generic setup guidance
 - a shooter-ready input and participant setup path
-- weapon prefab or launcher starter path that a beginner can assign in Unity
+- weapon prefab or launcher setup path that a beginner can assign in Unity
 - scene readiness validation for required pawn, launcher, camera, participant, and scoring pieces
-- a small sample or starter pack proving two local participants can move, fire, score, and be distinguished
+- a small proof scene showing two local participants can move, fire, score, and be distinguished
 
 Out of scope for the MVP:
 
@@ -216,8 +216,8 @@ Already present:
 
 Still useful before the Rigged3D or Billboard2_5D pawn action lanes reach `Ready`:
 
-- first-person or over-shoulder starter profile
-- 3D projectile weapon starter prefab path
+- first-person or over-shoulder setup guidance
+- 3D projectile weapon prefab setup path
 - camera and aim validation
 - clear docs for converting the same projectile assets between 2D shooter, 3D shooter, turret, trap, or scripted use
 
@@ -232,14 +232,14 @@ Out of scope for the MVP:
 Already present:
 
 - guided inspectors for many shared definitions and profiles
-- setup profile and runtime pattern validation
-- starter pack patterns for some pawn and projectile assets
+- setup profile, runtime capability, and optional route-contract validation
+- generic setup guidance for pawn and projectile assets
 
 Still useful before routes reach `Ready`:
 
 - guided inspectors for every new creator-facing rule, policy, and setup asset
 - Create Asset menu coverage for all intended authoring assets
-- starter pack entries for tabletop MVP and pawn action lane variants
+- cookbook facts and optional route contracts for tabletop MVP and pawn action lane variants
 - scene readiness checks for missing services, participants, pawns, boards, cameras, action queues, and launchers
 - docs that say exactly what a beginner creates first, second, and third
 

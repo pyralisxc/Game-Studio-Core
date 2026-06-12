@@ -32,7 +32,7 @@
 # Implementation Steps
 
 ## Phase 1: Infrastructure Unification (The "Singular Path")
-1. **Unify Scanning Logic**: Merge `PyralisReflectiveFactScanner` and `PyralisAuthoringContractRegistry` logic into a singular stream within `PyralisAuthoringFactRegistry.BuildFacts`.
+1. **Unify Scanning Logic**: Merge `PyralisReflectiveFactScanner` and `ResolvedAuthoringContractRegistry` logic into a singular stream within `PyralisAuthoringFactRegistry.BuildFacts`.
    - **Assigned role**: developer
    - **Dependencies**: None
    - **Parallelizable**: No

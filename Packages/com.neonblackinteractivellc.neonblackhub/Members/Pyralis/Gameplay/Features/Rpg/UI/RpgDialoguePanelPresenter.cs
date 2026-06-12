@@ -18,7 +18,9 @@ namespace NeonBlack.Gameplay.Features.Rpg.UI
         Lane = "RPG",
         RequiredInterfaces = new[] { typeof(IRuntimeValidationProvider) },
         RequiredComponentNames = new[] { "TMPro.TextMeshProUGUI" },
-        FirstProof = "Verify that the dialogue panel displays the speaker name and line text correctly."
+        NativeSetup = new[] { "Add to a Canvas-backed RPG dialogue panel.", "Assign speaker, line, choice, and issue labels from the UI hierarchy." },
+        AssignmentFields = new[] { nameof(routePresenter), nameof(dialogueGraphs), nameof(npcProfiles), nameof(speakerLabel), nameof(lineLabel), nameof(choiceButtons) },
+        FirstProof = "proof.ui-hud-menu"
     )]
     [AddComponentMenu("NeonBlack/Gameplay/RPG/UI/RPG Dialogue Panel Presenter")]
     public sealed class RpgDialoguePanelPresenter : MonoBehaviour, IRuntimeValidationProvider

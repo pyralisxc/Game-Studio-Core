@@ -97,6 +97,7 @@ namespace NeonBlack.Gameplay.Characters
             spawnService.SetRosterService(rosterService);
             spawnService.SetSessionStateService(sessionStateService);
             spawnService.SetSpawnPoints(spawnPoints);
+            spawnService.SetCameraBoundsProvider(cameraRigController as ICameraBoundsProvider ?? cameraBoundsSource as ICameraBoundsProvider);
 
             ParticipantInputRouter inputRouter = participantInputRouter ??= GetOrCreatePersistentService<ParticipantInputRouter>("ParticipantInputRouter");
             inputRouter.SetSessionDefinition(sessionDefinition);

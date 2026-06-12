@@ -27,7 +27,7 @@ For the first proof of an authored route, follow native actions only:
   - Pawn route only: participant `Default Pawn` -> `PawnDefinition`, pawn prefab, and at least one spawn point.
 - Play mode proof checks:
   - one pawn spawns and is controlled by input
-  - required blockers are clear in Overview/Validate
+  - intent-required blockers are clear in Overview/Validate
   - optional camera bounds are assigned only if tested.
 
 Use native Unity creation and assignment while Authoring explains the route. Future scaffold tooling should be treated as route scaffolding only, not authoring-proof evidence.
@@ -42,7 +42,7 @@ Use this exact sequence when learning the platform from a clean scene:
 3. Create in Project and wire: `SessionDefinition` -> `GameModeDefinition` -> `GameSetupProfile` -> `ParticipantDefinition` -> `PawnDefinition`.
 4. Add one `InputProfile` to participant and assign one `Motor2DInputAdapter`-based prefab path to pawn.
 5. Create one `SpawnPoint` transform and assign it to `GameplaySessionBootstrap.Spawn Points`.
-6. In Authoring Window: clear `Do Now`, open `Map`, check required blockers in `Validate`, then Play.
+6. In Authoring Window: clear `Do Now`, open `Map`, check intent-required blockers in `Validate`, then Play.
 7. Confirm: one pawn spawns and moves from input before adding score/combat/HUD.
 
 Only after these checks pass, add optional layers.

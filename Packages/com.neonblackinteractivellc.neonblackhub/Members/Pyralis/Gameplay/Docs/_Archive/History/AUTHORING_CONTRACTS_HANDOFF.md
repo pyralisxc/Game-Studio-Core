@@ -40,7 +40,7 @@ Separate these states everywhere:
 
 Authoring metadata can say a route is ready to attempt. It must not claim Play Mode proof unless proof actually ran.
 
-Feature contracts are required for feature module authoring in this model. A feature contract is declared in-package via `IAuthoringContractProvider` and found only through `PyralisAuthoringContractRegistry` discovery.
+Feature contracts are required for feature module authoring in this model. A feature contract is declared in-package via `IAuthoringContractProvider` and found only through `ResolvedAuthoringContractRegistry` discovery.
 
 ## Minimum Viable Authoring Contract
 

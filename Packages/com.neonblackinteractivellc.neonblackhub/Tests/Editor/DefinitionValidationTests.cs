@@ -1291,7 +1291,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             System.Collections.Generic.List<string> issues = definition.GetValidationIssues();
 
             Assert.That(issues.Exists(issue => issue.Contains("Setup profile")), Is.True);
-            Assert.That(issues.Exists(issue => issue.Contains("Choose a Runtime Capability family")), Is.True);
+            Assert.That(issues.Exists(issue => issue.Contains("choose DNA axioms and Engine Spine capabilities")), Is.True);
 
             Object.DestroyImmediate(setupProfile);
             Object.DestroyImmediate(definition);

@@ -7,20 +7,20 @@ using UnityEngine;
 
 namespace NeonBlack.Gameplay.Editor
 {
-    public enum PyralisAuthoringContractProofState
+    public enum ResolvedAuthoringContractProofState
     {
         ProofTargetMissing,
         ProofBlockedBySetup,
         ProofNotRunInPlayMode
     }
 
-    public sealed class PyralisAuthoringContractProofGuidanceRow
+    public sealed class ResolvedAuthoringContractProofGuidanceRow
     {
-        public PyralisAuthoringContractProofGuidanceRow(
-            PyralisAuthoringContract contract,
+        public ResolvedAuthoringContractProofGuidanceRow(
+            ResolvedAuthoringContract contract,
             FeatureModuleDefinition module,
             PyralisAuthoringFact proofFact,
-            PyralisAuthoringContractProofState state,
+            ResolvedAuthoringContractProofState state,
             ActorPresentationMode? activeLane)
         {
             Contract = contract;
@@ -30,18 +30,18 @@ namespace NeonBlack.Gameplay.Editor
             ActiveLane = activeLane;
         }
 
-        public PyralisAuthoringContract Contract { get; }
+        public ResolvedAuthoringContract Contract { get; }
         public FeatureModuleDefinition Module { get; }
         public PyralisAuthoringFact ProofFact { get; }
-        public PyralisAuthoringContractProofState State { get; }
+        public ResolvedAuthoringContractProofState State { get; }
         public ActorPresentationMode? ActiveLane { get; }
         public bool ProofTargetExists => ProofFact != null;
-        public bool PlayModeProofRequired => ProofTargetExists && State == PyralisAuthoringContractProofState.ProofNotRunInPlayMode;
-        public bool BlocksProof => State == PyralisAuthoringContractProofState.ProofTargetMissing || State == PyralisAuthoringContractProofState.ProofBlockedBySetup;
+        public bool PlayModeProofRequired => ProofTargetExists && State == ResolvedAuthoringContractProofState.ProofNotRunInPlayMode;
+        public bool BlocksProof => State == ResolvedAuthoringContractProofState.ProofTargetMissing || State == ResolvedAuthoringContractProofState.ProofBlockedBySetup;
         public bool HasUnsupportedLaneCaution => ActiveLane.HasValue && Contract != null && Contract.IsExplicitlyUnsupported(ActiveLane.Value);
     }
 
-    public static class PyralisAuthoringContractProofGuidance
+    public static class ResolvedAuthoringContractProofGuidance
     {
         private sealed class ActiveModuleContext
         {
@@ -55,9 +55,9 @@ namespace NeonBlack.Gameplay.Editor
             public ActorPresentationMode? Lane { get; }
         }
 
-        public static IReadOnlyList<PyralisAuthoringContractProofGuidanceRow> Build(Object activeSetup, PyralisAuthoringRouteReport routeReport)
+        public static IReadOnlyList<ResolvedAuthoringContractProofGuidanceRow> Build(Object activeSetup, PyralisAuthoringRouteReport routeReport)
         {
-            List<PyralisAuthoringContractProofGuidanceRow> rows = new List<PyralisAuthoringContractProofGuidanceRow>();
+            List<ResolvedAuthoringContractProofGuidanceRow> rows = new List<ResolvedAuthoringContractProofGuidanceRow>();
             List<ActiveModuleContext> moduleContexts = CollectActiveModuleContexts(activeSetup);
             bool setupBlocked = routeReport != null && routeReport.ValidationIssues.Count > 0;
 
@@ -67,26 +67,26 @@ namespace NeonBlack.Gameplay.Editor
                 if (context.Module == null || string.IsNullOrWhiteSpace(context.Module.moduleId))
                     continue;
 
-                PyralisAuthoringContract contract = PyralisAuthoringContractRegistry.FindByModuleId(context.Module.moduleId);
+                ResolvedAuthoringContract contract = ResolvedAuthoringContractRegistry.FindByModuleId(context.Module.moduleId);
                 if (contract == null)
                     continue;
 
                 PyralisAuthoringFact proofFact = PyralisAuthoringRouteProof.FindProofFact(contract.FirstProofTargetId);
-                PyralisAuthoringContractProofState state = GetState(proofFact, setupBlocked);
-                rows.Add(new PyralisAuthoringContractProofGuidanceRow(contract, context.Module, proofFact, state, context.Lane));
+                ResolvedAuthoringContractProofState state = GetState(proofFact, setupBlocked);
+                rows.Add(new ResolvedAuthoringContractProofGuidanceRow(contract, context.Module, proofFact, state, context.Lane));
             }
 
             return rows;
         }
 
-        private static PyralisAuthoringContractProofState GetState(PyralisAuthoringFact proofFact, bool setupBlocked)
+        private static ResolvedAuthoringContractProofState GetState(PyralisAuthoringFact proofFact, bool setupBlocked)
         {
             if (proofFact == null)
-                return PyralisAuthoringContractProofState.ProofTargetMissing;
+                return ResolvedAuthoringContractProofState.ProofTargetMissing;
 
             return setupBlocked
-                ? PyralisAuthoringContractProofState.ProofBlockedBySetup
-                : PyralisAuthoringContractProofState.ProofNotRunInPlayMode;
+                ? ResolvedAuthoringContractProofState.ProofBlockedBySetup
+                : ResolvedAuthoringContractProofState.ProofNotRunInPlayMode;
         }
 
         private static List<ActiveModuleContext> CollectActiveModuleContexts(Object activeSetup)
@@ -259,7 +259,7 @@ namespace NeonBlack.Gameplay.Editor
                 },
                 new[] { "combat", "projectiles", "HUD", "scoring", "pickups", "hazards", "networking", "local join" },
                 "the active 2D pawn route",
-                "press Play after required setup is clear; move the pawn through the mapped input path and watch the Game view",
+                "press Play after the selected intent's Do Now setup is clear; move the pawn through the mapped input path and watch the Game view",
                 "one pawn spawns at the assigned spawn point, visibly moves, and the Game view follows the runtime GameplaySharedCameraFocus driven by that pawn",
                 "The 1P pawn proof is the foundation of the player experience. Ensure movement feels responsive before adding more complexity.",
                 "https://docs.neonblack.com/pyralis/movement",
@@ -545,22 +545,22 @@ namespace NeonBlack.Gameplay.Editor
         {
             string[] values = new string[tags.Length];
             for (int i = 0; i < tags.Length; i++)
-                values[i] = tags[i].ToString();
+                values[i] = tags[i] == RuntimeCapabilityLaneTag.Mixed ? "Networked" : tags[i].ToString();
 
             return values;
         }
 
         public static PyralisAuthoringRouteProof Build(PyralisAuthoringRouteDescriptor route)
         {
-            if (route == null || !route.HasValidPatterns)
+            if (route == null || !route.HasSelectedCapabilities)
             {
                 return new PyralisAuthoringRouteProof(
-                    "Choose Capability Patterns",
-                    "Choose existing RuntimePatternDefinition assets first so Pyralis can recommend a route-specific proof.",
-                    "Choose capability patterns before deciding which scene or prefab surface matters.",
-                    "The setup recipe contains at least one valid runtime pattern.",
-                    "Defer scene building, starter-pack tuning, and optional systems until the route recipe is valid.",
-                    "First Unity focus: choose the capability patterns that describe the game surface before wiring scene roots.");
+                    "Choose Capability Ingredients",
+                    "Use Intent or the GameSetupProfile Runtime Capabilities section to describe the route before wiring scene objects.",
+                    "Choose capability families before deciding which scene or prefab surface matters.",
+                    "The setup profile contains at least one selected capability family.",
+                    "Defer scene wiring, scene building, optional route metadata, and optional systems until the setup intent is clear.",
+                    "First Unity focus: choose the capability ingredients that describe the game surface before wiring scene roots.");
             }
 
             PyralisAuthoringProofStep[] proofChain = BuildProofChain(route);
@@ -614,7 +614,7 @@ namespace NeonBlack.Gameplay.Editor
                 "One participant, one PawnDefinition with prefab, one scene Transform in Spawn Points, and one Input Profile path on that participant or SessionDefinition.defaultInputProfile. Add camera bounds only if framing is part of this proof.",
                 "One participant spawns one pawn, input reaches the pawn through the selected InputProfile, and movement is visibly responsive. Core session services are present or auto-created by GameplaySessionBootstrap.",
                 later,
-                "First Unity focus: create or inspect the pawn prefab with PawnRoot, lane movement/presentation components, ParticipantDefinition, PawnDefinition, InputProfile, and Spawn Points.",
+                "First Unity focus: create or inspect the pawn prefab stack, then link ParticipantDefinition, PawnDefinition, InputProfile, and Spawn Points. For a 2D proof, the prefab root should carry PawnRoot, Motor2D, Motor2DInputAdapter, SpriteRenderer, and Animator before Play Mode.",
                 proofChain);
         }
 

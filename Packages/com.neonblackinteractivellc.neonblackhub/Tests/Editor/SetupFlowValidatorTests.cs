@@ -195,7 +195,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             Assert.That(report.FirstBlockingStep.Label, Is.EqualTo("Assign Setup Profile"));
             Assert.That(report.GetStep("Assign Setup Profile").Status, Is.EqualTo(PyralisSetupFlowStepStatus.Missing));
-            Assert.That(report.GetStep("Add Runtime Patterns").Status, Is.EqualTo(PyralisSetupFlowStepStatus.Blocked));
+            Assert.That(report.GetStep(PyralisSetupFlowStepId.AddRuntimePatterns).Status, Is.EqualTo(PyralisSetupFlowStepStatus.Blocked));
 
             Object.DestroyImmediate(mode);
             Object.DestroyImmediate(session);
@@ -218,8 +218,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             PyralisSetupFlowReport report = PyralisSetupFlowValidator.BuildReport(bootstrap);
 
-            Assert.That(report.FirstBlockingStep.Label, Is.EqualTo("Add Runtime Patterns"));
-            Assert.That(report.GetStep("Add Runtime Patterns").Status, Is.EqualTo(PyralisSetupFlowStepStatus.Missing));
+            Assert.That(report.FirstBlockingStep.Label, Is.EqualTo("Choose Capabilities"));
+            Assert.That(report.GetStep(PyralisSetupFlowStepId.AddRuntimePatterns).Status, Is.EqualTo(PyralisSetupFlowStepStatus.Missing));
 
             Object.DestroyImmediate(setupProfile);
             Object.DestroyImmediate(mode);
@@ -409,53 +409,6 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void GameplayStarterPackFactory_CreatedPawnStarterPack_UsesSpawnablePawnPrefab()
-        {
-            string root = "Assets/Temp/PyralisStarterPackFactoryTests";
-            if (!AssetDatabase.IsValidFolder("Assets/Temp"))
-                AssetDatabase.CreateFolder("Assets", "Temp");
-            if (!AssetDatabase.IsValidFolder(root))
-                AssetDatabase.CreateFolder("Assets/Temp", "PyralisStarterPackFactoryTests");
-
-            Object previousSelection = Selection.activeObject;
-            SessionDefinition session = null;
-            string createdRoot = null;
-
-            try
-            {
-                Selection.activeObject = AssetDatabase.LoadAssetAtPath<Object>(root);
-                GameplayStarterPackFactory.CreatePawnStarterPack();
-
-                session = Selection.activeObject as SessionDefinition;
-                Assert.That(session, Is.Not.Null, "Starter pack factory should select the generated SessionDefinition.");
-
-                string sessionPath = AssetDatabase.GetAssetPath(session);
-                createdRoot = sessionPath.Substring(0, sessionPath.IndexOf("/Definitions/", System.StringComparison.Ordinal));
-                Assert.That(AssetDatabase.IsValidFolder(createdRoot), Is.True);
-                Assert.That(createdRoot, Does.StartWith(root + "/"));
-
-                Assert.That(session.defaultParticipants, Is.Not.Null.And.Not.Empty);
-                Assert.That(session.defaultParticipants, Has.Length.EqualTo(1));
-                Assert.That(session.maxParticipants, Is.EqualTo(1));
-                ParticipantDefinition participant = session.defaultParticipants[0];
-                Assert.That(participant, Is.Not.Null);
-                Assert.That(participant.defaultPawn, Is.Not.Null);
-                Assert.That(participant.defaultPawn.pawnPrefab, Is.Not.Null);
-                Assert.That(participant.defaultPawn.pawnPrefab.GetComponent<PawnRoot>(), Is.Not.Null);
-                Assert.That(participant.defaultPawn.pawnPrefab.GetComponentsInChildren<MonoBehaviour>(true).OfType<IPawnMotor>().Any(), Is.True);
-                Assert.That(participant.defaultPawn.pawnPrefab.GetComponentsInChildren<MonoBehaviour>(true).OfType<IPawnPresentationModule>().Any(), Is.True);
-            }
-            finally
-            {
-                Selection.activeObject = previousSelection;
-                if (!string.IsNullOrWhiteSpace(createdRoot))
-                    AssetDatabase.DeleteAsset(createdRoot);
-                AssetDatabase.DeleteAsset(root);
-                DeleteFolderIfEmpty("Assets/Temp");
-            }
-        }
-
-        [Test]
         public void PyralisSetupFlowValidator_NoPawnSetup_DoesNotRequirePawnOrSpawnPoints()
         {
             GameObject root = new GameObject("Gameplay Root");
@@ -601,9 +554,9 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             PyralisSetupFlowReport report = PyralisSetupFlowValidator.BuildReport(bootstrap);
 
-            Assert.That(report.FirstBlockingStep.Label, Is.EqualTo("Add Runtime Patterns"));
-            Assert.That(report.GetStep("Add Runtime Patterns").Status, Is.EqualTo(PyralisSetupFlowStepStatus.Missing));
-            Assert.That(report.GetStep("Add Runtime Patterns").Message, Does.Contain("validation issues"));
+            Assert.That(report.FirstBlockingStep.Label, Is.EqualTo("Choose Capabilities"));
+            Assert.That(report.GetStep(PyralisSetupFlowStepId.AddRuntimePatterns).Status, Is.EqualTo(PyralisSetupFlowStepStatus.Missing));
+            Assert.That(report.GetStep(PyralisSetupFlowStepId.AddRuntimePatterns).Message, Does.Contain("validation issues"));
 
             Object.DestroyImmediate(session);
             Object.DestroyImmediate(mode);
@@ -1659,49 +1612,15 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void PyralisAuthoringConventionFactRegistry_DiscoversBridgeProvider()
-        {
-            Assert.That(
-                PyralisAuthoringConventionFactRegistry.ProviderTypeNames,
-                Does.Contain(typeof(PyralisConventionAuthoringFactBridgeProvider).FullName));
-            Assert.That(
-                PyralisAuthoringConventionFactRegistry.ProviderTypeNames,
-                Does.Contain(typeof(PyralisSprite2DConventionAuthoringFactProvider).FullName));
-            Assert.That(
-                PyralisAuthoringConventionFactRegistry.ProviderTypeNames,
-                Does.Contain(typeof(PyralisRouteIntentAuthoringFactProvider).FullName));
-
-            PyralisAuthoringFact sessionCreate = FindConventionRegistryFact("reflection.create-asset-menu.session-definition");
-            Assert.That(sessionCreate, Is.Not.Null);
-            Assert.That(sessionCreate.SourceKind, Is.EqualTo(PyralisAuthoringFactSourceKind.Reflection));
-        }
-
-        [Test]
-        public void PyralisAuthoringConventionFactRegistry_DoesNotContainDuplicateStableIds()
-        {
-            Assert.That(PyralisAuthoringConventionFactRegistry.HasDuplicateStableIds(out string duplicateStableId), Is.False, duplicateStableId);
-        }
-
-        [Test]
-        public void PyralisAuthoringConventionFactRegistry_BridgeAndSprite2DProviderPreserveFactSurface()
+        public void PyralisAuthoringFactRegistry_ExplicitConventionFactsPreserveFactSurface()
         {
             IReadOnlyList<PyralisAuthoringFact> bridgeFacts = PyralisConventionAuthoringFacts.GetAuthoringFacts();
-            IReadOnlyList<PyralisAuthoringFact> sprite2DFacts = new PyralisSprite2DConventionAuthoringFactProvider().GetAuthoringFacts();
-            IReadOnlyList<PyralisAuthoringFact> intentFacts = new PyralisRouteIntentAuthoringFactProvider().GetAuthoringFacts();
-            IReadOnlyList<PyralisAuthoringFact> registryFacts = PyralisAuthoringConventionFactRegistry.AllFacts;
+            IReadOnlyList<PyralisAuthoringFact> intentFacts = PyralisRouteIntentAuthoringFactProvider.GetAuthoringFacts();
 
-            Assert.That(registryFacts.Count, Is.EqualTo(bridgeFacts.Count + sprite2DFacts.Count + intentFacts.Count));
-            AssertFactsReachConventionRegistry(bridgeFacts);
-            AssertFactsReachConventionRegistry(sprite2DFacts);
-            AssertFactsReachConventionRegistry(intentFacts);
+            AssertFactsReachMainRegistry(bridgeFacts);
+            AssertFactsReachMainRegistry(intentFacts);
 
-            for (int i = 0; i < Sprite2DConventionStableIds.Length; i++)
-            {
-                string stableId = Sprite2DConventionStableIds[i];
-                Assert.That(ContainsFact(bridgeFacts, stableId), Is.False, stableId);
-                Assert.That(ContainsFact(sprite2DFacts, stableId), Is.True, stableId);
-                Assert.That(FindConventionRegistryFact(stableId), Is.Not.Null, stableId);
-            }
+            Assert.That(PyralisAuthoringFactRegistry.Find("reflection.create-asset-menu.participant-definition"), Is.Not.Null);
         }
 
         [Test]
@@ -1837,30 +1756,12 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
             Assert.That(caution.Tier, Is.EqualTo(PyralisAuthoringIntentGuideTier.Caution));
         }
 
-        private static readonly string[] Sprite2DConventionStableIds =
-        {
-            "reflection.create-asset-menu.participant-definition",
-            "reflection.create-asset-menu.pawn-definition",
-            "reflection.create-asset-menu.input-profile",
-            "reflection.create-asset-menu.pawn-movement-profile",
-            "reflection.create-asset-menu.pawn-presentation-profile",
-            "reflection.add-component-menu.pawn-root",
-            "reflection.add-component-menu.motor-2d",
-            "reflection.add-component-menu.motor-2d-input-adapter",
-            "reflection.add-component-menu.pawn-2d-movement-component",
-            "reflection.add-component-menu.pawn-2d-presentation-component",
-            "reflection.require-component.motor-2d",
-            "reflection.require-component.pawn-2d-movement-component",
-            "convention.serialized-field.pawn-definition.pawn-prefab",
-            "convention.serialized-field.input-profile.gameplay-actions"
-        };
-
-        private static void AssertFactsReachConventionRegistry(IReadOnlyList<PyralisAuthoringFact> facts)
+        private static void AssertFactsReachMainRegistry(IReadOnlyList<PyralisAuthoringFact> facts)
         {
             for (int i = 0; i < facts.Count; i++)
             {
                 PyralisAuthoringFact directFact = facts[i];
-                PyralisAuthoringFact registryFact = FindConventionRegistryFact(directFact.StableId);
+                PyralisAuthoringFact registryFact = PyralisAuthoringFactRegistry.Find(directFact.StableId);
 
                 Assert.That(registryFact, Is.Not.Null, directFact.StableId);
                 Assert.That(registryFact.Kind, Is.EqualTo(directFact.Kind), directFact.StableId);
@@ -1879,18 +1780,6 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
             }
 
             return false;
-        }
-
-        private static PyralisAuthoringFact FindConventionRegistryFact(string stableId)
-        {
-            IReadOnlyList<PyralisAuthoringFact> facts = PyralisAuthoringConventionFactRegistry.AllFacts;
-            for (int i = 0; i < facts.Count; i++)
-            {
-                if (facts[i].MatchesStableId(stableId))
-                    return facts[i];
-            }
-
-            return null;
         }
 
         private static PyralisAuthoringIntentRow FindIntentRow(IReadOnlyList<PyralisAuthoringIntentRow> rows, string stableId)
@@ -1955,7 +1844,7 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
             Assert.That(pawn.RequiredPrefabComponents, Does.Contain("PawnRoot"));
 
             PyralisAuthoringFact tabletop = PyralisAuthoringFactRegistry.Find("route.tabletop-card");
-            Assert.That(tabletop.LaneTags, Does.Contain("TabletopNoPawn"));
+            Assert.That(tabletop.LaneTags, Does.Contain("TabletopBoard"));
             Assert.That(tabletop.UnsupportedLaneTags, Does.Contain("Sprite2D"));
             Assert.That(tabletop.RequiredDefinitions, Does.Contain("BoardDefinition"));
 
@@ -1998,7 +1887,7 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
             }
 
             PyralisAuthoringFact tabletopProof = PyralisAuthoringFactRegistry.Find("proof.board-card-action");
-            Assert.That(tabletopProof.LaneTags, Does.Contain("TabletopNoPawn"));
+            Assert.That(tabletopProof.LaneTags, Does.Contain("TabletopBoard"));
             Assert.That(tabletopProof.UnsupportedLaneTags, Does.Contain("Sprite2D"));
             Assert.That(tabletopProof.RelatedStableIds, Does.Contain("route.tabletop-card"));
             Assert.That(tabletopProof.RelatedStableIds, Does.Contain("capability.interaction-action-selection"));
@@ -2391,9 +2280,9 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
             Assert.That(model.BestNextAction, Does.Contain("setup folder"));
             Assert.That(model.BestNextAction, Does.Contain("imported art folders separate"));
             Assert.That(model.BestNextAction, Does.Contain("GameplaySessionBootstrap > Session Definition"));
-            Assert.That(model.FirstProofLabel, Is.EqualTo("Complete Required Setup"));
-            Assert.That(model.FirstProofGuidance, Does.Contain("SessionDefinition"));
-            Assert.That(model.FirstProofDeferUntilAfter, Does.Contain("proof-specific"));
+            Assert.That(model.FirstProofLabel, Is.EqualTo("Choose Capability Ingredients"));
+            Assert.That(model.FirstProofGuidance, Does.Contain("Intent"));
+            Assert.That(model.FirstProofDeferUntilAfter, Does.Contain("scene wiring"));
             Assert.That(model.DoNow.First(issue => issue.Label == "Assign Session Definition").NativeActionGuidance, Does.Contain("Session Definition"));
             Assert.That(model.DoNow.First(issue => issue.Label == "Assign Session Definition").NativeActionGuidance, Does.Contain("project-owned setup folder"));
             Assert.That(model.DoNow.First(issue => issue.Label == "Assign Session Definition").NativeActionGuidance, Does.Contain("then confirm"));
@@ -2529,7 +2418,7 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
                 "NeonBlack/Gameplay/Setup/Pyralis Gameplay Lifetime Scope");
             AssertAddComponentMenu<PawnRoot>("NeonBlack/Gameplay/Characters/Pawn Root");
             AssertAddComponentMenu<Motor2D>("NeonBlack/Gameplay/Runtime 2D/Motor 2D");
-            AssertAddComponentMenu<Motor2DInputAdapter>("NeonBlack/Gameplay/Runtime 2D/Motor 2D Input Adapter");
+            AssertAddComponentMenu<Motor2DInputAdapter>("NeonBlack/Gameplay/Input/2D Motor Input Adapter");
             AssertAddComponentMenu<Pawn2DMovementComponent>("NeonBlack/Gameplay/Characters/2D/Pawn 2D Movement Component");
             AssertAddComponentMenu<Pawn2DPresentationComponent>("NeonBlack/Gameplay/Characters/2D/Pawn 2D Presentation Component");
         }
@@ -2668,7 +2557,7 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
         }
 
         [Test]
-        public void PyralisAuthoringValidationModel_SetupPatternIssue_PreservesSetupRecipeGuidance()
+        public void PyralisAuthoringValidationModel_SetupPatternIssue_PreservesSetupProfileGuidance()
         {
             GameSetupProfile setupProfile = ScriptableObject.CreateInstance<GameSetupProfile>();
             setupProfile.runtimePatterns = System.Array.Empty<RuntimePatternDefinition>();
@@ -2676,16 +2565,16 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
 
             PyralisAuthoringValidationModel model = PyralisAuthoringValidationModel.Build(setupProfile, report);
 
-            Assert.That(model.Issues.Select(issue => issue.Category), Does.Contain(PyralisAuthoringValidationCategory.SetupRecipe));
-            PyralisAuthoringValidationIssue setupIssue = model.Issues.First(issue => issue.Category == PyralisAuthoringValidationCategory.SetupRecipe);
-            Assert.That(setupIssue.IssueCode, Is.EqualTo("setupProfile.runtimePatterns.missing"));
-            Assert.That(setupIssue.Problem, Does.Contain("runtime pattern"));
-            Assert.That(setupIssue.AffectedMember, Is.EqualTo("GameSetupProfile.runtimePatterns"));
-            Assert.That(setupIssue.WhyItMatters, Does.Contain("setup recipe"));
+            Assert.That(model.Issues.Select(issue => issue.Category), Does.Contain(PyralisAuthoringValidationCategory.SetupProfile));
+            PyralisAuthoringValidationIssue setupIssue = model.Issues.First(issue => issue.Category == PyralisAuthoringValidationCategory.SetupProfile);
+            Assert.That(setupIssue.IssueCode, Is.EqualTo("setupProfile.runtimeCapabilities.missing"));
+            Assert.That(setupIssue.Problem, Does.Contain("runtime capability"));
+            Assert.That(setupIssue.AffectedMember, Is.EqualTo("GameSetupProfile.runtimeCapabilities"));
+            Assert.That(setupIssue.WhyItMatters, Does.Contain("setup profile"));
             Assert.That(setupIssue.InspectionHint, Does.Contain("GameSetupProfile"));
             Assert.That(setupIssue.Target, Is.EqualTo(setupProfile));
-            Assert.That(setupIssue.PrimaryActionLabel, Is.EqualTo("Inspect Setup Recipe"));
-            Assert.That(setupIssue.GuidanceActionLabel, Is.EqualTo("Open Setup Recipe Picker"));
+            Assert.That(setupIssue.PrimaryActionLabel, Is.EqualTo("Inspect Setup Profile"));
+            Assert.That(setupIssue.GuidanceActionLabel, Is.EqualTo("Open Setup Profile"));
             Assert.That(setupIssue.HasGuidanceAction, Is.True);
 
             Object.DestroyImmediate(setupProfile);
@@ -2731,7 +2620,7 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
             Assert.That(model.Issues.Select(issue => issue.IssueCode), Does.Contain("gameMode.startingLives.respawnDisabled"));
             PyralisAuthoringValidationIssue setupProfileIssue = model.Issues.First(issue => issue.IssueCode == "gameMode.setupProfile.missing");
             Assert.That(setupProfileIssue.AffectedMember, Is.EqualTo("GameModeDefinition.setupProfile"));
-            Assert.That(setupProfileIssue.PrimaryActionLabel, Is.EqualTo("Inspect Setup Recipe"));
+            Assert.That(setupProfileIssue.PrimaryActionLabel, Is.EqualTo("Inspect Setup Profile"));
             Assert.That(setupProfileIssue.GuidanceActionLabel, Is.EqualTo("Open Game Rules Guide"));
             Assert.That(setupProfileIssue.HasGuidanceAction, Is.True);
 
@@ -2748,15 +2637,21 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
                 ParticipantEmbodimentRequirement.OptionalPawn,
                 RuntimeControlSurface.Pawn);
             GameSetupProfile setupProfile = ScriptableObject.CreateInstance<GameSetupProfile>();
-            setupProfile.runtimePatterns = new[] { duplicatePattern, null, duplicatePattern };
+            setupProfile.runtimeCapabilities = new[]
+            {
+                new RuntimeCapabilitySelection { capabilityFamily = RuntimeCapabilityFamily.Combat },
+                null,
+                new RuntimeCapabilitySelection { capabilityFamily = RuntimeCapabilityFamily.Combat }
+            };
+            setupProfile.runtimePatterns = new[] { duplicatePattern };
             SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
             session.defaultParticipants = new ParticipantDefinition[] { null };
 
             PyralisAuthoringValidationModel setupModel = PyralisAuthoringValidationModel.Build(setupProfile, PyralisAuthoringRouteReport.Build(setupProfile));
             PyralisAuthoringValidationModel sessionModel = PyralisAuthoringValidationModel.Build(session, PyralisAuthoringRouteReport.Build(session));
 
-            Assert.That(setupModel.Issues.First(issue => issue.IssueCode == "setupProfile.runtimePatterns.slot.empty").GuidanceActionLabel, Is.EqualTo("Open Setup Recipe Picker"));
-            Assert.That(setupModel.Issues.First(issue => issue.IssueCode == "setupProfile.runtimePatterns.duplicate").GuidanceActionLabel, Is.EqualTo("Open Setup Recipe Picker"));
+            Assert.That(setupModel.Issues.First(issue => issue.IssueCode == "setupProfile.runtimeCapabilities.slot.empty").GuidanceActionLabel, Is.EqualTo("Open Setup Profile"));
+            Assert.That(setupModel.Issues.First(issue => issue.IssueCode == "setupProfile.runtimeCapabilities.duplicate").GuidanceActionLabel, Is.EqualTo("Open Setup Profile"));
             Assert.That(sessionModel.Issues.First(issue => issue.IssueCode == "session.defaultParticipants.slot.empty").GuidanceActionLabel, Is.EqualTo("Open Participant Guide"));
 
             Object.DestroyImmediate(session);

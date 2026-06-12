@@ -89,7 +89,7 @@ If your session uses a `GameModeDefinition` asset, assign your `CameraRigProfile
 
 1. Drag the `Camera Root` object from the Hierarchy into `GameplaySessionBootstrap > Camera Rig Controller`. Unity assigns the `CinemachineCameraRigController` component from that object.
 2. Leave `Camera Bounds Source` empty unless you are intentionally using a custom `ICameraBoundsProvider`.
-3. If a legacy or direct component asks for Camera Bounds Source, assign the same `CinemachineCameraRigController`.
+3. If a direct component asks for Camera Bounds Source, assign the same `CinemachineCameraRigController`.
 
 ### Step 7 - Enable orientations in Player Settings for 2D
 

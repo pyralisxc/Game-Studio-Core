@@ -25,16 +25,16 @@ namespace NeonBlack.Gameplay.Data.Profiles
     }
 
     /// <summary>
-     /// Describes one composed game setup by selecting compatible runtime pattern recipes.
-     /// </summary>
+    /// Describes one composed game setup by selecting capability families and optional route metadata.
+    /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Setup | AuthoringCapability.Session, 
         Priority = AuthoringPriority.AuxiliaryDefault,
         Lane = "Setup",
-        Relevance = "Project-window creation path for the runtime pattern setup profile.",
+        Relevance = "Project-window creation path for the capability setup profile.",
         AssignmentFields = new[] { nameof(setupName), nameof(runtimeCapabilities), nameof(runtimePatterns) },
-        FirstProof = "Validate that the selected runtime patterns correctly bootstrap the game session.",
-        ExpertAdvice = "GameSetupProfile is your 'Recipe' for a specific route. Use it to select high-level capability families and the specific RuntimePatternDefinitions that implement them.",
+        FirstProof = "Validate that the selected capability families correctly shape the game session.",
+        ExpertAdvice = "GameSetupProfile is the editable intent contract for a route. RuntimeCapabilitySelection rows choose the game ingredients; RuntimePatternDefinition assets are optional advanced metadata when a route needs a reusable contract.",
         NativeSetup = new[] { "Create Asset" },
         DocumentationURL = "https://docs.neonblack.com/pyralis/game-setup"
     )]
@@ -51,10 +51,10 @@ namespace NeonBlack.Gameplay.Data.Profiles
         [TextArea(2, 5)]
         public string summary = string.Empty;
 
-        [Tooltip("Creator-facing runtime choices. Add rows from the inspector dropdown and assign a matching RuntimePatternDefinition when the setup needs detailed recipe guidance.")]
+        [Tooltip("Creator-facing runtime choices. Add rows from the inspector dropdown to choose the game ingredients. RuntimePatternDefinition is optional advanced metadata.")]
         public RuntimeCapabilitySelection[] runtimeCapabilities = System.Array.Empty<RuntimeCapabilitySelection>();
 
-        [Tooltip("Resolved runtime recipe assets used by validators and route analysis. Prefer editing Runtime Capabilities above.")]
+        [Tooltip("Optional advanced route-contract assets used only when a capability needs reusable metadata beyond the generic family.")]
         public RuntimePatternDefinition[] runtimePatterns = System.Array.Empty<RuntimePatternDefinition>();
 
         [TextArea(2, 6)]
@@ -101,26 +101,22 @@ namespace NeonBlack.Gameplay.Data.Profiles
             if ((runtimeCapabilities == null || runtimeCapabilities.Length == 0)
                 && (runtimePatterns == null || runtimePatterns.Length == 0))
             {
-                issues.Add("Choose a Runtime Capability family, then click Add Capability to create the first setup row.");
+                issues.Add("Open Authoring Window -> Intent, choose DNA axioms and Engine Spine capabilities, then keep this GameSetupProfile active so the route saves to runtime capabilities.");
                 return issues;
             }
 
             AppendRuntimeCapabilityIssues(issues);
 
             if (runtimePatterns == null || runtimePatterns.Length == 0)
-            {
-                issues.Add("Select a RuntimePatternDefinition for at least one runtime capability so Authoring can explain the setup recipe.");
                 return issues;
-            }
 
             HashSet<string> patternIds = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
-
             for (int i = 0; i < runtimePatterns.Length; i++)
             {
                 RuntimePatternDefinition pattern = runtimePatterns[i];
                 if (pattern == null)
                 {
-                    issues.Add($"Runtime Patterns[{i}] is null.");
+                    issues.Add($"Optional Runtime Patterns[{i}] is null.");
                     continue;
                 }
 
@@ -138,9 +134,6 @@ namespace NeonBlack.Gameplay.Data.Profiles
 
         private void AppendRuntimeCapabilityIssues(List<string> issues)
         {
-            if (!HasRuntimeCapabilityPatterns())
-                return;
-
             HashSet<RuntimeCapabilityFamily> families = new HashSet<RuntimeCapabilityFamily>();
             for (int i = 0; i < runtimeCapabilities.Length; i++)
             {
@@ -154,9 +147,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
                 if (!families.Add(capability.capabilityFamily))
                     issues.Add($"Runtime capability `{capability.capabilityFamily}` is selected more than once.");
 
-                if (capability.patternDefinition == null)
-                    issues.Add($"Runtime capability `{capability.capabilityFamily}` needs a RuntimePatternDefinition recipe.");
-                else if (capability.patternDefinition.capabilityFamily != capability.capabilityFamily)
+                if (capability.patternDefinition != null && capability.patternDefinition.capabilityFamily != capability.capabilityFamily)
                     issues.Add($"Runtime capability `{capability.capabilityFamily}` references pattern `{GetPatternLabel(capability.patternDefinition)}` with family `{capability.patternDefinition.capabilityFamily}`.");
             }
         }
@@ -182,21 +173,8 @@ namespace NeonBlack.Gameplay.Data.Profiles
                     patterns.Add(pattern);
             }
 
-            runtimePatterns = patterns.ToArray();
-        }
-
-        private bool HasRuntimeCapabilityPatterns()
-        {
-            if (runtimeCapabilities == null)
-                return false;
-
-            for (int i = 0; i < runtimeCapabilities.Length; i++)
-            {
-                if (runtimeCapabilities[i]?.patternDefinition != null)
-                    return true;
-            }
-
-            return false;
+            if (patterns.Count > 0)
+                runtimePatterns = patterns.ToArray();
         }
 
         private void AppendCompanionIssues(List<string> issues)

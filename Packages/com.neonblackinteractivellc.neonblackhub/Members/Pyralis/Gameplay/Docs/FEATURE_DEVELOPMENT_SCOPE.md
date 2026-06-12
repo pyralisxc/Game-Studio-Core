@@ -31,7 +31,7 @@ A route is complete when Pyralis provides:
 - prefab and scene setup
 - Authoring Window guidance
 - validation
-- starter pack
+- generic setup guidance or optional route contract when needed
 - sample scene
 - first playable proof
 - docs

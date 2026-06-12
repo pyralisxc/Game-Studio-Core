@@ -15,47 +15,242 @@ namespace NeonBlack.Gameplay.Editor
             List<PyralisAuthoringFact> facts = new List<PyralisAuthoringFact>();
             HashSet<string> seenStableIds = new HashSet<string>(StringComparer.Ordinal);
 
-            // 1. Singular reflective stream for attributes
-            var typesWithAttribute = TypeCache.GetTypesWithAttribute<AuthoringContractAttribute>();
-            foreach (var type in typesWithAttribute)
+            foreach (var contract in ResolvedAuthoringContractRegistry.All)
             {
-                var attributes = type.GetCustomAttributes<AuthoringContractAttribute>();
-                foreach (var attr in attributes)
-                {
-                    var fact = CreateFact(type, attr);
-                    if (fact != null && seenStableIds.Add(fact.StableId))
-                        facts.Add(fact);
-                }
-            }
-
-            // 2. Process any remaining contracts from the registry (e.g., from IAuthoringContractProvider)
-            foreach (var contract in PyralisAuthoringContractRegistry.All)
-            {
-                if (seenStableIds.Contains(contract.StableId))
-                    continue;
-
                 var fact = CreateFactFromContract(contract);
                 if (fact != null && seenStableIds.Add(fact.StableId))
                     facts.Add(fact);
             }
 
+            AddUnityMetadataFacts(facts, seenStableIds);
+
             return facts;
         }
 
-        public static PyralisAuthoringFact CreateFact(Type type, AuthoringContractAttribute attr)
+        private static void AddUnityMetadataFacts(List<PyralisAuthoringFact> facts, HashSet<string> seenStableIds)
         {
-            if (!string.IsNullOrEmpty(attr.ModuleId))
+            foreach (Type type in GetGameplayObjectTypes())
             {
-                var contract = PyralisAuthoringContractRegistry.FindByModuleId(attr.ModuleId);
-                if (contract != null)
-                    return CreateFactFromContract(contract, type);
+                if (type == null || type.IsAbstract || !typeof(ScriptableObject).IsAssignableFrom(type) || !IsGameplayType(type))
+                    continue;
+
+                CreateAssetMenuAttribute attribute = type.GetCustomAttribute<CreateAssetMenuAttribute>();
+                if (attribute == null || string.IsNullOrWhiteSpace(attribute.menuName))
+                    continue;
+
+                string stableId = "reflection.create-asset-menu." + ToStableSlug(type.Name);
+                if (!seenStableIds.Add(stableId))
+                    continue;
+
+                PyralisAuthoringFactKind kind = type.Name.EndsWith("Profile", StringComparison.Ordinal)
+                    ? PyralisAuthoringFactKind.Profile
+                    : PyralisAuthoringFactKind.Definition;
+                string fileName = string.IsNullOrWhiteSpace(attribute.fileName) ? type.Name : attribute.fileName;
+                string createPath = "Assets/Create/" + attribute.menuName;
+
+                facts.Add(new PyralisAuthoringFact(
+                    stableId,
+                    AuthoringCapabilityRegistry.PrettifyTypeName(type.Name),
+                    kind,
+                    PyralisAuthoringFactSourceKind.Reflection,
+                    PyralisAuthoringConfidence.Explicit,
+                    $"Unity CreateAssetMenu path for {type.Name}.",
+                    $"Create {type.Name} through the Project window when this route needs the asset.",
+                    string.Empty,
+                    requiredDefinitions: kind == PyralisAuthoringFactKind.Definition ? new[] { type.Name } : null,
+                    requiredProfiles: kind == PyralisAuthoringFactKind.Profile ? new[] { type.Name } : null,
+                    nativeActions: new[]
+                    {
+                        new PyralisAuthoringNativeAction(
+                            "Create",
+                            PyralisAuthoringActionSurface.ProjectWindow,
+                            createPath,
+                            fileName,
+                            type.Name + " asset exists in the chosen project folder")
+                    },
+                    workIntent: "NativeCreatePath",
+                    relatedStableIds: InferRelatedStableIds(type)));
             }
 
-            return CreateFactFromAttribute(type, attr);
+            foreach (Type type in GetGameplayObjectTypes())
+            {
+                if (type == null || type.IsAbstract || !typeof(Component).IsAssignableFrom(type) || !IsGameplayType(type))
+                    continue;
+
+                AddComponentMenu attribute = type.GetCustomAttribute<AddComponentMenu>();
+                if (attribute != null && !string.IsNullOrWhiteSpace(attribute.componentMenu))
+                {
+                    string stableId = "reflection.add-component-menu." + ToStableSlug(type.Name);
+                    if (seenStableIds.Add(stableId))
+                    {
+                        PyralisAuthoringFactKind kind = IsSceneComponent(type, attribute.componentMenu)
+                            ? PyralisAuthoringFactKind.SceneComponent
+                            : PyralisAuthoringFactKind.PrefabComponent;
+
+                        facts.Add(new PyralisAuthoringFact(
+                            stableId,
+                            AuthoringCapabilityRegistry.PrettifyTypeName(type.Name),
+                            kind,
+                            PyralisAuthoringFactSourceKind.Reflection,
+                            PyralisAuthoringConfidence.Explicit,
+                            $"Unity AddComponentMenu path for {type.Name}.",
+                            $"Add {type.Name} through the Inspector when this route needs the component.",
+                            string.Empty,
+                            requiredSceneComponents: kind == PyralisAuthoringFactKind.SceneComponent ? new[] { type.Name } : null,
+                            requiredPrefabComponents: kind == PyralisAuthoringFactKind.PrefabComponent ? new[] { type.Name } : null,
+                            nativeActions: new[]
+                            {
+                                new PyralisAuthoringNativeAction(
+                                    "Add Component",
+                                    PyralisAuthoringActionSurface.Inspector,
+                                    type.Name,
+                                    attribute.componentMenu,
+                                    type.Name + " is present on the selected scene object or prefab")
+                            },
+                            workIntent: "NativeComponentMenu",
+                            relatedStableIds: InferRelatedStableIds(type)));
+                    }
+                }
+
+                AddRequireComponentFact(type, facts, seenStableIds);
+            }
+
+            foreach (Type type in TypeCache.GetTypesDerivedFrom<UnityEngine.Object>())
+            {
+                if (type == null || type.IsAbstract || !IsGameplayType(type))
+                    continue;
+
+                AddSerializedFieldFacts(type, facts, seenStableIds);
+            }
         }
 
-        public static PyralisAuthoringFact CreateFactFromContract(PyralisAuthoringContract contract, Type type = null)
+        private static IEnumerable<Type> GetGameplayObjectTypes()
         {
+            HashSet<Type> seen = new HashSet<Type>();
+            foreach (Type type in TypeCache.GetTypesDerivedFrom<UnityEngine.Object>())
+            {
+                if (type != null && typeof(UnityEngine.Object).IsAssignableFrom(type) && seen.Add(type))
+                    yield return type;
+            }
+
+            foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                if (assembly == null || assembly.IsDynamic)
+                    continue;
+
+                Type[] types;
+                try
+                {
+                    types = assembly.GetTypes();
+                }
+                catch (ReflectionTypeLoadException ex)
+                {
+                    types = ex.Types;
+                }
+
+                if (types == null)
+                    continue;
+
+                for (int i = 0; i < types.Length; i++)
+                {
+                    Type type = types[i];
+                    if (type != null && typeof(UnityEngine.Object).IsAssignableFrom(type) && seen.Add(type))
+                        yield return type;
+                }
+            }
+        }
+
+        private static void AddRequireComponentFact(Type type, List<PyralisAuthoringFact> facts, HashSet<string> seenStableIds)
+        {
+            object[] attributes = type.GetCustomAttributes(typeof(RequireComponent), false);
+            if (attributes == null || attributes.Length == 0)
+                return;
+
+            List<string> requiredComponents = new List<string>();
+            for (int i = 0; i < attributes.Length; i++)
+            {
+                RequireComponent attribute = attributes[i] as RequireComponent;
+                if (attribute == null)
+                    continue;
+
+                AddRequireComponentType(attribute, 0, requiredComponents);
+                AddRequireComponentType(attribute, 1, requiredComponents);
+                AddRequireComponentType(attribute, 2, requiredComponents);
+            }
+
+            if (requiredComponents.Count == 0)
+                return;
+
+            string stableId = "reflection.require-component." + ToStableSlug(type.Name);
+            if (!seenStableIds.Add(stableId))
+                return;
+
+            facts.Add(new PyralisAuthoringFact(
+                stableId,
+                AuthoringCapabilityRegistry.PrettifyTypeName(type.Name) + " Requirements",
+                PyralisAuthoringFactKind.PrefabComponent,
+                PyralisAuthoringFactSourceKind.Reflection,
+                PyralisAuthoringConfidence.Explicit,
+                $"{type.Name} declares required Unity components through RequireComponent metadata.",
+                "Unity component requirements that shape prefab composition.",
+                string.Empty,
+                requiredPrefabComponents: requiredComponents.ToArray(),
+                nativeActions: new[]
+                {
+                    new PyralisAuthoringNativeAction(
+                        "Inspect",
+                        PyralisAuthoringActionSurface.Inspector,
+                        type.Name,
+                        string.Join(", ", requiredComponents),
+                        "Unity can satisfy or preserve the required component stack")
+                },
+                workIntent: "RequiredComponentContract",
+                relatedStableIds: InferRelatedStableIds(type)));
+        }
+
+        private static void AddSerializedFieldFacts(Type type, List<PyralisAuthoringFact> facts, HashSet<string> seenStableIds)
+        {
+            FieldInfo[] fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            for (int i = 0; i < fields.Length; i++)
+            {
+                FieldInfo field = fields[i];
+                bool serialized = (field.IsPublic && !field.IsInitOnly && field.GetCustomAttribute<NonSerializedAttribute>() == null)
+                    || field.GetCustomAttribute<SerializeField>() != null;
+                if (!serialized || field.GetCustomAttribute<HideInInspector>() != null)
+                    continue;
+
+                string stableId = "convention.serialized-field." + ToStableSlug(type.Name) + "." + ToStableSlug(field.Name);
+                if (!seenStableIds.Add(stableId))
+                    continue;
+
+                string fieldDescription = type.Name + "." + field.Name + " -> " + field.FieldType.Name;
+                facts.Add(new PyralisAuthoringFact(
+                    stableId,
+                    AuthoringCapabilityRegistry.PrettifyTypeName(type.Name) + " " + AuthoringCapabilityRegistry.PrettifyTypeName(field.Name),
+                    PyralisAuthoringFactKind.AssignmentField,
+                    PyralisAuthoringFactSourceKind.Convention,
+                    PyralisAuthoringConfidence.ConventionDerived,
+                    $"Serialized Inspector field discovered on {type.Name}.",
+                    "Inspector field assignment generated from Unity serialization metadata.",
+                    string.Empty,
+                    assignmentFields: new[] { fieldDescription },
+                    nativeActions: new[]
+                    {
+                        new PyralisAuthoringNativeAction(
+                            "Assign",
+                            PyralisAuthoringActionSurface.Inspector,
+                            type.Name,
+                            field.Name,
+                            "the serialized Inspector field holds the user's authored value")
+                    },
+                    workIntent: "InspectorFieldConvention",
+                    relatedStableIds: InferRelatedStableIds(type, field)));
+            }
+        }
+
+        public static PyralisAuthoringFact CreateFactFromContract(ResolvedAuthoringContract contract, Type type = null)
+        {
+            type = type ?? contract.SourceType;
             List<string> discoveredAssignment = new List<string>();
             List<string> discoveredCustomization = new List<string>();
             DiscoverAuthoringFields(type, discoveredAssignment, discoveredCustomization);
@@ -77,6 +272,8 @@ namespace NeonBlack.Gameplay.Editor
                 assignmentFields: MergeAndDeDuplicateFields(contract.AssignmentFields, discoveredAssignment),
                 customizationMoments: MergeAndDeDuplicateFields(contract.CustomizationMoments, discoveredCustomization),
                 nativeActions: BuildNativeActions(type, contract.NativeSetup),
+                workIntent: contract.WorkIntent,
+                axioms: contract.Axioms,
                 relatedStableIds: BuildRelatedStableIds(contract.FirstProofTargetId),
                 capability: contract.Capability,
                 priority: (AuthoringPriority)contract.Priority,
@@ -85,99 +282,6 @@ namespace NeonBlack.Gameplay.Editor
                 removableInVersion: contract.RemovableInVersion,
                 documentationURL: contract.DocumentationURL,
                 expertAdvice: contract.ExpertAdvice);
-        }
-
-        public static PyralisAuthoringFact CreateFactFromAttribute(Type type, AuthoringContractAttribute attr)
-        {
-            string categoryLabel = attr.Capability != AuthoringCapability.None 
-                ? AuthoringCapabilityRegistry.GetDisplayName(attr.Capability) 
-                : string.Empty;
-
-            string stableId = $"reflective.{type.FullName.ToLowerInvariant()}.{categoryLabel?.ToLowerInvariant() ?? "none"}";
-            string displayName = string.IsNullOrWhiteSpace(categoryLabel) 
-                ? AuthoringCapabilityRegistry.PrettifyTypeName(type.Name) 
-                : $"{AuthoringCapabilityRegistry.PrettifyTypeName(type.Name)} ({categoryLabel})";
-
-            List<string> discoveredAssignment = new List<string>();
-            List<string> discoveredCustomization = new List<string>();
-            DiscoverAuthoringFields(type, discoveredAssignment, discoveredCustomization);
-            DiscoverAuthoringFields(attr.ProfileType, discoveredAssignment, discoveredCustomization);
-
-            List<string> requiredPrefabComponents = new List<string>();
-            if (attr.RequiredInterfaces != null)
-            {
-                foreach (var iface in attr.RequiredInterfaces)
-                    if (iface != null) requiredPrefabComponents.Add(iface.Name);
-            }
-            if (attr.RequiredInterfaceNames != null)
-            {
-                foreach (var name in attr.RequiredInterfaceNames)
-                    if (!string.IsNullOrWhiteSpace(name)) requiredPrefabComponents.Add(SimplifyTypeName(name));
-            }
-
-            // Synthesize from RequireComponent
-            var requireCompAttrs = type.GetCustomAttributes<RequireComponent>(true);
-            foreach (var req in requireCompAttrs)
-            {
-                var t0 = GetRequireComponentType(req, 0);
-                if (t0 != null) requiredPrefabComponents.Add(t0.Name);
-                var t1 = GetRequireComponentType(req, 1);
-                if (t1 != null) requiredPrefabComponents.Add(t1.Name);
-                var t2 = GetRequireComponentType(req, 2);
-                if (t2 != null) requiredPrefabComponents.Add(t2.Name);
-            }
-
-            string[] finalRequiredPrefabComponents = null;
-            if (requiredPrefabComponents.Count > 0)
-            {
-                HashSet<string> unique = new HashSet<string>(StringComparer.Ordinal);
-                foreach (var name in requiredPrefabComponents)
-                    if (!string.IsNullOrWhiteSpace(name)) unique.Add(name);
-
-                finalRequiredPrefabComponents = new string[unique.Count];
-                unique.CopyTo(finalRequiredPrefabComponents);
-            }
-
-            List<string> requiredSceneComponents = new List<string>();
-            if (attr.RequiredComponents != null)
-            {
-                foreach (var comp in attr.RequiredComponents)
-                    if (comp != null) requiredSceneComponents.Add(comp.Name);
-            }
-            if (attr.RequiredComponentNames != null)
-            {
-                foreach (var name in attr.RequiredComponentNames)
-                    if (!string.IsNullOrWhiteSpace(name)) requiredSceneComponents.Add(SimplifyTypeName(name));
-            }
-
-            return new PyralisAuthoringFact(
-                stableId: stableId,
-                displayName: displayName,
-                kind: DetermineFactKind(type),
-                sourceKind: PyralisAuthoringFactSourceKind.Reflection,
-                confidence: PyralisAuthoringConfidence.Explicit,
-                summary: attr.Relevance ?? $"Reflective authoring contract discovered for {type.Name}.",
-                routeRelevance: $"Directly tagged reflective contract for {categoryLabel ?? "general"} gameplay.",
-                firstProof: attr.FirstProof ?? string.Empty,
-                goalTags: !string.IsNullOrWhiteSpace(categoryLabel) ? new[] { categoryLabel } : null,
-                laneTags: ToStringArray(attr.SupportedLanes),
-                unsupportedLaneTags: ToStringArray(attr.UnsupportedLanes),
-                requiredProfiles: GetRequiredProfiles(attr.ProfileType),
-                requiredPrefabComponents: finalRequiredPrefabComponents,
-                requiredSceneComponents: requiredSceneComponents.Count > 0 ? requiredSceneComponents.ToArray() : null,
-                assignmentFields: MergeAndDeDuplicateFields(attr.AssignmentFields, discoveredAssignment),
-                customizationMoments: MergeAndDeDuplicateFields(attr.CustomizationMoments, discoveredCustomization),
-                nativeActions: BuildNativeActions(type, attr.NativeSetup),
-                workIntent: attr.AxiomKeywords,
-                axioms: attr.Axioms,
-                capability: attr.Capability,
-                priority: attr.Priority,
-                priorityValueOverride: attr.PriorityValueOverride,
-                deprecatedInVersion: attr.DeprecatedInVersion,
-                removableInVersion: attr.RemovableInVersion,
-                documentationURL: attr.DocumentationURL,
-                expertAdvice: attr.ExpertAdvice
-            );
         }
 
         private static void DiscoverAuthoringFields(Type type, List<string> assignmentFields, List<string> customizationMoments)
@@ -314,6 +418,139 @@ namespace NeonBlack.Gameplay.Editor
             return new[] { firstProofTargetId };
         }
 
+        private static bool IsGameplayType(Type type)
+        {
+            return type != null
+                && type.Namespace != null
+                && type.Namespace.StartsWith("NeonBlack.Gameplay", StringComparison.Ordinal)
+                && (typeof(Component).IsAssignableFrom(type) || typeof(ScriptableObject).IsAssignableFrom(type));
+        }
+
+        private static bool IsSceneComponent(Type type, string menuPath)
+        {
+            string value = ((type != null ? type.Name : string.Empty) + " " + (menuPath ?? string.Empty)).ToLowerInvariant();
+            return value.Contains("bootstrap")
+                || value.Contains("lifetime")
+                || value.Contains("camera")
+                || value.Contains("tabletop")
+                || value.Contains("ui")
+                || value.Contains("hud")
+                || value.Contains("score")
+                || value.Contains("spawner")
+                || value.Contains("manager")
+                || value.Contains("service")
+                || value.Contains("scene")
+                || value.Contains("game flow");
+        }
+
+        private static void AddRequireComponentType(RequireComponent attribute, int index, List<string> requiredComponents)
+        {
+            Type type = GetRequireComponentType(attribute, index);
+            if (type == null)
+                return;
+
+            string typeName = type.Name;
+            if (!requiredComponents.Contains(typeName))
+                requiredComponents.Add(typeName);
+        }
+
+        private static string[] InferRelatedStableIds(Type type, FieldInfo field = null)
+        {
+            List<string> related = new List<string>();
+            string value = ((type != null ? type.Name : string.Empty) + " " +
+                (type != null ? type.FullName : string.Empty) + " " +
+                (field != null ? field.Name : string.Empty) + " " +
+                (field != null ? field.FieldType.Name : string.Empty)).ToLowerInvariant();
+
+            void Add(string stableId)
+            {
+                if (!related.Contains(stableId))
+                    related.Add(stableId);
+            }
+
+            if (value.Contains("session"))
+                Add("setup.assign-session-definition");
+            if (value.Contains("game mode") || value.Contains("gamemode") || value.Contains("setup"))
+                Add("setup.assign-game-mode");
+            if (value.Contains("participant"))
+                Add("setup.assign-participant-pawn");
+            if (value.Contains("pawn") || value.Contains("motor") || value.Contains("movement") || value.Contains("input"))
+            {
+                Add("capability.2d-pawn-movement");
+                Add("proof.1p-pawn-movement");
+            }
+            if (value.Contains("inputprofile") || value.Contains("gameplayactions") || value.Contains("gameplay-actions"))
+                Add("inspector.input-profile.gameplay-action-names");
+            if (value.Contains("board") || value.Contains("turn") || value.Contains("tabletop") || value.Contains("card"))
+                Add("proof.board-card-action");
+            if (value.Contains("camera") || value.Contains("playfield"))
+            {
+                Add("capability.camera-follow-bounds");
+                Add("proof.camera-cursor-world");
+            }
+            if (value.Contains("featuremodule") || value.Contains("feature module") || value.Contains("profileasset"))
+                Add("proof.custom-object-effect");
+            if (value.Contains("enemy") || value.Contains("combat") || value.Contains("projectile") || value.Contains("health"))
+                Add("proof.npc-enemy-behavior");
+            if (value.Contains("ui") || value.Contains("hud") || value.Contains("feedback"))
+                Add("proof.ui-hud-menu");
+            if (value.Contains("network"))
+                Add("proof.network-ownership");
+
+            return related.Count > 0 ? related.ToArray() : Array.Empty<string>();
+        }
+
+        private static string ToStableSlug(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return "unnamed";
+
+            List<char> chars = new List<char>();
+            char previous = '\0';
+            for (int i = 0; i < value.Length; i++)
+            {
+                char current = value[i];
+                if (current == '_')
+                {
+                    AppendDash(chars);
+                    previous = current;
+                    continue;
+                }
+
+                if (char.IsDigit(current) && i > 0 && char.IsLetter(previous) && previous != '-' && previous != '_')
+                    AppendDash(chars);
+                else if (char.IsUpper(current) && i > 0 && previous != '-' && previous != '_')
+                {
+                    bool startsNewWord = !char.IsUpper(previous) && !char.IsDigit(previous);
+                    bool closesAcronym = char.IsUpper(previous)
+                        && i + 1 < value.Length
+                        && char.IsLower(value[i + 1]);
+                    if (startsNewWord || closesAcronym)
+                        AppendDash(chars);
+                }
+
+                if (char.IsLetterOrDigit(current))
+                    chars.Add(char.ToLowerInvariant(current));
+                else
+                    AppendDash(chars);
+
+                previous = current;
+            }
+
+            while (chars.Count > 0 && chars[chars.Count - 1] == '-')
+                chars.RemoveAt(chars.Count - 1);
+
+            return chars.Count > 0 ? new string(chars.ToArray()) : "unnamed";
+        }
+
+        private static void AppendDash(List<char> chars)
+        {
+            if (chars.Count == 0 || chars[chars.Count - 1] == '-')
+                return;
+
+            chars.Add('-');
+        }
+
         internal static string[] ToStringArray(ActorPresentationMode[] presentationModes)
         {
             if (presentationModes == null || presentationModes.Length == 0)
@@ -407,22 +644,5 @@ namespace NeonBlack.Gameplay.Editor
             return new PyralisAuthoringNativeAction(verb, surface, target, field, success);
         }
 
-        private static PyralisAuthoringFactKind DetermineFactKind(Type type)
-        {
-            if (typeof(ScriptableObject).IsAssignableFrom(type))
-            {
-                if (type.Name.EndsWith("Profile")) return PyralisAuthoringFactKind.Profile;
-                return PyralisAuthoringFactKind.Definition;
-            }
-            
-            if (typeof(Component).IsAssignableFrom(type))
-            {
-                return PyralisAuthoringFactKind.PrefabComponent;
-            }
-
-            if (type.IsInterface) return PyralisAuthoringFactKind.FeatureContract;
-
-            return PyralisAuthoringFactKind.RuntimeCapability;
-        }
     }
 }

@@ -9,7 +9,7 @@ namespace NeonBlack.Gameplay.Features.Composition
         Relevance = "The runtime entry point for custom game features and modular logic.", 
         Axioms = AuthoringWorldAxiom.None,
         AssignmentFields = new[] { nameof(IFeatureModuleRuntime.ModuleId) },
-        FirstProof = "Verify that InitializeFeature is called when the feature host starts up.",
+        FirstProof = "proof.custom-object-effect",
         NativeSetup = new[] { "Implement interface in a feature module component" }
     ,
         ExpertAdvice = "Implement this interface on any component that needs to participate in the feature-host lifecycle. It provides access to shared services via the InitializationContext.",

@@ -361,92 +361,6 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void PawnStarterPackAuthoring_CanAssignRicoControllerThroughMappingWizard()
-        {
-            const string testFolder = "Assets/Temp/PyralisAuthoringStarterPackTest";
-            const string starterPackRoot = testFolder + "/PawnStarterPack";
-            const string controllerPath = "Packages/com.neonblackinteractivellc.neonblackhub/Members/Public/Apocalyptia/Animations/Player/Player.controller";
-
-            AssetDatabase.DeleteAsset(testFolder);
-            if (!AssetDatabase.IsValidFolder("Assets/Temp"))
-                AssetDatabase.CreateFolder("Assets", "Temp");
-            AssetDatabase.CreateFolder("Assets/Temp", "PyralisAuthoringStarterPackTest");
-
-            Object previousSelection = Selection.activeObject;
-            try
-            {
-                Selection.activeObject = AssetDatabase.LoadAssetAtPath<Object>(testFolder);
-
-                GameplayStarterPackFactory.CreatePawnStarterPack();
-
-                Assert.That(AssetDatabase.IsValidFolder(starterPackRoot), Is.True, "The internal starter-pack factory should still create the expected authoring folder for coverage.");
-
-                PawnAnimationProfile profile = AssetDatabase.LoadAssetAtPath<PawnAnimationProfile>($"{starterPackRoot}/Profiles/AnimationProfile.asset");
-                ActorAnimationDefinition definition = AssetDatabase.LoadAssetAtPath<ActorAnimationDefinition>($"{starterPackRoot}/Definitions/DefaultActorAnimationDefinition.asset");
-                PawnDefinition pawn = AssetDatabase.LoadAssetAtPath<PawnDefinition>($"{starterPackRoot}/Definitions/Sprite2DPawnDefinition.asset");
-                AnimatorController controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(controllerPath);
-
-                Assert.That(profile, Is.Not.Null);
-                Assert.That(definition, Is.Not.Null);
-                Assert.That(pawn, Is.Not.Null);
-                Assert.That(controller, Is.Not.Null, "The Rico controller fixture should be available for a real imported-controller authoring test.");
-                Assert.That(profile.animationDefinition, Is.SameAs(definition));
-                Assert.That(pawn.animationProfile, Is.SameAs(profile));
-                Assert.That(pawn.pawnPrefab, Is.Not.Null);
-
-                Animator prefabAnimator = pawn.pawnPrefab.GetComponentInChildren<Animator>(true);
-                ActorAnimationDriver prefabDriver = pawn.pawnPrefab.GetComponent<ActorAnimationDriver>();
-                Pawn2DPresentationComponent presentation = pawn.pawnPrefab.GetComponent<Pawn2DPresentationComponent>();
-                Assert.That(prefabAnimator, Is.Not.Null, "The generated 2D starter pawn should expose a visual Animator for imported controllers.");
-                Assert.That(prefabDriver, Is.Not.Null);
-                Assert.That(presentation, Is.Not.Null);
-
-                SerializedObject driverObject = new SerializedObject(prefabDriver);
-                Assert.That(driverObject.FindProperty("animator")?.objectReferenceValue, Is.SameAs(prefabAnimator));
-                SerializedObject presentationObject = new SerializedObject(presentation);
-                Assert.That(presentationObject.FindProperty("animator")?.objectReferenceValue, Is.SameAs(prefabAnimator));
-
-                profile.baseController = controller;
-                PawnAnimationProfileValidation.ReplaceWithSuggestedBindings(profile);
-                System.Collections.Generic.List<string> issues = PawnAnimationProfileValidation.GetValidationIssues(profile);
-
-                Assert.That(ContainsOnlyMissingSpriteReferenceIssues(issues), Is.True, string.Join("\n", issues));
-                Assert.That(issues.Any(issue => issue.Contains("missing SpriteRenderer sprite frame reference")), Is.True);
-                AssertMapped(profile, ActorAnimationSignal.Move, "IsMoving", ActorAnimationBindingType.Bool);
-                AssertMapped(profile, ActorAnimationSignal.Dash, "DodgeFwd", ActorAnimationBindingType.Trigger);
-                AssertMapped(profile, ActorAnimationSignal.AttackPrimary, "RightPunch", ActorAnimationBindingType.Trigger);
-                AssertMapped(profile, ActorAnimationSignal.AttackSecondary, "RightKick", ActorAnimationBindingType.Trigger);
-                AssertMapped(profile, ActorAnimationSignal.BlockLoop, "Block", ActorAnimationBindingType.Bool);
-                Assert.That(profile.bindings.Any(binding => binding.signal == ActorAnimationSignal.SideClimb), Is.False, "Suggestions should not add unsupported starter definition signals.");
-
-                GameObject instance = PrefabUtility.InstantiatePrefab(pawn.pawnPrefab) as GameObject;
-                try
-                {
-                    Assert.That(instance, Is.Not.Null);
-                    Animator runtimeAnimator = instance.GetComponentInChildren<Animator>(true);
-                    ActorAnimationDriver runtimeDriver = instance.GetComponent<ActorAnimationDriver>();
-
-                    runtimeDriver.ApplyProfiles(pawn.presentationProfile, profile);
-                    runtimeDriver.SetBoolSignal(ActorAnimationSignal.Move, true);
-
-                    Assert.That(runtimeAnimator.runtimeAnimatorController, Is.SameAs(controller));
-                    Assert.That(runtimeAnimator.GetBool("IsMoving"), Is.True);
-                }
-                finally
-                {
-                    if (instance != null)
-                        Object.DestroyImmediate(instance);
-                }
-            }
-            finally
-            {
-                Selection.activeObject = previousSelection;
-                AssetDatabase.DeleteAsset(testFolder);
-                DeleteFolderIfEmpty("Assets/Temp");
-            }
-        }
-
-        [Test]
         public void AnimationMappingSource_DoesNotDependOnApocalyptiaFixture()
         {
             string gameplayRoot = Path.Combine(
@@ -460,7 +374,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             string[] genericMappingSources =
             {
-                Path.Combine(gameplayRoot, "Editor", "PawnAnimationProfileEditor.cs"),
+                Directory.GetFiles(Path.Combine(gameplayRoot, "Editor"), "PawnAnimationProfileEditor.cs", SearchOption.AllDirectories).Single(),
                 Path.Combine(gameplayRoot, "Presentation", "Animation", "ActorAnimationDriver.cs")
             };
 

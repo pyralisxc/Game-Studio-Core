@@ -13,7 +13,7 @@ Proof scenes are temporary, deletable route-verification artifacts. They answer 
 
 - package samples
 - hidden setup generators
-- final starter packs
+- final presets or starter packs
 - evidence that bypasses the Authoring Window, Project window Create menu, Hierarchy, Inspector Add Component, object picker, drag/drop wiring, or Play Mode verification
 
 ## Promotion Path

@@ -23,16 +23,18 @@ Axioms = AuthoringWorldAxiom.None,
             "Add ParticipantScoreService to a global service GameObject in the scene.",
             "Reference the service from HUD or GameMode presenters to show score."
         },
-        FirstProof = "Earn points during gameplay and verify the score updates in the UI.",
+        FirstProof = "proof.ui-hud-menu",
         AssignmentFields = new[] { nameof(OnPointsChanged), nameof(OnHighScoreBeaten) },
         ExpertAdvice = "The Scoring service stores high scores in PlayerPrefs. Use ISessionScoreService for cross-feature point collection and IParticipantRoster for multiplayer leaderboards."
     )]
     [DefaultExecutionOrder(-30)]
 public class ParticipantScoreService : MonoBehaviour, IGameService, ISessionScoreService, IRuntimeValidationProvider
     {
+        private static int _activeInstanceCount;
+
         public IEnumerable<string> GetRuntimeValidationIssues()
         {
-            if (Object.FindObjectsByType<ParticipantScoreService>(FindObjectsSortMode.None).Length > 1)
+            if (_activeInstanceCount > 1)
                 yield return "Multiple ParticipantScoreService instances found. Only one global scoring service should be active.";
         }
         // PlayerPrefs keys.
@@ -67,6 +69,16 @@ public class ParticipantScoreService : MonoBehaviour, IGameService, ISessionScor
             _highScorePointsCached   = PlayerPrefs.GetInt(HighScorePointsKey, 0);
             _highScoreTimeCached     = PlayerPrefs.GetFloat(HighScoreTimeKey, 0f);
             _highScoreBestTimeCached = PlayerPrefs.GetFloat(HighScoreBestTimeKey, 0f);
+        }
+
+        private void OnEnable()
+        {
+            _activeInstanceCount++;
+        }
+
+        private void OnDisable()
+        {
+            _activeInstanceCount = Mathf.Max(0, _activeInstanceCount - 1);
         }
 
         private void Update()

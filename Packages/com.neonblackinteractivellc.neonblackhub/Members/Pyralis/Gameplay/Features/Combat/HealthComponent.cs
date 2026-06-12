@@ -20,7 +20,7 @@ namespace NeonBlack.Gameplay.Features.Combat
         "Wire OnDamaged, OnHealed, or OnDeath UnityEvents for visual feedback (HitFlash, UI)."
     },
     AssignmentFields = new[] { nameof(maxHealth), nameof(faction), nameof(iFrameDuration) },
-    FirstProof = "Trigger TakeDamage via a script or zone and verify CurrentHealth decreases.",
+    FirstProof = "proof.npc-enemy-behavior",
     ExpertAdvice = "HealthComponent is a neutral actor. Use Faction to prevent friendly fire. Attach HitFlash or HitPause listeners to the OnDamaged event for standard combat feel. Use Faction.Neutral for props that should be destructible by everyone.",
     DocumentationURL = "https://docs.neonblack.com/pyralis/health",
     Axioms = AuthoringWorldAxiom.Realtime

@@ -189,7 +189,7 @@ namespace NeonBlack.Gameplay.Editor
         {
             string[] values = new string[tags.Length];
             for (int i = 0; i < tags.Length; i++)
-                values[i] = tags[i].ToString();
+                values[i] = tags[i] == RuntimeCapabilityLaneTag.Mixed ? "Networked" : tags[i].ToString();
 
             return values;
         }

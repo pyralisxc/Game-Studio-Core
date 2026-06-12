@@ -40,7 +40,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
         public string RemovableInVersion { get; set; }
 
         /// <summary>
-        /// The ID of the legacy module this contract maps to during the refactor transition.
+        /// Stable feature module identity used by reflective authoring and proof-card mapping.
         /// </summary>
         public string ModuleId { get; set; }
 

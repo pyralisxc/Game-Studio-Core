@@ -29,6 +29,55 @@ function Invoke-Checked {
     }
 }
 
+function Get-OwnedDotnetProjectPaths {
+    param([string]$SolutionPath)
+
+    if (!(Test-Path -LiteralPath $SolutionPath)) {
+        throw "Solution file was not found: $SolutionPath"
+    }
+
+    $solutionRoot = Split-Path -Parent $SolutionPath
+    $projectPaths = @()
+    foreach ($match in Select-String -LiteralPath $SolutionPath -Pattern '<Project Path="([^"]+)"' -AllMatches) {
+        foreach ($projectMatch in $match.Matches) {
+            $relativeProjectPath = $projectMatch.Groups[1].Value
+            $projectName = [System.IO.Path]::GetFileNameWithoutExtension($relativeProjectPath)
+            if ($projectName -like "NeonBlack.Gameplay*" -or $projectName -like "Neonblackinteractivellc.Neonblackhub*") {
+                $projectPath = Join-Path $solutionRoot $relativeProjectPath
+                if (Test-Path -LiteralPath $projectPath) {
+                    $projectPaths += (Resolve-Path $projectPath).Path
+                }
+            }
+        }
+    }
+
+    $projectPaths | Sort-Object -Unique
+}
+
+function Invoke-DotnetProjectSet {
+    param(
+        [ValidateSet("restore", "build")]
+        [string]$Command,
+        [string[]]$ProjectPaths,
+        [string]$FailureMessage
+    )
+
+    if ($ProjectPaths.Count -eq 0) {
+        throw "No owned dotnet projects were found for validation."
+    }
+
+    foreach ($projectPath in $ProjectPaths) {
+        $projectName = [System.IO.Path]::GetFileName($projectPath)
+        Write-Host "$Command $projectName"
+        if ($Command -eq "build") {
+            Invoke-Checked -FilePath "dotnet" -Arguments @("build", $projectPath, "--no-restore") -FailureMessage "$FailureMessage Project: $projectName."
+        }
+        else {
+            Invoke-Checked -FilePath "dotnet" -Arguments @("restore", $projectPath) -FailureMessage "$FailureMessage Project: $projectName."
+        }
+    }
+}
+
 function Assert-NoUnityProcess {
     $unityProcesses = Get-Process Unity -ErrorAction SilentlyContinue
     if ($unityProcesses) {
@@ -247,7 +296,7 @@ function Assert-PackagePortability {
     Write-Step "package portability"
 
     $packageId = "com.neonblackinteractivellc.neonblackhub"
-    $expectedVersion = "0.1.2"
+    $expectedVersion = "0.2.0"
     $packageRoot = Join-Path $ProjectPath "Packages\$packageId"
     $packageJsonPath = Join-Path $packageRoot "package.json"
     $manifestPath = Join-Path $ProjectPath "Packages\manifest.json"
@@ -279,7 +328,7 @@ function Assert-PackagePortability {
 
     $runtimeMarker = Get-Content -LiteralPath $runtimeMarkerPath -Raw
     $editorMarker = Get-Content -LiteralPath $editorMarkerPath -Raw
-    if ($runtimeMarker -notmatch 'Version\s*=\s*"0\.1\.2"' -or $editorMarker -notmatch 'Version\s*=\s*"0\.1\.2"') {
+    if ($runtimeMarker -notmatch 'Version\s*=\s*"0\.2\.0"' -or $editorMarker -notmatch 'Version\s*=\s*"0\.2\.0"') {
         throw "Package marker scripts are not stamped with version $expectedVersion."
     }
 
@@ -302,6 +351,7 @@ function Assert-PackagePortability {
 
 $ProjectPath = (Resolve-Path $ProjectPath).Path
 $solutionPath = Join-Path $ProjectPath "Game Studio Core.slnx"
+$ownedDotnetProjectPaths = @(Get-OwnedDotnetProjectPaths -SolutionPath $solutionPath)
 $logDirectory = Join-Path $ProjectPath "Logs\Codex"
 New-Item -ItemType Directory -Force -Path $logDirectory | Out-Null
 
@@ -312,10 +362,12 @@ if (!$SkipPackagePortability) {
 }
 
 Write-Step "dotnet restore"
-Invoke-Checked -FilePath "dotnet" -Arguments @("restore", $solutionPath) -FailureMessage "dotnet restore failed."
+Write-Host "Restoring owned NeonBlack/Pyralis projects from Game Studio Core.slnx."
+Invoke-DotnetProjectSet -Command "restore" -ProjectPaths $ownedDotnetProjectPaths -FailureMessage "dotnet restore failed."
 
 Write-Step "dotnet build"
-Invoke-Checked -FilePath "dotnet" -Arguments @("build", $solutionPath, "--no-restore") -FailureMessage "dotnet build failed."
+Write-Host "Building owned NeonBlack/Pyralis projects from Game Studio Core.slnx."
+Invoke-DotnetProjectSet -Command "build" -ProjectPaths $ownedDotnetProjectPaths -FailureMessage "dotnet build failed."
 
 $unityResults = @()
 $layoutGuard = $null
@@ -330,12 +382,14 @@ finally {
     Restore-UnityVersionControlLayout -Guard $layoutGuard
 }
 
-if (!$SkipFinalBuild) {
+if (!$SkipUnity -and !$SkipFinalBuild) {
     Write-Step "final dotnet restore"
-    Invoke-Checked -FilePath "dotnet" -Arguments @("restore", $solutionPath) -FailureMessage "final dotnet restore failed."
+    Write-Host "Restoring owned NeonBlack/Pyralis projects from Game Studio Core.slnx after Unity tests."
+    Invoke-DotnetProjectSet -Command "restore" -ProjectPaths $ownedDotnetProjectPaths -FailureMessage "final dotnet restore failed."
 
     Write-Step "final dotnet build"
-    Invoke-Checked -FilePath "dotnet" -Arguments @("build", $solutionPath, "--no-restore") -FailureMessage "final dotnet build failed."
+    Write-Host "Building owned NeonBlack/Pyralis projects from Game Studio Core.slnx after Unity tests."
+    Invoke-DotnetProjectSet -Command "build" -ProjectPaths $ownedDotnetProjectPaths -FailureMessage "final dotnet build failed."
 }
 
 if (!$SkipResidueScan) {

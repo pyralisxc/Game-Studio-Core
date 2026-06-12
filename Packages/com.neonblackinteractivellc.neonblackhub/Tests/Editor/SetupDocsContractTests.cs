@@ -152,17 +152,18 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 "Gameplay",
                 "Editor");
 
-            string[] beginnerFacingFiles =
-            {
-                "GameConfigEditor.cs",
-                "InputConfigEditor.cs",
-                "SceneGameFlowGuidedEditors.cs",
-                "Pawn2DStackGuidedEditors.cs"
-            };
+            string[] beginnerFacingFiles = Directory.GetFiles(editorRoot, "*.cs", SearchOption.AllDirectories)
+                .Where(path =>
+                    path.Contains($"{Path.DirectorySeparatorChar}Authoring{Path.DirectorySeparatorChar}") ||
+                    path.EndsWith("PyralisReflectiveInspectorOverlay.cs") ||
+                    path.EndsWith("PyralisInspectorGuide.cs"))
+                .ToArray();
+
+            Assert.That(beginnerFacingFiles.Length, Is.GreaterThan(0));
 
             for (int i = 0; i < beginnerFacingFiles.Length; i++)
             {
-                string source = File.ReadAllText(Path.Combine(editorRoot, beginnerFacingFiles[i]));
+                string source = File.ReadAllText(beginnerFacingFiles[i]);
                 Assert.That(source.ToLowerInvariant().Contains("legacy"), Is.False, beginnerFacingFiles[i] + " should use compatibility/fresh-start wording.");
             }
         }

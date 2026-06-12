@@ -50,7 +50,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             PyralisSetupRouteAnalysis route = PyralisSetupRouteAnalysis.Build(session);
             GameModeDefinition mode = route.Mode;
             GameSetupProfile setupProfile = route.SetupProfile;
-            bool hasValidPatterns = route.HasValidPatterns;
+            bool hasSelectedCapabilities = route.HasValidPatterns;
             bool requiresPawn = route.RequiresPawn;
             bool hasParticipants = route.HasParticipants;
             bool hasParticipantPawn = route.HasAnyDefaultPawn;
@@ -59,7 +59,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             bool hasParticipantInputProfile = HasAnyParticipantInputProfile(session);
             string participantInputProfileIssue = GetParticipantInputIssue(session);
             bool hasUsableParticipantInputProfile = hasParticipantInputProfile && string.IsNullOrWhiteSpace(participantInputProfileIssue);
-            bool setupRouteReady = setupProfile != null && hasValidPatterns;
+            bool setupRouteReady = setupProfile != null && hasSelectedCapabilities;
             bool needsCameraRigForFirstProof = setupRouteReady && route.UsesPawnGameplay();
             bool needs2DCameraBounds = setupRouteReady && route.Requires2DCameraBounds();
             bool has2DCameraBounds = !needs2DCameraBounds || HasUsable2DCameraBounds(cameraRig, mode);
@@ -121,8 +121,8 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 "First-Scene Defaults",
                 autoCreateCoreServices && injectLoadedScenesOnBuild ? PyralisSetupFlowStepStatus.Ready : PyralisSetupFlowStepStatus.Recommended,
                 autoCreateCoreServices && injectLoadedScenesOnBuild
-                    ? "Auto Create Core Services and Inject Loaded Scenes On Build are enabled."
-                    : "First-scene proofs should keep Auto Create Core Services and Inject Loaded Scenes On Build enabled.",
+                    ? "Bootstrap startup ownership and loaded-scene injection are ready for a first proof."
+                    : "For first-scene proofs, keep bootstrap startup ownership on this root and inject loaded scenes unless this intent deliberately uses a custom composition flow.",
                 bootstrap,
                 autoCreateCoreServices && injectLoadedScenesOnBuild ? PyralisSetupFlowActionKind.SelectObject : PyralisSetupFlowActionKind.RestoreFirstSceneDefaults,
                 stepId: PyralisSetupFlowStepId.FirstSceneDefaults));
@@ -130,7 +130,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             steps.Add(new PyralisSetupFlowStep(
                 "Runtime Service Ownership",
                 PyralisSetupFlowStepStatus.Ready,
-                "GameplaySessionBootstrap builds PyralisGameplayLifetimeScope as the singular source of truth for runtime services. Systems depend on direct VContainer injection.",
+                "GameplaySessionBootstrap builds PyralisGameplayLifetimeScope as the singular source of truth for runtime services. Systems depend on direct VContainer injection, not hidden global lookups.",
                 bootstrap,
                 PyralisSetupFlowActionKind.SelectObject,
                 stepId: PyralisSetupFlowStepId.RuntimeServiceOwnership));
@@ -161,11 +161,11 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 stepId: PyralisSetupFlowStepId.AssignSetupProfile));
 
             steps.Add(new PyralisSetupFlowStep(
-                "Add Runtime Patterns",
-                GetDependentStatus(setupProfile != null, hasValidPatterns),
+                "Choose Capabilities",
+                GetDependentStatus(setupProfile != null, hasSelectedCapabilities),
                 setupProfile == null
                     ? "Assign Setup Profile first."
-                    : !route.HasAssignedPatterns ? "Add one or more runtime capabilities to the setup profile through Capability To Add -> Add Capability." : hasValidPatterns ? "Setup profile has runtime pattern intent." : "Fix RuntimePatternDefinition validation issues before continuing.",
+                    : !route.HasAssignedPatterns ? "Open Authoring Window -> Intent, choose DNA axioms and Engine Spine capabilities, then keep the GameSetupProfile active so those choices save to runtime capabilities." : hasSelectedCapabilities ? "Setup profile has selected capability intent." : "Fix setup capability validation issues before continuing.",
                 setupProfile,
                 stepId: PyralisSetupFlowStepId.AddRuntimePatterns));
 
@@ -180,36 +180,37 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
 
             steps.Add(new PyralisSetupFlowStep(
                 "Assign Participant Pawn",
-                GetParticipantPawnStatus(setupProfile != null && hasValidPatterns, requiresPawn, hasParticipantPawn, participantPawnIssue),
-                GetParticipantPawnMessage(setupProfile != null && hasValidPatterns, requiresPawn, hasParticipantPawn, participantPawnIssue),
+                GetParticipantPawnStatus(setupRouteReady, requiresPawn, hasParticipantPawn, participantPawnIssue),
+                GetParticipantPawnMessage(setupRouteReady, requiresPawn, hasParticipantPawn, participantPawnIssue),
                 session,
-                stepId: PyralisSetupFlowStepId.AssignParticipantPawn));
+                stepId: PyralisSetupFlowStepId.AssignParticipantPawn,
+                nativeAction: PyralisSetupFlowGuidance.GetPawnNativeAction(route.ParticipantPawnIssueKind)));
 
             steps.Add(new PyralisSetupFlowStep(
                 "Assign Input Profile",
-                GetParticipantInputProfileStatus(setupProfile != null && hasValidPatterns, requiresPawn, hasParticipants, hasUsableParticipantInputProfile),
-                GetParticipantInputProfileMessage(setupProfile != null && hasValidPatterns, requiresPawn, hasParticipants, session, hasParticipantInputProfile, participantInputProfileIssue),
+                GetParticipantInputProfileStatus(setupRouteReady, requiresPawn, hasParticipants, hasUsableParticipantInputProfile),
+                GetParticipantInputProfileMessage(setupRouteReady, requiresPawn, hasParticipants, session, hasParticipantInputProfile, participantInputProfileIssue),
                 GetInputProfileReference(session),
                 stepId: PyralisSetupFlowStepId.AssignInputProfile));
 
             steps.Add(new PyralisSetupFlowStep(
                 "Assign Spawn Points",
-                GetSpawnPointStatus(setupProfile != null && hasValidPatterns, requiresPawn, spawnPointCount),
-                GetSpawnPointMessage(setupProfile != null && hasValidPatterns, requiresPawn, spawnPointCount),
+                GetSpawnPointStatus(setupRouteReady, requiresPawn, spawnPointCount),
+                GetSpawnPointMessage(setupRouteReady, requiresPawn, spawnPointCount),
                 bootstrap,
                 stepId: PyralisSetupFlowStepId.AssignSpawnPoints));
 
             steps.Add(new PyralisSetupFlowStep(
                 "Assign Camera Rig",
-                GetCameraRigStatus(setupProfile != null && hasValidPatterns, needsCameraRigForFirstProof, route.UsesCamera(), hasCameraRig, has2DCameraBounds),
-                GetCameraRigMessage(setupProfile != null && hasValidPatterns, needsCameraRigForFirstProof, needs2DCameraBounds, route.UsesCamera(), hasCameraRig, has2DCameraBounds),
+                GetCameraRigStatus(setupRouteReady, needsCameraRigForFirstProof, route.UsesCamera(), hasCameraRig, has2DCameraBounds),
+                GetCameraRigMessage(setupRouteReady, needsCameraRigForFirstProof, needs2DCameraBounds, route.UsesCamera(), hasCameraRig, has2DCameraBounds),
                 cameraRig,
                 stepId: PyralisSetupFlowStepId.AssignCameraRig));
 
             steps.Add(new PyralisSetupFlowStep(
                 "Assign Player Input Manager",
-                GetRequiredRouteServiceStatus(setupProfile != null && hasValidPatterns, route.LikelyUsesInputManager(), hasPlayerInputManager),
-                GetPlayerInputMessage(setupProfile != null && hasValidPatterns, route.LikelyUsesInputManager(), hasPlayerInputManager),
+                GetRequiredRouteServiceStatus(setupRouteReady, route.LikelyUsesInputManager(), hasPlayerInputManager),
+                GetPlayerInputMessage(setupRouteReady, route.LikelyUsesInputManager(), hasPlayerInputManager),
                 GetObjectReference<Object>(serializedBootstrap, "playerInputManager"),
                 stepId: PyralisSetupFlowStepId.AssignPlayerInputManager));
 
@@ -236,8 +237,8 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
 
             steps.Add(new PyralisSetupFlowStep(
                 "Assign Playfield Profile",
-                GetRecommendationStatus(setupProfile != null && hasValidPatterns, route.UsesPlayfield(), mode != null && mode.playfieldProfile != null),
-                GetPlayfieldMessage(setupProfile != null && hasValidPatterns, route.UsesPlayfield(), mode != null && mode.playfieldProfile != null),
+                GetRecommendationStatus(setupRouteReady, route.UsesPlayfield(), mode != null && mode.playfieldProfile != null),
+                GetPlayfieldMessage(setupRouteReady, route.UsesPlayfield(), mode != null && mode.playfieldProfile != null),
                 mode != null ? mode.playfieldProfile : null,
                 stepId: PyralisSetupFlowStepId.AssignPlayfieldProfile));
 
@@ -473,10 +474,10 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
         private static string GetRuntimeSystemClaimsMessage(bool setupReady, PyralisRuntimeSystemClaimReport report)
         {
             if (!setupReady)
-                return "Choose runtime patterns before resolving declared runtime system claims.";
+                return "Choose setup capabilities before resolving declared runtime system claims.";
 
             if (report == null || !report.HasDeclaredClaims)
-                return "No explicit Required Runtime Systems are declared by the selected patterns.";
+                return "No explicit Required Runtime Systems are declared by optional route contracts.";
 
             if (!report.HasUnverifiedClaims)
                 return "Declared Required Runtime Systems are covered by bootstrap services, pawn validation, or concrete scene-service checks.";
@@ -500,7 +501,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
         private static string GetSceneReadinessMessage(bool setupReady, PyralisSceneReadinessReport report)
         {
             if (!setupReady)
-                return "Choose a valid setup profile and runtime pattern before checking scene and prefab readiness.";
+                return "Choose a valid setup profile and capability intent before checking scene and prefab readiness.";
 
             if (report == null)
                 return "Scene and prefab readiness could not be evaluated.";
@@ -517,7 +518,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
         private static string GetParticipantPawnMessage(bool setupReady, bool requiresPawn, bool hasParticipantPawn, string participantPawnIssue)
         {
             if (!setupReady)
-                return "Choose runtime patterns before deciding whether participants need pawns.";
+                return "Choose setup capabilities before deciding whether participants need pawns.";
 
             if (!requiresPawn)
             {
@@ -549,7 +550,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             string inputProfileIssue)
         {
             if (!setupReady)
-                return "Choose runtime patterns before deciding whether input profiles are required.";
+                return "Choose setup capabilities before deciding whether input profiles are required.";
 
             if (!hasParticipants)
                 return "Assign participants first, then assign input profiles.";
@@ -689,7 +690,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
         private static string GetSpawnPointMessage(bool setupReady, bool requiresPawn, int spawnPointCount)
         {
             if (!setupReady)
-                return "Choose runtime patterns before deciding whether spawn points are required.";
+                return "Choose setup capabilities before deciding whether spawn points are required.";
 
             if (!requiresPawn)
                 return spawnPointCount > 0
@@ -704,7 +705,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
         private static string GetCameraRigMessage(bool setupReady, bool requiredForFirstProof, bool requires2DBounds, bool recommended, bool ready, bool usable2DBounds)
         {
             if (!setupReady)
-                return "Choose runtime patterns before deciding camera rig wiring.";
+                return "Choose setup capabilities before deciding camera rig wiring.";
 
             if (requiredForFirstProof)
             {
@@ -732,7 +733,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
         private static string GetCameraCustomizationMessage(bool setupReady, bool relevant, bool hasCameraRig)
         {
             if (!setupReady)
-                return "Choose runtime patterns before deciding camera customization.";
+                return "Choose setup capabilities before deciding camera customization.";
 
             if (!relevant)
                 return "Camera framing can wait until this route uses a pawn, camera, cursor, board view, playfield, or follow camera.";
@@ -745,7 +746,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
         private static string GetPawnCustomizationMessage(bool setupReady, bool relevant, PawnDefinition pawn)
         {
             if (!setupReady)
-                return "Choose runtime patterns before deciding pawn customization.";
+                return "Choose setup capabilities before deciding pawn customization.";
 
             if (!relevant)
                 return "Pawn visuals and colliders can wait because this route does not currently need actor bodies.";
@@ -759,7 +760,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
         private static string GetMovementCustomizationMessage(bool setupReady, bool relevant, PawnDefinition pawn)
         {
             if (!setupReady)
-                return "Choose runtime patterns before deciding movement customization.";
+                return "Choose setup capabilities before deciding movement customization.";
 
             if (!relevant)
                 return "Movement and input tuning can wait because this route does not currently need pawn control.";
@@ -794,7 +795,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
         private static string GetPlayerInputMessage(bool setupReady, bool recommended, bool ready)
         {
             if (!setupReady)
-                return "Choose runtime patterns before deciding local join wiring.";
+                return "Choose setup capabilities before deciding local join wiring.";
 
             if (!recommended)
                 return ready
@@ -809,7 +810,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
         private static string GetPlayfieldMessage(bool setupReady, bool recommended, bool ready)
         {
             if (!setupReady)
-                return "Choose runtime patterns before deciding playfield wiring.";
+                return "Choose setup capabilities before deciding playfield wiring.";
 
             if (!recommended)
                 return ready
@@ -824,7 +825,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
         private static string GetScoringMessage(bool setupReady, bool recommended, bool ready)
         {
             if (!setupReady)
-                return "Choose runtime patterns before deciding scoring wiring.";
+                return "Choose setup capabilities before deciding scoring wiring.";
 
             if (!recommended)
                 return ready ? "Scoring is enabled." : "Scoring can stay disabled for this setup route.";
@@ -856,7 +857,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             bool ready)
         {
             if (!setupReady)
-                return "Choose runtime patterns before deciding gameplay state service wiring.";
+                return "Choose setup capabilities before deciding gameplay state service wiring.";
 
             if (!required)
             {
@@ -865,32 +866,32 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
 
             if (autoCreateCoreServices)
             {
-                return "Auto Create Core Services is enabled, so required session-state services are provisioned at startup for the first proof.";
+                return "GameplaySessionBootstrap provisions session-state services at startup for the selected first proof.";
             }
 
             return ready
                 ? "Scene has an IGameplayStateReader for active/dead/game-over aware systems."
-                : "Enable Auto Create Core Services for first-scene proofs, or assign an IGameplayStateReader before running your proof.";
+                : "Add an IGameplayStateReader only when this intent uses a custom gameplay-state service; otherwise keep the standard bootstrap startup path.";
 
         }
 
         private static string GetCameraBoundsServiceMessage(bool setupReady, bool recommended, bool ready)
         {
             if (!setupReady)
-                return "Choose runtime patterns before deciding camera bounds service wiring.";
+                return "Choose setup capabilities before deciding camera bounds service wiring.";
 
             if (!recommended)
-                return ready ? "Camera bounds provider is present." : "Camera bounds provider is optional for this setup route.";
+                return ready ? "Camera bounds provider is present." : "Camera bounds provider is optional until the selected intent uses framing, camera-aware spawning, hazards, pickups, or bounded playfield behavior.";
 
             return ready
-                ? "Scene has an ICameraBoundsProvider for playfield-aware systems."
-                : "Assign the CinemachineCameraRigController to Bootstrap > Camera Rig Controller. The rig provides ICameraBoundsProvider for 2D movement, spawning, hazards, pickups, and framing; use Camera Bounds Source only for specialized custom bounds providers.";
+                ? "Scene has an ICameraBoundsProvider for the selected camera/playfield proof."
+                : "Selected intent includes camera or bounds behavior. Assign CinemachineCameraRigController to Bootstrap > Camera Rig Controller, or use Camera Bounds Source only for a specialized custom ICameraBoundsProvider.";
         }
 
         private static string GetScoreServiceMessage(bool setupReady, bool required, bool ready)
         {
             if (!setupReady)
-                return "Choose runtime patterns before deciding score service wiring.";
+                return "Choose setup capabilities before deciding score service wiring.";
 
             if (!required)
                 return ready ? "Score service is present." : "Score service is optional for this setup route.";
@@ -922,7 +923,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
         private static string GetHudSurfaceMessage(bool setupReady, PyralisSetupRouteAnalysis route, bool hasCanvas, bool ready)
         {
             if (!setupReady)
-                return "Choose runtime patterns before deciding HUD or menu surfaces.";
+                return "Choose setup capabilities before deciding HUD or menu surfaces.";
 
             if (ready)
                 return "Scene has a Pyralis HUD/UI surface. Verify its Canvas, EventSystem, labels, panels, buttons, and service references in the Inspector.";
@@ -934,7 +935,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 return "Selected setup uses scoring/objectives. Create a UI Root with Canvas and EventSystem, then add UIManager for score/time/game-over flow or ParticipantFeedbackHudPresenter for score feedback. Link score UI to ParticipantScoreService or another ISessionScoreService after score changes work in Play Mode.";
 
             if (route != null && route.UsesTabletopContract())
-                return "Selected setup uses board/card/tabletop flow. Create a UI Root with Canvas and EventSystem for turn prompts, action menus, card hands, board selection, or routed interaction panels; connect presenters to the board/action/turn services the scene owns.";
+                return "Selected setup uses Board/Card/Tabletop flow. Create a UI Root with Canvas and EventSystem for turn prompts, action menus, card hands, board selection, or routed interaction panels; connect presenters to the board/action/turn services the scene owns.";
 
             if (route != null && route.UsesActionSelection())
                 return "Selected setup uses action selection. Create a UI Root with Canvas and EventSystem, then add buttons, panels, or cursor/selection presenters that call the chosen action, menu, turn, card, or command runtime. Start with one selectable action before expanding the whole menu.";
@@ -948,7 +949,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
         private static string GetProjectileLauncherMessage(bool setupReady, bool required, bool ready)
         {
             if (!setupReady)
-                return "Choose runtime patterns before deciding projectile launcher wiring.";
+                return "Choose setup capabilities before deciding projectile launcher wiring.";
 
             if (!required)
                 return ready ? "Projectile launcher is present." : "Projectile launcher is optional for this setup route.";
@@ -961,7 +962,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
         private static string GetTabletopContractMessage(bool setupReady, bool usesTabletopContract, bool hasTabletopContract)
         {
             if (!setupReady)
-                return "Choose runtime patterns before deciding tabletop runtime contract wiring.";
+                return "Choose setup capabilities before deciding tabletop runtime contract wiring.";
 
             if (!usesTabletopContract)
                 return "Tabletop runtime contract is optional for this setup route.";
@@ -974,7 +975,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
         private static string GetTabletopSelectionSurfaceMessage(bool setupReady, bool usesTabletopContract, bool hasTabletopSelectionSurface)
         {
             if (!setupReady)
-                return "Choose runtime patterns before deciding tabletop selection wiring.";
+                return "Choose setup capabilities before deciding tabletop selection wiring.";
 
             if (!usesTabletopContract)
                 return "Tabletop selection/input surfaces are optional for this setup route.";

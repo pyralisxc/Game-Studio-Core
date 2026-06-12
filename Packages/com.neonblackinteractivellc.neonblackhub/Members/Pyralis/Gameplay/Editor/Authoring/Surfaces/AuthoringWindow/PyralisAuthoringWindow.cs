@@ -33,19 +33,6 @@ namespace NeonBlack.Gameplay.Editor
         private const string SetupChainLabel = "Setup Chain";
 
         private static readonly string[] ModeLabels = { "Overview", "Intent", "Guide", "Map", "Validate", "Facts" };
-        private static readonly RuntimeCapabilityFamily[] GuidedCapabilityFamilies =
-        {
-            RuntimeCapabilityFamily.CharacterPawnGameplay,
-            RuntimeCapabilityFamily.Combat,
-            RuntimeCapabilityFamily.GunsProjectiles,
-            RuntimeCapabilityFamily.ActionTargeting,
-            RuntimeCapabilityFamily.BoardCardTabletop,
-            RuntimeCapabilityFamily.CameraInput,
-            RuntimeCapabilityFamily.AnimationPresentation,
-            RuntimeCapabilityFamily.ScoringObjectives,
-            RuntimeCapabilityFamily.ProceduralGeneration,
-            RuntimeCapabilityFamily.Networking
-        };
         private static readonly RuntimeCapabilityLaneTag[] GuidedCapabilityLaneTags =
         {
             RuntimeCapabilityLaneTag.Sprite2D,
@@ -204,6 +191,22 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
             if (_contentRoot == null) return;
             _contentRoot.Clear();
 
+            Object selection = Selection.activeObject;
+            Object selectionSetup = GetSetupContext(selection);
+            Object sceneFallbackSetup = GetSceneFallbackSetup(selection, selectionSetup);
+            Object activeSetup = ResolveActiveSetup(selection, selectionSetup, sceneFallbackSetup, _pinnedActiveSetup, _lastActiveSetup);
+            if (ShouldStartInIntent(activeSetup, selectionSetup, sceneFallbackSetup, _mode)
+                && !_emptySceneIntentStartApplied)
+            {
+                _emptySceneIntentStartApplied = true;
+                _mode = AuthoringWindowMode.Intent;
+                UpdateToolbarSelection();
+            }
+            else if (!HasNoSetupContext(activeSetup, selectionSetup, sceneFallbackSetup))
+            {
+                _emptySceneIntentStartApplied = false;
+            }
+
             if (_mode == AuthoringWindowMode.Intent)
             {
                 RefreshIntentTab();
@@ -221,17 +224,54 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
                 _contentRoot.Add(new IMGUIContainer(() =>
                 {
                     // We use the same logic as the old OnGUI but skip the layout headers
-                    Object selection = Selection.activeObject;
-                    Object selectionSetup = GetSetupContext(selection);
-                    Object sceneFallbackSetup = GetSceneFallbackSetup(selection, selectionSetup);
-                    Object activeSetup = ResolveActiveSetup(selection, selectionSetup, sceneFallbackSetup, _pinnedActiveSetup, _lastActiveSetup);
+                    Object currentSelection = Selection.activeObject;
+                    Object currentSelectionSetup = GetSetupContext(currentSelection);
+                    Object currentSceneFallbackSetup = GetSceneFallbackSetup(currentSelection, currentSelectionSetup);
+                    Object currentActiveSetup = ResolveActiveSetup(currentSelection, currentSelectionSetup, currentSceneFallbackSetup, _pinnedActiveSetup, _lastActiveSetup);
                     
                     ref Vector2 scroll = ref GetCurrentScroll();
                     scroll = EditorGUILayout.BeginScrollView(scroll);
-                    DrawModeContent(activeSetup, selection);
+                    DrawModeContent(currentActiveSetup, currentSelection);
                     EditorGUILayout.EndScrollView();
                 }));
             }
+        }
+
+        private void SwitchMode(AuthoringWindowMode mode)
+        {
+            _mode = mode;
+            UpdateToolbarSelection();
+            EditorApplication.delayCall += () =>
+            {
+                if (this == null)
+                    return;
+
+                RefreshActiveTab();
+                Repaint();
+            };
+        }
+
+        private void UpdateToolbarSelection()
+        {
+            var toolbar = rootVisualElement.Q<VisualElement>("toolbar");
+            if (toolbar == null)
+                return;
+
+            foreach (var tab in toolbar.Children())
+                tab.RemoveFromClassList("mode-tab--active");
+
+            string tabName = _mode switch
+            {
+                AuthoringWindowMode.Overview => "tabOverview",
+                AuthoringWindowMode.Intent => "tabIntent",
+                AuthoringWindowMode.Guide => "tabGuide",
+                AuthoringWindowMode.Map => "tabMap",
+                AuthoringWindowMode.Validate => "tabHygiene",
+                AuthoringWindowMode.Facts => "tabFacts",
+                _ => "tabOverview"
+            };
+
+            rootVisualElement.Q<VisualElement>(tabName)?.AddToClassList("mode-tab--active");
         }
 
         private ref Vector2 GetCurrentScroll()
@@ -278,10 +318,33 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
             var advisorTitle = new Label("INTENT ADVISOR");
             advisorTitle.AddToClassList("section-title");
             advisorContainer.Add(advisorTitle);
+
+            var intentContract = new Label("Intent shapes the game you want. It does not apply presets, create assets, wire scenes, or choose art/feel for you.");
+            intentContract.style.whiteSpace = WhiteSpace.Normal;
+            intentContract.style.opacity = 0.75f;
+            intentContract.style.marginBottom = 6f;
+            advisorContainer.Add(intentContract);
             
             var intentSummary = new Label("Project DNA is defined by... Engine Spine capabilities: ...") { name = "intentSummary" };
             intentSummary.AddToClassList("intent-card-summary");
             advisorContainer.Add(intentSummary);
+
+            var intentNext = new Label(string.Empty) { name = "intentNext" };
+            intentNext.style.whiteSpace = WhiteSpace.Normal;
+            intentNext.style.marginTop = 6f;
+            intentNext.style.marginBottom = 6f;
+            advisorContainer.Add(intentNext);
+
+            var actionRow = new VisualElement { name = "intentActionRow" };
+            actionRow.style.flexDirection = FlexDirection.Row;
+            actionRow.style.marginTop = 4f;
+            var guideButton = new Button(() => SwitchMode(AuthoringWindowMode.Guide)) { text = "Open Guide" };
+            guideButton.tooltip = "Show ranked cookbook cards for this intent without applying a preset.";
+            var overviewButton = new Button(() => SwitchMode(AuthoringWindowMode.Overview)) { text = "Open Overview" };
+            overviewButton.tooltip = "Return to the current setup route once a scene root or setup asset exists.";
+            actionRow.Add(guideButton);
+            actionRow.Add(overviewButton);
+            advisorContainer.Add(actionRow);
 
             var sidebar = new VisualElement() { name = "sidebar" };
             sidebar.AddToClassList("intent-sidebar");
@@ -362,6 +425,7 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
                 {
                     dropdown.tooltip = "No mechanical axiom selected for this category.";
                 }
+                SyncIntentToActiveSetupProfile();
                 InvalidateAuthoringCache();
                 UpdateAdvisor(rootVisualElement);
             });
@@ -390,6 +454,7 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
             {
                 _intentLane = options[dropdown.index];
                 dropdown.tooltip = RuntimeCapabilityLaneRegistry.GetTooltip(_intentLane);
+                SyncIntentToActiveSetupProfile();
                 InvalidateAuthoringCache();
                 UpdateAdvisor(rootVisualElement);
             });
@@ -479,6 +544,7 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
                     {
                         if (evt.newValue) _intentCapabilities |= cap;
                         else _intentCapabilities &= ~cap;
+                        SyncIntentToActiveSetupProfile();
                         InvalidateAuthoringCache();
                         UpdateAdvisor(rootVisualElement);
                     });
@@ -574,10 +640,10 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
             AddChainLink(chainContainer, "SESSION", session, "Defines participants, networking, and rules.", "Create or assign the first asset the scene root reads.");
 
             // 3. Game Mode
-            AddChainLink(chainContainer, "GAME MODE", mode, "The specific setup recipe and win/loss rules.", "Create or assign the rules asset for this session.");
+            AddChainLink(chainContainer, "GAME MODE", mode, "The specific setup profile and win/loss rules.", "Create or assign the rules asset for this session.");
 
-            // 4. Setup Recipe
-            AddChainLink(chainContainer, "SETUP RECIPE", setupProfile, "Combines capability patterns before prefab or scene wiring starts.", "Create or assign the recipe that combines game capability patterns.");
+            // 4. Setup Profile
+            AddChainLink(chainContainer, "SETUP PROFILE", setupProfile, "Combines capability ingredients before prefab or scene wiring starts.", "Create or assign the profile that combines game capability ingredients.");
 
             if (report != null && !string.IsNullOrEmpty(report.NextStep))
             {
@@ -739,6 +805,186 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
             var model = PyralisAuthoringIntentAdvisor.Build(selection);
 
             summaryLabel.text = model.Summary;
+            var nextLabel = root.Q<Label>("intentNext");
+            if (nextLabel != null)
+            {
+                nextLabel.text = GetIntentReadinessMessage();
+            }
+        }
+
+        private string GetIntentReadinessMessage()
+        {
+            if (!HasCompleteCoreAxioms())
+                return "Choose the DNA axioms first: dimensionality, physics gravity, sequence timeline, and spatial topology. Then choose the Engine Spine capabilities for this proof.";
+
+            if (_intentCapabilities == AuthoringCapability.None)
+                return "Choose Engine Spine capabilities that describe the game. The active GameSetupProfile will store matching runtime capability rows for Overview, Guide, Map, and Validate.";
+
+            GameSetupProfile setupProfile = GetActiveIntentSetupProfile();
+            if (setupProfile == null)
+                return "Intent is shaped. Create or select a GameSetupProfile so these choices become the route contract read by Overview, Guide, Map, and Validate.";
+
+            return "Intent is shaped and synced to the active GameSetupProfile. Open Guide for ranked cookbook cards, then use Project, Hierarchy, and Inspector to create and wire your own setup.";
+        }
+
+        private bool HasCompleteCoreAxioms()
+        {
+            return (_intentAxioms & (AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.Dimensions3D)) != 0
+                && (_intentAxioms & (AuthoringWorldAxiom.GravityVertical | AuthoringWorldAxiom.GravityRadial | AuthoringWorldAxiom.GravityNone)) != 0
+                && (_intentAxioms & (AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.TurnBased)) != 0
+                && (_intentAxioms & (AuthoringWorldAxiom.BoundedSpace | AuthoringWorldAxiom.WrappedSpace | AuthoringWorldAxiom.InfiniteSpace)) != 0;
+        }
+
+        private GameSetupProfile GetActiveIntentSetupProfile()
+        {
+            Object selection = Selection.activeObject;
+            Object selectionSetup = GetSetupContext(selection);
+            Object sceneFallbackSetup = GetSceneFallbackSetup(selection, selectionSetup);
+            Object activeSetup = ResolveActiveSetup(selection, selectionSetup, sceneFallbackSetup, _pinnedActiveSetup, _lastActiveSetup);
+            return selection as GameSetupProfile
+                ?? GetSelectedSetupProfile(activeSetup, GetSelectedMode(activeSetup, GetSelectedSession(activeSetup, GetSelectedBootstrap(activeSetup))));
+        }
+
+        private void SyncIntentToActiveSetupProfile()
+        {
+            if (_intentCapabilities == AuthoringCapability.None)
+                return;
+
+            GameSetupProfile setupProfile = GetActiveIntentSetupProfile();
+            if (setupProfile == null)
+                return;
+
+            RuntimeCapabilityFamily[] families = BuildRuntimeFamiliesFromIntent(_intentCapabilities, _intentLane, _intentAxioms);
+            if (families.Length == 0)
+                return;
+
+            Undo.RecordObject(setupProfile, "Sync Intent To Setup Profile");
+            List<RuntimeCapabilitySelection> next = new List<RuntimeCapabilitySelection>();
+
+            for (int i = 0; i < families.Length; i++)
+            {
+                RuntimeCapabilityFamily family = families[i];
+                RuntimeCapabilitySelection existing = GetCapabilitySelection(setupProfile, family);
+                next.Add(new RuntimeCapabilitySelection
+                {
+                    capabilityFamily = family,
+                    patternDefinition = existing?.patternDefinition,
+                    requiredForFirstProof = existing?.requiredForFirstProof ?? true
+                });
+            }
+
+            setupProfile.runtimeCapabilities = next.ToArray();
+            setupProfile.runtimePatterns = FilterRuntimePatternsToFamilies(setupProfile.runtimePatterns, families);
+            EditorUtility.SetDirty(setupProfile);
+            InvalidateAuthoringCache();
+        }
+
+        private static RuntimeCapabilityFamily[] BuildRuntimeFamiliesFromIntent(
+            AuthoringCapability capabilities,
+            RuntimeCapabilityLaneTag lane,
+            AuthoringWorldAxiom axioms)
+        {
+            List<RuntimeCapabilityFamily> families = new List<RuntimeCapabilityFamily>();
+
+            AddFamilyIf(
+                families,
+                HasAnyCapability(
+                    capabilities,
+                    AuthoringCapability.Participants,
+                    AuthoringCapability.Movement,
+                    AuthoringCapability.KineticMotor2D,
+                    AuthoringCapability.KineticMotor3D,
+                    AuthoringCapability.Steering2D,
+                    AuthoringCapability.Steering3D,
+                    AuthoringCapability.Traversal),
+                RuntimeCapabilityFamily.CharacterPawnGameplay);
+
+            AddFamilyIf(
+                families,
+                HasAnyCapability(
+                    capabilities,
+                    AuthoringCapability.Combat,
+                    AuthoringCapability.CombatState,
+                    AuthoringCapability.CombatSensors,
+                    AuthoringCapability.MeleeFlow,
+                    AuthoringCapability.TacticsAggressive,
+                    AuthoringCapability.TacticsDefensive),
+                RuntimeCapabilityFamily.Combat);
+
+            AddFamilyIf(
+                families,
+                HasAnyCapability(capabilities, AuthoringCapability.RangedFlow),
+                RuntimeCapabilityFamily.GunsProjectiles);
+
+            AddFamilyIf(
+                families,
+                HasAnyCapability(capabilities, AuthoringCapability.Rules, AuthoringCapability.UI, AuthoringCapability.TurnBased, AuthoringCapability.Puzzle),
+                RuntimeCapabilityFamily.ActionTargeting);
+
+            AddFamilyIf(
+                families,
+                HasAnyCapability(capabilities, AuthoringCapability.Tabletop, AuthoringCapability.Grid)
+                    || lane == RuntimeCapabilityLaneTag.TabletopBoard,
+                RuntimeCapabilityFamily.BoardCardTabletop);
+
+            AddFamilyIf(
+                families,
+                HasAnyCapability(capabilities, AuthoringCapability.Camera, AuthoringCapability.Input)
+                    || lane == RuntimeCapabilityLaneTag.CameraCursor,
+                RuntimeCapabilityFamily.CameraInput);
+
+            AddFamilyIf(
+                families,
+                HasAnyCapability(capabilities, AuthoringCapability.Animation, AuthoringCapability.VFX),
+                RuntimeCapabilityFamily.AnimationPresentation);
+
+            AddFamilyIf(
+                families,
+                HasAnyCapability(capabilities, AuthoringCapability.Scoring),
+                RuntimeCapabilityFamily.ScoringObjectives);
+
+            AddFamilyIf(
+                families,
+                HasAnyCapability(capabilities, AuthoringCapability.Environment)
+                    && (axioms & AuthoringWorldAxiom.InfiniteSpace) != 0,
+                RuntimeCapabilityFamily.ProceduralGeneration);
+
+            AddFamilyIf(
+                families,
+                HasAnyCapability(capabilities, AuthoringCapability.Networking)
+                    || (axioms & AuthoringWorldAxiom.Networked) != 0,
+                RuntimeCapabilityFamily.Networking);
+
+            return families.ToArray();
+        }
+
+        private static bool HasAnyCapability(AuthoringCapability selected, params AuthoringCapability[] candidates)
+        {
+            for (int i = 0; i < candidates.Length; i++)
+            {
+                if ((selected & candidates[i]) != 0)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static void AddFamilyIf(List<RuntimeCapabilityFamily> families, bool condition, RuntimeCapabilityFamily family)
+        {
+            if (condition && !families.Contains(family))
+                families.Add(family);
+        }
+
+        private static RuntimePatternDefinition[] FilterRuntimePatternsToFamilies(
+            RuntimePatternDefinition[] patterns,
+            IReadOnlyCollection<RuntimeCapabilityFamily> families)
+        {
+            if (patterns == null || patterns.Length == 0 || families == null || families.Count == 0)
+                return System.Array.Empty<RuntimePatternDefinition>();
+
+            return patterns
+                .Where(pattern => pattern != null && families.Contains(pattern.capabilityFamily))
+                .ToArray();
         }
 
         private HelpBoxMessageType GetHelpBoxType(PyralisAuthoringIssueSeverity severity)
@@ -995,8 +1241,9 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
 
         private void DrawOverviewMode(Object activeSetup, Object selection, PyralisAuthoringRouteReport report, PyralisAuthoringRouteReport selectionReport)
         {
-            Object currentStepSelection = activeSetup != null ? activeSetup : selection;
-            PyralisAuthoringRouteReport currentStepReport = activeSetup != null ? report : selectionReport;
+            bool selectedSetupProfile = selection is GameSetupProfile;
+            Object currentStepSelection = selectedSetupProfile ? selection : activeSetup != null ? activeSetup : selection;
+            PyralisAuthoringRouteReport currentStepReport = selectedSetupProfile ? selectionReport : activeSetup != null ? report : selectionReport;
             PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(activeSetup, report);
 
             EditorGUILayout.LabelField("Overview Dashboard", EditorStyles.boldLabel);
@@ -1005,7 +1252,7 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
                 DrawOverviewGuidanceCard(model, report);
 
                 EditorGUILayout.LabelField("Route", model.RouteName);
-                EditorGUILayout.LabelField("Blocking Setup Clear", model.ReadyToPressPlay ? "Yes - required setup is clear. Proof Enhancers are optional." : "No - required setup is missing.");
+                EditorGUILayout.LabelField("Blocking Setup Clear", model.ReadyToPressPlay ? "Yes - selected intent's Do Now setup is clear. Proof Enhancers are optional." : "No - selected intent still has Do Now setup to finish.");
                 DrawOverviewActionButtons(model);
                 DrawFirstProofCard(model);
                 DrawPlayModeChecklist(model);
@@ -1013,8 +1260,8 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
                 EditorGUILayout.LabelField("Active Setup", activeSetup != null ? $"{activeSetup.name} ({activeSetup.GetType().Name})" : "Nothing pinned or inferred");
                 EditorGUILayout.LabelField("Selected Context", selection != null ? $"{selection.name} ({selection.GetType().Name})" : "Nothing selected");
 
-                DrawOverviewLane("Do Now", "Required missing or blocked work only.", model.DoNow);
-                DrawOverviewLane("Proof Enhancers", "Helpful native setup once Do Now is clear. These should improve the first proof, not block it.", model.DoSoon);
+                DrawOverviewLane("Do Now", "Intent-required missing or blocked work only.", model.DoNow);
+                DrawOverviewLane("Proof Enhancers", "Recommended by this intent once Do Now is clear. Wire only what the first proof depends on.", model.DoSoon);
                 DrawOverviewLane("Feature Cards", "Optional next capabilities, polish, advanced systems, and setup that can safely wait.", model.Later);
             }
 
@@ -1045,16 +1292,22 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
             EditorGUILayout.Space(4f);
             using (new EditorGUILayout.HorizontalScope())
             {
+                if (GUILayout.Button("Open Intent"))
+                {
+                    _intentScroll = Vector2.zero;
+                    SwitchMode(AuthoringWindowMode.Intent);
+                }
+
                 if (GUILayout.Button("Open Map"))
                 {
-                    _mode = AuthoringWindowMode.Map;
                     _mapScroll = Vector2.zero;
+                    SwitchMode(AuthoringWindowMode.Map);
                 }
 
                 if (GUILayout.Button("Open Validate"))
                 {
-                    _mode = AuthoringWindowMode.Validate;
                     _hygieneScroll = Vector2.zero;
+                    SwitchMode(AuthoringWindowMode.Validate);
                 }
 
                 Object bestTarget = GetBestOverviewTarget(model);
@@ -1153,7 +1406,7 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
 
         private static void DrawContractProofGuidance(Object activeSetup, PyralisAuthoringRouteReport report)
         {
-            IReadOnlyList<PyralisAuthoringContractProofGuidanceRow> rows = PyralisAuthoringContractProofGuidance.Build(activeSetup, report);
+            IReadOnlyList<ResolvedAuthoringContractProofGuidanceRow> rows = ResolvedAuthoringContractProofGuidance.Build(activeSetup, report);
             if (rows == null || rows.Count == 0)
                 return;
 
@@ -1169,7 +1422,7 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
             }
         }
 
-        private static void DrawContractProofGuidanceRow(PyralisAuthoringContractProofGuidanceRow row)
+        private static void DrawContractProofGuidanceRow(ResolvedAuthoringContractProofGuidanceRow row)
         {
             if (row == null || row.Contract == null)
                 return;
@@ -1196,23 +1449,23 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
             }
         }
 
-        private static string GetContractProofStatusText(PyralisAuthoringContractProofGuidanceRow row)
+        private static string GetContractProofStatusText(ResolvedAuthoringContractProofGuidanceRow row)
         {
             if (row == null)
                 return "No proof guidance available.";
 
             switch (row.State)
             {
-                case PyralisAuthoringContractProofState.ProofTargetMissing:
+                case ResolvedAuthoringContractProofState.ProofTargetMissing:
                     return "Blocked: proof target is missing from PyralisAuthoringRouteProof.";
-                case PyralisAuthoringContractProofState.ProofBlockedBySetup:
+                case ResolvedAuthoringContractProofState.ProofBlockedBySetup:
                     return "Proof target exists, but route setup still has blockers. Clear Do Now before Play Mode.";
                 default:
-                    return "Proof not run in Play Mode. Enter Play only after required setup is clear, then verify this proof target.";
+                    return "Proof not run in Play Mode. Enter Play only after the selected intent's Do Now setup is clear, then verify this proof target.";
             }
         }
 
-        private static string GetUnsupportedLaneCaution(PyralisAuthoringContractProofGuidanceRow row)
+        private static string GetUnsupportedLaneCaution(ResolvedAuthoringContractProofGuidanceRow row)
         {
             if (row == null || row.Contract == null || !row.ActiveLane.HasValue)
                 return "No active lane caution.";
@@ -1565,11 +1818,11 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
                 DrawCompactReadinessRow("Scene Root", bootstrap != null, false, bootstrap);
                 DrawCompactReadinessRow("Session", session != null, false, session);
                 DrawCompactReadinessRow("Game Rules", mode != null, false, mode);
-                DrawCompactReadinessRow("Setup Recipe", setupProfile != null, false, setupProfile);
-                DrawCompactReadinessRow("Capability Patterns", GetStepReady(flowReport, "Add Runtime Patterns", setupProfile != null && setupProfile.runtimePatterns != null && setupProfile.runtimePatterns.Length > 0), false, setupProfile, GetStepMessage(flowReport, "Add Runtime Patterns"));
-                DrawCompactReadinessRow("Players / Seats", GetStepReady(flowReport, "Assign Default Participants", session != null && session.defaultParticipants != null && session.defaultParticipants.Length > 0), false, session, GetStepMessage(flowReport, "Assign Default Participants"));
-                DrawCompactReadinessRow("Pawn / No Pawn", GetStepReady(flowReport, "Assign Participant Pawn", HasAnyPawn(session)), true, session, GetStepMessage(flowReport, "Assign Participant Pawn"));
-                DrawCompactReadinessRow("Scene Roots", GetStepReady(flowReport, "Scene And Prefab Readiness", bootstrap != null), true, bootstrap, GetStepMessage(flowReport, "Scene And Prefab Readiness"));
+                DrawCompactReadinessRow("Setup Profile", setupProfile != null, false, setupProfile);
+                DrawCompactReadinessRow("Capabilities", GetStepReady(flowReport, PyralisSetupFlowStepId.AddRuntimePatterns, HasAnyRuntimeCapability(setupProfile)), false, setupProfile, GetStepMessage(flowReport, PyralisSetupFlowStepId.AddRuntimePatterns));
+                DrawCompactReadinessRow("Players / Seats", GetStepReady(flowReport, PyralisSetupFlowStepId.AssignDefaultParticipants, session != null && session.defaultParticipants != null && session.defaultParticipants.Length > 0), false, session, GetStepMessage(flowReport, PyralisSetupFlowStepId.AssignDefaultParticipants));
+                DrawCompactReadinessRow("Pawn / No Pawn", GetStepReady(flowReport, PyralisSetupFlowStepId.AssignParticipantPawn, HasAnyPawn(session)), true, session, GetStepMessage(flowReport, PyralisSetupFlowStepId.AssignParticipantPawn));
+                DrawCompactReadinessRow("Scene Roots", GetStepReady(flowReport, PyralisSetupFlowStepId.SceneAndPrefabReadiness, bootstrap != null), true, bootstrap, GetStepMessage(flowReport, PyralisSetupFlowStepId.SceneAndPrefabReadiness));
             }
         }
 
@@ -1621,9 +1874,9 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
             {
                 DrawSetupChainRow("Scene Root", bootstrap, bootstrap != null, false, "Scene object that starts the session.");
                 DrawSetupChainRow("Session", route.Session, route.Session != null, false, "Asset that names game rules and participants.");
-                DrawSetupChainRow("Game Rules", route.Mode, route.Mode != null, false, "Ruleset that chooses the setup recipe.");
-                DrawSetupChainRow("Setup Recipe", route.SetupProfile, route.SetupProfile != null, false, "Capability recipe for this route.");
-                DrawSetupChainRow("Capabilities", route.SetupProfile, route.HasValidPatterns, false, GetCapabilityChainMessage(route));
+                DrawSetupChainRow("Game Rules", route.Mode, route.Mode != null, false, "Ruleset that chooses the setup profile.");
+                DrawSetupChainRow("Setup Profile", route.SetupProfile, route.SetupProfile != null, false, "Editable capability contract for this route.");
+                DrawSetupChainRow("Capabilities", route.SetupProfile, route.HasSelectedCapabilities, false, GetCapabilityChainMessage(route));
                 DrawSetupChainRow("Participants", route.Session, route.HasParticipants, false, route.HasParticipants ? "Players, seats, hands, factions, or command owners are assigned." : "Assign at least one default participant.");
                 DrawSetupChainRow("Pawn / No Pawn", GetFirstParticipant(route.Session), GetPawnChainReady(route), !route.RequiresPawn, GetPawnChainMessage(route));
                 DrawSetupChainRow("Scene Surfaces", bootstrap, GetRecommendedSceneSurfacesReady(surfaces), false, GetSceneSurfaceChainMessage(surfaces));
@@ -1657,13 +1910,13 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
         private static string GetCapabilityChainMessage(PyralisAuthoringRouteDescriptor route)
         {
             if (route.SetupProfile == null)
-                return "Create or assign the setup recipe before choosing capabilities.";
+                return "Create or assign the setup profile before choosing capabilities.";
 
             if (!route.HasAssignedPatterns)
-                return "Choose capability patterns before scene wiring.";
+                return "Choose capability ingredients before scene wiring.";
 
             if (!route.HasValidPatterns)
-                return "Fix runtime pattern validation before trusting route guidance.";
+                return "Fix setup capability validation before trusting route guidance.";
 
             return route.RouteName;
         }
@@ -1747,15 +2000,15 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
             }
         }
 
-        private static bool GetStepReady(PyralisSetupFlowReport report, string label, bool fallback)
+        private static bool GetStepReady(PyralisSetupFlowReport report, PyralisSetupFlowStepId stepId, bool fallback)
         {
-            PyralisSetupFlowStep step = report != null ? report.GetStep(label) : null;
+            PyralisSetupFlowStep step = report != null ? report.GetStep(stepId) : null;
             return step != null ? step.Status == PyralisSetupFlowStepStatus.Ready || step.Status == PyralisSetupFlowStepStatus.Optional : fallback;
         }
 
-        private static string GetStepMessage(PyralisSetupFlowReport report, string label)
+        private static string GetStepMessage(PyralisSetupFlowReport report, PyralisSetupFlowStepId stepId)
         {
-            PyralisSetupFlowStep step = report != null ? report.GetStep(label) : null;
+            PyralisSetupFlowStep step = report != null ? report.GetStep(stepId) : null;
             return step != null ? step.Message : null;
         }
 
@@ -1968,167 +2221,11 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
 
         private static void DrawPrimaryAction(Object selection, PyralisAuthoringRouteReport report)
         {
-            if (selection == null)
-            {
-                DrawSemanticHelpBox(
-                    "Native first step: right-click in Hierarchy, choose Create Empty, name it Gameplay Root, then select it and use Inspector -> Add Component search for GameplaySessionBootstrap. Keep this window open while you do it.",
-                    MessageType.Info);
-                DrawSemanticMiniLabel(
-                    "After that, select Gameplay Root so Overview can switch from route discovery to the setup map: SessionDefinition, participants, pawn prefab, spawn points, input, and camera bounds.");
-                return;
-            }
-
-            if (selection is GameObject selectedGameObject && selectedGameObject.GetComponent<GameplaySessionBootstrap>() == null)
-            {
-                if (IsSceneSupportObject(selectedGameObject))
-                {
-                    DrawSemanticHelpBox(
-                        $"Native path: keep `{selectedGameObject.name}` as scene support. In the Hierarchy, right-click -> Create Empty, name it Gameplay Root, then select Gameplay Root and use Inspector -> Add Component search for GameplaySessionBootstrap.",
-                        MessageType.Info);
-                    DrawSemanticMiniLabel(
-                        "After Gameplay Root exists, return to camera, art, lights, and playfield objects as guided setup steps. The camera route should be wired through Camera Root with CinemachineCameraRigController, not by deleting Main Camera or turning it into the session root.");
-                    return;
-                }
-
-                DrawSemanticHelpBox(
-                    $"Native path: keep `{selectedGameObject.name}` selected, then use Inspector -> Add Component search for GameplaySessionBootstrap. Add PyralisGameplayLifetimeScope next if you want the composition root visible before Play Mode.",
-                    MessageType.Info);
-                DrawSemanticMiniLabel(
-                    "This is still before asset wiring. Once GameplaySessionBootstrap is on the object, Overview will promote it to the active setup and guide SessionDefinition, participants, pawn prefab, spawn points, input, and camera bounds.");
-                return;
-            }
-
-            GameplaySessionBootstrap bootstrap = GetSelectedBootstrap(selection);
-            SessionDefinition session = GetSelectedSession(selection, bootstrap);
-            GameModeDefinition mode = GetSelectedMode(selection, session);
-            GameSetupProfile setupProfile = GetSelectedSetupProfile(selection, mode);
-            PyralisAuthoringRouteDescriptor route = PyralisAuthoringRouteDescriptor.Build(setupProfile, session, mode);
-
-            if (bootstrap != null && session == null)
-            {
-                DrawSemanticHelpBox(
-                    "Native path: in the Project window, choose or create a project-owned setup folder for this proof, separate from imported art folders, then right-click in that folder and choose Create -> NeonBlack -> Definitions -> Session Definition. Drag that asset into GameplaySessionBootstrap > Session Definition in the Inspector, or click the field's object picker circle and double-click the asset.",
-                    MessageType.Info);
-                DrawSemanticMiniLabel(
-                    "This keeps folderbase and assignment ownership visible: check the Project content pane/breadcrumb first, because Unity creates the asset in the active Project folder. Keep Jim/imported art in its art folder, keep Pyralis setup definitions/profiles in the proof setup folder, and use the Inspector to show exactly which field owns the link.");
-                return;
-            }
-
-            if (session != null && mode == null)
-            {
-                DrawSemanticHelpBox(
-                    "Native path: in the Project window, create a Game Mode Definition asset. Then select/open the SessionDefinition asset and assign its Default Game Mode field by dragging the asset there or using the field's object picker circle.",
-                    MessageType.Info);
-                DrawSemanticMiniLabel(
-                    "The Authoring Window explains the next link; the SessionDefinition Inspector remains the field-level source of truth.");
-                return;
-            }
-
-            if (mode != null && setupProfile == null)
-            {
-                DrawSemanticHelpBox(
-                    "Native path: in the Project window, create a Game Setup Profile asset. Then select/open the GameModeDefinition asset and assign its Setup Profile field by dragging the asset there or using the field's object picker circle.",
-                    MessageType.Info);
-                DrawSemanticMiniLabel(
-                    "Create or choose the setup recipe intentionally, then wire it through the GameModeDefinition Inspector.");
-                return;
-            }
-
-            if (setupProfile != null && !route.HasAssignedPatterns)
-            {
-                DrawSemanticHelpBox(
-                    "Native path: select/open the GameSetupProfile asset, use Runtime Capabilities -> Capability To Add to choose the route family, then click Add Capability. Runtime Patterns is the resolved recipe output; create a new Runtime Pattern Definition only when the existing capability language cannot describe the route.",
-                    MessageType.Info);
-                DrawSemanticMiniLabel(
-                    "Runtime capabilities name the route intent before participant and pawn wiring becomes meaningful. For a 1P movement proof, start with Character Pawn Gameplay.");
-                return;
-            }
-
-            if (setupProfile != null && !route.HasValidPatterns)
-            {
-                DrawSemanticHelpBox(
-                    "Native path: select the assigned Runtime Pattern Definition and clear its Inspector validation issues before adding participants. Fill Pattern Id, Display Name, Description, Setup Notes, Capability Family, Participant Embodiment, and Supported Control Surfaces.",
-                    MessageType.Warning);
-                DrawSemanticMiniLabel(
-                    "A pattern slot is assigned, but Pyralis cannot trust it as the route source of truth until its metadata is real. Do this in the pattern Inspector, then return to the setup root.");
-                return;
-            }
-
-            if (session != null && (session.defaultParticipants == null || session.defaultParticipants.Length == 0))
-            {
-                DrawSemanticHelpBox(
-                    "Native path: create a Participant Definition asset in the Project window, configure player/input fields in its Inspector, then select/open the SessionDefinition asset, add a Default Participants slot, and drag the asset there or use the slot's object picker circle.",
-                    MessageType.Info);
-                DrawSemanticMiniLabel(
-                    "Participants are design-owned. Use the Inspector so player, seat, input, hand, faction, camera, cursor, or pawn intent stays explicit.");
-                return;
-            }
-
-            if (route.RequiresPawn && !string.IsNullOrWhiteSpace(route.ParticipantPawnIssue))
-            {
-                DrawSemanticHelpBox(GetPawnIssuePrimaryAction(route.ParticipantPawnIssue), MessageType.Info);
-                DrawSemanticMiniLabel(
-                    "The setup root can still see pawn-required routes. Select the participant, pawn definition, or pawn prefab named in Current Step when you need the exact Inspector field.");
-                return;
-            }
-
-            if (report.NextStep.Contains("Spawn Points"))
-            {
-                DrawSemanticHelpBox(
-                    "Native path: select Gameplay Root, right-click -> Create Empty, name it SpawnPoint_1, position it, click + on GameplaySessionBootstrap > Spawn Points, then drag SpawnPoint_1 into the new Transform slot.",
-                    MessageType.Info);
-                DrawSemanticMiniLabel(
-                    "Unity list fields usually need an element slot before a drag can land. The guide should keep this explicit so beginners do not bounce off an empty list.");
-                return;
-            }
-
-            if (report.NextStep.Contains("PlayerInputManager") || report.NextStep.Contains("Player Input Manager"))
-            {
-                DrawSemanticHelpBox(
-                    "Native path: only add Unity PlayerInputManager for local join. For a 1P proof, select/open the SessionDefinition asset, set Max Participants to 1, and leave Bootstrap > Player Input Manager empty. For local join, add PlayerInputManager, assign a dedicated PlayerInput prefab, configure Join Behavior/Input Actions, then drag it into Bootstrap > Player Input Manager.",
-                    MessageType.Warning);
-                DrawSemanticMiniLabel(
-                    "PlayerInputManager is not the pawn spawner for ordinary 1P proofs. It is a local-join input surface, and Unity requires a Player Prefab when joining is enabled.");
-                return;
-            }
-
-            if (report.NextStep.Contains("Camera Root") || report.NextStep.Contains("Camera Rig"))
-            {
-                DrawSemanticHelpBox(
-                    "Native path:\n1. Keep or create exactly one enabled physical Unity Camera for this shared proof, usually the default Main Camera.\n2. Hierarchy right-click -> Create Empty, name it Camera Root.\n3. Add CinemachineCameraRigController.\n4. Create GameObject -> Cinemachine -> Cinemachine Camera; this creates a separate Cinemachine Camera GameObject and usually adds Cinemachine Brain to the physical Main Camera.\n5. Verify Main Camera still has the MainCamera tag and Cinemachine Brain. Add the Brain manually only if it is missing.\n6. Assign the Cinemachine Camera component to Shared Camera Behaviour and the physical Main Camera to Target Camera.\n7. Disable or remove accidental extra physical Camera objects only when they were created by mistake; keep intentional overlay, split-screen, minimap, or render-texture cameras.\n8. Drag Camera Root into GameplaySessionBootstrap > Camera Rig Controller.",
-                    MessageType.Warning);
-                DrawSemanticMiniLabel(
-                    "For a 2D proof, also set the physical Target Camera > Camera > Projection to Orthographic or use an orthographic CameraRigProfile. This is setup, not polish: Pawn2DMovementComponent needs usable camera bounds before it can move reliably.");
-                return;
-            }
-
-            if (report.NextStep.Contains("Play Mode"))
-            {
-                DrawSemanticHelpBox(
-                    "Native path: switch to the Game tab, press Play, then use the route input to confirm one pawn spawns, receives input, and moves. If the pawn cannot move or the framing is poor in a 2D proof, return to Edit Mode and make the Target Camera orthographic or assign an orthographic CameraRigProfile on Camera Root.",
-                    MessageType.Info);
-                DrawSemanticMiniLabel(
-                    "Play Mode is the proof, not the setup tool. If a recommended row still affects what you are testing, wire it first.");
-                return;
-            }
-
-            if (selection is ParticipantDefinition participant && participant.defaultPawn == null)
-            {
-                if (route.RequiresPawn)
-                {
-                    DrawSemanticHelpBox(
-                        "Native path: create a Pawn Definition asset in the Project window, create or choose a pawn prefab, then assign the Pawn Definition into ParticipantDefinition > Default Pawn by dragging it there or using the field's object picker circle.",
-                        MessageType.Info);
-                    DrawSemanticMiniLabel(
-                        "Keep pawn definition, prefab, art, movement, and presentation choices explicit in Unity instead of letting the guide silently pick defaults.");
-                }
-                else
-                {
-                    DrawSemanticMiniLabel("Pawn is optional for this route; leave it empty for seats, hands, factions, camera, cursor, menu, or board-driven participants.");
-                }
-
-                return;
-            }
+            PyralisPrimaryActionGuidance guidance = PyralisCurrentStepPrimaryActionGuidance.Build(selection, report);
+            if (!string.IsNullOrWhiteSpace(guidance.Message))
+                DrawSemanticHelpBox(guidance.Message, guidance.MessageType);
+            if (!string.IsNullOrWhiteSpace(guidance.Detail))
+                DrawSemanticMiniLabel(guidance.Detail);
 
             using (new EditorGUILayout.HorizontalScope())
             {
@@ -2142,50 +2239,6 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
                 }
             }
 
-            DrawSemanticMiniLabel(report.ValidationIssues.Count > 0 ? "Review validation issues next." : "No one-click setup action is needed for this selection.");
-        }
-
-        private static string GetPawnIssuePrimaryAction(string participantPawnIssue)
-        {
-            if (string.IsNullOrWhiteSpace(participantPawnIssue))
-                return "Native path: inspect the pawn route item named in Current Step and clear its Inspector validation issue.";
-
-            if (participantPawnIssue.Contains("needs a PawnDefinition"))
-            {
-                return "Native path: create a Pawn Definition asset in the Project window, create or choose a pawn prefab, then assign the Pawn Definition to the participant named in Current Step.";
-            }
-
-            if (participantPawnIssue.Contains("needs a pawn prefab"))
-            {
-                return "Native path: create or choose a pawn prefab, add PawnRoot and the movement/presentation components it needs, then assign that prefab to PawnDefinition > Pawn Prefab.";
-            }
-
-            if (participantPawnIssue.Contains("needs PawnRoot"))
-            {
-                return "Native path: select the pawn prefab named in Current Step and use Inspector -> Add Component to add PawnRoot on the root GameObject.";
-            }
-
-            if (participantPawnIssue.Contains("needs a component that implements IPawnMotor"))
-            {
-                return "Native path: select the pawn prefab named in Current Step and use Inspector -> Add Component to add a movement motor component that implements IPawnMotor.";
-            }
-
-            if (participantPawnIssue.Contains("needs a component that implements IPawnPresentationModule"))
-            {
-                return "Native path: select the pawn prefab named in Current Step and use Inspector -> Add Component to add a presentation component that implements IPawnPresentationModule. For 2D visuals, drag the sprite or Aseprite asset from the Project window onto SpriteRenderer > Sprite instead of relying only on the object picker search.";
-            }
-
-            if (participantPawnIssue.Contains("needs a component that implements IPawnInputModule"))
-            {
-                return "Native path: select the pawn prefab named in Current Step and use Inspector -> Add Component to add the input adapter for the lane, such as Motor2DInputAdapter for a 2D pawn, so InputProfile actions reach movement.";
-            }
-
-            if (participantPawnIssue.Contains("extra PlayerInputHandler"))
-            {
-                return "Native path: open the pawn prefab named in Current Step, keep Motor2DInputAdapter as the supported 2D input bridge, remove the duplicate 2D Player Input Handler component, then return here and re-check the movement proof.";
-            }
-
-            return "Native path: inspect the pawn route item named in Current Step and clear its Inspector validation issue before entering Play Mode.";
         }
 
         private static void DrawMapMode(Object activeSetup, Object selection, PyralisAuthoringRouteReport report)
@@ -2233,9 +2286,9 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
             {
                 GameplaySessionBootstrap => "Session reference, spawn points, and scene-level setup helpers.",
                 SessionDefinition => "Game Rules, players/seats, local/network mode, and participant limits.",
-                GameModeDefinition => "Setup Recipe plus rule-level defaults for the playable loop.",
-                GameSetupProfile => "Capability Patterns that describe what this game route needs before scene wiring starts.",
-                RuntimePatternDefinition => "Capability family, participant embodiment, presentation lanes, first-proof requirements, supported control surfaces, required systems, and setup notes.",
+                GameModeDefinition => "Setup Profile plus rule-level defaults for the playable loop.",
+                GameSetupProfile => "Capability ingredients that describe what this game route needs before scene wiring starts.",
+                RuntimePatternDefinition => "Optional advanced route contract with capability family, participant embodiment, presentation lanes, first-proof requirements, supported control surfaces, required systems, and setup notes.",
                 ParticipantDefinition => "Display name, seat index, input ownership, and optional Pawn Actor.",
                 PawnDefinition => "Pawn prefab, profiles, feature modules, and presentation setup.",
                 Component component => component is PawnRoot
@@ -2274,7 +2327,7 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
 
             DrawValidationIssueGroup(PyralisAuthoringValidationCategory.SessionSetup, model.Issues);
             DrawValidationIssueGroup(PyralisAuthoringValidationCategory.GameRules, model.Issues);
-            DrawValidationIssueGroup(PyralisAuthoringValidationCategory.SetupRecipe, model.Issues);
+            DrawValidationIssueGroup(PyralisAuthoringValidationCategory.SetupProfile, model.Issues);
             DrawValidationIssueGroup(PyralisAuthoringValidationCategory.PlayersSeats, model.Issues);
             DrawValidationIssueGroup(PyralisAuthoringValidationCategory.PawnsActors, model.Issues);
             DrawValidationIssueGroup(PyralisAuthoringValidationCategory.SceneObjects, model.Issues);
@@ -2488,7 +2541,7 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
                 DrawFactCoverageSummary(facts);
             }
 
-            DrawFeatureContractSetupRecipes();
+            DrawFeatureContractSetupProfiles();
 
             DrawFactGroup(PyralisAuthoringFactKind.RuntimeCapability, facts);
             DrawFactGroup(PyralisAuthoringFactKind.FeatureContract, facts);
@@ -2535,12 +2588,12 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
             return count;
         }
 
-        private static void DrawFeatureContractSetupRecipes()
+        private static void DrawFeatureContractSetupProfiles()
         {
-            IReadOnlyList<PyralisAuthoringContract> contracts = PyralisAuthoringContractRegistry.All;
+            IReadOnlyList<ResolvedAuthoringContract> contracts = ResolvedAuthoringContractRegistry.All;
             EditorGUILayout.Space(8f);
             EditorGUILayout.LabelField("Contract-Backed Feature Module Setup", EditorStyles.boldLabel);
-            DrawSemanticHelpBox("Read-only setup recipes generated from feature-owned authoring contracts. Use native Unity surfaces for asset creation, Prefab/Component composition, Inspector assignment, object picking, and Play Mode proof.", MessageType.Info);
+            DrawSemanticHelpBox("Read-only setup guidance generated from feature-owned authoring contracts. Use native Unity surfaces for asset creation, Prefab/Component composition, Inspector assignment, object picking, and Play Mode proof.", MessageType.Info);
 
             if (contracts == null || contracts.Count == 0)
             {
@@ -2548,14 +2601,14 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
                 return;
             }
 
-            Dictionary<string, List<PyralisAuthoringContract>> contractsByCategory = BuildContractsByCategory(contracts);
+            Dictionary<string, List<ResolvedAuthoringContract>> contractsByCategory = BuildContractsByCategory(contracts);
             List<string> categories = new List<string>(contractsByCategory.Keys);
             categories.Sort(System.StringComparer.OrdinalIgnoreCase);
 
             for (int i = 0; i < categories.Count; i++)
             {
                 string category = categories[i];
-                List<PyralisAuthoringContract> categoryContracts = contractsByCategory[category];
+                List<ResolvedAuthoringContract> categoryContracts = contractsByCategory[category];
                 string key = "Pyralis.AuthoringWindow.ContractSetup." + category;
                 bool isOpen = ServiceStepFoldouts.TryGetValue(key, out bool value) && value;
                 isOpen = EditorGUILayout.Foldout(isOpen, $"{category} Contracts ({categoryContracts.Count})", true);
@@ -2566,36 +2619,36 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
 
                 EditorGUI.indentLevel++;
                 for (int contractIndex = 0; contractIndex < categoryContracts.Count; contractIndex++)
-                    DrawFeatureContractSetupRecipe(categoryContracts[contractIndex]);
+                    DrawFeatureContractSetupProfile(categoryContracts[contractIndex]);
                 EditorGUI.indentLevel--;
             }
         }
 
         private static void DrawContractBackedFeatureModuleSetup(GameSetupProfile setupProfile)
         {
-            DrawFeatureContractSetupRecipes();
+            DrawFeatureContractSetupProfiles();
         }
 
-        private static Dictionary<string, List<PyralisAuthoringContract>> BuildContractsByCategory(IReadOnlyList<PyralisAuthoringContract> contracts)
+        private static Dictionary<string, List<ResolvedAuthoringContract>> BuildContractsByCategory(IReadOnlyList<ResolvedAuthoringContract> contracts)
         {
-            Dictionary<string, List<PyralisAuthoringContract>> contractsByCategory = new Dictionary<string, List<PyralisAuthoringContract>>();
+            Dictionary<string, List<ResolvedAuthoringContract>> contractsByCategory = new Dictionary<string, List<ResolvedAuthoringContract>>();
             for (int i = 0; i < contracts.Count; i++)
             {
-                PyralisAuthoringContract contract = contracts[i];
+                ResolvedAuthoringContract contract = contracts[i];
                 if (contract == null)
                     continue;
 
                 string category = string.IsNullOrWhiteSpace(contract.AuthoringCategory) ? "General" : contract.AuthoringCategory;
-                if (!contractsByCategory.TryGetValue(category, out List<PyralisAuthoringContract> categoryContracts))
+                if (!contractsByCategory.TryGetValue(category, out List<ResolvedAuthoringContract> categoryContracts))
                 {
-                    categoryContracts = new List<PyralisAuthoringContract>();
+                    categoryContracts = new List<ResolvedAuthoringContract>();
                     contractsByCategory.Add(category, categoryContracts);
                 }
 
                 categoryContracts.Add(contract);
             }
 
-            foreach (List<PyralisAuthoringContract> categoryContracts in contractsByCategory.Values)
+            foreach (List<ResolvedAuthoringContract> categoryContracts in contractsByCategory.Values)
             {
                 categoryContracts.Sort((left, right) => string.Compare(left.DisplayName, right.DisplayName, System.StringComparison.OrdinalIgnoreCase));
             }
@@ -2603,7 +2656,7 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
             return contractsByCategory;
         }
 
-        private static void DrawFeatureContractSetupRecipe(PyralisAuthoringContract contract)
+        private static void DrawFeatureContractSetupProfile(ResolvedAuthoringContract contract)
         {
             if (contract == null)
                 return;
@@ -2627,7 +2680,7 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
             }
         }
 
-        private static List<PyralisAuthoringSemanticTag> GetFeatureContractSetupTags(PyralisAuthoringContract contract)
+        private static List<PyralisAuthoringSemanticTag> GetFeatureContractSetupTags(ResolvedAuthoringContract contract)
         {
             List<PyralisAuthoringSemanticTag> tags = new List<PyralisAuthoringSemanticTag>();
             AddSemanticTag(PyralisAuthoringSemanticTag.Authoring, tags);
@@ -2976,7 +3029,7 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
 
             if (selection == null)
             {
-                EditorGUILayout.HelpBox("Select a Pyralis scene object, component, definition, profile, or starter-pack asset to make this window show the authoring context for that selection.", MessageType.Info);
+                EditorGUILayout.HelpBox("Select a Pyralis scene object, component, definition, profile, or authored asset to make this window show the authoring context for that selection.", MessageType.Info);
                 return;
             }
 
@@ -3039,8 +3092,8 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
                 {
                     DrawServiceStep("Scene Root", bootstrap != null, bootstrap, "Startup object found.", "Select a GameplaySessionBootstrap or Gameplay Root object.", "This is the scene object that starts the Pyralis session when Play begins.");
                     DrawServiceStep("Session", session != null, session, "Session asset is connected.", "Create or assign the first asset the scene root reads.", "The session names the game mode and the players, seats, cursors, or other participants that can join.");
-                    DrawServiceStep("Game Rules", mode != null, mode, "Game rules asset is connected.", "Create or assign the rules asset for this session.", "The game mode points at the setup recipe and owns rule-level choices for this playable loop.");
-                    DrawServiceStep("Setup Recipe", setupProfile != null, setupProfile, "Setup recipe is connected.", "Create or assign the recipe that combines game capability patterns.", "The setup recipe combines capability patterns before prefab or scene wiring starts.");
+                    DrawServiceStep("Game Rules", mode != null, mode, "Game rules asset is connected.", "Create or assign the rules asset for this session.", "The game mode points at the setup profile and owns rule-level choices for this playable loop.");
+                    DrawServiceStep("Setup Profile", setupProfile != null, setupProfile, "Setup profile is connected.", "Create or assign the profile that combines game capability ingredients.", "The setup profile combines capability ingredients before prefab or scene wiring starts.");
                     DrawRuntimePatternServiceSteps(setupProfile);
                     DrawParticipantServiceSteps(session, PyralisAuthoringRouteDescriptor.Build(setupProfile, session, mode));
                 }
@@ -3140,7 +3193,7 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
         private static void DrawSetupProfileContext(GameSetupProfile setupProfile)
         {
             EditorGUILayout.Space(4f);
-            DrawCapabilityPicker(setupProfile);
+            DrawSemanticHelpBox("Open Intent to choose or revise setup profile capability ingredients. Guide keeps this selected-profile view read-only so route shaping stays in one place.", MessageType.Info);
 
             EditorGUILayout.Space(4f);
             DrawRuntimeCapabilityCatalog(setupProfile);
@@ -3149,11 +3202,11 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
             DrawContractBackedFeatureModuleSetup(setupProfile);
 
             EditorGUILayout.Space(4f);
-            EditorGUILayout.LabelField("Setup Profile Patterns", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Optional Route Contracts", EditorStyles.boldLabel);
 
             if (setupProfile.runtimePatterns == null || setupProfile.runtimePatterns.Length == 0)
             {
-                EditorGUILayout.HelpBox("No runtime patterns assigned yet. Add existing runtime patterns before wiring scene objects.", MessageType.Warning);
+                EditorGUILayout.HelpBox("No optional runtime pattern assets are assigned. That is fine for generic capability-first setup; add one only when a route needs reusable advanced metadata.", MessageType.Info);
                 return;
             }
 
@@ -3172,66 +3225,6 @@ private static readonly SemanticTokenRule[] SemanticTokenRules =
                     if (GUILayout.Button("Select", GUILayout.Width(72f)))
                         Selection.activeObject = pattern;
                 }
-            }
-        }
-
-        private static void DrawCapabilityPicker(GameSetupProfile setupProfile)
-        {
-            EditorGUILayout.LabelField("Design Capabilities", EditorStyles.boldLabel);
-
-            if (setupProfile == null)
-            {
-                EditorGUILayout.HelpBox("Select a GameSetupProfile before choosing capabilities.", MessageType.Info);
-                return;
-            }
-
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
-            {
-                EditorGUILayout.LabelField("Pick the capabilities this game route needs. The picker assigns existing RuntimePatternDefinition assets, then the guide explains the setup impact.", EditorStyles.wordWrappedMiniLabel);
-
-                for (int i = 0; i < GuidedCapabilityFamilies.Length; i++)
-                    DrawCapabilityPickerRow(setupProfile, GuidedCapabilityFamilies[i]);
-            }
-        }
-
-        private static void DrawCapabilityPickerRow(GameSetupProfile setupProfile, RuntimeCapabilityFamily family)
-        {
-            List<RuntimePatternDefinition> availablePatterns = FindRuntimePatternsByFamily(family);
-            RuntimePatternDefinition selectedPattern = PyralisAuthoringCapabilitySelection.GetSelectedPattern(setupProfile.runtimePatterns, family);
-            if (selectedPattern != null && !availablePatterns.Contains(selectedPattern))
-                availablePatterns.Insert(0, selectedPattern);
-
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
-            {
-                using (new EditorGUILayout.HorizontalScope())
-                {
-                    bool hasAvailablePattern = availablePatterns.Count > 0;
-                    bool isEnabled = selectedPattern != null;
-                    using (new EditorGUI.DisabledScope(!hasAvailablePattern && !isEnabled))
-                    {
-                        bool nextEnabled = EditorGUILayout.ToggleLeft(GetCapabilityLabel(family), isEnabled, GUILayout.Width(210f));
-                        if (nextEnabled != isEnabled)
-                        {
-                            if (nextEnabled && hasAvailablePattern)
-                                ApplyCapabilityPattern(setupProfile, availablePatterns[0]);
-                            else
-                                RemoveCapabilityPattern(setupProfile, family);
-                        }
-                    }
-
-                    using (new EditorGUI.DisabledScope(!isEnabled || availablePatterns.Count <= 1))
-                    {
-                        int selectedIndex = Mathf.Max(0, availablePatterns.IndexOf(selectedPattern));
-                        string[] labels = BuildPatternPopupLabels(availablePatterns);
-                        int nextIndex = EditorGUILayout.Popup(selectedIndex, labels);
-                        if (nextIndex != selectedIndex && nextIndex >= 0 && nextIndex < availablePatterns.Count)
-                            ApplyCapabilityPattern(setupProfile, availablePatterns[nextIndex]);
-                    }
-                }
-
-                EditorGUILayout.LabelField(GetCapabilityDescription(family), EditorStyles.wordWrappedMiniLabel);
-                if (availablePatterns.Count == 0)
-                    EditorGUILayout.HelpBox("No existing RuntimePatternDefinition asset was found for this capability. Create one only if the existing starter patterns cannot describe this route.", MessageType.None);
             }
         }
 
@@ -3404,49 +3397,26 @@ DrawRuntimeCapabilityGroup(GetLaneTagLabel(tag), "Lane", facts, setupProfile, la
                 DrawSemanticMiniLabel($"+ {values.Count - visibleCount} more when expanded");
         }
 
-        private static List<RuntimePatternDefinition> FindRuntimePatternsByFamily(RuntimeCapabilityFamily family)
+        private static bool HasAnyRuntimeCapability(GameSetupProfile setupProfile)
         {
-            List<RuntimePatternDefinition> patterns = new List<RuntimePatternDefinition>();
-            string[] guids = AssetDatabase.FindAssets("t:RuntimePatternDefinition");
-            for (int i = 0; i < guids.Length; i++)
+            return setupProfile != null
+                && setupProfile.runtimeCapabilities != null
+                && setupProfile.runtimeCapabilities.Length > 0;
+        }
+
+        private static RuntimeCapabilitySelection GetCapabilitySelection(GameSetupProfile setupProfile, RuntimeCapabilityFamily family)
+        {
+            if (setupProfile == null || setupProfile.runtimeCapabilities == null)
+                return null;
+
+            for (int i = 0; i < setupProfile.runtimeCapabilities.Length; i++)
             {
-                string path = AssetDatabase.GUIDToAssetPath(guids[i]);
-                RuntimePatternDefinition pattern = AssetDatabase.LoadAssetAtPath<RuntimePatternDefinition>(path);
-                if (pattern != null && pattern.capabilityFamily == family)
-                    patterns.Add(pattern);
+                RuntimeCapabilitySelection selection = setupProfile.runtimeCapabilities[i];
+                if (selection != null && selection.capabilityFamily == family)
+                    return selection;
             }
 
-            patterns.Sort((left, right) => string.Compare(GetRuntimePatternLabel(left), GetRuntimePatternLabel(right), System.StringComparison.OrdinalIgnoreCase));
-            return patterns;
-        }
-
-        private static string[] BuildPatternPopupLabels(List<RuntimePatternDefinition> patterns)
-        {
-            string[] labels = new string[patterns.Count];
-            for (int i = 0; i < patterns.Count; i++)
-                labels[i] = GetRuntimePatternLabel(patterns[i]);
-
-            return labels;
-        }
-
-        private static void ApplyCapabilityPattern(GameSetupProfile setupProfile, RuntimePatternDefinition pattern)
-        {
-            if (setupProfile == null || pattern == null)
-                return;
-
-            Undo.RecordObject(setupProfile, "Set Setup Capability Pattern");
-            setupProfile.runtimePatterns = PyralisAuthoringCapabilitySelection.SetCapabilityPattern(setupProfile.runtimePatterns, pattern);
-            EditorUtility.SetDirty(setupProfile);
-        }
-
-        private static void RemoveCapabilityPattern(GameSetupProfile setupProfile, RuntimeCapabilityFamily family)
-        {
-            if (setupProfile == null)
-                return;
-
-            Undo.RecordObject(setupProfile, "Remove Setup Capability Pattern");
-            setupProfile.runtimePatterns = PyralisAuthoringCapabilitySelection.RemoveCapabilityFamily(setupProfile.runtimePatterns, family);
-            EditorUtility.SetDirty(setupProfile);
+            return null;
         }
 
         private static void DrawFeatureAdvisor(GameSetupProfile setupProfile)
@@ -3480,7 +3450,7 @@ DrawRuntimeCapabilityGroup(GetLaneTagLabel(tag), "Lane", facts, setupProfile, la
 
             if (advisor.SelectedFeatures.Count == 0)
             {
-                EditorGUILayout.HelpBox("No capability patterns are selected yet. Choose existing RuntimePatternDefinition assets before wiring camera, input, HUD, pawns, menus, combat, or board objects.", MessageType.Info);
+                EditorGUILayout.HelpBox("No capability route contracts are selected yet. Use Intent to shape the game first, then author the setup assets that describe the route before wiring camera, input, HUD, pawns, menus, combat, or board objects.", MessageType.Info);
                 return;
             }
 
@@ -3644,11 +3614,11 @@ DrawRuntimeCapabilityGroup(GetLaneTagLabel(tag), "Lane", facts, setupProfile, la
         private static void DrawRuntimePatternServiceSteps(GameSetupProfile setupProfile)
         {
             EditorGUILayout.Space(4f);
-            EditorGUILayout.LabelField("Capability Patterns", EditorStyles.miniBoldLabel);
+            EditorGUILayout.LabelField("Capability Ingredients", EditorStyles.miniBoldLabel);
 
             if (setupProfile == null || setupProfile.runtimePatterns == null || setupProfile.runtimePatterns.Length == 0)
             {
-                DrawServiceStep("Capability Patterns", false, setupProfile, string.Empty, "Choose existing patterns before scene wiring.", "Patterns describe the kind of game being built: pawn action, tabletop, camera/cursor, scoring, combat, traversal, and similar capability families.");
+                DrawServiceStep("Capability Ingredients", HasAnyRuntimeCapability(setupProfile), setupProfile, string.Empty, "Choose capability ingredients before scene wiring.", "Capabilities describe the kind of game being built: pawn action, tabletop, camera/cursor, scoring, combat, traversal, and similar capability families. Optional contracts can be added later.");
                 return;
             }
 
@@ -3656,9 +3626,9 @@ DrawRuntimeCapabilityGroup(GetLaneTagLabel(tag), "Lane", facts, setupProfile, la
             {
                 RuntimePatternDefinition pattern = setupProfile.runtimePatterns[i];
                 string readyText = pattern != null
-                    ? $"{GetRuntimePatternLabel(pattern)} tells the Inspector what this setup needs."
+                    ? $"{GetRuntimePatternLabel(pattern)} adds optional route-contract metadata."
                     : string.Empty;
-                DrawServiceStep($"Pattern {i}", pattern != null, pattern, readyText, "Empty capability pattern slot; fill it in the Setup Recipe Inspector.", "Use patterns to declare game intent before creating scene objects or prefabs.");
+                DrawServiceStep($"Contract {i}", pattern != null, pattern, readyText, "Empty optional contract slot; remove it or assign a RuntimePatternDefinition if this route needs reusable metadata.", "Use capability ingredients to declare game intent before creating scene objects or prefabs.");
             }
         }
 
@@ -3669,7 +3639,7 @@ DrawRuntimeCapabilityGroup(GetLaneTagLabel(tag), "Lane", facts, setupProfile, la
 
             if (session == null || session.defaultParticipants == null || session.defaultParticipants.Length == 0)
             {
-                DrawServiceStep("Player / Seat", false, session, string.Empty, "Create or assign participants after the route exists.", "A participant can be a player, AI, board seat, hand, faction, cursor, camera owner, or turn owner depending on the setup recipe.");
+                DrawServiceStep("Player / Seat", false, session, string.Empty, "Create or assign participants after the route exists.", "A participant can be a player, AI, board seat, hand, faction, cursor, camera owner, or turn owner depending on the setup profile.");
                 return;
             }
 
@@ -4106,13 +4076,6 @@ DrawRuntimeCapabilityGroup(GetLaneTagLabel(tag), "Lane", facts, setupProfile, la
             return null;
         }
 
-        private static bool IsSceneSupportObject(GameObject gameObject)
-        {
-            return gameObject.GetComponent<UnityEngine.Camera>() != null
-                || gameObject.GetComponent<Light>() != null
-                || gameObject.GetComponentInParent<UnityEngine.Camera>() != null;
-        }
-
         private static GameplaySessionBootstrap GetOnlySceneBootstrap()
         {
             GameplaySessionBootstrap onlyBootstrap = null;
@@ -4210,24 +4173,6 @@ DrawRuntimeCapabilityGroup(GetLaneTagLabel(tag), "Lane", facts, setupProfile, la
             return string.Join(", ", labels);
         }
 
-        private static string GetCapabilityLabel(RuntimeCapabilityFamily family)
-        {
-            return family switch
-            {
-                RuntimeCapabilityFamily.CharacterPawnGameplay => "Pawn actor",
-                RuntimeCapabilityFamily.Combat => "Combat",
-                RuntimeCapabilityFamily.GunsProjectiles => "Projectiles",
-                RuntimeCapabilityFamily.ActionTargeting => "Action/menu selection",
-                RuntimeCapabilityFamily.BoardCardTabletop => "Board/card/tabletop",
-                RuntimeCapabilityFamily.CameraInput => "Camera/cursor",
-                RuntimeCapabilityFamily.AnimationPresentation => "Animation/presentation",
-                RuntimeCapabilityFamily.ScoringObjectives => "Scoring/objectives",
-                RuntimeCapabilityFamily.ProceduralGeneration => "Procedural",
-                RuntimeCapabilityFamily.Networking => "Networking",
-                _ => family.ToString()
-            };
-        }
-
         private static string GetIntentTierLabel(PyralisAuthoringIntentGuideTier tier)
 {
             return tier switch
@@ -4267,24 +4212,6 @@ DrawRuntimeCapabilityGroup(GetLaneTagLabel(tag), "Lane", facts, setupProfile, la
                 RuntimeCapabilityLaneTag.CameraCursor => "Camera / Cursor",
                 RuntimeCapabilityLaneTag.Mixed => "Networked",
                 _ => tag.ToString()
-            };
-        }
-
-        private static string GetCapabilityDescription(RuntimeCapabilityFamily family)
-        {
-            return family switch
-            {
-                RuntimeCapabilityFamily.CharacterPawnGameplay => "Use when participants need actor bodies, movement, spawn points, pawn definitions, and pawn prefabs.",
-                RuntimeCapabilityFamily.Combat => "Use for hitboxes, hurtboxes, damage, health, reactions, brawler moves, fighter moves, or combat sequences.",
-                RuntimeCapabilityFamily.GunsProjectiles => "Use for bullets, spells, traps, turrets, hitscan, fire modes, ammo, and impact feedback.",
-                RuntimeCapabilityFamily.ActionTargeting => "Use when players choose commands through menus, turns, cards, board spaces, cursors, or queued abilities.",
-                RuntimeCapabilityFamily.BoardCardTabletop => "Use for seats, hands, pieces, zones, legal moves, card/board state, turn order, and no-pawn tabletop flow.",
-                RuntimeCapabilityFamily.CameraInput => "Use when the player controls a camera, cursor, selector, commander view, or other non-pawn surface.",
-                RuntimeCapabilityFamily.AnimationPresentation => "Use for Sprite2D, Billboard2_5D, Rigged3D, Animator signals, facing, shadows, and visual feedback.",
-                RuntimeCapabilityFamily.ScoringObjectives => "Use for score, timers, lives, resources, objectives, win/loss state, round results, or victory points.",
-                RuntimeCapabilityFamily.ProceduralGeneration => "Use for generated rooms, chunks, lanes, waves, board layouts, encounters, budgets, and seeds.",
-                RuntimeCapabilityFamily.Networking => "Use after the local route works and the scene needs ownership, authority, transport, or network prefab readiness.",
-                _ => "Use for a custom setup capability. Make sure its pattern description and setup notes explain the Unity wiring."
             };
         }
 

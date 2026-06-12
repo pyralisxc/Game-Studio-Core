@@ -18,6 +18,17 @@ namespace NeonBlack.Gameplay.Tests.Editor
             "Pyralis",
             "Gameplay");
 
+        private static string AuthoringDoc(params string[] segments)
+        {
+            string path = Path.Combine(GameplayRoot, "Docs", "Authoring");
+            foreach (string segment in segments)
+            {
+                path = Path.Combine(path, segment);
+            }
+
+            return path;
+        }
+
         [Test]
         public void MainMenuManager_Source_ExposesCreditsPanelFlow()
         {
@@ -35,19 +46,21 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void MainMenuManagerEditor_GuidesCreditsAndRequiredNavigation()
         {
-            string source = File.ReadAllText(Path.Combine(GameplayRoot, "Editor", "MenuNavigationGuidedEditors.cs"));
+            string source = File.ReadAllText(Path.Combine(GameplayRoot, "Core", "Navigation", "UI", "MainMenuManager.cs"));
 
+            StringAssert.Contains("AuthoringContract", source);
             StringAssert.Contains("Credits", source);
             StringAssert.Contains("creditsPanel", source);
             StringAssert.Contains("creditsButton", source);
             StringAssert.Contains("creditsBackButton", source);
-            StringAssert.Contains("Scene Navigator Source is required for play/load/exit buttons.", source);
+            StringAssert.Contains("sceneNavigator", source);
+            StringAssert.Contains("AssignmentFields", source);
         }
 
         [Test]
         public void SceneFlowSetup_DocumentsCompleteGameShellRoute()
         {
-            string docs = File.ReadAllText(Path.Combine(GameplayRoot, "Docs", "Setup", "Prefabs", "Scene_Flow_Setup.md"));
+            string docs = File.ReadAllText(AuthoringDoc("Prefabs", "Scene_Flow_Setup.md"));
 
             StringAssert.Contains("Game Shell MVP route", docs);
             StringAssert.Contains("boot scene", docs);

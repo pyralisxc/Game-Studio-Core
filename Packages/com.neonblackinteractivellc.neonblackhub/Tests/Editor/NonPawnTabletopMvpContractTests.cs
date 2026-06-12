@@ -15,10 +15,29 @@ namespace NeonBlack.Gameplay.Tests.Editor
             "Pyralis",
             "Gameplay");
 
+        private static string AuthoringDoc(params string[] segments)
+        {
+            string path = Path.Combine(GameplayRoot, "Docs", "Authoring");
+            foreach (string segment in segments)
+            {
+                path = Path.Combine(path, segment);
+            }
+
+            return path;
+        }
+
+        private static string FindGameplayEditorFile(string fileName)
+        {
+            string editorRoot = Path.Combine(GameplayRoot, "Editor");
+            string[] matches = Directory.GetFiles(editorRoot, fileName, SearchOption.AllDirectories);
+            Assert.That(matches.Length, Is.EqualTo(1), $"Expected one Gameplay Editor file named {fileName}.");
+            return matches[0];
+        }
+
         [Test]
         public void TabletopSetupDocs_DefineNoPawnMvpQuickPath()
         {
-            string docs = File.ReadAllText(Path.Combine(GameplayRoot, "Docs", "Setup", "Prefabs", "Board_Card_Tabletop_Setup.md"));
+            string docs = File.ReadAllText(AuthoringDoc("Prefabs", "Board_Card_Tabletop_Setup.md"));
 
             StringAssert.Contains("Non-Pawn Tabletop MVP quick path", docs);
             StringAssert.Contains("leave `Default Pawn` empty", docs);
@@ -31,7 +50,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void TabletopSetupDocs_NameRuntimeProofComponents()
         {
-            string docs = File.ReadAllText(Path.Combine(GameplayRoot, "Docs", "Setup", "Prefabs", "Board_Card_Tabletop_Setup.md"));
+            string docs = File.ReadAllText(AuthoringDoc("Prefabs", "Board_Card_Tabletop_Setup.md"));
 
             StringAssert.Contains("TabletopBoardGridPresenter", docs);
             StringAssert.Contains("TabletopBoardSelectionBridge", docs);
@@ -44,12 +63,15 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void SetupFlowSource_PreservesNoPawnParticipantAndSpawnGuidance()
         {
-            string source = File.ReadAllText(Path.Combine(GameplayRoot, "Editor", "PyralisSetupFlowMonitor.cs"));
+            string validator = File.ReadAllText(FindGameplayEditorFile("PyralisSetupFlowValidator.cs"));
+            string guidance = File.ReadAllText(FindGameplayEditorFile("PyralisSetupFlowGuidance.cs"));
+            string routeAnalysis = File.ReadAllText(FindGameplayEditorFile("PyralisSetupRouteAnalysis.cs"));
 
-            StringAssert.Contains("No participant pawn is required for this setup route.", source);
-            StringAssert.Contains("Spawn points can stay empty for no-pawn board/card/menu/camera routes.", source);
-            StringAssert.Contains("Tabletop Runtime Contract", source);
-            StringAssert.Contains("Assign Tabletop Selection Surface", source);
+            StringAssert.Contains("ParticipantEmbodimentRequirement.RequiredPawn", routeAnalysis);
+            StringAssert.Contains("No participant pawn is required for this setup route.", validator);
+            StringAssert.Contains("Spawn points can stay empty for no-pawn board/card/menu/camera routes.", validator);
+            StringAssert.Contains("Tabletop Runtime Contract", guidance);
+            StringAssert.Contains("Assign Tabletop Selection Surface", guidance);
         }
     }
 }

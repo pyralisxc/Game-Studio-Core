@@ -13,10 +13,10 @@ namespace NeonBlack.Gameplay.Data.Definitions
         Capability = AuthoringCapability.Rules, 
         Priority = AuthoringPriority.Primary,
         Lane = "Rules",
-        Relevance = "Defines the specific game rules, required features, and scene setup for a gameplay session.",
-        AssignmentFields = new[] { nameof(setupProfile), nameof(cameraRigProfile), nameof(requiredFeatureModules), nameof(boardDefinition), nameof(turnOrderDefinition), nameof(gameplayScene) },
+        Relevance = "Defines the project-owned rules, required feature modules, and scene targets for a gameplay session.",
+        AssignmentFields = new[] { nameof(setupProfile), nameof(playfieldProfile), nameof(cameraRigProfile), nameof(requiredFeatureModules), nameof(gameplayScene) },
         FirstProof = "Assign this Game Mode Definition to a Session Definition asset.",
-        ExpertAdvice = "GameModeDefinition is your 'Ruleset' bridge. Use 'Required Feature Modules' to inject global systems like Scoring or Weather. Ensure the 'Gameplay Scene' matches the level design intended for this mode.",
+        ExpertAdvice = "Start neutral, then enable only the systems this route actually uses. Use Required Feature Modules for project-owned global systems, and assign board or turn-order assets only for tabletop-style routes.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/game-mode"
     )]
 [CreateAssetMenu(menuName = "NeonBlack/Definitions/Game Mode Definition", fileName = "GameModeDefinition", order = 10)]
@@ -38,11 +38,11 @@ namespace NeonBlack.Gameplay.Data.Definitions
 
         [Header("Systems")]
         public FeatureModuleDefinition[] requiredFeatureModules;
-        public bool enableCombat = true;
+        public bool enableCombat = false;
         public bool enablePickups = false;
         public bool enableHazards = false;
         public bool enableScore = false;
-        public bool enableRespawn = true;
+        public bool enableRespawn = false;
 
         [Header("Rules")]
         public TurnOrderDefinition turnOrderDefinition;

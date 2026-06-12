@@ -70,7 +70,10 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void DialogueGraphEditorWindow_Source_ExposesMenuValidationAndPreview()
         {
-            string path = Path.Combine(Application.dataPath, "..", "Packages", "com.neonblackinteractivellc.neonblackhub", "Members", "Pyralis", "Gameplay", "Editor", "DialogueGraphEditorWindow.cs");
+            string editorRoot = Path.Combine(Application.dataPath, "..", "Packages", "com.neonblackinteractivellc.neonblackhub", "Members", "Pyralis", "Gameplay", "Editor");
+            string[] matches = Directory.GetFiles(editorRoot, "DialogueGraphEditorWindow.cs", SearchOption.AllDirectories);
+            Assert.That(matches.Length, Is.EqualTo(1));
+            string path = matches[0];
             string source = File.ReadAllText(path);
 
             Assert.That(source, Does.Contain("MenuItem(\"NeonBlack/Gameplay/RPG Narrative Editor\")"));

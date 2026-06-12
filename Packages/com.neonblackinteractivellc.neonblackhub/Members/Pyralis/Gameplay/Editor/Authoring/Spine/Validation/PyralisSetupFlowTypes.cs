@@ -152,6 +152,17 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             return null;
         }
 
+        public PyralisSetupFlowStep GetStep(PyralisSetupFlowStepId stepId)
+        {
+            for (int i = 0; i < _steps.Count; i++)
+            {
+                if (_steps[i].StepId == stepId)
+                    return _steps[i];
+            }
+
+            return null;
+        }
+
         public string BuildChecklistText()
         {
             StringBuilder builder = new StringBuilder();

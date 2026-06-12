@@ -8,6 +8,7 @@ namespace NeonBlack.Gameplay.Features.Characters
     [AuthoringContract(
         Capability = AuthoringCapability.Combat | AuthoringCapability.Inventory,
         Relevance = "Pawn module for managing equipped weapon data and animation overrides.",
+        NativeSetup = new[] { "Attach to the pawn root that owns combat animation.", "Assign WeaponData assets for the attacks this pawn can perform." },
         AssignmentFields = new[] { nameof(attackWeapon), nameof(kickWeapon), nameof(aerialWeapon), nameof(equippedWeapons) },
         FirstProof = "Assign a weapon and verify the pawn's animator controller is overridden at runtime.",
         ExpertAdvice = "WeaponData assets can override the base animator controller. Ensure your weapon assets have the correct 'overrideController' assigned.",

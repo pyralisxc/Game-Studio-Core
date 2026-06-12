@@ -161,18 +161,17 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             bool requiredSetupClear = setupFlowReport.RequiredIssueCount == 0;
-            PyralisSetupFlowStep firstBlockingStep = setupFlowReport.FirstBlockingStep;
 
             return new PyralisAuthoringOverviewModel(
                 routeName,
                 requiredSetupClear,
                 GetBestNextAction(doNow, doSoon),
-                requiredSetupClear ? GetFirstProofLabel(route) : "Complete Required Setup",
-                requiredSetupClear ? GetFirstProofGuidance(route) : firstBlockingStep?.Message ?? "Clear the first Do Now item before choosing a playable proof.",
-                requiredSetupClear ? GetFirstProofSetupSurface(route) : "Required setup chain.",
-                requiredSetupClear ? GetFirstProofSuccessCriteria(route) : "Do Now is clear and Overview can name a narrow playable proof.",
-                requiredSetupClear ? GetFirstProofDeferUntilAfter(route) : "Defer proof-specific scene, prefab, UI, combat, and NPC work until required setup is clear.",
-                requiredSetupClear ? GetFirstProofChainSummary(route) : "Foundation first, then route proof.",
+                GetFirstProofLabel(route),
+                GetFirstProofGuidance(route),
+                GetFirstProofSetupSurface(route),
+                GetFirstProofSuccessCriteria(route),
+                GetFirstProofDeferUntilAfter(route),
+                GetFirstProofChainSummary(route),
                 BuildPlayModeChecklist(setupFlowReport, readinessReport, route),
                 doNow,
                 doSoon,
@@ -200,7 +199,7 @@ namespace NeonBlack.Gameplay.Editor
             items.Add(new PyralisAuthoringPlayModeChecklistItem(
                 "Required setup",
                 requiredClear,
-                requiredClear ? "Do Now is clear." : setupFlowReport?.FirstBlockingStep?.Message ?? "Clear required setup before Play Mode."));
+                requiredClear ? "Do Now is clear." : setupFlowReport?.FirstBlockingStep?.Message ?? "Clear the selected intent's Do Now setup before Play Mode."));
 
             items.Add(new PyralisAuthoringPlayModeChecklistItem(
                 "First proof target",

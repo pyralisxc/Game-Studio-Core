@@ -88,7 +88,7 @@ namespace NeonBlack.Gameplay.Editor
         public const string GeneralReflectiveFact = "Relevant reflective authoring fact.";
         public const string CautionAgainstLane = "Useful context, but this fact cautions against {0}.";
         public const string MatchingIntentSummary = "Active focus currently resembles {0} for {1}. DNA Axioms provide {2} grounding.";
-        public const string AxiomFoundationSummary = "Project DNA is defined by {0}. Engine Spine capabilities: {1}.";
+        public const string AxiomFoundationSummary = "DNA Axioms define the project as {0}. Engine Spine capabilities: {1}.";
     }
 
     public static class PyralisAuthoringIntentAdvisor
@@ -120,10 +120,10 @@ namespace NeonBlack.Gameplay.Editor
                 bool unsupported = HasUnsupportedLane(fact, selection.Lane);
                 int score = ScoreFact(selection, fact, relatedStableIds, unsupported);
                 
-                if (score <= 0 && !unsupported && !HasCapabilityOverlap(selection, fact))
+                if (score <= 0 && !unsupported && !HasCapabilityOverlap(selection, fact) && !HasGoalOverlap(selection, fact))
                     continue;
 
-                if (unsupported && (score > 0 || HasCapabilityOverlap(selection, fact)))
+                if (unsupported && (score > 0 || HasCapabilityOverlap(selection, fact) || HasGoalOverlap(selection, fact)))
                 {
                     cautions.Add(new PyralisAuthoringIntentRow(
                         fact,
@@ -134,7 +134,7 @@ namespace NeonBlack.Gameplay.Editor
                     continue;
                 }
 
-                if (score <= 0 && !HasCapabilityOverlap(selection, fact))
+                if (score <= 0 && !HasCapabilityOverlap(selection, fact) && !HasGoalOverlap(selection, fact))
                     continue;
 
                 recommendations.Add(new PyralisAuthoringIntentRow(
@@ -368,6 +368,7 @@ namespace NeonBlack.Gameplay.Editor
             {
                 int capabilityOverlap = CountCapabilityMatches(selection.Capabilities, fact.Capability);
                 score += capabilityOverlap * 20;
+                score += CountGoalMatches(selection, fact) * 10;
             }
 
             if (relatedStableIds.Contains(fact.StableId))
@@ -388,7 +389,7 @@ namespace NeonBlack.Gameplay.Editor
             if (relatedStableIds.Contains(fact.StableId) || fact.Kind == PyralisAuthoringFactKind.RouteIntent || score >= 85)
                 return PyralisAuthoringIntentGuideTier.Primary;
 
-            if (HasCapabilityOverlap(selection, fact) || score >= 55)
+            if (HasCapabilityOverlap(selection, fact) || HasGoalOverlap(selection, fact) || score >= 55)
                 return PyralisAuthoringIntentGuideTier.SuggestedNext;
 
             return PyralisAuthoringIntentGuideTier.OptionalEnhancer;
@@ -407,7 +408,7 @@ namespace NeonBlack.Gameplay.Editor
             if (relatedStableIds.Contains(fact.StableId))
                 return PyralisAuthoringGuidance.RelatedByIntent;
 
-            if (HasCapabilityOverlap(selection, fact))
+            if (HasCapabilityOverlap(selection, fact) || HasGoalOverlap(selection, fact))
                 return PyralisAuthoringGuidance.MatchesCapabilities;
 
             if (HasLane(fact, selection.Lane))
@@ -524,13 +525,44 @@ namespace NeonBlack.Gameplay.Editor
             if (fact.GoalTags == null || fact.GoalTags.Length == 0)
                 return 0;
 
-            // This is a legacy fallback for facts without typed Capabilities
-            return 0; 
+            int count = 0;
+            if (HasCapabilityGoal(selection, fact, AuthoringCapability.Movement, "Movement"))
+                count++;
+            if (HasCapabilityGoal(selection, fact, AuthoringCapability.Combat, "Combat", "MeleeFlow", "RangedFlow", "Projectiles"))
+                count++;
+            if (HasCapabilityGoal(selection, fact, AuthoringCapability.Input, "Input"))
+                count++;
+            if (HasCapabilityGoal(selection, fact, AuthoringCapability.Animation, "AnimationPresentation"))
+                count++;
+            if (HasCapabilityGoal(selection, fact, AuthoringCapability.Camera, "Camera"))
+                count++;
+            if (HasCapabilityGoal(selection, fact, AuthoringCapability.Tabletop, "Tabletop"))
+                count++;
+            if (HasCapabilityGoal(selection, fact, AuthoringCapability.UI, "UiHud", "UI"))
+                count++;
+            if (HasCapabilityGoal(selection, fact, AuthoringCapability.Networking, "Networking"))
+                count++;
+
+            return count;
         }
 
         private static bool HasGoalOverlap(PyralisAuthoringIntentSelection selection, PyralisAuthoringFact fact)
         {
             return CountGoalMatches(selection, fact) > 0;
+        }
+
+        private static bool HasCapabilityGoal(PyralisAuthoringIntentSelection selection, PyralisAuthoringFact fact, AuthoringCapability capability, params string[] goals)
+        {
+            if ((selection.Capabilities & capability) == 0 || goals == null)
+                return false;
+
+            for (int i = 0; i < goals.Length; i++)
+            {
+                if (Contains(fact.GoalTags, goals[i]))
+                    return true;
+            }
+
+            return false;
         }
 
         private static bool Contains(string[] values, string expected)

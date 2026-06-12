@@ -16,7 +16,7 @@ Use this package when you want to:
 | `Members/Pyralis/Gameplay/Docs/Authoring/` | Active setup guides for new scenes and authored gameplay routes. Start with `START_HERE.md`. |
 | `Members/Pyralis/Gameplay/Core/` | Foundational services, VContainer composition, contracts, config, `SceneLoader`, and `TimeManager`. |
 | `Members/Pyralis/Gameplay/Data/` | ScriptableObject definitions and profiles for sessions, participants, pawns, modes, and settings. |
-| `Members/Pyralis/Gameplay/Editor/` | Editor tooling and asset generation helpers (flat, no sub-folders). |
+| `Members/Pyralis/Gameplay/Editor/Authoring/` | Central Pyralis authoring spine, Authoring Window, Inspector guides, validation, diagnostics, and editor utilities. |
 | `Members/Pyralis/Gameplay/Features/` | All gameplay systems. Each feature lives in `Features/[Name]/` with `2D/` and `3D/` subfolders where applicable. |
 | `Members/Pyralis/Gameplay/Networking/` | Session ownership, authority, replication-facing contracts, and backend adapters. |
 | `Members/Pyralis/Gameplay/Presentation/` | Cross-feature animation, camera, audio, and HUD infrastructure. |
@@ -56,11 +56,11 @@ When another teammate opens the shared Game Studio Core project folder, Unity sh
 Before debugging script errors on another machine, check the package source that Unity is actually reading:
 
 1. Open `Packages/com.neonblackinteractivellc.neonblackhub/package.json`.
-2. Confirm `"version": "0.1.2"`.
+2. Confirm `"version": "0.2.0"`.
 3. Confirm the package has `Members/Pyralis/Gameplay/`.
 4. Confirm `Packages/manifest.json` does not reference `com.studiotools.core`.
 
-If `package.json` still says `0.1.1`, that machine has an older copy of the package folder and needs the current project files. If `package.json` says `0.1.2` but Unity Package Manager still displays `0.1.1`, close Unity, remove the local `Library/PackageCache/com.neonblackinteractivellc.neonblackhub*` cache entry if one exists, reopen the project, and let Unity re-resolve packages. The shared project uses the embedded package under `Packages/`; the package cache is only Unity-generated local state.
+If `package.json` still says an older version, that machine has an older copy of the package folder and needs the current project files. If `package.json` says `0.2.0` but Unity Package Manager still displays an older version, close Unity, remove the local `Library/PackageCache/com.neonblackinteractivellc.neonblackhub*` cache entry if one exists, reopen the project, and let Unity re-resolve packages. The shared project uses the embedded package under `Packages/`; the package cache is only Unity-generated local state.
 
 ## Quick start
 
@@ -75,6 +75,6 @@ If `package.json` still says `0.1.1`, that machine has an older copy of the pack
 
 - Active runtime code is under `Members/Pyralis/Gameplay/`.
 - `GameplaySessionBootstrap` is the Unity-facing startup path for new scenes.
-- `PyralisGameplayLifetimeScope` is the runtime DI graph. It registers owned services and bridges remaining `PlatformServiceRegistry` entries into VContainer during the migration window.
+- `PyralisGameplayLifetimeScope` is the runtime DI graph. It registers owned services for the active bootstrap/session path.
 - The folder structure is `Core/`, `Data/`, `Editor/`, `Features/` with no `Shared/`, `Runtime2D/`, or `Runtime3D/` top-level folders.
 - Scene setup should follow the current guides in `Members/Pyralis/Gameplay/Docs/Authoring/`.

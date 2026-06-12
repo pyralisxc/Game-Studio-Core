@@ -970,7 +970,7 @@ This document is auto-generated from the [AuthoringContract] attributes and the 
 - **Summary**: Create or assign the session asset that owns game mode and default participants.
 
 ### Assign Setup Profile
-- **Summary**: Create or assign the setup recipe that lists runtime patterns.
+- **Summary**: Create or assign the setup profile that lists runtime capability ingredients.
 
 ### Assign Spawn Points
 - **Summary**: Place spawn Transforms so pawn-backed participants can enter the scene predictably.
@@ -1046,7 +1046,7 @@ This document is auto-generated from the [AuthoringContract] attributes and the 
 - **Summary**: Assign feature modules when the route depends on custom objects, hazards, pickups, NPC behaviors, UI feedback, or route-specific runtime modules.
 
 ### GameModeDefinition Setup Profile
-- **Summary**: Assign the setup recipe that lists runtime patterns for the route.
+- **Summary**: Assign the setup profile that lists runtime capability ingredients for the route.
 
 ### Gameplay Root
 - **Summary**: Keep the scene setup anchored on one visible GameplaySessionBootstrap object.

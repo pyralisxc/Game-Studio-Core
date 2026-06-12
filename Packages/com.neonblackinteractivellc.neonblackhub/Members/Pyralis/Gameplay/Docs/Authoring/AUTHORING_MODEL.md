@@ -56,7 +56,7 @@ SessionDefinition
   -> GameModeDefinition
       -> GameSetupProfile
           -> Runtime Capabilities
-              -> RuntimePatternDefinition[]
+              -> optional RuntimePatternDefinition[]
   -> ParticipantDefinition[]
       -> PawnDefinition optional
           -> pawn prefab
@@ -66,17 +66,19 @@ SessionDefinition
 
 In plain English:
 
-- `PyralisAuthoringContractRegistry` is the authoritative source for feature-owned authoring contracts.
-- Feature contracts are declared in feature editor code via `IAuthoringContractProvider`.
-- Contracts are discovered reflectively; there is no manual registry fallback for feature contract coverage.
-- `PyralisAuthoringConventionFactRegistry` is the provider-indexed source for reflection/convention authoring facts.
-- Convention facts are declared by `IAuthoringConventionFactProvider` entries. The central convention fact file is the bridge for unmigrated convention facts; 1P Sprite2D is the first route surface moved into a provider through `PyralisSprite2DConventionAuthoringFactProvider`, and studio-wide Game Type intent facts live in `PyralisRouteIntentAuthoringFactProvider`.
+- `AuthoringContractAttribute` is the lightweight declaration placed on runtime/editor types.
+- `ResolvedAuthoringContract` is the normalized contract record after attributes, providers, merge rules, source type, proof target, and fallback guidance have been resolved.
+- `ResolvedAuthoringContractRegistry` is the authoritative source for feature-owned authoring contracts.
+- Feature contracts are declared in feature code with `[AuthoringContract]` or beside feature code via `IAuthoringContractProvider`.
+- Contracts are discovered reflectively and normalized once; validation, proof guidance, inspector handoffs, and cookbook facts should consume resolved contracts instead of rescanning raw attributes.
+- `PyralisAuthoringFactRegistry` is the single cookbook aggregator for runtime capability cards, reflection, setup-flow facts, route proofs, inspector handoffs, convention facts, route intents, and scene evidence.
+- Convention facts stay as explicit source calls from the main fact registry. Do not add a parallel provider-discovery layer unless a new spine capability genuinely needs extension-point behavior.
 - `GameplaySessionBootstrap` is the runtime startup object in the scene.
 - `SessionDefinition` is the whole play session.
 - `GameModeDefinition` is the active mode or ruleset for that session.
 - `GameSetupProfile` describes the kind of runtime the mode expects.
 - `GameSetupProfile` runtime capabilities are the beginner-facing capability selections.
-- Resolved `RuntimePatternDefinition` assets are the selected capability recipes. They declare route-facing capability family, participant embodiment, supported control surfaces, presentation/runtime lanes, and first-proof requirements such as spawn points, camera rig, 2D bounds, score service, hitbox/projectile source, tabletop contract, or selection surface.
+- Selected runtime capability families are the beginner-facing route ingredients. Optional `RuntimePatternDefinition` assets can add reusable advanced metadata such as participant embodiment, supported control surfaces, presentation/runtime lanes, and first-proof requirements when the generic capability family is not descriptive enough.
 - `ParticipantDefinition` describes a player, AI, seat, team, or participant slot.
 - `PawnDefinition` is used only when a participant needs an actor body.
 
@@ -88,7 +90,7 @@ Definitions are identity and relationship assets.
 |---|---|---|---|
 | `SessionDefinition` | session name, max participants, join/camera defaults | default `GameModeDefinition`, default `InputProfile`, `SettingsProfile`, participant list | every playable setup |
 | `GameModeDefinition` | scene names, enabled systems, mode rules | `GameSetupProfile`, `PlayfieldProfile`, `CameraRigProfile`, required feature modules | every playable mode |
-| `RuntimePatternDefinition` | one reusable setup recipe plus route-facing description/setup notes, presentation/runtime lanes, and first-proof requirements | companion/cautionary runtime patterns | describing capabilities such as realtime character, board/card/tabletop, projectile combat, turn/menu action |
+| `RuntimePatternDefinition` | optional reusable route contract plus route-facing description/setup notes, presentation/runtime lanes, and first-proof requirements | companion/cautionary runtime contracts | adding advanced metadata when a capability family alone cannot describe the route |
 | `ParticipantDefinition` | display name, team, seat, auto-join defaults | default `PawnDefinition`, participant `InputProfile` | each player, AI, seat, faction, hand, or participant slot |
 | `PawnDefinition` | one actor body setup | pawn prefab, pawn profiles, feature modules | only when the participant owns an actor body |
 | `FeatureModuleDefinition` | reusable actor/pawn capability or ability declaration | runtime prefab, profile asset, supported presentation modes | adding modular abilities such as pickups, feedback, status, interaction, traversal, guard/reaction, or custom actor modules |
@@ -172,21 +174,21 @@ Use the Inspector when you need to edit a specific serialized field. Use the Aut
 
 The authoring experience should guide Unity setup without taking authorship away. It can say "create a UI Root with Canvas and EventSystem, add `ParticipantHealthHudBinder`, then connect its labels or panels," but it should not design the HUD for the user. It can say "movement speed lives in `PawnMovementProfile` and presentation mode lives in `PawnPresentationProfile`," but it should not choose the sprite sheet, rig, or exact speed value. It can explain that a brawler route usually unlocks pawn, combat, animation, feedback, camera, input, and HUD concerns, then point to the fields and components that configure each concern.
 
-Authoring should also keep obvious customization checkpoints visible before Play Mode. These are non-blocking Proof Enhancers, not generated setup: tune camera framing, pawn visual/collider fit, movement feel, input mappings, UI labels, board surfaces, and route-specific profiles enough that the first proof represents the user's game instead of starter defaults. The Authoring Window should name the Unity object or profile to inspect and the type of choice to make, while the Inspector remains where exact values are edited.
+Authoring should also keep obvious customization checkpoints visible before Play Mode. These are non-blocking Proof Enhancers, not generated setup: tune camera framing, pawn visual/collider fit, movement feel, input mappings, UI labels, board surfaces, and route-specific profiles enough that the first proof represents the user's intent instead of generic untouched defaults. The Authoring Window should name the Unity object or profile to inspect and the type of choice to make, while the Inspector remains where exact values are edited.
 
 ## Manual Authoring Validation
 
 The validation path for this system is a Computer Use pass through the actual Unity Editor. A tester should open the Pyralis Authoring Window, follow the guidance, create assets from the Project window, place scene objects from the Hierarchy, add components through the Inspector, assign fields with drag/drop or object pickers, customize values in normal Unity fields, and enter Play Mode when the guide says the route is ready.
 
-Do not prove the authoring model by adding a generated full-scene factory, one-click sample scene, or starter-pack shortcut. That bypasses the user's decisions and hides the navigation problems the authoring system exists to solve. Starter packs can be useful later as captured scaffolds from a route the team already proved manually, but they are not authoring validation evidence until the same route has been reproduced through the native authoring workflow.
+Do not prove the authoring model by adding a generated full-scene factory, one-click sample scene, preset, or starter-pack shortcut. That bypasses the user's decisions and hides the navigation problems the authoring system exists to solve. Active validation must come from the Authoring Window guiding native Unity workflow and generic setup capabilities.
 
 Imported asset packs are valid proof material when they are treated as creator-owned content. For tabletop validation, use generic board, card, marker, token, tile, or little-game collections the way a normal Unity creator would: bring assets into the project, form intent in the Authoring Window, create project-local definitions/profiles, wire scene objects through the Hierarchy and Inspector, and verify one visible or inspectable state change. Do not make Pyralis authoring promote, generate, or wire package sample scenes. Disposable proof scenes can exist for Cameron's review, but they are review artifacts, not the authoring contract.
 
 Good validation notes should record where the guide helped, where Unity navigation was naturally a learning curve, where Pyralis guidance was missing or too forceful, which code warnings or validators were improved, and which customization choices stayed in the tester's hands.
 
-The **Intent**, **Guide**, **Overview**, **Map**, **Validate**, and **Facts** tabs are projections from the same cookbook. They do not turn genres into hard-coded templates. `PyralisAuthoringIntentAdvisor` reads route-intent facts, combines them with selected world/playfield, control shape, presentation/runtime lane, and explicitly toggled capability goals, then returns a ranked model for the UI to project. Intent owns only the creator's route choices and a compact summary. Guide owns the ranked cards that match those choices and the selected-object explanation. Overview extracts the best next one to three setup moves. Map projects current setup topology. Validate projects the internal readiness console. Facts shows the full dictionary, including facts outside the current route. Genre words are summaries of selected ingredients, not source data. Intent should not apply suggested defaults, create assets, choose runtime patterns, wire a scene, or imply that the user has accepted a preset. For side-view brawler work, `Movement`, `Jump / Traversal`, `Combat`, `Input`, and `Animation / Presentation` are visible route-shaping capabilities because they are the first decisions a creator brings with imported art, sprites, animations, and attack feel. For top-down 2D work, free X/Y movement, bounds, targeting, camera framing, and optional hop/dash semantics outrank side-view gravity ground. For tabletop/card/UI work, no-pawn surfaces, action selection, seats/hands/factions, and visible state changes outrank pawn prefab setup. Each proof pass should improve the cookbook facts and contracts first, then let every tab benefit from the corrected reflection. The feature guide reads `GameSetupProfile.runtimePatterns` and explains the selected capabilities:
+The **Intent**, **Guide**, **Overview**, **Map**, **Validate**, and **Facts** tabs are projections from the same cookbook. They do not turn genres into hard-coded templates. `PyralisAuthoringIntentAdvisor` reads route-intent facts, combines them with selected world/playfield, control shape, presentation/runtime lane, and explicitly toggled capability goals, then returns a ranked model for the UI to project. Intent owns only the creator's route choices and a compact summary. Guide owns the ranked cards that match those choices and the selected-object explanation. Overview extracts the best next one to three setup moves. Map projects current setup topology. Validate projects the internal readiness console. Facts shows the full dictionary, including facts outside the current route. Genre words are summaries of selected ingredients, not source data. Intent should not apply suggested defaults, create assets, choose optional runtime contracts, wire a scene, or imply that the user has accepted a preset. For side-view brawler work, `Movement`, `Jump / Traversal`, `Combat`, `Input`, and `Animation / Presentation` are visible route-shaping capabilities because they are the first decisions a creator brings with imported art, sprites, animations, and attack feel. For top-down 2D work, free X/Y movement, bounds, targeting, camera framing, and optional hop/dash semantics outrank side-view gravity ground. For tabletop/card/UI work, no-pawn surfaces, action selection, seats/hands/factions, and visible state changes outrank pawn prefab setup. Each proof pass should improve the cookbook facts and contracts first, then let every tab benefit from the corrected reflection. The feature guide reads `GameSetupProfile.runtimeCapabilities` and optional runtime contracts, then explains the selected capabilities:
 
-- design capabilities: checkbox/dropdown selection for route-facing capability families, backed by existing `RuntimePatternDefinition` assets
+- design capabilities: checkbox/dropdown selection for route-facing capability families; optional `RuntimePatternDefinition` contracts can enrich advanced metadata
 - design prompts: what world/playfield the project uses, what the user controls, which capabilities are active, and which focused proof should come next
 - gameplay effect: what this capability adds to the game
 - world/environment contract: how plain Unity geometry, colliders, layers, bounds, zones, anchors, and selectable surfaces affect Pyralis
@@ -211,16 +213,16 @@ Authoring UI performance is part of the contract. Expensive route reports, scene
 The **Map** tab owns the first-read setup map:
 
 ```text
-Scene Root -> Session -> Game Rules -> Setup Recipe -> Capabilities -> Participants -> Pawn / No Pawn -> Scene Surfaces
+Scene Root -> Session -> Game Rules -> Setup Profile -> Capabilities -> Participants -> Pawn / No Pawn -> Scene Surfaces
 ```
 
 Each row should show whether the current route needs that link, whether it is ready, what asset or scene object is current, and where to inspect next. Pawn status must come from the route descriptor: pawn-backed routes should ask for a `PawnDefinition`, while no-pawn tabletop, board, card, camera, cursor, and menu routes should explicitly say that empty pawn fields are correct.
 
 The **Scene Surface Scan** is the bridge between setup assets and ordinary Unity scene content. It scans for common scene surfaces such as colliders, Tilemaps, spawn points, cameras, camera bounds providers, Canvas, EventSystem, HUD/menu presenters, scoring services, board/action selection surfaces, pickups, hazards, enemies, and zones. These rows should stay explanatory: they tell the author what exists, whether the selected route likely needs it, and what to create or inspect next. Route-irrelevant rows should read as not needed yet, not ready. Spawn points are placement evidence, not a playable Environment / Playfield surface by themselves. Side-view 2D gravity proofs need an intentional collider, Tilemap, zone, bounds provider, or other route-owned gameplay surface before Play Mode is a meaningful movement test. Top-down/free 2D, camera/cursor, tabletop, card, and UI-first paths may treat spawn/camera/selection/UI evidence differently because their world contract is not platform ground. They should not auto-build levels, choose art, or require every environment object to carry a Pyralis component.
 
-For example, a pawn plus combat route can be described as a brawler/fighter/action route because the selected patterns imply pawn actors, movement, combat actions, presentation, input, camera, HUD, and feedback. A tabletop route should instead say that pawn fields can stay empty and that the next useful surfaces are board/card state, action selection, camera/cursor, and UI.
+For example, a pawn plus combat route can be described as a brawler/fighter/action route because the selected capabilities imply pawn actors, movement, combat actions, presentation, input, camera, HUD, and feedback. A tabletop route should instead say that pawn fields can stay empty and that the next useful surfaces are board/card state, action selection, camera/cursor, and UI.
 
-The Design Capabilities picker is a guided editor for the same capability selection model shown in the `GameSetupProfile` Inspector's Runtime Capabilities section. Checking a capability chooses the route family; the profile resolves that selection to `RuntimePatternDefinition` recipes used by validation, route reading, and setup guidance. If multiple existing patterns describe the same family, the dropdown chooses which one the setup route uses. The picker should not create new runtime pattern assets automatically; new patterns are manual authoring work and should be created only when the existing capability language cannot describe the game.
+Intent is the guided editor for the route selection model persisted by the `GameSetupProfile` Inspector's Runtime Capabilities section. DNA axioms describe the world contract, the presentation lane describes the runtime surface, and Engine Spine capability toggles describe what the author is trying to build. When a setup profile is active, those Intent choices write matching runtime capability rows so validation, route reading, Map, Overview, and Guide all read the same contract. Optional `RuntimePatternDefinition` assets can still enrich selected families with advanced metadata, but they are not the first-shape route selector and should be created only when the existing capability language cannot describe the game.
 
 Environment authoring is part of the route even when the objects do not carry Pyralis scripts. Ground, walls, platforms, tilemaps, terrain, card slots, table props, board squares, rooms, and arena boundaries can remain ordinary Unity objects. Pyralis should teach which observable contracts matter:
 
@@ -237,7 +239,7 @@ Field explanations should name the actual selected field whenever possible. Exam
 
 - `defaultGameMode`: chooses the ruleset this session starts with.
 - `setupProfile`: chooses which runtime route the mode expects.
-- `runtimePatterns`: decide whether pawns, board/card UI, camera/cursor, action menus, combat, projectiles, scoring, networking, or procedural systems are expected.
+- `runtimeCapabilities`: decide whether pawns, board/card UI, camera/cursor, action menus, combat, projectiles, scoring, networking, or procedural systems are expected.
 - `defaultPawn`: stays empty for seats, hands, factions, menus, or camera-only participants, and is required when the selected route needs actor bodies.
 - `movementProfile`: controls speed, acceleration, jump feel, braking, and similar motion tuning.
 - `presentationProfile`: chooses whether the pawn is presented as Sprite2D, Billboard2_5D, Rigged3D, or another supported presentation stack.
@@ -264,7 +266,7 @@ When one of those core links is missing, the window should point to the native U
 The core chain uses route-aware shared guidance:
 
 - `RuntimePatternDefinition` explains one capability, the control surfaces and presentation lanes it supports, and the first-proof scene/service evidence it expects.
-- `GameSetupProfile` combines selected patterns and explains the next setup route.
+- `GameSetupProfile` combines selected capabilities and explains the next setup route.
 - `GameModeDefinition` reads its setup profile before recommending camera, playfield, feature, combat, scoring, or respawn wiring.
 - `SessionDefinition` explains participants, pawn/no-pawn expectations, and whether shared input is only optional.
 - `GameplaySessionBootstrap` inspects the assigned session graph and reports scene-level next steps.
@@ -555,8 +557,8 @@ Keep shared scene systems out of pawn prefabs unless the prefab is intentionally
 For a pawn-backed prototype:
 
 1. Start from the `GameplaySessionBootstrap` Setup Flow monitor.
-2. Choose existing `RuntimePatternDefinition` assets that describe the route.
-3. Create or assign `GameSetupProfile`.
+2. Create or assign `GameSetupProfile`.
+3. Choose runtime capability families that describe the route.
 4. Create or assign `GameModeDefinition`.
 5. Create or assign `SessionDefinition`.
 6. Create or assign `ParticipantDefinition`.
@@ -566,15 +568,15 @@ For a pawn-backed prototype:
 For a non-pawn prototype:
 
 1. Start from the `GameplaySessionBootstrap` Setup Flow monitor.
-2. Choose existing `RuntimePatternDefinition` assets that describe the route.
-3. Create or assign `GameSetupProfile`.
+2. Create or assign `GameSetupProfile`.
+3. Choose runtime capability families that describe the route.
 4. Create or assign `GameModeDefinition`.
 5. Create or assign `SessionDefinition`.
 6. Create or assign `ParticipantDefinition`.
-7. Add UI/camera/playfield/scoring scene roots only when the selected patterns need them.
+7. Add UI/camera/playfield/scoring scene roots only when the selected capabilities need them.
 8. Add board/card/turn-specific runtime components as the first playable loop needs them.
 
-After a manual prototype route becomes repeatable, a starter pack may capture that route as editable project scaffolding. Treat that as a convenience output of proven authoring, not the first source of truth while the authoring system is still being tested.
+Do not promote manually proven routes into active starter packs or presets. Capture reusable learning as cookbook facts, validation rules, optional route contracts, or generic setup guidance instead.
 
 ## Common Confusions
 

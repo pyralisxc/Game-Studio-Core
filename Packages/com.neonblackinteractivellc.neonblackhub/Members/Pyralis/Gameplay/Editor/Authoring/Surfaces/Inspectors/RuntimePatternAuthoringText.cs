@@ -44,7 +44,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
         {
             return pattern.participantEmbodiment switch
             {
-                ParticipantEmbodimentRequirement.RequiredPawn => "Pawn required: each active participant needs a PawnDefinition and a pawn prefab with PawnRoot.",
+                ParticipantEmbodimentRequirement.RequiredPawn => "Pawn-backed intent: each active participant should point to a PawnDefinition whose prefab has PawnRoot.",
                 ParticipantEmbodimentRequirement.OptionalPawn => "Pawn optional: this pattern can be driven by a pawn, camera, cursor, card, board piece, menu, trap, or AI depending on the selected control surfaces.",
                 ParticipantEmbodimentRequirement.NonPawnSurfaceRequired => "No character controller required: start with camera, cursor, UI, board, card, seat, or faction control instead of a PawnDefinition.",
                 ParticipantEmbodimentRequirement.Custom => "Custom embodiment: explain the required participant surface in Description and Setup Notes before using this pattern in a setup profile.",

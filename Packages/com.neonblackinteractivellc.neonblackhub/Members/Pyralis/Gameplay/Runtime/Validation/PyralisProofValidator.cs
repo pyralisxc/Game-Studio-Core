@@ -1,71 +1,73 @@
-using UnityEngine;
+using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Core.Runtime;
+using UnityEngine;
 
 namespace NeonBlack.Gameplay.Runtime.Validation
 {
     /// <summary>
-    /// Visual and logical validator for Pyralis Proof scenes.
-    /// Flags issues with setup, connectivity, and baseline readiness.
+    /// Visual and logical validator for Pyralis proof scenes.
+    /// Attach it to the proof root and use explicit references when the checked objects live elsewhere.
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Setup,
         Relevance = "Automated scene-readiness checker for Proof of Concept scenes.",
-        ExpertAdvice = "Add this component to any proof scene to verify the bootstrap and core services are healthy."
+        ExpertAdvice = "Add this component to any proof root to verify the bootstrap and core services are healthy."
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Validation/Pyralis Proof Validator")]
     public class PyralisProofValidator : MonoBehaviour
     {
         public bool runOnStart = true;
         public bool logSuccess = true;
+        [SerializeField] private GameplaySessionBootstrap bootstrap;
+        [SerializeField] private PyralisGameplayLifetimeScope lifetimeScope;
+        [SerializeField] private Light directionalLight;
 
         private void Start()
         {
             if (runOnStart)
-            {
                 Validate();
-            }
         }
 
         [ContextMenu("Run Validation")]
         public void Validate()
         {
             bool hasErrors = false;
-            
-            // Check Bootstrap
-            var bootstrap = Object.FindAnyObjectByType<NeonBlack.Gameplay.Characters.GameplaySessionBootstrap>();
-            if (bootstrap == null)
+
+            GameplaySessionBootstrap foundBootstrap = bootstrap != null
+                ? bootstrap
+                : transform.root.GetComponentInChildren<GameplaySessionBootstrap>(true);
+            if (foundBootstrap == null)
             {
-                Debug.LogError("[ProofValidator] CRITICAL: No GameplaySessionBootstrap found in scene.", this);
+                Debug.LogError("[ProofValidator] CRITICAL: No GameplaySessionBootstrap found under the proof root.", this);
                 hasErrors = true;
             }
-            else
+            else if (logSuccess)
             {
-                if (logSuccess) Debug.Log("[ProofValidator] ✓ Found Bootstrap.", bootstrap);
+                Debug.Log("[ProofValidator] Found Bootstrap.", foundBootstrap);
             }
 
-            // Check Lifetime Scope
-            var scope = Object.FindAnyObjectByType<NeonBlack.Gameplay.Core.Runtime.PyralisGameplayLifetimeScope>();
-            if (scope == null)
+            PyralisGameplayLifetimeScope foundScope = lifetimeScope != null
+                ? lifetimeScope
+                : transform.root.GetComponentInChildren<PyralisGameplayLifetimeScope>(true);
+            if (foundScope == null)
             {
-                Debug.LogError("[ProofValidator] CRITICAL: No PyralisGameplayLifetimeScope found. Session dependencies will not be injected.", this);
+                Debug.LogError("[ProofValidator] CRITICAL: No PyralisGameplayLifetimeScope found under the proof root. Session dependencies will not be injected.", this);
                 hasErrors = true;
             }
-            else
+            else if (logSuccess)
             {
-                if (logSuccess) Debug.Log("[ProofValidator] ✓ Lifetime Scope Active.", scope);
+                Debug.Log("[ProofValidator] Lifetime Scope Active.", foundScope);
             }
 
-            // Check Environment
-            var light = Object.FindAnyObjectByType<Light>();
-            if (light == null || light.type != LightType.Directional)
-            {
-                Debug.LogWarning("[ProofValidator] Warning: No Directional Light found. Proof may be dark.", this);
-            }
+            Light foundLight = directionalLight != null
+                ? directionalLight
+                : transform.root.GetComponentInChildren<Light>(true);
+            if (foundLight == null || foundLight.type != LightType.Directional)
+                Debug.LogWarning("[ProofValidator] Warning: No Directional Light found under the proof root. Proof may be dark.", this);
 
             if (!hasErrors && logSuccess)
-            {
                 Debug.Log("[ProofValidator] SUCCESS: Scene baseline is healthy.", this);
-            }
         }
     }
 }

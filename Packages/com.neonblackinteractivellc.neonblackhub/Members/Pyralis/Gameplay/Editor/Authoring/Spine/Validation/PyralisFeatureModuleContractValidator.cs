@@ -1,15 +1,12 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
-using NeonBlack.Gameplay.Data.Profiles;
-using NeonBlack.Gameplay.Presentation.Animation;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Editor
 {
     /// <summary>
-    /// Specialized validator for FeatureModuleDefinition that checks for moduleId-specific contracts.
-    /// This was previously part of the manual Guided Authoring system.
+    /// Validates FeatureModuleDefinition assets against their resolved authoring contract.
     /// </summary>
     public static class PyralisFeatureModuleContractValidator
     {
@@ -18,55 +15,99 @@ namespace NeonBlack.Gameplay.Editor
             List<string> issues = new List<string>();
             if (definition == null) return issues;
 
-            switch (definition.moduleId)
-            {
-                case "actor.feedback":
-                    ValidateProfile<ActorFeedbackProfile>(definition, issues);
-                    break;
-                
-                case "actor.traversal.topdown-hop":
-                    ValidateProfile<TopDownHopProfile>(definition, issues);
-                    if (SupportsLane(definition, ActorPresentationMode.ThirdPerson3D))
-                        issues.Add("Rigged3D actors should use the 3D traversal jump path instead of topdown-hop.");
-                    break;
+            ResolvedAuthoringContract contract = ResolvedAuthoringContractRegistry.FindByModuleId(definition.moduleId);
+            if (contract == null)
+                return issues;
 
-                case "enemy.reaction":
-                    ValidateProfile<EnemyReactionProfile>(definition, issues);
-                    break;
-
-                case "actor.combat.reaction":
-                    ValidateProfile<ActorCombatReactionProfile>(definition, issues);
-                    break;
-
-                case "actor.status":
-                    ValidateProfile<ActorStatusEffectProfile>(definition, issues);
-                    break;
-            }
+            ValidateProfile(definition, contract, issues);
+            ValidateUnsupportedLanes(definition, contract, issues);
+            ValidateRuntimeInterfaces(definition, contract, issues);
 
             return issues;
         }
 
-        private static void ValidateProfile<T>(FeatureModuleDefinition definition, List<string> issues) where T : ScriptableObject
+        private static void ValidateProfile(FeatureModuleDefinition definition, ResolvedAuthoringContract contract, List<string> issues)
         {
+            System.Type requiredProfileType = contract.RequiredProfileType;
+            if (requiredProfileType == null)
+                return;
+
             if (definition.profileAsset == null)
             {
-                issues.Add($"Feature module `{definition.moduleId}` requires a `{typeof(T).Name}` profile asset.");
+                issues.Add($"Feature module `{definition.moduleId}` requires a `{requiredProfileType.Name}` profile asset.");
             }
-            else if (!(definition.profileAsset is T))
+            else if (!requiredProfileType.IsInstanceOfType(definition.profileAsset))
             {
-                issues.Add($"Feature module `{definition.moduleId}` profile asset is not `{typeof(T).Name}`.");
+                issues.Add($"Feature module `{definition.moduleId}` profile asset is not `{requiredProfileType.Name}`.");
             }
         }
 
-        private static bool SupportsLane(FeatureModuleDefinition definition, ActorPresentationMode mode)
+        private static void ValidateUnsupportedLanes(FeatureModuleDefinition definition, ResolvedAuthoringContract contract, List<string> issues)
         {
-            if (definition.supportedPresentationModes == null || definition.supportedPresentationModes.Length == 0)
-                return true;
+            if (definition.supportedPresentationModes == null ||
+                contract.UnsupportedPresentationModes == null ||
+                contract.UnsupportedPresentationModes.Length == 0)
+            {
+                return;
+            }
 
-            foreach (var m in definition.supportedPresentationModes)
-                if (m == mode) return true;
+            for (int i = 0; i < definition.supportedPresentationModes.Length; i++)
+            {
+                if (!contract.IsExplicitlyUnsupported(definition.supportedPresentationModes[i]))
+                    continue;
+
+                string message = !string.IsNullOrWhiteSpace(contract.UnsupportedLaneMessage)
+                    ? contract.UnsupportedLaneMessage
+                    : $"{definition.supportedPresentationModes[i]} is not supported by `{definition.moduleId}`.";
+                issues.Add(message);
+            }
+        }
+
+        private static void ValidateRuntimeInterfaces(FeatureModuleDefinition definition, ResolvedAuthoringContract contract, List<string> issues)
+        {
+            if (definition.runtimePrefab == null || contract.RequiredRuntimeInterfaceNames == null)
+                return;
+
+            for (int i = 0; i < contract.RequiredRuntimeInterfaceNames.Length; i++)
+            {
+                string interfaceName = contract.RequiredRuntimeInterfaceNames[i];
+                if (string.IsNullOrWhiteSpace(interfaceName))
+                    continue;
+
+                if (!RuntimePrefabHasInterface(definition.runtimePrefab, interfaceName))
+                    issues.Add($"Feature module `{definition.moduleId}` runtime prefab should expose `{GetShortTypeName(interfaceName)}`.");
+            }
+        }
+
+        private static bool RuntimePrefabHasInterface(GameObject runtimePrefab, string interfaceName)
+        {
+            MonoBehaviour[] behaviours = runtimePrefab.GetComponentsInChildren<MonoBehaviour>(true);
+            for (int i = 0; i < behaviours.Length; i++)
+            {
+                MonoBehaviour behaviour = behaviours[i];
+                if (behaviour == null)
+                    continue;
+
+                System.Type[] interfaces = behaviour.GetType().GetInterfaces();
+                for (int j = 0; j < interfaces.Length; j++)
+                {
+                    if (interfaces[j].FullName == interfaceName || interfaces[j].Name == interfaceName)
+                        return true;
+                }
+            }
 
             return false;
+        }
+
+        private static string GetShortTypeName(string typeName)
+        {
+            if (string.IsNullOrWhiteSpace(typeName))
+                return string.Empty;
+
+            int lastDot = typeName.LastIndexOf('.');
+            return lastDot >= 0 && lastDot < typeName.Length - 1
+                ? typeName.Substring(lastDot + 1)
+                : typeName;
         }
     }
 }

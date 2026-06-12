@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 namespace NeonBlack.Gameplay.Editor
 {
-    public sealed class PyralisRouteIntentAuthoringFactProvider : IAuthoringConventionFactProvider
+    public static class PyralisRouteIntentAuthoringFactProvider
     {
-        public IReadOnlyList<PyralisAuthoringFact> GetAuthoringFacts()
+        public static IReadOnlyList<PyralisAuthoringFact> GetAuthoringFacts()
         {
             return new[]
             {
@@ -29,7 +29,7 @@ namespace NeonBlack.Gameplay.Editor
                     laneTags: new[] { RuntimeCapabilityLaneTag.Sprite2D.ToString() },
                     assignmentFields: new[]
                     {
-                        "GameSetupProfile.runtimePatterns -> 2D movement pattern",
+                        "GameSetupProfile.runtimeCapabilities -> 2D movement ingredients",
                         "PawnDefinition.pawnPrefab -> Sprite2D pawn prefab",
                         "PawnMovementProfile -> side-view movement and jump feel"
                     },
@@ -45,6 +45,9 @@ namespace NeonBlack.Gameplay.Editor
                         "capability.combat-projectile-proof",
                         "capability.camera-follow-bounds"
                     },
+                    axioms: AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityVertical,
+                    capability: AuthoringCapability.Movement | AuthoringCapability.Combat | AuthoringCapability.Input | AuthoringCapability.Animation | AuthoringCapability.Camera,
+                    priority: AuthoringPriority.Primary,
                     documentationURL: "https://docs.neonblack.com/pyralis/intent-2d-side-view",
                     expertAdvice: "Ensure your level geometry uses layers defined in the PawnMovementProfile's Ground Layer mask."),
                 new PyralisAuthoringFact(
@@ -54,7 +57,7 @@ namespace NeonBlack.Gameplay.Editor
                     PyralisAuthoringFactSourceKind.Convention,
                     PyralisAuthoringConfidence.Explicit,
                     "A Sprite2D route for top-down action, arena movement, or cursor-driven interaction without side-view gravity.",
-                    "Use this for free X/Y movement, twin-stick shooters, or arena-style interaction proofs.",
+                    "Use this for top-down free X/Y movement, twin-stick shooters, or arena-style interaction proofs.",
                     "One controlled body, cursor, or action surface moves on the 2D plane and proves camera/world bounds; arena-style proofs can then add one projectile or pickup event, one score change, and one HUD readout without treating jump gravity as required.",
                     goalTags: new[]
                     {
@@ -89,6 +92,9 @@ namespace NeonBlack.Gameplay.Editor
                         "proof.ui-hud-menu-event",
                         "route.custom-object-feature"
                     },
+                    axioms: AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone,
+                    capability: AuthoringCapability.Movement | AuthoringCapability.Input | AuthoringCapability.Combat | AuthoringCapability.Camera,
+                    priority: AuthoringPriority.Primary,
                     documentationURL: "https://docs.neonblack.com/pyralis/intent-2d-top-down",
                     expertAdvice: "Use CameraRigProfile to define the play area and prevent the actor from leaving the screen."),
                 new PyralisAuthoringFact(
@@ -134,9 +140,11 @@ namespace NeonBlack.Gameplay.Editor
                         "capability.3d-pawn-movement",
                         "capability.combat-projectile-proof",
                         "capability.npc-enemy-setup",
-                        "capability.camera-follow-bounds",
                         "capability.ui-scoring-feedback"
                     },
+                    axioms: AuthoringWorldAxiom.None,
+                    capability: AuthoringCapability.Movement | AuthoringCapability.Combat | AuthoringCapability.Input | AuthoringCapability.Animation,
+                    priority: AuthoringPriority.Primary,
                     documentationURL: "https://docs.neonblack.com/pyralis/intent-pawn-brawler",
                     expertAdvice: "Leverage PawnCombatProfile to define hitboxes and attack sequences efficiently."),
                 new PyralisAuthoringFact(
@@ -234,7 +242,7 @@ namespace NeonBlack.Gameplay.Editor
                     laneTags: new[]
                     {
                         "CameraCursor",
-                        "TabletopNoPawn",
+                        RuntimeCapabilityLaneTag.TabletopBoard.ToString(),
                         "UiMenu"
                     },
                     relatedStableIds: new[]
@@ -270,14 +278,14 @@ namespace NeonBlack.Gameplay.Editor
                     },
                     assignmentFields: new[]
                     {
-                        "GameSetupProfile.runtimePatterns -> tabletop/action patterns",
+                        "GameSetupProfile.runtimeCapabilities -> tabletop/action ingredients",
                         "SessionDefinition.defaultParticipants -> seats, factions, hands, or command owners",
                         "ActionDefinition -> legal action or card command"
                     },
                     customizationMoments: new[]
                     {
                         "Choose board/grid shape, selectable surfaces, turn timing, card/command vocabulary, targeting rules, and visual state feedback.",
-                        "Hybrid choices such as projectiles, towers, enemies, or pawns stay optional ingredients rather than preset routes."
+                        "Hybrid choices such as projectiles, towers, enemies, or pawns stay optional ingredients rather than bundled route generators."
                     },
                     canWait: new[] { "pawn actors", "full card UX", "campaign map", "networking" },
                     relatedStableIds: new[]
@@ -287,6 +295,9 @@ namespace NeonBlack.Gameplay.Editor
                         "capability.interaction-action-selection",
                         "capability.ui-scoring-feedback"
                     },
+                    axioms: AuthoringWorldAxiom.TurnBased,
+                    capability: AuthoringCapability.Tabletop | AuthoringCapability.Camera | AuthoringCapability.Input | AuthoringCapability.TurnBased,
+                    priority: AuthoringPriority.Primary,
                     documentationURL: "https://docs.neonblack.com/pyralis/intent-tabletop",
                     expertAdvice: "Use LevelRegistry to manage different board/level configurations and SessionDefinition for rule overrides."),
                 new PyralisAuthoringFact(
@@ -356,7 +367,7 @@ namespace NeonBlack.Gameplay.Editor
                     },
                     assignmentFields: new[]
                     {
-                        "GameSetupProfile.runtimePatterns -> selected ingredient patterns",
+                        "GameSetupProfile.runtimeCapabilities -> selected ingredients",
                         "FeatureModuleDefinition -> custom reusable systems when they graduate into Pyralis",
                         "Proof target facts -> choose the first small observable chain"
                     },
@@ -365,7 +376,7 @@ namespace NeonBlack.Gameplay.Editor
                         "Choose which ingredient is the active authoring focus and which ingredients are intentionally deferred.",
                         "Mark custom systems with facts/contracts before calling them reusable Pyralis features."
                     },
-                    canWait: new[] { "full route completion", "starter packs", "export promotion gate" },
+                    canWait: new[] { "full route completion", "optional route contracts", "export promotion gate" },
                     relatedStableIds: new[]
                     {
                         "proof.custom-object-effect",

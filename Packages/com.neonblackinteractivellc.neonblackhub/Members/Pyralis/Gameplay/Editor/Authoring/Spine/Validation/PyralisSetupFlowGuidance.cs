@@ -22,8 +22,8 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             AddSetupFact(facts, PyralisSetupFlowStepId.RuntimeServiceOwnership, "Runtime Service Ownership", "Keep runtime services owned by GameplaySessionBootstrap and PyralisGameplayLifetimeScope instead of hidden singleton lookups.", "Core setup chain");
             AddSetupFact(facts, PyralisSetupFlowStepId.AssignSessionDefinition, "Assign Session Definition", "Create or assign the session asset that owns game mode and default participants.", "Core setup chain");
             AddSetupFact(facts, PyralisSetupFlowStepId.AssignDefaultGameMode, "Assign Default Game Mode", "Create or assign the game-rules asset for the session.", "Core setup chain");
-            AddSetupFact(facts, PyralisSetupFlowStepId.AssignSetupProfile, "Assign Setup Profile", "Create or assign the setup recipe that lists runtime patterns.", "Core setup chain");
-            AddSetupFact(facts, PyralisSetupFlowStepId.AddRuntimePatterns, "Add Runtime Patterns", "Assign runtime pattern definitions that describe the current route.", "Capability setup");
+            AddSetupFact(facts, PyralisSetupFlowStepId.AssignSetupProfile, "Assign Setup Profile", "Create or assign the setup profile that lists selected capability ingredients.", "Core setup chain");
+            AddSetupFact(facts, PyralisSetupFlowStepId.AddRuntimePatterns, "Choose Capabilities", "Select capability families that describe the current route. Optional runtime pattern assets can add advanced metadata later.", "Capability setup");
             AddSetupFact(facts, PyralisSetupFlowStepId.AssignDefaultParticipants, "Assign Default Participants", "Create or assign participant definitions for players, seats, factions, or command owners.", "Participant setup");
             AddSetupFact(facts, PyralisSetupFlowStepId.AssignParticipantPawn, "Assign Participant Pawn", "Assign a PawnDefinition and prefab only when the selected route is pawn-backed.", "Pawn-backed movement route", new[] { "capability.2d-pawn-movement", "capability.3d-pawn-movement", "proof.1p-pawn-movement" });
             AddSetupFact(facts, PyralisSetupFlowStepId.AssignInputProfile, "Assign Input Profile", "Assign input mapping when participant input drives pawn movement or actions.", "Pawn-backed movement route", new[] { "capability.2d-pawn-movement", "capability.3d-pawn-movement", "proof.1p-pawn-movement" });
@@ -91,6 +91,10 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 case PyralisSetupFlowStepId.AddHudOrMenuSurface:
                 case PyralisSetupFlowStepId.AddProjectileLauncher:
                     return PyralisSetupFlowWorkIntent.FeatureCard;
+                case PyralisSetupFlowStepId.TuneCameraFraming:
+                case PyralisSetupFlowStepId.TunePawnVisualsAndCollision:
+                case PyralisSetupFlowStepId.TuneMovementAndInputFeel:
+                    return PyralisSetupFlowWorkIntent.ProofEnhancer;
                 default:
                     return PyralisSetupFlowWorkIntent.RequiredSetup;
             }
@@ -164,14 +168,14 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                         PyralisAuthoringActionSurface.ProjectWindow,
                         "the opened setup folder",
                         "choose or create the proof setup folder in the Project content pane first, keep imported art folders separate, then right-click inside it -> Create -> NeonBlack -> Profiles -> Game Setup Profile, then select/open the GameModeDefinition asset and assign Setup Profile by drag/drop or the field's object picker circle",
-                        "the Setup Recipe row is ready");
+                        "the Setup Profile row is ready");
                 case PyralisSetupFlowStepId.AddRuntimePatterns:
                     return new PyralisAuthoringNativeAction(
-                        "Assign",
-                        PyralisAuthoringActionSurface.Inspector,
-                        "the GameSetupProfile",
-                        "Runtime Capabilities; choose the route family in Capability To Add, click Add Capability, then use the generated or assigned runtime pattern only when its metadata matches the route",
-                        "Capability Patterns are ready");
+                        "Choose",
+                        PyralisAuthoringActionSurface.AuthoringWindow,
+                        "Intent",
+                        "set DNA axioms, choose the presentation lane, and toggle the Engine Spine capabilities that describe this route while the GameSetupProfile is active; leave RuntimePatternDefinition empty unless this route needs an advanced reusable contract",
+                        "Capability ingredients are selected");
                 case PyralisSetupFlowStepId.AssignDefaultParticipants:
                     return new PyralisAuthoringNativeAction(
                         "Create",
@@ -193,7 +197,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                         "Create",
                         PyralisAuthoringActionSurface.Hierarchy,
                         "Gameplay Root or a Playfield Root",
-                        "right-click -> Create Empty, name it SpawnPoint_1, position it, then drag its Transform into GameplaySessionBootstrap > Spawn Points",
+                        "right-click -> Create Empty, name it SpawnPoint_1, position it, select Gameplay Root, expand GameplaySessionBootstrap > Spawn Points, click + to create Element 0, then drag SpawnPoint_1 from the Hierarchy into that Transform slot",
                         "the pawn route has one spawn point per default participant");
                 case PyralisSetupFlowStepId.AssignCameraRig:
                     return new PyralisAuthoringNativeAction(
@@ -270,7 +274,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                         "Customize",
                         PyralisAuthoringActionSurface.Inspector,
                         "Camera Root, CameraRigProfile, and the Cinemachine camera",
-                        "for 2D proofs set the CameraRigProfile preset or Target Camera Projection to Orthographic; tune Orthographic Size for zoom, but check Camera Root > 2D Bounds Framing because Enforce Minimum Visible Area 2D can raise the effective size; tune Follow Damping (0 means no lag), Follow Offset, and View Euler Angles for pitch/yaw/roll; disable Use Profile Transform only when you want to hand-place and hand-rotate the Cinemachine camera directly",
+                        "for 2D proofs set CameraRigProfile projection values or Target Camera Projection to Orthographic; tune Orthographic Size for zoom, but check Camera Root > 2D Bounds Framing because Enforce Minimum Visible Area 2D can raise the effective size; tune Follow Damping (0 means no lag), Follow Offset, and View Euler Angles for pitch/yaw/roll; disable Use Profile Transform only when you want to hand-place and hand-rotate the Cinemachine camera directly",
                         "the first proof is judged through the right camera setup");
                 case PyralisSetupFlowStepId.TunePawnVisualsAndCollision:
                     return new PyralisAuthoringNativeAction(
@@ -298,8 +302,8 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                         "Enable",
                         PyralisAuthoringActionSurface.Inspector,
                         "GameplaySessionBootstrap",
-                        "Auto Create Core Services and Inject Loaded Scenes On Build",
-                        "first-scene runtime services are created predictably");
+                        "bootstrap startup ownership and Inject Loaded Scenes On Build",
+                        "first-scene runtime services are owned predictably");
                 case PyralisSetupFlowStepId.SceneAndPrefabReadiness:
                     return new PyralisAuthoringNativeAction(
                         "Inspect",
@@ -312,84 +316,91 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             }
         }
 
+        public static PyralisAuthoringNativeAction GetPawnNativeAction(PyralisParticipantPawnIssueKind issueKind)
+        {
+            switch (issueKind)
+            {
+                case PyralisParticipantPawnIssueKind.MissingPawnDefinition:
+                    return new PyralisAuthoringNativeAction(
+                        "Create",
+                        PyralisAuthoringActionSurface.ProjectWindow,
+                        "the opened setup folder",
+                        "choose or create the proof setup folder in the Project content pane first, keep imported art folders separate, then right-click inside it -> Create -> NeonBlack -> Definitions -> Pawn Definition, then assign it into ParticipantDefinition > Default Pawn by drag/drop or the field's object picker circle",
+                        "the participant points at a PawnDefinition");
+                case PyralisParticipantPawnIssueKind.MissingPawnPrefab:
+                    return new PyralisAuthoringNativeAction(
+                        "Create or select",
+                        PyralisAuthoringActionSurface.Hierarchy,
+                        "the pawn prefab root",
+                        "name the GameObject, add the lane stack, save it as a prefab, then drag the prefab into PawnDefinition > Pawn Prefab. For a 2D proof, add PawnRoot, Motor2D, Motor2DInputAdapter, SpriteRenderer, and Animator; Motor2D adds the required movement and presentation siblings. Add Unity PlayerInput only when you want explicit local keyboard/gamepad ownership, and assign the same Input Actions asset used by the InputProfile",
+                        "the PawnDefinition has a prefab");
+                case PyralisParticipantPawnIssueKind.MissingPawnRoot:
+                    return new PyralisAuthoringNativeAction(
+                        "Add",
+                        PyralisAuthoringActionSurface.Inspector,
+                        "the pawn prefab root",
+                        "Add Component -> PawnRoot",
+                        "Pyralis recognizes the prefab as a pawn actor");
+                case PyralisParticipantPawnIssueKind.MissingMotor:
+                    return new PyralisAuthoringNativeAction(
+                        "Add",
+                        PyralisAuthoringActionSurface.Inspector,
+                        "the pawn prefab root",
+                        "Add Component -> Motor2D for a 2D pawn, or the lane motor that implements IPawnMotor",
+                        "movement profiles have a runtime motor to drive");
+                case PyralisParticipantPawnIssueKind.MissingPresentation:
+                    return new PyralisAuthoringNativeAction(
+                        "Add",
+                        PyralisAuthoringActionSurface.Inspector,
+                        "the pawn prefab root or visual child",
+                        "Add Component -> Pawn2DPresentationComponent or the lane presentation module, then assign a project-owned sprite, prefab visual, or renderer in the presentation fields",
+                        "the pawn has visible presentation");
+                case PyralisParticipantPawnIssueKind.MissingInputModule:
+                    return new PyralisAuthoringNativeAction(
+                        "Add",
+                        PyralisAuthoringActionSurface.Inspector,
+                        "the pawn prefab root",
+                        "Add Component -> Motor2DInputAdapter for a 2D pawn, or the lane input module that implements IPawnInputModule",
+                        "InputProfile actions can reach movement");
+                default:
+                    return new PyralisAuthoringNativeAction(
+                        "Inspect",
+                        PyralisAuthoringActionSurface.Inspector,
+                        "the participant, PawnDefinition, or pawn prefab",
+                        "the field or component named by the validation message",
+                        "Assign Participant Pawn is ready");
+            }
+        }
+
         private static PyralisAuthoringNativeAction GetPawnNativeAction(string message)
         {
+            return GetPawnNativeAction(InferPawnIssueKind(message));
+        }
+
+        private static PyralisParticipantPawnIssueKind InferPawnIssueKind(string message)
+        {
             if (string.IsNullOrWhiteSpace(message))
-            {
-                return new PyralisAuthoringNativeAction(
-                    "Inspect",
-                    PyralisAuthoringActionSurface.Inspector,
-                    "the participant, PawnDefinition, or pawn prefab named by the current step",
-                    "the missing pawn field or component",
-                    "Assign Participant Pawn is ready");
-            }
+                return PyralisParticipantPawnIssueKind.None;
 
-            if (message.Contains("needs a PawnDefinition"))
-            {
-                return new PyralisAuthoringNativeAction(
-                    "Create",
-                    PyralisAuthoringActionSurface.ProjectWindow,
-                    "the opened setup folder",
-                    "choose or create the proof setup folder in the Project content pane first, keep imported art folders separate, then right-click inside it -> Create -> NeonBlack -> Definitions -> Pawn Definition, then assign it into ParticipantDefinition > Default Pawn by drag/drop or the field's object picker circle",
-                    "the participant points at a PawnDefinition");
-            }
+            if (message.Contains("PawnDefinition before participants can spawn"))
+                return PyralisParticipantPawnIssueKind.MissingPawnDefinition;
 
-            if (message.Contains("needs a pawn prefab"))
-            {
-                return new PyralisAuthoringNativeAction(
-                    "Create or select",
-                    PyralisAuthoringActionSurface.Hierarchy,
-                    "the pawn prefab root",
-                    "name the GameObject, add PawnRoot plus lane movement/presentation/input components, then drag the prefab into PawnDefinition > Pawn Prefab",
-                    "the PawnDefinition has a prefab");
-            }
+            if (message.Contains("point at a pawn prefab"))
+                return PyralisParticipantPawnIssueKind.MissingPawnPrefab;
 
-            if (message.Contains("needs PawnRoot"))
-            {
-                return new PyralisAuthoringNativeAction(
-                    "Add",
-                    PyralisAuthoringActionSurface.Inspector,
-                    "the pawn prefab root",
-                    "Add Component -> PawnRoot",
-                    "Pyralis recognizes the prefab as a pawn actor");
-            }
+            if (message.Contains("missing PawnRoot"))
+                return PyralisParticipantPawnIssueKind.MissingPawnRoot;
 
-            if (message.Contains("needs a component that implements IPawnMotor"))
-            {
-                return new PyralisAuthoringNativeAction(
-                    "Add",
-                    PyralisAuthoringActionSurface.Inspector,
-                    "the pawn prefab root",
-                    "Add Component -> Motor2D for a 2D pawn, or the lane motor that implements IPawnMotor",
-                    "movement profiles have a runtime motor to drive");
-            }
+            if (message.Contains("missing a lane motor component"))
+                return PyralisParticipantPawnIssueKind.MissingMotor;
 
-            if (message.Contains("needs a component that implements IPawnPresentationModule"))
-            {
-                return new PyralisAuthoringNativeAction(
-                    "Add",
-                    PyralisAuthoringActionSurface.Inspector,
-                    "the pawn prefab root or visual child",
-                    "Add Component -> Pawn2DPresentationComponent or the lane presentation module, then assign a project-owned sprite, prefab visual, or renderer in the presentation fields",
-                    "the pawn has visible presentation");
-            }
+            if (message.Contains("missing a presentation component"))
+                return PyralisParticipantPawnIssueKind.MissingPresentation;
 
-            if (message.Contains("needs a component that implements IPawnInputModule"))
-            {
-                return new PyralisAuthoringNativeAction(
-                    "Add",
-                    PyralisAuthoringActionSurface.Inspector,
-                    "the pawn prefab root",
-                    "Add Component -> Motor2DInputAdapter for a 2D pawn, or the lane input module that implements IPawnInputModule",
-                    "InputProfile actions can reach movement");
-            }
+            if (message.Contains("missing an input adapter"))
+                return PyralisParticipantPawnIssueKind.MissingInputModule;
 
-            return new PyralisAuthoringNativeAction(
-                "Inspect",
-                PyralisAuthoringActionSurface.Inspector,
-                "the participant, PawnDefinition, or pawn prefab",
-                "the field or component named by the validation message",
-                "Assign Participant Pawn is ready");
+            return PyralisParticipantPawnIssueKind.PawnValidation;
         }
     }
 

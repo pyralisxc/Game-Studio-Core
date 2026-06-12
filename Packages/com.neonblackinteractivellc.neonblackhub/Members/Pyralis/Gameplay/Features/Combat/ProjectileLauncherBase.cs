@@ -14,7 +14,7 @@ namespace NeonBlack.Gameplay.Features.Combat
             "Add ProjectileLauncher2D or 3D to a scene coordinator.", 
             "Assign a Projectile Parent transform and configure pooling settings." 
         },
-        FirstProof = "Fire a weapon and observe projectile instances correctly spawning from the launcher.",
+        FirstProof = "proof.npc-enemy-behavior",
         AssignmentFields = new[] { nameof(usePrefabPooling), nameof(maxPoolSizePerPrefab) },
         DocumentationURL = "https://docs.neonblack.com/pyralis/combat/projectiles"
     )]

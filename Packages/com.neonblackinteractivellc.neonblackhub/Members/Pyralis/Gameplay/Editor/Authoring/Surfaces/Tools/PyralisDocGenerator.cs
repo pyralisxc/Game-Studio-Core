@@ -50,15 +50,15 @@ namespace NeonBlack.Gameplay.Editor
                 sb.AppendLine();
             }
 
-            // Handle Legacy Goal-based contracts or General facts
-            var legacyFacts = facts.Where(f => f.Capability == AuthoringCapability.None).OrderBy(f => f.DisplayName).ToList();
-            if (legacyFacts.Count > 0)
+            // Handle general facts that do not yet expose typed capability metadata.
+            var generalFacts = facts.Where(f => f.Capability == AuthoringCapability.None).OrderBy(f => f.DisplayName).ToList();
+            if (generalFacts.Count > 0)
             {
-                sb.AppendLine("## General & Legacy Contracts");
-                sb.AppendLine("> Contracts that have not yet been migrated to the typed Spine Capability system or represent general engine utilities.");
+                sb.AppendLine("## General Contracts");
+                sb.AppendLine("> Contracts that do not yet expose typed Spine Capability metadata or represent general engine utilities.");
                 sb.AppendLine();
 
-                foreach (var fact in legacyFacts)
+                foreach (var fact in generalFacts)
                 {
                     DrawFact(sb, fact);
                 }

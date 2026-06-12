@@ -110,7 +110,7 @@ Keep the implementation split by responsibility:
 | `PyralisAuthoringRouteProof` | first playable proof names, success criteria, and deferred work for each route family |
 | `PyralisAuthoringRouteReport` | selected-object diagnosis, validation issues, target jumps, and route report rows |
 | `PyralisAuthoringOverviewSnapshot` | Overview counts, next-step summary, and readiness buckets |
-| `PyralisAuthoringCapabilitySelection` | Design Capabilities picker backed by existing `RuntimePatternDefinition` assets |
+| `PyralisAuthoringCapabilitySelection` | Capability-row helpers used by Intent-to-`GameSetupProfile` sync and optional `RuntimePatternDefinition` metadata |
 | `PyralisRuntimeCapabilityCatalog` | guide-only capability cards indexed by game-goal and runtime-lane tags |
 | `PyralisAuthoringIntentAdvisor` | Cookbook-to-intent read model that ranks route-intent, capability, contract, and proof facts from selected world/playfield, control shape, lane, and goals for Guide cards and other tab projections |
 | `PyralisAuthoringCapabilityGuidance` | selected capability, recommended next, environment, and route-intent guidance rows |
@@ -156,7 +156,7 @@ The user-facing Map chain is:
 Scene Root
 -> Session
 -> Game Rules
--> Setup Recipe
+-> Setup Profile
 -> Capabilities
 -> Participants
 -> Pawn / No Pawn
@@ -180,7 +180,7 @@ Core concepts:
 - `Evidence`: why the tool believes something is ready, missing, optional, or not needed for this route.
 - `Work Intent`: whether the row is foundation setup, required setup, a proof enhancer, or a feature card.
 
-The first Authoring 2.0 foundation is `PyralisAuthoringFactRegistry`. It is a read-only typed fact spine used to keep guide cards, future validation issues, inspector handoffs, and setup rows on stable ids instead of display text. Current runtime capability cards now expose `PyralisAuthoringFact` records with provenance, confidence, native Unity actions, route relevance, first proof, required definitions/profiles/components, assignment fields, customization moments, deferrable work, and supported/unsupported lanes. Setup-flow rows now contribute setup-node facts through `PyralisSetupFlowGuidance.GetAuthoringFacts`, including stable setup ids, work intent, native Unity action metadata, and related capability ids for the 2D pawn movement route. Route proof facts now include stable first-proof anchors for pawn movement, board/card action, action selection, NPC/enemy behavior, custom object effects, UI/HUD/menu events, camera/cursor/world framing, generated content, and network ownership. Route-family coverage facts name the broad authoring surfaces the system must support: pawn actors, NPC/enemy actors, custom objects/features, UI/HUD/menu routes, world/camera routes, tabletop/card routes, and networking authority routes. Scene-evidence facts now bridge the existing scene-surface guidance rows to route/proof ids for environment/playfield, camera/bounds, UI/HUD/menus, scoring/objectives, board/action selection, and pickups/hazards/enemies surfaces. Validate cards now carry and display typed `PyralisAuthoringIssue` companions through `PyralisAuthoringIssueAdapter`, preserving stable issue codes, severity, work intent, evidence state, affected field/component, reason, and native Unity action metadata for setup, scene-surface, and prefab-readiness issues. Inspector handoff facts now link native Inspector fields for core setup, 2D pawn/input, tabletop board/turn rules, camera/playfield profiles, required feature modules, feature module profile/runtime/network fields, Cinemachine camera fields, tabletop presenter fields, and camera framing customization back to route families and first-proof facts. Reflection/convention facts now flow through `IAuthoringConventionFactProvider` entries discovered by `PyralisAuthoringConventionFactRegistry`; `PyralisConventionAuthoringFacts` remains the bridge for unmigrated convention facts, `PyralisSprite2DConventionAuthoringFactProvider` owns the first migrated 1P Sprite2D convention surface, and `PyralisRouteIntentAuthoringFactProvider` owns studio-wide Game Type intent facts such as 2D side-view action, pawn brawler, and camera/cursor command. `PyralisAuthoringIntentAdvisor` now projects those facts into a compact route-choice summary for Intent and ranked current-intent cards for Guide: world/playfield, control shape, lane, grouped capability toggles, tooltips, recommendations, first-proof summaries, assignment/customization foldouts, and lane cautions. Intent chooses the route shape; Guide owns the card wall; Facts remains the full cookbook and dictionary. Those facts expose selected `CreateAssetMenu`, `AddComponentMenu`, `RequireComponent`, serialized-field, route-intent, lane, and goal metadata across core setup, pawn, tabletop, action, camera, UI, custom feature, NPC/enemy, combat, projectile, and feedback surfaces as read-only native Unity guidance with explicit or convention-derived confidence. Beginner semantic location tags have started through `PyralisAuthoringSemanticTag`, giving the Authoring Window an optional top legend strip and fact/action badges for Project, Hierarchy, Inspector, Component, Prefab, Definition, Profile, Input, UI, Animation, Audio, and Play Mode. The Authoring Window now includes a read-only `Facts` tab that groups registry facts by kind, shows coverage counts, provenance, native actions, requirement lists, customization moments, semantic location badges, and related stable ids.
+The first Authoring 2.0 foundation is `PyralisAuthoringFactRegistry`. It is a read-only typed fact spine used to keep guide cards, validation issues, inspector handoffs, and setup rows on stable ids instead of display text. Runtime capability cards, reflected contracts, setup-flow rows, route proof facts, route-family coverage facts, scene-evidence facts, inspector handoff facts, convention facts, route intents, and typed `PyralisAuthoringIssue` metadata all flow through that single registry. Feature-owned `IAuthoringContractProvider` entries still feed setup-profile capability guidance, profile/runtime/lane validation, unsupported-lane cautions, and first-proof target rows, but convention facts do not use a second provider-discovery registry. `PyralisAuthoringIntentAdvisor` projects registry facts into a compact route-choice summary for Intent and ranked current-intent cards for Guide. Intent chooses the route shape; Guide owns the card wall; Facts remains the full cookbook and dictionary. Beginner semantic location tags give the Authoring Window a top legend strip and fact/action badges for Project, Hierarchy, Inspector, Component, Prefab, Definition, Profile, Input, UI, Animation, Audio, and Play Mode.
 
 The registry should grow in this order:
 
@@ -289,8 +289,8 @@ Overview is the daily home base. It should show:
 
 Organize progress into three lanes:
 
-- `Do Now`: required missing or blocked work only.
-- `Proof Enhancers`: route-specific setup that can make the first proof easier to read but should not block it once `Do Now` is clear.
+- `Do Now`: intent-required missing or blocked work only.
+- `Proof Enhancers`: setup recommended by the selected intent that can make the first proof easier to read but should not block it once `Do Now` is clear.
 - `Feature Cards`: optional next capabilities, polish, advanced systems, and nice-to-have proof.
 
 If the developer is tired or lost, Overview should still make the next move obvious.

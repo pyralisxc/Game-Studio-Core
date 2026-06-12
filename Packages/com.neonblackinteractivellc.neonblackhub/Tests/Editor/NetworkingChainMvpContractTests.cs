@@ -15,6 +15,17 @@ namespace NeonBlack.Gameplay.Tests.Editor
             "Pyralis",
             "Gameplay");
 
+        private static string AuthoringDoc(params string[] segments)
+        {
+            string path = Path.Combine(GameplayRoot, "Docs", "Authoring");
+            foreach (string segment in segments)
+            {
+                path = Path.Combine(path, segment);
+            }
+
+            return path;
+        }
+
         [Test]
         public void NetworkingReadme_DefinesBuildOrBuyBoundary()
         {
@@ -31,7 +42,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void MultiplayerSetupDocs_SeparateLocalAndNetworkRoutes()
         {
-            string docs = File.ReadAllText(Path.Combine(GameplayRoot, "Docs", "Setup", "Prefabs", "Multiplayer_Setup.md"));
+            string docs = File.ReadAllText(AuthoringDoc("Prefabs", "Multiplayer_Setup.md"));
 
             StringAssert.Contains("Local multiplayer", docs);
             StringAssert.Contains("Networked MVP setup", docs);

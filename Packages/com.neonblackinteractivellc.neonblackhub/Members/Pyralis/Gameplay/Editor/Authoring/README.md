@@ -19,7 +19,7 @@ Most feature developers should not need to edit the spine unless they are expand
 
 - `AuthoringWindow/`: the main guided Authoring Window and its UI assets.
 - `Inspectors/`: shared inspector field guides and direct custom inspectors.
-- `Tools/`: editor utilities, generators, diagnostics windows, and validation bridge helpers.
+- `Tools/`: editor utilities, diagnostics windows, and validation bridge helpers.
 
 Surfaces should consume spine data. They should not become competing sources of route truth.
 
@@ -30,6 +30,8 @@ Surfaces should consume spine data. They should not become competing sources of 
 ## Feature-Owned Truth
 
 Feature-specific authoring contracts should stay beside the owning feature when practical and be discovered reflectively. Central authoring code should aggregate those contracts rather than maintaining parallel feature-id switch statements.
+
+Feature-owned editor scripts that teach setup, draw field guides, or validate a feature's Inspector path should live under that feature's `Editor/Authoring/` folder. Keep the feature editor asmdef at the feature `Editor/` root when that preserves the existing assembly boundary. Generic feature editor utilities that are not authoring guidance should be rare and should have a clear owner-specific reason to stay outside `Authoring/`.
 
 ## Rule Of Thumb
 

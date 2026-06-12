@@ -38,6 +38,20 @@ namespace NeonBlack.Gameplay.Editor
         public bool PrimaryProofCandidate { get; }
     }
 
+    public enum PyralisParticipantPawnIssueKind
+    {
+        None,
+        MissingParticipants,
+        EmptyParticipantSlot,
+        MissingPawnDefinition,
+        MissingPawnPrefab,
+        MissingPawnRoot,
+        MissingMotor,
+        MissingPresentation,
+        MissingInputModule,
+        PawnValidation
+    }
+
     public sealed class PyralisSetupRouteAnalysis
     {
         private PyralisSetupRouteAnalysis(
@@ -45,6 +59,7 @@ namespace NeonBlack.Gameplay.Editor
             GameModeDefinition mode,
             GameSetupProfile setupProfile,
             RuntimePatternDefinition[] patterns,
+            RuntimeCapabilityFamily[] capabilityFamilies,
             string[] requiredRuntimeSystems,
             bool hasAssignedPatterns,
             bool hasValidPatterns,
@@ -52,12 +67,14 @@ namespace NeonBlack.Gameplay.Editor
             bool hasParticipants,
             bool hasAnyDefaultPawn,
             string participantPawnIssue,
+            PyralisParticipantPawnIssueKind participantPawnIssueKind,
             PyralisAuthoringRouteFact[] routeFacts)
         {
             Session = session;
             Mode = mode;
             SetupProfile = setupProfile;
             Patterns = patterns;
+            CapabilityFamilies = capabilityFamilies ?? System.Array.Empty<RuntimeCapabilityFamily>();
             RequiredRuntimeSystems = requiredRuntimeSystems;
             HasAssignedPatterns = hasAssignedPatterns;
             HasValidPatterns = hasValidPatterns;
@@ -65,6 +82,7 @@ namespace NeonBlack.Gameplay.Editor
             HasParticipants = hasParticipants;
             HasAnyDefaultPawn = hasAnyDefaultPawn;
             ParticipantPawnIssue = participantPawnIssue;
+            ParticipantPawnIssueKind = participantPawnIssueKind;
             RouteFacts = routeFacts ?? System.Array.Empty<PyralisAuthoringRouteFact>();
         }
 
@@ -72,6 +90,7 @@ namespace NeonBlack.Gameplay.Editor
         public GameModeDefinition Mode { get; }
         public GameSetupProfile SetupProfile { get; }
         public RuntimePatternDefinition[] Patterns { get; }
+        public RuntimeCapabilityFamily[] CapabilityFamilies { get; }
         public string[] RequiredRuntimeSystems { get; }
         public bool HasAssignedPatterns { get; }
         public bool HasValidPatterns { get; }
@@ -79,6 +98,7 @@ namespace NeonBlack.Gameplay.Editor
         public bool HasParticipants { get; }
         public bool HasAnyDefaultPawn { get; }
         public string ParticipantPawnIssue { get; }
+        public PyralisParticipantPawnIssueKind ParticipantPawnIssueKind { get; }
         public PyralisAuthoringRouteFact[] RouteFacts { get; }
         public PyralisAuthoringRouteFact PrimaryRouteFact => RouteFacts.Length > 0 ? RouteFacts[0] : null;
 
@@ -123,20 +143,22 @@ namespace NeonBlack.Gameplay.Editor
         public static PyralisSetupRouteAnalysis Build(GameSetupProfile setupProfile, SessionDefinition session = null, GameModeDefinition mode = null)
         {
             RuntimePatternDefinition[] patterns = setupProfile != null ? setupProfile.runtimePatterns : null;
+            RuntimeCapabilityFamily[] capabilityFamilies = CollectCapabilityFamilies(setupProfile, patterns);
             string[] requiredRuntimeSystems = CollectRequiredRuntimeSystems(patterns);
-            bool hasAssignedPatterns = CheckHasAssignedPatterns(patterns);
-            bool hasValidPatterns = CheckHasValidPatterns(patterns);
-            bool requiresPawn = RequiresPawnPattern(patterns);
+            bool hasAssignedPatterns = capabilityFamilies.Length > 0 || CheckHasAssignedPatterns(patterns);
+            bool hasValidPatterns = capabilityFamilies.Length > 0 || CheckHasValidPatterns(patterns);
+            bool requiresPawn = ContainsFamily(capabilityFamilies, RuntimeCapabilityFamily.CharacterPawnGameplay) || RequiresPawnPattern(patterns);
             bool hasParticipants = CheckHasParticipants(session);
             bool hasAnyDefaultPawn = CheckHasAnyDefaultPawn(session);
-            string participantPawnIssue = GetParticipantPawnIssue(session);
-            PyralisAuthoringRouteFact[] routeFacts = BuildRouteFacts(patterns);
+            string participantPawnIssue = GetParticipantPawnIssue(session, out PyralisParticipantPawnIssueKind participantPawnIssueKind);
+            PyralisAuthoringRouteFact[] routeFacts = BuildRouteFacts(capabilityFamilies);
 
             return new PyralisSetupRouteAnalysis(
                 session,
                 mode,
                 setupProfile,
                 patterns,
+                capabilityFamilies,
                 requiredRuntimeSystems,
                 hasAssignedPatterns,
                 hasValidPatterns,
@@ -144,6 +166,7 @@ namespace NeonBlack.Gameplay.Editor
                 hasParticipants,
                 hasAnyDefaultPawn,
                 participantPawnIssue,
+                participantPawnIssueKind,
                 routeFacts);
         }
 
@@ -308,9 +331,11 @@ namespace NeonBlack.Gameplay.Editor
 
         private bool HasFamily(RuntimeCapabilityFamily family)
         {
+            if (ContainsFamily(CapabilityFamilies, family))
+                return true;
+
             if (Patterns == null)
                 return false;
-
             for (int i = 0; i < Patterns.Length; i++)
             {
                 if (IsValidPattern(Patterns[i]) && Patterns[i].capabilityFamily == family)
@@ -420,35 +445,94 @@ namespace NeonBlack.Gameplay.Editor
             return false;
         }
 
-        private static PyralisAuthoringRouteFact[] BuildRouteFacts(RuntimePatternDefinition[] patterns)
+        private static RuntimeCapabilityFamily[] CollectCapabilityFamilies(GameSetupProfile setupProfile, RuntimePatternDefinition[] patterns)
         {
-            if (patterns == null)
+            List<RuntimeCapabilityFamily> families = new List<RuntimeCapabilityFamily>();
+            if (setupProfile != null && setupProfile.runtimeCapabilities != null)
+            {
+                for (int i = 0; i < setupProfile.runtimeCapabilities.Length; i++)
+                {
+                    RuntimeCapabilitySelection selection = setupProfile.runtimeCapabilities[i];
+                    if (selection == null)
+                        continue;
+
+                    AddFamily(families, selection.capabilityFamily);
+                }
+            }
+
+            if (patterns != null)
+            {
+                for (int i = 0; i < patterns.Length; i++)
+                {
+                    RuntimePatternDefinition pattern = patterns[i];
+                    if (IsValidPattern(pattern))
+                        AddFamily(families, pattern.capabilityFamily);
+                }
+            }
+
+            return families.ToArray();
+        }
+
+        private static void AddFamily(List<RuntimeCapabilityFamily> families, RuntimeCapabilityFamily family)
+        {
+            if (!ContainsFamily(families, family))
+                families.Add(family);
+        }
+
+        private static bool ContainsFamily(List<RuntimeCapabilityFamily> families, RuntimeCapabilityFamily family)
+        {
+            for (int i = 0; i < families.Count; i++)
+            {
+                if (families[i] == family)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static bool ContainsFamily(RuntimeCapabilityFamily[] families, RuntimeCapabilityFamily family)
+        {
+            if (families == null)
+                return false;
+
+            for (int i = 0; i < families.Length; i++)
+            {
+                if (families[i] == family)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static PyralisAuthoringRouteFact[] BuildRouteFacts(RuntimeCapabilityFamily[] families)
+        {
+            if (families == null)
                 return System.Array.Empty<PyralisAuthoringRouteFact>();
 
             List<PyralisAuthoringRouteFact> facts = new List<PyralisAuthoringRouteFact>();
-            AddFactIfFamily(facts, patterns, RuntimeCapabilityFamily.CharacterPawnGameplay, PyralisAuthoringRouteCapability.PawnAction, "Pawn Action", true);
-            AddFactIfFamily(facts, patterns, RuntimeCapabilityFamily.BoardCardTabletop, PyralisAuthoringRouteCapability.Tabletop, "Tabletop", true);
-            AddFactIfFamily(facts, patterns, RuntimeCapabilityFamily.ActionTargeting, PyralisAuthoringRouteCapability.ActionSelection, "Action Selection", true);
-            AddFactIfFamily(facts, patterns, RuntimeCapabilityFamily.GunsProjectiles, PyralisAuthoringRouteCapability.Projectile, "Projectile", true);
-            AddFactIfFamily(facts, patterns, RuntimeCapabilityFamily.Combat, PyralisAuthoringRouteCapability.Combat, "Combat", true);
-            AddFactIfFamily(facts, patterns, RuntimeCapabilityFamily.ScoringObjectives, PyralisAuthoringRouteCapability.Scoring, "Scoring", true);
-            AddFactIfFamily(facts, patterns, RuntimeCapabilityFamily.CameraInput, PyralisAuthoringRouteCapability.CameraCursor, "Camera / Cursor", true);
-            AddFactIfFamily(facts, patterns, RuntimeCapabilityFamily.ProceduralGeneration, PyralisAuthoringRouteCapability.Procedural, "Procedural", true);
-            AddFactIfFamily(facts, patterns, RuntimeCapabilityFamily.Networking, PyralisAuthoringRouteCapability.Networking, "Networking", true);
-            AddFactIfFamily(facts, patterns, RuntimeCapabilityFamily.AnimationPresentation, PyralisAuthoringRouteCapability.AnimationPresentation, "Animation / Presentation", false);
-            AddFactIfFamily(facts, patterns, RuntimeCapabilityFamily.PlatformCore, PyralisAuthoringRouteCapability.PlatformCore, "Platform Core", false);
+            AddFactIfFamily(facts, families, RuntimeCapabilityFamily.CharacterPawnGameplay, PyralisAuthoringRouteCapability.PawnAction, "Pawn Action", true);
+            AddFactIfFamily(facts, families, RuntimeCapabilityFamily.BoardCardTabletop, PyralisAuthoringRouteCapability.Tabletop, "Tabletop", true);
+            AddFactIfFamily(facts, families, RuntimeCapabilityFamily.ActionTargeting, PyralisAuthoringRouteCapability.ActionSelection, "Action Selection", true);
+            AddFactIfFamily(facts, families, RuntimeCapabilityFamily.GunsProjectiles, PyralisAuthoringRouteCapability.Projectile, "Projectile", true);
+            AddFactIfFamily(facts, families, RuntimeCapabilityFamily.Combat, PyralisAuthoringRouteCapability.Combat, "Combat", true);
+            AddFactIfFamily(facts, families, RuntimeCapabilityFamily.ScoringObjectives, PyralisAuthoringRouteCapability.Scoring, "Scoring", true);
+            AddFactIfFamily(facts, families, RuntimeCapabilityFamily.CameraInput, PyralisAuthoringRouteCapability.CameraCursor, "Camera / Cursor", true);
+            AddFactIfFamily(facts, families, RuntimeCapabilityFamily.ProceduralGeneration, PyralisAuthoringRouteCapability.Procedural, "Procedural", true);
+            AddFactIfFamily(facts, families, RuntimeCapabilityFamily.Networking, PyralisAuthoringRouteCapability.Networking, "Networking", true);
+            AddFactIfFamily(facts, families, RuntimeCapabilityFamily.AnimationPresentation, PyralisAuthoringRouteCapability.AnimationPresentation, "Animation / Presentation", false);
+            AddFactIfFamily(facts, families, RuntimeCapabilityFamily.PlatformCore, PyralisAuthoringRouteCapability.PlatformCore, "Platform Core", false);
             return facts.ToArray();
         }
 
         private static void AddFactIfFamily(
             List<PyralisAuthoringRouteFact> facts,
-            RuntimePatternDefinition[] patterns,
+            RuntimeCapabilityFamily[] families,
             RuntimeCapabilityFamily family,
             PyralisAuthoringRouteCapability capability,
             string label,
             bool primaryProofCandidate)
         {
-            if (!ContainsFamily(patterns, family))
+            if (!ContainsFamily(families, family))
                 return;
 
             facts.Add(new PyralisAuthoringRouteFact(capability, label, family, primaryProofCandidate));
@@ -500,41 +584,69 @@ namespace NeonBlack.Gameplay.Editor
             return false;
         }
 
-        private static string GetParticipantPawnIssue(SessionDefinition session)
+        private static string GetParticipantPawnIssue(SessionDefinition session, out PyralisParticipantPawnIssueKind issueKind)
         {
             if (session == null || session.defaultParticipants == null || session.defaultParticipants.Length == 0)
+            {
+                issueKind = PyralisParticipantPawnIssueKind.MissingParticipants;
                 return "Assign default participants before checking pawn readiness.";
+            }
 
             for (int i = 0; i < session.defaultParticipants.Length; i++)
             {
                 ParticipantDefinition participant = session.defaultParticipants[i];
                 if (participant == null)
+                {
+                    issueKind = PyralisParticipantPawnIssueKind.EmptyParticipantSlot;
                     return $"Default participant slot {i} is empty.";
+                }
 
                 if (participant.defaultPawn == null)
-                    return $"Participant `{participant.displayName}` needs a PawnDefinition for pawn-backed setup.";
+                {
+                    issueKind = PyralisParticipantPawnIssueKind.MissingPawnDefinition;
+                    return $"Selected pawn-backed intent asks participant `{participant.displayName}` to use a PawnDefinition before participants can spawn.";
+                }
 
                 PawnDefinition pawn = participant.defaultPawn;
                 if (pawn.pawnPrefab == null)
-                    return $"PawnDefinition `{pawn.name}` needs a pawn prefab before this setup can spawn participants.";
+                {
+                    issueKind = PyralisParticipantPawnIssueKind.MissingPawnPrefab;
+                    return $"Selected pawn-backed intent asks PawnDefinition `{pawn.name}` to point at a pawn prefab before participants can spawn.";
+                }
 
                 if (pawn.pawnPrefab.GetComponent<PawnRoot>() == null)
-                    return $"Pawn prefab `{pawn.pawnPrefab.name}` needs PawnRoot on its root GameObject.";
+                {
+                    issueKind = PyralisParticipantPawnIssueKind.MissingPawnRoot;
+                    return $"Pawn prefab `{pawn.pawnPrefab.name}` is missing PawnRoot on its root GameObject.";
+                }
 
                 if (!PrefabHasComponent<IPawnMotor>(pawn.pawnPrefab))
-                    return $"Pawn prefab `{pawn.pawnPrefab.name}` needs a component that implements IPawnMotor.";
+                {
+                    issueKind = PyralisParticipantPawnIssueKind.MissingMotor;
+                    return $"Pawn prefab `{pawn.pawnPrefab.name}` is missing a lane motor component that implements IPawnMotor.";
+                }
 
                 if (!PrefabHasComponent<IPawnPresentationModule>(pawn.pawnPrefab))
-                    return $"Pawn prefab `{pawn.pawnPrefab.name}` needs a component that implements IPawnPresentationModule.";
+                {
+                    issueKind = PyralisParticipantPawnIssueKind.MissingPresentation;
+                    return $"Pawn prefab `{pawn.pawnPrefab.name}` is missing a presentation component that implements IPawnPresentationModule.";
+                }
 
                 if (!PrefabHasComponent<IPawnInputModule>(pawn.pawnPrefab))
-                    return $"Pawn prefab `{pawn.pawnPrefab.name}` needs a component that implements IPawnInputModule so InputProfile actions can reach movement.";
+                {
+                    issueKind = PyralisParticipantPawnIssueKind.MissingInputModule;
+                    return $"Pawn prefab `{pawn.pawnPrefab.name}` is missing an input adapter that implements IPawnInputModule so the selected InputProfile can reach movement.";
+                }
 
                 List<string> pawnIssues = PyralisAuthoringValidationModel.BuildPawnRouteValidationIssues(pawn);
                 if (pawnIssues.Count > 0)
+                {
+                    issueKind = PyralisParticipantPawnIssueKind.PawnValidation;
                     return $"PawnDefinition `{pawn.name}`: {pawnIssues[0]}";
+                }
             }
 
+            issueKind = PyralisParticipantPawnIssueKind.None;
             return null;
         }
 

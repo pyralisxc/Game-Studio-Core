@@ -8,7 +8,17 @@ namespace NeonBlack.Gameplay.Editor
         public static PyralisAuthoringFeatureRow BuildSelectedRow(RuntimePatternDefinition pattern)
         {
             string source = GetPatternDisplayName(pattern);
-            return pattern.capabilityFamily switch
+            return BuildSelectedRow(pattern.capabilityFamily, source);
+        }
+
+        public static PyralisAuthoringFeatureRow BuildSelectedRow(RuntimeCapabilityFamily family)
+        {
+            return BuildSelectedRow(family, "Selected capability");
+        }
+
+        private static PyralisAuthoringFeatureRow BuildSelectedRow(RuntimeCapabilityFamily family, string source)
+        {
+            return family switch
             {
                 RuntimeCapabilityFamily.PlatformCore => new PyralisAuthoringFeatureRow(
                     "Core Session Setup",
@@ -20,7 +30,7 @@ namespace NeonBlack.Gameplay.Editor
                     "Pawn Actor Control",
                     source,
                     "Participants own actor bodies that can move, collide, animate, fight, collect, or be spawned into the scene.",
-                    "Create a pawn prefab with PawnRoot, assign it through PawnDefinition, assign that pawn to ParticipantDefinition, then add Spawn Points to GameplaySessionBootstrap.",
+                    "Create a pawn prefab with the lane stack, assign it through PawnDefinition, assign that pawn to ParticipantDefinition, then add Spawn Points to GameplaySessionBootstrap. For a 2D proof, use PawnRoot, Motor2D, Motor2DInputAdapter, SpriteRenderer, and Animator on the prefab root.",
                     "Choose art and presentation in PawnPresentationProfile. Tune speed, acceleration, braking, jump, and feel in movement profiles and movement components."),
                 RuntimeCapabilityFamily.Combat => new PyralisAuthoringFeatureRow(
                     "Combat / Brawler Actions",
@@ -136,11 +146,11 @@ namespace NeonBlack.Gameplay.Editor
         public static string GetRouteIntent(PyralisAuthoringRouteDescriptor route, int selectedCount)
         {
             if (route == null || selectedCount == 0)
-                return "No capabilities selected yet. Add existing runtime patterns that match the game surface before wiring scene objects.";
+                return "No capabilities selected yet. Choose capability ingredients that match the game surface before wiring scene objects.";
             if (route.HasPawn && route.HasCombat)
                 return "This reads like a brawler, fighter, action character, or enemy-driven pawn route. Expect pawn, movement, combat, animation/presentation, input, camera, feedback, and optional scoring/HUD setup.";
             if (route.HasTabletop)
-                return "This reads like a board, card, tactics, or tabletop route. Pawns can stay empty unless a selected pattern later introduces actor bodies.";
+                return "This reads like a board, card, tactics, or tabletop route. Pawns can stay empty unless a selected capability later introduces actor bodies.";
             if (route.HasProjectiles && route.HasCamera && !route.HasPawn)
                 return "This reads like a camera/cursor projectile, trap, turret, or command-shot prototype. Decide the firing source before building pawn assumptions.";
             if (route.HasPawn)

@@ -195,12 +195,12 @@ namespace NeonBlack.Gameplay.Editor
             {
                 SceneSurfaceCounts counts = new SceneSurfaceCounts
                 {
-                    CanvasCount = Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include).Length,
-                    EventSystemCount = Object.FindObjectsByType<EventSystem>(FindObjectsInactive.Include).Length,
-                    CameraCount = Object.FindObjectsByType<Camera>(FindObjectsInactive.Include).Length,
-                    ColliderCount = Object.FindObjectsByType<Collider>(FindObjectsInactive.Include).Length,
-                    Collider2DCount = Object.FindObjectsByType<Collider2D>(FindObjectsInactive.Include).Length,
-                    TilemapCount = Object.FindObjectsByType<Tilemap>(FindObjectsInactive.Include).Length
+                    CanvasCount = CountSceneComponents<Canvas>(bootstrap),
+                    EventSystemCount = CountSceneComponents<EventSystem>(bootstrap),
+                    CameraCount = CountSceneComponents<Camera>(bootstrap),
+                    ColliderCount = CountSceneComponents<Collider>(bootstrap),
+                    Collider2DCount = CountSceneComponents<Collider2D>(bootstrap),
+                    TilemapCount = CountSceneComponents<Tilemap>(bootstrap)
                 };
 
                 counts.SpawnPointCount = GetSpawnPointCount(bootstrap);
@@ -211,7 +211,7 @@ namespace NeonBlack.Gameplay.Editor
                 for (int i = 0; i < behaviours.Length; i++)
                 {
                     MonoBehaviour behaviour = behaviours[i];
-                    if (behaviour == null)
+                    if (behaviour == null || !IsInBootstrapScene(bootstrap, behaviour))
                         continue;
 
                     if (behaviour is ICameraBoundsProvider)
@@ -239,6 +239,25 @@ namespace NeonBlack.Gameplay.Editor
                 return counts;
             }
 
+            private static int CountSceneComponents<T>(GameplaySessionBootstrap bootstrap) where T : Component
+            {
+                T[] components = Object.FindObjectsByType<T>(FindObjectsInactive.Include);
+                int count = 0;
+                for (int i = 0; i < components.Length; i++)
+                {
+                    if (IsInBootstrapScene(bootstrap, components[i]))
+                        count++;
+                }
+
+                return count;
+            }
+
+            private static bool IsInBootstrapScene(GameplaySessionBootstrap bootstrap, Component component)
+            {
+                return component != null
+                    && (bootstrap == null || component.gameObject.scene == bootstrap.gameObject.scene);
+            }
+
             public string GetEnvironmentSummary()
             {
                 List<string> parts = new List<string>();
@@ -261,6 +280,8 @@ namespace NeonBlack.Gameplay.Editor
             public string GetUiSummary()
             {
                 List<string> parts = new List<string>();
+                if (CanvasCount <= 0)
+                    parts.Add("No Canvas");
                 AddPart(parts, CanvasCount, "Canvas");
                 AddPart(parts, EventSystemCount, "EventSystem");
                 AddPart(parts, HudPresenterCount, "HUD presenter");

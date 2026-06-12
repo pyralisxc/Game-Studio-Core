@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9071d64c9b0c85440ae364f043731733, type: 3}
+  m_Name: PawnDefinition
+  m_EditorClassIdentifier: NeonBlack.Gameplay.Data::NeonBlack.Gameplay.Data.Definitions.PawnDefinition
+  pawnPrefab: {fileID: 7698620586385234557, guid: 3afa60445a09a6644b1ac6a07b81ca91, type: 3}
+  defaultInputProfile: {fileID: 11400000, guid: 12b26ac573667ca479c0ff4d11009758, type: 2}
+  movementProfile: {fileID: 11400000, guid: aa693444bf73bf040b43a7f9bceafc95, type: 2}
+  combatProfile: {fileID: 11400000, guid: 1b8a362e50a524c429d2e722eef82b0e, type: 2}
+  traversalProfile: {fileID: 0}
+  presentationProfile: {fileID: 11400000, guid: cddb89d2b36a0b246a5b429d72446359, type: 2}
+  animationProfile: {fileID: 11400000, guid: e02b1a8ec3e67dd458910bd01f4c4ef7, type: 2}
+  featureModules: []

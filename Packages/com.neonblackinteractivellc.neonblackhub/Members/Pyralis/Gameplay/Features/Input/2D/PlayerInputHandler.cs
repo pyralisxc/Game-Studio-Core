@@ -189,12 +189,10 @@ public class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver, IPawnIn
     }
 
     [Inject]
-    private void Construct(IGameplayStateReader gameplayStateReader = null, IInputSettingsRegistrar inputSettingsRegistrar = null)
+    private void Construct(IGameplayStateReader gameplayStateReader = null)
     {
         if (gameplayStateReader != null)
             _gameplayStateReader = gameplayStateReader;
-        if (inputSettingsRegistrar != null)
-            _inputSettingsRegistrar = inputSettingsRegistrar;
     }
 
     public void ConfigureRuntime(IGameplayStateReader gameplayStateReader)

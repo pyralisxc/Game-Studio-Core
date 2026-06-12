@@ -13,7 +13,9 @@ namespace NeonBlack.Gameplay.Networking.Runtime
     [AuthoringContract(
         Capability = AuthoringCapability.Networking,
         Relevance = "Shared validation for the NGO-backed Pyralis runtime lane.",
-        FirstProof = "Validation issues are correctly reported in the Authoring Window when NGO components are missing."
+        FirstProof = "proof.network-ownership",
+        NativeSetup = new[] { "Add NetworkManager to the scene.", "Assign UnityTransport.", "Register networked pawn prefabs." },
+        RequiredComponentNames = new[] { nameof(NetworkManager), nameof(UnityTransport) }
     )]
     public static class PyralisNetworkSetupValidator
     {

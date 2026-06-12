@@ -10,6 +10,13 @@ namespace NeonBlack.Gameplay.Networking.Runtime
     [AuthoringContract(
         Capability = AuthoringCapability.Networking,
         Relevance = "NGO-backed session ownership policy used by networked Pyralis sessions.",
+        NativeSetup = new[]
+        {
+            "Add a Unity Netcode NetworkManager to the scene.",
+            "Assign transport and session ownership references through the Inspector.",
+            "Enter Play Mode and start host from the networked session surface."
+        },
+        RequiredInterfaceNames = new[] { nameof(ISessionOwnershipService) },
         FirstProof = "StartHost correctly triggers the NGO NetworkManager to begin listening.",
         ExpertAdvice = "This service enforces server-authoritative logic for the session lifecycle."
     )]

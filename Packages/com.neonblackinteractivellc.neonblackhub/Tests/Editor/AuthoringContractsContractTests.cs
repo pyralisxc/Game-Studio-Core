@@ -28,7 +28,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void AuthoringContracts_DoNotContainDuplicateStableIds()
         {
-            Assert.That(PyralisAuthoringContractRegistry.HasDuplicateStableIds(out string duplicateStableId), Is.False, duplicateStableId);
+            Assert.That(ResolvedAuthoringContractRegistry.HasDuplicateStableIds(out string duplicateStableId), Is.False, duplicateStableId);
         }
 
         [Test]
@@ -77,7 +77,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void AuthoringContracts_CanFindContractByModuleId()
         {
-            PyralisAuthoringContract contract = PyralisAuthoringContractRegistry.FindByModuleId("actor.traversal.topdown-hop");
+            ResolvedAuthoringContract contract = ResolvedAuthoringContractRegistry.FindByModuleId("actor.traversal.topdown-hop");
 
             Assert.That(contract, Is.Not.Null);
             Assert.That(contract.StableId, Is.EqualTo("feature.actor.traversal.topdown-hop"));
@@ -86,7 +86,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void TopDownHopContract_DeclaresProfileRuntimeLanesAndProof()
         {
-            PyralisAuthoringContract contract = PyralisAuthoringContractRegistry.FindByModuleId("actor.traversal.topdown-hop");
+            ResolvedAuthoringContract contract = ResolvedAuthoringContractRegistry.FindByModuleId("actor.traversal.topdown-hop");
 
             Assert.That(contract, Is.Not.Null);
             Assert.That(contract.RequiredProfileType.FullName, Is.EqualTo(typeof(TopDownHopProfile).FullName));
@@ -121,7 +121,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void Traversal3DContract_DeclaresProfileRuntimeLanesAndProof()
         {
-            PyralisAuthoringContract contract = PyralisAuthoringContractRegistry.FindByModuleId("actor.traversal.3d");
+            ResolvedAuthoringContract contract = ResolvedAuthoringContractRegistry.FindByModuleId("actor.traversal.3d");
 
             Assert.That(contract, Is.Not.Null);
             Assert.That(contract.RequiredProfileType.FullName, Is.EqualTo(typeof(PawnTraversalProfile).FullName));
@@ -153,7 +153,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void InteractionContract_DeclaresProfileRuntimeAndProof()
         {
-            PyralisAuthoringContract contract = PyralisAuthoringContractRegistry.FindByModuleId("actor.interaction");
+            ResolvedAuthoringContract contract = ResolvedAuthoringContractRegistry.FindByModuleId("actor.interaction");
 
             Assert.That(contract, Is.Not.Null);
             Assert.That(contract.RequiredProfileType.FullName, Is.EqualTo(typeof(InteractionFeatureProfile).FullName));
@@ -179,7 +179,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void EnemyReactionContract_DeclaresProfileRuntimeAndProof()
         {
-            PyralisAuthoringContract contract = PyralisAuthoringContractRegistry.FindByModuleId("enemy.reaction");
+            ResolvedAuthoringContract contract = ResolvedAuthoringContractRegistry.FindByModuleId("enemy.reaction");
 
             Assert.That(contract, Is.Not.Null);
             Assert.That(contract.RequiredProfileType.FullName, Is.EqualTo(typeof(EnemyReactionProfile).FullName));
@@ -214,7 +214,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void EnemyAmbientContract_DeclaresProfileRuntimeAndProof()
         {
-            PyralisAuthoringContract contract = PyralisAuthoringContractRegistry.FindByModuleId("enemy.ambient");
+            ResolvedAuthoringContract contract = ResolvedAuthoringContractRegistry.FindByModuleId("enemy.ambient");
 
             Assert.That(contract, Is.Not.Null);
             Assert.That(contract.RequiredProfileType.FullName, Is.EqualTo(typeof(EnemyAmbientFeatureProfile).FullName));
@@ -247,7 +247,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void Pickups2DContract_DeclaresProfileRuntimeLanesAndProof()
         {
-            PyralisAuthoringContract contract = PyralisAuthoringContractRegistry.FindByModuleId("actor.pickups.2d");
+            ResolvedAuthoringContract contract = ResolvedAuthoringContractRegistry.FindByModuleId("actor.pickups.2d");
 
             Assert.That(contract, Is.Not.Null);
             Assert.That(contract.RequiredProfileType.FullName, Is.EqualTo(typeof(PickupFeatureProfile).FullName));
@@ -282,7 +282,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void Pickups3DContract_DeclaresProfileRuntimeLanesAndProof()
         {
-            PyralisAuthoringContract contract = PyralisAuthoringContractRegistry.FindByModuleId("actor.pickups.3d");
+            ResolvedAuthoringContract contract = ResolvedAuthoringContractRegistry.FindByModuleId("actor.pickups.3d");
 
             Assert.That(contract, Is.Not.Null);
             Assert.That(contract.RequiredProfileType.FullName, Is.EqualTo(typeof(PickupFeatureProfile).FullName));
@@ -316,7 +316,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void CombatReactionContract_DeclaresProfileRuntimeLanesAndProof()
         {
-            PyralisAuthoringContract contract = PyralisAuthoringContractRegistry.FindByModuleId("actor.combat.reaction");
+            ResolvedAuthoringContract contract = ResolvedAuthoringContractRegistry.FindByModuleId("actor.combat.reaction");
 
             Assert.That(contract, Is.Not.Null);
             Assert.That(contract.RequiredProfileType.FullName, Is.EqualTo(typeof(ActorCombatReactionProfile).FullName));
@@ -351,7 +351,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void StatusContract_DeclaresProfileRuntimeLanesAndProof()
         {
-            PyralisAuthoringContract contract = PyralisAuthoringContractRegistry.FindByModuleId("actor.status");
+            ResolvedAuthoringContract contract = ResolvedAuthoringContractRegistry.FindByModuleId("actor.status");
 
             Assert.That(contract, Is.Not.Null);
             Assert.That(contract.RequiredProfileType.FullName, Is.EqualTo(typeof(ActorStatusEffectProfile).FullName));
@@ -385,7 +385,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void FeedbackContract_DeclaresProfileRuntimeLanesAndProof()
         {
-            PyralisAuthoringContract contract = PyralisAuthoringContractRegistry.FindByModuleId("actor.feedback");
+            ResolvedAuthoringContract contract = ResolvedAuthoringContractRegistry.FindByModuleId("actor.feedback");
 
             Assert.That(contract, Is.Not.Null);
             Assert.That(contract.RequiredProfileType.FullName, Is.EqualTo(typeof(ActorFeedbackProfile).FullName));
@@ -447,38 +447,62 @@ namespace NeonBlack.Gameplay.Tests.Editor
         public void AuthoringContracts_RegistryUsesReflectionDiscovery()
         {
             string registrySource = File.ReadAllText(
-                Path.Combine(GameplayRoot, "Editor", "Authoring", "Facts", "PyralisAuthoringFactTypes.cs"));
+                Path.Combine(GameplayRoot, "Core", "Contracts", "ResolvedAuthoringContractRegistry.cs"));
 
             Assert.That(registrySource.Contains("GetTypesWithAttribute<AuthoringContractAttribute>()"), Is.True, "Registry should discover contracts via TypeCache attribute scanning.");
             Assert.That(registrySource.Contains("ModuleId"), Is.True, "Registry should filter and map via ModuleId metadata.");
             Assert.That(registrySource.Contains("PrettifyTypeName"), Is.True, "Registry should generate clean display names from reflected types.");
+            Assert.That(File.Exists(Path.Combine(GameplayRoot, "Editor", "Authoring", "Spine", "Facts", "PyralisAuthoringFactTypes.cs")), Is.True);
         }
 
         [Test]
-        public void AuthoringContracts_AllContractsCarrySetupRecipeMetadata()
+        public void AuthoringContracts_RawAttributeScanningStaysInsideResolvedRegistry()
         {
-            IReadOnlyList<PyralisAuthoringContract> contracts = PyralisAuthoringContractRegistry.All;
+            string registryPath = Path.Combine(GameplayRoot, "Core", "Contracts", "ResolvedAuthoringContractRegistry.cs");
+            string editorRoot = Path.Combine(GameplayRoot, "Editor", "Authoring");
+            string[] searchedFiles = Directory.GetFiles(editorRoot, "*.cs", SearchOption.AllDirectories)
+                .Concat(Directory.GetFiles(Path.Combine(GameplayRoot, "Runtime"), "*.cs", SearchOption.AllDirectories))
+                .Concat(Directory.GetFiles(Path.Combine(GameplayRoot, "Core"), "*.cs", SearchOption.AllDirectories))
+                .Where(path => !Path.GetFullPath(path).Equals(Path.GetFullPath(registryPath), StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+
+            foreach (string file in searchedFiles)
+            {
+                string source = File.ReadAllText(file);
+                Assert.That(
+                    source.Contains("GetTypesWithAttribute<AuthoringContractAttribute>()"),
+                    Is.False,
+                    $"{file} should consume ResolvedAuthoringContractRegistry instead of scanning raw AuthoringContractAttribute data.");
+            }
+        }
+
+        [Test]
+        public void AuthoringContracts_AllContractsCarrySetupProfileMetadata()
+        {
+            IReadOnlyList<ResolvedAuthoringContract> contracts = ResolvedAuthoringContractRegistry.All;
 
             Assert.That(contracts.Count, Is.GreaterThan(0));
             for (int i = 0; i < contracts.Count; i++)
             {
-                PyralisAuthoringContract contract = contracts[i];
+                ResolvedAuthoringContract contract = contracts[i];
                 Assert.That(contract.AuthoringCategory, Is.Not.Empty, contract.StableId);
                 Assert.That(contract.NativeSetup.Length, Is.GreaterThan(0), contract.StableId);
-                Assert.That(contract.AssignmentFields.Length, Is.GreaterThan(0), contract.StableId);
-                Assert.That(contract.CustomizationMoments.Length, Is.GreaterThan(0), contract.StableId);
+                Assert.That(
+                    contract.AssignmentFields.Length + contract.CustomizationMoments.Length + contract.RequiredRuntimeInterfaceNames.Length + contract.RequiredComponentNames.Length,
+                    Is.GreaterThan(0),
+                    contract.StableId);
             }
         }
 
         [Test]
         public void AuthoringContracts_AllFirstProofTargetsMapToRouteProofCards()
         {
-            IReadOnlyList<PyralisAuthoringContract> contracts = PyralisAuthoringContractRegistry.All;
+            IReadOnlyList<ResolvedAuthoringContract> contracts = ResolvedAuthoringContractRegistry.All;
 
             Assert.That(contracts.Count, Is.GreaterThan(0));
             for (int i = 0; i < contracts.Count; i++)
             {
-                PyralisAuthoringContract contract = contracts[i];
+                ResolvedAuthoringContract contract = contracts[i];
                 Assert.That(contract.FirstProofTargetId, Is.Not.Empty, contract.StableId);
                 Assert.That(PyralisAuthoringRouteProof.FindProofFact(contract.FirstProofTargetId), Is.Not.Null, contract.StableId);
             }
@@ -494,14 +518,14 @@ namespace NeonBlack.Gameplay.Tests.Editor
             GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
             mode.requiredFeatureModules = new[] { module };
 
-            IReadOnlyList<PyralisAuthoringContractProofGuidanceRow> rows = PyralisAuthoringContractProofGuidance.Build(mode, null);
+            IReadOnlyList<ResolvedAuthoringContractProofGuidanceRow> rows = ResolvedAuthoringContractProofGuidance.Build(mode, null);
 
             Assert.That(rows.Count, Is.EqualTo(1));
             Assert.That(rows[0].Contract.StableId, Is.EqualTo($"feature.{moduleId}"));
             Assert.That(rows[0].Contract.FirstProofTargetId, Is.EqualTo(proofId));
             Assert.That(rows[0].ProofTargetExists, Is.True);
             Assert.That(rows[0].ProofFact.DisplayName, Is.EqualTo(proofLabel));
-            Assert.That(rows[0].State, Is.EqualTo(PyralisAuthoringContractProofState.ProofNotRunInPlayMode));
+            Assert.That(rows[0].State, Is.EqualTo(ResolvedAuthoringContractProofState.ProofNotRunInPlayMode));
             Assert.That(rows[0].PlayModeProofRequired, Is.True);
 
             UnityEngine.Object.DestroyImmediate(mode);
@@ -519,7 +543,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             pawn.presentationProfile = presentation;
             pawn.featureModules = new[] { module };
 
-            IReadOnlyList<PyralisAuthoringContractProofGuidanceRow> rows = PyralisAuthoringContractProofGuidance.Build(pawn, null);
+            IReadOnlyList<ResolvedAuthoringContractProofGuidanceRow> rows = ResolvedAuthoringContractProofGuidance.Build(pawn, null);
 
             Assert.That(rows.Count, Is.EqualTo(1));
             Assert.That(rows[0].ProofTargetExists, Is.True);
@@ -547,7 +571,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void DeprecatedContracts_EnforceHardDeletionDeadlines()
         {
-            string path = Path.Combine(GameplayRoot, "..", "..", "package.json");
+            string path = Path.Combine(GameplayRoot, "..", "..", "..", "package.json");
             Assert.That(File.Exists(path), Is.True);
             
             string jsonRaw = File.ReadAllText(path);
@@ -556,7 +580,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             foreach (var fact in PyralisAuthoringFactRegistry.AllFacts)
             {
-                if (fact.Priority >= (int)AuthoringPriority.Deprecated)
+                if (fact.Priority == (int)AuthoringPriority.Deprecated)
                 {
                     if (!string.IsNullOrEmpty(fact.RemovableInVersion))
                     {

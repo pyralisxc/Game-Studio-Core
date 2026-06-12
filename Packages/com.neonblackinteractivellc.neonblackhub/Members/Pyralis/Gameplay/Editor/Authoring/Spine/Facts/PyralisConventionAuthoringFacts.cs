@@ -29,7 +29,12 @@ namespace NeonBlack.Gameplay.Editor
         public static IReadOnlyList<PyralisAuthoringFact> GetAuthoringFacts()
         {
             List<PyralisAuthoringFact> facts = new List<PyralisAuthoringFact>();
-            // Redundant manual facts removed; PyralisReflectiveFactScanner now synthesizes these reflectively.
+            AddRequireComponentFacts<Pawn2DMovementComponent>(
+                facts,
+                "reflection.require-component.pawn-2d-movement-component",
+                "Pawn 2D Movement Component Requirements",
+                "2D pawn movement requires Unity physics body and collider components on the prefab.",
+                new[] { "capability.2d-pawn-movement", "proof.1p-pawn-movement" });
             return facts;
         }
 
@@ -214,13 +219,4 @@ namespace NeonBlack.Gameplay.Editor
         }
     }
 
-    public sealed class PyralisSprite2DConventionAuthoringFactProvider : IAuthoringConventionFactProvider
-    {
-        public IReadOnlyList<PyralisAuthoringFact> GetAuthoringFacts()
-        {
-            List<PyralisAuthoringFact> facts = new List<PyralisAuthoringFact>();
-            // Redundant manual facts removed; PyralisReflectiveFactScanner now synthesizes these reflectively.
-            return facts;
-        }
-    }
 }

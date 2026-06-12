@@ -12,9 +12,8 @@ using Object = UnityEngine.Object;
 namespace NeonBlack.Gameplay.Editor
 {
     /// <summary>
-    /// Provides a reflective way to validate game setup contracts tagged with <see cref="AuthoringContractAttribute"/>.
-    /// This unifies authoring logic into a single reflective spine, allowing new features to declare their
-    /// own validation requirements without modifying the core validator.
+    /// Validates setup contracts after they have been resolved by the central contract registry.
+    /// Attribute-backed and provider-backed contracts use the same path here.
     /// </summary>
     public static class PyralisReflectiveContractSolver
     {
@@ -23,176 +22,122 @@ namespace NeonBlack.Gameplay.Editor
             List<PyralisSetupFlowStep> steps = new List<PyralisSetupFlowStep>();
             if (bootstrap == null) return new PyralisSetupFlowReport(steps);
 
-            // Analysis of the current setup to filter relevant contracts
             var routeAnalysis = PyralisSetupRouteAnalysis.Build(bootstrap);
             var activeAxioms = DeriveAxiomsFromRoute(routeAnalysis);
 
-            // Use TypeCache for fast discovery of types with the AuthoringContract attribute
-            var typesWithAttribute = TypeCache.GetTypesWithAttribute<AuthoringContractAttribute>();
-            foreach (var type in typesWithAttribute)
+            foreach (ResolvedAuthoringContract contract in ResolvedAuthoringContractRegistry.All)
             {
-                var attributes = type.GetCustomAttributes<AuthoringContractAttribute>();
-                foreach (var attr in attributes)
+                if (contract == null || !IsRelevant(contract, routeAnalysis, activeAxioms))
+                    continue;
+
+                Object reference = null;
+                bool satisfied = true;
+                List<string> missingTypes = new List<string>();
+
+                if (contract.RequiredRuntimeInterfaceNames != null)
                 {
-                    if (attr == null) continue;
-
-                    // Only include contracts relevant to the current gameplay route and world intent
-                    if (!IsRelevant(attr, routeAnalysis, activeAxioms))
-                        continue;
-
-                    Object reference = null;
-                    bool satisfied = true;
-                    List<string> missingTypes = new List<string>();
-
-                    // Validate Required Interfaces
-                    if (attr.RequiredInterfaces != null)
+                    foreach (var ifaceName in contract.RequiredRuntimeInterfaceNames)
                     {
-                        foreach (var iface in attr.RequiredInterfaces)
+                        var resolvedType = FindTypeByName(ifaceName);
+                        var found = resolvedType != null ? FindTypeInContext(resolvedType, bootstrap) : null;
+                        if (found != null)
                         {
-                            var found = FindTypeInContext(iface, bootstrap);
-                            if (found != null)
-                            {
-                                if (reference == null) reference = found;
-                            }
-                            else
-                            {
-                                satisfied = false;
-                                missingTypes.Add(iface.Name);
-                            }
+                            if (reference == null) reference = found;
+                        }
+                        else
+                        {
+                            satisfied = false;
+                            missingTypes.Add(GetShortTypeName(ifaceName));
                         }
                     }
+                }
 
-                    if (attr.RequiredInterfaceNames != null)
+                if (contract.RequiredComponentNames != null)
+                {
+                    foreach (var compName in contract.RequiredComponentNames)
                     {
-                        foreach (var ifaceName in attr.RequiredInterfaceNames)
+                        var resolvedType = FindTypeByName(compName);
+                        var found = resolvedType != null ? FindTypeInContext(resolvedType, bootstrap) : null;
+                        if (found != null)
                         {
-                            var resolvedType = FindTypeByName(ifaceName);
-                            var found = resolvedType != null ? FindTypeInContext(resolvedType, bootstrap) : null;
-                            if (found != null)
-                            {
-                                if (reference == null) reference = found;
-                            }
-                            else
-                            {
-                                satisfied = false;
-                                missingTypes.Add(GetShortTypeName(ifaceName));
-                            }
+                            if (reference == null) reference = found;
+                        }
+                        else
+                        {
+                            satisfied = false;
+                            missingTypes.Add(GetShortTypeName(compName));
                         }
                     }
+                }
 
-                    // Validate Required Components
-                    if (attr.RequiredComponents != null)
+                if (satisfied &&
+                    contract.RequiredRuntimeInterfaceNames.Length == 0 &&
+                    contract.RequiredComponentNames.Length == 0 &&
+                    contract.SourceType != null &&
+                    (contract.SourceType.IsInterface || typeof(Component).IsAssignableFrom(contract.SourceType)))
+                {
+                    var found = FindTypeInContext(contract.SourceType, bootstrap);
+                    if (found != null)
                     {
-                        foreach (var comp in attr.RequiredComponents)
-                        {
-                            var found = FindTypeInContext(comp, bootstrap);
-                            if (found != null)
-                            {
-                                if (reference == null) reference = found;
-                            }
-                            else
-                            {
-                                satisfied = false;
-                                missingTypes.Add(comp.Name);
-                            }
-                        }
-                    }
-
-                    if (attr.RequiredComponentNames != null)
-                    {
-                        foreach (var compName in attr.RequiredComponentNames)
-                        {
-                            var resolvedType = FindTypeByName(compName);
-                            var found = resolvedType != null ? FindTypeInContext(resolvedType, bootstrap) : null;
-                            if (found != null)
-                            {
-                                if (reference == null) reference = found;
-                            }
-                            else
-                            {
-                                satisfied = false;
-                                missingTypes.Add(GetShortTypeName(compName));
-                            }
-                        }
-                    }
-
-                    // If no explicit requirements specified in the attribute, automatically check for the type itself
-                    // if it's an interface or a component implementation.
-                    if (satisfied && (attr.RequiredInterfaces == null || attr.RequiredInterfaces.Length == 0) && 
-                        (attr.RequiredComponents == null || attr.RequiredComponents.Length == 0))
-                    {
-                        if (type.IsInterface || typeof(Component).IsAssignableFrom(type))
-                        {
-                            var found = FindTypeInContext(type, bootstrap);
-                            if (found != null)
-                            {
-                                if (reference == null) reference = found;
-                            }
-                            else
-                            {
-                                satisfied = false;
-                                missingTypes.Add(type.Name);
-                            }
-                        }
-                    }
-
-                    string categoryLabel = attr.Capability != AuthoringCapability.None 
-                        ? AuthoringCapabilityRegistry.GetDisplayName(attr.Capability) 
-                        : string.Empty;
-
-                                        string label = string.IsNullOrWhiteSpace(categoryLabel) ? AuthoringCapabilityRegistry.PrettifyTypeName(type.Name) : categoryLabel;
-                    PyralisSetupFlowStepStatus status = satisfied ? PyralisSetupFlowStepStatus.Ready : PyralisSetupFlowStepStatus.Missing;
-                    
-                    string message;
-                    if (satisfied)
-                    {
-                        message = attr.SatisfactionReason ?? $"Contract for {label} is satisfied.";
-
-                        // Surfacing expert advice and first proof even when satisfied
-                        if (!string.IsNullOrEmpty(attr.FirstProof))
-                            message += $"\n\n<b>First Proof:</b> {attr.FirstProof}";
-                        
-                        // NEW: Validate AssignmentFields if satisfied
-                        if (reference != null && attr.AssignmentFields != null && attr.AssignmentFields.Length > 0)
-                        {
-                            var missingFields = ValidateAssignmentFields(reference, attr.AssignmentFields);
-                            if (missingFields.Count > 0)
-                            {
-                                satisfied = false;
-                                status = PyralisSetupFlowStepStatus.Missing;
-                                message = $"Contract {label} is present, but missing field assignments: {string.Join(", ", missingFields)}.";
-                                
-                                if (!string.IsNullOrEmpty(attr.ExpertAdvice))
-                                    message += $"\n\n<b>Expert Advice:</b> {attr.ExpertAdvice}";
-                            }
-                        }
+                        if (reference == null) reference = found;
                     }
                     else
                     {
-                        message = $"Missing required types for {label}: {string.Join(", ", missingTypes)}.";
+                        satisfied = false;
+                        missingTypes.Add(contract.SourceType.Name);
+                    }
+                }
+
+                string label = !string.IsNullOrWhiteSpace(contract.AuthoringCategory)
+                    ? contract.AuthoringCategory
+                    : contract.DisplayName;
+                PyralisSetupFlowStepStatus status = satisfied ? PyralisSetupFlowStepStatus.Ready : PyralisSetupFlowStepStatus.Recommended;
+                    
+                string message;
+                if (satisfied)
+                {
+                    message = $"Contract for {label} is satisfied.";
+
+                    if (!string.IsNullOrEmpty(contract.FirstProofTargetId))
+                        message += $"\n\n<b>First Proof:</b> {contract.FirstProofTargetId}";
                         
-                        if (!string.IsNullOrEmpty(attr.ExpertAdvice))
-                            message += $"\n\n<b>Expert Advice:</b> {attr.ExpertAdvice}";
-                    }
-
-                    PyralisSetupFlowActionKind actionKind = PyralisSetupFlowActionKind.None;
-if (!satisfied && attr.ProfileType != null)
+                    if (reference != null && contract.AssignmentFields != null && contract.AssignmentFields.Length > 0)
                     {
-                        actionKind = PyralisSetupFlowActionKind.CreateProfile;
+                        var missingFields = ValidateAssignmentFields(reference, contract.AssignmentFields);
+                        if (missingFields.Count > 0)
+                        {
+                            satisfied = false;
+                            status = PyralisSetupFlowStepStatus.Recommended;
+                            message = $"Contract {label} is present, but missing field assignments: {string.Join(", ", missingFields)}.";
+                                
+                            if (!string.IsNullOrEmpty(contract.ExpertAdvice))
+                                message += $"\n\n<b>Expert Advice:</b> {contract.ExpertAdvice}";
+                        }
                     }
+                }
+                else
+                {
+                    message = $"Missing required types for {label}: {string.Join(", ", missingTypes)}.";
+                        
+                    if (!string.IsNullOrEmpty(contract.ExpertAdvice))
+                        message += $"\n\n<b>Expert Advice:</b> {contract.ExpertAdvice}";
+                }
 
-                    steps.Add(new PyralisSetupFlowStep(
-                        label,
-                        status,
-                        message,
-                        reference ?? bootstrap,
-                        actionKind,
-                        PyralisSetupFlowStepId.Unknown,
-                        PyralisSetupFlowWorkIntent.RequiredSetup,
-                        null,
-                        attr.ProfileType
-                    ));
-}
+                PyralisSetupFlowActionKind actionKind = PyralisSetupFlowActionKind.None;
+                if (!satisfied && contract.RequiredProfileType != null)
+                    actionKind = PyralisSetupFlowActionKind.CreateProfile;
+
+                steps.Add(new PyralisSetupFlowStep(
+                    label,
+                    status,
+                    message,
+                    reference ?? bootstrap,
+                    actionKind,
+                    PyralisSetupFlowStepId.Unknown,
+                    PyralisSetupFlowWorkIntent.ProofEnhancer,
+                    null,
+                    contract.RequiredProfileType
+                ));
             }
 
             return new PyralisSetupFlowReport(steps);
@@ -251,16 +196,16 @@ if (!satisfied && attr.ProfileType != null)
             return false;
         }
 
-        public static int ResolveReflectivePriority(AuthoringContractAttribute attr, AuthoringWorldAxiom activeIntentAxioms)
+        public static int ResolveReflectivePriority(ResolvedAuthoringContract contract, AuthoringWorldAxiom activeIntentAxioms)
         {
-            int basePriority = attr.PriorityValueOverride > 0 ? attr.PriorityValueOverride : (int)attr.Priority;
-            if (attr.Priority == AuthoringPriority.Deprecated) return (int)AuthoringPriority.Deprecated;
-            if (attr.Priority == AuthoringPriority.Primary) return (int)AuthoringPriority.Primary;
+            int basePriority = contract.PriorityValueOverride > 0 ? contract.PriorityValueOverride : contract.Priority;
+            if (contract.Priority == (int)AuthoringPriority.Deprecated) return (int)AuthoringPriority.Deprecated;
+            if (contract.Priority == (int)AuthoringPriority.Primary) return (int)AuthoringPriority.Primary;
 
-            if (attr.Axioms != AuthoringWorldAxiom.None)
+            if (contract.Axioms != AuthoringWorldAxiom.None)
             {
-                int matches = CountAxiomFlags(attr.Axioms & activeIntentAxioms);
-                int clashes = CountAxiomFlags(attr.Axioms & ~activeIntentAxioms);
+                int matches = CountAxiomFlags(contract.Axioms & activeIntentAxioms);
+                int clashes = CountAxiomFlags(contract.Axioms & ~activeIntentAxioms);
                 return basePriority + (matches * 50) - (clashes * 25);
             }
             return basePriority;
@@ -309,15 +254,13 @@ if (!satisfied && attr.ProfileType != null)
             return missing;
         }
 
-        private static bool IsRelevant(AuthoringContractAttribute attr, PyralisSetupRouteAnalysis route, AuthoringWorldAxiom activeAxioms)
+        private static bool IsRelevant(ResolvedAuthoringContract contract, PyralisSetupRouteAnalysis route, AuthoringWorldAxiom activeAxioms)
         {
-            // If no filtering criteria specified, it's always relevant
-            if (attr.Capability == AuthoringCapability.None && attr.Axioms == AuthoringWorldAxiom.None)
+            if (contract.Capability == AuthoringCapability.None && contract.Axioms == AuthoringWorldAxiom.None)
                 return true;
 
-            // Check Capability relevance (matches route facts or capability families)
-            string categoryLabel = attr.Capability != AuthoringCapability.None 
-                ? AuthoringCapabilityRegistry.GetDisplayName(attr.Capability) 
+            string categoryLabel = contract.Capability != AuthoringCapability.None 
+                ? AuthoringCapabilityRegistry.GetDisplayName(contract.Capability) 
                 : string.Empty;
 
             if (!string.IsNullOrEmpty(categoryLabel))
@@ -351,10 +294,9 @@ if (!satisfied && attr.ProfileType != null)
                 }
             }
 
-            // Check Axiom relevance (overlap with derived world axioms)
-            if (attr.Axioms != AuthoringWorldAxiom.None)
+            if (contract.Axioms != AuthoringWorldAxiom.None)
             {
-                if ((attr.Axioms & activeAxioms) != 0)
+                if ((contract.Axioms & activeAxioms) != 0)
                     return true;
             }
 
@@ -402,8 +344,17 @@ if (!satisfied && attr.ProfileType != null)
             if (type == null) return null;
 
             // 1. Check if it's on the bootstrap itself
-            var componentOnBootstrap = bootstrap.GetComponent(type);
-            if (componentOnBootstrap != null) return componentOnBootstrap;
+            if (bootstrap != null && (typeof(Component).IsAssignableFrom(type) || type.IsInterface))
+            {
+                var componentOnBootstrap = bootstrap.GetComponent(type);
+                if (componentOnBootstrap != null) return componentOnBootstrap;
+            }
+
+            if (type.IsInterface)
+                return FindInterfaceInScene(type, bootstrap);
+
+            if (!typeof(Object).IsAssignableFrom(type))
+                return null;
 
             // 2. Check in the scene (active and inactive)
             var objects = Object.FindObjectsByType(type, FindObjectsInactive.Include);
@@ -412,10 +363,34 @@ if (!satisfied && attr.ProfileType != null)
                 // Prefer objects in the same scene as bootstrap if possible
                 foreach (var obj in objects)
                 {
-                    if (obj is Component comp && comp.gameObject.scene == bootstrap.gameObject.scene)
+                    if (bootstrap != null && obj is Component comp && comp.gameObject.scene == bootstrap.gameObject.scene)
                         return obj;
                 }
                 return objects[0];
+            }
+
+            return null;
+        }
+
+        private static Object FindInterfaceInScene(Type interfaceType, GameplaySessionBootstrap bootstrap)
+        {
+            MonoBehaviour[] behaviours = Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include);
+            for (int i = 0; i < behaviours.Length; i++)
+            {
+                MonoBehaviour behaviour = behaviours[i];
+                if (behaviour == null || !interfaceType.IsAssignableFrom(behaviour.GetType()))
+                    continue;
+
+                if (bootstrap == null || behaviour.gameObject.scene == bootstrap.gameObject.scene)
+                    return behaviour;
+            }
+
+            ScriptableObject[] assets = Resources.FindObjectsOfTypeAll<ScriptableObject>();
+            for (int i = 0; i < assets.Length; i++)
+            {
+                ScriptableObject asset = assets[i];
+                if (asset != null && interfaceType.IsAssignableFrom(asset.GetType()))
+                    return asset;
             }
 
             return null;

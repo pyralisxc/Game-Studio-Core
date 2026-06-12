@@ -43,7 +43,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
         }
 
         private const string FeatureRuntimeInterfaceName = "NeonBlack.Gameplay.Features.Composition.IFeatureModuleRuntime";
-        private const string RuntimeValidationProviderInterfaceName = "NeonBlack.Gameplay.Features.Composition.IRuntimeValidationProvider";
+        private static readonly string RuntimeValidationProviderInterfaceName = typeof(IRuntimeValidationProvider).FullName;
 
         public string moduleId = "feature.module";
         public string displayName = "Feature Module";
@@ -164,7 +164,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
                 return issues;
 
             // Reflective Contract Validation
-            PyralisAuthoringContract contract = PyralisAuthoringContractRegistry.FindByModuleId(moduleId);
+            ResolvedAuthoringContract contract = ResolvedAuthoringContractRegistry.FindByModuleId(moduleId);
             if (contract != null)
             {
                 // Validate Required Components
