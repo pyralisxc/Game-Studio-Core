@@ -66,6 +66,7 @@ namespace NeonBlack.Gameplay.Editor
             string[] assignmentFields = null,
             string[] customizationMoments = null,
             string blockingReason = null,
+            PyralisAuthoringNativeAction? nativeAction = null,
             ResolvedAuthoringContract sourceContract = null,
             UnityEngine.Object sourceObject = null)
         {
@@ -82,6 +83,7 @@ namespace NeonBlack.Gameplay.Editor
             AssignmentFields = assignmentFields ?? Array.Empty<string>();
             CustomizationMoments = customizationMoments ?? Array.Empty<string>();
             BlockingReason = blockingReason ?? string.Empty;
+            NativeAction = nativeAction;
             SourceContract = sourceContract;
             SourceObject = sourceObject;
         }
@@ -99,6 +101,7 @@ namespace NeonBlack.Gameplay.Editor
         public string[] AssignmentFields { get; }
         public string[] CustomizationMoments { get; }
         public string BlockingReason { get; }
+        public PyralisAuthoringNativeAction? NativeAction { get; }
         public ResolvedAuthoringContract SourceContract { get; }
         public UnityEngine.Object SourceObject { get; }
     }

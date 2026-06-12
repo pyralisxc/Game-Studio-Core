@@ -24,7 +24,8 @@ namespace NeonBlack.Gameplay.Features.Combat
     Axioms = AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.Dimensions2D,
     NativeSetup = new[] { "Add to a child GameObject of a 2D actor.", "Assign a Trigger Collider2D." },
     AssignmentFields = new[] { nameof(owner), nameof(weapon), nameof(hitFXPrefab), nameof(hitSFX), nameof(hitPauseSink) },
-    FirstProof = "proof.npc-enemy-behavior",
+    FirstProof = "The 2D hitbox damages a valid target during its active window.",
+    FirstProofTargetId = "proof.npc-enemy-behavior",
     ExpertAdvice = "HitBox2D uses OnTriggerEnter2D. Ensure the root actor has a Rigidbody2D and correct LayerMasks to detect the intended targets. Use 'Freeze Frame Duration' for impact weight."
 )]
 [RequireComponent(typeof(Collider2D))]

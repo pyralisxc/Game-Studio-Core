@@ -348,8 +348,9 @@ namespace NeonBlack.Gameplay.Editor
             bool selectedSetupProfile = selection is GameSetupProfile;
             Object currentStepSelection = selectedSetupProfile ? selection : activeSetup != null ? activeSetup : selection;
             PyralisAuthoringRouteReport currentStepReport = selectedSetupProfile ? selectionReport : activeSetup != null ? report : selectionReport;
-            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(activeSetup, report);
             PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(activeSetup);
+            PyralisAuthoringCurrentStepGraphRow currentStep = PyralisAuthoringSetupGraphProjection.BuildCurrentStepRow(graph, currentStepReport);
+            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(activeSetup, report, graph);
 
             EditorGUILayout.LabelField("Overview", EditorStyles.boldLabel);
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
@@ -364,7 +365,7 @@ namespace NeonBlack.Gameplay.Editor
             PyralisAuthoringOverviewRenderer.DrawLane("Do Now", "Only intent-required missing or blocked work appears here.", model.DoNow);
             PyralisAuthoringOverviewRenderer.DrawLane("Proof Enhancers", "Useful before Play Mode when they make the first proof clearer.", model.DoSoon);
             PyralisAuthoringOverviewRenderer.DrawContractProofGuidance(activeSetup, report);
-            DrawCurrentStepPanel(currentStepSelection, currentStepReport);
+            DrawCurrentStepPanel(currentStepSelection, currentStepReport, currentStep);
         }
 
         private void OpenIntentFromOverview()

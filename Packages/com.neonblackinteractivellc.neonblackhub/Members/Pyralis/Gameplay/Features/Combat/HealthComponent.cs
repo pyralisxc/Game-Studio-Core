@@ -5,40 +5,41 @@ using NeonBlack.Gameplay.Core.Contracts;
 
 namespace NeonBlack.Gameplay.Features.Combat
 {
-/// <summary>
-/// Universal health component - attach to any GameObject that can be damaged.
-/// </summary>
-[AuthoringContract(
-    Capability = AuthoringCapability.CombatState, 
-    Priority = AuthoringPriority.Primary,
-    Lane = "Combat",
-    Relevance = "Universal health component for players, enemies, and destructible props.",
-    NativeSetup = new[] 
-    { 
-        "Add to the actor or prop root.",
-        "Set Max Health and Faction.",
-        "Wire OnDamaged, OnHealed, or OnDeath UnityEvents for visual feedback (HitFlash, UI)."
-    },
-    AssignmentFields = new[] { nameof(maxHealth), nameof(faction), nameof(iFrameDuration) },
-    FirstProof = "proof.npc-enemy-behavior",
-    ExpertAdvice = "HealthComponent is a neutral actor. Use Faction to prevent friendly fire. Attach HitFlash or HitPause listeners to the OnDamaged event for standard combat feel. Use Faction.Neutral for props that should be destructible by everyone.",
-    DocumentationURL = "https://docs.neonblack.com/pyralis/health",
-    Axioms = AuthoringWorldAxiom.Realtime
-)]
-[AddComponentMenu("NeonBlack/Gameplay/Combat/Health Component")]
-public class HealthComponent : MonoBehaviour, IActorHealthModifierReceiver, IActorHealthState, IRuntimeValidationProvider
-{
-    public IEnumerable<string> GetRuntimeValidationIssues()
+    /// <summary>
+    /// Universal health component - attach to any GameObject that can be damaged.
+    /// </summary>
+    [AuthoringContract(
+        Capability = AuthoringCapability.CombatState,
+        Priority = AuthoringPriority.Primary,
+        Lane = "Combat",
+        Relevance = "Universal health component for players, enemies, and destructible props.",
+        NativeSetup = new[]
+        {
+            "Add to the actor or prop root.",
+            "Set Max Health and Faction.",
+            "Wire OnDamaged, OnHealed, or OnDeath UnityEvents for visual feedback (HitFlash, UI)."
+        },
+        AssignmentFields = new[] { nameof(maxHealth), nameof(faction), nameof(iFrameDuration) },
+        FirstProof = "Damage changes health state and raises configured feedback events.",
+        FirstProofTargetId = "proof.npc-enemy-behavior",
+        ExpertAdvice = "HealthComponent is a neutral actor. Use Faction to prevent friendly fire. Attach HitFlash or HitPause listeners to the OnDamaged event for standard combat feel. Use Faction.Neutral for props that should be destructible by everyone.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/health",
+        Axioms = AuthoringWorldAxiom.Realtime
+    )]
+    [AddComponentMenu("NeonBlack/Gameplay/Combat/Health Component")]
+    public class HealthComponent : MonoBehaviour, IActorHealthModifierReceiver, IActorHealthState, IRuntimeValidationProvider
     {
-        if (maxHealth <= 0f)
-            yield return "Max Health must be greater than zero.";
-        
-        if (destroyOnDeath && deathDestroyDelay < 0f)
-            yield return "Death Destroy Delay cannot be negative.";
+        public IEnumerable<string> GetRuntimeValidationIssues()
+        {
+            if (maxHealth <= 0f)
+                yield return "Max Health must be greater than zero.";
 
-        if (regenEnabled && regenRate <= 0f)
-            yield return "Regen is enabled but Regen Rate is <= 0.";
-    }
+            if (destroyOnDeath && deathDestroyDelay < 0f)
+                yield return "Death Destroy Delay cannot be negative.";
+
+            if (regenEnabled && regenRate <= 0f)
+                yield return "Regen is enabled but Regen Rate is <= 0.";
+        }
     // Inspector
     [Header("Stats")]
     [SerializeField] private float maxHealth = 100f;

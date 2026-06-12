@@ -52,6 +52,20 @@ namespace NeonBlack.Gameplay.Editor
         public PyralisAuthoringGraphEvidenceState EvidenceState => Node != null ? Node.EvidenceState : PyralisAuthoringGraphEvidenceState.Unknown;
     }
 
+    public sealed class PyralisAuthoringReflectiveContractGraphRow
+    {
+        public PyralisAuthoringReflectiveContractGraphRow(PyralisAuthoringGraphNode node)
+        {
+            Node = node;
+        }
+
+        public PyralisAuthoringGraphNode Node { get; }
+        public string Label => Node != null ? Node.Label : string.Empty;
+        public string Message => Node != null ? Node.Guidance : string.Empty;
+        public Object Target => Node != null ? Node.SourceObject : null;
+        public PyralisAuthoringGraphEvidenceState EvidenceState => Node != null ? Node.EvidenceState : PyralisAuthoringGraphEvidenceState.Unknown;
+    }
+
     public sealed class PyralisAuthoringSelectedContextGraphRow
     {
         public PyralisAuthoringSelectedContextGraphRow(
@@ -75,6 +89,33 @@ namespace NeonBlack.Gameplay.Editor
         public string RuntimeMeaning => Node != null && !string.IsNullOrWhiteSpace(Node.Guidance) ? Node.Guidance : Role;
         public string NativeSetup => Node != null && Node.NativeSetup.Length > 0 ? string.Join("; ", Node.NativeSetup) : string.Empty;
         public PyralisAuthoringGraphEvidenceState EvidenceState => Node != null ? Node.EvidenceState : PyralisAuthoringGraphEvidenceState.Unknown;
+    }
+
+    public sealed class PyralisAuthoringCurrentStepGraphRow
+    {
+        public PyralisAuthoringCurrentStepGraphRow(
+            string routeName,
+            PyralisAuthoringGraphNode node,
+            string message,
+            string detail,
+            Object target)
+        {
+            RouteName = routeName ?? string.Empty;
+            Node = node;
+            Message = message ?? string.Empty;
+            Detail = detail ?? string.Empty;
+            Target = target;
+        }
+
+        public string RouteName { get; }
+        public PyralisAuthoringGraphNode Node { get; }
+        public string Label => Node != null ? Node.Label : "Create Setup Foundation";
+        public string Message { get; }
+        public string Detail { get; }
+        public Object Target { get; }
+        public PyralisAuthoringNativeAction? NativeAction => Node?.NativeAction;
+        public PyralisAuthoringGraphEvidenceState EvidenceState => Node != null ? Node.EvidenceState : PyralisAuthoringGraphEvidenceState.Missing;
+        public bool HasNode => Node != null;
     }
 
     public static class PyralisAuthoringSetupGraphProjection
@@ -152,6 +193,32 @@ namespace NeonBlack.Gameplay.Editor
             return FindFirstUnresolvedNode(graph, PyralisAuthoringGraphNodeKind.SceneSurface);
         }
 
+        public static PyralisAuthoringCurrentStepGraphRow BuildCurrentStepRow(
+            PyralisAuthoringSetupGraph graph,
+            PyralisAuthoringRouteReport fallbackReport)
+        {
+            if (graph == null || graph.Source == null)
+                return BuildFallbackCurrentStepRow(fallbackReport);
+
+            PyralisAuthoringGraphNode node = FindFirstUnresolvedSetupFlowNode(graph)
+                ?? FindFirstUnresolvedNode(graph);
+
+            if (node != null)
+            {
+                string message = !string.IsNullOrWhiteSpace(node.Guidance)
+                    ? node.Guidance
+                    : !string.IsNullOrWhiteSpace(node.BlockingReason)
+                        ? node.BlockingReason
+                        : "Inspect this graph node and clear its missing setup evidence.";
+
+                string detail = GetCurrentStepDetail(node);
+                string routeName = GetCurrentRouteName(graph, fallbackReport);
+                return new PyralisAuthoringCurrentStepGraphRow(routeName, node, message, detail, node.SourceObject);
+            }
+
+            return BuildFallbackCurrentStepRow(fallbackReport);
+        }
+
         public static int CountNodes(PyralisAuthoringSetupGraph graph, PyralisAuthoringGraphEvidenceState evidenceState)
         {
             if (graph == null)
@@ -170,6 +237,19 @@ namespace NeonBlack.Gameplay.Editor
                     && node.SourceKind == PyralisAuthoringGraphSourceKind.SceneReadiness
                     && node.EvidenceState == evidenceState)
                 .Select(node => new PyralisAuthoringValidationGraphRow(node))
+                .ToArray();
+        }
+
+        public static IReadOnlyList<PyralisAuthoringReflectiveContractGraphRow> BuildReflectiveContractRows(PyralisAuthoringSetupGraph graph)
+        {
+            if (graph == null)
+                return Array.Empty<PyralisAuthoringReflectiveContractGraphRow>();
+
+            return graph.FindNodes(PyralisAuthoringGraphNodeKind.Contract)
+                .Where(node => node != null
+                    && node.SourceKind == PyralisAuthoringGraphSourceKind.AuthoringContract
+                    && node.EvidenceState != PyralisAuthoringGraphEvidenceState.Unknown)
+                .Select(node => new PyralisAuthoringReflectiveContractGraphRow(node))
                 .ToArray();
         }
 
@@ -238,6 +318,69 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             return null;
+        }
+
+        private static PyralisAuthoringGraphNode FindFirstUnresolvedSetupFlowNode(PyralisAuthoringSetupGraph graph)
+        {
+            if (graph == null)
+                return null;
+
+            for (int i = 0; i < graph.Nodes.Count; i++)
+            {
+                PyralisAuthoringGraphNode node = graph.Nodes[i];
+                if (node == null || node.Kind != PyralisAuthoringGraphNodeKind.ValidationEvidence)
+                    continue;
+
+                if (node.SourceKind != PyralisAuthoringGraphSourceKind.SetupFlow)
+                    continue;
+
+                if (node.EvidenceState == PyralisAuthoringGraphEvidenceState.Blocked || node.EvidenceState == PyralisAuthoringGraphEvidenceState.Missing)
+                    return node;
+            }
+
+            return null;
+        }
+
+        private static PyralisAuthoringCurrentStepGraphRow BuildFallbackCurrentStepRow(PyralisAuthoringRouteReport fallbackReport)
+        {
+            string routeName = fallbackReport != null ? fallbackReport.RouteName : "No setup route selected";
+            string message = fallbackReport != null && !string.IsNullOrWhiteSpace(fallbackReport.NextStep)
+                ? fallbackReport.NextStep
+                : "Create a Gameplay Root scene object with GameplaySessionBootstrap, then create and assign the first SessionDefinition asset.";
+            string detail = fallbackReport != null && !string.IsNullOrWhiteSpace(fallbackReport.RouteGuidance)
+                ? fallbackReport.RouteGuidance
+                : "Start with the native Unity setup chain: Hierarchy object, bootstrap component, SessionDefinition, GameModeDefinition, GameSetupProfile, capability intent, then participants.";
+
+            return new PyralisAuthoringCurrentStepGraphRow(routeName, null, message, detail, null);
+        }
+
+        private static string GetCurrentStepDetail(PyralisAuthoringGraphNode node)
+        {
+            if (node == null)
+                return string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(node.BlockingReason) && !string.Equals(node.BlockingReason, node.Guidance, StringComparison.Ordinal))
+                return node.BlockingReason;
+
+            if (node.AssignmentFields.Length > 0)
+                return "Inspector field: " + string.Join(", ", node.AssignmentFields);
+
+            if (node.NativeSetup.Length > 0)
+                return node.NativeSetup[0];
+
+            return "Use Map for topology, Validate for the full issue list, and the Inspector for field-level edits.";
+        }
+
+        private static string GetCurrentRouteName(PyralisAuthoringSetupGraph graph, PyralisAuthoringRouteReport fallbackReport)
+        {
+            if (graph != null && graph.RouteAnalysis != null)
+            {
+                PyralisAuthoringRouteDescriptor descriptor = PyralisAuthoringRouteDescriptor.Build(graph.RouteAnalysis);
+                if (descriptor != null && !string.IsNullOrWhiteSpace(descriptor.RouteName))
+                    return descriptor.RouteName;
+            }
+
+            return fallbackReport != null ? fallbackReport.RouteName : "No setup route selected";
         }
 
         private static PyralisAuthoringSetupGraphRow Row(

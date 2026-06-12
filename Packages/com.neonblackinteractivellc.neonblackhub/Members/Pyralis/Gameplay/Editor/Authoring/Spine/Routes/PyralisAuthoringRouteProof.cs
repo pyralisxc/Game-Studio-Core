@@ -473,13 +473,18 @@ namespace NeonBlack.Gameplay.Editor
                 return null;
 
             System.Collections.Generic.IReadOnlyList<PyralisAuthoringFact> facts = GetAuthoringFacts();
+            System.Collections.Generic.HashSet<string> existingProofIds = new System.Collections.Generic.HashSet<string>(System.StringComparer.Ordinal);
             for (int i = 0; i < facts.Count; i++)
             {
-                if (facts[i] != null && facts[i].MatchesStableId(stableId))
+                if (facts[i] == null)
+                    continue;
+
+                existingProofIds.Add(facts[i].StableId);
+                if (facts[i].MatchesStableId(stableId))
                     return facts[i];
             }
 
-            return null;
+            return PyralisContractProofFactProjector.FindProofFact(stableId, existingProofIds);
         }
 
         private static PyralisAuthoringFact CreateProofFact(

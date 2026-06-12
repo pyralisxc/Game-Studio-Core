@@ -16,19 +16,20 @@ namespace NeonBlack.Gameplay.Features.Scoring
     [AuthoringContract(
         Capability = AuthoringCapability.Scoring,
         Relevance = "Canonical scoring service; tracks participant scores, session points, survival time, and high-score persistence.",
-Axioms = AuthoringWorldAxiom.None,
+        Axioms = AuthoringWorldAxiom.None,
         RequiredInterfaces = new[] { typeof(IGameService), typeof(ISessionScoreService) },
         NativeSetup = new[]
         {
             "Add ParticipantScoreService to a global service GameObject in the scene.",
             "Reference the service from HUD or GameMode presenters to show score."
         },
-        FirstProof = "proof.ui-hud-menu",
+        FirstProof = "Trigger one score change and verify the service raises score events for a HUD or presenter.",
+        FirstProofTargetId = "proof.ui-hud-menu",
         AssignmentFields = new[] { nameof(OnPointsChanged), nameof(OnHighScoreBeaten) },
         ExpertAdvice = "The Scoring service stores high scores in PlayerPrefs. Use ISessionScoreService for cross-feature point collection and IParticipantRoster for multiplayer leaderboards."
     )]
     [DefaultExecutionOrder(-30)]
-public class ParticipantScoreService : MonoBehaviour, IGameService, ISessionScoreService, IRuntimeValidationProvider
+    public class ParticipantScoreService : MonoBehaviour, IGameService, ISessionScoreService, IRuntimeValidationProvider
     {
         private static int _activeInstanceCount;
 

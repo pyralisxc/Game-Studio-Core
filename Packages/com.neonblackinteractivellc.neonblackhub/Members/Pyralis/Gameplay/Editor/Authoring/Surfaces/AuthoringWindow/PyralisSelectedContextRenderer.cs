@@ -16,6 +16,7 @@ namespace NeonBlack.Gameplay.Editor
             Object selection,
             PyralisAuthoringRouteReport report,
             PyralisAuthoringSetupGraph graph,
+            PyralisAuthoringCurrentStepGraphRow currentStep,
             Action<RuntimePatternDefinition> fillMissingRuntimePatternText)
         {
             EditorGUILayout.Space(12f);
@@ -48,7 +49,7 @@ namespace NeonBlack.Gameplay.Editor
 
             if (selection is Component component)
             {
-                DrawComponentContext(component);
+                DrawComponentContext(component, currentStep);
                 return;
             }
 
@@ -120,7 +121,7 @@ namespace NeonBlack.Gameplay.Editor
             }
         }
 
-        private static void DrawComponentContext(Component component)
+        private static void DrawComponentContext(Component component, PyralisAuthoringCurrentStepGraphRow currentStep)
         {
             if (component == null)
                 return;
@@ -129,12 +130,10 @@ namespace NeonBlack.Gameplay.Editor
             EditorGUILayout.LabelField("Component Context", EditorStyles.boldLabel);
             DrawComponentRow(component);
 
-            if (component is GameplaySessionBootstrap bootstrap)
+            if (component is GameplaySessionBootstrap)
             {
-                PyralisSetupFlowReport setupFlowReport = PyralisSetupFlowValidator.BuildReport(bootstrap);
-                PyralisSetupFlowStep firstBlockingStep = setupFlowReport.FirstBlockingStep;
-                if (firstBlockingStep != null)
-                    EditorGUILayout.HelpBox(firstBlockingStep.Message, GetMessageType(firstBlockingStep.Status));
+                if (currentStep != null && currentStep.HasNode)
+                    EditorGUILayout.HelpBox(currentStep.Message, GetMessageType(currentStep.EvidenceState));
                 else
                     EditorGUILayout.HelpBox("Required setup is clear. Run the first proof pass first, then handle recommended items while the route grows.", MessageType.Info);
             }
@@ -287,9 +286,9 @@ namespace NeonBlack.Gameplay.Editor
             };
         }
 
-        private static MessageType GetMessageType(PyralisSetupFlowStepStatus status)
+        private static MessageType GetMessageType(PyralisAuthoringGraphEvidenceState state)
         {
-            return status == PyralisSetupFlowStepStatus.Missing || status == PyralisSetupFlowStepStatus.Blocked
+            return state == PyralisAuthoringGraphEvidenceState.Missing || state == PyralisAuthoringGraphEvidenceState.Blocked
                 ? MessageType.Warning
                 : MessageType.Info;
         }

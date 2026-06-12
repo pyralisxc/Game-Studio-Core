@@ -14,18 +14,19 @@ namespace NeonBlack.Gameplay.Features.Composition
     [AuthoringContract(
         Capability = AuthoringCapability.Setup | AuthoringCapability.Session,
         Relevance = "Installs runtime feature prefabs declared by actor definitions or profiles.",
-        NativeSetup = new[] 
-        { 
-            "Add one host to the actor root.", 
+        NativeSetup = new[]
+        {
+            "Add one host to the actor root.",
             "Modules are assigned by the actor definition during initialization.",
             "Runtime feature prefabs should contain IFeatureModuleRuntime components."
         },
         RequiredInterfaces = new[] { typeof(IRuntimeValidationProvider) },
-        FirstProof = "proof.custom-object-effect",
+        FirstProof = "Authored feature prefabs are installed on the actor at runtime.",
+        FirstProofTargetId = "proof.custom-object-effect",
         ExpertAdvice = "The ActorFeatureHost is the central manager for dynamic actor capabilities. It handles dependency injection (VContainer) for newly instantiated feature prefabs.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/composition"
     )]
-[AddComponentMenu("NeonBlack/Gameplay/Composition/Actor Feature Host")]
+    [AddComponentMenu("NeonBlack/Gameplay/Composition/Actor Feature Host")]
     [DisallowMultipleComponent]
     public class ActorFeatureHost : MonoBehaviour, IRuntimeValidationProvider
     {

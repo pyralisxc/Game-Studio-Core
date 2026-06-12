@@ -452,7 +452,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void PyralisAuthoringOverviewSnapshot_NoPawnSetup_IsReadyWithRecommendedTabletopNextSteps()
+        public void PyralisAuthoringOverviewModel_NoPawnSetup_IsReadyWithRecommendedTabletopNextSteps()
         {
             GameObject root = new GameObject("Gameplay Root");
             GameplaySessionBootstrap bootstrap = root.AddComponent<GameplaySessionBootstrap>();
@@ -479,14 +479,15 @@ namespace NeonBlack.Gameplay.Tests.Editor
             SetObjectReference(bootstrap, "sessionDefinition", session);
 
             PyralisAuthoringRouteReport routeReport = PyralisAuthoringRouteReport.Build(bootstrap);
-            PyralisAuthoringOverviewSnapshot snapshot = PyralisAuthoringOverviewSnapshot.Build(bootstrap, routeReport);
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
+            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(bootstrap, routeReport, graph);
 
-            Assert.That(snapshot.RouteName, Is.EqualTo("Tabletop route"));
-            Assert.That(snapshot.ReadyToPressPlay, Is.True);
-            Assert.That(snapshot.RequiredMissingCount, Is.EqualTo(0));
-            Assert.That(snapshot.RecommendedNextCount, Is.GreaterThan(0));
-            Assert.That(snapshot.RecommendedNextLabel, Does.Contain("board spaces").Or.Contain("Tabletop"));
-            Assert.That(snapshot.OptionalLaterCount, Is.GreaterThan(0));
+            Assert.That(model.RouteName, Is.EqualTo("Tabletop route"));
+            Assert.That(model.ReadyToPressPlay, Is.True);
+            Assert.That(model.DoNow, Is.Empty);
+            Assert.That(model.DoSoon.Count, Is.GreaterThan(0));
+            Assert.That(model.DoSoon.Any(issue => issue.Message.Contains("board") || issue.Message.Contains("Tabletop")), Is.True);
+            Assert.That(model.Later.Count, Is.GreaterThan(0));
 
             Object.DestroyImmediate(session);
             Object.DestroyImmediate(participant);
@@ -499,7 +500,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void PyralisAuthoringOverviewSnapshot_PawnSetupMissingPawn_IsNotReadyAndNamesRequiredFix()
+        public void PyralisAuthoringOverviewModel_PawnSetupMissingPawn_IsNotReadyAndNamesRequiredFix()
         {
             GameObject root = new GameObject("Gameplay Root");
             GameplaySessionBootstrap bootstrap = root.AddComponent<GameplaySessionBootstrap>();
@@ -522,12 +523,13 @@ namespace NeonBlack.Gameplay.Tests.Editor
             SetObjectReference(bootstrap, "sessionDefinition", session);
 
             PyralisAuthoringRouteReport routeReport = PyralisAuthoringRouteReport.Build(bootstrap);
-            PyralisAuthoringOverviewSnapshot snapshot = PyralisAuthoringOverviewSnapshot.Build(bootstrap, routeReport);
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
+            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(bootstrap, routeReport, graph);
 
-            Assert.That(snapshot.RouteName, Is.EqualTo("Pawn-backed route"));
-            Assert.That(snapshot.ReadyToPressPlay, Is.False);
-            Assert.That(snapshot.RequiredMissingCount, Is.GreaterThan(0));
-            Assert.That(snapshot.RequiredMissingLabel, Does.Contain("PawnDefinition"));
+            Assert.That(model.RouteName, Is.EqualTo("Pawn-backed route"));
+            Assert.That(model.ReadyToPressPlay, Is.False);
+            Assert.That(model.DoNow.Count, Is.GreaterThan(0));
+            Assert.That(model.DoNow.Select(issue => issue.Message), Has.Some.Contains("PawnDefinition"));
 
             Object.DestroyImmediate(session);
             Object.DestroyImmediate(participant);
@@ -606,7 +608,9 @@ namespace NeonBlack.Gameplay.Tests.Editor
             prefab.AddComponent<TestPawnPresentation>();
             prefab.AddComponent<TestPawnInput>();
             PyralisSetupFlowReport readyReport = PyralisSetupFlowValidator.BuildReport(bootstrap);
-            PyralisAuthoringOverviewModel overview = PyralisAuthoringOverviewModel.Build(bootstrap, PyralisAuthoringRouteReport.Build(bootstrap));
+            PyralisAuthoringRouteReport routeReport = PyralisAuthoringRouteReport.Build(bootstrap);
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
+            PyralisAuthoringOverviewModel overview = PyralisAuthoringOverviewModel.Build(bootstrap, routeReport, graph);
 
             Assert.That(readyReport.GetStep("Assign Participant Pawn").Status, Is.EqualTo(PyralisSetupFlowStepStatus.Ready));
             Assert.That(readyReport.GetStep("Tune Pawn Visuals And Collision").Status, Is.EqualTo(PyralisSetupFlowStepStatus.Recommended));
@@ -754,7 +758,9 @@ namespace NeonBlack.Gameplay.Tests.Editor
             SetObjectReference(bootstrap, "sessionDefinition", session);
 
             PyralisSceneReadinessReport readiness = PyralisSceneReadinessValidator.BuildReport(bootstrap);
-            PyralisAuthoringOverviewModel overview = PyralisAuthoringOverviewModel.Build(bootstrap, PyralisAuthoringRouteReport.Build(bootstrap));
+            PyralisAuthoringRouteReport routeReport = PyralisAuthoringRouteReport.Build(bootstrap);
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
+            PyralisAuthoringOverviewModel overview = PyralisAuthoringOverviewModel.Build(bootstrap, routeReport, graph);
 
             Assert.That(readiness.IsReady, Is.True);
             Assert.That(readiness.GetIssues(PyralisSceneReadinessSeverity.ProofEnhancer).Any(issue => issue.Category == PyralisSceneReadinessCategory.Physics), Is.True);
@@ -1744,6 +1750,43 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
         }
 
         [Test]
+        public void PyralisRuntimeCapabilityFamilyMap_CentralizesContractCapabilityProjection()
+        {
+            RuntimeCapabilityFamily[] brawlerFamilies = PyralisRuntimeCapabilityFamilyMap.GetFamilies(
+                AuthoringCapability.Movement | AuthoringCapability.Combat | AuthoringCapability.Input | AuthoringCapability.Animation | AuthoringCapability.Camera);
+            Assert.That(brawlerFamilies, Does.Contain(RuntimeCapabilityFamily.CharacterPawnGameplay));
+            Assert.That(brawlerFamilies, Does.Contain(RuntimeCapabilityFamily.Combat));
+            Assert.That(brawlerFamilies, Does.Contain(RuntimeCapabilityFamily.CameraInput));
+            Assert.That(brawlerFamilies, Does.Contain(RuntimeCapabilityFamily.AnimationPresentation));
+
+            RuntimeCapabilityFamily[] rangedFamilies = PyralisRuntimeCapabilityFamilyMap.GetFamilies(AuthoringCapability.RangedFlow);
+            Assert.That(rangedFamilies, Does.Contain(RuntimeCapabilityFamily.GunsProjectiles));
+            Assert.That(rangedFamilies, Does.Contain(RuntimeCapabilityFamily.Combat));
+
+            RuntimeCapabilityFamily[] tabletopFamilies = PyralisRuntimeCapabilityFamilyMap.GetFamilies(
+                AuthoringCapability.None,
+                RuntimeCapabilityLaneTag.TabletopBoard);
+            Assert.That(tabletopFamilies, Does.Contain(RuntimeCapabilityFamily.BoardCardTabletop));
+
+            RuntimeCapabilityFamily[] cursorFamilies = PyralisRuntimeCapabilityFamilyMap.GetFamilies(
+                AuthoringCapability.None,
+                RuntimeCapabilityLaneTag.CameraCursor);
+            Assert.That(cursorFamilies, Does.Contain(RuntimeCapabilityFamily.CameraInput));
+
+            RuntimeCapabilityFamily[] proceduralFamilies = PyralisRuntimeCapabilityFamilyMap.GetFamilies(
+                AuthoringCapability.Environment,
+                RuntimeCapabilityLaneTag.Mixed,
+                AuthoringWorldAxiom.InfiniteSpace);
+            Assert.That(proceduralFamilies, Does.Contain(RuntimeCapabilityFamily.ProceduralGeneration));
+
+            RuntimeCapabilityFamily[] networkFamilies = PyralisRuntimeCapabilityFamilyMap.GetFamilies(
+                AuthoringCapability.None,
+                RuntimeCapabilityLaneTag.Mixed,
+                AuthoringWorldAxiom.Networked);
+            Assert.That(networkFamilies, Does.Contain(RuntimeCapabilityFamily.Networking));
+        }
+
+        [Test]
         public void PyralisAuthoringIntentAdvisor_CurrentIntentCards_AreRankedFromCookbook()
         {
             PyralisAuthoringIntentModel tabletop = PyralisAuthoringIntentAdvisor.Build(
@@ -2301,7 +2344,7 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
         [Test]
         public void PyralisAuthoringOverviewModel_NoActiveSetup_GuidesBlankSceneFoundation()
         {
-            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(null, null);
+            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(null, null, null);
 
             Assert.That(model.ReadyToPressPlay, Is.False);
             Assert.That(model.FirstProofLabel, Is.EqualTo("Create Setup Foundation"));
@@ -2321,7 +2364,8 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
             GameplaySessionBootstrap bootstrap = root.AddComponent<GameplaySessionBootstrap>();
             PyralisAuthoringRouteReport routeReport = PyralisAuthoringRouteReport.Build(bootstrap);
 
-            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(bootstrap, routeReport);
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
+            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(bootstrap, routeReport, graph);
 
             Assert.That(model.ReadyToPressPlay, Is.False);
             Assert.That(model.DoNow.Select(issue => issue.Label), Does.Contain("Assign Session Definition"));
@@ -2398,7 +2442,8 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
             SetObjectReference(bootstrap, "sessionDefinition", session);
             PyralisAuthoringRouteReport routeReport = PyralisAuthoringRouteReport.Build(bootstrap);
 
-            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(bootstrap, routeReport);
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
+            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(bootstrap, routeReport, graph);
 
             Assert.That(model.DoNow.Select(issue => issue.Label), Does.Contain("Tabletop Runtime Contract"));
             Assert.That(model.DoSoon.Select(issue => issue.Label), Does.Contain("Assign Tabletop Selection Surface"));
@@ -2441,7 +2486,8 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
             SetObjectReference(bootstrap, "sessionDefinition", session);
             PyralisAuthoringRouteReport routeReport = PyralisAuthoringRouteReport.Build(bootstrap);
 
-            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(bootstrap, routeReport);
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
+            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(bootstrap, routeReport, graph);
 
             Assert.That(model.FirstProofLabel, Is.EqualTo("1P Pawn Movement Proof"));
             Assert.That(model.FirstProofGuidance, Does.Contain("spawn the pawn"));
@@ -2533,7 +2579,8 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
             SetObjectReference(bootstrap, "sessionDefinition", session);
             PyralisAuthoringRouteReport routeReport = PyralisAuthoringRouteReport.Build(bootstrap);
 
-            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(bootstrap, routeReport);
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
+            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(bootstrap, routeReport, graph);
 
             Assert.That(model.FirstProofLabel, Is.EqualTo("Board/Card Action Proof"));
             Assert.That(model.FirstProofGuidance, Does.Contain("rules-backed selection"));
@@ -2939,7 +2986,8 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
 
             PyralisSetupFlowReport report = PyralisSetupFlowValidator.BuildReport(bootstrap);
             PyralisAuthoringRouteReport routeReport = PyralisAuthoringRouteReport.Build(bootstrap);
-            PyralisAuthoringOverviewModel overview = PyralisAuthoringOverviewModel.Build(bootstrap, routeReport);
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
+            PyralisAuthoringOverviewModel overview = PyralisAuthoringOverviewModel.Build(bootstrap, routeReport, graph);
 
             PyralisSetupFlowStep cameraRigStep = report.GetStep("Assign Camera Rig");
             Assert.That(cameraRigStep.Status, Is.EqualTo(PyralisSetupFlowStepStatus.Recommended));

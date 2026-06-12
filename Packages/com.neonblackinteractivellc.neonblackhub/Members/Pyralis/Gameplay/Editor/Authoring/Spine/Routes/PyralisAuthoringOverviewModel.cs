@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Editor.Inspectors;
 using UnityEngine;
 
@@ -109,15 +108,17 @@ namespace NeonBlack.Gameplay.Editor
         public IReadOnlyList<PyralisAuthoringOverviewIssue> DoSoon => _doSoon;
         public IReadOnlyList<PyralisAuthoringOverviewIssue> Later => _later;
 
-        public static PyralisAuthoringOverviewModel Build(Object activeSetup, PyralisAuthoringRouteReport routeReport)
+        public static PyralisAuthoringOverviewModel Build(
+            Object activeSetup,
+            PyralisAuthoringRouteReport routeReport,
+            PyralisAuthoringSetupGraph graph)
         {
             string routeName = routeReport != null ? routeReport.RouteName : "No setup route selected";
-            GameplaySessionBootstrap bootstrap = PyralisAuthoringSetupContextResolver.GetSelectedBootstrap(activeSetup);
             List<PyralisAuthoringOverviewIssue> doNow = new List<PyralisAuthoringOverviewIssue>();
             List<PyralisAuthoringOverviewIssue> doSoon = new List<PyralisAuthoringOverviewIssue>();
             List<PyralisAuthoringOverviewIssue> later = new List<PyralisAuthoringOverviewIssue>();
 
-            if (bootstrap == null)
+            if (graph == null || graph.Source == null)
             {
                 AddNoActiveSetupIssues(activeSetup, routeReport, doNow);
                 return new PyralisAuthoringOverviewModel(
@@ -136,13 +137,11 @@ namespace NeonBlack.Gameplay.Editor
                     later);
             }
 
-            PyralisAuthoringRouteDescriptor route = PyralisAuthoringRouteDescriptor.Build(activeSetup);
-            PyralisSetupFlowReport setupFlowReport = PyralisSetupFlowValidator.BuildReport(bootstrap);
-            PyralisSceneReadinessReport readinessReport = PyralisSceneReadinessValidator.BuildReport(bootstrap);
-            for (int i = 0; i < setupFlowReport.Steps.Count; i++)
+            PyralisAuthoringRouteDescriptor route = PyralisAuthoringRouteDescriptor.Build(graph.RouteAnalysis);
+            for (int i = 0; i < graph.Nodes.Count; i++)
             {
-                PyralisSetupFlowStep step = setupFlowReport.Steps[i];
-                PyralisAuthoringOverviewIssue issue = BuildIssue(step);
+                PyralisAuthoringGraphNode node = graph.Nodes[i];
+                PyralisAuthoringOverviewIssue issue = BuildIssue(node);
                 if (issue == null)
                     continue;
 
@@ -160,7 +159,7 @@ namespace NeonBlack.Gameplay.Editor
                 }
             }
 
-            bool requiredSetupClear = setupFlowReport.RequiredIssueCount == 0;
+            bool requiredSetupClear = CountDoNowBlockers(graph) == 0;
 
             return new PyralisAuthoringOverviewModel(
                 routeName,
@@ -172,7 +171,7 @@ namespace NeonBlack.Gameplay.Editor
                 GetFirstProofSuccessCriteria(route),
                 GetFirstProofDeferUntilAfter(route),
                 GetFirstProofChainSummary(route),
-                BuildPlayModeChecklist(setupFlowReport, readinessReport, route),
+                BuildPlayModeChecklist(graph, route),
                 doNow,
                 doSoon,
                 later);
@@ -190,16 +189,16 @@ namespace NeonBlack.Gameplay.Editor
         }
 
         private static List<PyralisAuthoringPlayModeChecklistItem> BuildPlayModeChecklist(
-            PyralisSetupFlowReport setupFlowReport,
-            PyralisSceneReadinessReport readinessReport,
+            PyralisAuthoringSetupGraph graph,
             PyralisAuthoringRouteDescriptor route)
         {
             List<PyralisAuthoringPlayModeChecklistItem> items = new List<PyralisAuthoringPlayModeChecklistItem>();
-            bool requiredClear = setupFlowReport != null && setupFlowReport.RequiredIssueCount == 0;
+            bool requiredClear = CountDoNowBlockers(graph) == 0;
+            PyralisAuthoringGraphNode firstRequired = FindFirstDoNowBlocker(graph);
             items.Add(new PyralisAuthoringPlayModeChecklistItem(
                 "Required setup",
                 requiredClear,
-                requiredClear ? "Do Now is clear." : setupFlowReport?.FirstBlockingStep?.Message ?? "Clear the selected intent's Do Now setup before Play Mode."));
+                requiredClear ? "Do Now is clear." : firstRequired?.Guidance ?? "Clear the selected intent's Do Now setup before Play Mode."));
 
             items.Add(new PyralisAuthoringPlayModeChecklistItem(
                 "First proof target",
@@ -209,29 +208,29 @@ namespace NeonBlack.Gameplay.Editor
             AddReadinessChecklistItem(
                 items,
                 "Scene visibility",
-                readinessReport,
-                PyralisSceneReadinessCategory.CameraAudio,
+                graph,
+                "CameraAudio",
                 "Camera/audio checks are clear enough for a narrow visual proof.");
 
             AddReadinessChecklistItem(
                 items,
                 "Input route",
-                readinessReport,
-                PyralisSceneReadinessCategory.Input,
+                graph,
+                "Input",
                 "InputProfile, action map, Move action, and UI input module checks are clear.");
 
             AddReadinessChecklistItem(
                 items,
                 "Presentation",
-                readinessReport,
-                PyralisSceneReadinessCategory.Presentation,
+                graph,
+                "Presentation",
                 "Visible sprites/renderers and presentation-route checks are clear.");
 
             AddReadinessChecklistItem(
                 items,
                 "Physics feel",
-                readinessReport,
-                PyralisSceneReadinessCategory.Physics,
+                graph,
+                "Physics",
                 "Physics lane and collider checks are clear enough to judge movement feel.");
 
             return items;
@@ -240,32 +239,35 @@ namespace NeonBlack.Gameplay.Editor
         private static void AddReadinessChecklistItem(
             List<PyralisAuthoringPlayModeChecklistItem> items,
             string label,
-            PyralisSceneReadinessReport readinessReport,
-            PyralisSceneReadinessCategory category,
+            PyralisAuthoringSetupGraph graph,
+            string category,
             string readyDetail)
         {
-            PyralisSceneReadinessIssue issue = FindFirstReadinessIssue(readinessReport, category);
+            PyralisAuthoringGraphNode issue = FindFirstSceneReadinessNode(graph, category);
             items.Add(new PyralisAuthoringPlayModeChecklistItem(
                 label,
-                issue == null || issue.Severity != PyralisSceneReadinessSeverity.RequiredBeforePlay,
-                issue == null ? readyDetail : issue.Message));
+                issue == null || issue.EvidenceState != PyralisAuthoringGraphEvidenceState.Blocked,
+                issue == null ? readyDetail : issue.Guidance));
         }
 
-        private static PyralisSceneReadinessIssue FindFirstReadinessIssue(
-            PyralisSceneReadinessReport readinessReport,
-            PyralisSceneReadinessCategory category)
+        private static PyralisAuthoringGraphNode FindFirstSceneReadinessNode(
+            PyralisAuthoringSetupGraph graph,
+            string category)
         {
-            if (readinessReport == null)
+            if (graph == null || string.IsNullOrWhiteSpace(category))
                 return null;
 
-            PyralisSceneReadinessIssue fallback = null;
-            for (int i = 0; i < readinessReport.Issues.Count; i++)
+            PyralisAuthoringGraphNode fallback = null;
+            for (int i = 0; i < graph.Nodes.Count; i++)
             {
-                PyralisSceneReadinessIssue issue = readinessReport.Issues[i];
-                if (issue == null || issue.Category != category)
+                PyralisAuthoringGraphNode issue = graph.Nodes[i];
+                if (issue == null || issue.SourceKind != PyralisAuthoringGraphSourceKind.SceneReadiness)
                     continue;
 
-                if (issue.Severity == PyralisSceneReadinessSeverity.RequiredBeforePlay)
+                if (!string.Equals(issue.Label, category, System.StringComparison.Ordinal))
+                    continue;
+
+                if (issue.EvidenceState == PyralisAuthoringGraphEvidenceState.Blocked)
                     return issue;
 
                 fallback ??= issue;
@@ -313,57 +315,134 @@ namespace NeonBlack.Gameplay.Editor
                 GetNativeActionGuidance("Create Gameplay Root", message)));
         }
 
-        private static PyralisAuthoringOverviewIssue BuildIssue(PyralisSetupFlowStep step)
+        private static PyralisAuthoringOverviewIssue BuildIssue(PyralisAuthoringGraphNode node)
         {
-            if (step == null || step.Status == PyralisSetupFlowStepStatus.Ready)
+            if (node == null || node.EvidenceState == PyralisAuthoringGraphEvidenceState.Ready)
                 return null;
 
-            PyralisAuthoringOverviewLane lane = GetLane(step.Status, step.WorkIntent);
+            if (node.SourceKind != PyralisAuthoringGraphSourceKind.SetupFlow
+                && node.SourceKind != PyralisAuthoringGraphSourceKind.SceneReadiness)
+                return null;
+
+            PyralisAuthoringOverviewLane lane = GetLane(node);
             return new PyralisAuthoringOverviewIssue(
                 lane,
-                step.Label,
-                step.Status,
-                step.Message,
-                step.ReferencedObject,
-                GetEvidence(step),
-                GetNativeActionGuidance(step),
-                step.WorkIntent);
+                node.Label,
+                GetStatus(node.EvidenceState),
+                node.Guidance,
+                node.SourceObject,
+                GetEvidence(node),
+                node.NativeAction.HasValue ? node.NativeAction.Value.ToGuidanceSentence() : GetFirstNativeSetup(node),
+                GetWorkIntent(lane));
         }
 
-        private static string GetNativeActionGuidance(PyralisSetupFlowStep step)
+        private static PyralisAuthoringOverviewLane GetLane(PyralisAuthoringGraphNode node)
         {
-            if (step == null)
-                return string.Empty;
+            if (node == null)
+                return PyralisAuthoringOverviewLane.Later;
 
-            if (step.NativeAction.HasValue)
-                return step.NativeAction.Value.ToGuidanceSentence();
+            if (node.EvidenceState == PyralisAuthoringGraphEvidenceState.Blocked)
+                return PyralisAuthoringOverviewLane.DoNow;
 
-            return string.Empty;
-        }
-
-        private static PyralisAuthoringOverviewLane GetLane(PyralisSetupFlowStepStatus status, PyralisSetupFlowWorkIntent workIntent)
-        {
-            switch (status)
+            if (node.EvidenceState == PyralisAuthoringGraphEvidenceState.Missing)
             {
-                case PyralisSetupFlowStepStatus.Missing:
-                case PyralisSetupFlowStepStatus.Blocked:
+                if (node.SourceKind == PyralisAuthoringGraphSourceKind.SetupFlow)
                     return PyralisAuthoringOverviewLane.DoNow;
-                case PyralisSetupFlowStepStatus.Recommended:
-                    return workIntent == PyralisSetupFlowWorkIntent.FeatureCard
-                        ? PyralisAuthoringOverviewLane.Later
-                        : PyralisAuthoringOverviewLane.DoSoon;
-                case PyralisSetupFlowStepStatus.Optional:
+
+                return PyralisAuthoringOverviewLane.DoSoon;
+            }
+
+            if (node.EvidenceState == PyralisAuthoringGraphEvidenceState.CandidateDetected)
+                return PyralisAuthoringOverviewLane.DoSoon;
+
+            return PyralisAuthoringOverviewLane.Later;
+        }
+
+        private static string GetEvidence(PyralisAuthoringGraphNode node)
+        {
+            if (node.SourceObject != null)
+                return "Evidence: " + node.SourceObject.name + " (" + node.SourceObject.GetType().Name + ")";
+
+            return "Evidence: " + node.SourceKind + " / " + node.StableId;
+        }
+
+        private static int CountDoNowBlockers(PyralisAuthoringSetupGraph graph)
+        {
+            int count = 0;
+            if (graph == null)
+                return count;
+
+            for (int i = 0; i < graph.Nodes.Count; i++)
+            {
+                if (IsDoNowBlocker(graph.Nodes[i]))
+                    count++;
+            }
+
+            return count;
+        }
+
+        private static PyralisAuthoringGraphNode FindFirstDoNowBlocker(PyralisAuthoringSetupGraph graph)
+        {
+            if (graph == null)
+                return null;
+
+            for (int i = 0; i < graph.Nodes.Count; i++)
+            {
+                if (IsDoNowBlocker(graph.Nodes[i]))
+                    return graph.Nodes[i];
+            }
+
+            return null;
+        }
+
+        private static bool IsDoNowBlocker(PyralisAuthoringGraphNode node)
+        {
+            if (node == null)
+                return false;
+
+            if (node.EvidenceState == PyralisAuthoringGraphEvidenceState.Blocked)
+                return true;
+
+            return node.SourceKind == PyralisAuthoringGraphSourceKind.SetupFlow
+                && node.EvidenceState == PyralisAuthoringGraphEvidenceState.Missing;
+        }
+
+        private static PyralisSetupFlowStepStatus GetStatus(PyralisAuthoringGraphEvidenceState evidenceState)
+        {
+            switch (evidenceState)
+            {
+                case PyralisAuthoringGraphEvidenceState.Blocked:
+                    return PyralisSetupFlowStepStatus.Blocked;
+                case PyralisAuthoringGraphEvidenceState.Missing:
+                    return PyralisSetupFlowStepStatus.Missing;
+                case PyralisAuthoringGraphEvidenceState.CandidateDetected:
+                    return PyralisSetupFlowStepStatus.Recommended;
+                case PyralisAuthoringGraphEvidenceState.Optional:
+                    return PyralisSetupFlowStepStatus.Optional;
                 default:
-                    return PyralisAuthoringOverviewLane.Later;
+                    return PyralisSetupFlowStepStatus.Ready;
             }
         }
 
-        private static string GetEvidence(PyralisSetupFlowStep step)
+        private static PyralisSetupFlowWorkIntent GetWorkIntent(PyralisAuthoringOverviewLane lane)
         {
-            if (step.ReferencedObject != null)
-                return "Evidence: " + step.ReferencedObject.name + " (" + step.ReferencedObject.GetType().Name + ")";
+            switch (lane)
+            {
+                case PyralisAuthoringOverviewLane.DoNow:
+                    return PyralisSetupFlowWorkIntent.RequiredSetup;
+                case PyralisAuthoringOverviewLane.DoSoon:
+                    return PyralisSetupFlowWorkIntent.ProofEnhancer;
+                default:
+                    return PyralisSetupFlowWorkIntent.FeatureCard;
+            }
+        }
 
-            return "Evidence: no referenced object is currently assigned for this step.";
+        private static string GetFirstNativeSetup(PyralisAuthoringGraphNode node)
+        {
+            if (node == null || node.NativeSetup.Length == 0)
+                return string.Empty;
+
+            return node.NativeSetup[0];
         }
 
         private static string GetBestNextAction(
@@ -440,111 +519,4 @@ namespace NeonBlack.Gameplay.Editor
         }
     }
 
-    public sealed class PyralisAuthoringOverviewSnapshot
-    {
-        private PyralisAuthoringOverviewSnapshot(
-            string routeName,
-            bool readyToPressPlay,
-            int requiredMissingCount,
-            int recommendedNextCount,
-            int optionalLaterCount,
-            int readyCount,
-            string requiredMissingLabel,
-            string recommendedNextLabel,
-            string optionalLaterLabel)
-        {
-            RouteName = routeName;
-            ReadyToPressPlay = readyToPressPlay;
-            RequiredMissingCount = requiredMissingCount;
-            RecommendedNextCount = recommendedNextCount;
-            OptionalLaterCount = optionalLaterCount;
-            ReadyCount = readyCount;
-            RequiredMissingLabel = requiredMissingLabel;
-            RecommendedNextLabel = recommendedNextLabel;
-            OptionalLaterLabel = optionalLaterLabel;
-        }
-
-        public string RouteName { get; }
-        public bool ReadyToPressPlay { get; }
-        public int RequiredMissingCount { get; }
-        public int RecommendedNextCount { get; }
-        public int OptionalLaterCount { get; }
-        public int ReadyCount { get; }
-        public string RequiredMissingLabel { get; }
-        public string RecommendedNextLabel { get; }
-        public string OptionalLaterLabel { get; }
-
-        public static PyralisAuthoringOverviewSnapshot Build(Object activeSetup, PyralisAuthoringRouteReport routeReport)
-        {
-            GameplaySessionBootstrap bootstrap = PyralisAuthoringSetupContextResolver.GetSelectedBootstrap(activeSetup);
-            if (bootstrap == null)
-            {
-                int validationCount = routeReport != null ? routeReport.ValidationIssues.Count : 0;
-                return new PyralisAuthoringOverviewSnapshot(
-                    routeReport != null ? routeReport.RouteName : "No setup route selected",
-                    false,
-                    validationCount,
-                    0,
-                    0,
-                    0,
-                    validationCount > 0 ? "Resolve selected asset validation before scene readiness can be checked." : "Select or pin a GameplaySessionBootstrap to check scene readiness.",
-                    "No scene-level recommendations until a bootstrap is active.",
-                    "Optional scene roots are shown after a bootstrap is active.");
-            }
-
-            PyralisSetupFlowReport setupFlowReport = PyralisSetupFlowValidator.BuildReport(bootstrap);
-            PyralisSetupFlowStep firstRequired = setupFlowReport.FirstBlockingStep;
-            PyralisSetupFlowStep firstRecommended = FindFirstRecommendedStep(setupFlowReport);
-            PyralisSetupFlowStep firstOptional = FindFirstStep(setupFlowReport, PyralisSetupFlowStepStatus.Optional);
-
-            return new PyralisAuthoringOverviewSnapshot(
-                routeReport != null ? routeReport.RouteName : "No setup route selected",
-                setupFlowReport.RequiredIssueCount == 0,
-                setupFlowReport.RequiredIssueCount,
-                setupFlowReport.RecommendedIssueCount,
-                setupFlowReport.OptionalCount,
-                setupFlowReport.ReadyCount,
-                firstRequired != null ? firstRequired.Label + ": " + firstRequired.Message : "Required setup is clear.",
-                firstRecommended != null ? firstRecommended.Label + ": " + firstRecommended.Message : "No recommended next item.",
-                firstOptional != null ? firstOptional.Label + ": " + firstOptional.Message : "No optional later item.");
-        }
-
-        private static PyralisSetupFlowStep FindFirstStep(PyralisSetupFlowReport report, PyralisSetupFlowStepStatus status)
-        {
-            if (report == null)
-                return null;
-
-            for (int i = 0; i < report.Steps.Count; i++)
-            {
-                if (report.Steps[i].Status == status)
-                    return report.Steps[i];
-            }
-
-            return null;
-        }
-
-        private static PyralisSetupFlowStep FindFirstRecommendedStep(PyralisSetupFlowReport report)
-        {
-            if (report == null)
-                return null;
-
-            for (int i = 0; i < report.Steps.Count; i++)
-            {
-                PyralisSetupFlowStep step = report.Steps[i];
-                if (step.Status == PyralisSetupFlowStepStatus.Recommended && IsRouteSpecificRecommendation(step))
-                    return step;
-            }
-
-            return FindFirstStep(report, PyralisSetupFlowStepStatus.Recommended);
-        }
-
-        private static bool IsRouteSpecificRecommendation(PyralisSetupFlowStep step)
-        {
-            if (step == null)
-                return false;
-
-            return step.WorkIntent == PyralisSetupFlowWorkIntent.ProofEnhancer
-                || step.WorkIntent == PyralisSetupFlowWorkIntent.FeatureCard;
-        }
-    }
 }

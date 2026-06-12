@@ -24,8 +24,24 @@ namespace NeonBlack.Gameplay.Editor
 
     internal static class PyralisCurrentStepPrimaryActionGuidance
     {
-        public static PyralisPrimaryActionGuidance Build(Object selection, PyralisAuthoringRouteReport report)
+        public static PyralisPrimaryActionGuidance Build(
+            Object selection,
+            PyralisAuthoringRouteReport report,
+            PyralisAuthoringCurrentStepGraphRow currentStep = null)
         {
+            if (currentStep != null && currentStep.HasNode)
+            {
+                if (currentStep.NativeAction.HasValue)
+                    return new PyralisPrimaryActionGuidance(string.Empty, MessageType.None, string.Empty);
+
+                return new PyralisPrimaryActionGuidance(
+                    string.Empty,
+                    MessageType.None,
+                    !string.IsNullOrWhiteSpace(currentStep.Detail)
+                        ? currentStep.Detail
+                        : "Use Map for topology, Validate for the full issue list, and the Inspector for field-level edits.");
+            }
+
             if (selection == null)
             {
                 return new PyralisPrimaryActionGuidance(

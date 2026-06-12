@@ -83,7 +83,9 @@ namespace NeonBlack.Gameplay.Editor
 
             AddRange(PyralisReflectiveFactScanner.ScanProject());
             AddRange(Inspectors.PyralisSetupFlowGuidance.GetAuthoringFacts());
-            AddRange(PyralisAuthoringRouteProof.GetAuthoringFacts());
+            IReadOnlyList<PyralisAuthoringFact> routeProofFacts = PyralisAuthoringRouteProof.GetAuthoringFacts();
+            AddRange(routeProofFacts);
+            AddRange(PyralisContractProofFactProjector.GetAuthoringFacts(GetStableIds(routeProofFacts)));
             AddRange(PyralisRouteCoverageFacts.GetAuthoringFacts());
             AddRange(PyralisInspectorHandoffFacts.GetAuthoringFacts());
             AddRange(PyralisConventionAuthoringFacts.GetAuthoringFacts());
@@ -91,6 +93,21 @@ namespace NeonBlack.Gameplay.Editor
             AddRange(PyralisSceneSurfaceEvidenceFacts.GetAuthoringFacts());
 
             return facts;
+        }
+
+        private static IReadOnlyCollection<string> GetStableIds(IReadOnlyList<PyralisAuthoringFact> facts)
+        {
+            HashSet<string> stableIds = new HashSet<string>(StringComparer.Ordinal);
+            if (facts == null)
+                return stableIds;
+
+            for (int i = 0; i < facts.Count; i++)
+            {
+                if (facts[i] != null && !string.IsNullOrWhiteSpace(facts[i].StableId))
+                    stableIds.Add(facts[i].StableId);
+            }
+
+            return stableIds;
         }
     }
 }

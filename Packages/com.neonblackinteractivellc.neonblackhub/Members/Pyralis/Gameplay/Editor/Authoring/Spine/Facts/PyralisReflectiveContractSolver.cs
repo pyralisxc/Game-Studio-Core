@@ -306,7 +306,7 @@ namespace NeonBlack.Gameplay.Editor
 
         private static bool CapabilityMatchesRouteFamilies(AuthoringCapability capability, PyralisSetupRouteAnalysis route)
         {
-            RuntimeCapabilityFamily[] matchingFamilies = GetMatchingFamilies(capability);
+            RuntimeCapabilityFamily[] matchingFamilies = PyralisRuntimeCapabilityFamilyMap.GetFamilies(capability);
             if (matchingFamilies.Length == 0)
                 return false;
 
@@ -321,57 +321,6 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             return false;
-        }
-
-        private static RuntimeCapabilityFamily[] GetMatchingFamilies(AuthoringCapability capability)
-        {
-            switch (capability)
-            {
-                case AuthoringCapability.Setup:
-                case AuthoringCapability.Session:
-                case AuthoringCapability.Participants:
-                    return new[] { RuntimeCapabilityFamily.PlatformCore, RuntimeCapabilityFamily.CharacterPawnGameplay };
-                case AuthoringCapability.Movement:
-                case AuthoringCapability.KineticMotor2D:
-                case AuthoringCapability.KineticMotor3D:
-                case AuthoringCapability.Steering2D:
-                case AuthoringCapability.Steering3D:
-                case AuthoringCapability.Traversal:
-                    return new[] { RuntimeCapabilityFamily.CharacterPawnGameplay };
-                case AuthoringCapability.Combat:
-                case AuthoringCapability.CombatState:
-                case AuthoringCapability.CombatSensors:
-                case AuthoringCapability.MeleeFlow:
-                case AuthoringCapability.TacticsAggressive:
-                case AuthoringCapability.TacticsDefensive:
-                    return new[] { RuntimeCapabilityFamily.Combat };
-                case AuthoringCapability.RangedFlow:
-                    return new[] { RuntimeCapabilityFamily.GunsProjectiles, RuntimeCapabilityFamily.Combat };
-                case AuthoringCapability.Tabletop:
-                case AuthoringCapability.Grid:
-                    return new[] { RuntimeCapabilityFamily.BoardCardTabletop };
-                case AuthoringCapability.TurnBased:
-                case AuthoringCapability.Rules:
-                case AuthoringCapability.Puzzle:
-                    return new[] { RuntimeCapabilityFamily.ActionTargeting };
-                case AuthoringCapability.Input:
-                    return new[] { RuntimeCapabilityFamily.CameraInput, RuntimeCapabilityFamily.ActionTargeting, RuntimeCapabilityFamily.CharacterPawnGameplay };
-                case AuthoringCapability.Camera:
-                    return new[] { RuntimeCapabilityFamily.CameraInput };
-                case AuthoringCapability.Animation:
-                case AuthoringCapability.VFX:
-                    return new[] { RuntimeCapabilityFamily.AnimationPresentation };
-                case AuthoringCapability.UI:
-                    return new[] { RuntimeCapabilityFamily.ActionTargeting, RuntimeCapabilityFamily.ScoringObjectives };
-                case AuthoringCapability.Scoring:
-                    return new[] { RuntimeCapabilityFamily.ScoringObjectives };
-                case AuthoringCapability.Environment:
-                    return new[] { RuntimeCapabilityFamily.ProceduralGeneration };
-                case AuthoringCapability.Networking:
-                    return new[] { RuntimeCapabilityFamily.Networking };
-                default:
-                    return Array.Empty<RuntimeCapabilityFamily>();
-            }
         }
 
         private static AuthoringWorldAxiom DeriveAxiomsFromRoute(PyralisSetupRouteAnalysis route)

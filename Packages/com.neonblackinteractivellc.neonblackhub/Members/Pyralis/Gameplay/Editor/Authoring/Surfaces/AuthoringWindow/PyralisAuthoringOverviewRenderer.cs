@@ -15,12 +15,17 @@ namespace NeonBlack.Gameplay.Editor
                 return;
 
             EditorGUILayout.LabelField("Next Setup Guidance", EditorStyles.miniBoldLabel);
-            string guidance = report != null && !string.IsNullOrWhiteSpace(report.RouteGuidance)
-                ? report.RouteGuidance
-                : model.FirstProofGuidance;
+            PyralisAuthoringCurrentStepGraphRow currentStep = PyralisAuthoringSetupGraphProjection.BuildCurrentStepRow(graph, report);
+            string guidance = currentStep != null && !string.IsNullOrWhiteSpace(currentStep.Message)
+                ? currentStep.Message
+                : report != null && !string.IsNullOrWhiteSpace(report.RouteGuidance)
+                    ? report.RouteGuidance
+                    : model.FirstProofGuidance;
             PyralisAuthoringWindowText.DrawSemanticHelpBox(guidance, MessageType.Info);
             PyralisAuthoringWindowPrimitives.DrawMiniField("Intent vs Setup", "Intent shapes the route. Project, Hierarchy, and Inspector create and wire the user's actual setup.");
-            PyralisAuthoringWindowPrimitives.DrawMiniField("Next", model.BestNextAction);
+            PyralisAuthoringWindowPrimitives.DrawMiniField("Next", currentStep != null && !string.IsNullOrWhiteSpace(currentStep.Label) ? currentStep.Label : model.BestNextAction);
+            if (currentStep != null && currentStep.NativeAction.HasValue)
+                PyralisAuthoringSurfaceBeacon.DrawNativeAction(currentStep.NativeAction.Value, currentStep.NativeAction.Value.ToGuidanceSentence());
             DrawGraphPriority(graph);
             PyralisAuthoringWindowPrimitives.DrawMiniField("Proof Status", GetFlowTestStatus(model));
         }
@@ -191,8 +196,7 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringWindowPrimitives.DrawMiniField("Feature Module", row.Contract.StableId);
                 PyralisAuthoringWindowPrimitives.DrawMiniField("Proof Target", string.IsNullOrWhiteSpace(row.Contract.FirstProofTargetId) ? "None recorded." : row.Contract.FirstProofTargetId);
                 PyralisAuthoringWindowPrimitives.DrawMiniField("Proof Target Exists", row.ProofTargetExists ? "Yes - this contract maps to a route proof card." : "No - the contract points at a missing route proof card.");
-                if (!string.IsNullOrWhiteSpace(row.Contract.FirstProofGuidance) &&
-                    !row.Contract.FirstProofGuidance.StartsWith("proof.", StringComparison.Ordinal))
+                if (!string.IsNullOrWhiteSpace(row.Contract.FirstProofGuidance))
                 {
                     PyralisAuthoringWindowPrimitives.DrawMiniField("Developer Proof Guidance", row.Contract.FirstProofGuidance);
                 }

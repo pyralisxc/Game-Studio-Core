@@ -110,12 +110,12 @@ Keep the implementation split by responsibility:
 | `PyralisAuthoringRouteDescriptor` | route facts inferred from setup patterns and selected context |
 | `PyralisAuthoringRouteProof` | first playable proof names, success criteria, and deferred work for each route family |
 | `PyralisAuthoringRouteReport` | selected-object diagnosis, validation issues, target jumps, and route report rows |
-| `PyralisAuthoringOverviewSnapshot` | Overview counts, next-step summary, and readiness buckets |
+| `PyralisAuthoringOverviewModel` | Overview read model for graph-projected lanes, first proof text, and Play Mode checklist |
 | `PyralisAuthoringCapabilitySelection` | Capability-row helpers used by Intent-to-`GameSetupProfile` sync and optional `RuntimePatternDefinition` metadata |
 | `PyralisRuntimeCapabilityCatalog` | guide-only capability cards indexed by game-goal and runtime-lane tags |
 | `PyralisAuthoringIntentAdvisor` | Cookbook-to-intent read model that ranks route-intent, capability, contract, and proof facts from selected world/playfield, control shape, lane, and goals for Guide cards and other tab projections |
 | `PyralisAuthoringSetupGraph` | read-only resolved graph of setup nodes, edges, evidence, proof targets, selected context, and source contracts |
-| `PyralisAuthoringSetupGraphProjection` | Map, Overview, Validate, and selected-context projection rows derived from the resolved setup graph |
+| `PyralisAuthoringSetupGraphProjection` | Map, Overview, Guide, Validate, reflective-contract, and selected-context projection rows derived from the resolved setup graph |
 | `PyralisAuthoringCapabilityGuidance` | selected capability, recommended next, environment, and route-intent guidance rows |
 | `PyralisAuthoringSceneSurfaceGuidance` | scene-surface labels, route relevance, next-fix text, expected evidence, and success text |
 | `PyralisSetupFlowMonitor` | bootstrap/setup-flow readiness checks that should stay aligned with the window |

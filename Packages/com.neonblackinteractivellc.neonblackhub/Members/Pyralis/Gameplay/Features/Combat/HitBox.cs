@@ -19,11 +19,12 @@ namespace NeonBlack.Gameplay.Features.Combat
         Axioms = AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.Dimensions3D,
         NativeSetup = new[] { "Add to a child GameObject of a combat actor.", "Assign a Box or Sphere collider (it will be disabled at runtime)." },
         AssignmentFields = new[] { nameof(owner), nameof(hitFXPrefab), nameof(hitPauseSink), nameof(cameraShakeSink) },
-        FirstProof = "proof.npc-enemy-behavior",
+        FirstProof = "The hitbox damages a valid target and plays impact feedback.",
+        FirstProofTargetId = "proof.npc-enemy-behavior",
         ExpertAdvice = "HitBoxes are disabled colliders used only for overlap queries. Ensure the owner is set for correct knockback calculation. Use hitPauseSink for juicy combat feel.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/hitbox"
     )]
-[RequireComponent(typeof(Collider))]
+    [RequireComponent(typeof(Collider))]
     public class HitBox : MonoBehaviour
     {
         public event Action<GameObject> HitConfirmed;

@@ -281,13 +281,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
 
         private static string NormalizeFirstProofTargetId(AuthoringContractAttribute attr)
         {
-            if (!string.IsNullOrWhiteSpace(attr.FirstProofTargetId))
-                return attr.FirstProofTargetId;
-
-            return !string.IsNullOrWhiteSpace(attr.FirstProof) &&
-                attr.FirstProof.StartsWith("proof.", StringComparison.Ordinal)
-                    ? attr.FirstProof
-                    : string.Empty;
+            return !string.IsNullOrWhiteSpace(attr.FirstProofTargetId) ? attr.FirstProofTargetId : string.Empty;
         }
 
         private static ResolvedAuthoringContract MergeContracts(ResolvedAuthoringContract current, ResolvedAuthoringContract incoming)

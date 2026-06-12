@@ -270,15 +270,18 @@ namespace NeonBlack.Gameplay.Editor
             {
                 PyralisSetupFlowStep step = steps[i];
                 string nodeId = "setupflow." + NormalizeId(step.StepId != PyralisSetupFlowStepId.Unknown ? step.StepId.ToString() : step.Label);
+                bool reflectedContractEvidence = step.StepId == PyralisSetupFlowStepId.Unknown
+                    && step.WorkIntent == PyralisSetupFlowWorkIntent.ProofEnhancer;
                 AddNode(nodes, new PyralisAuthoringGraphNode(
                     nodeId,
                     step.Label,
-                    PyralisAuthoringGraphNodeKind.ValidationEvidence,
-                    PyralisAuthoringGraphSourceKind.SetupFlow,
+                    reflectedContractEvidence ? PyralisAuthoringGraphNodeKind.Contract : PyralisAuthoringGraphNodeKind.ValidationEvidence,
+                    reflectedContractEvidence ? PyralisAuthoringGraphSourceKind.AuthoringContract : PyralisAuthoringGraphSourceKind.SetupFlow,
                     ConvertSetupFlowStatus(step.Status),
                     guidance: step.Message,
                     nativeSetup: step.NativeAction.HasValue ? new[] { FormatNativeAction(step.NativeAction.Value) } : Array.Empty<string>(),
                     blockingReason: step.IsRequiredIssue ? step.Message : string.Empty,
+                    nativeAction: step.NativeAction,
                     sourceObject: step.ReferencedObject));
                 AddEdge(edges, "bootstrap.root", nodeId, PyralisAuthoringGraphEdgeKind.RelatesTo, "setup evidence");
             }

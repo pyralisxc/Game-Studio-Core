@@ -456,6 +456,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(registrySource.Contains("SetupNodeId"), Is.True, "Contracts should explicitly map to resolved setup graph nodes when they enrich known setup concepts.");
             Assert.That(registrySource.Contains("FirstProofTargetId"), Is.True, "Proof routing should use explicit contract metadata, not infer from prose.");
             Assert.That(registrySource.Contains("ResolveFirstProofTargetId"), Is.False, "Central keyword proof-target inference should stay deleted.");
+            Assert.That(registrySource.Contains("FirstProof.StartsWith(\"proof.\""), Is.False, "FirstProof is human guidance and must not be parsed as a proof route id.");
             Assert.That(registrySource.Contains("PrettifyTypeName"), Is.True, "Registry should generate clean display names from reflected types.");
             Assert.That(File.Exists(Path.Combine(GameplayRoot, "Editor", "Authoring", "Spine", "Facts", "PyralisAuthoringFactTypes.cs")), Is.True);
         }
@@ -484,6 +485,17 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(contract.FirstProofGuidance, Does.Contain("hop"));
             Assert.That(contract.FirstProofGuidance, Does.Not.StartWith("proof."));
             Assert.That(contract.FirstProofTargetId, Is.EqualTo("proof.1p-pawn-movement"));
+        }
+
+        [Test]
+        public void AuthoringContracts_FirstProofGuidanceNeverStoresRouteProofIds()
+        {
+            IReadOnlyList<ResolvedAuthoringContract> contracts = ResolvedAuthoringContractRegistry.All;
+            for (int i = 0; i < contracts.Count; i++)
+            {
+                ResolvedAuthoringContract contract = contracts[i];
+                Assert.That(contract.FirstProofGuidance, Does.Not.StartWith("proof."), contract.StableId);
+            }
         }
 
         [Test]
@@ -742,6 +754,25 @@ namespace NeonBlack.Gameplay.Tests.Editor
             }
         }
 
+        [Test]
+        public void ContractProofFactProjector_GeneratesContractOwnedProofFactsWhenNoBroadProofExists()
+        {
+            IReadOnlyCollection<string> broadProofIds = PyralisAuthoringRouteProof.GetAuthoringFacts()
+                .Select(fact => fact.StableId)
+                .ToArray();
+
+            PyralisAuthoringFact proof = PyralisContractProofFactProjector.FindProofFact(
+                "proof.contract-owned-editor-test",
+                broadProofIds);
+
+            Assert.That(proof, Is.Not.Null);
+            Assert.That(proof.Kind, Is.EqualTo(PyralisAuthoringFactKind.Proof));
+            Assert.That(proof.SourceKind, Is.EqualTo(PyralisAuthoringFactSourceKind.FeatureContract));
+            Assert.That(proof.FirstProof, Does.Contain("contract-owned proof"));
+            Assert.That(proof.RelatedStableIds, Does.Contain("feature." + typeof(ContractOwnedProofFixture).FullName));
+            Assert.That(PyralisAuthoringFactRegistry.Find("proof.contract-owned-editor-test"), Is.Not.Null);
+        }
+
         [TestCase("actor.traversal.topdown-hop", "proof.1p-pawn-movement", "1P Pawn Movement Proof")]
         [TestCase("actor.interaction", "proof.action-selection", "Action Selection Proof")]
         [TestCase("actor.traversal.3d", "proof.npc-enemy-behavior", "NPC Enemy Behavior Proof")]
@@ -832,5 +863,17 @@ namespace NeonBlack.Gameplay.Tests.Editor
 #pragma warning disable 0649
         private class PackageJsonRaw { public string version; }
 #pragma warning restore 0649
+
+        [AuthoringContract(
+            Capability = AuthoringCapability.Puzzle,
+            Relevance = "Test-only contract that proves feature contracts can own a proof target without a central route-proof entry.",
+            Axioms = AuthoringWorldAxiom.None,
+            FirstProofTargetId = "proof.contract-owned-editor-test",
+            FirstProof = "Run one contract-owned proof generated from feature metadata.",
+            NativeSetup = new[] { "Inspect the test-owned contract proof." },
+            AssignmentFields = new[] { "ContractOwnedProofFixture.testField" })]
+        private sealed class ContractOwnedProofFixture
+        {
+        }
     }
 }
