@@ -118,42 +118,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void PyralisEditor_Source_ExposesRuntimePatternAndGameSetupInspectors()
-        {
-            AssertReflectiveAuthoringLayerSupportsCurrentTruth();
-        }
-        [Test]
-        public void PyralisEditor_Source_UsesSharedGuidedAuthoringInspectorLayer()
-        {
-            AssertReflectiveAuthoringLayerSupportsCurrentTruth();
-        }
-        [Test]
-        public void PyralisEditor_Source_UsesSharedGuidedAuthoringForCoreProfiles()
-        {
-            AssertReflectiveAuthoringLayerSupportsCurrentTruth();
-        }
-        [Test]
-        public void PyralisEditor_Source_CoreRouteHelpersAvoidPresetFraming()
-        {
-            AssertReflectiveAuthoringLayerSupportsCurrentTruth();
-        }
-        [Test]
-        public void PyralisEditor_Source_UsesSharedGuidedAuthoringForFeatureAndCombatAssets()
-        {
-            AssertReflectiveAuthoringLayerSupportsCurrentTruth();
-        }
-        [Test]
-        public void PyralisEditor_Source_UsesSharedGuidedAuthoringForSceneFlowHazardInputAndVisualAssets()
-        {
-            AssertReflectiveAuthoringLayerSupportsCurrentTruth();
-        }
-        [Test]
-        public void PyralisEditor_Source_UsesSharedGuidedAuthoringForGameplaySessionBootstrap()
-        {
-            AssertReflectiveAuthoringLayerSupportsCurrentTruth();
-        }
-        [Test]
-        public void PyralisEditor_Source_UsesSafeSetupFlowMonitorForGameplaySessionBootstrap()
+        public void PyralisEditor_Source_ReflectiveAuthoringLayerSupportsCurrentTruth()
         {
             AssertReflectiveAuthoringLayerSupportsCurrentTruth();
         }
@@ -307,56 +272,6 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void PyralisAuthoringWindow_Source_PrioritizesCapabilityRoutesOverPresets()
-        {
-            AssertReflectiveAuthoringLayerSupportsCurrentTruth();
-        }
-        [Test]
-        public void PyralisEditor_Source_UsesSharedRouteAnalysisForAuthoringSurfaces()
-        {
-            AssertReflectiveAuthoringLayerSupportsCurrentTruth();
-        }
-        [Test]
-        public void PyralisEditor_Source_UsesCollapsedGuidanceFor3DPawnStack()
-        {
-            AssertReflectiveAuthoringLayerSupportsCurrentTruth();
-        }
-        [Test]
-        public void ProjectileDefinitionEditor_Source_ValidatesPrefabRuntimeBodyCompatibility()
-        {
-            AssertReflectiveAuthoringLayerSupportsCurrentTruth();
-        }
-        [Test]
-        public void PyralisEditor_Source_UsesSharedGuidedAuthoringForCameraRuntimeComponents()
-        {
-            AssertReflectiveAuthoringLayerSupportsCurrentTruth();
-        }
-        [Test]
-        public void PyralisEditor_Source_UsesSharedGuidedAuthoringFor2DPawnAndInputStack()
-        {
-            AssertReflectiveAuthoringLayerSupportsCurrentTruth();
-        }
-        [Test]
-        public void PyralisEditor_Source_UsesSharedGuidedAuthoringForActorFeatureRuntimes()
-        {
-            AssertReflectiveAuthoringLayerSupportsCurrentTruth();
-        }
-        [Test]
-        public void PyralisEditor_Source_UsesSharedGuidedAuthoringForPickupAndScoringRuntimes()
-        {
-            AssertReflectiveAuthoringLayerSupportsCurrentTruth();
-        }
-        [Test]
-        public void PyralisEditor_Source_UsesSharedGuidedAuthoringForFeedbackHudRuntimes()
-        {
-            AssertReflectiveAuthoringLayerSupportsCurrentTruth();
-        }
-        [Test]
-        public void PyralisEditor_Source_UsesSharedGuidedAuthoringForPresentationAndLeaderboardRuntimes()
-        {
-            AssertReflectiveAuthoringLayerSupportsCurrentTruth();
-        }
-        [Test]
         public void PyralisEditor_Source_UsesGuidedAuthoringForRemainingMenuFacingRuntimes()
         {
             string gameplayRoot = Path.Combine(
@@ -474,36 +389,6 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void PyralisEditor_Source_UsesGuidedAuthoringForSceneGameFlowComponents()
-        {
-            AssertReflectiveAuthoringLayerSupportsCurrentTruth();
-        }
-        [Test]
-        public void PyralisEditor_Source_UsesGuidedAuthoringForMenuNavigationComponents()
-        {
-            AssertReflectiveAuthoringLayerSupportsCurrentTruth();
-        }
-        [Test]
-        public void PyralisEditor_Source_UsesGuidedAuthoringForHazardSpawningComponents()
-        {
-            AssertReflectiveAuthoringLayerSupportsCurrentTruth();
-        }
-        [Test]
-        public void PyralisEditor_Source_UsesGuidedAuthoringForVisualWorldHelperComponents()
-        {
-            AssertReflectiveAuthoringLayerSupportsCurrentTruth();
-        }
-        [Test]
-        public void PyralisEditor_Source_ClassifiesFinalP2AuthoringCandidates()
-        {
-            AssertReflectiveAuthoringLayerSupportsCurrentTruth();
-        }
-        [Test]
-        public void PyralisEditor_Source_UsesSharedGuidedAuthoringForPrefabRuntimeComponents()
-        {
-            AssertReflectiveAuthoringLayerSupportsCurrentTruth();
-        }
-        [Test]
         public void PyralisEditor_Source_KeepsFlaggedEditorToolsSafeAndReadable()
         {
             string gameplayRoot = Path.Combine(
@@ -544,11 +429,6 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void PyralisEditor_Source_CoversConcreteInspectorVisibleRuntimeTypes()
-        {
-            AssertReflectiveAuthoringLayerSupportsCurrentTruth();
-        }
-        [Test]
         public void PyralisEditor_Source_ExposesCoreSceneComponentsInAddComponentMenu()
         {
             string gameplayRoot = Path.Combine(
@@ -581,11 +461,6 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(gameManagerSource.Contains("AuthoringContract"), Is.True);
         }
 
-        [Test]
-        public void PyralisEditor_Source_ExposesGuideOnlyRuntimeCapabilityCatalog()
-        {
-            AssertReflectiveAuthoringLayerSupportsCurrentTruth();
-        }
         [Test]
         public void PyralisEditor_RuntimeCapabilityCards_AreBackedByStableAuthoringFacts()
         {

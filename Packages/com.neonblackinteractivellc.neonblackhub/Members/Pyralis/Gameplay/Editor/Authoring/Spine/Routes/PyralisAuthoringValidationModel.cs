@@ -170,7 +170,7 @@ namespace NeonBlack.Gameplay.Editor
             if (bootstrap == null)
                 return issues;
 
-            SessionDefinition session = PyralisAuthoringWindow.GetSelectedSession(bootstrap, bootstrap);
+            SessionDefinition session = PyralisAuthoringSetupContextResolver.GetSelectedSession(bootstrap, bootstrap);
             if (session == null)
             {
                 issues.Add(CreateIssue(
@@ -620,7 +620,7 @@ namespace NeonBlack.Gameplay.Editor
             if (bootstrap == null || string.IsNullOrWhiteSpace(readinessIssue))
                 return null;
 
-            SessionDefinition session = PyralisAuthoringWindow.GetSelectedSession(bootstrap, bootstrap);
+            SessionDefinition session = PyralisAuthoringSetupContextResolver.GetSelectedSession(bootstrap, bootstrap);
             if (session == null)
                 return bootstrap;
 

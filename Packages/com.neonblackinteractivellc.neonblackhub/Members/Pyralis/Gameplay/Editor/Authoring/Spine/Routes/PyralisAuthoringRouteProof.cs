@@ -125,7 +125,7 @@ namespace NeonBlack.Gameplay.Editor
 
             if (activeSetup is GameplaySessionBootstrap bootstrap)
             {
-                SessionDefinition bootstrapSession = PyralisAuthoringWindow.GetSelectedSession(bootstrap, bootstrap);
+                SessionDefinition bootstrapSession = PyralisAuthoringSetupContextResolver.GetSelectedSession(bootstrap, bootstrap);
                 AddSessionModules(modules, bootstrapSession);
             }
 

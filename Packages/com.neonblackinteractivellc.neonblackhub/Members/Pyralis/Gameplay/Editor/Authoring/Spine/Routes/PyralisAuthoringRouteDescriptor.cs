@@ -53,10 +53,10 @@ namespace NeonBlack.Gameplay.Editor
 
         public static PyralisAuthoringRouteDescriptor Build(Object activeSetup)
         {
-            GameplaySessionBootstrap bootstrap = PyralisAuthoringWindow.GetSelectedBootstrap(activeSetup);
-            SessionDefinition session = PyralisAuthoringWindow.GetSelectedSession(activeSetup, bootstrap);
-            GameModeDefinition mode = PyralisAuthoringWindow.GetSelectedMode(activeSetup, session);
-            GameSetupProfile setupProfile = PyralisAuthoringWindow.GetSelectedSetupProfile(activeSetup, mode);
+            GameplaySessionBootstrap bootstrap = PyralisAuthoringSetupContextResolver.GetSelectedBootstrap(activeSetup);
+            SessionDefinition session = PyralisAuthoringSetupContextResolver.GetSelectedSession(activeSetup, bootstrap);
+            GameModeDefinition mode = PyralisAuthoringSetupContextResolver.GetSelectedMode(activeSetup, session);
+            GameSetupProfile setupProfile = PyralisAuthoringSetupContextResolver.GetSelectedSetupProfile(activeSetup, mode);
             return Build(setupProfile, session, mode);
         }
 

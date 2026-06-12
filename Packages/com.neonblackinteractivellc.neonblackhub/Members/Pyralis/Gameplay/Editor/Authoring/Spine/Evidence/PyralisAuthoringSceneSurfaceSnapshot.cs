@@ -52,7 +52,7 @@ namespace NeonBlack.Gameplay.Editor
 
         public static PyralisAuthoringSceneSurfaceSnapshot Build(Object activeSetup)
         {
-            GameplaySessionBootstrap bootstrap = PyralisAuthoringWindow.GetSelectedBootstrap(activeSetup);
+            GameplaySessionBootstrap bootstrap = PyralisAuthoringSetupContextResolver.GetSelectedBootstrap(activeSetup);
             PyralisAuthoringRouteDescriptor route = PyralisAuthoringRouteDescriptor.Build(activeSetup);
             SceneSurfaceCounts counts = SceneSurfaceCounts.Build(bootstrap);
             List<PyralisAuthoringSceneSurfaceRow> rows = new List<PyralisAuthoringSceneSurfaceRow>();

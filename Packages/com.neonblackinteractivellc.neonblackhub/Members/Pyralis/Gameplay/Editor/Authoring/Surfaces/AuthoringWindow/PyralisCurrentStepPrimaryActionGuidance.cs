@@ -50,10 +50,10 @@ namespace NeonBlack.Gameplay.Editor
                     "This is still before asset wiring. Once GameplaySessionBootstrap is on the object, Overview will promote it to the active setup and guide SessionDefinition, participants, pawn prefab, spawn points, input, and camera bounds.");
             }
 
-            GameplaySessionBootstrap bootstrap = PyralisAuthoringWindow.GetSelectedBootstrap(selection);
-            SessionDefinition session = PyralisAuthoringWindow.GetSelectedSession(selection, bootstrap);
-            GameModeDefinition mode = PyralisAuthoringWindow.GetSelectedMode(selection, session);
-            GameSetupProfile setupProfile = PyralisAuthoringWindow.GetSelectedSetupProfile(selection, mode);
+            GameplaySessionBootstrap bootstrap = PyralisAuthoringSetupContextResolver.GetSelectedBootstrap(selection);
+            SessionDefinition session = PyralisAuthoringSetupContextResolver.GetSelectedSession(selection, bootstrap);
+            GameModeDefinition mode = PyralisAuthoringSetupContextResolver.GetSelectedMode(selection, session);
+            GameSetupProfile setupProfile = PyralisAuthoringSetupContextResolver.GetSelectedSetupProfile(selection, mode);
             PyralisAuthoringRouteDescriptor route = PyralisAuthoringRouteDescriptor.Build(setupProfile, session, mode);
 
             if (bootstrap != null && session == null)

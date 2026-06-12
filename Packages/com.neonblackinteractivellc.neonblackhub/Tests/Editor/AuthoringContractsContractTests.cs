@@ -595,6 +595,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Serializable]
+#pragma warning disable 0649
         private class PackageJsonRaw { public string version; }
+#pragma warning restore 0649
     }
 }

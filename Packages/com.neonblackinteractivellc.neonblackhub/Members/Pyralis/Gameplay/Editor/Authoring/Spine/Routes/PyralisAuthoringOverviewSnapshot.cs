@@ -112,7 +112,7 @@ namespace NeonBlack.Gameplay.Editor
         public static PyralisAuthoringOverviewModel Build(Object activeSetup, PyralisAuthoringRouteReport routeReport)
         {
             string routeName = routeReport != null ? routeReport.RouteName : "No setup route selected";
-            GameplaySessionBootstrap bootstrap = PyralisAuthoringWindow.GetSelectedBootstrap(activeSetup);
+            GameplaySessionBootstrap bootstrap = PyralisAuthoringSetupContextResolver.GetSelectedBootstrap(activeSetup);
             List<PyralisAuthoringOverviewIssue> doNow = new List<PyralisAuthoringOverviewIssue>();
             List<PyralisAuthoringOverviewIssue> doSoon = new List<PyralisAuthoringOverviewIssue>();
             List<PyralisAuthoringOverviewIssue> later = new List<PyralisAuthoringOverviewIssue>();
@@ -476,7 +476,7 @@ namespace NeonBlack.Gameplay.Editor
 
         public static PyralisAuthoringOverviewSnapshot Build(Object activeSetup, PyralisAuthoringRouteReport routeReport)
         {
-            GameplaySessionBootstrap bootstrap = PyralisAuthoringWindow.GetSelectedBootstrap(activeSetup);
+            GameplaySessionBootstrap bootstrap = PyralisAuthoringSetupContextResolver.GetSelectedBootstrap(activeSetup);
             if (bootstrap == null)
             {
                 int validationCount = routeReport != null ? routeReport.ValidationIssues.Count : 0;

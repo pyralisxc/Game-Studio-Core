@@ -1,6 +1,8 @@
 param(
     [string]$ProjectPath = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path,
     [string]$UnityExe = "C:\Program Files\Unity\Hub\Editor\6000.4.0f1\Editor\Unity.exe",
+    [ValidateSet("Smoke", "Authoring", "Checkpoint", "Full")]
+    [string]$Phase = "Full",
     [int]$TimeoutMinutes = 15,
     [switch]$SkipUnity,
     [switch]$SkipFinalBuild,
@@ -76,6 +78,32 @@ function Invoke-DotnetProjectSet {
             Invoke-Checked -FilePath "dotnet" -Arguments @("restore", $projectPath) -FailureMessage "$FailureMessage Project: $projectName."
         }
     }
+}
+
+function Get-SmokeDotnetProjectPaths {
+    param(
+        [string]$ProjectPath,
+        [string[]]$OwnedProjectPaths
+    )
+
+    $preferredNames = @(
+        "NeonBlack.Gameplay.Editor.Tests.csproj",
+        "NeonBlack.Gameplay.Tests.csproj"
+    )
+
+    $projectPaths = @()
+    foreach ($projectName in $preferredNames) {
+        $projectPath = Join-Path $ProjectPath $projectName
+        if (Test-Path -LiteralPath $projectPath) {
+            $projectPaths += (Resolve-Path $projectPath).Path
+        }
+    }
+
+    if ($projectPaths.Count -gt 0) {
+        return $projectPaths | Sort-Object -Unique
+    }
+
+    return $OwnedProjectPaths
 }
 
 function Assert-NoUnityProcess {
@@ -352,10 +380,32 @@ function Assert-PackagePortability {
 $ProjectPath = (Resolve-Path $ProjectPath).Path
 $solutionPath = Join-Path $ProjectPath "Game Studio Core.slnx"
 $ownedDotnetProjectPaths = @(Get-OwnedDotnetProjectPaths -SolutionPath $solutionPath)
+$dotnetProjectPaths = $ownedDotnetProjectPaths
 $logDirectory = Join-Path $ProjectPath "Logs\Codex"
 New-Item -ItemType Directory -Force -Path $logDirectory | Out-Null
 
 Write-Host "Pre-scene validation project: $ProjectPath"
+Write-Host "Validation phase: $Phase"
+
+switch ($Phase) {
+    "Smoke" {
+        $SkipPackagePortability = $true
+        $SkipUnity = $true
+        $SkipFinalBuild = $true
+        $SkipResidueScan = $true
+        $dotnetProjectPaths = @(Get-SmokeDotnetProjectPaths -ProjectPath $ProjectPath -OwnedProjectPaths $ownedDotnetProjectPaths)
+    }
+    "Authoring" {
+        $SkipUnity = $true
+        $SkipFinalBuild = $true
+        $dotnetProjectPaths = @(Get-SmokeDotnetProjectPaths -ProjectPath $ProjectPath -OwnedProjectPaths $ownedDotnetProjectPaths)
+    }
+    "Checkpoint" {
+        $SkipFinalBuild = $true
+    }
+    "Full" {
+    }
+}
 
 if (!$SkipPackagePortability) {
     Assert-PackagePortability -ProjectPath $ProjectPath
@@ -363,11 +413,11 @@ if (!$SkipPackagePortability) {
 
 Write-Step "dotnet restore"
 Write-Host "Restoring owned NeonBlack/Pyralis projects from Game Studio Core.slnx."
-Invoke-DotnetProjectSet -Command "restore" -ProjectPaths $ownedDotnetProjectPaths -FailureMessage "dotnet restore failed."
+Invoke-DotnetProjectSet -Command "restore" -ProjectPaths $dotnetProjectPaths -FailureMessage "dotnet restore failed."
 
 Write-Step "dotnet build"
 Write-Host "Building owned NeonBlack/Pyralis projects from Game Studio Core.slnx."
-Invoke-DotnetProjectSet -Command "build" -ProjectPaths $ownedDotnetProjectPaths -FailureMessage "dotnet build failed."
+Invoke-DotnetProjectSet -Command "build" -ProjectPaths $dotnetProjectPaths -FailureMessage "dotnet build failed."
 
 $unityResults = @()
 $layoutGuard = $null
@@ -385,11 +435,11 @@ finally {
 if (!$SkipUnity -and !$SkipFinalBuild) {
     Write-Step "final dotnet restore"
     Write-Host "Restoring owned NeonBlack/Pyralis projects from Game Studio Core.slnx after Unity tests."
-    Invoke-DotnetProjectSet -Command "restore" -ProjectPaths $ownedDotnetProjectPaths -FailureMessage "final dotnet restore failed."
+    Invoke-DotnetProjectSet -Command "restore" -ProjectPaths $dotnetProjectPaths -FailureMessage "final dotnet restore failed."
 
     Write-Step "final dotnet build"
     Write-Host "Building owned NeonBlack/Pyralis projects from Game Studio Core.slnx after Unity tests."
-    Invoke-DotnetProjectSet -Command "build" -ProjectPaths $ownedDotnetProjectPaths -FailureMessage "final dotnet build failed."
+    Invoke-DotnetProjectSet -Command "build" -ProjectPaths $dotnetProjectPaths -FailureMessage "final dotnet build failed."
 }
 
 if (!$SkipResidueScan) {
