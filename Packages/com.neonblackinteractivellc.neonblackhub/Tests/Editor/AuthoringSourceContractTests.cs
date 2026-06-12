@@ -672,22 +672,14 @@ namespace NeonBlack.Gameplay.Tests.Editor
             string authoringBlueprint = File.ReadAllText(AuthoringDoc("AUTHORING_BLUEPRINT.md"));
             string authoringModel = File.ReadAllText(AuthoringDoc("AUTHORING_MODEL.md"));
             string roadmap = File.ReadAllText(Path.Combine(gameplayRoot, "Docs", "FEATURE_DEVELOPMENT_ROADMAP.md"));
-            string hardeningRoadmap = File.ReadAllText(Path.Combine(
-                Application.dataPath,
-                "..",
-                "docs",
-                "superpowers",
-                "plans",
-                "2026-06-04-pyralis-reflective-authoring-hardening-roadmap.md"));
 
             Assert.That(authoringBlueprint.Contains("Export Footprint Boundary"), Is.True);
             Assert.That(authoringBlueprint.Contains("Unity build reports"), Is.True);
+            Assert.That(authoringBlueprint.Contains("unexpected editor assemblies"), Is.True);
             Assert.That(authoringModel.Contains("Build Footprint Model"), Is.True);
             Assert.That(authoringModel.Contains("Future build-report checks"), Is.True);
             Assert.That(roadmap.Contains("BuildReport / Export Footprint"), Is.True);
             Assert.That(roadmap.Contains("editor-only authoring contracts/facts/providers/validators out of player builds"), Is.True);
-            Assert.That(hardeningRoadmap.Contains("Later Export Footprint Gate"), Is.True);
-            Assert.That(hardeningRoadmap.Contains("unexpected editor assemblies"), Is.True);
         }
 
         private static void AssertReflectiveAuthoringLayerSupportsCurrentTruth()

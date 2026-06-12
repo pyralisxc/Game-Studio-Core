@@ -84,12 +84,13 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
         protected static AnimatorController CreateTestAnimatorController(string assetName)
         {
-            string folderPath = "Assets/Temp/PyralisEditorTests";
-            if (!AssetDatabase.IsValidFolder("Assets/Temp"))
-                AssetDatabase.CreateFolder("Assets", "Temp");
+            const string generatedRoot = "Packages/com.neonblackinteractivellc.neonblackhub/Tests/Editor/_Generated";
+            string folderPath = $"{generatedRoot}/PyralisEditorTests";
+            if (!AssetDatabase.IsValidFolder(generatedRoot))
+                AssetDatabase.CreateFolder("Packages/com.neonblackinteractivellc.neonblackhub/Tests/Editor", "_Generated");
 
             if (!AssetDatabase.IsValidFolder(folderPath))
-                AssetDatabase.CreateFolder("Assets/Temp", "PyralisEditorTests");
+                AssetDatabase.CreateFolder(generatedRoot, "PyralisEditorTests");
 
             string assetPath = AssetDatabase.GenerateUniqueAssetPath($"{folderPath}/{assetName}.controller");
             return AnimatorController.CreateAnimatorControllerAtPath(assetPath);
@@ -106,8 +107,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
             else
                 Object.DestroyImmediate(controller);
 
-            DeleteFolderIfEmpty("Assets/Temp/PyralisEditorTests");
-            DeleteFolderIfEmpty("Assets/Temp");
+            DeleteFolderIfEmpty("Packages/com.neonblackinteractivellc.neonblackhub/Tests/Editor/_Generated/PyralisEditorTests");
+            DeleteFolderIfEmpty("Packages/com.neonblackinteractivellc.neonblackhub/Tests/Editor/_Generated");
         }
 
         protected static void DeleteFolderIfEmpty(string folderPath)

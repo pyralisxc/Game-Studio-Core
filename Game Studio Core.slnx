@@ -1,5 +1,6 @@
 ﻿<Solution>
   <Project Path="Unity.AI.Sound.csproj" />
+  <Project Path="NeonBlack.Gameplay.Editor.csproj" />
   <Project Path="Unity.Collections.csproj" />
   <Project Path="UnityEngine.UI.csproj" />
   <Project Path="Unity.AI.Assistant.Runtime.csproj" />
@@ -27,7 +28,6 @@
   <Project Path="Unity.AI.Animate.csproj" />
   <Project Path="Unity.AI.Assistant.Tools.Editor.csproj" />
   <Project Path="Unity.TextMeshPro.csproj" />
-  <Project Path="NeonBlack.Gameplay.Editor.csproj" />
   <Project Path="NeonBlack.Gameplay.Feature.Combat.Editor.csproj" />
   <Project Path="Unity.TextMeshPro.Editor.csproj" />
   <Project Path="VContainer.Editor.csproj" />
