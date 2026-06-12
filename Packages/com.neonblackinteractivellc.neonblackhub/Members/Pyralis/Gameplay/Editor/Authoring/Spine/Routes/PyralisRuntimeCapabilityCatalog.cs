@@ -70,6 +70,11 @@ namespace NeonBlack.Gameplay.Editor
             string stableId,
             string displayName,
             RuntimeCapabilityFamily capabilityFamily,
+            PyralisAuthoringRouteCapability routeCapability,
+            string routeLabel,
+            bool primaryProofCandidate,
+            string proofStepLabel,
+            string proofStepSuccessCriteria,
             string[] goalTags,
             RuntimeCapabilityLaneTag[] laneTags,
             RuntimeCapabilityLaneTag[] cautionLaneTags,
@@ -91,6 +96,11 @@ namespace NeonBlack.Gameplay.Editor
             StableId = stableId;
             DisplayName = displayName;
             CapabilityFamily = capabilityFamily;
+            RouteCapability = routeCapability;
+            RouteLabel = routeLabel ?? string.Empty;
+            PrimaryProofCandidate = primaryProofCandidate;
+            ProofStepLabel = proofStepLabel ?? string.Empty;
+            ProofStepSuccessCriteria = proofStepSuccessCriteria ?? string.Empty;
             GoalTags = goalTags ?? System.Array.Empty<string>();
             LaneTags = laneTags ?? System.Array.Empty<RuntimeCapabilityLaneTag>();
             CautionLaneTags = cautionLaneTags ?? System.Array.Empty<RuntimeCapabilityLaneTag>();
@@ -136,6 +146,11 @@ namespace NeonBlack.Gameplay.Editor
         public string StableId { get; }
         public string DisplayName { get; }
         public RuntimeCapabilityFamily CapabilityFamily { get; }
+        public PyralisAuthoringRouteCapability RouteCapability { get; }
+        public string RouteLabel { get; }
+        public bool PrimaryProofCandidate { get; }
+        public string ProofStepLabel { get; }
+        public string ProofStepSuccessCriteria { get; }
         public string[] GoalTags { get; }
         public RuntimeCapabilityLaneTag[] LaneTags { get; }
         public RuntimeCapabilityLaneTag[] CautionLaneTags { get; }
@@ -255,6 +270,11 @@ namespace NeonBlack.Gameplay.Editor
                 "capability.2d-pawn-movement",
                 "2D Pawn Movement",
                 RuntimeCapabilityFamily.CharacterPawnGameplay,
+                PyralisAuthoringRouteCapability.PawnAction,
+                "Pawn Action",
+                true,
+                "Local pawn movement",
+                "One participant spawns one pawn and movement input visibly moves it.",
                 new[]
                 {
                     "Movement",
@@ -304,6 +324,11 @@ namespace NeonBlack.Gameplay.Editor
                 "capability.3d-pawn-movement",
                 "3D / 2.5D Pawn Movement",
                 RuntimeCapabilityFamily.CharacterPawnGameplay,
+                PyralisAuthoringRouteCapability.PawnAction,
+                "Pawn Action",
+                true,
+                "Local pawn movement",
+                "One participant spawns one pawn and movement input visibly moves it.",
                 new[]
                 {
                     "Movement",
@@ -359,6 +384,11 @@ namespace NeonBlack.Gameplay.Editor
                 "capability.camera-follow-bounds",
                 "Camera Follow And Bounds",
                 RuntimeCapabilityFamily.CameraInput,
+                PyralisAuthoringRouteCapability.CameraCursor,
+                "Camera / Cursor",
+                true,
+                "Camera/cursor response",
+                "One input or target changes camera, cursor, selection, framing, or bounds.",
                 new[] { "Camera" },
                 new[] { RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Billboard2_5D, RuntimeCapabilityLaneTag.ThirdPerson3D, RuntimeCapabilityLaneTag.CameraCursor },
                 System.Array.Empty<RuntimeCapabilityLaneTag>(),
@@ -390,6 +420,11 @@ namespace NeonBlack.Gameplay.Editor
                 "capability.interaction-action-selection",
                 "Interaction Or Action Selection",
                 RuntimeCapabilityFamily.ActionTargeting,
+                PyralisAuthoringRouteCapability.ActionSelection,
+                "Action Selection",
+                true,
+                "Action resolver",
+                "One selected command reaches its resolver and reports accepted, rejected, completed, or failed.",
                 new[] { "Interaction", "Input", "Tabletop" },
                 new[] { RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Billboard2_5D, RuntimeCapabilityLaneTag.ThirdPerson3D, RuntimeCapabilityLaneTag.TabletopBoard, RuntimeCapabilityLaneTag.UiMenuOnly, RuntimeCapabilityLaneTag.CameraCursor },
                 System.Array.Empty<RuntimeCapabilityLaneTag>(),
@@ -420,6 +455,11 @@ namespace NeonBlack.Gameplay.Editor
                 "capability.combat-projectile-proof",
                 "Combat Attack Proof",
                 RuntimeCapabilityFamily.Combat,
+                PyralisAuthoringRouteCapability.Combat,
+                "Combat",
+                true,
+                "Combat reaction",
+                "One attack produces one hit, block, damage, or reaction outcome.",
                 new[]
                 {
                     "Combat",
@@ -461,6 +501,11 @@ namespace NeonBlack.Gameplay.Editor
                 "capability.npc-enemy-setup",
                 "NPC / Enemy Actor Setup",
                 RuntimeCapabilityFamily.Combat,
+                PyralisAuthoringRouteCapability.Combat,
+                "Combat",
+                true,
+                "Combat reaction",
+                "One attack produces one hit, block, damage, or reaction outcome.",
                 new[]
                 {
                     "NpcsEnemies",
@@ -508,6 +553,11 @@ namespace NeonBlack.Gameplay.Editor
                 "capability.ui-scoring-feedback",
                 "UI And Scoring Feedback",
                 RuntimeCapabilityFamily.ScoringObjectives,
+                PyralisAuthoringRouteCapability.Scoring,
+                "Scoring",
+                true,
+                "Score/objective change",
+                "One gameplay event changes score, objective, timer, resource, or result state.",
                 new[] { "UiHud", "Scoring" },
                 new[] { RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Billboard2_5D, RuntimeCapabilityLaneTag.ThirdPerson3D, RuntimeCapabilityLaneTag.TabletopBoard, RuntimeCapabilityLaneTag.UiMenuOnly },
                 System.Array.Empty<RuntimeCapabilityLaneTag>(),
@@ -560,6 +610,18 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             return matches;
+        }
+
+        public static RuntimeCapabilityCard FindPrimaryByFamily(RuntimeCapabilityFamily family)
+        {
+            for (int i = 0; i < Cards.Length; i++)
+            {
+                RuntimeCapabilityCard card = Cards[i];
+                if (card.CapabilityFamily == family)
+                    return card;
+            }
+
+            return null;
         }
     }
 

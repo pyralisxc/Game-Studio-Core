@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Data.Definitions;
@@ -450,9 +451,236 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 Path.Combine(GameplayRoot, "Core", "Contracts", "ResolvedAuthoringContractRegistry.cs"));
 
             Assert.That(registrySource.Contains("GetTypesWithAttribute<AuthoringContractAttribute>()"), Is.True, "Registry should discover contracts via TypeCache attribute scanning.");
+            Assert.That(registrySource.Contains("IAuthoringContractProvider"), Is.False, "Provider-based contracts were removed; keep one attribute-backed contract path.");
             Assert.That(registrySource.Contains("ModuleId"), Is.True, "Registry should filter and map via ModuleId metadata.");
+            Assert.That(registrySource.Contains("SetupNodeId"), Is.True, "Contracts should explicitly map to resolved setup graph nodes when they enrich known setup concepts.");
+            Assert.That(registrySource.Contains("FirstProofTargetId"), Is.True, "Proof routing should use explicit contract metadata, not infer from prose.");
+            Assert.That(registrySource.Contains("ResolveFirstProofTargetId"), Is.False, "Central keyword proof-target inference should stay deleted.");
             Assert.That(registrySource.Contains("PrettifyTypeName"), Is.True, "Registry should generate clean display names from reflected types.");
             Assert.That(File.Exists(Path.Combine(GameplayRoot, "Editor", "Authoring", "Spine", "Facts", "PyralisAuthoringFactTypes.cs")), Is.True);
+        }
+
+        [Test]
+        public void AuthoringContracts_PropagateSetupNodeMetadata()
+        {
+            ResolvedAuthoringContract sessionContract = ResolvedAuthoringContractRegistry.FindByType(typeof(SessionDefinition));
+            ResolvedAuthoringContract pawnContract = ResolvedAuthoringContractRegistry.FindByType(typeof(PawnDefinition));
+            ResolvedAuthoringContract pawnRootContract = ResolvedAuthoringContractRegistry.FindByType(typeof(PawnRoot));
+
+            Assert.That(sessionContract, Is.Not.Null);
+            Assert.That(sessionContract.SetupNodeId, Is.EqualTo("session.definition"));
+            Assert.That(pawnContract, Is.Not.Null);
+            Assert.That(pawnContract.SetupNodeId, Is.EqualTo("pawn.definition"));
+            Assert.That(pawnRootContract, Is.Not.Null);
+            Assert.That(pawnRootContract.SetupNodeId, Is.EqualTo("pawn.definition"));
+        }
+
+        [Test]
+        public void AuthoringContracts_PreserveDeveloperFirstProofGuidanceSeparatelyFromRouteProofTarget()
+        {
+            ResolvedAuthoringContract contract = ResolvedAuthoringContractRegistry.FindByModuleId("actor.traversal.topdown-hop");
+
+            Assert.That(contract, Is.Not.Null);
+            Assert.That(contract.FirstProofGuidance, Does.Contain("hop"));
+            Assert.That(contract.FirstProofGuidance, Does.Not.StartWith("proof."));
+            Assert.That(contract.FirstProofTargetId, Is.EqualTo("proof.1p-pawn-movement"));
+        }
+
+        [Test]
+        public void AuthoringSetupGraph_ReflectsFeatureContractsAsNodes()
+        {
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(null);
+
+            Assert.That(graph.TryFindNode("contract.feature.actor.traversal.topdown-hop", out PyralisAuthoringGraphNode node), Is.True);
+            Assert.That(node.Kind, Is.EqualTo(PyralisAuthoringGraphNodeKind.Contract));
+            Assert.That(node.SourceKind, Is.EqualTo(PyralisAuthoringGraphSourceKind.AuthoringContract));
+            Assert.That(node.ProofTargetId, Is.EqualTo("proof.1p-pawn-movement"));
+            Assert.That(node.NativeSetup, Is.Not.Empty);
+        }
+
+        [Test]
+        public void AuthoringSetupGraph_LinksContractsToResolvedSetupNodes()
+        {
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(null);
+            ResolvedAuthoringContract sessionContract = ResolvedAuthoringContractRegistry.FindByType(typeof(SessionDefinition));
+            ResolvedAuthoringContract pawnRootContract = ResolvedAuthoringContractRegistry.FindByType(typeof(PawnRoot));
+
+            Assert.That(sessionContract, Is.Not.Null);
+            Assert.That(pawnRootContract, Is.Not.Null);
+            Assert.That(
+                graph.Edges.Any(edge =>
+                    edge.FromNodeId == "contract." + sessionContract.StableId
+                    && edge.ToNodeId == "session.definition"
+                    && edge.Kind == PyralisAuthoringGraphEdgeKind.RelatesTo),
+                Is.True);
+            Assert.That(
+                graph.Edges.Any(edge =>
+                    edge.FromNodeId == "contract." + pawnRootContract.StableId
+                    && edge.ToNodeId == "pawn.definition"
+                    && edge.Kind == PyralisAuthoringGraphEdgeKind.RelatesTo),
+                Is.True);
+        }
+
+        [Test]
+        public void AuthoringContractFacts_RelateFoundationalContractsToSetupNodes()
+        {
+            ResolvedAuthoringContract sessionContract = ResolvedAuthoringContractRegistry.FindByType(typeof(SessionDefinition));
+            Assert.That(sessionContract, Is.Not.Null);
+
+            PyralisAuthoringFact fact = PyralisAuthoringFactRegistry.Find(sessionContract.StableId);
+
+            Assert.That(fact, Is.Not.Null);
+            Assert.That(fact.RelatedStableIds, Does.Contain("session.definition"));
+        }
+
+        [Test]
+        public void AuthoringSetupGraph_GameSetupProfileCreatesCapabilityAndProofNodes()
+        {
+            GameSetupProfile setupProfile = ScriptableObject.CreateInstance<GameSetupProfile>();
+            setupProfile.runtimeCapabilities = new[]
+            {
+                new RuntimeCapabilitySelection { capabilityFamily = RuntimeCapabilityFamily.CharacterPawnGameplay },
+                new RuntimeCapabilitySelection { capabilityFamily = RuntimeCapabilityFamily.Combat }
+            };
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(setupProfile);
+
+            Assert.That(graph.TryFindNode("setup.profile", out PyralisAuthoringGraphNode setupNode), Is.True);
+            Assert.That(setupNode.EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.Ready));
+            Assert.That(graph.TryFindNode("capability.characterpawngameplay", out PyralisAuthoringGraphNode pawnNode), Is.True);
+            Assert.That(pawnNode.Kind, Is.EqualTo(PyralisAuthoringGraphNodeKind.Capability));
+            Assert.That(graph.TryFindNode("proof.current", out PyralisAuthoringGraphNode proofNode), Is.True);
+            Assert.That(proofNode.Kind, Is.EqualTo(PyralisAuthoringGraphNodeKind.Proof));
+            Assert.That(graph.Edges.Any(edge => edge.ToNodeId == "proof.current"), Is.True);
+
+            UnityEngine.Object.DestroyImmediate(setupProfile);
+        }
+
+        [Test]
+        public void AuthoringSetupGraph_SessionRouteCreatesParticipantPawnAndSurfaceNodes()
+        {
+            GameSetupProfile setupProfile = ScriptableObject.CreateInstance<GameSetupProfile>();
+            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
+            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
+            ParticipantDefinition participant = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            PawnDefinition pawn = ScriptableObject.CreateInstance<PawnDefinition>();
+            setupProfile.runtimeCapabilities = new[]
+            {
+                new RuntimeCapabilitySelection { capabilityFamily = RuntimeCapabilityFamily.CharacterPawnGameplay }
+            };
+            mode.setupProfile = setupProfile;
+            session.defaultGameMode = mode;
+            session.defaultParticipants = new[] { participant };
+            participant.defaultPawn = pawn;
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(session);
+
+            Assert.That(graph.TryFindNode("participant.default", out PyralisAuthoringGraphNode participantNode), Is.True);
+            Assert.That(participantNode.EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.Ready));
+            Assert.That(participantNode.SourceObject, Is.SameAs(participant));
+            Assert.That(graph.TryFindNode("pawn.definition", out PyralisAuthoringGraphNode pawnNode), Is.True);
+            Assert.That(pawnNode.EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.Ready));
+            Assert.That(pawnNode.SourceObject, Is.SameAs(pawn));
+            Assert.That(graph.TryFindNode("scene.surfaces", out PyralisAuthoringGraphNode surfaceSummaryNode), Is.True);
+            Assert.That(surfaceSummaryNode.Kind, Is.EqualTo(PyralisAuthoringGraphNodeKind.SceneSurface));
+
+            UnityEngine.Object.DestroyImmediate(pawn);
+            UnityEngine.Object.DestroyImmediate(participant);
+            UnityEngine.Object.DestroyImmediate(session);
+            UnityEngine.Object.DestroyImmediate(mode);
+            UnityEngine.Object.DestroyImmediate(setupProfile);
+        }
+
+        [Test]
+        public void AuthoringSetupGraphProjection_BuildsMapRowsFromGraphNodes()
+        {
+            GameSetupProfile setupProfile = ScriptableObject.CreateInstance<GameSetupProfile>();
+            setupProfile.runtimeCapabilities = new[]
+            {
+                new RuntimeCapabilitySelection { capabilityFamily = RuntimeCapabilityFamily.Combat }
+            };
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(setupProfile);
+            IReadOnlyList<PyralisAuthoringSetupGraphRow> rows = PyralisAuthoringSetupGraphProjection.BuildSetupMapRows(graph);
+
+            Assert.That(rows.Select(row => row.Label), Does.Contain("Setup Profile"));
+            Assert.That(rows.Select(row => row.Label), Does.Contain("Capabilities"));
+            Assert.That(rows.Select(row => row.Label), Does.Contain("Scene Surfaces"));
+            Assert.That(PyralisAuthoringSetupGraphProjection.FindCurrentProofNode(graph), Is.Not.Null);
+            Assert.That(PyralisAuthoringSetupGraphProjection.FindFirstUnresolvedNode(graph), Is.Not.Null);
+
+            UnityEngine.Object.DestroyImmediate(setupProfile);
+        }
+
+        [Test]
+        public void AuthoringSetupGraphProjection_ResolvesSelectedSetupAssetsToGraphContext()
+        {
+            GameSetupProfile setupProfile = ScriptableObject.CreateInstance<GameSetupProfile>();
+            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
+            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
+            setupProfile.runtimeCapabilities = new[]
+            {
+                new RuntimeCapabilitySelection { capabilityFamily = RuntimeCapabilityFamily.CharacterPawnGameplay }
+            };
+            mode.setupProfile = setupProfile;
+            session.defaultGameMode = mode;
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(session);
+            PyralisAuthoringSelectedContextGraphRow sessionContext = PyralisAuthoringSetupGraphProjection.BuildSelectedContextRow(graph, session);
+            PyralisAuthoringSelectedContextGraphRow modeContext = PyralisAuthoringSetupGraphProjection.BuildSelectedContextRow(graph, mode);
+            PyralisAuthoringSelectedContextGraphRow setupContext = PyralisAuthoringSetupGraphProjection.BuildSelectedContextRow(graph, setupProfile);
+
+            Assert.That(sessionContext.NodeId, Is.EqualTo("session.definition"));
+            Assert.That(modeContext.NodeId, Is.EqualTo("mode.definition"));
+            Assert.That(setupContext.NodeId, Is.EqualTo("setup.profile"));
+            Assert.That(setupContext.NextCheck, Does.Contain("Open Intent"));
+
+            UnityEngine.Object.DestroyImmediate(session);
+            UnityEngine.Object.DestroyImmediate(mode);
+            UnityEngine.Object.DestroyImmediate(setupProfile);
+        }
+
+        [Test]
+        public void AuthoringSetupGraphProjection_ResolvesPawnRootSelectionToPawnNode()
+        {
+            GameSetupProfile setupProfile = ScriptableObject.CreateInstance<GameSetupProfile>();
+            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
+            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
+            ParticipantDefinition participant = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            PawnDefinition pawn = ScriptableObject.CreateInstance<PawnDefinition>();
+            GameObject prefab = new GameObject("Pawn Root Context");
+            PawnRoot pawnRoot = prefab.AddComponent<PawnRoot>();
+            setupProfile.runtimeCapabilities = new[]
+            {
+                new RuntimeCapabilitySelection { capabilityFamily = RuntimeCapabilityFamily.CharacterPawnGameplay }
+            };
+            mode.setupProfile = setupProfile;
+            session.defaultGameMode = mode;
+            session.defaultParticipants = new[] { participant };
+            participant.defaultPawn = pawn;
+            pawn.pawnPrefab = prefab;
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(session);
+            PyralisAuthoringSelectedContextGraphRow context = PyralisAuthoringSetupGraphProjection.BuildSelectedContextRow(graph, pawnRoot);
+
+            Assert.That(context.NodeId, Is.EqualTo("pawn.definition"));
+            Assert.That(context.RuntimeMeaning, Does.Contain("Pawn"));
+
+            UnityEngine.Object.DestroyImmediate(prefab);
+            UnityEngine.Object.DestroyImmediate(pawn);
+            UnityEngine.Object.DestroyImmediate(participant);
+            UnityEngine.Object.DestroyImmediate(session);
+            UnityEngine.Object.DestroyImmediate(mode);
+            UnityEngine.Object.DestroyImmediate(setupProfile);
+        }
+
+        [Test]
+        public void AuthoringContracts_PropagatePriorityAndDeprecationMetadata()
+        {
+            ResolvedAuthoringContract movement = ResolvedAuthoringContractRegistry.FindByType(typeof(NeonBlack.Gameplay.Features.Characters.Pawn2DMovementComponent));
+
+            Assert.That(movement, Is.Not.Null);
+            Assert.That(movement.PriorityValueOverride, Is.EqualTo(50));
         }
 
         [Test]
@@ -495,7 +723,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void AuthoringContracts_AllFirstProofTargetsMapToRouteProofCards()
+        public void AuthoringContracts_RoutedFeatureModulesDeclareProofTargetsThatMapToRouteProofCards()
         {
             IReadOnlyList<ResolvedAuthoringContract> contracts = ResolvedAuthoringContractRegistry.All;
 
@@ -503,6 +731,12 @@ namespace NeonBlack.Gameplay.Tests.Editor
             for (int i = 0; i < contracts.Count; i++)
             {
                 ResolvedAuthoringContract contract = contracts[i];
+                if (string.IsNullOrWhiteSpace(contract.ModuleId)
+                    || !contract.RequiredRuntimeInterfaceNames.Contains("NeonBlack.Gameplay.Features.Composition.IFeatureModuleRuntime"))
+                {
+                    continue;
+                }
+
                 Assert.That(contract.FirstProofTargetId, Is.Not.Empty, contract.StableId);
                 Assert.That(PyralisAuthoringRouteProof.FindProofFact(contract.FirstProofTargetId), Is.Not.Null, contract.StableId);
             }

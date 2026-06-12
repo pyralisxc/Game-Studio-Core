@@ -45,6 +45,12 @@ namespace NeonBlack.Gameplay.Core.Contracts
         public string ModuleId { get; set; }
 
         /// <summary>
+        /// Optional resolved setup graph node that this contract enriches or explains.
+        /// Use stable graph ids such as "session.definition" or "pawn.definition".
+        /// </summary>
+        public string SetupNodeId { get; set; }
+
+        /// <summary>
         /// The presentation lane this contract belongs to (e.g., "Sprite2D", "Rigged3D").
         /// </summary>
         public string Lane { get; set; }
@@ -141,6 +147,12 @@ namespace NeonBlack.Gameplay.Core.Contracts
         /// The first thing a user should do to prove this contract is working.
         /// </summary>
         public string FirstProof { get; set; }
+
+        /// <summary>
+        /// Stable proof-card id used when this contract should route to a first-proof guide.
+        /// Keep FirstProof as human developer guidance; use this only for machine-readable proof routing.
+        /// </summary>
+        public string FirstProofTargetId { get; set; }
 
         /// <summary>
         /// Fields or properties that should be highlighted for assignment in the authoring UI.

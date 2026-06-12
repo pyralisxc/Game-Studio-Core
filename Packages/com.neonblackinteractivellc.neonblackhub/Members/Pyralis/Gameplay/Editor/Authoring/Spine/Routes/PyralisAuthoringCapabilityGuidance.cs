@@ -18,6 +18,15 @@ namespace NeonBlack.Gameplay.Editor
 
         private static PyralisAuthoringFeatureRow BuildSelectedRow(RuntimeCapabilityFamily family, string source)
         {
+            RuntimeCapabilityCard card = PyralisRuntimeCapabilityCatalog.FindPrimaryByFamily(family);
+            if (card != null)
+                return new PyralisAuthoringFeatureRow(
+                    card.DisplayName,
+                    source,
+                    card.WhatItAdds,
+                    BuildSetupSummary(card),
+                    BuildCustomizationSummary(card));
+
             return family switch
             {
                 RuntimeCapabilityFamily.PlatformCore => new PyralisAuthoringFeatureRow(
@@ -93,6 +102,42 @@ namespace NeonBlack.Gameplay.Editor
                     "Explain concrete Unity objects, components, and fields in the pattern description/setup notes before using it in a guided route.",
                     "Customize only after the required scene objects and runtime systems are named clearly.")
             };
+        }
+
+        private static string BuildSetupSummary(RuntimeCapabilityCard card)
+        {
+            if (card == null)
+                return string.Empty;
+
+            List<string> parts = new List<string>();
+            AddJoined(parts, card.RequiredDefinitions, "Definitions");
+            AddJoined(parts, card.RequiredProfiles, "Profiles");
+            AddJoined(parts, card.RequiredSceneComponents, "Scene");
+            AddJoined(parts, card.RequiredPrefabComponents, "Prefab");
+
+            if (parts.Count == 0)
+                return card.FirstProof;
+
+            return string.Join(" | ", parts);
+        }
+
+        private static string BuildCustomizationSummary(RuntimeCapabilityCard card)
+        {
+            if (card == null)
+                return string.Empty;
+
+            if (card.CustomizationMoments.Length > 0)
+                return string.Join(" ", card.CustomizationMoments);
+
+            return card.ExpertAdvice;
+        }
+
+        private static void AddJoined(List<string> parts, string[] values, string label)
+        {
+            if (values == null || values.Length == 0)
+                return;
+
+            parts.Add(label + ": " + string.Join(", ", values));
         }
 
         public static List<PyralisAuthoringFeatureRow> BuildRecommendedRows(PyralisAuthoringRouteDescriptor route)

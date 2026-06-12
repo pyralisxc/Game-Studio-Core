@@ -382,6 +382,7 @@ $solutionPath = Join-Path $ProjectPath "Game Studio Core.slnx"
 $ownedDotnetProjectPaths = @(Get-OwnedDotnetProjectPaths -SolutionPath $solutionPath)
 $dotnetProjectPaths = $ownedDotnetProjectPaths
 $logDirectory = Join-Path $ProjectPath "Logs\Codex"
+$unityTestPlatforms = @("EditMode", "PlayMode")
 New-Item -ItemType Directory -Force -Path $logDirectory | Out-Null
 
 Write-Host "Pre-scene validation project: $ProjectPath"
@@ -396,9 +397,9 @@ switch ($Phase) {
         $dotnetProjectPaths = @(Get-SmokeDotnetProjectPaths -ProjectPath $ProjectPath -OwnedProjectPaths $ownedDotnetProjectPaths)
     }
     "Authoring" {
-        $SkipUnity = $true
         $SkipFinalBuild = $true
         $dotnetProjectPaths = @(Get-SmokeDotnetProjectPaths -ProjectPath $ProjectPath -OwnedProjectPaths $ownedDotnetProjectPaths)
+        $unityTestPlatforms = @("EditMode")
     }
     "Checkpoint" {
         $SkipFinalBuild = $true
@@ -424,8 +425,9 @@ $layoutGuard = $null
 try {
     if (!$SkipUnity) {
         $layoutGuard = Suspend-UnityVersionControlLayout -ProjectPath $ProjectPath
-        $unityResults += Invoke-UnityTestRun -Platform "EditMode" -ProjectPath $ProjectPath -UnityExe $UnityExe -LogDirectory $logDirectory -TimeoutMinutes $TimeoutMinutes
-        $unityResults += Invoke-UnityTestRun -Platform "PlayMode" -ProjectPath $ProjectPath -UnityExe $UnityExe -LogDirectory $logDirectory -TimeoutMinutes $TimeoutMinutes
+        foreach ($platform in $unityTestPlatforms) {
+            $unityResults += Invoke-UnityTestRun -Platform $platform -ProjectPath $ProjectPath -UnityExe $UnityExe -LogDirectory $logDirectory -TimeoutMinutes $TimeoutMinutes
+        }
     }
 }
 finally {

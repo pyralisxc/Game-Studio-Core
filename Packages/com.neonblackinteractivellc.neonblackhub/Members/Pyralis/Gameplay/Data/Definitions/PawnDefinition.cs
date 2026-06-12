@@ -13,6 +13,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
     [AuthoringContract(
         Capability = AuthoringCapability.Movement | AuthoringCapability.Combat, 
         Priority = AuthoringPriority.Primary,
+        SetupNodeId = "pawn.definition",
         Lane = "Entity",
         Relevance = "Core definition for a controllable entity, linking its prefab to movement, combat, and animation profiles.",
         AssignmentFields = new[] { nameof(pawnPrefab), nameof(movementProfile), nameof(combatProfile), nameof(animationProfile), nameof(featureModules), nameof(defaultInputProfile) },

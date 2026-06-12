@@ -12,6 +12,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
     [AuthoringContract(
         Capability = AuthoringCapability.Rules, 
         Priority = AuthoringPriority.Primary,
+        SetupNodeId = "mode.definition",
         Lane = "Rules",
         Relevance = "Defines the project-owned rules, required feature modules, and scene targets for a gameplay session.",
         AssignmentFields = new[] { nameof(setupProfile), nameof(playfieldProfile), nameof(cameraRigProfile), nameof(requiredFeatureModules), nameof(gameplayScene) },

@@ -35,6 +35,7 @@ namespace NeonBlack.Gameplay.Features.Combat
             "ensure HealthComponent and status modifier receivers are present on actors that consume status effects"
         },
         FirstProof = "Apply a status effect to an actor and verify it appears in the active effect list.",
+        FirstProofTargetId = "proof.custom-object-effect",
         DocumentationURL = "https://docs.neonblack.com/pyralis/actor-status",
         AssignmentFields = new[]
         {

@@ -12,6 +12,7 @@ Pyralis docs should stay current and purposeful:
 - `START_HERE.md` teaches the first human setup path.
 - `AUTHORING_EXPERIENCE_VISION.md` owns the concise product north star: Authoring is the map, Unity is the workshop, and Inspectors are the local knobs.
 - `AUTHORING_BLUEPRINT.md` owns Authoring Window product direction, UX rules, implementation phases, and maintenance rules.
+- `RESOLVED_SETUP_GRAPH_SCOPE.md` owns the full migration boundary for the read-only authoring setup graph.
 - `AUTHORING_MODEL.md` owns the asset/runtime relationship map behind the window.
 - `CANONICAL_SETUP.md` owns the technical setup contract.
 - `FEATURE_DEVELOPMENT_ROADMAP.md` owns route-completeness sequencing.
@@ -113,9 +114,10 @@ Keep the implementation split by responsibility:
 | `PyralisAuthoringCapabilitySelection` | Capability-row helpers used by Intent-to-`GameSetupProfile` sync and optional `RuntimePatternDefinition` metadata |
 | `PyralisRuntimeCapabilityCatalog` | guide-only capability cards indexed by game-goal and runtime-lane tags |
 | `PyralisAuthoringIntentAdvisor` | Cookbook-to-intent read model that ranks route-intent, capability, contract, and proof facts from selected world/playfield, control shape, lane, and goals for Guide cards and other tab projections |
+| `PyralisAuthoringSetupGraph` | read-only resolved graph of setup nodes, edges, evidence, proof targets, selected context, and source contracts |
+| `PyralisAuthoringSetupGraphProjection` | Map, Overview, Validate, and selected-context projection rows derived from the resolved setup graph |
 | `PyralisAuthoringCapabilityGuidance` | selected capability, recommended next, environment, and route-intent guidance rows |
 | `PyralisAuthoringSceneSurfaceGuidance` | scene-surface labels, route relevance, next-fix text, expected evidence, and success text |
-| `PyralisAuthoringFeatureAdvisor` | composes route-aware feature advice from shared guidance models |
 | `PyralisSetupFlowMonitor` | bootstrap/setup-flow readiness checks that should stay aligned with the window |
 | `PyralisSceneReadinessValidator` | scene and prefab evidence checks |
 
@@ -127,8 +129,8 @@ The active guidance pipeline is:
 Runtime contracts
   -> Definition/Profile assets
       -> Route analysis
-          -> Shared authoring guidance models
-              -> Authoring Window, validation cards, inspector handoffs, and docs
+          -> Resolved setup graph and shared authoring guidance models
+              -> Map, Overview, Guide, validation cards, inspector handoffs, and docs
 ```
 
 Do not store the same route advice separately in multiple windows, inspectors, validators, or docs. If wording such as first proof, route intent, recommended next systems, or scene-surface success criteria needs to change, update the shared guidance owner first and let the visible surfaces render from it.
@@ -180,7 +182,7 @@ Core concepts:
 - `Evidence`: why the tool believes something is ready, missing, optional, or not needed for this route.
 - `Work Intent`: whether the row is foundation setup, required setup, a proof enhancer, or a feature card.
 
-The first Authoring 2.0 foundation is `PyralisAuthoringFactRegistry`. It is a read-only typed fact spine used to keep guide cards, validation issues, inspector handoffs, and setup rows on stable ids instead of display text. Runtime capability cards, reflected contracts, setup-flow rows, route proof facts, route-family coverage facts, scene-evidence facts, inspector handoff facts, convention facts, route intents, and typed `PyralisAuthoringIssue` metadata all flow through that single registry. Feature-owned `IAuthoringContractProvider` entries still feed setup-profile capability guidance, profile/runtime/lane validation, unsupported-lane cautions, and first-proof target rows, but convention facts do not use a second provider-discovery registry. `PyralisAuthoringIntentAdvisor` projects registry facts into a compact route-choice summary for Intent and ranked current-intent cards for Guide. Intent chooses the route shape; Guide owns the card wall; Facts remains the full cookbook and dictionary. Beginner semantic location tags give the Authoring Window a top legend strip and fact/action badges for Project, Hierarchy, Inspector, Component, Prefab, Definition, Profile, Input, UI, Animation, Audio, and Play Mode.
+The first Authoring 2.0 foundation is `PyralisAuthoringFactRegistry`. It is a read-only typed fact spine used to keep guide cards, validation issues, inspector handoffs, and setup rows on stable ids instead of display text. Runtime capability cards, reflected contracts, setup-flow rows, route proof facts, route-family coverage facts, scene-evidence facts, inspector handoff facts, convention facts, route intents, and typed `PyralisAuthoringIssue` metadata all flow through that single registry. Feature-owned `[AuthoringContract]` metadata feeds setup-profile capability guidance, profile/runtime/lane validation, unsupported-lane cautions, developer first-proof guidance, and resolved proof target rows. Convention facts do not use a second provider-discovery registry. `PyralisAuthoringIntentAdvisor` projects registry facts into a compact route-choice summary for Intent and ranked current-intent cards for Guide. Intent chooses the route shape; Guide owns the card wall; Facts remains the full cookbook and dictionary. Beginner semantic location tags give the Authoring Window a top legend strip plus generated fact/action badges for Project, Hierarchy, Inspector, Component, Prefab, Definition, Profile, Input, UI, Animation, Audio, and Play Mode.
 
 The registry should grow in this order:
 
@@ -266,7 +268,7 @@ Intent is the starting surface when no Pyralis setup context is selected or infe
 
 Intent should stay studio-wide:
 
-- use world/playfield dropdowns, control-shape dropdowns, lane choices, and capability toggles, not preset setup profiles
+- use world/playfield dropdowns, control-shape dropdowns, lane choices, and capability toggles as the route-shaping contract
 - rank route families, contracts, cautions, and first proof targets from registry facts
 - react to side-view 2D gravity, top-down/free 2D, 2.5D lane/arena, 3D, tabletop/no-pawn, card/table, UI/menu, camera/cursor, hybrid, and networking lanes
 - explain what the toggles imply without creating assets or choosing design taste

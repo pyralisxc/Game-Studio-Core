@@ -11,6 +11,7 @@ The Authoring Window, Inspector field guides, setup validation, and route facts 
 | I am creating a first scene | `START_HERE.md` |
 | I need the asset/runtime mental model | `AUTHORING_MODEL.md` |
 | I am improving the Authoring Window | `AUTHORING_BLUEPRINT.md`, then `AUTHORING_MODEL.md` |
+| I am working on the resolved setup graph | `RESOLVED_SETUP_GRAPH_SCOPE.md`, then `AUTHORING_BLUEPRINT.md` |
 | I need the technical contract | `CANONICAL_SETUP.md` |
 | I need to choose runtime patterns | `RUNTIME_PATTERN_COOKBOOK.md` |
 | I need scene-level route requirements | `SCENE_SETUP_GUIDE.md` |
@@ -39,6 +40,7 @@ Authoring guidance is product code. When changing first-scene or route-guided se
 - `PyralisSetupFlowValidator`
 - `PyralisSceneReadinessValidator`
 - `PyralisAuthoringRouteProof`
+- `PyralisAuthoringSetupGraph` and graph projection rows
 - Inspector field guides
 - these docs
 

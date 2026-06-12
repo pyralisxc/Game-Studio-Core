@@ -30,6 +30,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
     [AuthoringContract(
         Capability = AuthoringCapability.Setup | AuthoringCapability.Session, 
         Priority = AuthoringPriority.AuxiliaryDefault,
+        SetupNodeId = "setup.profile",
         Lane = "Setup",
         Relevance = "Project-window creation path for the capability setup profile.",
         AssignmentFields = new[] { nameof(setupName), nameof(runtimeCapabilities), nameof(runtimePatterns) },

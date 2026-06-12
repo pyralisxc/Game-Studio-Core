@@ -32,6 +32,7 @@ namespace NeonBlack.Gameplay.Features.Traversal
             "bind Jump in InputProfile"
         },
         FirstProof = "Press the Jump key and verify the actor performs a visual hop animation.",
+        FirstProofTargetId = "proof.1p-pawn-movement",
         AssignmentFields = new[]
         {
             "FeatureModuleDefinition.moduleId",

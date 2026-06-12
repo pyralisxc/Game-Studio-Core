@@ -13,6 +13,7 @@ namespace NeonBlack.Gameplay.Editor
     {
         private void DrawGuideMode(Object selection, PyralisAuthoringRouteReport report, Object activeSetup, PyralisAuthoringRouteReport activeSetupReport)
         {
+            PyralisAuthoringSetupGraph contextGraph = PyralisAuthoringSetupGraphBuilder.Build(activeSetup != null ? activeSetup : selection);
             if (ShouldShowSelectionFirstGuide(selection, activeSetup))
             {
                 EditorGUILayout.LabelField("Selected Object Next Step", EditorStyles.boldLabel);
@@ -20,8 +21,8 @@ namespace NeonBlack.Gameplay.Editor
 
                 EditorGUILayout.Space(10f);
                 EditorGUILayout.LabelField("What This Selection Does", EditorStyles.boldLabel);
-                PyralisSelectedContextRenderer.Draw(selection, report, FillMissingRuntimePatternText);
-                DrawSelectionGuide(selection, report);
+                PyralisSelectedContextRenderer.Draw(selection, report, contextGraph, FillMissingRuntimePatternText);
+                DrawSelectionGuide(selection, report, contextGraph);
 
                 EditorGUILayout.Space(10f);
                 DrawCurrentIntentGuide(GetCachedIntentModel());
@@ -34,8 +35,8 @@ namespace NeonBlack.Gameplay.Editor
 
                 EditorGUILayout.Space(10f);
                 EditorGUILayout.LabelField("What This Selection Does", EditorStyles.boldLabel);
-                PyralisSelectedContextRenderer.Draw(selection, report, FillMissingRuntimePatternText);
-                DrawSelectionGuide(selection, report);
+                PyralisSelectedContextRenderer.Draw(selection, report, contextGraph, FillMissingRuntimePatternText);
+                DrawSelectionGuide(selection, report, contextGraph);
             }
 
             if (activeSetup == null || activeSetup == selection)
@@ -221,41 +222,22 @@ namespace NeonBlack.Gameplay.Editor
             return names.Count > 0 ? string.Join(", ", names) : string.Empty;
         }
 
-        private static void DrawSelectionGuide(Object selection, PyralisAuthoringRouteReport report)
+        private static void DrawSelectionGuide(Object selection, PyralisAuthoringRouteReport report, PyralisAuthoringSetupGraph graph)
         {
+            PyralisAuthoringSelectedContextGraphRow selectedContext = PyralisAuthoringSetupGraphProjection.BuildSelectedContextRow(graph, selection);
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 EditorGUILayout.LabelField("Important Values", EditorStyles.miniBoldLabel);
-                EditorGUILayout.LabelField(GetImportantValuesText(selection), EditorStyles.wordWrappedMiniLabel);
+                EditorGUILayout.LabelField(selectedContext.Role, EditorStyles.wordWrappedMiniLabel);
 
                 EditorGUILayout.Space(4f);
                 EditorGUILayout.LabelField("What To Check First", EditorStyles.miniBoldLabel);
-                EditorGUILayout.LabelField(report.NextStep, EditorStyles.wordWrappedMiniLabel);
+                EditorGUILayout.LabelField(!string.IsNullOrWhiteSpace(selectedContext.NextCheck) ? selectedContext.NextCheck : report.NextStep, EditorStyles.wordWrappedMiniLabel);
 
                 EditorGUILayout.Space(4f);
                 EditorGUILayout.LabelField("Runtime Meaning", EditorStyles.miniBoldLabel);
-                EditorGUILayout.LabelField(report.RouteGuidance, EditorStyles.wordWrappedMiniLabel);
+                EditorGUILayout.LabelField(!string.IsNullOrWhiteSpace(selectedContext.RuntimeMeaning) ? selectedContext.RuntimeMeaning : report.RouteGuidance, EditorStyles.wordWrappedMiniLabel);
             }
-        }
-
-        private static string GetImportantValuesText(Object selection)
-        {
-            return selection switch
-            {
-                GameplaySessionBootstrap => "Session reference, spawn points, and scene-level setup helpers.",
-                SessionDefinition => "Game Rules, players/seats, local/network mode, and participant limits.",
-                GameModeDefinition => "Setup Profile plus rule-level defaults for the playable loop.",
-                GameSetupProfile => "Capability ingredients that describe what this game route needs before scene wiring starts.",
-                RuntimePatternDefinition => "Optional advanced route contract with capability family, participant embodiment, presentation lanes, first-proof requirements, supported control surfaces, required systems, and setup notes.",
-                ParticipantDefinition => "Display name, seat index, input ownership, and optional Pawn Actor.",
-                PawnDefinition => "Pawn prefab, profiles, feature modules, and presentation setup.",
-                Component component => component is PawnRoot
-                    ? "PawnRoot marks the prefab root that Pyralis treats as a pawn actor."
-                    : "This component participates in the selected GameObject's runtime behavior. Use the Inspector for field values and this window for setup meaning.",
-                GameObject => "Pyralis components on this object and the likely authoring root for setup.",
-                null => "Select a Pyralis setup asset, scene root, pawn prefab, or component to see its authoring meaning.",
-                _ => "Use this asset's Inspector for fields, and use this page to understand how it fits into setup."
-            };
         }
     }
 }

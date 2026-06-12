@@ -33,7 +33,7 @@ The current refactor pass now includes these concrete shared-core building block
 - `InputProfile`
 - `SettingsProfile`
 - feature module definitions and pawn-module interfaces
-- `ResolvedAuthoringContractRegistry` discovery for `IAuthoringContractProvider` contract providers
+- `ResolvedAuthoringContractRegistry` discovery for `[AuthoringContract]` metadata
 
 This means the package has a real Inspector-driven shared-core startup path. New gameplay and authoring work should extend this path directly instead of preserving abandoned setup routes.
 
@@ -79,7 +79,7 @@ The maintainable path is:
 
 ### 3.5. Feature Contracts Own Feature Setup Truth
 
-Reusable feature modules declare their authoring requirements beside the owning feature through `IAuthoringContractProvider`. `ResolvedAuthoringContractRegistry` discovers those providers reflectively. Central authoring code aggregates and displays contracts; it should not maintain parallel switch statements or manual module-id lists for feature-specific profile, lane, action, runtime-interface, or first-proof rules.
+Reusable feature modules declare their authoring requirements on the owning feature type with `[AuthoringContract]`. `ResolvedAuthoringContractRegistry` discovers those attributes reflectively. Central authoring code aggregates and displays contracts; it should not maintain parallel switch statements or manual module-id lists for feature-specific profile, lane, action, runtime-interface, or first-proof rules.
 
 A complete feature contract names:
 

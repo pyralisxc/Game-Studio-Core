@@ -15,6 +15,7 @@ namespace NeonBlack.Gameplay.Editor
         public static void Draw(
             Object selection,
             PyralisAuthoringRouteReport report,
+            PyralisAuthoringSetupGraph graph,
             Action<RuntimePatternDefinition> fillMissingRuntimePatternText)
         {
             EditorGUILayout.Space(12f);
@@ -30,6 +31,7 @@ namespace NeonBlack.Gameplay.Editor
             {
                 EditorGUILayout.LabelField("Selection", selection.name);
                 EditorGUILayout.LabelField("Type", selection.GetType().Name);
+                DrawGraphContext(PyralisAuthoringSetupGraphProjection.BuildSelectedContextRow(graph, selection));
 
                 if (GUILayout.Button("Open In Inspector"))
                 {
@@ -59,12 +61,30 @@ namespace NeonBlack.Gameplay.Editor
             if (selection is GameSetupProfile setupProfile)
             {
                 DrawSetupProfileContext(setupProfile);
-                PyralisFeatureAdvisorRenderer.Draw(setupProfile);
                 return;
             }
 
             if (selection is SessionDefinition or GameModeDefinition or ParticipantDefinition or PawnDefinition or FeatureModuleDefinition)
                 EditorGUILayout.HelpBox(report.RouteGuidance, MessageType.Info);
+        }
+
+        private static void DrawGraphContext(PyralisAuthoringSelectedContextGraphRow row)
+        {
+            if (row == null)
+                return;
+
+            EditorGUILayout.Space(2f);
+            EditorGUILayout.LabelField("Resolved Graph Context", EditorStyles.miniBoldLabel);
+            EditorGUI.indentLevel++;
+            EditorGUILayout.LabelField("Node", string.IsNullOrWhiteSpace(row.NodeId) ? "No matching graph node yet" : row.NodeId, EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.LabelField("Evidence", GetEvidenceLabel(row.EvidenceState), EditorStyles.wordWrappedMiniLabel);
+            if (!string.IsNullOrWhiteSpace(row.Role))
+                EditorGUILayout.LabelField("Role", row.Role, EditorStyles.wordWrappedMiniLabel);
+            if (!string.IsNullOrWhiteSpace(row.NextCheck))
+                EditorGUILayout.LabelField("Next Check", row.NextCheck, EditorStyles.wordWrappedMiniLabel);
+            if (!string.IsNullOrWhiteSpace(row.NativeSetup))
+                EditorGUILayout.LabelField("Native Setup", row.NativeSetup, EditorStyles.wordWrappedMiniLabel);
+            EditorGUI.indentLevel--;
         }
 
         private static void DrawGameObjectContext(GameObject gameObject)
@@ -159,12 +179,6 @@ namespace NeonBlack.Gameplay.Editor
             PyralisAuthoringWindowText.DrawSemanticHelpBox("Open Intent to choose or revise setup profile capability ingredients. Guide keeps this selected-profile view read-only so route shaping stays in one place.", MessageType.Info);
 
             EditorGUILayout.Space(4f);
-            PyralisRuntimeCapabilityCatalogRenderer.Draw(setupProfile);
-
-            EditorGUILayout.Space(4f);
-            PyralisAuthoringFactExplorerRenderer.DrawContractBackedFeatureModuleSetup();
-
-            EditorGUILayout.Space(4f);
             EditorGUILayout.LabelField("Optional Route Contracts", EditorStyles.boldLabel);
 
             if (setupProfile.runtimePatterns == null || setupProfile.runtimePatterns.Length == 0)
@@ -184,11 +198,25 @@ namespace NeonBlack.Gameplay.Editor
 
                 using (new EditorGUILayout.HorizontalScope())
                 {
-                    EditorGUILayout.LabelField(PyralisSetupChainRenderer.GetRuntimePatternLabel(pattern), $"{pattern.capabilityFamily} / {pattern.participantEmbodiment}");
+                    EditorGUILayout.LabelField(GetRuntimePatternLabel(pattern), $"{pattern.capabilityFamily} / {pattern.participantEmbodiment}");
                     if (GUILayout.Button("Select", GUILayout.Width(72f)))
                         Selection.activeObject = pattern;
                 }
             }
+        }
+
+        private static string GetRuntimePatternLabel(RuntimePatternDefinition pattern)
+        {
+            if (pattern == null)
+                return "Missing pattern";
+
+            if (!string.IsNullOrWhiteSpace(pattern.displayName))
+                return pattern.displayName;
+
+            if (!string.IsNullOrWhiteSpace(pattern.patternId))
+                return pattern.patternId;
+
+            return pattern.name;
         }
 
         private static void DrawComponentRow(Component component)
@@ -243,6 +271,19 @@ namespace NeonBlack.Gameplay.Editor
                 GameplaySessionBootstrap => "scene startup and setup-flow root",
                 PawnRoot => "pawn composition root",
                 _ => "runtime or authoring component"
+            };
+        }
+
+        private static string GetEvidenceLabel(PyralisAuthoringGraphEvidenceState state)
+        {
+            return state switch
+            {
+                PyralisAuthoringGraphEvidenceState.Ready => "Ready",
+                PyralisAuthoringGraphEvidenceState.Optional => "Optional",
+                PyralisAuthoringGraphEvidenceState.Missing => "Missing",
+                PyralisAuthoringGraphEvidenceState.CandidateDetected => "Candidate detected",
+                PyralisAuthoringGraphEvidenceState.Blocked => "Blocked",
+                _ => "Unknown"
             };
         }
 

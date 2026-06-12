@@ -16,7 +16,7 @@ The important rule is simple: a player does not require a pawn. In Pyralis, a pl
 
 ## Non-Pawn Tabletop MVP quick path
 
-Create the no-pawn route manually from `Create -> NeonBlack`: `Session Definition`, `Game Mode Definition`, `Game Setup Profile`, `Runtime Pattern Definition`, one or more `Participant Definition` assets for seats, hands, sides, or factions, `Board Definition`, `Board Piece Definition`, `Board Move Policy`, `Turn Order Definition`, and optional `Board Terminal Condition` assets. Keep these assets in a project-owned setup folder so the route is visible and editable before any future scaffold tooling exists.
+Create the no-pawn route manually from `Create -> NeonBlack`: `Session Definition`, `Game Mode Definition`, `Game Setup Profile`, one or more `Participant Definition` assets for seats, hands, sides, or factions, `Board Definition`, `Board Piece Definition`, `Board Move Policy`, `Turn Order Definition`, and optional `Board Terminal Condition` assets. Use Intent or the `GameSetupProfile.runtimeCapabilities` Inspector rows to choose board/card/tabletop, action-selection, camera/cursor, UI, and scoring ingredients. Add optional `RuntimePatternDefinition` assets only when the generic capability rows cannot describe reusable route metadata. Keep assets in a project-owned setup folder so the route is visible and editable.
 
 First proof loop:
 
@@ -67,14 +67,11 @@ Add those later only if the tabletop game grows pieces that need actor bodies, a
 Create these assets:
 
 1. `GameSetupProfile`
-2. `RuntimePatternDefinition` for `Board/Card/Tabletop`
-3. `RuntimePatternDefinition` for `Turn/Menu Action`
-4. `RuntimePatternDefinition` for `Camera/Cursor Control` if the player points at board spaces, cards, or UI
-5. `RuntimePatternDefinition` for `Scoring/Objectives` if the game tracks points, victory points, resources, timers, or round results
-6. `GameModeDefinition`
-7. `SessionDefinition`
-8. one `ParticipantDefinition` per seat, player, hand, faction, or side
-9. `ActionDefinition` assets for legal actions such as move piece, play card, end turn, draw, discard, pass, confirm, or cancel
+2. `GameModeDefinition`
+3. `SessionDefinition`
+4. one `ParticipantDefinition` per seat, player, hand, faction, or side
+5. `ActionDefinition` assets for legal actions such as move piece, play card, end turn, draw, discard, pass, confirm, or cancel
+6. optional `RuntimePatternDefinition` assets only when the route needs reusable metadata beyond capability rows
 
 In Unity, create these from the `Assets/Create/NeonBlack/...` menus where available. Keep them in a folder such as:
 
@@ -84,10 +81,10 @@ In Unity, create these from the `Assets/Create/NeonBlack/...` menus where availa
 
 On `GameSetupProfile`:
 
-- assign the board/card/tabletop runtime pattern
-- assign the turn/menu action runtime pattern
-- assign camera/cursor and scoring patterns only if the game uses them
-- use the description and setup notes to explain the exact game shape
+- select board/card/tabletop capability rows
+- select action-selection, camera/cursor, UI, and scoring capabilities only if the game uses them
+- assign optional runtime patterns only when reusable advanced metadata is needed
+- use notes and asset names to explain the exact game shape
 
 On `GameModeDefinition`:
 

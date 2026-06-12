@@ -1,0 +1,125 @@
+using System;
+using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Data.Definitions;
+using UnityEngine;
+
+namespace NeonBlack.Gameplay.Editor
+{
+    public enum PyralisAuthoringGraphNodeKind
+    {
+        Unknown,
+        SetupChain,
+        Capability,
+        Contract,
+        Proof,
+        SceneSurface,
+        PrefabRequirement,
+        AssignmentField,
+        ValidationEvidence
+    }
+
+    public enum PyralisAuthoringGraphSourceKind
+    {
+        Unknown,
+        SetupProfile,
+        RuntimeCapabilityCatalog,
+        RuntimePattern,
+        AuthoringContract,
+        FactRegistry,
+        SetupFlow,
+        SceneReadiness,
+        RouteProof
+    }
+
+    public enum PyralisAuthoringGraphEvidenceState
+    {
+        Unknown,
+        Optional,
+        Missing,
+        CandidateDetected,
+        Ready,
+        Blocked
+    }
+
+    public enum PyralisAuthoringGraphEdgeKind
+    {
+        RelatesTo,
+        DependsOn,
+        Satisfies,
+        Recommends,
+        BlocksProof
+    }
+
+    public sealed class PyralisAuthoringGraphNode
+    {
+        public PyralisAuthoringGraphNode(
+            string stableId,
+            string label,
+            PyralisAuthoringGraphNodeKind kind,
+            PyralisAuthoringGraphSourceKind sourceKind,
+            PyralisAuthoringGraphEvidenceState evidenceState = PyralisAuthoringGraphEvidenceState.Unknown,
+            RuntimeCapabilityFamily capabilityFamily = RuntimeCapabilityFamily.PlatformCore,
+            AuthoringCapability authoringCapability = AuthoringCapability.None,
+            string proofTargetId = null,
+            string guidance = null,
+            string[] nativeSetup = null,
+            string[] assignmentFields = null,
+            string[] customizationMoments = null,
+            string blockingReason = null,
+            ResolvedAuthoringContract sourceContract = null,
+            UnityEngine.Object sourceObject = null)
+        {
+            StableId = stableId ?? string.Empty;
+            Label = label ?? string.Empty;
+            Kind = kind;
+            SourceKind = sourceKind;
+            EvidenceState = evidenceState;
+            CapabilityFamily = capabilityFamily;
+            AuthoringCapability = authoringCapability;
+            ProofTargetId = proofTargetId ?? string.Empty;
+            Guidance = guidance ?? string.Empty;
+            NativeSetup = nativeSetup ?? Array.Empty<string>();
+            AssignmentFields = assignmentFields ?? Array.Empty<string>();
+            CustomizationMoments = customizationMoments ?? Array.Empty<string>();
+            BlockingReason = blockingReason ?? string.Empty;
+            SourceContract = sourceContract;
+            SourceObject = sourceObject;
+        }
+
+        public string StableId { get; }
+        public string Label { get; }
+        public PyralisAuthoringGraphNodeKind Kind { get; }
+        public PyralisAuthoringGraphSourceKind SourceKind { get; }
+        public PyralisAuthoringGraphEvidenceState EvidenceState { get; }
+        public RuntimeCapabilityFamily CapabilityFamily { get; }
+        public AuthoringCapability AuthoringCapability { get; }
+        public string ProofTargetId { get; }
+        public string Guidance { get; }
+        public string[] NativeSetup { get; }
+        public string[] AssignmentFields { get; }
+        public string[] CustomizationMoments { get; }
+        public string BlockingReason { get; }
+        public ResolvedAuthoringContract SourceContract { get; }
+        public UnityEngine.Object SourceObject { get; }
+    }
+
+    public sealed class PyralisAuthoringGraphEdge
+    {
+        public PyralisAuthoringGraphEdge(
+            string fromNodeId,
+            string toNodeId,
+            PyralisAuthoringGraphEdgeKind kind,
+            string label = null)
+        {
+            FromNodeId = fromNodeId ?? string.Empty;
+            ToNodeId = toNodeId ?? string.Empty;
+            Kind = kind;
+            Label = label ?? string.Empty;
+        }
+
+        public string FromNodeId { get; }
+        public string ToNodeId { get; }
+        public PyralisAuthoringGraphEdgeKind Kind { get; }
+        public string Label { get; }
+    }
+}

@@ -17,7 +17,7 @@ namespace NeonBlack.Gameplay.Editor
                     new[] { "Movement", "Combat", "NpcsEnemies" },
                     new[] { RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Billboard2_5D, RuntimeCapabilityLaneTag.ThirdPerson3D },
                     new[] { RuntimeCapabilityLaneTag.TabletopBoard },
-                    new[] { "SessionDefinition", "ParticipantDefinition", "PawnDefinition", "RuntimePatternDefinition" },
+                    new[] { "SessionDefinition", "ParticipantDefinition", "PawnDefinition" },
                     new[] { "InputProfile", "PawnMovementProfile", "PawnPresentationProfile" },
                     new[] { "GameplaySessionBootstrap", "PyralisGameplayLifetimeScope", "Spawn Point Transform" },
                     new[] { "PawnRoot", "Motor2D or Motor3D", "lane movement/presentation/input components" },

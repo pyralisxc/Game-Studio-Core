@@ -17,6 +17,7 @@ namespace NeonBlack.Gameplay.Characters
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Movement | AuthoringCapability.Session,
+        SetupNodeId = "pawn.definition",
         Relevance = "The root coordinator for participant-owned pawns. Handles profile application and feature installation.",
         NativeSetup = new[] { "Add to Pawn prefab root", "Assign PawnDefinition" },
         AssignmentFields = new[] { nameof(pawnDefinition) },

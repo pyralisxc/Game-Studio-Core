@@ -9,20 +9,20 @@ namespace NeonBlack.Gameplay.Editor
 {
     internal static class PyralisAuthoringOverviewRenderer
     {
-        public static void DrawGuidanceCard(PyralisAuthoringOverviewModel model, PyralisAuthoringRouteReport report)
+        public static void DrawGuidanceCard(PyralisAuthoringOverviewModel model, PyralisAuthoringRouteReport report, PyralisAuthoringSetupGraph graph)
         {
             if (model == null)
                 return;
 
-            EditorGUILayout.LabelField("Guidance", EditorStyles.miniBoldLabel);
+            EditorGUILayout.LabelField("Next Setup Guidance", EditorStyles.miniBoldLabel);
             string guidance = report != null && !string.IsNullOrWhiteSpace(report.RouteGuidance)
                 ? report.RouteGuidance
                 : model.FirstProofGuidance;
-            PyralisAuthoringWindowText.DrawSemanticHelpBox(guidance, model.ReadyToPressPlay ? MessageType.Info : MessageType.Warning);
+            PyralisAuthoringWindowText.DrawSemanticHelpBox(guidance, MessageType.Info);
+            PyralisAuthoringWindowPrimitives.DrawMiniField("Intent vs Setup", "Intent shapes the route. Project, Hierarchy, and Inspector create and wire the user's actual setup.");
             PyralisAuthoringWindowPrimitives.DrawMiniField("Next", model.BestNextAction);
+            DrawGraphPriority(graph);
             PyralisAuthoringWindowPrimitives.DrawMiniField("Proof Status", GetFlowTestStatus(model));
-            PyralisAuthoringWindowPrimitives.DrawMiniField("First Proof", model.FirstProofLabel);
-            PyralisAuthoringWindowText.DrawSemanticMiniLabel(model.FirstProofGuidance);
         }
 
         public static void DrawActionButtons(PyralisAuthoringOverviewModel model, Action openIntent, Action openMap, Action openValidate)
@@ -98,20 +98,42 @@ namespace NeonBlack.Gameplay.Editor
             return "Ready for first proof. Run the smallest route pass named below, verify one interaction in Play Mode, stop Play Mode, then add one feature at a time.";
         }
 
-        public static void DrawFirstProofCard(PyralisAuthoringOverviewModel model)
+        private static void DrawGraphPriority(PyralisAuthoringSetupGraph graph)
+        {
+            if (graph == null)
+                return;
+
+            PyralisAuthoringGraphNode next = PyralisAuthoringSetupGraphProjection.FindFirstUnresolvedNode(graph);
+            int blocked = PyralisAuthoringSetupGraphProjection.CountNodes(graph, PyralisAuthoringGraphEvidenceState.Blocked);
+            int missing = PyralisAuthoringSetupGraphProjection.CountNodes(graph, PyralisAuthoringGraphEvidenceState.Missing);
+            PyralisAuthoringWindowPrimitives.DrawMiniField("Resolved Graph", $"{blocked} blocked, {missing} missing");
+            if (next != null)
+                PyralisAuthoringWindowPrimitives.DrawMiniField("Graph Next", !string.IsNullOrWhiteSpace(next.Guidance) ? $"{next.Label}: {next.Guidance}" : next.Label);
+        }
+
+        public static void DrawFirstProofCard(PyralisAuthoringOverviewModel model, PyralisAuthoringSetupGraph graph)
         {
             if (model == null)
                 return;
 
+            PyralisAuthoringGraphNode proofNode = PyralisAuthoringSetupGraphProjection.FindCurrentProofNode(graph);
             EditorGUILayout.Space(4f);
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                EditorGUILayout.LabelField("First Playable Proof", model.FirstProofLabel, EditorStyles.miniBoldLabel);
-                PyralisAuthoringWindowPrimitives.DrawMiniField("Setup Surface", model.FirstProofSetupSurface);
-                PyralisAuthoringWindowPrimitives.DrawMiniField("Success Looks Like", model.FirstProofSuccessCriteria);
+                EditorGUILayout.LabelField("First Playable Proof", proofNode != null ? proofNode.Label : model.FirstProofLabel, EditorStyles.miniBoldLabel);
+                PyralisAuthoringWindowPrimitives.DrawMiniField("Setup Surface", GetFirstValue(proofNode?.NativeSetup, model.FirstProofSetupSurface));
+                PyralisAuthoringWindowPrimitives.DrawMiniField("Success Looks Like", !string.IsNullOrWhiteSpace(proofNode?.BlockingReason) ? proofNode.BlockingReason : model.FirstProofSuccessCriteria);
                 PyralisAuthoringWindowPrimitives.DrawMiniField("Proof Chain", model.FirstProofChainSummary);
                 PyralisAuthoringWindowPrimitives.DrawMiniField("Defer Until After Proof", model.FirstProofDeferUntilAfter);
             }
+        }
+
+        private static string GetFirstValue(string[] values, string fallback)
+        {
+            if (values != null && values.Length > 0 && !string.IsNullOrWhiteSpace(values[0]))
+                return values[0];
+
+            return fallback;
         }
 
         public static void DrawPlayModeChecklist(PyralisAuthoringOverviewModel model)
@@ -169,6 +191,12 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringWindowPrimitives.DrawMiniField("Feature Module", row.Contract.StableId);
                 PyralisAuthoringWindowPrimitives.DrawMiniField("Proof Target", string.IsNullOrWhiteSpace(row.Contract.FirstProofTargetId) ? "None recorded." : row.Contract.FirstProofTargetId);
                 PyralisAuthoringWindowPrimitives.DrawMiniField("Proof Target Exists", row.ProofTargetExists ? "Yes - this contract maps to a route proof card." : "No - the contract points at a missing route proof card.");
+                if (!string.IsNullOrWhiteSpace(row.Contract.FirstProofGuidance) &&
+                    !row.Contract.FirstProofGuidance.StartsWith("proof.", StringComparison.Ordinal))
+                {
+                    PyralisAuthoringWindowPrimitives.DrawMiniField("Developer Proof Guidance", row.Contract.FirstProofGuidance);
+                }
+
                 PyralisAuthoringWindowPrimitives.DrawMiniField("Proof Status", GetContractProofStatusText(row));
 
                 if (row.ProofFact != null)

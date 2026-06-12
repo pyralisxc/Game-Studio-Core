@@ -221,6 +221,9 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             if (lower.Contains("collider") || lower.Contains("physics"))
                 return "Inspect the prefab root and child colliders/Rigidbodies; keep one 2D or 3D physics lane for the proof.";
 
+            if (lower.Contains("prefab") || lower.Contains("pawnroot") || lower.Contains("ipawn") || lower.Contains("missing script"))
+                return "Inspect the prefab root in Prefab Mode or the Project window, then add or repair the named runtime component through the Inspector.";
+
             return string.Empty;
         }
     }

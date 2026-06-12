@@ -9,6 +9,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Participants, 
+        SetupNodeId = "participant.default",
         Relevance = "Defines a player or NPC seat within a session, including their default pawn and input configuration.",
         AssignmentFields = new[] { nameof(displayName), nameof(defaultPawn), nameof(inputProfile), nameof(teamIndex) },
         FirstProof = "Add this Participant Definition to the 'Default Participants' array in a Session Definition.",

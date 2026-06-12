@@ -21,6 +21,7 @@ namespace NeonBlack.Gameplay.Characters
     [AuthoringContract(
         Capability = AuthoringCapability.Setup,
         Priority = AuthoringPriority.Primary,
+        SetupNodeId = "bootstrap.root",
         Relevance = "Primary entry point for gameplay sessions; orchestrates participant spawn, camera setup, and core services.",
         Axioms = AuthoringWorldAxiom.None,
         NativeSetup = new[]

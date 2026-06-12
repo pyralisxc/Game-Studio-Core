@@ -36,7 +36,6 @@ The MVP readiness gate tracks these dimensions:
 | Capability | Game Shell | Pawn Action Sprite2D | Pawn Action Billboard2_5D | Pawn Action Rigged3D | Non-Pawn Tabletop |
 | --- | --- | --- | --- | --- | --- |
 | Route setup profile | Guided Needs Proof | Guided Needs Proof | Guided Needs Proof | Guided Needs Proof | Guided Needs Proof |
-| Starter pack | Foundation Only | Guided Needs Proof | Guided Needs Proof | Guided Needs Proof | Guided Needs Proof |
 | Scene root setup | Guided Needs Proof | Guided Needs Proof | Guided Needs Proof | Guided Needs Proof | Guided Needs Proof |
 | Session and participant setup | Foundation Only | Ready | Ready | Ready | Guided Needs Proof |
 | Pawn or no-pawn correctness | Deferred | Guided Needs Proof | Guided Needs Proof | Guided Needs Proof | Guided Needs Proof |
@@ -85,7 +84,7 @@ Current status: `Guided Needs Proof`.
 Strong foundations:
 
 - 2D pawn movement, input, combat, pickup, hazard, projectile, scoring, and camera pieces exist.
-- Starter-pack generation creates `Sprite2DPawnDefinition`, `Sprite2DPresentationProfile`, and `Sprite2DPawnPrefab` with the 2D pawn stack.
+- Native authoring guidance covers `PawnDefinition`, `PawnPresentationProfile`, and a user-owned `Sprite2D` pawn prefab with the 2D pawn stack.
 - Projectile and 2D runtime tests exist for important foundations.
 
 Main blockers before `Ready`:
@@ -103,7 +102,7 @@ Strong foundations:
 - `PawnPresentationProfile` names `Billboard2_5D` as an official presentation lane.
 - 3D pawn composition and camera foundations can carry the lane.
 - Animation/presentation profile wiring exists.
-- Starter-pack generation creates `Billboard25DPawnDefinition`, `Billboard25DPresentationProfile`, and `Billboard25DPawnPrefab` with the 3D pawn stack.
+- Native authoring guidance covers `PawnDefinition`, `PawnPresentationProfile`, and a user-owned `Billboard2_5D` pawn prefab with the 3D pawn stack.
 
 Main blockers before `Ready`:
 
@@ -120,7 +119,7 @@ Strong foundations:
 - 3D pawn movement, traversal, camera, combat, projectile, and Animator-driven presentation foundations exist.
 - Rigged 3D is an official presentation lane.
 - 3D projectile launcher and movement foundations have tests.
-- Starter-pack generation creates `Rigged3DPawnDefinition`, `Rigged3DPresentationProfile`, and `Rigged3DPawnPrefab` with the 3D pawn stack.
+- Native authoring guidance covers `PawnDefinition`, `PawnPresentationProfile`, and a user-owned `Rigged3D` pawn prefab with the 3D pawn stack.
 
 Main blockers before `Ready`:
 
@@ -142,7 +141,7 @@ Strong foundations:
 
 Main blockers before `Ready`:
 
-- packaged proof scene is still needed for one-click beginner validation
+- temporary proof-scene or PlayMode fixture evidence is still needed for beginner-route validation
 - proof scene should show board selection, action queue, legal move resolution, turn flow, and terminal condition behavior together
 
 ### Network Chain MVP

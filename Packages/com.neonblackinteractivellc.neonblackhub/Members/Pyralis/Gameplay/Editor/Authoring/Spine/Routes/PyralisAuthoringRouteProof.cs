@@ -738,22 +738,16 @@ namespace NeonBlack.Gameplay.Editor
 
         private static PyralisAuthoringProofStep CreateProofStep(PyralisAuthoringRouteCapability capability)
         {
+            RuntimeCapabilityCard card = FindProofStepCard(capability);
+            if (card != null)
+                return new PyralisAuthoringProofStep(capability, card.ProofStepLabel, card.ProofStepSuccessCriteria);
+
             switch (capability)
             {
-                case PyralisAuthoringRouteCapability.PawnAction:
-                    return new PyralisAuthoringProofStep(capability, "Local pawn movement", "One participant spawns one pawn and movement input visibly moves it.");
                 case PyralisAuthoringRouteCapability.Tabletop:
                     return new PyralisAuthoringProofStep(capability, "Board/card action", "One board, card, or seat command resolves through rules.");
-                case PyralisAuthoringRouteCapability.ActionSelection:
-                    return new PyralisAuthoringProofStep(capability, "Action resolver", "One selected command reaches its resolver and reports accepted, rejected, completed, or failed.");
                 case PyralisAuthoringRouteCapability.Projectile:
                     return new PyralisAuthoringProofStep(capability, "Projectile resolution", "One shot spawns or traces and resolves impact, miss, or expiry.");
-                case PyralisAuthoringRouteCapability.Combat:
-                    return new PyralisAuthoringProofStep(capability, "Combat reaction", "One attack produces one hit, block, damage, or reaction outcome.");
-                case PyralisAuthoringRouteCapability.Scoring:
-                    return new PyralisAuthoringProofStep(capability, "Score/objective change", "One gameplay event changes score, objective, timer, resource, or result state.");
-                case PyralisAuthoringRouteCapability.CameraCursor:
-                    return new PyralisAuthoringProofStep(capability, "Camera/cursor response", "One input or target changes camera, cursor, selection, framing, or bounds.");
                 case PyralisAuthoringRouteCapability.Procedural:
                     return new PyralisAuthoringProofStep(capability, "Generated output", "One generated result is visible, deterministic enough to inspect, or logged clearly.");
                 case PyralisAuthoringRouteCapability.Networking:
@@ -761,6 +755,19 @@ namespace NeonBlack.Gameplay.Editor
                 default:
                     return new PyralisAuthoringProofStep(capability, "Route support", "The selected capability has inspectable setup evidence.");
             }
+        }
+
+        private static RuntimeCapabilityCard FindProofStepCard(PyralisAuthoringRouteCapability capability)
+        {
+            IReadOnlyList<RuntimeCapabilityCard> cards = PyralisRuntimeCapabilityCatalog.All;
+            for (int i = 0; i < cards.Count; i++)
+            {
+                RuntimeCapabilityCard card = cards[i];
+                if (card.RouteCapability == capability && card.PrimaryProofCandidate)
+                    return card;
+            }
+
+            return null;
         }
 
         private static string BuildProofChainSummary(PyralisAuthoringProofStep[] proofChain)

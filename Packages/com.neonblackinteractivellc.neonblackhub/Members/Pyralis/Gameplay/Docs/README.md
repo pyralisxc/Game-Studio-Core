@@ -29,7 +29,7 @@ Active docs should describe the current product truth. Dated audits, superseded 
 - `PLATFORM_GOVERNANCE.md` - ownership and feature-folder rules.
 - `WORK_PRODUCT_EXPECTATIONS.md` - development and quality expectations.
 - `PROOF_SCENE_POLICY.md` - temporary proof-scene policy and promotion rules.
-- `Setup/Systems/Migration_and_Readability_Standard.md` - cleanup and readability rules.
+- `Authoring/Systems/Migration_and_Readability_Standard.md` - cleanup and readability rules.
 
 ## Archive
 

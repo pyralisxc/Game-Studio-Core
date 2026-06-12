@@ -12,6 +12,8 @@ namespace NeonBlack.Gameplay.Editor
 {
     public partial class PyralisAuthoringWindow
     {
+        private bool _intentHasUnappliedSetupChanges;
+
         private void RefreshIntentTab()
         {
             var axiomContainer = new VisualElement() { name = "axiomContainer" };
@@ -66,6 +68,10 @@ namespace NeonBlack.Gameplay.Editor
             guideButton.tooltip = "Show ranked cookbook cards for this intent without applying a preset.";
             var overviewButton = new Button(() => SwitchMode(AuthoringWindowMode.Overview)) { text = "Open Overview" };
             overviewButton.tooltip = "Return to the current setup route once a scene root or setup asset exists.";
+            var applyButton = new Button(ApplyIntentToActiveSetupProfile) { text = "Apply To Setup Profile", name = "applyIntentToSetupProfile" };
+            applyButton.tooltip = "Write the selected intent capability families into the active GameSetupProfile runtime capability rows.";
+            applyButton.SetEnabled(GetActiveIntentSetupProfile() != null && _intentCapabilities != AuthoringCapability.None);
+            actionRow.Add(applyButton);
             actionRow.Add(guideButton);
             actionRow.Add(overviewButton);
             advisorContainer.Add(actionRow);
@@ -147,7 +153,7 @@ namespace NeonBlack.Gameplay.Editor
                     dropdown.tooltip = "No mechanical axiom selected for this category.";
                 }
 
-                SyncIntentToActiveSetupProfile();
+                MarkIntentSetupChangesPending();
                 InvalidateAuthoringCache();
                 UpdateAdvisor(rootVisualElement);
             });
@@ -176,7 +182,7 @@ namespace NeonBlack.Gameplay.Editor
             {
                 _intentLane = options[dropdown.index];
                 dropdown.tooltip = RuntimeCapabilityLaneRegistry.GetTooltip(_intentLane);
-                SyncIntentToActiveSetupProfile();
+                MarkIntentSetupChangesPending();
                 InvalidateAuthoringCache();
                 UpdateAdvisor(rootVisualElement);
             });
@@ -237,7 +243,7 @@ namespace NeonBlack.Gameplay.Editor
                     {
                         if (evt.newValue) _intentCapabilities |= cap;
                         else _intentCapabilities &= ~cap;
-                        SyncIntentToActiveSetupProfile();
+                        MarkIntentSetupChangesPending();
                         InvalidateAuthoringCache();
                         UpdateAdvisor(rootVisualElement);
                     });
@@ -290,6 +296,10 @@ namespace NeonBlack.Gameplay.Editor
             Label nextLabel = root.Q<Label>("intentNext");
             if (nextLabel != null)
                 nextLabel.text = GetIntentReadinessMessage();
+
+            Button applyButton = root.Q<Button>("applyIntentToSetupProfile");
+            if (applyButton != null)
+                applyButton.SetEnabled(GetActiveIntentSetupProfile() != null && _intentCapabilities != AuthoringCapability.None);
         }
 
         private string GetIntentReadinessMessage()
@@ -304,7 +314,10 @@ namespace NeonBlack.Gameplay.Editor
             if (setupProfile == null)
                 return "Intent is shaped. Create or select a GameSetupProfile so these choices become the route contract read by Overview, Guide, Map, and Validate.";
 
-            return "Intent is shaped and synced to the active GameSetupProfile. Open Guide for ranked cookbook cards, then use Project, Hierarchy, and Inspector to create and wire your own setup.";
+            if (_intentHasUnappliedSetupChanges)
+                return $"Intent is shaped. Click Apply To Setup Profile to update `{setupProfile.name}` runtime capability rows, then open Guide for ranked cookbook cards.";
+
+            return $"Intent matches the active GameSetupProfile `{setupProfile.name}`. Open Guide for ranked cookbook cards, then use Project, Hierarchy, and Inspector to create and wire your own setup.";
         }
 
         private bool HasCompleteCoreAxioms()
@@ -325,7 +338,12 @@ namespace NeonBlack.Gameplay.Editor
                 ?? PyralisAuthoringSetupContextResolver.GetSelectedSetupProfile(activeSetup, PyralisAuthoringSetupContextResolver.GetSelectedMode(activeSetup, PyralisAuthoringSetupContextResolver.GetSelectedSession(activeSetup, PyralisAuthoringSetupContextResolver.GetSelectedBootstrap(activeSetup))));
         }
 
-        private void SyncIntentToActiveSetupProfile()
+        private void MarkIntentSetupChangesPending()
+        {
+            _intentHasUnappliedSetupChanges = true;
+        }
+
+        private void ApplyIntentToActiveSetupProfile()
         {
             if (_intentCapabilities == AuthoringCapability.None)
                 return;
@@ -356,7 +374,9 @@ namespace NeonBlack.Gameplay.Editor
             setupProfile.runtimeCapabilities = next.ToArray();
             setupProfile.runtimePatterns = PyralisIntentCapabilityProjection.FilterRuntimePatternsToFamilies(setupProfile.runtimePatterns, families);
             EditorUtility.SetDirty(setupProfile);
+            _intentHasUnappliedSetupChanges = false;
             InvalidateAuthoringCache();
+            UpdateAdvisor(rootVisualElement);
         }
     }
 }

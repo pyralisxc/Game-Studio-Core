@@ -274,7 +274,7 @@ namespace NeonBlack.Gameplay.Editor
                 nativeActions: BuildNativeActions(type, contract.NativeSetup),
                 workIntent: contract.WorkIntent,
                 axioms: contract.Axioms,
-                relatedStableIds: BuildRelatedStableIds(contract.FirstProofTargetId),
+                relatedStableIds: BuildRelatedStableIds(contract.FirstProofTargetId, contract.SetupNodeId),
                 capability: contract.Capability,
                 priority: (AuthoringPriority)contract.Priority,
                 priorityValueOverride: contract.PriorityValueOverride,
@@ -410,12 +410,16 @@ namespace NeonBlack.Gameplay.Editor
             return typeName.Substring(lastDot + 1);
         }
 
-        private static string[] BuildRelatedStableIds(string firstProofTargetId)
+        private static string[] BuildRelatedStableIds(string firstProofTargetId, string setupNodeId = null)
         {
-            if (string.IsNullOrWhiteSpace(firstProofTargetId))
-                return Array.Empty<string>();
+            List<string> related = new List<string>();
+            if (!string.IsNullOrWhiteSpace(firstProofTargetId))
+                related.Add(firstProofTargetId);
 
-            return new[] { firstProofTargetId };
+            if (!string.IsNullOrWhiteSpace(setupNodeId) && !related.Contains(setupNodeId))
+                related.Add(setupNodeId);
+
+            return related.ToArray();
         }
 
         private static bool IsGameplayType(Type type)

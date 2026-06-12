@@ -27,6 +27,7 @@ namespace NeonBlack.Gameplay.Features.Traversal
             "bind Jump or Interact in InputProfile"
         },
         FirstProof = "Press Jump or Interact when near a valid ClimbZone and verify the actor transition.",
+        FirstProofTargetId = "proof.npc-enemy-behavior",
         AssignmentFields = new[]
         {
             "FeatureModuleDefinition.moduleId",

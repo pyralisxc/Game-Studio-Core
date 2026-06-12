@@ -510,32 +510,68 @@ namespace NeonBlack.Gameplay.Editor
                 return System.Array.Empty<PyralisAuthoringRouteFact>();
 
             List<PyralisAuthoringRouteFact> facts = new List<PyralisAuthoringRouteFact>();
-            AddFactIfFamily(facts, families, RuntimeCapabilityFamily.CharacterPawnGameplay, PyralisAuthoringRouteCapability.PawnAction, "Pawn Action", true);
-            AddFactIfFamily(facts, families, RuntimeCapabilityFamily.BoardCardTabletop, PyralisAuthoringRouteCapability.Tabletop, "Tabletop", true);
-            AddFactIfFamily(facts, families, RuntimeCapabilityFamily.ActionTargeting, PyralisAuthoringRouteCapability.ActionSelection, "Action Selection", true);
-            AddFactIfFamily(facts, families, RuntimeCapabilityFamily.GunsProjectiles, PyralisAuthoringRouteCapability.Projectile, "Projectile", true);
-            AddFactIfFamily(facts, families, RuntimeCapabilityFamily.Combat, PyralisAuthoringRouteCapability.Combat, "Combat", true);
-            AddFactIfFamily(facts, families, RuntimeCapabilityFamily.ScoringObjectives, PyralisAuthoringRouteCapability.Scoring, "Scoring", true);
-            AddFactIfFamily(facts, families, RuntimeCapabilityFamily.CameraInput, PyralisAuthoringRouteCapability.CameraCursor, "Camera / Cursor", true);
-            AddFactIfFamily(facts, families, RuntimeCapabilityFamily.ProceduralGeneration, PyralisAuthoringRouteCapability.Procedural, "Procedural", true);
-            AddFactIfFamily(facts, families, RuntimeCapabilityFamily.Networking, PyralisAuthoringRouteCapability.Networking, "Networking", true);
-            AddFactIfFamily(facts, families, RuntimeCapabilityFamily.AnimationPresentation, PyralisAuthoringRouteCapability.AnimationPresentation, "Animation / Presentation", false);
-            AddFactIfFamily(facts, families, RuntimeCapabilityFamily.PlatformCore, PyralisAuthoringRouteCapability.PlatformCore, "Platform Core", false);
+            for (int i = 0; i < families.Length; i++)
+                AddFact(facts, families[i]);
+
             return facts.ToArray();
         }
 
-        private static void AddFactIfFamily(
-            List<PyralisAuthoringRouteFact> facts,
-            RuntimeCapabilityFamily[] families,
-            RuntimeCapabilityFamily family,
-            PyralisAuthoringRouteCapability capability,
-            string label,
-            bool primaryProofCandidate)
+        private static void AddFact(List<PyralisAuthoringRouteFact> facts, RuntimeCapabilityFamily family)
         {
-            if (!ContainsFamily(families, family))
+            RuntimeCapabilityCard card = PyralisRuntimeCapabilityCatalog.FindPrimaryByFamily(family);
+            if (card != null)
+            {
+                facts.Add(new PyralisAuthoringRouteFact(card.RouteCapability, card.RouteLabel, card.CapabilityFamily, card.PrimaryProofCandidate));
                 return;
+            }
 
-            facts.Add(new PyralisAuthoringRouteFact(capability, label, family, primaryProofCandidate));
+            if (TryGetFallbackRouteFact(family, out PyralisAuthoringRouteCapability capability, out string label, out bool primaryProofCandidate))
+                facts.Add(new PyralisAuthoringRouteFact(capability, label, family, primaryProofCandidate));
+        }
+
+        private static bool TryGetFallbackRouteFact(
+            RuntimeCapabilityFamily family,
+            out PyralisAuthoringRouteCapability capability,
+            out string label,
+            out bool primaryProofCandidate)
+        {
+            capability = PyralisAuthoringRouteCapability.PlatformCore;
+            label = string.Empty;
+            primaryProofCandidate = false;
+
+            switch (family)
+            {
+                case RuntimeCapabilityFamily.BoardCardTabletop:
+                    capability = PyralisAuthoringRouteCapability.Tabletop;
+                    label = "Tabletop";
+                    primaryProofCandidate = true;
+                    return true;
+                case RuntimeCapabilityFamily.GunsProjectiles:
+                    capability = PyralisAuthoringRouteCapability.Projectile;
+                    label = "Projectile";
+                    primaryProofCandidate = true;
+                    return true;
+                case RuntimeCapabilityFamily.ProceduralGeneration:
+                    capability = PyralisAuthoringRouteCapability.Procedural;
+                    label = "Procedural";
+                    primaryProofCandidate = true;
+                    return true;
+                case RuntimeCapabilityFamily.Networking:
+                    capability = PyralisAuthoringRouteCapability.Networking;
+                    label = "Networking";
+                    primaryProofCandidate = true;
+                    return true;
+                case RuntimeCapabilityFamily.AnimationPresentation:
+                    capability = PyralisAuthoringRouteCapability.AnimationPresentation;
+                    label = "Animation / Presentation";
+                    return true;
+                case RuntimeCapabilityFamily.PlatformCore:
+                    capability = PyralisAuthoringRouteCapability.PlatformCore;
+                    label = "Platform Core";
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         private static bool ContainsFamily(RuntimePatternDefinition[] patterns, RuntimeCapabilityFamily family)

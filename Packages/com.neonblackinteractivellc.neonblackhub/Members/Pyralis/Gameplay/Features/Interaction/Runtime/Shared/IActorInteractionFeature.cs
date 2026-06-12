@@ -12,6 +12,7 @@ namespace NeonBlack.Gameplay.Features.Interaction
         ConsumedRoles = new[] { "Interact" },
         AssignmentFields = new[] { "InteractionFeatureProfile.enableInteraction", "InteractionFeatureProfile.interactionCooldown" },
         FirstProof = "Press the interact button and verify the interaction handler is triggered.",
+        FirstProofTargetId = "proof.action-selection",
         NativeSetup = new[]
         {
             "create InteractionFeatureProfile",

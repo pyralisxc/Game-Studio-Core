@@ -19,13 +19,9 @@ Most feature developers should not need to edit the spine unless they are expand
 
 - `AuthoringWindow/`: the main guided Authoring Window and its UI assets.
 - `Inspectors/`: shared inspector field guides and direct custom inspectors.
-- `Tools/`: editor utilities, diagnostics windows, and validation bridge helpers.
+- `Tools/`: authoring-adjacent editor utilities, diagnostics windows, documentation helpers, and validation bridge helpers.
 
 Surfaces should consume spine data. They should not become competing sources of route truth.
-
-## Diagnostics
-
-`Diagnostics/` is reserved for coverage reports, audits, and temporary health snapshots that help maintain the authoring system.
 
 ## Feature-Owned Truth
 

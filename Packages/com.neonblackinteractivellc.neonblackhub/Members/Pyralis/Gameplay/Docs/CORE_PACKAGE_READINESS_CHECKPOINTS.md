@@ -69,7 +69,7 @@ Required before this checkpoint is `Ready`:
 
 Current slice status:
 
-- Generic capability setup now guides lane-specific presentation profiles, pawn definitions, and prefabs for `Sprite2D`, `Billboard2_5D`, and `Rigged3D` without relying on starter-pack generation.
+- Generic capability setup guides lane-specific presentation profiles, pawn definitions, and prefabs for `Sprite2D`, `Billboard2_5D`, and `Rigged3D` through native Unity authoring.
 - Pawn-Backed Action remains `Guided Needs Proof` until each lane has an end-to-end playable-loop proof covering movement, camera, presentation, health/damage, projectile/combat, scoring/HUD, and scene flow.
 
 ## Checkpoint 3: Non-Pawn Tabletop MVP
@@ -87,7 +87,7 @@ Current slice status:
 
 - The no-pawn quick path now points beginners through manually authored tabletop/session/profile assets, empty `Default Pawn`, empty `Spawn Points`, `TabletopBoardGridPresenter`, `TabletopBoardSelectionBridge`, `ActionQueueService`, and `BoardMoveActionResolver`.
 - Runtime and editor contracts already cover board move resolution, selection queueing, presenter creation, and no-pawn setup-flow guidance.
-- Non-Pawn Tabletop remains `Guided Needs Proof` until a packaged proof scene verifies the full route in one Unity-facing setup.
+- Non-Pawn Tabletop remains `Guided Needs Proof` until a temporary proof scene or PlayMode fixture verifies the full route through the Authoring Window and native Unity setup.
 
 ## Checkpoint 4: Network Chain MVP
 

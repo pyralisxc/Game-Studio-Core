@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Core.Contracts;
-using NeonBlack.Gameplay.Editor.Inspectors;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -25,12 +23,13 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             PyralisAuthoringValidationModel model = PyralisAuthoringValidationModel.Build(activeSetup, report);
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(activeSetup);
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 EditorGUILayout.LabelField("Active Setup", activeSetup.name);
                 EditorGUILayout.LabelField("Route", model.RouteName);
                 EditorGUILayout.LabelField("Next Step", model.NextStep, EditorStyles.wordWrappedLabel);
-                DrawValidateReadinessBuckets(activeSetup);
+                DrawValidateReadinessBuckets(graph);
             }
 
             if (!model.HasIssues)
@@ -49,24 +48,27 @@ namespace NeonBlack.Gameplay.Editor
             DrawValidationIssueGroup(PyralisAuthoringValidationCategory.Other, model.Issues, runGuidanceAction);
         }
 
-        private static void DrawValidateReadinessBuckets(Object activeSetup)
+        private static void DrawValidateReadinessBuckets(PyralisAuthoringSetupGraph graph)
         {
-            GameplaySessionBootstrap bootstrap = PyralisAuthoringSetupContextResolver.GetSelectedBootstrap(activeSetup);
-            if (bootstrap == null)
+            if (graph == null)
                 return;
 
-            PyralisSceneReadinessReport readiness = PyralisSceneReadinessValidator.BuildReport(bootstrap);
-            if (readiness == null || readiness.Issues.Count == 0)
+            IReadOnlyList<PyralisAuthoringValidationGraphRow> required = PyralisAuthoringSetupGraphProjection.BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.Blocked);
+            IReadOnlyList<PyralisAuthoringValidationGraphRow> recommended = PyralisAuthoringSetupGraphProjection.BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.Missing);
+            IReadOnlyList<PyralisAuthoringValidationGraphRow> enhancers = PyralisAuthoringSetupGraphProjection.BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.CandidateDetected);
+            if (required.Count == 0 && recommended.Count == 0 && enhancers.Count == 0)
                 return;
 
-            DrawReadinessBucket("Required Before Play", readiness.GetIssues(PyralisSceneReadinessSeverity.RequiredBeforePlay), MessageType.Error);
-            DrawReadinessBucket("Recommended Before Play", readiness.GetIssues(PyralisSceneReadinessSeverity.RecommendedBeforePlay), MessageType.Warning);
-            DrawReadinessBucket("Proof Enhancers", readiness.GetIssues(PyralisSceneReadinessSeverity.ProofEnhancer), MessageType.Info);
+            EditorGUILayout.Space(4f);
+            EditorGUILayout.LabelField("Graph Readiness Evidence", EditorStyles.miniBoldLabel);
+            DrawReadinessBucket("Required Before Play", required, MessageType.Error);
+            DrawReadinessBucket("Recommended Before Play", recommended, MessageType.Warning);
+            DrawReadinessBucket("Proof Enhancers", enhancers, MessageType.Info);
         }
 
         private static void DrawReadinessBucket(
             string label,
-            IReadOnlyList<PyralisSceneReadinessIssue> issues,
+            IReadOnlyList<PyralisAuthoringValidationGraphRow> issues,
             MessageType messageType)
         {
             if (issues == null || issues.Count == 0)
@@ -77,13 +79,13 @@ namespace NeonBlack.Gameplay.Editor
             int visible = Mathf.Min(issues.Count, 4);
             for (int i = 0; i < visible; i++)
             {
-                PyralisSceneReadinessIssue issue = issues[i];
+                PyralisAuthoringValidationGraphRow issue = issues[i];
                 if (issue == null)
                     continue;
 
                 string text = string.IsNullOrWhiteSpace(issue.NativeAction)
-                    ? issue.Message
-                    : issue.Message + "\nNext native action: " + issue.NativeAction;
+                    ? $"{issue.Message}\nGraph node: {issue.NodeId}"
+                    : $"{issue.Message}\nGraph node: {issue.NodeId}\nNext native action: {issue.NativeAction}";
                 EditorGUILayout.HelpBox(text, messageType);
             }
 

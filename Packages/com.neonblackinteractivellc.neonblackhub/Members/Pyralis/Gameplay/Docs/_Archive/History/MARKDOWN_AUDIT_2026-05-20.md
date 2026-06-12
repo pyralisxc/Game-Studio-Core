@@ -1,6 +1,6 @@
 # Markdown Audit - 2026-05-20
 
-Status: historical snapshot. Use `README.md`, `CURRENT_STATE_AUDIT.md`, and `Setup/START_HERE.md` for current documentation status.
+Status: historical snapshot. Use `README.md`, `CURRENT_STATE_AUDIT.md`, and `Authoring/START_HERE.md` for current documentation status.
 
 This audit records the documentation cleanup completed after the gameplay platform realignment and deferred-implementation cleanup pass.
 

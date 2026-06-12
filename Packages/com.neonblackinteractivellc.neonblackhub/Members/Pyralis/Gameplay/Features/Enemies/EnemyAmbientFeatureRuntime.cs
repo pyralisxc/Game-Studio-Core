@@ -17,6 +17,7 @@ namespace NeonBlack.Gameplay.Features.Enemies
         RequiredComponentNames = new[] { "NeonBlack.Gameplay.Features.Enemies.EnemyAI" },
         AssignmentFields = new[] { nameof(ambientProfile) },
         FirstProof = "Verify that the enemy performs ambient look-around animations while patrolling.",
+        FirstProofTargetId = "proof.npc-enemy-behavior",
         NativeSetup = new[]
         {
             "create EnemyAmbientFeatureProfile",

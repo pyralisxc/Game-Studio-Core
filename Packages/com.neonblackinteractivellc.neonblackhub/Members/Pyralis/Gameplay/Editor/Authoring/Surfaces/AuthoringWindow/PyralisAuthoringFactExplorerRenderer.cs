@@ -108,11 +108,6 @@ namespace NeonBlack.Gameplay.Editor
             }
         }
 
-        public static void DrawContractBackedFeatureModuleSetup()
-        {
-            DrawFeatureContractSetupProfiles();
-        }
-
         private static Dictionary<string, List<ResolvedAuthoringContract>> BuildContractsByCategory(IReadOnlyList<ResolvedAuthoringContract> contracts)
         {
             Dictionary<string, List<ResolvedAuthoringContract>> contractsByCategory = new Dictionary<string, List<ResolvedAuthoringContract>>();

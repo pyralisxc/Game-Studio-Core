@@ -67,10 +67,10 @@ SessionDefinition
 In plain English:
 
 - `AuthoringContractAttribute` is the lightweight declaration placed on runtime/editor types.
-- `ResolvedAuthoringContract` is the normalized contract record after attributes, providers, merge rules, source type, proof target, and fallback guidance have been resolved.
+- `ResolvedAuthoringContract` is the normalized contract record after attributes, merge rules, source type, setup graph node id, developer proof guidance, proof target, and fallback guidance have been resolved.
 - `ResolvedAuthoringContractRegistry` is the authoritative source for feature-owned authoring contracts.
-- Feature contracts are declared in feature code with `[AuthoringContract]` or beside feature code via `IAuthoringContractProvider`.
-- Contracts are discovered reflectively and normalized once; validation, proof guidance, inspector handoffs, and cookbook facts should consume resolved contracts instead of rescanning raw attributes.
+- Feature contracts are declared in feature code with `[AuthoringContract]`.
+- Contracts are discovered reflectively and normalized once; validation, proof guidance, inspector handoffs, setup graph links, and cookbook facts should consume resolved contracts instead of rescanning raw attributes.
 - `PyralisAuthoringFactRegistry` is the single cookbook aggregator for runtime capability cards, reflection, setup-flow facts, route proofs, inspector handoffs, convention facts, route intents, and scene evidence.
 - Convention facts stay as explicit source calls from the main fact registry. Do not add a parallel provider-discovery layer unless a new spine capability genuinely needs extension-point behavior.
 - `GameplaySessionBootstrap` is the runtime startup object in the scene.
@@ -186,7 +186,7 @@ Imported asset packs are valid proof material when they are treated as creator-o
 
 Good validation notes should record where the guide helped, where Unity navigation was naturally a learning curve, where Pyralis guidance was missing or too forceful, which code warnings or validators were improved, and which customization choices stayed in the tester's hands.
 
-The **Intent**, **Guide**, **Overview**, **Map**, **Validate**, and **Facts** tabs are projections from the same cookbook. They do not turn genres into hard-coded templates. `PyralisAuthoringIntentAdvisor` reads route-intent facts, combines them with selected world/playfield, control shape, presentation/runtime lane, and explicitly toggled capability goals, then returns a ranked model for the UI to project. Intent owns only the creator's route choices and a compact summary. Guide owns the ranked cards that match those choices and the selected-object explanation. Overview extracts the best next one to three setup moves. Map projects current setup topology. Validate projects the internal readiness console. Facts shows the full dictionary, including facts outside the current route. Genre words are summaries of selected ingredients, not source data. Intent should not apply suggested defaults, create assets, choose optional runtime contracts, wire a scene, or imply that the user has accepted a preset. For side-view brawler work, `Movement`, `Jump / Traversal`, `Combat`, `Input`, and `Animation / Presentation` are visible route-shaping capabilities because they are the first decisions a creator brings with imported art, sprites, animations, and attack feel. For top-down 2D work, free X/Y movement, bounds, targeting, camera framing, and optional hop/dash semantics outrank side-view gravity ground. For tabletop/card/UI work, no-pawn surfaces, action selection, seats/hands/factions, and visible state changes outrank pawn prefab setup. Each proof pass should improve the cookbook facts and contracts first, then let every tab benefit from the corrected reflection. The feature guide reads `GameSetupProfile.runtimeCapabilities` and optional runtime contracts, then explains the selected capabilities:
+The **Intent**, **Guide**, **Overview**, **Map**, **Validate**, and **Facts** tabs are projections from the same authoring spine. The read-only resolved setup graph is built from contracts, cookbook facts, route analysis, setup-flow evidence, scene-readiness evidence, and selected Unity context. Foundational contracts can declare `SetupNodeId` so the graph and cookbook facts connect reflected contracts to stable setup concepts without parallel mapping files. The graph does not create assets or apply presets; it explains what the selected intent and current setup imply. `PyralisAuthoringIntentAdvisor` still reads route-intent facts, combines them with selected world/playfield, control shape, presentation/runtime lane, and explicitly toggled capability goals, then returns a ranked model for the UI to project. Intent owns only the creator's route choices and a compact summary. Guide owns the ranked cards that match those choices and uses graph selected-context rows for repeated object meaning. Overview extracts the best next one to three setup moves and can surface graph priority/proof data. Map projects current setup topology from graph rows. Validate projects graph-grouped readiness evidence while the concrete Unity checks stay in the setup-flow and scene-readiness validators. Facts shows the full dictionary, including facts outside the current route. Genre words are summaries of selected ingredients, not source data. Intent should not apply suggested defaults, create assets, choose optional runtime contracts, wire a scene, or imply that the user has accepted a preset. For side-view brawler work, `Movement`, `Jump / Traversal`, `Combat`, `Input`, and `Animation / Presentation` are visible route-shaping capabilities because they are the first decisions a creator brings with imported art, sprites, animations, and attack feel. For top-down 2D work, free X/Y movement, bounds, targeting, camera framing, and optional hop/dash semantics outrank side-view gravity ground. For tabletop/card/UI work, no-pawn surfaces, action selection, seats/hands/factions, and visible state changes outrank pawn prefab setup. Each proof pass should improve the contracts, graph, and cookbook facts first, then let every tab benefit from the corrected reflection. The feature guide reads `GameSetupProfile.runtimeCapabilities` and optional runtime contracts, then explains the selected capabilities:
 
 - design capabilities: checkbox/dropdown selection for route-facing capability families; optional `RuntimePatternDefinition` contracts can enrich advanced metadata
 - design prompts: what world/playfield the project uses, what the user controls, which capabilities are active, and which focused proof should come next
@@ -196,7 +196,7 @@ The **Intent**, **Guide**, **Overview**, **Map**, **Validate**, and **Facts** ta
 - customization: the fields and assets where the user expresses taste, art, tuning, rules, layout, and feature behavior
 - recommended next options: nearby capabilities that commonly complete the selected project shape without becoming presets
 
-The Authoring Window implementation should stay split by responsibility. Keep `PyralisAuthoringWindow` as the UI shell and selection/mode coordinator. Put canonical route facts in `PyralisSetupRouteAnalysis`, route presentation in `PyralisAuthoringRouteDescriptor`, first playable proof and proof-chain text in `PyralisAuthoringRouteProof`, selected-object route diagnosis in `PyralisAuthoringRouteReport`, overview counts in `PyralisAuthoringOverviewSnapshot`, capability checkbox behavior in `PyralisAuthoringCapabilitySelection`, capability explanation rows in `PyralisAuthoringCapabilityGuidance`, scene-surface route wording in `PyralisAuthoringSceneSurfaceGuidance`, cookbook-to-intent ranking in `PyralisAuthoringIntentAdvisor`, and composed game-feature explanations in `PyralisAuthoringFeatureAdvisor`. Add new game systems to these shared analysis or guidance owners before adding more drawing logic to the window.
+The Authoring Window implementation should stay split by responsibility. Keep `PyralisAuthoringWindow` as the UI shell and selection/mode coordinator. Put canonical route facts in `PyralisSetupRouteAnalysis`, route presentation in `PyralisAuthoringRouteDescriptor`, first playable proof and proof-chain text in `PyralisAuthoringRouteProof`, selected-object route diagnosis in `PyralisAuthoringRouteReport`, overview counts in `PyralisAuthoringOverviewSnapshot`, capability checkbox behavior in `PyralisAuthoringCapabilitySelection`, capability explanation rows in `PyralisAuthoringCapabilityGuidance`, scene-surface route wording in `PyralisAuthoringSceneSurfaceGuidance`, and cookbook-to-intent ranking in `PyralisAuthoringIntentAdvisor`. Add new game systems to these shared analysis or guidance owners before adding more drawing logic to the window.
 
 Setup flow rows should be structured facts, not just display strings. Each `PyralisSetupFlowStep` should carry a stable step id, a work intent (`Foundation`, `RequiredSetup`, `ProofEnhancer`, or `FeatureCard`), evidence, target object, and native Unity action when one is known. This lets Overview decide what to do first even when many systems are open: blockers go to `Do Now`, proof enhancers stay near the first proof, and feature-card work waits until the current proof is reliable. Do not key new feature behavior only from row labels or warning copy.
 
@@ -466,7 +466,7 @@ Do not create a feature module for one-off scene wiring. Use a normal component 
 
 ### Feature-Owned Authoring Contracts
 
-Every reusable `FeatureModuleDefinition` module with known setup rules should have a feature-owned authoring contract provider. Put the provider beside the owning feature's editor code and implement `IAuthoringContractProvider`. The registry discovers providers by reflection across loaded editor assemblies, so do not add central lists of feature module ids.
+Every reusable `FeatureModuleDefinition` module with known setup rules should have a feature-owned `[AuthoringContract]` on the runtime, interface, profile, or component type that owns the capability. The registry discovers contracts by reflection across loaded assemblies, so do not add central lists of feature module ids.
 
 A feature contract is the source of truth for:
 
@@ -479,22 +479,21 @@ A feature contract is the source of truth for:
 - native Unity setup actions
 - Inspector assignment fields
 - customization moments
-- first proof target id
+- developer first-proof guidance and resolved proof target id
 
-The Authoring Window, fact registry, feature-module Inspector, contract validator, and proof guidance all read this contract data. If a feature-specific rule appears in a central switch or hand-authored setup row, move it into the feature provider unless the rule is truly generic to every feature module.
+The Authoring Window, fact registry, feature-module Inspector, contract validator, and proof guidance all read this contract data. If a feature-specific rule appears in a central switch or hand-authored setup row, move it into the feature contract unless the rule is truly generic to every feature module.
 
 New feature module checklist:
 
 1. Add or update the runtime module, runtime prefab/component, profile, and any shared interfaces.
-2. Add an editor assembly for the feature when one does not already exist.
-3. Add an `IAuthoringContractProvider` in the feature editor folder.
-4. Declare required profile, runtime interfaces, lane support, unsupported lane cautions, action roles, native setup, assignment fields, customization moments, and first proof target.
-5. Add Unity `.meta` files for new scripts, asmdefs, assets, prefabs, and folders.
-6. Add registry/fact/validator/proof tests for the module.
-7. Refresh or run Unity validation before trusting generated project files.
-8. Update setup docs only when the feature changes durable authoring behavior.
+2. Add or update `[AuthoringContract]` on the capability owner.
+3. Declare required profile, runtime interfaces/components, lane support, unsupported lane cautions, action roles, native setup, assignment fields, customization moments, and developer first-proof guidance.
+4. Add Unity `.meta` files for new scripts, asmdefs, assets, prefabs, and folders.
+5. Add registry/fact/validator/proof tests for the module.
+6. Refresh or run Unity validation before trusting generated project files.
+7. Update setup docs only when the feature changes durable authoring behavior.
 
-Do not edit generated `.csproj` or `.sln` files to make a provider compile. Unity should generate those from asmdefs and package assets after refresh.
+Do not edit generated `.csproj` or `.sln` files to make a contract compile. Unity should generate those from asmdefs and package assets after refresh.
 
 ## Combat And Projectile Setup
 

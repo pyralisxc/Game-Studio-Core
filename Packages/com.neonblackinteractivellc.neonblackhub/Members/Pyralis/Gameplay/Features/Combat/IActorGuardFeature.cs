@@ -35,6 +35,7 @@ namespace NeonBlack.Gameplay.Features.Combat
             "ensure HealthComponent and IActorReactionResponder are present on the actor root"
         },
         FirstProof = "Hold the Guard button and verify the actor's IsGuarding state becomes true.",
+        FirstProofTargetId = "proof.npc-enemy-behavior",
         DocumentationURL = "https://docs.neonblack.com/pyralis/actor-guard",
         AssignmentFields = new[]
         {

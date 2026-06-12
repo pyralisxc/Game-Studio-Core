@@ -27,7 +27,7 @@ Use `Smoke` for ordinary C# and folderbase cleanup. It restores and builds the f
 .\Tools\Validation\Run-PreSceneValidation.ps1 -Phase Authoring
 ```
 
-Use `Authoring` after authoring-spine, inspector, route, or contract edits that do not need Play Mode. It runs the smoke build plus package portability and residue scan.
+Use `Authoring` after authoring-spine, inspector, route, or contract edits that do not need Play Mode. It runs the smoke build, package portability, Unity EditMode tests, and residue scan.
 
 ```powershell
 .\Tools\Validation\Run-PreSceneValidation.ps1 -Phase Checkpoint
@@ -45,4 +45,4 @@ Use the full gate only when validating a release-style package checkpoint or inv
 
 `Full` keeps the old expensive path: package portability, owned project restore/build, Unity EditMode, Unity PlayMode, final restore/build, and residue scan. It intentionally runs Unity Test Runner without `-quit`; Unity Test Framework 1.6 skips command-line tests when `-quit` is supplied.
 
-If the GUI Editor is open, close it before running `Checkpoint` or `Full`. Use the Unity stewardship helper's `-Mode Refresh` path only for compile/log refresh while the Editor is open.
+If the GUI Editor is open, close it before running `Authoring`, `Checkpoint`, or `Full`. Use the Unity stewardship helper's `-Mode Refresh` path only for compile/log refresh while the Editor is open.

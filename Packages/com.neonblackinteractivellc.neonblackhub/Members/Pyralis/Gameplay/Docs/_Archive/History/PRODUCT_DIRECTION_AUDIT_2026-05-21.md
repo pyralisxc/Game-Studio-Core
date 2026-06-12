@@ -1,6 +1,6 @@
 # Pyralis Product Direction Audit - 2026-05-21
 
-Status: historical snapshot. Use CURRENT_STATE_AUDIT.md, CURRENT_ARCHETYPE_QUALITY_AUDIT_2026-05-23.md, and Docs/Setup/START_HERE.md for current development status. This file is kept as product-direction history and should not be treated as the active gap list.
+Status: historical snapshot. Use CURRENT_STATE_AUDIT.md and Docs/Authoring/START_HERE.md for current development status. This file is kept as product-direction history and should not be treated as the active gap list.
 
 ## Read
 

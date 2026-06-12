@@ -674,6 +674,52 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
+        public void PyralisSetupGraphProjection_MapsSceneReadinessIssuesToValidationRows()
+        {
+            GameObject root = new GameObject("Gameplay Root");
+            GameplaySessionBootstrap bootstrap = root.AddComponent<GameplaySessionBootstrap>();
+            RuntimePatternDefinition realtime = CreateRuntimePattern(
+                "pattern.realtime-character",
+                "Realtime Character",
+                RuntimeCapabilityFamily.CharacterPawnGameplay,
+                ParticipantEmbodimentRequirement.RequiredPawn,
+                RuntimeControlSurface.Pawn);
+            GameSetupProfile setupProfile = ScriptableObject.CreateInstance<GameSetupProfile>();
+            setupProfile.setupName = "Pawn Setup";
+            setupProfile.runtimePatterns = new[] { realtime };
+            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
+            mode.setupProfile = setupProfile;
+            GameObject prefab = new GameObject("Pawn Prefab Missing Graph Validation");
+            prefab.AddComponent<PawnRoot>();
+            PawnDefinition pawn = ScriptableObject.CreateInstance<PawnDefinition>();
+            pawn.pawnPrefab = prefab;
+            ParticipantDefinition participant = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            participant.defaultPawn = pawn;
+            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
+            session.defaultGameMode = mode;
+            session.defaultParticipants = new[] { participant };
+            SetObjectReference(bootstrap, "sessionDefinition", session);
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
+            IReadOnlyList<PyralisAuthoringValidationGraphRow> requiredRows =
+                PyralisAuthoringSetupGraphProjection.BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.Blocked);
+
+            Assert.That(requiredRows.Count, Is.GreaterThan(0));
+            Assert.That(requiredRows.Any(row => row.NodeId.StartsWith("scenereadiness.", System.StringComparison.Ordinal)), Is.True);
+            Assert.That(requiredRows.Any(row => row.Message.Contains("IPawnMotor")), Is.True);
+            Assert.That(requiredRows.Any(row => row.NativeAction.Contains("prefab root")), Is.True);
+
+            Object.DestroyImmediate(session);
+            Object.DestroyImmediate(participant);
+            Object.DestroyImmediate(pawn);
+            Object.DestroyImmediate(prefab);
+            Object.DestroyImmediate(mode);
+            Object.DestroyImmediate(setupProfile);
+            Object.DestroyImmediate(realtime);
+            Object.DestroyImmediate(root);
+        }
+
+        [Test]
         public void PyralisSceneReadiness_PawnVisualWithoutCollider_IsProofEnhancerAndChecklistItem()
         {
             GameObject root = new GameObject("Gameplay Root");
@@ -978,7 +1024,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void PyralisAuthoringFeatureAdvisor_PawnCombatRoute_ExplainsBrawlerSetupAndCustomization()
+        public void PyralisAuthoringCapabilityGuidance_PawnCombatRoute_ExplainsBrawlerSetupAndCustomization()
         {
             RuntimePatternDefinition pawn = CreateRuntimePattern(
                 "pattern.character-pawn",
@@ -996,25 +1042,28 @@ namespace NeonBlack.Gameplay.Tests.Editor
             setupProfile.setupName = "Brawler Setup";
             setupProfile.runtimePatterns = new[] { pawn, combat };
 
-            PyralisAuthoringFeatureAdvisor advisor = PyralisAuthoringFeatureAdvisor.Build(setupProfile);
+            PyralisAuthoringRouteDescriptor route = PyralisAuthoringRouteDescriptor.Build(setupProfile);
+            PyralisAuthoringRouteProof proof = PyralisAuthoringRouteProof.Build(route);
+            PyralisAuthoringFeatureRow pawnRow = PyralisAuthoringCapabilityGuidance.BuildSelectedRow(pawn);
+            PyralisAuthoringFeatureRow combatRow = PyralisAuthoringCapabilityGuidance.BuildSelectedRow(combat);
+            List<PyralisAuthoringFeatureRow> recommended = PyralisAuthoringCapabilityGuidance.BuildRecommendedRows(route);
+            List<PyralisAuthoringFeatureRow> environmentGuidance = PyralisAuthoringCapabilityGuidance.BuildEnvironmentRows(route);
 
-            Assert.That(advisor.RouteIntent, Does.Contain("brawler"));
-            Assert.That(advisor.FirstProofLabel, Is.EqualTo("1P Pawn Movement Proof"));
-            Assert.That(advisor.FirstProofGuidance, Does.Contain("before adding combat"));
-            Assert.That(advisor.FirstUnityFocus, Does.Contain("PawnRoot"));
-            Assert.That(advisor.SelectedFeatures.Count, Is.EqualTo(2));
-            Assert.That(advisor.SelectedFeatures[0].GameplayEffect, Does.Contain("actor bodies"));
-            Assert.That(advisor.SelectedFeatures[0].Customization, Does.Contain("speed"));
-            Assert.That(advisor.SelectedFeatures[1].UnitySetup, Does.Contain("CombatActionDefinition"));
-            Assert.That(advisor.RecommendedFeatures.Select(row => row.Feature), Does.Contain("Animation / Presentation"));
-            Assert.That(advisor.RecommendedFeatures.Select(row => row.Feature), Does.Contain("HUD / Menus / Feedback"));
-            Assert.That(advisor.RecommendedFeatures.Select(row => row.Feature), Does.Contain("Movement / Traversal / Respawn"));
-            Assert.That(advisor.RecommendedFeatures.Select(row => row.Feature), Does.Contain("Feature Modules / Pickups / Interaction"));
-            Assert.That(advisor.RecommendedFeatures.Select(row => row.Feature), Does.Contain("Health / Hitboxes / Feedback"));
-            Assert.That(advisor.RecommendedFeatures.Select(row => row.Feature), Does.Contain("Enemies / Hazards / Encounter Zones"));
-            Assert.That(advisor.DesignPrompts.Select(prompt => prompt.Question), Does.Contain("What kind of space does the game happen in?"));
-            Assert.That(advisor.EnvironmentGuidance.Select(row => row.Feature), Does.Contain("Walkable Ground And Collision"));
-            PyralisAuthoringFeatureRow environmentRow = advisor.EnvironmentGuidance[0];
+            Assert.That(PyralisAuthoringCapabilityGuidance.GetRouteIntent(route, 2), Does.Contain("brawler"));
+            Assert.That(proof.Label, Is.EqualTo("1P Pawn Movement Proof"));
+            Assert.That(proof.Guidance, Does.Contain("before adding combat"));
+            Assert.That(proof.FirstUnityFocus, Does.Contain("PawnRoot"));
+            Assert.That(pawnRow.GameplayEffect, Does.Contain("actor bodies"));
+            Assert.That(pawnRow.Customization, Does.Contain("speed"));
+            Assert.That(combatRow.UnitySetup, Does.Contain("CombatActionDefinition"));
+            Assert.That(recommended.Select(row => row.Feature), Does.Contain("Animation / Presentation"));
+            Assert.That(recommended.Select(row => row.Feature), Does.Contain("HUD / Menus / Feedback"));
+            Assert.That(recommended.Select(row => row.Feature), Does.Contain("Movement / Traversal / Respawn"));
+            Assert.That(recommended.Select(row => row.Feature), Does.Contain("Feature Modules / Pickups / Interaction"));
+            Assert.That(recommended.Select(row => row.Feature), Does.Contain("Health / Hitboxes / Feedback"));
+            Assert.That(recommended.Select(row => row.Feature), Does.Contain("Enemies / Hazards / Encounter Zones"));
+            Assert.That(environmentGuidance.Select(row => row.Feature), Does.Contain("Walkable Ground And Collision"));
+            PyralisAuthoringFeatureRow environmentRow = environmentGuidance[0];
             Assert.That(environmentRow.GameplayEffect, Does.Contain("plain Unity objects"));
             Assert.That(environmentRow.GameplayEffect, Does.Contain("backdrops"));
             Assert.That(environmentRow.UnitySetup, Does.Contain("flat sprite/PNG backdrops"));
@@ -1028,7 +1077,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void PyralisAuthoringFeatureAdvisor_TabletopRoute_KeepsPawnEmptyAndRecommendsSelectionSurface()
+        public void PyralisAuthoringCapabilityGuidance_TabletopRoute_KeepsPawnEmptyAndRecommendsSelectionSurface()
         {
             RuntimePatternDefinition tabletop = CreateRuntimePattern(
                 "pattern.tabletop",
@@ -1040,27 +1089,30 @@ namespace NeonBlack.Gameplay.Tests.Editor
             setupProfile.setupName = "Tabletop Setup";
             setupProfile.runtimePatterns = new[] { tabletop };
 
-            PyralisAuthoringFeatureAdvisor advisor = PyralisAuthoringFeatureAdvisor.Build(setupProfile);
+            PyralisAuthoringRouteDescriptor route = PyralisAuthoringRouteDescriptor.Build(setupProfile);
+            PyralisAuthoringRouteProof proof = PyralisAuthoringRouteProof.Build(route);
+            PyralisAuthoringFeatureRow tabletopRow = PyralisAuthoringCapabilityGuidance.BuildSelectedRow(tabletop);
+            List<PyralisAuthoringFeatureRow> recommended = PyralisAuthoringCapabilityGuidance.BuildRecommendedRows(route);
+            List<PyralisAuthoringFeatureRow> environmentGuidance = PyralisAuthoringCapabilityGuidance.BuildEnvironmentRows(route);
 
-            Assert.That(advisor.RouteIntent, Does.Contain("tabletop"));
-            Assert.That(advisor.FirstProofLabel, Is.EqualTo("Board/Card Action Proof"));
-            Assert.That(advisor.FirstProofGuidance, Does.Contain("rules-backed selection"));
-            Assert.That(advisor.FirstUnityFocus, Does.Contain("Keep pawn fields empty"));
-            Assert.That(advisor.SelectedFeatures[0].UnitySetup, Does.Contain("Start with no PawnDefinition"));
-            Assert.That(advisor.SelectedFeatures[0].Customization, Does.Contain("turn order"));
-            Assert.That(advisor.RecommendedFeatures.Select(row => row.Feature), Does.Contain("Action Selection / Menus"));
-            Assert.That(advisor.RecommendedFeatures.Select(row => row.Feature), Does.Contain("Camera / Cursor Control"));
-            Assert.That(advisor.RecommendedFeatures.Select(row => row.Feature), Does.Contain("Menus / Settings / Scene Flow"));
-            Assert.That(advisor.DesignPrompts[0].Options, Does.Contain("Seat"));
-            Assert.That(advisor.EnvironmentGuidance.Select(row => row.Feature), Does.Contain("Selectable Spaces"));
-            Assert.That(advisor.EnvironmentGuidance[0].UnitySetup, Does.Contain("Playfield Root"));
+            Assert.That(PyralisAuthoringCapabilityGuidance.GetRouteIntent(route, 1), Does.Contain("tabletop"));
+            Assert.That(proof.Label, Is.EqualTo("Board/Card Action Proof"));
+            Assert.That(proof.Guidance, Does.Contain("rules-backed selection"));
+            Assert.That(proof.FirstUnityFocus, Does.Contain("Keep pawn fields empty"));
+            Assert.That(tabletopRow.UnitySetup, Does.Contain("Start with no PawnDefinition"));
+            Assert.That(tabletopRow.Customization, Does.Contain("turn order"));
+            Assert.That(recommended.Select(row => row.Feature), Does.Contain("Action Selection / Menus"));
+            Assert.That(recommended.Select(row => row.Feature), Does.Contain("Camera / Cursor Control"));
+            Assert.That(recommended.Select(row => row.Feature), Does.Contain("Menus / Settings / Scene Flow"));
+            Assert.That(environmentGuidance.Select(row => row.Feature), Does.Contain("Selectable Spaces"));
+            Assert.That(environmentGuidance[0].UnitySetup, Does.Contain("Playfield Root"));
 
             Object.DestroyImmediate(setupProfile);
             Object.DestroyImmediate(tabletop);
         }
 
         [Test]
-        public void PyralisAuthoringFeatureAdvisor_PlatformCore_NamesCanonicalBootstrapAndSessionChain()
+        public void PyralisAuthoringCapabilityGuidance_PlatformCore_NamesCanonicalBootstrapAndSessionChain()
         {
             RuntimePatternDefinition platform = CreateRuntimePattern(
                 "pattern.platform-core",
@@ -1072,12 +1124,12 @@ namespace NeonBlack.Gameplay.Tests.Editor
             setupProfile.setupName = "Core Setup";
             setupProfile.runtimePatterns = new[] { platform };
 
-            PyralisAuthoringFeatureAdvisor advisor = PyralisAuthoringFeatureAdvisor.Build(setupProfile);
+            PyralisAuthoringFeatureRow platformRow = PyralisAuthoringCapabilityGuidance.BuildSelectedRow(platform);
 
-            Assert.That(advisor.SelectedFeatures[0].Feature, Is.EqualTo("Core Session Setup"));
-            Assert.That(advisor.SelectedFeatures[0].UnitySetup, Does.Contain("GameplaySessionBootstrap"));
-            Assert.That(advisor.SelectedFeatures[0].UnitySetup, Does.Contain("SessionDefinition"));
-            Assert.That(advisor.SelectedFeatures[0].Customization, Does.Contain("settings profile"));
+            Assert.That(platformRow.Feature, Is.EqualTo("Core Session Setup"));
+            Assert.That(platformRow.UnitySetup, Does.Contain("GameplaySessionBootstrap"));
+            Assert.That(platformRow.UnitySetup, Does.Contain("SessionDefinition"));
+            Assert.That(platformRow.Customization, Does.Contain("settings profile"));
 
             Object.DestroyImmediate(setupProfile);
             Object.DestroyImmediate(platform);

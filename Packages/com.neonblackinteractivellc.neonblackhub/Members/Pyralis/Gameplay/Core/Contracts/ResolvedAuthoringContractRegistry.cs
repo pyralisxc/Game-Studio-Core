@@ -107,14 +107,6 @@ namespace NeonBlack.Gameplay.Core.Contracts
                 }
             }
 
-            var providerTypes = TypeCache.GetTypesDerivedFrom<IAuthoringContractProvider>();
-            foreach (var type in providerTypes)
-            {
-                if (type.IsAbstract || type.IsInterface)
-                    continue;
-
-                ProcessProvider(type, AddContract);
-            }
 #else
             // Standard reflection for runtime environments
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
@@ -130,37 +122,11 @@ namespace NeonBlack.Gameplay.Core.Contracts
                     {
                         AddContract(CreateFromAttribute(type, attr));
                     }
-
-                    if (typeof(IAuthoringContractProvider).IsAssignableFrom(type) && !type.IsAbstract && !type.IsInterface)
-                    {
-                        ProcessProvider(type, AddContract);
-                    }
                 }
             }
 #endif
 
             return contracts;
-        }
-
-        private static void ProcessProvider(Type type, Action<ResolvedAuthoringContract> addContract)
-        {
-            try
-            {
-            var provider = Activator.CreateInstance(type) as IAuthoringContractProvider;
-                if (provider == null) return;
-
-                foreach (var attr in provider.GetAuthoringContracts())
-                {
-                    if (attr == null)
-                        continue;
-
-                    addContract(CreateFromAttribute(type, attr));
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.LogWarning($"Failed to create authoring contract provider instance for {type.Name}: {ex.Message}");
-            }
         }
 
         private static ResolvedAuthoringContract CreateFromAttribute(Type type, AuthoringContractAttribute attr)
@@ -211,15 +177,14 @@ namespace NeonBlack.Gameplay.Core.Contracts
             }
 
             #pragma warning disable CS0618 // Type or member is obsolete
-                        string categoryLabel = attr.Capability != AuthoringCapability.None 
-                            ? AuthoringCapabilityRegistry.GetDisplayName(attr.Capability) 
+                        string categoryLabel = attr.Capability != AuthoringCapability.None
+                            ? GetCapabilityDisplayNames(attr.Capability)
                             : string.Empty;
 #pragma warning restore CS0618
 
             string stableId = !string.IsNullOrWhiteSpace(attr.ModuleId)
                 ? $"feature.{attr.ModuleId}"
                 : $"feature.{type.FullName}";
-            string firstProofTargetId = ResolveFirstProofTargetId(type, attr);
             string[] nativeSetup = NormalizeNativeSetup(type, attr);
             string[] assignmentFields = NormalizeAssignmentFields(type, attr);
             string[] customizationMoments = NormalizeCustomizationMoments(type, attr, interfaceNames, componentNames);
@@ -235,7 +200,8 @@ namespace NeonBlack.Gameplay.Core.Contracts
                 unsupportedLaneMessage: attr.UnsupportedLaneMessage,
                 consumedActionRoles: attr.ConsumedRoles,
                 nativeSetup: nativeSetup,
-                firstProofTargetId: firstProofTargetId,
+                firstProofTargetId: NormalizeFirstProofTargetId(attr),
+                firstProofGuidance: attr.FirstProof,
                 sourceType: type,
                 axioms: attr.Axioms,
                 workIntent: attr.AxiomKeywords,
@@ -245,9 +211,13 @@ namespace NeonBlack.Gameplay.Core.Contracts
                 requiredComponentNames: componentNames.ToArray(),
                 capability: attr.Capability,
                 priority: attr.Priority,
+                priorityValueOverride: attr.PriorityValueOverride > 0 ? attr.PriorityValueOverride : 0,
+                deprecatedInVersion: attr.DeprecatedInVersion,
+                removableInVersion: attr.RemovableInVersion,
                 documentationURL: attr.DocumentationURL,
                 expertAdvice: attr.ExpertAdvice,
                 moduleId: attr.ModuleId,
+                setupNodeId: attr.SetupNodeId,
                 relevance: attr.Relevance,
                 manualPath: attr.ManualPath
             );
@@ -309,125 +279,15 @@ namespace NeonBlack.Gameplay.Core.Contracts
             return new[] { $"Customize {displayName} only after the route's required setup is visible." };
         }
 
-        private static string ResolveFirstProofTargetId(Type type, AuthoringContractAttribute attr)
+        private static string NormalizeFirstProofTargetId(AuthoringContractAttribute attr)
         {
-            if (!string.IsNullOrWhiteSpace(attr.FirstProof) &&
-                attr.FirstProof.StartsWith("proof.", StringComparison.Ordinal))
-            {
-                return attr.FirstProof;
-            }
+            if (!string.IsNullOrWhiteSpace(attr.FirstProofTargetId))
+                return attr.FirstProofTargetId;
 
-            string moduleId = attr.ModuleId ?? string.Empty;
-            string lookup = (moduleId + " " + (type != null ? type.FullName : string.Empty)).ToLowerInvariant();
-            if (lookup.Contains("traversal.topdown-hop") ||
-                lookup.Contains("movement") ||
-                lookup.Contains("motor") ||
-                lookup.Contains("pawn"))
-            {
-                return "proof.1p-pawn-movement";
-            }
-
-            if (lookup.Contains("pickup") ||
-                lookup.Contains("collectible") ||
-                lookup.Contains("status"))
-            {
-                return "proof.custom-object-effect";
-            }
-
-            if (lookup.Contains("interaction"))
-                return "proof.action-selection";
-
-            if (lookup.Contains("feedback") ||
-                lookup.Contains("hud") ||
-                lookup.Contains("ui"))
-            {
-                return "proof.ui-hud-menu";
-            }
-
-            if (lookup.Contains("enemy") ||
-                lookup.Contains("traversal.3d") ||
-                lookup.Contains("combat") ||
-                lookup.Contains("projectile") ||
-                lookup.Contains("health") ||
-                lookup.Contains("hitbox") ||
-                lookup.Contains("damage") ||
-                lookup.Contains("guard"))
-            {
-                return "proof.npc-enemy-behavior";
-            }
-
-            if ((attr.Capability & AuthoringCapability.Tabletop) != 0)
-                return "proof.board-card-action";
-
-            if ((attr.Capability & AuthoringCapability.Networking) != 0)
-                return "proof.network-ownership";
-
-            if ((attr.Capability & AuthoringCapability.Camera) != 0)
-                return "proof.camera-cursor-world";
-
-            if ((attr.Capability & AuthoringCapability.UI) != 0 ||
-                (attr.Capability & AuthoringCapability.Scoring) != 0 ||
-                (attr.Capability & AuthoringCapability.Dialogue) != 0 ||
-                (attr.Capability & AuthoringCapability.Quests) != 0 ||
-                (attr.Capability & AuthoringCapability.Vendors) != 0 ||
-                (attr.Capability & AuthoringCapability.SkillTree) != 0)
-            {
-                return "proof.ui-hud-menu";
-            }
-
-            if ((attr.Capability & AuthoringCapability.Puzzle) != 0 ||
-                (attr.Capability & AuthoringCapability.Input) != 0)
-            {
-                return "proof.action-selection";
-            }
-
-            if ((attr.Capability & AuthoringCapability.Inventory) != 0 ||
-                (attr.Capability & AuthoringCapability.Stats) != 0 ||
-                (attr.Capability & AuthoringCapability.Progression) != 0 ||
-                (attr.Capability & AuthoringCapability.Rpg) != 0)
-            {
-                return "proof.custom-object-effect";
-            }
-
-            if ((attr.Capability & AuthoringCapability.Setup) != 0 ||
-                (attr.Capability & AuthoringCapability.Session) != 0 ||
-                (attr.Capability & AuthoringCapability.Rules) != 0 ||
-                (attr.Capability & AuthoringCapability.Participants) != 0)
-            {
-                return "proof.custom-object-effect";
-            }
-
-            if ((attr.Capability & AuthoringCapability.Combat) != 0)
-                return "proof.npc-enemy-behavior";
-
-            if ((attr.Capability & AuthoringCapability.CombatState) != 0 ||
-                (attr.Capability & AuthoringCapability.CombatSensors) != 0 ||
-                (attr.Capability & AuthoringCapability.MeleeFlow) != 0 ||
-                (attr.Capability & AuthoringCapability.RangedFlow) != 0 ||
-                (attr.Capability & AuthoringCapability.TacticsAggressive) != 0 ||
-                (attr.Capability & AuthoringCapability.TacticsDefensive) != 0 ||
-                (attr.Capability & AuthoringCapability.Steering2D) != 0 ||
-                (attr.Capability & AuthoringCapability.Steering3D) != 0)
-            {
-                return "proof.npc-enemy-behavior";
-            }
-
-            if ((attr.Capability & AuthoringCapability.Animation) != 0 ||
-                (attr.Capability & AuthoringCapability.VFX) != 0 ||
-                (attr.Capability & AuthoringCapability.Audio) != 0)
-            {
-                return "proof.ui-hud-menu";
-            }
-
-            if ((attr.Capability & AuthoringCapability.Movement) != 0 ||
-                (attr.Capability & AuthoringCapability.KineticMotor2D) != 0 ||
-                (attr.Capability & AuthoringCapability.KineticMotor3D) != 0 ||
-                (attr.Capability & AuthoringCapability.Traversal) != 0)
-            {
-                return "proof.1p-pawn-movement";
-            }
-
-            return "proof.custom-object-effect";
+            return !string.IsNullOrWhiteSpace(attr.FirstProof) &&
+                attr.FirstProof.StartsWith("proof.", StringComparison.Ordinal)
+                    ? attr.FirstProof
+                    : string.Empty;
         }
 
         private static ResolvedAuthoringContract MergeContracts(ResolvedAuthoringContract current, ResolvedAuthoringContract incoming)
@@ -444,6 +304,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
                 consumedActionRoles: MergeDistinct(current.ConsumedActionRoles, incoming.ConsumedActionRoles),
                 nativeSetup: MergeDistinct(current.NativeSetup, incoming.NativeSetup),
                 firstProofTargetId: FirstNonEmpty(current.FirstProofTargetId, incoming.FirstProofTargetId),
+                firstProofGuidance: FirstNonEmpty(current.FirstProofGuidance, incoming.FirstProofGuidance),
                 sourceType: current.SourceType ?? incoming.SourceType,
                 axioms: current.Axioms | incoming.Axioms,
                 workIntent: FirstNonEmpty(current.WorkIntent, incoming.WorkIntent),
@@ -459,8 +320,24 @@ namespace NeonBlack.Gameplay.Core.Contracts
                 documentationURL: FirstNonEmpty(current.DocumentationURL, incoming.DocumentationURL),
                 expertAdvice: FirstNonEmpty(current.ExpertAdvice, incoming.ExpertAdvice),
                 moduleId: FirstNonEmpty(current.ModuleId, incoming.ModuleId),
+                setupNodeId: FirstNonEmpty(current.SetupNodeId, incoming.SetupNodeId),
                 relevance: FirstNonEmpty(current.Relevance, incoming.Relevance),
                 manualPath: FirstNonEmpty(current.ManualPath, incoming.ManualPath));
+        }
+
+        private static string GetCapabilityDisplayNames(AuthoringCapability capability)
+        {
+            if (capability == AuthoringCapability.None)
+                return string.Empty;
+
+            List<string> names = new List<string>();
+            foreach (AuthoringCapability individual in AuthoringCapabilityRegistry.GetAllIndividualCapabilities())
+            {
+                if ((capability & individual) != 0)
+                    names.Add(AuthoringCapabilityRegistry.GetDisplayName(individual));
+            }
+
+            return names.Count > 0 ? string.Join(", ", names) : AuthoringCapabilityRegistry.GetDisplayName(capability);
         }
 
         private static string FirstNonEmpty(string first, string second)

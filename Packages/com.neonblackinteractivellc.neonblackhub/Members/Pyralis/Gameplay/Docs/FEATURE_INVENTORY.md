@@ -680,7 +680,7 @@ Available:
 - custom inspector for `RuntimePatternDefinition`
 - custom inspector for `GameSetupProfile`
 - custom inspectors for the new shared-core definitions and profiles
-- active `Create -> NeonBlack` definition/profile/runtime-pattern asset paths, with starter-pack-style scaffolding deferred until routes are manually proven
+- active `Create -> NeonBlack` definition/profile/runtime-pattern asset paths, with reusable route learning captured as facts, validation, and generic native-authoring guidance
 
 ## Current Gaps
 

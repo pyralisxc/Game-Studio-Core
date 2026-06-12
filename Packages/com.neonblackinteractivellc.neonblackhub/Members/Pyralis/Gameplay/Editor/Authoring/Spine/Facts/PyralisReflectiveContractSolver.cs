@@ -13,7 +13,7 @@ namespace NeonBlack.Gameplay.Editor
 {
     /// <summary>
     /// Validates setup contracts after they have been resolved by the central contract registry.
-    /// Attribute-backed and provider-backed contracts use the same path here.
+    /// Attribute-backed contracts use the same resolved path here.
     /// </summary>
     public static class PyralisReflectiveContractSolver
     {
@@ -259,40 +259,8 @@ namespace NeonBlack.Gameplay.Editor
             if (contract.Capability == AuthoringCapability.None && contract.Axioms == AuthoringWorldAxiom.None)
                 return true;
 
-            string categoryLabel = contract.Capability != AuthoringCapability.None 
-                ? AuthoringCapabilityRegistry.GetDisplayName(contract.Capability) 
-                : string.Empty;
-
-            if (!string.IsNullOrEmpty(categoryLabel))
-            {
-                foreach (var fact in route.RouteFacts)
-                {
-                    if (string.Equals(fact.Label, categoryLabel, StringComparison.OrdinalIgnoreCase))
-                        return true;
-
-                    // Hierarchical match: e.g. 'Combat/Reaction' matches 'Combat'
-                    if (categoryLabel.StartsWith(fact.Label + "/", StringComparison.OrdinalIgnoreCase) ||
-                        fact.Label.StartsWith(categoryLabel + "/", StringComparison.OrdinalIgnoreCase))
-                        return true;
-                }
-
-                if (route.Patterns != null)
-                {
-                    foreach (var pattern in route.Patterns)
-                    {
-                        if (pattern == null) continue;
-                        string family = pattern.capabilityFamily.ToString();
-                        
-                        if (string.Equals(family, categoryLabel, StringComparison.OrdinalIgnoreCase))
-                            return true;
-
-                        // Hierarchical match: e.g. 'Combat/Reaction' matches 'Combat' family
-                        if (categoryLabel.StartsWith(family + "/", StringComparison.OrdinalIgnoreCase) ||
-                            family.StartsWith(categoryLabel + "/", StringComparison.OrdinalIgnoreCase))
-                            return true;
-                    }
-                }
-            }
+            if (contract.Capability != AuthoringCapability.None && CapabilityMatchesRoute(contract.Capability, route))
+                return true;
 
             if (contract.Axioms != AuthoringWorldAxiom.None)
             {
@@ -301,6 +269,109 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             return false;
+        }
+
+        private static bool CapabilityMatchesRoute(AuthoringCapability capability, PyralisSetupRouteAnalysis route)
+        {
+            foreach (AuthoringCapability individual in AuthoringCapabilityRegistry.GetAllIndividualCapabilities())
+            {
+                if ((capability & individual) == 0)
+                    continue;
+
+                if (CapabilityMatchesRouteFacts(individual, route) || CapabilityMatchesRouteFamilies(individual, route))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static bool CapabilityMatchesRouteFacts(AuthoringCapability capability, PyralisSetupRouteAnalysis route)
+        {
+            string label = AuthoringCapabilityRegistry.GetDisplayName(capability);
+            foreach (var fact in route.RouteFacts)
+            {
+                if (fact == null || string.IsNullOrWhiteSpace(fact.Label))
+                    continue;
+
+                if (string.Equals(fact.Label, label, StringComparison.OrdinalIgnoreCase))
+                    return true;
+
+                if (label.StartsWith(fact.Label + "/", StringComparison.OrdinalIgnoreCase) ||
+                    fact.Label.StartsWith(label + "/", StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static bool CapabilityMatchesRouteFamilies(AuthoringCapability capability, PyralisSetupRouteAnalysis route)
+        {
+            RuntimeCapabilityFamily[] matchingFamilies = GetMatchingFamilies(capability);
+            if (matchingFamilies.Length == 0)
+                return false;
+
+            RuntimeCapabilityFamily[] routeFamilies = route.CapabilityFamilies ?? Array.Empty<RuntimeCapabilityFamily>();
+            for (int i = 0; i < routeFamilies.Length; i++)
+            {
+                for (int j = 0; j < matchingFamilies.Length; j++)
+                {
+                    if (routeFamilies[i] == matchingFamilies[j])
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static RuntimeCapabilityFamily[] GetMatchingFamilies(AuthoringCapability capability)
+        {
+            switch (capability)
+            {
+                case AuthoringCapability.Setup:
+                case AuthoringCapability.Session:
+                case AuthoringCapability.Participants:
+                    return new[] { RuntimeCapabilityFamily.PlatformCore, RuntimeCapabilityFamily.CharacterPawnGameplay };
+                case AuthoringCapability.Movement:
+                case AuthoringCapability.KineticMotor2D:
+                case AuthoringCapability.KineticMotor3D:
+                case AuthoringCapability.Steering2D:
+                case AuthoringCapability.Steering3D:
+                case AuthoringCapability.Traversal:
+                    return new[] { RuntimeCapabilityFamily.CharacterPawnGameplay };
+                case AuthoringCapability.Combat:
+                case AuthoringCapability.CombatState:
+                case AuthoringCapability.CombatSensors:
+                case AuthoringCapability.MeleeFlow:
+                case AuthoringCapability.TacticsAggressive:
+                case AuthoringCapability.TacticsDefensive:
+                    return new[] { RuntimeCapabilityFamily.Combat };
+                case AuthoringCapability.RangedFlow:
+                    return new[] { RuntimeCapabilityFamily.GunsProjectiles, RuntimeCapabilityFamily.Combat };
+                case AuthoringCapability.Tabletop:
+                case AuthoringCapability.Grid:
+                    return new[] { RuntimeCapabilityFamily.BoardCardTabletop };
+                case AuthoringCapability.TurnBased:
+                case AuthoringCapability.Rules:
+                case AuthoringCapability.Puzzle:
+                    return new[] { RuntimeCapabilityFamily.ActionTargeting };
+                case AuthoringCapability.Input:
+                    return new[] { RuntimeCapabilityFamily.CameraInput, RuntimeCapabilityFamily.ActionTargeting, RuntimeCapabilityFamily.CharacterPawnGameplay };
+                case AuthoringCapability.Camera:
+                    return new[] { RuntimeCapabilityFamily.CameraInput };
+                case AuthoringCapability.Animation:
+                case AuthoringCapability.VFX:
+                    return new[] { RuntimeCapabilityFamily.AnimationPresentation };
+                case AuthoringCapability.UI:
+                    return new[] { RuntimeCapabilityFamily.ActionTargeting, RuntimeCapabilityFamily.ScoringObjectives };
+                case AuthoringCapability.Scoring:
+                    return new[] { RuntimeCapabilityFamily.ScoringObjectives };
+                case AuthoringCapability.Environment:
+                    return new[] { RuntimeCapabilityFamily.ProceduralGeneration };
+                case AuthoringCapability.Networking:
+                    return new[] { RuntimeCapabilityFamily.Networking };
+                default:
+                    return Array.Empty<RuntimeCapabilityFamily>();
+            }
         }
 
         private static AuthoringWorldAxiom DeriveAxiomsFromRoute(PyralisSetupRouteAnalysis route)

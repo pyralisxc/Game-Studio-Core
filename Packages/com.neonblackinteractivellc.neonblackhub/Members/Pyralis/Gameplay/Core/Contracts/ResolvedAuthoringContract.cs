@@ -13,7 +13,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
 
     /// <summary>
     /// The runtime-safe data model for an authoring contract.
-    /// Derived from AuthoringContractAttribute or provided by IAuthoringContractProvider.
+    /// Derived from AuthoringContractAttribute.
     /// </summary>
     public sealed class ResolvedAuthoringContract
     {
@@ -29,6 +29,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
             string[] consumedActionRoles = null,
             string[] nativeSetup = null,
             string firstProofTargetId = null,
+            string firstProofGuidance = null,
             Type sourceType = null,
             AuthoringWorldAxiom axioms = AuthoringWorldAxiom.None,
             string workIntent = null,
@@ -44,6 +45,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
             string documentationURL = null,
             string expertAdvice = null,
             string moduleId = null,
+            string setupNodeId = null,
             string relevance = null,
             string manualPath = null)
         {
@@ -58,6 +60,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
             ConsumedActionRoles = consumedActionRoles ?? Array.Empty<string>();
             NativeSetup = nativeSetup ?? Array.Empty<string>();
             FirstProofTargetId = firstProofTargetId ?? string.Empty;
+            FirstProofGuidance = firstProofGuidance ?? string.Empty;
             SourceType = sourceType;
             Axioms = axioms;
             WorkIntent = workIntent ?? string.Empty;
@@ -73,6 +76,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
             DocumentationURL = documentationURL ?? string.Empty;
             ExpertAdvice = expertAdvice ?? string.Empty;
             ModuleId = moduleId ?? string.Empty;
+            SetupNodeId = setupNodeId ?? string.Empty;
             Relevance = relevance ?? string.Empty;
             ManualPath = manualPath ?? string.Empty;
         }
@@ -81,6 +85,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
         public string DisplayName { get; }
         public string AuthoringCategory { get; }
         public string ModuleId { get; }
+        public string SetupNodeId { get; }
         public Type RequiredProfileType { get; }
         public string[] RequiredRuntimeInterfaceNames { get; }
         public ActorPresentationMode[] SupportedPresentationModes { get; }
@@ -89,6 +94,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
         public string[] ConsumedActionRoles { get; }
         public string[] NativeSetup { get; }
         public string FirstProofTargetId { get; }
+        public string FirstProofGuidance { get; }
         public Type SourceType { get; }
         public AuthoringWorldAxiom Axioms { get; }
         public string WorkIntent { get; }

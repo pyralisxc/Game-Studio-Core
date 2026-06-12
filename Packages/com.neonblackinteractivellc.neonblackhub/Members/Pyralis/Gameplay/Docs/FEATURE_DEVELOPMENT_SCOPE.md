@@ -255,7 +255,7 @@ Before starting a major feature, write down:
 - which existing systems it should reuse
 - whether a Unity package or commercial-ready open source library should be used first
 - which authoring assets or profiles a developer will touch
-- which `IAuthoringContractProvider` entries, proof targets, unsupported lanes, and native setup actions the feature needs
+- which `[AuthoringContract]` metadata, developer proof guidance, proof targets, unsupported lanes, and native setup actions the feature needs
 - what a minimal sample scene or prefab should prove
 - what tests or validation rules protect the behavior
 
@@ -282,7 +282,7 @@ The highest-leverage expansion order is:
 
 1. Authoring Window as route auditor and tutor.
 2. First playable proof loops for existing mechanics.
-3. Starter packs and sample scenes for current routes.
+3. Disposable proof-scene evidence and generic native-authoring guidance for current routes.
 4. UI/HUD/menu basics.
 5. Save/settings/progression basics.
 6. One deep route, preferably tabletop/tactics or pawn action.

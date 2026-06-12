@@ -25,6 +25,7 @@ namespace NeonBlack.Gameplay.Features.Composition
             "bind Interact in InputProfile"
         },
         FirstProof = "Walk into a pickup object and verify it is collected/removed.",
+        FirstProofTargetId = "proof.custom-object-effect",
         DocumentationURL = "https://docs.neonblack.com/pyralis/actor-interaction",
         AssignmentFields = new[]
         {
@@ -64,6 +65,7 @@ namespace NeonBlack.Gameplay.Features.Composition
             "bind Interact in InputProfile"
         },
         FirstProof = "Walk into a pickup object and verify it is collected/removed.",
+        FirstProofTargetId = "proof.custom-object-effect",
         DocumentationURL = "https://docs.neonblack.com/pyralis/actor-interaction",
         AssignmentFields = new[]
         {

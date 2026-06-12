@@ -29,6 +29,7 @@ namespace NeonBlack.Gameplay.Features.Composition
             "add at least one IActorFeedbackReceiver in the actor hierarchy"
         },
         FirstProof = "Trigger a damage event and verify visual feedback (flash, popup) occurs.",
+        FirstProofTargetId = "proof.ui-hud-menu",
         DocumentationURL = "https://docs.neonblack.com/pyralis/actor-feedback",
         AssignmentFields = new[]
         {

@@ -1,6 +1,6 @@
 ﻿# NeonBlack Gameplay Refactor Workspace
 
-Status: historical workspace. The original refactor is complete; use `README.md`, `CURRENT_STATE_AUDIT.md`, `CURRENT_ARCHETYPE_QUALITY_AUDIT_2026-05-23.md`, and `Setup/START_HERE.md` for current status.
+Status: historical workspace. The original refactor is complete; use `README.md`, `CURRENT_STATE_AUDIT.md`, and `Authoring/START_HERE.md` for current status.
 
 This document records the NeonBlack Gameplay refactor history and the work rules that came out of it.
 

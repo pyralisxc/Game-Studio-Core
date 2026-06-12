@@ -24,9 +24,6 @@ namespace NeonBlack.Gameplay.Editor
             Facts
         }
 
-        private const string SelectedAuthoringContextLabel = "Selected Authoring Context";
-
-        private static readonly string[] ModeLabels = { "Overview", "Intent", "Guide", "Map", "Validate", "Facts" };
         private static readonly Dictionary<string, bool> ServiceStepFoldouts = new Dictionary<string, bool>();
         private static readonly Dictionary<string, bool> IntentRowFoldouts = new Dictionary<string, bool>();
         private const double InspectorRepaintIntervalSeconds = 0.35d;
@@ -34,7 +31,6 @@ namespace NeonBlack.Gameplay.Editor
         private AuthoringWindowMode _mode = AuthoringWindowMode.Overview;
         [SerializeField] private Object _pinnedActiveSetup;
         [SerializeField] private Object _lastActiveSetup;
-        [SerializeField] private bool _showBeginnerLocationTags = true;
         [SerializeField] private bool _emptySceneIntentStartApplied;
         [SerializeField] private RuntimeCapabilityLaneTag _intentLane = RuntimeCapabilityLaneTag.Sprite2D;
         [SerializeField] private AuthoringWorldAxiom _intentAxioms = AuthoringWorldAxiom.None;
@@ -44,12 +40,12 @@ namespace NeonBlack.Gameplay.Editor
             get => (AuthoringCapability)_intentCapabilitiesValue; 
             set => _intentCapabilitiesValue = (long)value; 
         }
-[SerializeField] private string _intentGoalFilter = "";
+        [SerializeField] private string _intentGoalFilter = "";
         [SerializeField] private Vector2 _overviewScroll;
         [SerializeField] private Vector2 _intentScroll;
         [SerializeField] private Vector2 _intentCapabilityScroll;
         [SerializeField] private Vector2 _mapScroll;
-        [SerializeField] private Vector2 _hygieneScroll;
+        [SerializeField] private Vector2 _validateScroll;
         [SerializeField] private Vector2 _guideScroll;
         [SerializeField] private Vector2 _factsScroll;
         [SerializeField] private bool _coreFoldout = true;
@@ -118,7 +114,7 @@ namespace NeonBlack.Gameplay.Editor
                 "tabOverview" => AuthoringWindowMode.Overview,
                 "tabIntent" => AuthoringWindowMode.Intent,
                 "tabMap" => AuthoringWindowMode.Map,
-                "tabHygiene" => AuthoringWindowMode.Validate,
+                "tabValidate" => AuthoringWindowMode.Validate,
                 "tabGuide" => AuthoringWindowMode.Guide,
                 "tabFacts" => AuthoringWindowMode.Facts,
                 _ => _mode
@@ -151,20 +147,6 @@ namespace NeonBlack.Gameplay.Editor
             if (_mode == AuthoringWindowMode.Intent)
             {
                 RefreshIntentTab();
-            }
-            else if (_mode == AuthoringWindowMode.Validate)
-            {
-                PyralisAuthoringToolkitTabRenderer.DrawHygiene(
-                    _contentRoot,
-                    activeSetup,
-                    new PyralisAuthoringIntentSelection(_intentLane, _intentCapabilities, _intentAxioms));
-            }
-            else if (_mode == AuthoringWindowMode.Map)
-            {
-                PyralisAuthoringToolkitTabRenderer.DrawMap(
-                    _contentRoot,
-                    activeSetup,
-                    GetCachedRouteReport(activeSetup, true));
             }
             else
             {
@@ -213,7 +195,7 @@ namespace NeonBlack.Gameplay.Editor
                 AuthoringWindowMode.Intent => "tabIntent",
                 AuthoringWindowMode.Guide => "tabGuide",
                 AuthoringWindowMode.Map => "tabMap",
-                AuthoringWindowMode.Validate => "tabHygiene",
+                AuthoringWindowMode.Validate => "tabValidate",
                 AuthoringWindowMode.Facts => "tabFacts",
                 _ => "tabOverview"
             };
@@ -228,7 +210,7 @@ namespace NeonBlack.Gameplay.Editor
                 case AuthoringWindowMode.Overview: return ref _overviewScroll;
                 case AuthoringWindowMode.Intent: return ref _intentScroll;
                 case AuthoringWindowMode.Map: return ref _mapScroll;
-                case AuthoringWindowMode.Validate: return ref _hygieneScroll;
+                case AuthoringWindowMode.Validate: return ref _validateScroll;
                 case AuthoringWindowMode.Guide: return ref _guideScroll;
                 case AuthoringWindowMode.Facts: return ref _factsScroll;
                 default: return ref _overviewScroll;
@@ -348,107 +330,6 @@ namespace NeonBlack.Gameplay.Editor
             return _cachedSelectionReport;
         }
 
-        private void DrawActiveSetupBar(Object selection, Object activeSetup, Object selectionSetup, Object sceneFallbackSetup)
-        {
-            EditorGUILayout.LabelField("Active Setup", EditorStyles.boldLabel);
-            using (new EditorGUILayout.VerticalScope())
-            {
-                _showBeginnerLocationTags = EditorGUILayout.ToggleLeft("Beginner Location Tags", _showBeginnerLocationTags);
-                string pinnedPrefix = _pinnedActiveSetup != null
-                    ? "Pinned"
-                    : selectionSetup != null
-                        ? "Following Selection"
-                        : sceneFallbackSetup != null && activeSetup == sceneFallbackSetup
-                            ? "Scene Gameplay Root"
-                            : activeSetup != null
-                            ? "Remembered Setup"
-                            : "Following Selection";
-                string activeLabel = activeSetup != null ? $"{activeSetup.name} ({activeSetup.GetType().Name})" : "No setup context";
-                EditorGUILayout.LabelField(pinnedPrefix, activeLabel, EditorStyles.wordWrappedLabel);
-
-                using (new EditorGUILayout.HorizontalScope())
-                {
-                    using (new EditorGUI.DisabledScope(!PyralisAuthoringSetupContextResolver.CanUseAsActiveSetup(selection)))
-                    {
-                        if (GUILayout.Button("Pin Selection As Active Setup"))
-                        {
-                            _pinnedActiveSetup = PyralisAuthoringSetupContextResolver.GetSetupContext(selection);
-                            InvalidateAuthoringCache();
-                        }
-                    }
-
-                    using (new EditorGUI.DisabledScope(_pinnedActiveSetup == null))
-                    {
-                        if (GUILayout.Button("Clear Pin"))
-                        {
-                            _pinnedActiveSetup = null;
-                            InvalidateAuthoringCache();
-                        }
-                    }
-
-                    using (new EditorGUI.DisabledScope(activeSetup == null))
-                    {
-                        if (GUILayout.Button("Inspect Active Setup"))
-                        {
-                            Selection.activeObject = activeSetup;
-                            EditorGUIUtility.PingObject(activeSetup);
-                        }
-                    }
-                }
-
-                EditorGUILayout.LabelField("Selection keeps the Guide reactive. Overview and Map use the active setup so the setup story stays steady while you inspect parts.", EditorStyles.wordWrappedMiniLabel);
-                if (_pinnedActiveSetup == null && selection != null && activeSetup != null && selection != activeSetup && selectionSetup == activeSetup)
-                    EditorGUILayout.LabelField("The selected object is already linked into this setup, so Authoring is keeping the scene root as the active setup while you inspect the selected field owner.", EditorStyles.wordWrappedMiniLabel);
-                if (_pinnedActiveSetup == null && sceneFallbackSetup != null && activeSetup == sceneFallbackSetup)
-                    EditorGUILayout.LabelField("Nothing is selected, so Authoring is using the single GameplaySessionBootstrap found in the open scene as the setup root.", EditorStyles.wordWrappedMiniLabel);
-                else if (_pinnedActiveSetup == null && selectionSetup == null && activeSetup != null)
-                    EditorGUILayout.LabelField("This route is remembered from the last setup anchor you selected. Use Clear Pin/Pin Selection when you want to change the setup story deliberately.", EditorStyles.wordWrappedMiniLabel);
-            }
-        }
-
-        private void DrawBeginnerLocationLegend()
-        {
-            if (!_showBeginnerLocationTags)
-                return;
-
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
-            {
-                EditorGUILayout.LabelField("Beginner Location Tags", EditorStyles.miniBoldLabel);
-                EditorGUILayout.LabelField("Use these colors to tell where a named thing lives while following setup guidance. Click a matching surface beacon when a step names a Unity tab.", EditorStyles.wordWrappedMiniLabel);
-                PyralisAuthoringWindowPrimitives.DrawSemanticTagStrip(PyralisAuthoringLabelUtility.BeginnerLegendTags);
-            }
-        }
-
-        private void DrawModeToolbar()
-        {
-            using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
-            {
-                for (int index = 0; index < ModeLabels.Length; index++)
-                    DrawModeToolbarTab((AuthoringWindowMode)index, ModeLabels[index]);
-            }
-
-            DrawActiveModeAccent(_mode);
-        }
-
-        private void DrawModeToolbarTab(AuthoringWindowMode mode, string label)
-        {
-            bool selected = _mode == mode;
-            string tabLabel = selected ? PyralisAuthoringWindowText.ColorizeModeTabLabel(label, GetModeAccentTag(mode)) : label;
-            if (GUILayout.Toggle(selected, tabLabel, GetModeToolbarButtonStyle(selected), GUILayout.MinWidth(64f)))
-                _mode = mode;
-        }
-
-        private static GUIStyle GetModeToolbarButtonStyle(bool selected)
-        {
-            GUIStyle style = new GUIStyle(EditorStyles.toolbarButton)
-            {
-                alignment = TextAnchor.MiddleCenter,
-                richText = true,
-                fontStyle = selected ? FontStyle.Bold : FontStyle.Normal
-            };
-            return style;
-        }
-
         private static bool ShouldStartInIntent(Object activeSetup, Object selectionSetup, Object sceneFallbackSetup, AuthoringWindowMode mode)
         {
             return mode == AuthoringWindowMode.Overview
@@ -462,83 +343,28 @@ namespace NeonBlack.Gameplay.Editor
                 && sceneFallbackSetup == null;
         }
 
-        private static void DrawActiveModeAccent(AuthoringWindowMode mode)
-        {
-            PyralisAuthoringSemanticTag tag = GetModeAccentTag(mode);
-            Color color = PyralisAuthoringLabelUtility.GetSemanticTagColor(tag);
-            Rect rect = GUILayoutUtility.GetRect(1f, 3f, GUILayout.ExpandWidth(true));
-            EditorGUI.DrawRect(rect, color);
-            PyralisAuthoringWindowText.DrawSemanticMiniLabel(GetModeOrientationText(mode));
-        }
-
-        private static PyralisAuthoringSemanticTag GetModeAccentTag(AuthoringWindowMode mode)
-        {
-            switch (mode)
-            {
-                case AuthoringWindowMode.Intent:
-                    return PyralisAuthoringSemanticTag.Authoring;
-                case AuthoringWindowMode.Guide:
-                    return PyralisAuthoringSemanticTag.Inspector;
-                case AuthoringWindowMode.Map:
-                    return PyralisAuthoringSemanticTag.Hierarchy;
-                case AuthoringWindowMode.Validate:
-                    return PyralisAuthoringSemanticTag.Component;
-                case AuthoringWindowMode.Facts:
-                    return PyralisAuthoringSemanticTag.Project;
-                default:
-                    return PyralisAuthoringSemanticTag.PlayMode;
-            }
-        }
-
-        private static string GetModeOrientationText(AuthoringWindowMode mode)
-        {
-            switch (mode)
-            {
-                case AuthoringWindowMode.Intent:
-                    return "Intent names the game shape before Project assets, Hierarchy objects, Inspector fields, and Play Mode proof compete for attention.";
-                case AuthoringWindowMode.Guide:
-                    return "Guide explains the selected Unity object or asset and points to the next Inspector or Project surface.";
-                case AuthoringWindowMode.Map:
-                    return "Map shows where the active setup chain lives across Hierarchy roots, Project assets, Prefabs, and Inspector fields.";
-                case AuthoringWindowMode.Validate:
-                    return "Validate separates visible Evidence from actual Play Mode proof.";
-                case AuthoringWindowMode.Facts:
-                    return "Facts is the advanced coverage map: read-only contracts, reflection, convention, and proof targets for future route work.";
-                default:
-                    return "Overview keeps the current proof path calm: Do Now, Proof Enhancers, then Feature Cards.";
-            }
-        }
-
         private void DrawOverviewMode(Object activeSetup, Object selection, PyralisAuthoringRouteReport report, PyralisAuthoringRouteReport selectionReport)
         {
             bool selectedSetupProfile = selection is GameSetupProfile;
             Object currentStepSelection = selectedSetupProfile ? selection : activeSetup != null ? activeSetup : selection;
             PyralisAuthoringRouteReport currentStepReport = selectedSetupProfile ? selectionReport : activeSetup != null ? report : selectionReport;
             PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(activeSetup, report);
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(activeSetup);
 
-            EditorGUILayout.LabelField("Overview Dashboard", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Overview", EditorStyles.boldLabel);
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                PyralisAuthoringOverviewRenderer.DrawGuidanceCard(model, report);
-
-                EditorGUILayout.LabelField("Route", model.RouteName);
-                EditorGUILayout.LabelField("Blocking Setup Clear", model.ReadyToPressPlay ? "Yes - selected intent's Do Now setup is clear. Proof Enhancers are optional." : "No - selected intent still has Do Now setup to finish.");
+                PyralisAuthoringOverviewRenderer.DrawGuidanceCard(model, report, graph);
                 PyralisAuthoringOverviewRenderer.DrawActionButtons(model, OpenIntentFromOverview, OpenMapFromOverview, OpenValidateFromOverview);
-                PyralisAuthoringOverviewRenderer.DrawFirstProofCard(model);
-                PyralisAuthoringOverviewRenderer.DrawPlayModeChecklist(model);
-                PyralisAuthoringOverviewRenderer.DrawContractProofGuidance(activeSetup, report);
-                EditorGUILayout.LabelField("Active Setup", activeSetup != null ? $"{activeSetup.name} ({activeSetup.GetType().Name})" : "Nothing pinned or inferred");
-                EditorGUILayout.LabelField("Selected Context", selection != null ? $"{selection.name} ({selection.GetType().Name})" : "Nothing selected");
-
-                PyralisAuthoringOverviewRenderer.DrawLane("Do Now", "Intent-required missing or blocked work only.", model.DoNow);
-                PyralisAuthoringOverviewRenderer.DrawLane("Proof Enhancers", "Recommended by this intent once Do Now is clear. Wire only what the first proof depends on.", model.DoSoon);
-                PyralisAuthoringOverviewRenderer.DrawLane("Feature Cards", "Optional next capabilities, polish, advanced systems, and setup that can safely wait.", model.Later);
             }
 
             EditorGUILayout.Space(12f);
+            PyralisAuthoringOverviewRenderer.DrawFirstProofCard(model, graph);
+            PyralisAuthoringOverviewRenderer.DrawPlayModeChecklist(model);
+            PyralisAuthoringOverviewRenderer.DrawLane("Do Now", "Only intent-required missing or blocked work appears here.", model.DoNow);
+            PyralisAuthoringOverviewRenderer.DrawLane("Proof Enhancers", "Useful before Play Mode when they make the first proof clearer.", model.DoSoon);
+            PyralisAuthoringOverviewRenderer.DrawContractProofGuidance(activeSetup, report);
             DrawCurrentStepPanel(currentStepSelection, currentStepReport);
-
-            PyralisFeatureAdvisorRenderer.Draw(PyralisAuthoringSetupContextResolver.GetSelectedSetupProfile(activeSetup, PyralisAuthoringSetupContextResolver.GetSelectedMode(activeSetup, PyralisAuthoringSetupContextResolver.GetSelectedSession(activeSetup, PyralisAuthoringSetupContextResolver.GetSelectedBootstrap(activeSetup)))));
         }
 
         private void OpenIntentFromOverview()
@@ -555,12 +381,12 @@ namespace NeonBlack.Gameplay.Editor
 
         private void OpenValidateFromOverview()
         {
-            _hygieneScroll = Vector2.zero;
+            _validateScroll = Vector2.zero;
             SwitchMode(AuthoringWindowMode.Validate);
         }
 
         private PyralisAuthoringIntentModel GetCachedIntentModel()
-{
+        {
             string key = $"{_intentLane}_{_intentAxioms}_{_intentCapabilities}_{_authoringCacheVersion}";
             if (_cachedIntentModelKey == key)
                 return _cachedIntentModel;

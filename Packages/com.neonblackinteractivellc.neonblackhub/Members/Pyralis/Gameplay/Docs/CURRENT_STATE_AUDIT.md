@@ -1,6 +1,6 @@
 # NeonBlack Gameplay Current State Audit
 
-This document captures the current architectural state of NeonBlack Gameplay after the platform realignment, assembly split, deferred cleanup pass, setup-doc consolidation, the 2026-05-22 Pyralis codebase audit, and the 2026-05-23 authoring/mechanics quality pass.
+This document captures the current architectural state of NeonBlack Gameplay after the platform realignment, assembly split, deferred cleanup pass, setup-doc consolidation, authoring infrastructure consolidation, and Unity proof passes.
 
 Update it whenever a major blocker changes or a formerly open refactor concern is no longer one of the top priorities.
 
@@ -14,7 +14,7 @@ NeonBlack Gameplay now has:
 - cleaned deferred slices for Pickups, Feedback, and Scoring
 - consolidated setup docs built around `Docs/Authoring/CANONICAL_SETUP.md`
 
-The platform architecture is no longer the main blocker. The highest-value ongoing work is:
+The platform architecture is stable enough for guided proof work. The highest-value ongoing work is:
 
 - expanding Unity-side behavioral coverage
 - keeping docs and editor tooling aligned with the preferred authored path
@@ -87,7 +87,7 @@ These were major refactor blockers and are now resolved or intentionally stabili
 - 3D movement now resolves raw input into camera-relative planar world movement when `movementCamera` is assigned, while preserving world-axis fallback when no camera is provided; `Motor3D.CurrentVelocity` now exposes full X/Y/Z state
 - `Motor2D` is no longer a duplicate `IPawnMotor` or `IPawnPresentationModule` owner; the dedicated `Pawn2DMovementComponent` and `Pawn2DPresentationComponent` now own profile application for the 2D stack
 - projectile definition authoring now validates prefab runtime-body compatibility in the inspector, requiring a `Projectile` or `Projectile2D` runtime body for prefab delivery and warning when a prefab mixes 2D and 3D physics
-- active setup now favors manual native authoring through `Create -> NeonBlack` asset paths, Overview guidance, and Inspector field wiring instead of starter-pack-first setup
+- active setup now favors manual native authoring through `Create -> NeonBlack` asset paths, Overview guidance, and Inspector field wiring
 - fire-mode guidance now distinguishes planner-consumed burst/spread fields from optional magazine data, so cooldown/ammo/reload fields do not overpromise automatic runtime behavior
 - local multiplayer docs now explicitly separate `PlayerInputManager` local join from NGO-backed networking, while `Networking/README.md` documents why Netcode dependencies are package-level but networked runtime is opt-in
 - local/offline ownership defaults now live in `NeonBlack.Gameplay.Core`, so the main Gameplay assembly no longer depends on the optional Networking assembly just to enter Play Mode
@@ -98,7 +98,7 @@ These were major refactor blockers and are now resolved or intentionally stabili
 - traversal climb/hang cleanup restores the controller, movement state, and climb zone when the component is disabled mid-action
 - setup flow now includes a scene/prefab readiness gate before scene authoring: it checks authored participant seats, missing scripts on referenced roots, pawn prefab runtime interfaces, enabled feature module prefab validation, projectile prefab runtime-body/physics compatibility, and networked pawn `NetworkObject`/`NetworkManager` readiness without depending on the optional Networking assembly
 - setup flow now treats invalid `RuntimePatternDefinition` assets as blocking, not ready, so empty or malformed runtime patterns cannot falsely clear the beginner checklist
-- the archived starter-pack factory remains covered for legacy/internal tests, but active authoring validation no longer treats generated scaffold assets as first-route evidence
+- active authoring validation treats native Unity setup, user-owned prefabs, and disposable proof-scene evidence as the first-route evidence
 - feature runtime lifecycle hardening now destroys previously instantiated feature runtime objects during `ActorFeatureHost` reinitialization, cancels delayed projectile commands when launchers are disabled, makes feedback/traversal feature runtimes tolerate null initialization contexts, and keeps 3D traversal dependencies explicit through `RequireComponent`
 - fresh Unity batch validation on 2026-05-24 passed EditMode `189/189` and PlayMode `63/63`; the working Test Runner route is batchmode without `-quit`, because Unity Test Framework 1.6 ignores command-line tests when `-quit` is specified
 - networking is MVP-ready for prefab/scene setup: `SessionDefinition.networkMode` selects NGO-backed session/roster/spawn/ownership/authority services through the isolated networking assembly, setup validation covers `NetworkManager`, `UnityTransport`, pawn `NetworkObject`, and Network Prefab registration, and the spawn/authority path now uses participant-specific owner client ids
@@ -109,7 +109,7 @@ These were major refactor blockers and are now resolved or intentionally stabili
 - primary-player compatibility paths are less dominant: `PlayerRegistry` now prefers the active participant/player provider before its local static fallback, and `PlayerSpawner` no longer respawns the first participant when a specific seat is configured but missing
 - clean-break pre-scene readiness now has the final authoring blockers closed for this phase: NGO participant spawning assigns ownership with `SpawnWithOwnership`, network authority compares the resolved owner client to the local client instead of treating every client as local, scene/prefab readiness scans bootstrap-referenced scene roots and key same-scene services instead of only the bootstrap hierarchy, and the package exposes its sample through `Samples~`/Package Manager metadata
 - fresh Unity batch validation on 2026-05-24 passed EditMode `199/199` and PlayMode `74/74` after those changes; `dotnet restore` plus `dotnet build "Game Studio Core.slnx" --no-restore` also passed, with remaining warnings coming from Unity Test Framework and VContainer package code
-- fresh Unity batch validation on 2026-05-25 passed EditMode `211/211` and PlayMode `90/90`; the tabletop starter now generates board, pieces, move policy, turn order, terminal conditions, and a board-move action, while malformed generated starter content remains archived outside the package import path
+- fresh Unity batch validation on 2026-05-25 passed EditMode `211/211` and PlayMode `90/90`; tabletop coverage now includes board, pieces, move policy, turn order, terminal conditions, and board-move action proof surfaces, while disposable proof content remains outside the package import path
 - the 2026-06-09 hardening pass tightened runtime service ownership around `GameplaySessionBootstrap` and `PyralisGameplayLifetimeScope`, refactored `CameraOcclusionFader` and `DamageZone` (2D/3D) for zero-allocation ticking, normalized 2D input through `Motor2DInputAdapter` and `PlayerInputHandler`, and hardened startup/teardown expectations for scene transitions.
 - launch-pad cleanup on 2026-05-25 archived stale active `Assets/GameplayExamplePack`, Unity `InitTestScene*.unity` scratch scenes, `Assets/Temp`, and empty package ownership folders under `_CodexArchive/2026-05-25-launchpad-active-assets-cleanup`; source contracts now keep those generated/test surfaces out of the active import path
 - authoring-first tabletop readiness now separates core rule assets from Unity-playable interaction: Setup Flow names the concrete tabletop core (`BoardDefinition`, `BoardMovePolicyDefinition`, `TurnOrderDefinition`, `ActionQueueService`, `BoardMoveActionResolver`, and terminal conditions), adds a recommended `Assign Tabletop Selection Surface` step, and keeps `project-owned` runtime claims visible instead of silently marking them ready when paired with a known service name
@@ -126,7 +126,7 @@ These were major refactor blockers and are now resolved or intentionally stabili
 
 ### 1. Keep Unity Test Runner As The Main Gate
 
-The .NET solution build is a useful fast compile gate, and source/editor contract tests catch many structural regressions. It is not enough for foundation readiness by itself. Projectile pooling/contact, traversal cleanup, participant spawning, networking MVP wiring, generated starter prefabs, sample packaging, and prefab/script serialization now have Unity Test Runner proof, so keep that proof fresh as prefab and scene work begins.
+The .NET solution build is a useful fast compile gate, and source/editor contract tests catch many structural regressions. It is not enough for foundation readiness by itself. Projectile pooling/contact, traversal cleanup, participant spawning, networking MVP wiring, runtime/PlayMode proof surfaces, sample packaging, and prefab/script serialization now have Unity Test Runner proof, so keep that proof fresh as prefab and scene work begins.
 
 Current focus:
 
@@ -245,7 +245,7 @@ Current focus:
 
 ## Medium-Priority Issues
 
-### 7. Large MonoBehaviours Still Carry High Change Cost
+### 8. Large MonoBehaviours Still Carry High Change Cost
 
 The codebase is no longer centered on one monolithic player controller, but several large files remain likely maintenance hotspots.
 
@@ -270,7 +270,7 @@ Current focus:
 - prefer extracting plain model/policy classes, validation helpers, and small presentation helpers
 - add tests around any extracted behavior before moving more logic
 
-### 8. Behavioral Test Coverage Is Still Light
+### 9. Behavioral Test Coverage Is Still Light
 
 The package now has real architecture and validation coverage, but deeper runtime/editor behavior coverage is still thinner than the platform shape.
 
@@ -287,7 +287,7 @@ Current focus:
 - editor-created authored assets
 - Unity-side scene and prefab validation for missing scripts, service wiring, feature installation, and participant spawning
 
-### 9. Assembly Boundaries Need Continued Enforcement
+### 10. Assembly Boundaries Need Continued Enforcement
 
 The package now has meaningful domain assemblies, but the aggregate `NeonBlack.Gameplay` assembly still references most feature assemblies for convenience.
 
@@ -303,7 +303,7 @@ Current focus:
 - avoid adding new dependencies to the aggregate assembly as a shortcut
 - extract contracts to `Core` or `Features/Composition` only when they are genuinely shared
 
-### 9. Deferred Compatibility Surfaces Still Need Periodic Review
+### 11. Deferred Compatibility Surfaces Still Need Periodic Review
 
 The highest-risk deferred slices have been cleaned, but some older scene-facing systems still deserve occasional review so they do not drift back toward hidden coupling.
 
@@ -315,7 +315,7 @@ Examples:
 
 ## Lower-Priority But Important
 
-### 10. Documentation Hygiene Is Now Ongoing Maintenance
+### 12. Documentation Hygiene Is Now Ongoing Maintenance
 
 The docs are in much better shape, but the rule now is maintenance discipline, not one more giant rewrite.
 
@@ -330,7 +330,7 @@ Current source-of-truth path:
 - `Docs/Authoring/SCENE_SETUP_GUIDE.md`
 - feature-specific setup docs beneath `Docs/Authoring/Prefabs/`
 
-### 11. Source Encoding Hygiene Is Now Guarded
+### 13. Source Encoding Hygiene Is Now Guarded
 
 The active Gameplay source/docs had several mojibake sequences from past UTF-8/Windows encoding mismatches. The known active markers have been cleaned and source contract tests now guard Gameplay `.cs` and `.md` files.
 

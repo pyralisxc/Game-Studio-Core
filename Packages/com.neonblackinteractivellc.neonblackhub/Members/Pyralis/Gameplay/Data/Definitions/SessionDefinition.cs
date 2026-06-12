@@ -19,6 +19,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
     [AuthoringContract(
         Capability = AuthoringCapability.Session, 
         Priority = AuthoringPriority.Primary,
+        SetupNodeId = "session.definition",
         Relevance = "Root configuration for a gameplay session. Defines the boundary of your game world and network authority.",
         AssignmentFields = new[] { nameof(sessionName), nameof(defaultGameMode), nameof(defaultParticipants), nameof(defaultInputProfile), nameof(networkMode), nameof(maxParticipants) },
         NativeSetup = new[] { "GameplaySessionBootstrap" },

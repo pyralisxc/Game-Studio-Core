@@ -29,7 +29,7 @@ A route is complete when it has:
 
 Use this checklist as the product gate for every game lane. A brawler route, tabletop route, card route, survival route, shooter route, RPG route, or procedural route is not done just because the runtime system exists. It is done when a Unity developer can create the route, understand the setup chain, validate common mistakes, run the smallest proof, and keep going without rebuilding the framework.
 
-During the Authoring 2.0 proof period, proof scenes and temporary authored values are evidence fixtures, not the product path. They should prove that the Authoring Window, inspectors, facts, providers, validators, and runtime code can guide native Unity authoring. They must not become hidden route generators, starter packs, or preset paths. Multiple unfinished structural proofs are acceptable when the remaining work is explicitly Cameron/user-owned art, animation, input, tuning, game-feel, or design validation.
+During the Authoring 2.0 proof period, proof scenes and temporary authored values are evidence fixtures, not the product path. They should prove that the Authoring Window, inspectors, facts, validators, contracts, and runtime code can guide native Unity authoring. They must not become hidden route generators, starter packs, or preset paths. Multiple unfinished structural proofs are acceptable when the remaining work is explicitly Cameron/user-owned art, animation, input, tuning, game-feel, or design validation.
 
 ## Full Studio Toolkit Feature Map
 
@@ -46,7 +46,7 @@ Target capabilities:
 - setup issue cards with exact fields or components to inspect
 - scene surface detectors with evidence
 - generic capability setup paths for each major game type
-- sample scenes for each route
+- disposable proof-scene evidence for each route
 - in-window success prompts
 - field explanations connected to actual Unity objects
 - guided authoring surface with progressive disclosure
@@ -72,7 +72,7 @@ runtime/data conventions
           -> Authoring Window, inspectors, setup flow, validators, catalog, and docs
 ```
 
-The first implementation step is `PyralisAuthoringFactRegistry`: a read-only spine for stable ids, provenance, confidence, native Unity actions, evidence/proof vocabulary, and capability-card facts. Keep the current Runtime Capability Catalog visible behavior stable while moving its meaning into facts. Do not build a whole-codebase scraper first. Current checkpoint status: runtime capability cards are fact-backed, setup-flow step ids now contribute setup-node facts, 2D pawn movement setup nodes are related to the `capability.2d-pawn-movement` fact, broad `proof.*` facts now name first-proof targets for pawn movement, board/card action, action selection, NPC/enemy behavior, custom object effects, UI/HUD/menu events, camera/cursor/world framing, generated content, and network ownership, route-family facts now name broad authoring surfaces the system must support, scene-evidence facts connect current scene-surface guidance rows to route/proof ids, Validate cards expose typed `PyralisAuthoringIssue` metadata, inspector handoff facts relate native Inspector assignment/customization to setup nodes and route proofs, and feature-owned `IAuthoringContractProvider` entries feed setup-profile capability guidance, profile/runtime/lane validation, unsupported-lane cautions, and first-proof target rows in the Authoring Window. The Authoring Window has a read-only `Facts` tab for registry coverage, provenance, native actions, requirements, customization moments, and relationships. Reflection and convention facts are added through explicit source calls in `PyralisAuthoringFactRegistry`; do not add a second provider-discovery registry for facts. Optional beginner semantic location tags show a top Authoring Window legend plus generated fact/action badges.
+The first implementation step is `PyralisAuthoringFactRegistry`: a read-only spine for stable ids, provenance, confidence, native Unity actions, evidence/proof vocabulary, and capability-card facts. Keep the current Runtime Capability Catalog visible behavior stable while moving its meaning into facts. Do not build a whole-codebase scraper first. Current checkpoint status: runtime capability cards are fact-backed, setup-flow step ids now contribute setup-node facts, 2D pawn movement setup nodes are related to the `capability.2d-pawn-movement` fact, broad `proof.*` facts now name first-proof targets for pawn movement, board/card action, action selection, NPC/enemy behavior, custom object effects, UI/HUD/menu events, camera/cursor/world framing, generated content, and network ownership, route-family facts now name broad authoring surfaces the system must support, scene-evidence facts connect current scene-surface guidance rows to route/proof ids, Validate cards expose typed `PyralisAuthoringIssue` metadata, inspector handoff facts relate native Inspector assignment/customization to setup nodes and route proofs, and feature-owned `[AuthoringContract]` metadata feeds setup-profile capability guidance, profile/runtime/lane validation, unsupported-lane cautions, developer first-proof guidance, and proof target rows in the Authoring Window. The Authoring Window has a read-only `Facts` tab for registry coverage, provenance, native actions, requirements, customization moments, and relationships. Reflection and convention facts are added through explicit source calls in `PyralisAuthoringFactRegistry`; do not add a second provider-discovery registry for facts. Optional beginner semantic location tags show a top Authoring Window legend plus generated fact/action badges.
 
 Authoring 2.0 rollout order:
 
@@ -84,7 +84,7 @@ Authoring 2.0 rollout order:
 6. add inspector handoff facts for selected field/component guidance - expanded across core setup, 2D pawn/input, tabletop, camera, feature-module, and selected route fields; still needs more per-route field audits after live testing
 7. add a read-only Fact Explorer tab that shows provenance, confidence, and missing coverage - started in the Authoring Window
 8. add reflection/convention providers for boring facts such as `CreateAssetMenu`, `AddComponentMenu`, `RequireComponent`, serialized fields, and known suffixes - provider spine is active, 1P Sprite2D convention facts have moved out of the bridge provider, and remaining route surfaces still need automated coverage discovery plus per-route pruning after Unity proof
-9. expand by proven route surface: pawns, NPCs/enemies, custom objects/features, UI/HUD/menus, world/environment, networking, and tabletop/card/procedural - route-family facts, broad proof targets, scene-evidence anchors, and first inspector/convention coverage are in place; still needs route-specific validators, starter/sample coverage, and manual proof coverage
+9. expand by proven route surface: pawns, NPCs/enemies, custom objects/features, UI/HUD/menus, world/environment, networking, and tabletop/card/procedural - route-family facts, broad proof targets, scene-evidence anchors, and first inspector/convention coverage are in place; still needs route-specific validators and manual proof coverage before any sample promotion
 10. add a BuildReport / Export Footprint promotion gate for route builds once representative route exports exist - keep editor-only authoring contracts/facts/providers/validators out of player builds, and use Unity build reports to catch unexpected editor assemblies, unrelated runtime modules, or large unused assets before export-footprint-sensitive routes are promoted
 11. add optional beginner semantic location tags from facts/actions rather than hand-colored prose - started with central palette, top legend, and fact/action badges
 
@@ -122,7 +122,7 @@ Do not build the map flat. Sequence it this way:
 
 1. Authoring Window as route auditor and tutor.
 2. First proof loops for existing mechanics.
-3. Starter packs and sample scenes for current routes.
+3. Disposable proof-scene evidence and generic native-authoring guidance for current routes.
 4. UI/HUD/menu basics.
 5. Save/settings/progression basics.
 6. One deep route: tabletop/tactics or pawn action.

@@ -183,17 +183,17 @@ Feature modules are authored through `FeatureModuleDefinition` and installed thr
 
 Important rules:
 
-- every reusable feature module should provide an explicit `IAuthoringContractProvider` in the owning feature editor assembly
+- every reusable feature module should provide an explicit `[AuthoringContract]` on the owning feature type
 - `ResolvedAuthoringContractRegistry` discovers contracts reflectively; do not add central hardcoded module-id registries
-- the provider must declare required profile type, runtime prefab interfaces, supported lanes, unsupported lanes, action roles, native setup actions, assignment fields, customization moments, and first proof target
+- the contract must declare required profile type, runtime prefab interfaces/components, supported lanes, unsupported lanes, action roles, native setup actions, assignment fields, customization moments, developer first-proof guidance, and `SetupNodeId` when the contract enriches a stable resolved setup graph node
 - every declared `FirstProofTargetId` must map to a real `PyralisAuthoringRouteProof` fact
 - every feature module must declare network intent
 - runtime prefabs must expose the required feature runtime contracts
 - feature-owned authored profiles should live with the feature whenever practical
 
-The Authoring Window reads these contracts for setup guidance, proof target guidance, and unsupported lane cautions. The feature module Inspector and contract validator use the same contract data for profile, runtime-interface, and lane validation. Keep feature-specific authoring rules in the feature provider; central definitions should only keep generic `FeatureModuleDefinition` rules.
+The Authoring Window reads these contracts for setup guidance, proof target guidance, and unsupported lane cautions. The feature module Inspector and contract validator use the same contract data for profile, runtime-interface, and lane validation. Keep feature-specific authoring rules in the feature contract; central definitions should only keep generic `FeatureModuleDefinition` rules.
 
-When adding a module, add the provider, asmdef references, `.meta` files, registry tests, validation tests, proof-target tests, and docs update in the same slice. Do not patch generated `.csproj` files; refresh Unity so project files are regenerated from the package assets.
+When adding a module, add the contract metadata, asmdef references, `.meta` files, registry tests, validation tests, proof-target tests, and docs update in the same slice. Do not patch generated `.csproj` files; refresh Unity so project files are regenerated from the package assets.
 
 Current extracted runtime domains include:
 
