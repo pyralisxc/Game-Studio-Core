@@ -290,7 +290,7 @@ namespace NeonBlack.Gameplay.Editor
             if (summaryLabel == null) return;
 
             var selection = new PyralisAuthoringIntentSelection(_intentLane, _intentCapabilities, _intentAxioms);
-            PyralisAuthoringIntentModel model = PyralisAuthoringIntentAdvisor.Build(selection);
+            PyralisAuthoringIntentModel model = PyralisAuthoringSetupGraphProjection.BuildIntentModel(selection);
 
             summaryLabel.text = model.Summary;
             Label nextLabel = root.Q<Label>("intentNext");

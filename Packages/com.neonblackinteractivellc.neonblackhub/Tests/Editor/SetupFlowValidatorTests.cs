@@ -620,7 +620,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(readyReport.GetStep("Tune Movement And Input Feel").NativeAction.HasValue, Is.True);
             Assert.That(overview.DoSoon.First(issue => issue.Label == "Tune Pawn Visuals And Collision").NativeActionGuidance, Does.Contain("Collider2D shape/size"));
             Assert.That(overview.DoSoon.First(issue => issue.Label == "Tune Movement And Input Feel").NativeActionGuidance, Does.Contain("movement speed"));
-            Assert.That(overview.DoSoon.First(issue => issue.Label == "Tune Movement And Input Feel").WorkIntent, Is.EqualTo(PyralisSetupFlowWorkIntent.ProofEnhancer));
+            Assert.That(overview.DoSoon.First(issue => issue.Label == "Tune Movement And Input Feel").WorkIntentLabel, Is.EqualTo("Proof Enhancer"));
 
             Object.DestroyImmediate(session);
             Object.DestroyImmediate(participant);
@@ -1535,8 +1535,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(proof.Kind, Is.EqualTo(PyralisAuthoringFactKind.Proof));
             Assert.That(proof.WorkIntent, Is.EqualTo("FirstProof"));
             Assert.That(proof.FirstProof, Does.Contain("One participant spawns one pawn"));
-            Assert.That(proof.RequiredDefinitions, Does.Contain("PawnDefinition"));
-            Assert.That(proof.RequiredUnitySurfaces, Does.Contain("PawnRoot"));
+            Assert.That(proof.RequiredDefinitions, Is.Empty);
+            Assert.That(proof.RequiredSceneComponents, Is.Empty);
             Assert.That(proof.NativeActions.Length, Is.GreaterThanOrEqualTo(1));
             Assert.That(proof.NativeActions[0].Surface, Is.EqualTo(PyralisAuthoringActionSurface.PlayMode));
             Assert.That(proof.RelatedStableIds, Does.Contain("capability.2d-pawn-movement"));
@@ -1989,18 +1989,15 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
             Assert.That(tabletopProof.RelatedStableIds, Does.Contain("capability.interaction-action-selection"));
 
             PyralisAuthoringFact uiProof = PyralisAuthoringFactRegistry.Find("proof.ui-hud-menu");
-            Assert.That(uiProof.RequiredSceneComponents, Does.Contain("Canvas"));
-            Assert.That(uiProof.RequiredSceneComponents, Does.Contain("EventSystem"));
+            Assert.That(uiProof.RequiredSceneComponents, Is.Empty);
             Assert.That(uiProof.RelatedStableIds, Does.Contain("route.ui-hud-menu"));
 
             PyralisAuthoringFact cameraProof = PyralisAuthoringFactRegistry.Find("proof.camera-cursor-world");
-            Assert.That(cameraProof.RequiredProfiles, Does.Contain("CameraRigProfile"));
             Assert.That(cameraProof.RelatedStableIds, Does.Contain("capability.camera-follow-bounds"));
 
             PyralisAuthoringFact networkProof = PyralisAuthoringFactRegistry.Find("proof.network-ownership");
             Assert.That(networkProof.LaneTags, Does.Contain("Networked"));
-            Assert.That(networkProof.RequiredSceneComponents, Does.Contain("NetworkManager"));
-            Assert.That(networkProof.AssignmentFields, Does.Contain("NetworkManager.NetworkPrefabs"));
+            Assert.That(networkProof.RequiredSceneComponents, Is.Empty);
         }
 
         [Test]

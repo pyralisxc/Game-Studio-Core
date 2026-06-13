@@ -43,26 +43,27 @@ namespace NeonBlack.Gameplay.Editor
             if (graph == null)
                 return false;
 
-            IReadOnlyList<PyralisAuthoringValidationGraphRow> required = PyralisAuthoringSetupGraphProjection.BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.Blocked);
-            IReadOnlyList<PyralisAuthoringValidationGraphRow> recommended = PyralisAuthoringSetupGraphProjection.BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.Missing);
-            IReadOnlyList<PyralisAuthoringValidationGraphRow> enhancers = PyralisAuthoringSetupGraphProjection.BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.CandidateDetected);
-            if (required.Count == 0 && recommended.Count == 0 && enhancers.Count == 0)
+            IReadOnlyList<PyralisAuthoringValidationGraphSection> sections = PyralisAuthoringSetupGraphProjection.BuildValidationSections(graph);
+            if (!HasRows(sections))
                 return false;
 
             EditorGUILayout.Space(8f);
             EditorGUILayout.LabelField("Resolved Graph Readiness", EditorStyles.boldLabel);
-            DrawReadinessBucket("Required Before Play", required, MessageType.Error);
-            DrawReadinessBucket("Recommended Before Play", recommended, MessageType.Warning);
-            DrawReadinessBucket("Proof Enhancers", enhancers, MessageType.Info);
+            for (int i = 0; i < sections.Count; i++)
+            {
+                PyralisAuthoringValidationGraphSection section = sections[i];
+                if (section == null || !section.HasRows)
+                    continue;
+
+                DrawReadinessBucket(section.Label, section.Rows, GetMessageType(section.EvidenceState));
+            }
+
             return true;
         }
 
         private static void DrawGraphEvidenceDetails(PyralisAuthoringSetupGraph graph)
         {
-            List<PyralisAuthoringValidationGraphRow> rows = new List<PyralisAuthoringValidationGraphRow>();
-            rows.AddRange(PyralisAuthoringSetupGraphProjection.BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.Blocked));
-            rows.AddRange(PyralisAuthoringSetupGraphProjection.BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.Missing));
-            rows.AddRange(PyralisAuthoringSetupGraphProjection.BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.CandidateDetected));
+            IReadOnlyList<PyralisAuthoringValidationGraphRow> rows = PyralisAuthoringSetupGraphProjection.BuildValidationDetailRows(graph);
 
             string currentGroup = string.Empty;
             for (int i = 0; i < rows.Count; i++)
@@ -80,6 +81,33 @@ namespace NeonBlack.Gameplay.Editor
                 }
 
                 DrawGraphEvidenceCard(row);
+            }
+        }
+
+        private static bool HasRows(IReadOnlyList<PyralisAuthoringValidationGraphSection> sections)
+        {
+            if (sections == null)
+                return false;
+
+            for (int i = 0; i < sections.Count; i++)
+            {
+                if (sections[i] != null && sections[i].HasRows)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static MessageType GetMessageType(PyralisAuthoringGraphEvidenceState evidenceState)
+        {
+            switch (evidenceState)
+            {
+                case PyralisAuthoringGraphEvidenceState.Blocked:
+                    return MessageType.Error;
+                case PyralisAuthoringGraphEvidenceState.Missing:
+                    return MessageType.Warning;
+                default:
+                    return MessageType.Info;
             }
         }
 

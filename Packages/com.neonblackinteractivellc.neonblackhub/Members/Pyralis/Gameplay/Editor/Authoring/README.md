@@ -7,6 +7,7 @@ This folder is the editor-only authoring system for Pyralis. Keep it organized b
 `Spine/` contains reflective infrastructure and stable authoring truth:
 
 - `Facts/`: fact records, convention providers, scanners, and registries.
+- `Graph/`: resolved setup graph, graph node/edge vocabulary, and graph-backed tab projections.
 - `Routes/`: route descriptors, proof language, capability catalog, intent advice, and pawn-prefab readiness analysis.
 - `Validation/`: setup-flow, scene-readiness, runtime-claim, and feature-contract validation.
 - `Evidence/`: scene-surface evidence snapshots and native Unity surface guidance.

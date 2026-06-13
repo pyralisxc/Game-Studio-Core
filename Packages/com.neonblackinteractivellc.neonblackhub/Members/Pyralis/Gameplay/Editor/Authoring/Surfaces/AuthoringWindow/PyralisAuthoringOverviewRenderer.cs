@@ -190,8 +190,8 @@ namespace NeonBlack.Gameplay.Editor
 
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                EditorGUILayout.LabelField(issue.Label, PyralisAuthoringWindowText.GetStatusLabel(issue.Status), EditorStyles.boldLabel);
-                PyralisAuthoringWindowPrimitives.DrawMiniField("Setup Role", PyralisAuthoringWindowText.GetWorkIntentLabel(issue.WorkIntent));
+                EditorGUILayout.LabelField(issue.Label, GetEvidenceLabel(issue.EvidenceState), EditorStyles.boldLabel);
+                PyralisAuthoringWindowPrimitives.DrawMiniField("Setup Role", issue.WorkIntentLabel);
                 PyralisAuthoringWindowText.DrawSemanticMiniLabel(issue.Message);
                 if (!string.IsNullOrWhiteSpace(issue.NativeActionGuidance))
                 {
@@ -210,6 +210,19 @@ namespace NeonBlack.Gameplay.Editor
                     }
                 }
             }
+        }
+
+        private static string GetEvidenceLabel(PyralisAuthoringGraphEvidenceState evidenceState)
+        {
+            return evidenceState switch
+            {
+                PyralisAuthoringGraphEvidenceState.Ready => "Ready",
+                PyralisAuthoringGraphEvidenceState.Optional => "Optional",
+                PyralisAuthoringGraphEvidenceState.Missing => "Missing",
+                PyralisAuthoringGraphEvidenceState.CandidateDetected => "Recommended",
+                PyralisAuthoringGraphEvidenceState.Blocked => "Blocked",
+                _ => "Unknown"
+            };
         }
 
         private static string GetLaneCountLabel(int count)

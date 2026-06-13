@@ -17,31 +17,31 @@ namespace NeonBlack.Gameplay.Editor
         public PyralisAuthoringOverviewIssue(
             PyralisAuthoringOverviewLane lane,
             string label,
-            PyralisSetupFlowStepStatus status,
+            PyralisAuthoringGraphEvidenceState evidenceState,
             string message,
             Object target,
             string evidence,
             string nativeActionGuidance = null,
-            PyralisSetupFlowWorkIntent workIntent = PyralisSetupFlowWorkIntent.RequiredSetup)
+            string workIntentLabel = null)
         {
             Lane = lane;
             Label = label;
-            Status = status;
+            EvidenceState = evidenceState;
             Message = message;
             Target = target;
             Evidence = evidence;
             NativeActionGuidance = nativeActionGuidance ?? string.Empty;
-            WorkIntent = workIntent;
+            WorkIntentLabel = workIntentLabel ?? string.Empty;
         }
 
         public PyralisAuthoringOverviewLane Lane { get; }
         public string Label { get; }
-        public PyralisSetupFlowStepStatus Status { get; }
+        public PyralisAuthoringGraphEvidenceState EvidenceState { get; }
         public string Message { get; }
         public Object Target { get; }
         public string Evidence { get; }
         public string NativeActionGuidance { get; }
-        public PyralisSetupFlowWorkIntent WorkIntent { get; }
+        public string WorkIntentLabel { get; }
     }
 
     public sealed class PyralisAuthoringPlayModeChecklistItem
@@ -113,9 +113,8 @@ namespace NeonBlack.Gameplay.Editor
             Object activeSetup,
             PyralisAuthoringSetupGraph graph)
         {
-            PyralisAuthoringRouteDescriptor route = PyralisAuthoringRouteDescriptor.Build(graph?.RouteAnalysis);
-            string routeName = route != null && !string.IsNullOrWhiteSpace(route.RouteName)
-                ? route.RouteName
+            string routeName = graph != null && !string.IsNullOrWhiteSpace(graph.RouteName)
+                ? graph.RouteName
                 : "No setup route selected";
             List<PyralisAuthoringOverviewIssue> doNow = new List<PyralisAuthoringOverviewIssue>();
             List<PyralisAuthoringOverviewIssue> doSoon = new List<PyralisAuthoringOverviewIssue>();

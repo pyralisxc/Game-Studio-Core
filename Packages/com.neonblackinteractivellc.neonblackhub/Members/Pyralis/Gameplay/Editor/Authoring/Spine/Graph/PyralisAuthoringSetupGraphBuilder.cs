@@ -307,13 +307,15 @@ namespace NeonBlack.Gameplay.Editor
                 proofNodeId = "proof.unresolved-route";
             AddNode(nodes, new PyralisAuthoringGraphNode(
                 proofNodeId,
-                proof.Label,
+                !string.IsNullOrWhiteSpace(proofFact?.DisplayName) ? proofFact.DisplayName : proof.Label,
                 PyralisAuthoringGraphNodeKind.Proof,
                 proofFact != null ? PyralisAuthoringGraphSourceKind.FactRegistry : PyralisAuthoringGraphSourceKind.RouteProof,
                 PyralisAuthoringGraphEvidenceState.Unknown,
                 proofTargetId: proofNodeId,
-                guidance: proof.Guidance,
-                nativeSetup: new[] { proof.SetupSurface },
+                guidance: GetProofGuidance(proof, proofFact),
+                nativeSetup: GetProofNativeSetup(proof, proofFact),
+                assignmentFields: proofFact != null ? proofFact.AssignmentFields : Array.Empty<string>(),
+                customizationMoments: proofFact != null ? proofFact.CustomizationMoments : Array.Empty<string>(),
                 blockingReason: proof.SuccessCriteria,
                 sourceOrigin: proofFact != null && proofFact.SourceKind == PyralisAuthoringFactSourceKind.FeatureContract
                     ? PyralisAuthoringGraphSourceOrigin.Contract
@@ -327,6 +329,34 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             return proofNodeId;
+        }
+
+        private static string GetProofGuidance(PyralisAuthoringRouteProof proof, PyralisAuthoringFact proofFact)
+        {
+            if (proofFact == null)
+                return proof.Guidance;
+
+            return FirstNonEmpty(
+                proofFact.FirstProof,
+                proofFact.RouteRelevance,
+                proofFact.Summary,
+                proof.Guidance);
+        }
+
+        private static string[] GetProofNativeSetup(PyralisAuthoringRouteProof proof, PyralisAuthoringFact proofFact)
+        {
+            if (proofFact != null && proofFact.NativeActions.Length > 0)
+            {
+                string[] actions = new string[proofFact.NativeActions.Length];
+                for (int i = 0; i < proofFact.NativeActions.Length; i++)
+                    actions[i] = proofFact.NativeActions[i].ToGuidanceSentence();
+
+                return actions;
+            }
+
+            return string.IsNullOrWhiteSpace(proof.SetupSurface)
+                ? Array.Empty<string>()
+                : new[] { proof.SetupSurface };
         }
 
         private static void AddContractNodes(
@@ -393,7 +423,9 @@ namespace NeonBlack.Gameplay.Editor
                     blockingReason: step.IsRequiredIssue ? step.Message : string.Empty,
                     nativeAction: step.NativeAction,
                     sourceObject: step.ReferencedObject,
-                    sourceOrigin: reflectedContractEvidence ? PyralisAuthoringGraphSourceOrigin.Contract : PyralisAuthoringGraphSourceOrigin.RuntimeEvidence));
+                    sourceOrigin: reflectedContractEvidence ? PyralisAuthoringGraphSourceOrigin.Contract : PyralisAuthoringGraphSourceOrigin.RuntimeEvidence,
+                    workIntent: ConvertSetupFlowWorkIntent(step.WorkIntent),
+                    issueSeverity: ConvertSetupFlowSeverity(step.Status)));
                 AddEdge(edges, "bootstrap.root", nodeId, PyralisAuthoringGraphEdgeKind.RelatesTo, "setup evidence");
                 AddEdge(edges, setupNodeId, nodeId, PyralisAuthoringGraphEdgeKind.RelatesTo, "setup flow evidence");
             }
@@ -419,7 +451,9 @@ namespace NeonBlack.Gameplay.Editor
                     guidance: issue.Message,
                     nativeSetup: !string.IsNullOrWhiteSpace(issue.NativeAction) ? new[] { issue.NativeAction } : Array.Empty<string>(),
                     blockingReason: issue.Severity == PyralisSceneReadinessSeverity.RequiredBeforePlay ? issue.Message : string.Empty,
-                    sourceOrigin: PyralisAuthoringGraphSourceOrigin.RuntimeEvidence));
+                    sourceOrigin: PyralisAuthoringGraphSourceOrigin.RuntimeEvidence,
+                    workIntent: ConvertSceneReadinessWorkIntent(issue.Severity),
+                    issueSeverity: ConvertSceneReadinessIssueSeverity(issue.Severity)));
                 AddEdge(edges, "bootstrap.root", nodeId, PyralisAuthoringGraphEdgeKind.RelatesTo, "scene readiness");
             }
         }
@@ -509,6 +543,31 @@ namespace NeonBlack.Gameplay.Editor
             };
         }
 
+        private static PyralisAuthoringGraphWorkIntent ConvertSetupFlowWorkIntent(PyralisSetupFlowWorkIntent workIntent)
+        {
+            return workIntent switch
+            {
+                PyralisSetupFlowWorkIntent.Foundation => PyralisAuthoringGraphWorkIntent.RequiredSetup,
+                PyralisSetupFlowWorkIntent.RequiredSetup => PyralisAuthoringGraphWorkIntent.RequiredSetup,
+                PyralisSetupFlowWorkIntent.ProofEnhancer => PyralisAuthoringGraphWorkIntent.ProofEnhancer,
+                PyralisSetupFlowWorkIntent.FeatureCard => PyralisAuthoringGraphWorkIntent.FeatureCard,
+                _ => PyralisAuthoringGraphWorkIntent.Unknown
+            };
+        }
+
+        private static PyralisAuthoringIssueSeverity ConvertSetupFlowSeverity(PyralisSetupFlowStepStatus status)
+        {
+            return status switch
+            {
+                PyralisSetupFlowStepStatus.Blocked => PyralisAuthoringIssueSeverity.Blocked,
+                PyralisSetupFlowStepStatus.Missing => PyralisAuthoringIssueSeverity.Required,
+                PyralisSetupFlowStepStatus.Recommended => PyralisAuthoringIssueSeverity.Recommended,
+                PyralisSetupFlowStepStatus.Optional => PyralisAuthoringIssueSeverity.Optional,
+                PyralisSetupFlowStepStatus.Ready => PyralisAuthoringIssueSeverity.Info,
+                _ => PyralisAuthoringIssueSeverity.Info
+            };
+        }
+
         private static PyralisAuthoringGraphEvidenceState ConvertSceneReadinessSeverity(PyralisSceneReadinessSeverity severity)
         {
             return severity switch
@@ -517,6 +576,28 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisSceneReadinessSeverity.RecommendedBeforePlay => PyralisAuthoringGraphEvidenceState.Missing,
                 PyralisSceneReadinessSeverity.ProofEnhancer => PyralisAuthoringGraphEvidenceState.CandidateDetected,
                 _ => PyralisAuthoringGraphEvidenceState.Unknown
+            };
+        }
+
+        private static PyralisAuthoringGraphWorkIntent ConvertSceneReadinessWorkIntent(PyralisSceneReadinessSeverity severity)
+        {
+            return severity switch
+            {
+                PyralisSceneReadinessSeverity.RequiredBeforePlay => PyralisAuthoringGraphWorkIntent.RequiredSetup,
+                PyralisSceneReadinessSeverity.RecommendedBeforePlay => PyralisAuthoringGraphWorkIntent.ProofEnhancer,
+                PyralisSceneReadinessSeverity.ProofEnhancer => PyralisAuthoringGraphWorkIntent.ProofEnhancer,
+                _ => PyralisAuthoringGraphWorkIntent.Unknown
+            };
+        }
+
+        private static PyralisAuthoringIssueSeverity ConvertSceneReadinessIssueSeverity(PyralisSceneReadinessSeverity severity)
+        {
+            return severity switch
+            {
+                PyralisSceneReadinessSeverity.RequiredBeforePlay => PyralisAuthoringIssueSeverity.Required,
+                PyralisSceneReadinessSeverity.RecommendedBeforePlay => PyralisAuthoringIssueSeverity.Recommended,
+                PyralisSceneReadinessSeverity.ProofEnhancer => PyralisAuthoringIssueSeverity.Recommended,
+                _ => PyralisAuthoringIssueSeverity.Info
             };
         }
 
@@ -673,6 +754,20 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             return values.ToArray();
+        }
+
+        private static string FirstNonEmpty(params string[] values)
+        {
+            if (values == null)
+                return string.Empty;
+
+            for (int i = 0; i < values.Length; i++)
+            {
+                if (!string.IsNullOrWhiteSpace(values[i]))
+                    return values[i];
+            }
+
+            return string.Empty;
         }
 
         private static string FormatNativeAction(PyralisAuthoringNativeAction action)

@@ -18,6 +18,9 @@ namespace NeonBlack.Gameplay.Editor
         {
             Source = source;
             RouteAnalysis = routeAnalysis;
+            RouteName = routeAnalysis != null && !string.IsNullOrWhiteSpace(routeAnalysis.RouteName)
+                ? routeAnalysis.RouteName
+                : "No setup route selected";
             _nodes = nodes != null
                 ? nodes.Where(node => node != null).ToList()
                 : new List<PyralisAuthoringGraphNode>();
@@ -36,6 +39,7 @@ namespace NeonBlack.Gameplay.Editor
 
         public UnityEngine.Object Source { get; }
         public PyralisSetupRouteAnalysis RouteAnalysis { get; }
+        public string RouteName { get; }
         public IReadOnlyList<PyralisAuthoringGraphNode> Nodes => _nodes;
         public IReadOnlyList<PyralisAuthoringGraphEdge> Edges => _edges;
 

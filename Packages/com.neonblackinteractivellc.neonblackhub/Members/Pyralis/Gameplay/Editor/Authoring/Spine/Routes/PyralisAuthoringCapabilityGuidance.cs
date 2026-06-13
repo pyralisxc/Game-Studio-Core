@@ -19,13 +19,14 @@ namespace NeonBlack.Gameplay.Editor
         private static PyralisAuthoringFeatureRow BuildSelectedRow(RuntimeCapabilityFamily family, string source)
         {
             RuntimeCapabilityCard card = PyralisRuntimeCapabilityCatalog.FindPrimaryByFamily(family);
-            if (card != null)
+            PyralisAuthoringFact fact = PyralisRuntimeCapabilityCatalog.FindPrimaryFactByFamily(family);
+            if (card != null && fact != null)
                 return new PyralisAuthoringFeatureRow(
                     card.DisplayName,
                     source,
                     card.WhatItAdds,
-                    BuildSetupSummary(card),
-                    BuildCustomizationSummary(card));
+                    BuildSetupSummary(fact, card.FirstProof),
+                    BuildCustomizationSummary(fact, card.ExpertAdvice));
 
             return family switch
             {
@@ -104,32 +105,32 @@ namespace NeonBlack.Gameplay.Editor
             };
         }
 
-        private static string BuildSetupSummary(RuntimeCapabilityCard card)
+        private static string BuildSetupSummary(PyralisAuthoringFact fact, string fallbackFirstProof)
         {
-            if (card == null)
+            if (fact == null)
                 return string.Empty;
 
             List<string> parts = new List<string>();
-            AddJoined(parts, card.RequiredDefinitions, "Definitions");
-            AddJoined(parts, card.RequiredProfiles, "Profiles");
-            AddJoined(parts, card.RequiredSceneComponents, "Scene");
-            AddJoined(parts, card.RequiredUnitySurfaces, "Unity");
+            AddJoined(parts, fact.RequiredDefinitions, "Definitions");
+            AddJoined(parts, fact.RequiredProfiles, "Profiles");
+            AddJoined(parts, fact.RequiredSceneComponents, "Scene");
+            AddJoined(parts, fact.RequiredUnitySurfaces, "Unity");
 
             if (parts.Count == 0)
-                return card.FirstProof;
+                return fallbackFirstProof;
 
             return string.Join(" | ", parts);
         }
 
-        private static string BuildCustomizationSummary(RuntimeCapabilityCard card)
+        private static string BuildCustomizationSummary(PyralisAuthoringFact fact, string fallbackExpertAdvice)
         {
-            if (card == null)
+            if (fact == null)
                 return string.Empty;
 
-            if (card.CustomizationMoments.Length > 0)
-                return string.Join(" ", card.CustomizationMoments);
+            if (fact.CustomizationMoments.Length > 0)
+                return string.Join(" ", fact.CustomizationMoments);
 
-            return card.ExpertAdvice;
+            return fallbackExpertAdvice;
         }
 
         private static void AddJoined(List<string> parts, string[] values, string label)

@@ -73,8 +73,6 @@ namespace NeonBlack.Gameplay.Editor
             PyralisAuthoringRouteCapability routeCapability,
             string routeLabel,
             bool primaryProofCandidate,
-            string proofStepLabel,
-            string proofStepSuccessCriteria,
             string[] goalTags,
             RuntimeCapabilityLaneTag[] laneTags,
             RuntimeCapabilityLaneTag[] cautionLaneTags,
@@ -88,7 +86,6 @@ namespace NeonBlack.Gameplay.Editor
             string[] customizationMoments,
             string[] canWait,
             string firstProof,
-            string[] commonNextCapabilities,
             string expertAdvice,
             string documentationURL,
             string[] relatedStableIds = null)
@@ -99,8 +96,6 @@ namespace NeonBlack.Gameplay.Editor
             RouteCapability = routeCapability;
             RouteLabel = routeLabel ?? string.Empty;
             PrimaryProofCandidate = primaryProofCandidate;
-            ProofStepLabel = proofStepLabel ?? string.Empty;
-            ProofStepSuccessCriteria = proofStepSuccessCriteria ?? string.Empty;
             GoalTags = goalTags ?? System.Array.Empty<string>();
             LaneTags = laneTags ?? System.Array.Empty<RuntimeCapabilityLaneTag>();
             CautionLaneTags = cautionLaneTags ?? System.Array.Empty<RuntimeCapabilityLaneTag>();
@@ -114,7 +109,6 @@ namespace NeonBlack.Gameplay.Editor
             CustomizationMoments = customizationMoments ?? System.Array.Empty<string>();
             CanWait = canWait ?? System.Array.Empty<string>();
             FirstProof = firstProof;
-            CommonNextCapabilities = commonNextCapabilities ?? System.Array.Empty<string>();
             ExpertAdvice = expertAdvice;
             DocumentationURL = documentationURL;
             NativeActions = BuildNativeActions(assignmentFields, customizationMoments, firstProof);
@@ -130,14 +124,14 @@ namespace NeonBlack.Gameplay.Editor
                 GoalTags,
                 ToStrings(LaneTags),
                 ToStrings(CautionLaneTags),
-                RequiredDefinitions,
-                RequiredProfiles,
-                RequiredSceneComponents,
-                RequiredUnitySurfaces,
-                AssignmentFields,
-                CustomizationMoments,
+                System.Array.Empty<string>(),
+                System.Array.Empty<string>(),
+                System.Array.Empty<string>(),
+                System.Array.Empty<string>(),
+                System.Array.Empty<string>(),
+                System.Array.Empty<string>(),
                 CanWait,
-                NativeActions,
+                BuildNativeActions(null, null, firstProof),
                 relatedStableIds: relatedStableIds,
                 expertAdvice: expertAdvice,
                 documentationURL: documentationURL);
@@ -149,8 +143,6 @@ namespace NeonBlack.Gameplay.Editor
         public PyralisAuthoringRouteCapability RouteCapability { get; }
         public string RouteLabel { get; }
         public bool PrimaryProofCandidate { get; }
-        public string ProofStepLabel { get; }
-        public string ProofStepSuccessCriteria { get; }
         public string[] GoalTags { get; }
         public RuntimeCapabilityLaneTag[] LaneTags { get; }
         public RuntimeCapabilityLaneTag[] CautionLaneTags { get; }
@@ -164,7 +156,6 @@ namespace NeonBlack.Gameplay.Editor
         public string[] CustomizationMoments { get; }
         public string[] CanWait { get; }
         public string FirstProof { get; }
-        public string[] CommonNextCapabilities { get; }
         public string ExpertAdvice { get; }
         public string DocumentationURL { get; }
         public PyralisAuthoringNativeAction[] NativeActions { get; }
@@ -273,8 +264,6 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringRouteCapability.PawnAction,
                 "Pawn Action",
                 true,
-                "Local pawn movement",
-                "One participant spawns one pawn and movement input visibly moves it.",
                 new[]
                 {
                     "Movement",
@@ -307,7 +296,6 @@ namespace NeonBlack.Gameplay.Editor
                 },
                 new[] { "combat", "HUD", "scoring", "pickups", "hazards", "networking", "local join" },
                 "Enter Play Mode and confirm one pawn spawns at the assigned spawn point, receives input, and visibly moves.",
-                new[] { "Combat Attack Proof", "Camera Follow And Bounds", "UI And Scoring Feedback" },
                 "The 2D Pawn is the most fundamental proof. Ensure your SpriteRenderer pivot is at the 'Feet' for consistent ground snapping.",
                 "https://docs.neonblack.com/pyralis/movement",
                 new[]
@@ -327,8 +315,6 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringRouteCapability.PawnAction,
                 "Pawn Action",
                 true,
-                "Local pawn movement",
-                "One participant spawns one pawn and movement input visibly moves it.",
                 new[]
                 {
                     "Movement",
@@ -365,7 +351,6 @@ namespace NeonBlack.Gameplay.Editor
                 },
                 new[] { "full combo trees", "split screen", "networking", "HUD polish", "export/build menus" },
                 "Enter Play Mode and confirm each authored or joined pawn spawns at a unique spawn point, receives its input owner, faces correctly, and moves through the 3D lane.",
-                new[] { "Combat Attack Proof", "NPC / Enemy Actor Setup", "Camera Follow And Bounds", "UI And Scoring Feedback" },
                 "CharacterController movement is highly sensitive to step offset and slope limit. Ensure these match your environment's geometry.",
                 "https://docs.neonblack.com/pyralis/movement",
                 new[]
@@ -387,8 +372,6 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringRouteCapability.CameraCursor,
                 "Camera / Cursor",
                 true,
-                "Camera/cursor response",
-                "One input or target changes camera, cursor, selection, framing, or bounds.",
                 new[] { "Camera" },
                 new[] { RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Billboard2_5D, RuntimeCapabilityLaneTag.ThirdPerson3D, RuntimeCapabilityLaneTag.CameraCursor },
                 System.Array.Empty<RuntimeCapabilityLaneTag>(),
@@ -412,7 +395,6 @@ namespace NeonBlack.Gameplay.Editor
                 },
                 new[] { "camera shake polish", "split screen", "cinematic transitions", "multi-target framing" },
                 "Enter Play Mode and confirm the camera shows the proof surface and respects assigned follow or bounds behavior.",
-                new[] { "2D Pawn Movement", "Combat Attack Proof", "Interaction Or Action Selection", "UI And Scoring Feedback" },
                 "The Cinemachine Rig is the most flexible camera solution. Use 'Camera Bounds' to prevent the player from seeing 'off-map' areas.",
                 "https://docs.neonblack.com/pyralis/camera"),
 
@@ -423,8 +405,6 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringRouteCapability.ActionSelection,
                 "Action Selection",
                 true,
-                "Action resolver",
-                "One selected command reaches its resolver and reports accepted, rejected, completed, or failed.",
                 new[] { "Interaction", "Input", "Tabletop" },
                 new[] { RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Billboard2_5D, RuntimeCapabilityLaneTag.ThirdPerson3D, RuntimeCapabilityLaneTag.TabletopBoard, RuntimeCapabilityLaneTag.UiMenuOnly, RuntimeCapabilityLaneTag.CameraCursor },
                 System.Array.Empty<RuntimeCapabilityLaneTag>(),
@@ -447,7 +427,6 @@ namespace NeonBlack.Gameplay.Editor
                 },
                 new[] { "large menus", "AI turns", "full card UX", "animation polish", "campaign flow" },
                 "Enter Play Mode and confirm one selected command reaches a resolver and reports accepted, rejected, completed, or failed.",
-                new[] { "UI And Scoring Feedback", "Combat Attack Proof", "Camera Follow And Bounds" },
                 "Interaction is the bridge between input and logic. Always provide a clear visual prompt when the player is in range of an interactable object.",
                 "https://docs.neonblack.com/pyralis/interaction"),
 
@@ -458,8 +437,6 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringRouteCapability.Combat,
                 "Combat",
                 true,
-                "Combat reaction",
-                "One attack produces one hit, block, damage, or reaction outcome.",
                 new[]
                 {
                     "Combat",
@@ -493,7 +470,6 @@ namespace NeonBlack.Gameplay.Editor
                 },
                 new[] { "combo trees", "enemy waves", "ammo economy", "score rewards", "network replication", "VFX polish" },
                 "Enter Play Mode and confirm one attack or shot produces one visible hit, miss, impact, damage, block, or reaction outcome.",
-                new[] { "UI And Scoring Feedback", "Interaction Or Action Selection", "Camera Follow And Bounds" },
                 "Melee combat relies on 'HitBox' zones. Ensure your attack sequences trigger these zones during the active frames of the animation.",
                 "https://docs.neonblack.com/pyralis/combat"),
 
@@ -504,8 +480,6 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringRouteCapability.Combat,
                 "Combat",
                 true,
-                "Combat reaction",
-                "One attack produces one hit, block, damage, or reaction outcome.",
                 new[]
                 {
                     "NpcsEnemies",
@@ -538,7 +512,6 @@ namespace NeonBlack.Gameplay.Editor
                 },
                 new[] { "boss AI", "dialogue/vendor/quest content", "advanced navigation", "loot tables", "network replication" },
                 "Enter Play Mode and confirm one enemy spawns or activates, finds a player target, attacks through a named hitbox, and can take damage.",
-                new[] { "Combat Attack Proof", "3D / 2.5D Pawn Movement", "UI And Scoring Feedback" },
                 "Enemy AI uses a simple range-based detection system. Adjust 'Aggro Range' and 'Leash Range' to fit the size of your combat arenas.",
                 "https://docs.neonblack.com/pyralis/enemies",
                 new[]
@@ -556,8 +529,6 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringRouteCapability.Scoring,
                 "Scoring",
                 true,
-                "Score/objective change",
-                "One gameplay event changes score, objective, timer, resource, or result state.",
                 new[] { "UiHud", "Scoring" },
                 new[] { RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Billboard2_5D, RuntimeCapabilityLaneTag.ThirdPerson3D, RuntimeCapabilityLaneTag.TabletopBoard, RuntimeCapabilityLaneTag.UiMenuOnly },
                 System.Array.Empty<RuntimeCapabilityLaneTag>(),
@@ -581,7 +552,6 @@ namespace NeonBlack.Gameplay.Editor
                 },
                 new[] { "leaderboards", "results screens", "save persistence", "achievements", "full menu navigation" },
                 "Enter Play Mode and confirm one gameplay event changes a visible label, panel, score value, prompt, health display, or feedback message.",
-                new[] { "Interaction Or Action Selection", "Combat Attack Proof", "Camera Follow And Bounds" },
                 "UI feedback should be responsive. Use the 'Feedback Hud Presenter' to queue messages so they don't overlap when many events happen at once.",
                 "https://docs.neonblack.com/pyralis/ui")
 };
@@ -601,30 +571,6 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             return facts.ToArray();
-        }
-
-        public static List<RuntimeCapabilityCard> GetByGoal(string goal)
-        {
-            List<RuntimeCapabilityCard> matches = new List<RuntimeCapabilityCard>();
-            for (int i = 0; i < Cards.Length; i++)
-            {
-                if (Cards[i].HasGoal(goal))
-                    matches.Add(Cards[i]);
-            }
-
-            return matches;
-        }
-
-        public static List<RuntimeCapabilityCard> GetByLane(RuntimeCapabilityLaneTag lane)
-        {
-            List<RuntimeCapabilityCard> matches = new List<RuntimeCapabilityCard>();
-            for (int i = 0; i < Cards.Length; i++)
-            {
-                if (Cards[i].HasLane(lane) || Cards[i].HasCautionLane(lane))
-                    matches.Add(Cards[i]);
-            }
-
-            return matches;
         }
 
         public static RuntimeCapabilityCard FindPrimaryByFamily(RuntimeCapabilityFamily family)
@@ -676,10 +622,6 @@ namespace NeonBlack.Gameplay.Editor
             AuthoringWorldAxiom axioms = card.Fact.Axioms;
             AuthoringCapability capability = card.Fact.Capability;
 
-            AddRangeDistinct(requiredProfiles, card.Fact.RequiredProfiles);
-            AddRangeDistinct(requiredUnitySurfaces, card.Fact.RequiredUnitySurfaces);
-            AddRangeDistinct(assignmentFields, card.Fact.AssignmentFields);
-            AddRangeDistinct(customizationMoments, card.Fact.CustomizationMoments);
             AddRangeDistinct(relatedStableIds, card.Fact.RelatedStableIds);
             AddRangeDistinct(goalTags, card.Fact.GoalTags);
 

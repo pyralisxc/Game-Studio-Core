@@ -88,6 +88,24 @@ namespace NeonBlack.Gameplay.Editor
         }
     }
 
+    public sealed class PyralisAuthoringValidationGraphSection
+    {
+        public PyralisAuthoringValidationGraphSection(
+            string label,
+            PyralisAuthoringGraphEvidenceState evidenceState,
+            IReadOnlyList<PyralisAuthoringValidationGraphRow> rows)
+        {
+            Label = label ?? string.Empty;
+            EvidenceState = evidenceState;
+            Rows = rows ?? Array.Empty<PyralisAuthoringValidationGraphRow>();
+        }
+
+        public string Label { get; }
+        public PyralisAuthoringGraphEvidenceState EvidenceState { get; }
+        public IReadOnlyList<PyralisAuthoringValidationGraphRow> Rows { get; }
+        public bool HasRows => Rows.Count > 0;
+    }
+
     public sealed class PyralisAuthoringGraphConnectionRow
     {
         public PyralisAuthoringGraphConnectionRow(
@@ -174,12 +192,18 @@ namespace NeonBlack.Gameplay.Editor
             Object selection,
             PyralisAuthoringGraphNode node,
             string role,
-            string nextCheck)
+            string nextCheck,
+            IReadOnlyList<PyralisAuthoringSelectedContextDetail> details = null,
+            string copyGuidance = null,
+            bool hasMissingRuntimePatternText = false)
         {
             Selection = selection;
             Node = node;
             Role = role ?? string.Empty;
             NextCheck = nextCheck ?? string.Empty;
+            Details = details ?? Array.Empty<PyralisAuthoringSelectedContextDetail>();
+            CopyGuidance = copyGuidance ?? string.Empty;
+            HasMissingRuntimePatternText = hasMissingRuntimePatternText;
         }
 
         public Object Selection { get; }
@@ -191,6 +215,24 @@ namespace NeonBlack.Gameplay.Editor
         public string RuntimeMeaning => Node != null && !string.IsNullOrWhiteSpace(Node.Guidance) ? Node.Guidance : Role;
         public string NativeSetup => Node != null && Node.NativeSetup.Length > 0 ? string.Join("; ", Node.NativeSetup) : string.Empty;
         public PyralisAuthoringGraphEvidenceState EvidenceState => Node != null ? Node.EvidenceState : PyralisAuthoringGraphEvidenceState.Unknown;
+        public IReadOnlyList<PyralisAuthoringSelectedContextDetail> Details { get; }
+        public string CopyGuidance { get; }
+        public bool HasMissingRuntimePatternText { get; }
+    }
+
+    public sealed class PyralisAuthoringSelectedContextDetail
+    {
+        public PyralisAuthoringSelectedContextDetail(string label, string value, Object target = null)
+        {
+            Label = label ?? string.Empty;
+            Value = value ?? string.Empty;
+            Target = target;
+        }
+
+        public string Label { get; }
+        public string Value { get; }
+        public Object Target { get; }
+        public bool CanSelectTarget => Target != null;
     }
 
     public sealed class PyralisAuthoringCurrentStepGraphRow
@@ -323,9 +365,55 @@ namespace NeonBlack.Gameplay.Editor
             return rows.ToArray();
         }
 
+        public static IReadOnlyList<PyralisAuthoringFact> BuildFactExplorerFacts(PyralisAuthoringSetupGraph graph)
+        {
+            return PyralisAuthoringFactRegistry.AllFacts;
+        }
+
+        public static IReadOnlyList<PyralisAuthoringFact> BuildRuntimeCapabilityFactsForCapability(
+            PyralisAuthoringSetupGraph graph,
+            AuthoringCapability capability)
+        {
+            if (capability == AuthoringCapability.None)
+                return Array.Empty<PyralisAuthoringFact>();
+
+            return PyralisAuthoringFactRegistry.AllFacts
+                .Where(fact => fact != null
+                    && (fact.Kind == PyralisAuthoringFactKind.RuntimeCapability
+                        || fact.Kind == PyralisAuthoringFactKind.FeatureContract)
+                    && (fact.Capability & capability) != 0)
+                .ToArray();
+        }
+
+        public static IReadOnlyList<PyralisAuthoringFact> BuildRuntimeCapabilityFactsForLane(
+            PyralisAuthoringSetupGraph graph,
+            RuntimeCapabilityLaneTag laneTag)
+        {
+            string laneName = laneTag.ToString();
+            return PyralisAuthoringFactRegistry.AllFacts
+                .Where(fact => fact != null
+                    && IsRuntimeCapabilityCatalogFactKind(fact.Kind)
+                    && (fact.HasLane(laneName) || fact.IsExplicitlyUnsupported(laneName)))
+                .ToArray();
+        }
+
+        private static bool IsRuntimeCapabilityCatalogFactKind(PyralisAuthoringFactKind kind)
+        {
+            return kind == PyralisAuthoringFactKind.RuntimeCapability
+                || kind == PyralisAuthoringFactKind.FeatureContract
+                || kind == PyralisAuthoringFactKind.UnitySurface
+                || kind == PyralisAuthoringFactKind.Profile
+                || kind == PyralisAuthoringFactKind.Definition;
+        }
+
+        public static PyralisAuthoringIntentModel BuildIntentModel(PyralisAuthoringIntentSelection selection)
+        {
+            return PyralisAuthoringIntentAdvisor.Build(selection);
+        }
+
         public static IReadOnlyList<PyralisAuthoringGuideGraphRow> BuildCurrentIntentGuideRows(PyralisAuthoringSetupGraph graph)
         {
-            if (graph == null || graph.Source == null)
+            if (!HasResolvedSetupContext(graph))
                 return Array.Empty<PyralisAuthoringGuideGraphRow>();
 
             List<PyralisAuthoringGuideGraphRow> rows = new List<PyralisAuthoringGuideGraphRow>();
@@ -498,6 +586,47 @@ namespace NeonBlack.Gameplay.Editor
                 .ToArray();
         }
 
+        public static IReadOnlyList<PyralisAuthoringValidationGraphSection> BuildValidationSections(PyralisAuthoringSetupGraph graph)
+        {
+            if (graph == null)
+                return Array.Empty<PyralisAuthoringValidationGraphSection>();
+
+            return new[]
+            {
+                new PyralisAuthoringValidationGraphSection(
+                    "Required Before Play",
+                    PyralisAuthoringGraphEvidenceState.Blocked,
+                    BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.Blocked)),
+                new PyralisAuthoringValidationGraphSection(
+                    "Recommended Before Play",
+                    PyralisAuthoringGraphEvidenceState.Missing,
+                    BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.Missing)),
+                new PyralisAuthoringValidationGraphSection(
+                    "Proof Enhancers",
+                    PyralisAuthoringGraphEvidenceState.CandidateDetected,
+                    BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.CandidateDetected))
+            };
+        }
+
+        public static IReadOnlyList<PyralisAuthoringValidationGraphRow> BuildValidationDetailRows(PyralisAuthoringSetupGraph graph)
+        {
+            if (graph == null)
+                return Array.Empty<PyralisAuthoringValidationGraphRow>();
+
+            List<PyralisAuthoringValidationGraphRow> rows = new List<PyralisAuthoringValidationGraphRow>();
+            IReadOnlyList<PyralisAuthoringValidationGraphSection> sections = BuildValidationSections(graph);
+            for (int i = 0; i < sections.Count; i++)
+            {
+                PyralisAuthoringValidationGraphSection section = sections[i];
+                if (section == null || !section.HasRows)
+                    continue;
+
+                rows.AddRange(section.Rows);
+            }
+
+            return rows.ToArray();
+        }
+
         public static IReadOnlyList<PyralisAuthoringIssue> BuildTypedValidationIssues(PyralisAuthoringSetupGraph graph)
         {
             if (graph == null)
@@ -560,7 +689,10 @@ namespace NeonBlack.Gameplay.Editor
                 selection,
                 node,
                 GetSelectionRole(selection, node),
-                GetSelectionNextCheck(selection, node));
+                GetSelectionNextCheck(selection, node),
+                BuildSelectedContextDetails(selection, graph),
+                GetSelectedContextCopyGuidance(selection),
+                HasMissingRuntimePatternText(selection));
         }
 
         public static IReadOnlyList<PyralisAuthoringOverviewIssue> BuildOverviewIssues(PyralisAuthoringSetupGraph graph, Object activeSetup)
@@ -660,6 +792,25 @@ namespace NeonBlack.Gameplay.Editor
             return FindCurrentProofNode(graph)?.Label ?? "Create Setup Foundation";
         }
 
+        public static bool HasResolvedSetupContext(PyralisAuthoringSetupGraph graph)
+        {
+            if (graph == null || graph.Source == null)
+                return false;
+
+            if (graph.Source is GameplaySessionBootstrap
+                || graph.Source is SessionDefinition
+                || graph.Source is GameModeDefinition
+                || graph.Source is GameSetupProfile
+                || graph.Source is ParticipantDefinition
+                || graph.Source is PawnDefinition)
+            {
+                return true;
+            }
+
+            return graph.Source is GameObject gameObject
+                && gameObject.GetComponent<GameplaySessionBootstrap>() != null;
+        }
+
         public static string GetOverviewFirstProofGuidance(PyralisAuthoringSetupGraph graph)
         {
             return FindCurrentProofNode(graph)?.Guidance
@@ -745,35 +896,14 @@ namespace NeonBlack.Gameplay.Editor
 
         private static PyralisAuthoringIssueSeverity GetTypedIssueSeverity(PyralisAuthoringGraphNode node)
         {
-            if (node == null)
-                return PyralisAuthoringIssueSeverity.Info;
-
-            if (node.EvidenceState == PyralisAuthoringGraphEvidenceState.Blocked)
-                return PyralisAuthoringIssueSeverity.Required;
-
-            if (node.EvidenceState == PyralisAuthoringGraphEvidenceState.Missing)
-            {
-                if (node.Kind == PyralisAuthoringGraphNodeKind.ValidationEvidence
-                    && node.SourceKind == PyralisAuthoringGraphSourceKind.SceneReadiness)
-                {
-                    return PyralisAuthoringIssueSeverity.Required;
-                }
-
-                return IsOverviewDoNowBlocker(node)
-                    ? PyralisAuthoringIssueSeverity.Required
-                    : PyralisAuthoringIssueSeverity.Recommended;
-            }
-
-            if (node.EvidenceState == PyralisAuthoringGraphEvidenceState.CandidateDetected)
-                return PyralisAuthoringIssueSeverity.Recommended;
-
-            return PyralisAuthoringIssueSeverity.Info;
+            return node != null ? node.IssueSeverity : PyralisAuthoringIssueSeverity.Info;
         }
 
         private static string GetTypedIssueWorkIntent(PyralisAuthoringGraphNode node)
         {
-            PyralisAuthoringOverviewLane lane = GetOverviewLane(node);
-            return GetOverviewWorkIntent(lane).ToString();
+            return node != null
+                ? GetWorkIntentLabel(node.WorkIntent)
+                : GetWorkIntentLabel(PyralisAuthoringGraphWorkIntent.Reference);
         }
 
         private static PyralisAuthoringEvidenceState GetTypedIssueEvidenceState(PyralisAuthoringGraphNode node)
@@ -835,13 +965,14 @@ namespace NeonBlack.Gameplay.Editor
             return new PyralisAuthoringOverviewIssue(
                 PyralisAuthoringOverviewLane.DoNow,
                 "Create Gameplay Root",
-                PyralisSetupFlowStepStatus.Missing,
+                PyralisAuthoringGraphEvidenceState.Missing,
                 message,
                 activeSetup,
                 "Overview needs a GameplaySessionBootstrap route before it can judge scene readiness.",
                 bootstrapNode != null && bootstrapNode.NativeAction.HasValue
                     ? bootstrapNode.NativeAction.Value.ToGuidanceSentence()
-                    : GetGameplayRootNativeActionGuidance());
+                    : GetGameplayRootNativeActionGuidance(),
+                GetWorkIntentLabel(PyralisAuthoringGraphWorkIntent.RequiredSetup));
         }
 
         private static PyralisAuthoringOverviewIssue BuildOverviewIssue(PyralisAuthoringGraphNode node)
@@ -856,12 +987,12 @@ namespace NeonBlack.Gameplay.Editor
             return new PyralisAuthoringOverviewIssue(
                 lane,
                 node.Label,
-                GetSetupFlowStatus(node.EvidenceState),
+                node.EvidenceState,
                 node.Guidance,
                 node.SourceObject,
                 GetOverviewEvidence(node),
                 node.NativeAction.HasValue ? node.NativeAction.Value.ToGuidanceSentence() : GetFirstNativeSetup(node),
-                GetOverviewWorkIntent(lane));
+                GetWorkIntentLabel(node.WorkIntent));
         }
 
         private static PyralisAuthoringOverviewLane GetOverviewLane(PyralisAuthoringGraphNode node)
@@ -926,39 +1057,23 @@ namespace NeonBlack.Gameplay.Editor
             if (node.EvidenceState != PyralisAuthoringGraphEvidenceState.Missing)
                 return false;
 
-            return node.Kind == PyralisAuthoringGraphNodeKind.SetupChain
-                || node.Kind == PyralisAuthoringGraphNodeKind.UnitySurfaceRequirement
-                || node.SourceKind == PyralisAuthoringGraphSourceKind.SetupFlow
-                || string.Equals(node.StableId, "capability.selected", StringComparison.Ordinal);
+            return node.WorkIntent == PyralisAuthoringGraphWorkIntent.RequiredSetup;
         }
 
-        private static PyralisSetupFlowStepStatus GetSetupFlowStatus(PyralisAuthoringGraphEvidenceState evidenceState)
+        private static string GetWorkIntentLabel(PyralisAuthoringGraphWorkIntent workIntent)
         {
-            switch (evidenceState)
+            switch (workIntent)
             {
-                case PyralisAuthoringGraphEvidenceState.Blocked:
-                    return PyralisSetupFlowStepStatus.Blocked;
-                case PyralisAuthoringGraphEvidenceState.Missing:
-                    return PyralisSetupFlowStepStatus.Missing;
-                case PyralisAuthoringGraphEvidenceState.CandidateDetected:
-                    return PyralisSetupFlowStepStatus.Recommended;
-                case PyralisAuthoringGraphEvidenceState.Optional:
-                    return PyralisSetupFlowStepStatus.Optional;
+                case PyralisAuthoringGraphWorkIntent.RequiredSetup:
+                    return "Required Setup";
+                case PyralisAuthoringGraphWorkIntent.ProofEnhancer:
+                    return "Proof Enhancer";
+                case PyralisAuthoringGraphWorkIntent.FeatureCard:
+                    return "Feature Card";
+                case PyralisAuthoringGraphWorkIntent.Optional:
+                    return "Optional";
                 default:
-                    return PyralisSetupFlowStepStatus.Ready;
-            }
-        }
-
-        private static PyralisSetupFlowWorkIntent GetOverviewWorkIntent(PyralisAuthoringOverviewLane lane)
-        {
-            switch (lane)
-            {
-                case PyralisAuthoringOverviewLane.DoNow:
-                    return PyralisSetupFlowWorkIntent.RequiredSetup;
-                case PyralisAuthoringOverviewLane.DoSoon:
-                    return PyralisSetupFlowWorkIntent.ProofEnhancer;
-                default:
-                    return PyralisSetupFlowWorkIntent.FeatureCard;
+                    return "Later";
             }
         }
 
@@ -1102,14 +1217,9 @@ namespace NeonBlack.Gameplay.Editor
 
         private static string GetCurrentRouteName(PyralisAuthoringSetupGraph graph)
         {
-            if (graph != null && graph.RouteAnalysis != null)
-            {
-                PyralisAuthoringRouteDescriptor descriptor = PyralisAuthoringRouteDescriptor.Build(graph.RouteAnalysis);
-                if (descriptor != null && !string.IsNullOrWhiteSpace(descriptor.RouteName))
-                    return descriptor.RouteName;
-            }
-
-            return "No setup route selected";
+            return graph != null && !string.IsNullOrWhiteSpace(graph.RouteName)
+                ? graph.RouteName
+                : "No setup route selected";
         }
 
         private static PyralisAuthoringSetupGraphRow Row(
@@ -1247,6 +1357,134 @@ namespace NeonBlack.Gameplay.Editor
                 GameObject => "Select the most specific Pyralis component on this object when you need field-level meaning.",
                 _ => "Inspect the selected asset fields in Unity."
             };
+        }
+
+        private static IReadOnlyList<PyralisAuthoringSelectedContextDetail> BuildSelectedContextDetails(
+            Object selection,
+            PyralisAuthoringSetupGraph graph)
+        {
+            if (selection is RuntimePatternDefinition pattern)
+                return BuildRuntimePatternContextDetails(pattern);
+
+            if (selection is GameSetupProfile setupProfile)
+                return BuildSetupProfileContextDetails(setupProfile, graph);
+
+            return Array.Empty<PyralisAuthoringSelectedContextDetail>();
+        }
+
+        private static IReadOnlyList<PyralisAuthoringSelectedContextDetail> BuildRuntimePatternContextDetails(RuntimePatternDefinition pattern)
+        {
+            if (pattern == null)
+                return Array.Empty<PyralisAuthoringSelectedContextDetail>();
+
+            string description = GetRuntimePatternDescription(pattern);
+            string setupNotes = GetRuntimePatternSetupNotes(pattern);
+            return new[]
+            {
+                new PyralisAuthoringSelectedContextDetail("Description", description),
+                new PyralisAuthoringSelectedContextDetail("Presentation Lanes", FormatPresentationLanes(pattern.presentationLanes)),
+                new PyralisAuthoringSelectedContextDetail("First Proof Requirements", pattern.firstProofRequirements.ToString()),
+                new PyralisAuthoringSelectedContextDetail("Setup Notes", setupNotes)
+            };
+        }
+
+        private static IReadOnlyList<PyralisAuthoringSelectedContextDetail> BuildSetupProfileContextDetails(
+            GameSetupProfile setupProfile,
+            PyralisAuthoringSetupGraph graph)
+        {
+            if (setupProfile == null)
+                return Array.Empty<PyralisAuthoringSelectedContextDetail>();
+
+            List<PyralisAuthoringSelectedContextDetail> details = new List<PyralisAuthoringSelectedContextDetail>
+            {
+                new PyralisAuthoringSelectedContextDetail(
+                    "Route Shaping",
+                    "Open Intent to choose or revise setup profile capability ingredients. Guide keeps this selected-profile view read-only so route shaping stays in one place.")
+            };
+
+            RuntimePatternDefinition[] patterns = graph != null && graph.RouteAnalysis != null
+                ? graph.RouteAnalysis.Patterns
+                : setupProfile.runtimePatterns;
+            if (patterns == null || patterns.Length == 0)
+            {
+                details.Add(new PyralisAuthoringSelectedContextDetail(
+                    "Optional Route Contracts",
+                    "No optional runtime pattern assets are assigned. That is fine for generic capability-first setup; add one only when a route needs reusable advanced metadata."));
+                return details;
+            }
+
+            for (int i = 0; i < patterns.Length; i++)
+            {
+                RuntimePatternDefinition pattern = patterns[i];
+                details.Add(new PyralisAuthoringSelectedContextDetail(
+                    "Runtime Pattern " + i,
+                    pattern == null
+                        ? "Pattern slot " + i + " is empty."
+                        : GetRuntimePatternLabel(pattern) + " - " + pattern.capabilityFamily + " / " + pattern.participantEmbodiment,
+                    pattern));
+            }
+
+            return details.ToArray();
+        }
+
+        private static string GetSelectedContextCopyGuidance(Object selection)
+        {
+            if (selection is RuntimePatternDefinition pattern)
+                return GetRuntimePatternDescription(pattern) + "\n\nSetup notes:\n" + GetRuntimePatternSetupNotes(pattern);
+
+            return string.Empty;
+        }
+
+        private static bool HasMissingRuntimePatternText(Object selection)
+        {
+            return selection is RuntimePatternDefinition pattern
+                && (string.IsNullOrWhiteSpace(pattern.description) || string.IsNullOrWhiteSpace(pattern.setupNotes));
+        }
+
+        private static string GetRuntimePatternDescription(RuntimePatternDefinition pattern)
+        {
+            if (pattern == null)
+                return string.Empty;
+
+            return !string.IsNullOrWhiteSpace(pattern.description)
+                ? pattern.description
+                : RuntimePatternAuthoringText.GetSuggestedDescription(pattern);
+        }
+
+        private static string GetRuntimePatternSetupNotes(RuntimePatternDefinition pattern)
+        {
+            if (pattern == null)
+                return string.Empty;
+
+            return !string.IsNullOrWhiteSpace(pattern.setupNotes)
+                ? pattern.setupNotes
+                : RuntimePatternAuthoringText.GetSuggestedSetupNotes(pattern);
+        }
+
+        private static string GetRuntimePatternLabel(RuntimePatternDefinition pattern)
+        {
+            if (pattern == null)
+                return "Missing pattern";
+
+            if (!string.IsNullOrWhiteSpace(pattern.displayName))
+                return pattern.displayName;
+
+            if (!string.IsNullOrWhiteSpace(pattern.patternId))
+                return pattern.patternId;
+
+            return pattern.name;
+        }
+
+        private static string FormatPresentationLanes(RuntimePatternPresentationLane[] lanes)
+        {
+            if (lanes == null || lanes.Length == 0)
+                return "None assigned";
+
+            string[] labels = new string[lanes.Length];
+            for (int i = 0; i < lanes.Length; i++)
+                labels[i] = lanes[i].ToString();
+
+            return string.Join(", ", labels);
         }
     }
 }

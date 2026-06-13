@@ -101,35 +101,15 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             PyralisAuthoringWindowText.DrawSemanticHelpBox(
-                "Pre-setup intent guidance from the cookbook. Create or select a GameSetupProfile so Guide can filter the resolved setup graph instead of showing planning cards.",
+                "Guide renders the resolved setup graph. Open Intent to choose route capabilities, then create or select a GameSetupProfile so Guide can show the graph-filtered route path.",
                 MessageType.Info);
-
-            PyralisAuthoringIntentModel model = GetCachedIntentModel();
-            if (model == null)
-            {
-                EditorGUILayout.LabelField("No intent model is available yet.", EditorStyles.wordWrappedMiniLabel);
-                return;
-            }
 
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                PyralisAuthoringWindowPrimitives.DrawMiniField("Intent Summary", model.Summary);
-                PyralisAuthoringWindowPrimitives.DrawMiniField("Matched Intent Families", model.MatchingIntents != null && model.MatchingIntents.Count > 0
-                    ? JoinFactDisplayNames(model.MatchingIntents)
-                    : "No named family matched yet. Toggle intent controls to shape the guide.");
+                PyralisAuthoringWindowPrimitives.DrawMiniField("Next Surface", "Intent");
+                PyralisAuthoringWindowPrimitives.DrawMiniField("Route Contract", "Create or select a GameSetupProfile and apply the intended capabilities there.");
+                PyralisAuthoringWindowPrimitives.DrawMiniField("After That", "Return to Guide for graph-ranked setup nodes, proof support, and reflective contracts.");
             }
-
-            DrawIntentRows(
-                "Recommended Cards",
-                "Highest-ranked facts and capabilities for the current intent. Start at the top unless Overview reports a blocking setup issue.",
-                model.Recommendations,
-                "Cards are sorted by lane, goals, related route intent, and caution fit.");
-
-            DrawIntentRows(
-                "Caution Cards",
-                "Useful facts that are not a clean fit for the selected lane. Keep them visible as tradeoffs, not primary steps.",
-                model.Cautions,
-                "Cautions help prevent pawn, combat, UI, board, or networking assumptions from leaking into the wrong route.");
         }
 
         private static void DrawGuideGraphRows(IReadOnlyList<PyralisAuthoringGuideGraphRow> rows)

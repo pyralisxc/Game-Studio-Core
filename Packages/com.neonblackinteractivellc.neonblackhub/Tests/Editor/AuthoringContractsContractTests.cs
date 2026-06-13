@@ -9,6 +9,7 @@ using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Definitions.Rules;
 using NeonBlack.Gameplay.Editor;
 using NeonBlack.Gameplay.Editor.Inspectors;
+using NeonBlack.Gameplay.Features.Combat;
 using NeonBlack.Gameplay.Features.Enemies;
 using NeonBlack.Gameplay.Features.Feedback;
 using NeonBlack.Gameplay.Presentation.Animation;
@@ -331,6 +332,29 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(fact.UnsupportedLaneTags, Does.Contain(nameof(ActorPresentationMode.Sprite2D)));
             Assert.That(fact.RelatedStableIds, Does.Contain("proof.custom-object-effect"));
             Assert.That(fact.FirstProof, Is.EqualTo("proof.custom-object-effect"));
+        }
+
+        [Test]
+        public void ProjectileFirePlannerContract_TargetsProjectileProof()
+        {
+            ResolvedAuthoringContract contract = ResolvedAuthoringContractRegistry.FindByType(typeof(ProjectileFirePlanner));
+
+            Assert.That(contract, Is.Not.Null);
+            Assert.That(contract.FirstProofTargetId, Is.EqualTo("proof.custom-object-effect"));
+            Assert.That(contract.AssignmentFields, Does.Contain(nameof(ProjectileFireRequest.Projectile)));
+            Assert.That(contract.AssignmentFields, Does.Contain(nameof(ProjectileFireRequest.FireMode)));
+        }
+
+        [Test]
+        public void ProjectileFirePlannerContract_EnrichesCustomObjectProofFact()
+        {
+            PyralisAuthoringFact fact = PyralisContractProofFactProjector.FindProofFact("proof.custom-object-effect");
+
+            Assert.That(fact, Is.Not.Null);
+            Assert.That(fact.RelatedStableIds, Does.Contain(ResolvedAuthoringContractRegistry.FindByType(typeof(ProjectileFirePlanner)).StableId));
+            Assert.That(fact.AssignmentFields, Does.Contain(nameof(ProjectileFireRequest.Projectile)));
+            Assert.That(fact.AssignmentFields, Does.Contain(nameof(ProjectileFireRequest.FireMode)));
+            Assert.That(fact.NativeActions.Any(action => action.ToGuidanceSentence().Contains("FireModeDefinition")), Is.True);
         }
 
         [Test]
@@ -676,6 +700,27 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
+        public void AuthoringSetupGraph_ProofNodesUseContractEnrichedFactData()
+        {
+            GameSetupProfile setupProfile = ScriptableObject.CreateInstance<GameSetupProfile>();
+            setupProfile.runtimeCapabilities = new[]
+            {
+                new RuntimeCapabilitySelection { capabilityFamily = RuntimeCapabilityFamily.GunsProjectiles }
+            };
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(setupProfile);
+
+            Assert.That(graph.TryFindNode("proof.custom-object-effect", out PyralisAuthoringGraphNode proofNode), Is.True);
+            Assert.That(proofNode.Kind, Is.EqualTo(PyralisAuthoringGraphNodeKind.Proof));
+            Assert.That(proofNode.SourceKind, Is.EqualTo(PyralisAuthoringGraphSourceKind.FactRegistry));
+            Assert.That(proofNode.AssignmentFields, Does.Contain(nameof(ProjectileFireRequest.Projectile)));
+            Assert.That(proofNode.AssignmentFields, Does.Contain(nameof(ProjectileFireRequest.FireMode)));
+            Assert.That(proofNode.NativeSetup.Any(step => step.Contains("FireModeDefinition")), Is.True);
+
+            UnityEngine.Object.DestroyImmediate(setupProfile);
+        }
+
+        [Test]
         public void ReflectedSetupDependencyTree_MatchesCanonicalSetupRouteChain()
         {
             GameObject root = new GameObject("Dependency Tree Bootstrap");
@@ -869,9 +914,108 @@ namespace NeonBlack.Gameplay.Tests.Editor
         public void AuthoringOverviewModel_DoesNotRebuildVisibleProofGuidanceFromRouteProof()
         {
             string overviewSource = File.ReadAllText(
-                Path.Combine(GameplayRoot, "Editor", "Authoring", "Spine", "Routes", "PyralisAuthoringOverviewModel.cs"));
+                Path.Combine(GameplayRoot, "Editor", "Authoring", "Spine", "Graph", "PyralisAuthoringOverviewModel.cs"));
 
             Assert.That(overviewSource.Contains("PyralisAuthoringRouteProof.Build"), Is.False);
+        }
+
+        [Test]
+        public void AuthoringSetupGraph_SetupChainMatchesReflectedDependencyTree()
+        {
+            GameObject root = new GameObject("Graph Dependency Tree Bootstrap");
+            GameplaySessionBootstrap bootstrap = root.AddComponent<GameplaySessionBootstrap>();
+            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
+            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
+            GameSetupProfile setupProfile = ScriptableObject.CreateInstance<GameSetupProfile>();
+            ParticipantDefinition participant = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            PawnDefinition pawn = ScriptableObject.CreateInstance<PawnDefinition>();
+
+            setupProfile.runtimeCapabilities = new[]
+            {
+                new RuntimeCapabilitySelection { capabilityFamily = RuntimeCapabilityFamily.CharacterPawnGameplay }
+            };
+            mode.setupProfile = setupProfile;
+            session.defaultGameMode = mode;
+            session.defaultParticipants = new[] { participant };
+            participant.defaultPawn = pawn;
+
+            SerializedObject serializedBootstrap = new SerializedObject(bootstrap);
+            serializedBootstrap.FindProperty("sessionDefinition").objectReferenceValue = session;
+            serializedBootstrap.ApplyModifiedPropertiesWithoutUndo();
+
+            PyralisSetupDependencyTree tree = PyralisSetupDependencyTree.Build(bootstrap);
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
+
+            AssertGraphNodeMatchesDependency(tree, graph, "bootstrap.root");
+            AssertGraphNodeMatchesDependency(tree, graph, "session.definition");
+            AssertGraphNodeMatchesDependency(tree, graph, "mode.definition");
+            AssertGraphNodeMatchesDependency(tree, graph, "setup.profile");
+            AssertGraphNodeMatchesDependency(tree, graph, "participant.default");
+            AssertGraphNodeMatchesDependency(tree, graph, "pawn.definition");
+
+            UnityEngine.Object.DestroyImmediate(pawn);
+            UnityEngine.Object.DestroyImmediate(participant);
+            UnityEngine.Object.DestroyImmediate(session);
+            UnityEngine.Object.DestroyImmediate(mode);
+            UnityEngine.Object.DestroyImmediate(setupProfile);
+            UnityEngine.Object.DestroyImmediate(root);
+        }
+
+        [Test]
+        public void AuthoringSetupGraph_DependencyTreeParity_CoreRouteSources()
+        {
+            GameObject root = new GameObject("Graph Dependency Tree Source Matrix");
+            GameplaySessionBootstrap bootstrap = root.AddComponent<GameplaySessionBootstrap>();
+            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
+            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
+            GameSetupProfile setupProfile = ScriptableObject.CreateInstance<GameSetupProfile>();
+            ParticipantDefinition participant = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            PawnDefinition pawn = ScriptableObject.CreateInstance<PawnDefinition>();
+
+            setupProfile.runtimeCapabilities = new[]
+            {
+                new RuntimeCapabilitySelection { capabilityFamily = RuntimeCapabilityFamily.CharacterPawnGameplay }
+            };
+            mode.setupProfile = setupProfile;
+            session.defaultGameMode = mode;
+            session.defaultParticipants = new[] { participant };
+            participant.defaultPawn = pawn;
+
+            SerializedObject serializedBootstrap = new SerializedObject(bootstrap);
+            serializedBootstrap.FindProperty("sessionDefinition").objectReferenceValue = session;
+            serializedBootstrap.ApplyModifiedPropertiesWithoutUndo();
+
+            UnityEngine.Object[] sources =
+            {
+                bootstrap,
+                session,
+                mode,
+                setupProfile
+            };
+            string[] canonicalNodeIds =
+            {
+                "bootstrap.root",
+                "session.definition",
+                "mode.definition",
+                "setup.profile",
+                "participant.default",
+                "pawn.definition"
+            };
+
+            for (int i = 0; i < sources.Length; i++)
+            {
+                PyralisSetupDependencyTree tree = PyralisSetupDependencyTree.Build(sources[i]);
+                PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(sources[i]);
+                for (int nodeIndex = 0; nodeIndex < canonicalNodeIds.Length; nodeIndex++)
+                    AssertGraphNodeMatchesDependency(tree, graph, canonicalNodeIds[nodeIndex]);
+            }
+
+            UnityEngine.Object.DestroyImmediate(pawn);
+            UnityEngine.Object.DestroyImmediate(participant);
+            UnityEngine.Object.DestroyImmediate(session);
+            UnityEngine.Object.DestroyImmediate(mode);
+            UnityEngine.Object.DestroyImmediate(setupProfile);
+            UnityEngine.Object.DestroyImmediate(root);
         }
 
         [Test]
@@ -943,6 +1087,111 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
+        public void AuthoringSetupGraph_BootstrapPawnRoute_EmitsCoreGraphOutput()
+        {
+            GameObject root = new GameObject("Bootstrap Pawn Graph Route");
+            GameplaySessionBootstrap bootstrap = root.AddComponent<GameplaySessionBootstrap>();
+            GameSetupProfile setupProfile = ScriptableObject.CreateInstance<GameSetupProfile>();
+            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
+            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
+            ParticipantDefinition participant = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            PawnDefinition pawn = ScriptableObject.CreateInstance<PawnDefinition>();
+            GameObject pawnPrefab = new GameObject("Graph Pawn Prefab");
+            pawnPrefab.AddComponent<PawnRoot>();
+            pawnPrefab.AddComponent<TestGraphPawnMotor>();
+            pawnPrefab.AddComponent<TestGraphPawnPresentation>();
+            pawnPrefab.AddComponent<TestGraphPawnInput>();
+
+            setupProfile.runtimeCapabilities = new[]
+            {
+                new RuntimeCapabilitySelection { capabilityFamily = RuntimeCapabilityFamily.CharacterPawnGameplay }
+            };
+            mode.setupProfile = setupProfile;
+            session.defaultGameMode = mode;
+            session.defaultParticipants = new[] { participant };
+            participant.defaultPawn = pawn;
+            pawn.pawnPrefab = pawnPrefab;
+            SetBootstrapSession(bootstrap, session);
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
+
+            Assert.That(graph.RouteAnalysis.RequiresPawn, Is.True);
+            AssertReadyGraphNode(graph, "bootstrap.root", bootstrap);
+            AssertReadyGraphNode(graph, "session.definition", session);
+            AssertReadyGraphNode(graph, "mode.definition", mode);
+            AssertReadyGraphNode(graph, "setup.profile", setupProfile);
+            AssertReadyGraphNode(graph, "participant.default", participant);
+            AssertReadyGraphNode(graph, "pawn.definition", pawn);
+            Assert.That(graph.TryFindNode("proof.1p-pawn-movement", out PyralisAuthoringGraphNode proofNode), Is.True);
+            Assert.That(proofNode.Kind, Is.EqualTo(PyralisAuthoringGraphNodeKind.Proof));
+            Assert.That(
+                graph.Edges.Any(edge =>
+                    edge.ToNodeId == "proof.1p-pawn-movement"
+                    && edge.Kind == PyralisAuthoringGraphEdgeKind.SupportsProof),
+                Is.True);
+
+            UnityEngine.Object.DestroyImmediate(pawnPrefab);
+            UnityEngine.Object.DestroyImmediate(pawn);
+            UnityEngine.Object.DestroyImmediate(participant);
+            UnityEngine.Object.DestroyImmediate(session);
+            UnityEngine.Object.DestroyImmediate(mode);
+            UnityEngine.Object.DestroyImmediate(setupProfile);
+            UnityEngine.Object.DestroyImmediate(root);
+        }
+
+        [Test]
+        public void AuthoringSetupGraph_BootstrapNoPawnTabletopRoute_EmitsCoreGraphOutput()
+        {
+            GameObject root = new GameObject("Bootstrap Tabletop Graph Route");
+            GameplaySessionBootstrap bootstrap = root.AddComponent<GameplaySessionBootstrap>();
+            GameSetupProfile setupProfile = ScriptableObject.CreateInstance<GameSetupProfile>();
+            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
+            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
+            ParticipantDefinition participant = ScriptableObject.CreateInstance<ParticipantDefinition>();
+
+            setupProfile.runtimeCapabilities = new[]
+            {
+                new RuntimeCapabilitySelection { capabilityFamily = RuntimeCapabilityFamily.BoardCardTabletop }
+            };
+            mode.setupProfile = setupProfile;
+            session.defaultGameMode = mode;
+            session.defaultParticipants = new[] { participant };
+            SetBootstrapSession(bootstrap, session);
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
+
+            Assert.That(graph.RouteAnalysis.RequiresPawn, Is.False);
+            AssertReadyGraphNode(graph, "bootstrap.root", bootstrap);
+            AssertReadyGraphNode(graph, "session.definition", session);
+            AssertReadyGraphNode(graph, "mode.definition", mode);
+            AssertReadyGraphNode(graph, "setup.profile", setupProfile);
+            AssertReadyGraphNode(graph, "participant.default", participant);
+            Assert.That(graph.TryFindNode("pawn.definition", out PyralisAuthoringGraphNode pawnNode), Is.True);
+            Assert.That(pawnNode.EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.Ready));
+            Assert.That(pawnNode.SourceObject, Is.SameAs(participant));
+            Assert.That(pawnNode.Guidance, Does.Contain("No-pawn route"));
+            Assert.That(graph.TryFindNode("proof.board-card-action", out PyralisAuthoringGraphNode proofNode), Is.True);
+            Assert.That(proofNode.Kind, Is.EqualTo(PyralisAuthoringGraphNodeKind.Proof));
+            Assert.That(
+                graph.Edges.Any(edge =>
+                    edge.ToNodeId == "proof.board-card-action"
+                    && edge.Kind == PyralisAuthoringGraphEdgeKind.SupportsProof),
+                Is.True);
+            Assert.That(
+                graph.Edges.Any(edge =>
+                    edge.Kind == PyralisAuthoringGraphEdgeKind.BlockedBy
+                    && edge.ToNodeId == "pawn.definition"),
+                Is.False,
+                "No-pawn tabletop routes must not block proof readiness on a pawn definition.");
+
+            UnityEngine.Object.DestroyImmediate(participant);
+            UnityEngine.Object.DestroyImmediate(session);
+            UnityEngine.Object.DestroyImmediate(mode);
+            UnityEngine.Object.DestroyImmediate(setupProfile);
+            UnityEngine.Object.DestroyImmediate(root);
+        }
+
+        [Test]
         public void AuthoringSetupGraphProjection_BuildsMapRowsFromGraphNodes()
         {
             GameSetupProfile setupProfile = ScriptableObject.CreateInstance<GameSetupProfile>();
@@ -992,6 +1241,33 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
+        public void AuthoringSetupGraphProjection_ValidationSectionsOwnVisibleValidateBuckets()
+        {
+            GameObject root = new GameObject("Bootstrap Validation Section Graph");
+            GameplaySessionBootstrap bootstrap = root.AddComponent<GameplaySessionBootstrap>();
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
+            IReadOnlyList<PyralisAuthoringValidationGraphSection> sections =
+                PyralisAuthoringSetupGraphProjection.BuildValidationSections(graph);
+            IReadOnlyList<PyralisAuthoringValidationGraphRow> details =
+                PyralisAuthoringSetupGraphProjection.BuildValidationDetailRows(graph);
+
+            Assert.That(sections.Select(section => section.Label), Is.EqualTo(new[]
+            {
+                "Required Before Play",
+                "Recommended Before Play",
+                "Proof Enhancers"
+            }));
+            Assert.That(sections[0].EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.Blocked));
+            Assert.That(sections[1].EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.Missing));
+            Assert.That(sections[2].EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.CandidateDetected));
+            Assert.That(sections.Any(section => section.Rows.Any(row => row.NodeId == "setupflow.setup.assign-session-definition")), Is.True);
+            Assert.That(details.Any(row => row.NodeId == "setupflow.setup.assign-session-definition"), Is.True);
+
+            UnityEngine.Object.DestroyImmediate(root);
+        }
+
+        [Test]
         public void AuthoringSetupGraphProjection_TypedIssuesComeFromGraphEvidence()
         {
             GameObject root = new GameObject("Typed Issue Graph");
@@ -1003,7 +1279,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             Assert.That(sessionIssue, Is.Not.Null);
             Assert.That(sessionIssue.Severity, Is.EqualTo(PyralisAuthoringIssueSeverity.Required));
-            Assert.That(sessionIssue.WorkIntent, Is.EqualTo(PyralisSetupFlowWorkIntent.RequiredSetup.ToString()));
+            Assert.That(sessionIssue.WorkIntent, Is.EqualTo("Required Setup"));
             Assert.That(sessionIssue.EvidenceState, Is.EqualTo(PyralisAuthoringEvidenceState.Missing));
             Assert.That(sessionIssue.Reason, Does.Contain("SessionDefinition"));
             Assert.That(sessionIssue.FieldOrComponent, Is.Not.Empty);
@@ -1132,6 +1408,29 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
+        public void AuthoringSetupGraphProjection_CurrentIntentGuideRequiresResolvedSetupContext()
+        {
+            GameObject looseObject = new GameObject("Loose Scene Object");
+            PyralisAuthoringSetupGraph looseGraph = PyralisAuthoringSetupGraphBuilder.Build(looseObject);
+
+            Assert.That(PyralisAuthoringSetupGraphProjection.HasResolvedSetupContext(looseGraph), Is.False);
+            Assert.That(PyralisAuthoringSetupGraphProjection.BuildCurrentIntentGuideRows(looseGraph), Is.Empty);
+
+            GameSetupProfile setupProfile = ScriptableObject.CreateInstance<GameSetupProfile>();
+            setupProfile.runtimeCapabilities = new[]
+            {
+                new RuntimeCapabilitySelection { capabilityFamily = RuntimeCapabilityFamily.CharacterPawnGameplay }
+            };
+            PyralisAuthoringSetupGraph setupGraph = PyralisAuthoringSetupGraphBuilder.Build(setupProfile);
+
+            Assert.That(PyralisAuthoringSetupGraphProjection.HasResolvedSetupContext(setupGraph), Is.True);
+            Assert.That(PyralisAuthoringSetupGraphProjection.BuildCurrentIntentGuideRows(setupGraph), Is.Not.Empty);
+
+            UnityEngine.Object.DestroyImmediate(setupProfile);
+            UnityEngine.Object.DestroyImmediate(looseObject);
+        }
+
+        [Test]
         public void AuthoringSetupGraphProjection_ResolvesSelectedSetupAssetsToGraphContext()
         {
             GameSetupProfile setupProfile = ScriptableObject.CreateInstance<GameSetupProfile>();
@@ -1157,6 +1456,35 @@ namespace NeonBlack.Gameplay.Tests.Editor
             UnityEngine.Object.DestroyImmediate(session);
             UnityEngine.Object.DestroyImmediate(mode);
             UnityEngine.Object.DestroyImmediate(setupProfile);
+        }
+
+        [Test]
+        public void AuthoringSetupGraphProjection_SelectedRuntimePatternDetailsComeFromGraphProjection()
+        {
+            RuntimePatternDefinition pattern = ScriptableObject.CreateInstance<RuntimePatternDefinition>();
+            pattern.patternId = "test.pattern";
+            pattern.displayName = "Test Pattern";
+            pattern.description = "Use this runtime pattern for a test route.";
+            pattern.setupNotes = "Wire the test route through native Unity setup.";
+            pattern.presentationLanes = new[] { RuntimePatternPresentationLane.Sprite2D };
+            pattern.firstProofRequirements = RuntimePatternFirstProofRequirement.PlayerInputManager;
+
+            GameSetupProfile setupProfile = ScriptableObject.CreateInstance<GameSetupProfile>();
+            setupProfile.runtimePatterns = new[] { pattern };
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(setupProfile);
+            PyralisAuthoringSelectedContextGraphRow patternContext =
+                PyralisAuthoringSetupGraphProjection.BuildSelectedContextRow(graph, pattern);
+            PyralisAuthoringSelectedContextGraphRow setupContext =
+                PyralisAuthoringSetupGraphProjection.BuildSelectedContextRow(graph, setupProfile);
+
+            Assert.That(patternContext.Details.Any(detail => detail.Label == "Description" && detail.Value.Contains("test route")), Is.True);
+            Assert.That(patternContext.Details.Any(detail => detail.Label == "Presentation Lanes" && detail.Value.Contains("Sprite2D")), Is.True);
+            Assert.That(patternContext.CopyGuidance, Does.Contain("Setup notes"));
+            Assert.That(setupContext.Details.Any(detail => detail.Label == "Runtime Pattern 0" && detail.Target == pattern), Is.True);
+
+            UnityEngine.Object.DestroyImmediate(setupProfile);
+            UnityEngine.Object.DestroyImmediate(pattern);
         }
 
         [Test]
@@ -1343,6 +1671,51 @@ namespace NeonBlack.Gameplay.Tests.Editor
                             $"Active package version is {currentPackageVersion}. Physically delete this script to restore build compliance.");
                     }
                 }
+            }
+        }
+
+        private static void AssertGraphNodeMatchesDependency(
+            PyralisSetupDependencyTree tree,
+            PyralisAuthoringSetupGraph graph,
+            string stableId)
+        {
+            Assert.That(tree.TryFindNode(stableId, out PyralisSetupDependencyNode dependencyNode), Is.True, stableId);
+            Assert.That(graph.TryFindNode(stableId, out PyralisAuthoringGraphNode graphNode), Is.True, stableId);
+            Assert.That(graphNode.SourceObject, Is.SameAs(dependencyNode.SourceObject), stableId);
+        }
+
+        private static void AssertReadyGraphNode(PyralisAuthoringSetupGraph graph, string stableId, UnityEngine.Object expectedSource)
+        {
+            Assert.That(graph.TryFindNode(stableId, out PyralisAuthoringGraphNode node), Is.True, stableId);
+            Assert.That(node.EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.Ready), stableId);
+            Assert.That(node.SourceObject, Is.SameAs(expectedSource), stableId);
+        }
+
+        private static void SetBootstrapSession(GameplaySessionBootstrap bootstrap, SessionDefinition session)
+        {
+            SerializedObject serializedBootstrap = new SerializedObject(bootstrap);
+            serializedBootstrap.FindProperty("sessionDefinition").objectReferenceValue = session;
+            serializedBootstrap.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private sealed class TestGraphPawnMotor : MonoBehaviour, IPawnMotor
+        {
+            public void ApplyMovementProfile(PawnProfileApplicationContext context, PawnMovementProfile movementProfile)
+            {
+            }
+        }
+
+        private sealed class TestGraphPawnPresentation : MonoBehaviour, IPawnPresentationModule
+        {
+            public void ApplyPresentationProfile(PawnProfileApplicationContext context, PawnPresentationProfile presentationProfile)
+            {
+            }
+        }
+
+        private sealed class TestGraphPawnInput : MonoBehaviour, IPawnInputModule
+        {
+            public void ApplyInputProfile(PawnProfileApplicationContext context, InputProfile inputProfile)
+            {
             }
         }
 

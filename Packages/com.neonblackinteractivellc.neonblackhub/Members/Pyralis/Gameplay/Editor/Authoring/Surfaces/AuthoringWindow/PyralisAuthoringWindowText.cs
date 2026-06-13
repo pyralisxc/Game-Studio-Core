@@ -91,38 +91,6 @@ namespace NeonBlack.Gameplay.Editor
             return builder.ToString();
         }
 
-        public static string GetStatusLabel(PyralisSetupFlowStepStatus status)
-        {
-            switch (status)
-            {
-                case PyralisSetupFlowStepStatus.Missing:
-                    return "Needs setup";
-                case PyralisSetupFlowStepStatus.Blocked:
-                    return "Blocked";
-                case PyralisSetupFlowStepStatus.Recommended:
-                    return "Recommended";
-                case PyralisSetupFlowStepStatus.Optional:
-                    return "Optional";
-                default:
-                    return "Ready";
-            }
-        }
-
-        public static string GetWorkIntentLabel(PyralisSetupFlowWorkIntent workIntent)
-        {
-            switch (workIntent)
-            {
-                case PyralisSetupFlowWorkIntent.Foundation:
-                    return "Foundation setup";
-                case PyralisSetupFlowWorkIntent.ProofEnhancer:
-                    return "Proof enhancer";
-                case PyralisSetupFlowWorkIntent.FeatureCard:
-                    return "Feature card";
-                default:
-                    return "Required setup";
-            }
-        }
-
         private static GUIStyle GetSemanticMiniLabelStyle()
         {
             return new GUIStyle(EditorStyles.wordWrappedMiniLabel)

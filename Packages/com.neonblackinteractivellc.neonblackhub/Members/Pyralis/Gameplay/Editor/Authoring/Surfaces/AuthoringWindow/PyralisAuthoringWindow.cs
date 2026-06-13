@@ -360,7 +360,7 @@ namespace NeonBlack.Gameplay.Editor
                 return _cachedIntentModel;
 
             _cachedIntentModelKey = key;
-            _cachedIntentModel = PyralisAuthoringIntentAdvisor.Build(
+            _cachedIntentModel = PyralisAuthoringSetupGraphProjection.BuildIntentModel(
                 new PyralisAuthoringIntentSelection(_intentLane, _intentCapabilities, _intentAxioms));
             return _cachedIntentModel;
         }

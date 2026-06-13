@@ -63,6 +63,16 @@ namespace NeonBlack.Gameplay.Editor
         BlockedBy
     }
 
+    public enum PyralisAuthoringGraphWorkIntent
+    {
+        Unknown,
+        RequiredSetup,
+        ProofEnhancer,
+        FeatureCard,
+        Optional,
+        Reference
+    }
+
     public sealed class PyralisAuthoringGraphNode
     {
         public PyralisAuthoringGraphNode(
@@ -82,7 +92,9 @@ namespace NeonBlack.Gameplay.Editor
             PyralisAuthoringNativeAction? nativeAction = null,
             ResolvedAuthoringContract sourceContract = null,
             UnityEngine.Object sourceObject = null,
-            PyralisAuthoringGraphSourceOrigin sourceOrigin = PyralisAuthoringGraphSourceOrigin.Unknown)
+            PyralisAuthoringGraphSourceOrigin sourceOrigin = PyralisAuthoringGraphSourceOrigin.Unknown,
+            PyralisAuthoringGraphWorkIntent workIntent = PyralisAuthoringGraphWorkIntent.Unknown,
+            PyralisAuthoringIssueSeverity issueSeverity = PyralisAuthoringIssueSeverity.Info)
         {
             StableId = stableId ?? string.Empty;
             Label = label ?? string.Empty;
@@ -103,6 +115,12 @@ namespace NeonBlack.Gameplay.Editor
             SourceOrigin = sourceOrigin == PyralisAuthoringGraphSourceOrigin.Unknown
                 ? InferSourceOrigin(sourceKind)
                 : sourceOrigin;
+            WorkIntent = workIntent == PyralisAuthoringGraphWorkIntent.Unknown
+                ? InferWorkIntent(kind, EvidenceState)
+                : workIntent;
+            IssueSeverity = issueSeverity == PyralisAuthoringIssueSeverity.Info
+                ? InferIssueSeverity(kind, EvidenceState)
+                : issueSeverity;
         }
 
         public string StableId { get; }
@@ -122,6 +140,8 @@ namespace NeonBlack.Gameplay.Editor
         public ResolvedAuthoringContract SourceContract { get; }
         public UnityEngine.Object SourceObject { get; }
         public PyralisAuthoringGraphSourceOrigin SourceOrigin { get; }
+        public PyralisAuthoringGraphWorkIntent WorkIntent { get; }
+        public PyralisAuthoringIssueSeverity IssueSeverity { get; }
 
         private static PyralisAuthoringGraphSourceOrigin InferSourceOrigin(PyralisAuthoringGraphSourceKind sourceKind)
         {
@@ -137,6 +157,54 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringGraphSourceKind.RouteProof => PyralisAuthoringGraphSourceOrigin.SpineFallback,
                 _ => PyralisAuthoringGraphSourceOrigin.Unknown
             };
+        }
+
+        private static PyralisAuthoringGraphWorkIntent InferWorkIntent(
+            PyralisAuthoringGraphNodeKind kind,
+            PyralisAuthoringGraphEvidenceState evidenceState)
+        {
+            if (evidenceState == PyralisAuthoringGraphEvidenceState.Blocked
+                || evidenceState == PyralisAuthoringGraphEvidenceState.Missing)
+            {
+                return kind == PyralisAuthoringGraphNodeKind.SetupChain
+                    || kind == PyralisAuthoringGraphNodeKind.UnitySurfaceRequirement
+                    || kind == PyralisAuthoringGraphNodeKind.ValidationEvidence
+                        ? PyralisAuthoringGraphWorkIntent.RequiredSetup
+                        : PyralisAuthoringGraphWorkIntent.ProofEnhancer;
+            }
+
+            if (evidenceState == PyralisAuthoringGraphEvidenceState.CandidateDetected)
+                return PyralisAuthoringGraphWorkIntent.ProofEnhancer;
+
+            if (evidenceState == PyralisAuthoringGraphEvidenceState.Optional)
+                return PyralisAuthoringGraphWorkIntent.Optional;
+
+            return PyralisAuthoringGraphWorkIntent.Reference;
+        }
+
+        private static PyralisAuthoringIssueSeverity InferIssueSeverity(
+            PyralisAuthoringGraphNodeKind kind,
+            PyralisAuthoringGraphEvidenceState evidenceState)
+        {
+            if (evidenceState == PyralisAuthoringGraphEvidenceState.Blocked)
+                return PyralisAuthoringIssueSeverity.Blocked;
+
+            if (evidenceState == PyralisAuthoringGraphEvidenceState.Missing)
+            {
+                return kind == PyralisAuthoringGraphNodeKind.SetupChain
+                    || kind == PyralisAuthoringGraphNodeKind.UnitySurfaceRequirement
+                    || kind == PyralisAuthoringGraphNodeKind.ValidationEvidence
+                        ? PyralisAuthoringIssueSeverity.Required
+                        : PyralisAuthoringIssueSeverity.Recommended;
+            }
+
+            if (evidenceState == PyralisAuthoringGraphEvidenceState.CandidateDetected)
+                return PyralisAuthoringIssueSeverity.Recommended;
+
+            if (evidenceState == PyralisAuthoringGraphEvidenceState.Optional)
+                return PyralisAuthoringIssueSeverity.Optional;
+
+            return PyralisAuthoringIssueSeverity.Info;
         }
     }
 

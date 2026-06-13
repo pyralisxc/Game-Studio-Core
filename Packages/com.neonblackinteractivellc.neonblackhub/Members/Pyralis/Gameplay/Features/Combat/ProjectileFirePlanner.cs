@@ -11,7 +11,7 @@ namespace NeonBlack.Gameplay.Features.Combat
         AssignmentFields = new[] { nameof(ProjectileFireRequest.Projectile), nameof(ProjectileFireRequest.FireMode), nameof(ProjectileFireRequest.Origin), nameof(ProjectileFireRequest.Direction) },
         ExpertAdvice = "This class produces ProjectileSpawnCommands but does not execute them. Use it in conjunction with a Launcher to decouple firing logic from physical spawning.",
         FirstProof = "Fire mode settings produce the expected projectile command pattern.",
-        FirstProofTargetId = "proof.npc-enemy-behavior",
+        FirstProofTargetId = "proof.custom-object-effect",
         NativeSetup = new[] { "Ensure FireModeDefinition spread values are configured.", "Call BuildCommands from weapon or action logic." },
         DocumentationURL = "https://docs.neonblack.com/pyralis/combat/projectiles"
     )]

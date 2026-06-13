@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Profiles;
@@ -42,10 +41,8 @@ namespace NeonBlack.Gameplay.Editor
             {
                 if (cap == AuthoringCapability.None) continue;
                 
-                List<PyralisAuthoringFact> facts = PyralisAuthoringFactRegistry.AllFacts
-                    .Where(f => f.Kind == PyralisAuthoringFactKind.RuntimeCapability || f.Kind == PyralisAuthoringFactKind.FeatureContract)
-                    .Where(f => (f.Capability & cap) != 0)
-                    .ToList();
+                IReadOnlyList<PyralisAuthoringFact> facts =
+                    PyralisAuthoringSetupGraphProjection.BuildRuntimeCapabilityFactsForCapability(null, cap);
 
                 if (facts.Count > 0)
                 {
@@ -67,13 +64,8 @@ namespace NeonBlack.Gameplay.Editor
             {
                 RuntimeCapabilityLaneTag tag = GuidedCapabilityLaneTags[i];
                 string laneName = tag.ToString();
-                List<PyralisAuthoringFact> facts = PyralisAuthoringFactRegistry.AllFacts
-                    .Where(f => f.Kind == PyralisAuthoringFactKind.RuntimeCapability 
-                                || f.Kind == PyralisAuthoringFactKind.FeatureContract
-                                || f.Kind == PyralisAuthoringFactKind.UnitySurface
-                                || f.Kind == PyralisAuthoringFactKind.Profile
-                                || f.Kind == PyralisAuthoringFactKind.Definition)
-                    .Where(f => f.HasLane(laneName) || f.IsExplicitlyUnsupported(laneName)).ToList();
+                IReadOnlyList<PyralisAuthoringFact> facts =
+                    PyralisAuthoringSetupGraphProjection.BuildRuntimeCapabilityFactsForLane(null, tag);
                 DrawRuntimeCapabilityGroup(GetLaneTagLabel(tag), "Lane", facts, setupProfile, laneName, tag);
             }
         }

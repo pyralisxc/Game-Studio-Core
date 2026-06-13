@@ -13,9 +13,9 @@ Gameplay systems
           -> Intent, Overview, Guide, Map, Validate, Facts, and selected-context projections
 ```
 
-The graph is the authoring memory. Tabs are projections. Contracts and existing Unity setup evidence are the source material.
+The graph is the authoring memory. Tabs are projections. Contracts and existing Unity setup evidence are the source material. Map, Validate, Overview, Guide, Facts, and selected-context surfaces should read graph projections instead of reconstructing route, proof, or validation meaning locally.
 
-Older route proof cards, overview compatibility models, validation models, and tab-specific projections are migration scaffolding. They may remain as source inputs, fallback references, or markdown-documented migration notes while parity is proven, but visible tab behavior should move toward reading the synthesized graph projection first. `PyralisAuthoringRouteReport` has been archived and removed; do not recreate route-report-style setup meaning beside the graph.
+The old route-report and validation-card paths are archived and removed. Do not recreate `PyralisAuthoringRouteReport`, `PyralisAuthoringValidationModel`, or tab-local setup card models beside the graph. Route proof cards, capability cards, route analysis, setup-flow validation, scene-readiness validation, and facts still exist where they earn their keep as source inputs, fallback grammar, or audit dictionaries.
 
 When a graph projection replaces an older active path, archive the useful migration context under `Docs/_Archive/Migration/`, then delete the migrated code or tests instead of leaving a silent parallel implementation behind. The archive is a temporary map for future cleanup; it is not a second source of authoring truth.
 
@@ -25,17 +25,17 @@ Current implementation: selected setup assets and optional `RuntimePatternDefini
 
 ## Why This Exists
 
-The current authoring system is organized, but setup meaning is still interpreted by several cooperating models:
+The authoring system is organized around one resolved setup graph compiled from cooperating source inputs:
 
 - `ResolvedAuthoringContractRegistry` resolves feature-owned `[AuthoringContract]` metadata.
 - `PyralisAuthoringFactRegistry` aggregates cookbook facts.
 - `PyralisSetupRouteAnalysis` interprets `GameSetupProfile.runtimeCapabilities` and optional runtime patterns.
 - `PyralisSetupFlowValidator` reports setup-chain readiness.
 - `PyralisSceneReadinessValidator` reports concrete scene and prefab evidence.
-- `PyralisAuthoringRouteProof`, `PyralisAuthoringOverviewModel`, graph projections, and tab renderers each project pieces of that truth.
+- `PyralisAuthoringRouteProof` remains route-proof fallback grammar, while `PyralisAuthoringOverviewModel`, graph projections, and tab renderers project resolved setup graph output.
 - `PyralisContractProofFactProjector` enriches broad route proof facts from resolved feature contracts that target the same `FirstProofTargetId`, then fills genuinely new contract-owned proof ids when no broad proof exists yet.
 
-That is workable, but it still means feature work can require too many authoring touch points. The graph migration should reduce that pressure so normal feature development is:
+This shape keeps feature work from requiring repeated tab edits. Normal feature development should be:
 
 ```text
 write gameplay system
@@ -171,9 +171,9 @@ Guide should rank:
 
 Selected context should explain the selected graph node or source Unity object instead of hand-writing meaning per object type wherever possible.
 
-Current implementation: selected setup assets, bootstrap roots, pawn roots, and reflected contracts resolve through `PyralisAuthoringSetupGraphProjection.BuildSelectedContextRow`, and Guide uses that row for role, graph id, evidence, native setup, and first check. Keep specialized selection renderers only where they expose object-specific details such as runtime pattern lane fields or GameObject component lists.
+Current implementation: selected setup assets, bootstrap roots, pawn roots, reflected contracts, runtime-pattern details, and setup-profile optional route-contract details resolve through `PyralisAuthoringSetupGraphProjection.BuildSelectedContextRow`, and Guide uses that row for role, graph id, evidence, native setup, and first check. Keep specialized selection renderers only where they expose object-specific actions such as selecting scene components, pinging targets, or filling missing RuntimePattern text without choosing route content.
 Current implementation: Guide selected-context and current-step text are graph-first. `bootstrap.root` is an explicit missing setup-chain node for blank setup contexts, so Overview and Guide can name the native Gameplay Root action without reading archived route reports or recomputing setup-flow reports in the window surface. Native action detail should come from graph nodes/current-step rows; the surface helper only handles the true pre-graph bootstrap hint.
-Current implementation: Guide current-intent rows use `PyralisAuthoringSetupGraphProjection.BuildCurrentIntentGuideRows(...)` whenever an active setup graph exists. Those rows are generated from first unresolved graph nodes, active proof nodes, proof support/blocker edges, selected capability nodes, and reflected contracts. `PyralisAuthoringIntentAdvisor` remains the pre-setup/fallback planning model; do not use it as the primary setup-backed Guide source.
+Current implementation: Guide current-intent rows use `PyralisAuthoringSetupGraphProjection.BuildCurrentIntentGuideRows(...)` only when the graph has a resolved setup context such as a Bootstrap, SessionDefinition, GameModeDefinition, GameSetupProfile, ParticipantDefinition, PawnDefinition, or Gameplay Root. Those rows are generated from first unresolved graph nodes, active proof nodes, proof support/blocker edges, selected capability nodes, and reflected contracts. `PyralisAuthoringIntentAdvisor` remains the pre-setup/fallback planning model; do not use it as the primary setup-backed Guide source.
 Current implementation: Facts opens with graph coverage, graph contract coverage, and graph proof coverage before the raw cookbook dictionary. The raw fact registry remains a read-only audit/reference surface, not the primary setup guidance path.
 
 ### Phase 5: Contract Enrichment
@@ -194,7 +194,7 @@ Current implementation: `PyralisSetupDependencyTree` is the reflected setup depe
 
 Current implementation: proof readiness includes graph topology for blockers. Missing or blocked setup-chain, Unity-surface, and validation-evidence nodes emit `BlockedBy` edges from the active proof node to the required node. Capability support remains `Capability -> Proof` via `SupportsProof`; missing setup should not be represented as capability support or as an inverted blocker edge.
 
-Current implementation: Overview lanes, first-proof summary, play-mode checklist, and best-next-action are graph projection outputs. `PyralisAuthoringOverviewModel` is a compatibility model over those graph projections, not an independent route/readiness resolver.
+Current implementation: Overview lanes, first-proof summary, play-mode checklist, and best-next-action are graph projection outputs. `PyralisAuthoringOverviewModel` lives under the graph spine as a graph-native read model over those projections; Overview rows carry graph evidence states instead of setup-flow status/work-intent enums.
 
 Current implementation: `ProfileType` is profile metadata only. It must not automatically imply `IFeatureModuleRuntime`, scene components, Unity object components, or service ownership. `RequiredInterfaces` and `RequiredInterfaceNames` describe dependency surfaces that code can implement. `RequiredComponents` and `RequiredComponentNames` describe physical Unity placement requirements that reflection cannot infer, such as actor-root, scene-root, UI-root, or runtime-prefab components. This keeps core profiles such as input, setup, camera, and settings from accidentally projecting as feature-module runtime requirements while still letting contracts own the setup truth reflection cannot see.
 
@@ -276,7 +276,7 @@ proof.1p-pawn-movement
 
 Use readable, stable ids. Do not derive ids from UI labels when a durable contract id or setup concept id exists.
 
-## Current Duplication To Retire Gradually
+## Duplication To Retire Gradually
 
 These areas should shrink as graph projections take over:
 
@@ -288,7 +288,7 @@ These areas should shrink as graph projections take over:
 - Selected-context hard-coded explanations.
 - Route proof and capability rows that duplicate contract-backed graph data.
 
-Do not delete these immediately. Retire them only after an equivalent graph projection is tested and visible behavior remains useful.
+Do not delete real source inputs just because a tab has migrated. Retire only migrated compatibility code after an equivalent graph projection is tested and visible behavior remains useful.
 
 ## Test Strategy
 
@@ -313,9 +313,9 @@ Before migrating premade proof or capability cards, run a provenance sanity pass
 
 ## Documentation Strategy
 
-Active docs should describe the graph as the target authoring spine once Phase 1 exists. Until tabs migrate, docs should say the graph is being introduced beside existing models.
+Active docs should describe the graph as the current authoring projection spine. Migration notes belong under `Docs/_Archive/Migration/` when they still explain why an old path was removed.
 
-Avoid saying the graph already powers every tab until the code does. Stale optimism is just another form of duplicated truth.
+Avoid active-doc language that implies a second visible-tab model is still supported. Stale caution is just another form of duplicated truth.
 
 ## Implementation Artifacts
 
