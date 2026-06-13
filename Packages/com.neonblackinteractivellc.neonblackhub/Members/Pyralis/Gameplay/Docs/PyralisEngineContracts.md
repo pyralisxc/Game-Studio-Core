@@ -2,7 +2,7 @@
 
 Generated on: 2026-06-08 22:04
 
-This document is auto-generated from the [AuthoringContract] attributes and the central Authoring Registries. It serves as the singular source of truth for the engine's capabilities.
+This document is auto-generated from `[AuthoringContract]` metadata and describes feature contract truth. Setup/reference truth comes from the dependency tree; compiled readiness/proof truth comes from the authoring setup graph.
 
 ## Capability: Setup
 > Foundational scene and bootstrap configuration.

@@ -13,13 +13,13 @@ namespace NeonBlack.Gameplay.Editor
         [MenuItem("NeonBlack/Gameplay/Pyralis/Generate Engine Documentation")]
         public static void Generate()
         {
-            var facts = PyralisAuthoringFactRegistry.AllFacts;
+            var facts = PyralisAuthoringGrammarRegistry.AllFacts;
             var sb = new StringBuilder();
             sb.AppendLine("# Pyralis Engine Capabilities & Authoring Contracts");
             sb.AppendLine();
             sb.AppendLine($"Generated on: {DateTime.Now:yyyy-MM-dd HH:mm}");
             sb.AppendLine();
-            sb.AppendLine("This document is auto-generated from the [AuthoringContract] attributes and the central Authoring Registries. It serves as the singular source of truth for the engine's capabilities.");
+            sb.AppendLine("This document is auto-generated from `[AuthoringContract]` metadata and describes feature contract truth. Setup/reference truth comes from the dependency tree; compiled readiness/proof truth comes from the authoring setup graph.");
             sb.AppendLine();
 
             // Handle Typed Capabilities (Flags)

@@ -7,7 +7,7 @@ namespace NeonBlack.Gameplay.Editor
 {
     internal static class PyralisAuthoringValidateRenderer
     {
-        public static void Draw(Object activeSetup)
+        public static void Draw(Object activeSetup, PyralisAuthoringSetupGraph graph)
         {
             EditorGUILayout.LabelField("Validate Active Setup", EditorStyles.boldLabel);
 
@@ -17,7 +17,6 @@ namespace NeonBlack.Gameplay.Editor
                 return;
             }
 
-            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(activeSetup);
             PyralisAuthoringCurrentStepGraphRow currentStep = PyralisAuthoringSetupGraphProjection.BuildCurrentStepRow(graph);
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {

@@ -16,7 +16,7 @@ This page defines how NeonBlack Gameplay runtime code is migrated inside `Member
 10. When touching participant, input, respawn, HUD, camera, or player lookup code, prefer participant/session references over `PlayerRegistry`, tag lookup, or one-primary-player assumptions.
 11. When touching hot-path runtime code, check for per-frame allocations, broad polling, `RaycastAll`, repeated `renderer.materials` access, and uncached `GetComponents*` calls.
 12. When touching aggregate assembly references, avoid broadening `NeonBlack.Gameplay.asmdef` for convenience unless the dependency is intentionally package-level.
-13. Treat setup guidance as product code. When changing beginner setup behavior, update the shared route analysis, Bootstrap Setup Flow, Authoring Window, reflective validation, and setup docs together. In short: setup guidance is product code, and shared route analysis is the source of truth.
+13. Treat setup guidance as product code. When changing beginner setup behavior, update contracts, dependency-tree setup references, graph projection, validators, grammar/vocabulary, the Authoring Window, and setup docs together. Route analysis is a graph input/helper, not the source of truth.
 14. Keep route detection in shared route analysis instead of duplicating pawn, pattern, participant, camera/input, playfield, or scoring checks in individual inspectors or windows.
 
 ## Readability rules

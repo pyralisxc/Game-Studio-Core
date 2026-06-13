@@ -12,12 +12,11 @@ namespace NeonBlack.Gameplay.Editor
     {
         private static readonly Dictionary<string, bool> Foldouts = new Dictionary<string, bool>();
 
-        public static void Draw(Object activeSetup)
+        public static void Draw(Object activeSetup, PyralisAuthoringSetupGraph graph)
         {
             EditorGUILayout.LabelField("Fact Explorer", EditorStyles.boldLabel);
             PyralisAuthoringWindowText.DrawSemanticHelpBox("Read-only coverage view. Facts explain what Pyralis knows about capabilities, setup nodes, proof paths, Inspector handoffs, validation vocabulary, and future convention-derived guidance. Use native Unity surfaces for creation, assignment, customization, and Play Mode proof.", MessageType.Info);
 
-            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(activeSetup);
             IReadOnlyList<PyralisAuthoringFact> facts = PyralisAuthoringSetupGraphProjection.BuildFactExplorerFacts(graph);
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {

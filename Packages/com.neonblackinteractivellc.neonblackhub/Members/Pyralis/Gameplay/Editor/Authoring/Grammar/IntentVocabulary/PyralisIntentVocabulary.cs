@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace NeonBlack.Gameplay.Editor
 {
-    public static class PyralisRouteIntentAuthoringFactProvider
+    public static class PyralisIntentVocabulary
     {
         public static IReadOnlyList<PyralisAuthoringFact> GetAuthoringFacts()
         {

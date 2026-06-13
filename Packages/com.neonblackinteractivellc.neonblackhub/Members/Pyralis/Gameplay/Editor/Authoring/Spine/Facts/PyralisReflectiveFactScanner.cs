@@ -549,7 +549,7 @@ namespace NeonBlack.Gameplay.Editor
                 contract.Axioms);
             for (int i = 0; i < families.Length; i++)
             {
-                RuntimeCapabilityCard card = PyralisRuntimeCapabilityCatalog.FindPrimaryByFamily(families[i]);
+                PyralisCapabilityVocabularyCard card = PyralisCapabilityVocabulary.FindPrimaryByFamily(families[i]);
                 if (card != null && card.Fact != null)
                     AddRelatedStableId(related, card.Fact.StableId);
             }

@@ -95,7 +95,7 @@ namespace NeonBlack.Gameplay.Editor
     {
         public static PyralisAuthoringIntentModel Build(PyralisAuthoringIntentSelection selection)
         {
-            return Build(selection, PyralisAuthoringFactRegistry.AllFacts);
+            return Build(selection, PyralisAuthoringGrammarRegistry.AllFacts);
         }
 
         public static PyralisAuthoringIntentModel Build(PyralisAuthoringIntentSelection selection, IReadOnlyList<PyralisAuthoringFact> facts)

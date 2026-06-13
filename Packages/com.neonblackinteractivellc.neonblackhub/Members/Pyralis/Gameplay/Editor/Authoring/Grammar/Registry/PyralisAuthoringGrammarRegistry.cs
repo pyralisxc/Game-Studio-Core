@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace NeonBlack.Gameplay.Editor
 {
-    public static class PyralisAuthoringFactRegistry
+    public static class PyralisAuthoringGrammarRegistry
     {
         private static readonly Lazy<IReadOnlyList<PyralisAuthoringFact>> _allFacts =
             new Lazy<IReadOnlyList<PyralisAuthoringFact>>(BuildFacts);
@@ -74,7 +74,7 @@ namespace NeonBlack.Gameplay.Editor
                 }
             }
 
-            IReadOnlyList<PyralisAuthoringFact> capabilityFacts = PyralisRuntimeCapabilityCatalog.GetAuthoringFacts();
+            IReadOnlyList<PyralisAuthoringFact> capabilityFacts = PyralisCapabilityVocabulary.GetAuthoringFacts();
             for (int i = 0; i < capabilityFacts.Count; i++)
             {
                 PyralisAuthoringFact fact = capabilityFacts[i];
@@ -84,13 +84,13 @@ namespace NeonBlack.Gameplay.Editor
 
             AddRange(PyralisReflectiveFactScanner.ScanProject());
             AddRange(Inspectors.PyralisSetupFlowGuidance.GetAuthoringFacts());
-            IReadOnlyList<PyralisAuthoringFact> routeProofFacts = PyralisAuthoringRouteProof.GetAuthoringFacts();
+            IReadOnlyList<PyralisAuthoringFact> routeProofFacts = PyralisProofFamilyVocabulary.GetAuthoringFacts();
             AddRange(routeProofFacts);
             AddRange(PyralisContractProofFactProjector.GetAuthoringFacts(GetStableIds(routeProofFacts)));
             AddRange(PyralisRouteCoverageFacts.GetAuthoringFacts());
             AddRange(PyralisInspectorHandoffFacts.GetAuthoringFacts());
             AddRange(PyralisConventionAuthoringFacts.GetAuthoringFacts());
-            AddRange(PyralisRouteIntentAuthoringFactProvider.GetAuthoringFacts());
+            AddRange(PyralisIntentVocabulary.GetAuthoringFacts());
             AddRange(PyralisSceneSurfaceEvidenceFacts.GetAuthoringFacts());
 
             return facts;

@@ -18,8 +18,8 @@ namespace NeonBlack.Gameplay.Editor
 
         private static PyralisAuthoringFeatureRow BuildSelectedRow(RuntimeCapabilityFamily family, string source)
         {
-            RuntimeCapabilityCard card = PyralisRuntimeCapabilityCatalog.FindPrimaryByFamily(family);
-            PyralisAuthoringFact fact = PyralisRuntimeCapabilityCatalog.FindPrimaryFactByFamily(family);
+            PyralisCapabilityVocabularyCard card = PyralisCapabilityVocabulary.FindPrimaryByFamily(family);
+            PyralisAuthoringFact fact = PyralisCapabilityVocabulary.FindPrimaryFactByFamily(family);
             if (card != null && fact != null)
                 return new PyralisAuthoringFeatureRow(
                     card.DisplayName,

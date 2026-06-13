@@ -108,10 +108,11 @@ Keep the implementation split by responsibility:
 |---|---|
 | `PyralisAuthoringWindow` | UI shell, active setup state, selection, and mode coordination |
 | `PyralisAuthoringRouteDescriptor` | route facts inferred from setup patterns and selected context |
-| `PyralisAuthoringRouteProof` | first playable proof names, success criteria, and deferred work for each route family |
+| `PyralisAuthoringRouteProof` | route-derived proof identity and proof-chain composition |
 | `PyralisAuthoringOverviewModel` | Overview read model for graph-projected lanes, first proof text, and Play Mode checklist |
 | `PyralisAuthoringCapabilitySelection` | Capability-row helpers used by Intent-to-`GameSetupProfile` sync and optional `RuntimePatternDefinition` metadata |
-| `PyralisRuntimeCapabilityCatalog` | guide-only capability cards indexed by game-goal and runtime-lane tags |
+| `PyralisCapabilityVocabulary` | fallback capability labels, summaries, and native setup vocabulary indexed by capability and runtime lane |
+| `PyralisProofFamilyVocabulary` | fallback proof family templates enriched by feature-owned contracts |
 | `PyralisAuthoringIntentAdvisor` | Cookbook-to-intent read model that ranks route-intent, capability, contract, and proof facts from selected world/playfield, control shape, lane, and goals for pre-setup planning and fallback guidance |
 | `PyralisAuthoringSetupGraph` | read-only resolved graph of setup nodes, edges, evidence, proof targets, selected context, and source contracts |
 | `PyralisAuthoringSetupGraphProjection` | Map, Overview, Guide, Validate, reflective-contract, and selected-context projection rows derived from the resolved setup graph |
@@ -125,14 +126,13 @@ Add route facts, issue meaning, and setup analysis to these focused model/report
 The active guidance pipeline is:
 
 ```text
-Runtime contracts
-  -> Definition/Profile assets
-      -> Route analysis
-          -> Resolved setup graph and graph-backed authoring projections
-              -> Map, Overview, Guide, validation cards, inspector handoffs, and docs
+Gameplay code and authored assets
+  -> feature contracts + reflected dependency tree + validators + grammar vocabulary
+      -> resolved setup graph
+          -> Map, Overview, Guide, Validate, Facts, selected context, inspectors, and docs
 ```
 
-Do not store the same route advice separately in multiple windows, inspectors, validators, or docs. If wording such as first proof, route intent, recommended next systems, or scene-surface success criteria needs to change, update the shared guidance owner first and let the visible surfaces render from it.
+Do not store the same route advice separately in multiple windows, inspectors, validators, or docs. If code structure proves it, reflect it. If humans need meaning, put it in a contract. If readiness changes, project it through graph evidence. If wording is generic, put it in Grammar/Vocabulary and let visible surfaces render from graph projections.
 
 ## Core Setup Chain
 
@@ -181,11 +181,11 @@ Core concepts:
 - `Evidence`: why the tool believes something is ready, missing, optional, or not needed for this route.
 - `Work Intent`: whether the row is foundation setup, required setup, a proof enhancer, or a feature card.
 
-The first Authoring 2.0 foundation is `PyralisAuthoringFactRegistry`. It is a read-only typed fact spine used to keep guide cards, validation issues, inspector handoffs, and setup rows on stable ids instead of display text. Runtime capability cards, reflected contracts, setup-flow rows, route proof facts, route-family coverage facts, scene-evidence facts, inspector handoff facts, convention facts, route intents, and typed `PyralisAuthoringIssue` metadata all flow through that single registry. Feature-owned `[AuthoringContract]` metadata feeds setup-profile capability guidance, profile/runtime/lane validation, unsupported-lane cautions, developer first-proof guidance, and resolved proof target rows. Convention facts do not use a second provider-discovery registry. `PyralisAuthoringIntentAdvisor` projects registry facts into a compact route-choice summary for Intent and pre-setup planning. Intent chooses the route shape; Guide owns the graph-filtered route guide when setup exists; Facts remains the full cookbook and dictionary. Beginner semantic location tags give the Authoring Window a top legend strip plus generated fact/action badges for Project, Hierarchy, Inspector, Component, Prefab, Definition, Profile, Input, UI, Animation, Audio, and Play Mode.
+The active Authoring 2.0 foundation is the contract/dependency-tree/graph pipeline. `PyralisAuthoringGrammarRegistry` aggregates vocabulary, reflected facts, setup-flow facts, proof templates, inspector handoffs, route intents, scene evidence, and convention facts so projections have stable ids and wording. It is an audit and grammar source, not the primary operating model. Feature-owned `[AuthoringContract]` metadata owns semantic setup meaning; `PyralisSetupDependencyTree` owns serialized setup/reference discovery; validators own scene/runtime readiness; `PyralisAuthoringSetupGraph` compiles those inputs into the single readiness/proof model consumed by tabs. `PyralisAuthoringIntentAdvisor` projects grammar facts into compact pre-setup planning. Intent chooses the route shape; Guide owns the graph-filtered route guide when setup exists; Facts remains the full cookbook and dictionary.
 
-The registry should grow in this order:
+The grammar and graph inputs should grow in this order:
 
-1. hand-authored guide-card facts that preserve product voice - implemented for the Runtime Capability Catalog
+1. grammar/vocabulary facts that preserve product voice - implemented for capability vocabulary
 2. setup-flow facts for core setup nodes and native actions - implemented for current setup step ids
 3. route proof facts that relate capability cards, setup nodes, and first Play Mode proof - expanded for pawn, tabletop/card, action selection, NPC/enemy, custom object, UI/HUD/menu, camera/world, generated content, and networking proof anchors
 4. typed validator issues with stable issue codes - started through the Validate model adapter and visible metadata block
@@ -235,11 +235,11 @@ Recommended setup should not all land in the same visual priority. Use work inte
 - `ProofEnhancer`: customization or scene support that makes the first proof believable, readable, or easier to debug.
 - `FeatureCard`: optional systems, advanced route capabilities, polish, or next proof-chain work that should not compete with the current proof.
 
-## Runtime Capability Catalog
+## Capability Vocabulary
 
-The Runtime Capability Catalog is a guide-only discovery layer inside the Authoring Window. It lets users browse Pyralis-supported setup surfaces by both game goal and runtime lane without turning the window into a scene generator.
+The Capability Vocabulary is a guide-only discovery layer inside the Authoring Window. It lets users browse Pyralis-supported setup surfaces by capability and runtime lane without turning the window into a scene generator or preset system.
 
-The catalog should use one canonical card model, not separate hardcoded trees. A card is indexed by game-goal tags such as movement, combat, projectiles, camera, UI/HUD, scoring, interaction, NPCs/enemies, tabletop, and networking, and by runtime-lane tags such as `Sprite2D`, `Billboard2_5D`, `Rigged3D`, tabletop/no-pawn, UI/menu, camera/cursor, and networked. Both browse modes render the same cards so guidance does not drift.
+The vocabulary should use one canonical card model, not separate hardcoded trees. A card is indexed by capability tags such as movement, combat, projectiles, camera, UI/HUD, scoring, interaction, NPCs/enemies, tabletop, and networking, and by runtime-lane tags such as `Sprite2D`, `Billboard2_5D`, `Rigged3D`, tabletop/no-pawn, UI/menu, camera/cursor, and networked. Both browse modes render the same cards so fallback wording does not drift.
 
 Each card should answer:
 
@@ -253,9 +253,9 @@ Each card should answer:
 - first proof
 - common next capabilities
 
-Runtime capability cards are the first fact-backed card surface. The visible card remains guide-only, but its underlying `PyralisAuthoringFact` is the maintainable contract future Authoring 2.0 surfaces should read from. Do not add new capability cards as isolated UI prose; add or update the shared card/fact model so Overview, Map, Validate, inspectors, docs, and future fact explorer views can converge on the same stable id and setup meaning.
+Capability vocabulary cards are fallback wording. The graph-facing `PyralisAuthoringFact` can be enriched by contracts and reflection, but feature-specific setup truth should move into feature contracts and reflected dependency evidence rather than new hardcoded card prose.
 
-The catalog must stay guide-only for the first implementation. It may select, ping, explain, or copy checklist text, but it must not create or assign assets, add components, or treat generated scaffolding as validation evidence. Users should still use native Unity surfaces: Project window asset creation, Hierarchy object creation, Inspector Add Component, Inspector field assignment, object picker, customization through serialized fields, and Play Mode proof.
+The vocabulary must stay guide-only. It may select, ping, explain, or copy checklist text, but it must not create or assign assets, add components, or treat generated scaffolding as validation evidence. Users should still use native Unity surfaces: Project window asset creation, Hierarchy object creation, Inspector Add Component, Inspector field assignment, object picker, customization through serialized fields, and Play Mode proof.
 
 The same guide-card model should later expand beyond runtime patterns into the whole setup path: session setup, participants, pawns, NPCs/enemies, custom interactables, pickups, hazards, camera/world bounds, UI/HUD/menus, scoring/objectives, tabletop/control surfaces, and networking.
 
@@ -386,14 +386,14 @@ Each detector should return typed evidence. A detected object means "we found a 
 
 Every route should recommend one small proof before asking for broad setup.
 
-Overview should show a first playable proof card rendered from `PyralisAuthoringRouteProof` with:
+Overview should show a first playable proof card rendered from graph proof nodes with:
 
 - setup surface
 - success criteria
 - proof chain for hybrid routes
 - work to defer until after the proof
 
-Route identity comes from `PyralisSetupRouteAnalysis`: it owns canonical route facts such as Pawn Action, Projectile, Scoring, and Networking. `PyralisAuthoringRouteProof` composes those facts into a first proof plus later proof-chain steps, so a pawn + projectile + networking setup still starts with local movement while showing that projectile resolution and network ownership are intentionally next.
+Route identity comes from `PyralisSetupRouteAnalysis` and the reflected dependency tree. `PyralisAuthoringRouteProof` composes route-derived proof identity and later proof-chain steps, while `PyralisProofFamilyVocabulary` supplies fallback proof wording and contracts enrich feature-specific proof requirements. A pawn + projectile + networking setup still starts with local movement while showing that projectile resolution and network ownership are intentionally next.
 
 Examples:
 
@@ -499,7 +499,7 @@ Expected result:
 
 ### Phase 6: Proof Loop Guidance
 
-Add first-proof recommendations to route analysis, feature advice, and Overview through `PyralisAuthoringRouteProof`.
+Add first-proof recommendations through contracts, dependency-tree evidence, validators, and graph proof nodes. Use `PyralisProofFamilyVocabulary` only for generic fallback proof wording.
 
 Expected result:
 

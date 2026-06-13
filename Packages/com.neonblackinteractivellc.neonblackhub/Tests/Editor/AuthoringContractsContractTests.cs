@@ -52,7 +52,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             for (int i = 0; i < expectedIntentIds.Length; i++)
             {
-                PyralisAuthoringFact fact = PyralisAuthoringFactRegistry.Find(expectedIntentIds[i]);
+                PyralisAuthoringFact fact = PyralisAuthoringGrammarRegistry.Find(expectedIntentIds[i]);
                 Assert.That(fact, Is.Not.Null, expectedIntentIds[i]);
                 Assert.That(fact.Kind, Is.EqualTo(PyralisAuthoringFactKind.RouteIntent), expectedIntentIds[i]);
                 Assert.That(fact.FirstProof, Is.Not.Empty, expectedIntentIds[i]);
@@ -109,7 +109,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void TopDownHopContract_ContributesAuthoringFact()
         {
-            PyralisAuthoringFact fact = PyralisAuthoringFactRegistry.Find("feature.actor.traversal.topdown-hop");
+            PyralisAuthoringFact fact = PyralisAuthoringGrammarRegistry.Find("feature.actor.traversal.topdown-hop");
 
             Assert.That(fact, Is.Not.Null);
             Assert.That(fact.Kind, Is.EqualTo(PyralisAuthoringFactKind.FeatureContract));
@@ -133,7 +133,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(profileContract, Is.Not.Null);
             Assert.That(profileContract.FirstProofTargetId, Is.EqualTo("proof.1p-pawn-movement"));
 
-            PyralisAuthoringFact fact = PyralisAuthoringFactRegistry.Find(profileContract.StableId);
+            PyralisAuthoringFact fact = PyralisAuthoringGrammarRegistry.Find(profileContract.StableId);
             Assert.That(fact, Is.Not.Null);
             Assert.That(fact.FirstProof, Is.EqualTo("proof.1p-pawn-movement"));
             Assert.That(fact.RelatedStableIds, Does.Contain("proof.1p-pawn-movement"));
@@ -158,7 +158,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void Traversal3DContract_ContributesAuthoringFact()
         {
-            PyralisAuthoringFact fact = PyralisAuthoringFactRegistry.Find("feature.actor.traversal.3d");
+            PyralisAuthoringFact fact = PyralisAuthoringGrammarRegistry.Find("feature.actor.traversal.3d");
 
             Assert.That(fact, Is.Not.Null);
             Assert.That(fact.Kind, Is.EqualTo(PyralisAuthoringFactKind.FeatureContract));
@@ -187,7 +187,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void InteractionContract_ContributesAuthoringFact()
         {
-            PyralisAuthoringFact fact = PyralisAuthoringFactRegistry.Find("feature.actor.interaction");
+            PyralisAuthoringFact fact = PyralisAuthoringGrammarRegistry.Find("feature.actor.interaction");
 
             Assert.That(fact, Is.Not.Null);
             Assert.That(fact.Kind, Is.EqualTo(PyralisAuthoringFactKind.FeatureContract));
@@ -217,7 +217,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void EnemyReactionContract_ContributesAuthoringFact()
         {
-            PyralisAuthoringFact fact = PyralisAuthoringFactRegistry.Find("feature.enemy.reaction");
+            PyralisAuthoringFact fact = PyralisAuthoringGrammarRegistry.Find("feature.enemy.reaction");
 
             Assert.That(fact, Is.Not.Null);
             Assert.That(fact.Kind, Is.EqualTo(PyralisAuthoringFactKind.FeatureContract));
@@ -251,7 +251,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void EnemyAmbientContract_ContributesAuthoringFact()
         {
-            PyralisAuthoringFact fact = PyralisAuthoringFactRegistry.Find("feature.enemy.ambient");
+            PyralisAuthoringFact fact = PyralisAuthoringGrammarRegistry.Find("feature.enemy.ambient");
 
             Assert.That(fact, Is.Not.Null);
             Assert.That(fact.Kind, Is.EqualTo(PyralisAuthoringFactKind.FeatureContract));
@@ -285,7 +285,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void Pickups2DContract_ContributesAuthoringFact()
         {
-            PyralisAuthoringFact fact = PyralisAuthoringFactRegistry.Find("feature.actor.pickups.2d");
+            PyralisAuthoringFact fact = PyralisAuthoringGrammarRegistry.Find("feature.actor.pickups.2d");
 
             Assert.That(fact, Is.Not.Null);
             Assert.That(fact.Kind, Is.EqualTo(PyralisAuthoringFactKind.FeatureContract));
@@ -319,7 +319,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void Pickups3DContract_ContributesAuthoringFact()
         {
-            PyralisAuthoringFact fact = PyralisAuthoringFactRegistry.Find("feature.actor.pickups.3d");
+            PyralisAuthoringFact fact = PyralisAuthoringGrammarRegistry.Find("feature.actor.pickups.3d");
 
             Assert.That(fact, Is.Not.Null);
             Assert.That(fact.Kind, Is.EqualTo(PyralisAuthoringFactKind.FeatureContract));
@@ -378,7 +378,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void CombatReactionContract_ContributesAuthoringFact()
         {
-            PyralisAuthoringFact fact = PyralisAuthoringFactRegistry.Find("feature.actor.combat.reaction");
+            PyralisAuthoringFact fact = PyralisAuthoringGrammarRegistry.Find("feature.actor.combat.reaction");
 
             Assert.That(fact, Is.Not.Null);
             Assert.That(fact.Kind, Is.EqualTo(PyralisAuthoringFactKind.FeatureContract));
@@ -412,7 +412,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void StatusContract_ContributesAuthoringFact()
         {
-            PyralisAuthoringFact fact = PyralisAuthoringFactRegistry.Find("feature.actor.status");
+            PyralisAuthoringFact fact = PyralisAuthoringGrammarRegistry.Find("feature.actor.status");
 
             Assert.That(fact, Is.Not.Null);
             Assert.That(fact.Kind, Is.EqualTo(PyralisAuthoringFactKind.FeatureContract));
@@ -445,7 +445,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void FeedbackContract_ContributesAuthoringFact()
         {
-            PyralisAuthoringFact fact = PyralisAuthoringFactRegistry.Find("feature.actor.feedback");
+            PyralisAuthoringFact fact = PyralisAuthoringGrammarRegistry.Find("feature.actor.feedback");
 
             Assert.That(fact, Is.Not.Null);
             Assert.That(fact.Kind, Is.EqualTo(PyralisAuthoringFactKind.FeatureContract));
@@ -529,7 +529,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void AuthoringContracts_ProjectPhysicalComponentRequirementsAsUnitySurfaces()
         {
-            PyralisAuthoringFact feedback = PyralisAuthoringFactRegistry.Find("feature.actor.feedback");
+            PyralisAuthoringFact feedback = PyralisAuthoringGrammarRegistry.Find("feature.actor.feedback");
 
             Assert.That(feedback, Is.Not.Null);
             Assert.That(feedback.RequiredUnitySurfaces, Does.Contain("IActorFeedbackPublisher"));
@@ -625,7 +625,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             ResolvedAuthoringContract sessionContract = ResolvedAuthoringContractRegistry.FindByType(typeof(SessionDefinition));
             Assert.That(sessionContract, Is.Not.Null);
 
-            PyralisAuthoringFact fact = PyralisAuthoringFactRegistry.Find(sessionContract.StableId);
+            PyralisAuthoringFact fact = PyralisAuthoringGrammarRegistry.Find(sessionContract.StableId);
 
             Assert.That(fact, Is.Not.Null);
             Assert.That(fact.RelatedStableIds, Does.Contain("session.definition"));
@@ -849,8 +849,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void RuntimeCapabilityFacts_AreEnrichedFromFeatureContracts()
         {
-            RuntimeCapabilityCard card = PyralisRuntimeCapabilityCatalog.FindPrimaryByFamily(RuntimeCapabilityFamily.CharacterPawnGameplay);
-            PyralisAuthoringFact projected = PyralisRuntimeCapabilityCatalog.FindPrimaryFactByFamily(RuntimeCapabilityFamily.CharacterPawnGameplay);
+            PyralisCapabilityVocabularyCard card = PyralisCapabilityVocabulary.FindPrimaryByFamily(RuntimeCapabilityFamily.CharacterPawnGameplay);
+            PyralisAuthoringFact projected = PyralisCapabilityVocabulary.FindPrimaryFactByFamily(RuntimeCapabilityFamily.CharacterPawnGameplay);
 
             Assert.That(card, Is.Not.Null);
             Assert.That(projected, Is.Not.Null);
@@ -1585,14 +1585,14 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 }
 
                 Assert.That(contract.FirstProofTargetId, Is.Not.Empty, contract.StableId);
-                Assert.That(PyralisAuthoringRouteProof.FindProofFact(contract.FirstProofTargetId), Is.Not.Null, contract.StableId);
+                Assert.That(PyralisProofFamilyVocabulary.FindProofFact(contract.FirstProofTargetId), Is.Not.Null, contract.StableId);
             }
         }
 
         [Test]
         public void ContractProofFactProjector_GeneratesContractOwnedProofFactsWhenNoBroadProofExists()
         {
-            IReadOnlyCollection<string> broadProofIds = PyralisAuthoringRouteProof.GetFallbackAuthoringFacts()
+            IReadOnlyCollection<string> broadProofIds = PyralisProofFamilyVocabulary.GetDefaultProofTemplates()
                 .Select(fact => fact.StableId)
                 .ToArray();
 
@@ -1605,13 +1605,13 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(proof.SourceKind, Is.EqualTo(PyralisAuthoringFactSourceKind.FeatureContract));
             Assert.That(proof.FirstProof, Does.Contain("contract-owned proof"));
             Assert.That(proof.RelatedStableIds, Does.Contain("feature." + typeof(ContractOwnedProofFixture).FullName));
-            Assert.That(PyralisAuthoringFactRegistry.Find("proof.contract-owned-editor-test"), Is.Not.Null);
+            Assert.That(PyralisAuthoringGrammarRegistry.Find("proof.contract-owned-editor-test"), Is.Not.Null);
         }
 
         [Test]
         public void RouteProofFallbackFacts_DoNotOwnFeatureSpecificSetupRequirements()
         {
-            PyralisAuthoringFact fallback = PyralisAuthoringRouteProof.GetFallbackAuthoringFacts()
+            PyralisAuthoringFact fallback = PyralisProofFamilyVocabulary.GetDefaultProofTemplates()
                 .FirstOrDefault(fact => fact.StableId == "proof.1p-pawn-movement");
 
             Assert.That(fallback, Is.Not.Null);
@@ -1624,7 +1624,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void ContractProofFactProjector_EnrichesBroadRouteProofsFromContractMetadata()
         {
-            PyralisAuthoringFact proof = PyralisAuthoringFactRegistry.Find("proof.1p-pawn-movement");
+            PyralisAuthoringFact proof = PyralisAuthoringGrammarRegistry.Find("proof.1p-pawn-movement");
 
             Assert.That(proof, Is.Not.Null);
             Assert.That(proof.SourceKind, Is.EqualTo(PyralisAuthoringFactSourceKind.SetupFlow));
@@ -1658,7 +1658,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             var packageDef = JsonUtility.FromJson<PackageJsonRaw>(jsonRaw);
             Version currentPackageVersion = new Version(packageDef.version);
 
-            foreach (var fact in PyralisAuthoringFactRegistry.AllFacts)
+            foreach (var fact in PyralisAuthoringGrammarRegistry.AllFacts)
             {
                 if (fact.Priority == (int)AuthoringPriority.Deprecated)
                 {

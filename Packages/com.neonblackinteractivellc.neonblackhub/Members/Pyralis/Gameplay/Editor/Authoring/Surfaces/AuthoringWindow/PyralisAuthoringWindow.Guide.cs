@@ -11,9 +11,8 @@ namespace NeonBlack.Gameplay.Editor
 {
     public partial class PyralisAuthoringWindow
     {
-        private void DrawGuideMode(Object selection, Object activeSetup)
+        private void DrawGuideMode(Object selection, Object activeSetup, PyralisAuthoringSetupGraph contextGraph)
         {
-            PyralisAuthoringSetupGraph contextGraph = PyralisAuthoringSetupGraphBuilder.Build(activeSetup != null ? activeSetup : selection);
             PyralisAuthoringCurrentStepGraphRow currentStep = PyralisAuthoringSetupGraphProjection.BuildCurrentStepRow(contextGraph);
             if (ShouldShowSelectionFirstGuide(selection, activeSetup))
             {
@@ -48,7 +47,7 @@ namespace NeonBlack.Gameplay.Editor
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 EditorGUILayout.LabelField("Active Setup", $"{activeSetup.name} ({activeSetup.GetType().Name})", EditorStyles.wordWrappedLabel);
-                PyralisAuthoringSetupGraph activeGraph = PyralisAuthoringSetupGraphBuilder.Build(activeSetup);
+                PyralisAuthoringSetupGraph activeGraph = GetCachedSetupGraph(activeSetup);
                 PyralisAuthoringCurrentStepGraphRow activeCurrentStep = PyralisAuthoringSetupGraphProjection.BuildCurrentStepRow(activeGraph);
                 EditorGUILayout.LabelField("Route", activeCurrentStep.RouteName, EditorStyles.wordWrappedLabel);
                 EditorGUILayout.LabelField("Next Required Step", activeCurrentStep.Message, EditorStyles.wordWrappedLabel);

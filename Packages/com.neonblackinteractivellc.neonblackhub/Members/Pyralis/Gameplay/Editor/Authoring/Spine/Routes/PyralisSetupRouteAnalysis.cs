@@ -529,7 +529,7 @@ namespace NeonBlack.Gameplay.Editor
 
         private static void AddFact(List<PyralisAuthoringRouteFact> facts, RuntimeCapabilityFamily family)
         {
-            RuntimeCapabilityCard card = PyralisRuntimeCapabilityCatalog.FindPrimaryByFamily(family);
+            PyralisCapabilityVocabularyCard card = PyralisCapabilityVocabulary.FindPrimaryByFamily(family);
             if (card != null)
             {
                 facts.Add(new PyralisAuthoringRouteFact(card.RouteCapability, card.RouteLabel, card.CapabilityFamily, card.PrimaryProofCandidate));

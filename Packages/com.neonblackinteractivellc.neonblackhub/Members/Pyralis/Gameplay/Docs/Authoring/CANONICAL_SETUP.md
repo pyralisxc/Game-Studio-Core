@@ -186,7 +186,7 @@ Important rules:
 - every reusable feature module should provide an explicit `[AuthoringContract]` on the owning feature type
 - `ResolvedAuthoringContractRegistry` discovers contracts reflectively; do not add central hardcoded module-id registries
 - the contract must declare required profile type, dependency interfaces, physical Unity component placement requirements, supported lanes, unsupported lanes, action roles, native setup actions, assignment fields, customization moments, developer first-proof guidance, and `SetupNodeId` when the contract enriches a stable resolved setup graph node
-- every declared `FirstProofTargetId` must map to a real `PyralisAuthoringRouteProof` fact
+- every declared `FirstProofTargetId` must resolve to a graph proof node; route-proof grammar may provide fallback wording, but contract metadata and graph proof edges own the compiled proof relationship
 - every feature module must declare network intent
 - runtime prefabs must expose the required feature runtime interfaces, while actor roots, scene roots, UI roots, and other authored objects must expose only the physical component requirements declared for that placement
 - feature-owned authored profiles should live with the feature whenever practical

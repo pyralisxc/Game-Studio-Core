@@ -354,7 +354,7 @@ A feature is "golden" when:
 - reusable feature modules declare reflective authoring contracts
 - it has clear setup docs
 - it has validation messages for common setup mistakes
-- its first proof target maps to a real route proof card
+- its first proof target resolves to a graph proof node with contract, validator, and dependency evidence as applicable
 - it has tests for core behavior or architecture boundaries
 - it can be reused in at least two game styles or is clearly labeled as sample-specific
 - it avoids single-player and character-controller assumptions unless that is its explicit purpose

@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace NeonBlack.Gameplay.Editor
 {
-    internal static class PyralisRuntimeCapabilityCatalogRenderer
+    internal static class PyralisCapabilityVocabularyRenderer
     {
         private static readonly RuntimeCapabilityLaneTag[] GuidedCapabilityLaneTags =
         {
@@ -23,7 +23,7 @@ namespace NeonBlack.Gameplay.Editor
 
         public static void Draw(GameSetupProfile setupProfile)
         {
-            EditorGUILayout.LabelField("Runtime Capability Catalog", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Capability Vocabulary", EditorStyles.boldLabel);
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 PyralisAuthoringWindowText.DrawSemanticMiniLabel("Browse Pyralis-supported runtime setup by game goal or runtime lane. No asset or component creation happens here; each card points back to native Project, Hierarchy, Inspector, Add Component, assignment, customization, and Play Mode proof steps.");
@@ -89,11 +89,11 @@ namespace NeonBlack.Gameplay.Editor
 
             EditorGUI.indentLevel++;
             for (int i = 0; i < facts.Count; i++)
-                DrawRuntimeCapabilityCard(facts[i], setupProfile, keySuffix + "." + i, laneTag);
+                DrawPyralisCapabilityVocabularyCard(facts[i], setupProfile, keySuffix + "." + i, laneTag);
             EditorGUI.indentLevel--;
         }
 
-        private static void DrawRuntimeCapabilityCard(
+        private static void DrawPyralisCapabilityVocabularyCard(
             PyralisAuthoringFact fact,
             GameSetupProfile setupProfile,
             string keySuffix,
@@ -108,7 +108,7 @@ namespace NeonBlack.Gameplay.Editor
                 EditorGUILayout.LabelField(fact.DisplayName, status, EditorStyles.boldLabel);
                 EditorGUILayout.LabelField(fact.Summary, EditorStyles.wordWrappedMiniLabel);
 
-                string key = "Pyralis.AuthoringWindow.RuntimeCapabilityCard." + fact.StableId + "." + keySuffix;
+                string key = "Pyralis.AuthoringWindow.PyralisCapabilityVocabularyCard." + fact.StableId + "." + keySuffix;
                 bool isOpen = Foldouts.TryGetValue(key, out bool value) && value;
                 isOpen = EditorGUILayout.Foldout(isOpen, "Native Setup Guide", true);
                 Foldouts[key] = isOpen;

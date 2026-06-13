@@ -20,7 +20,7 @@ namespace NeonBlack.Gameplay.Editor
             for (int i = 0; i < values.Length; i++)
             {
                 RuntimeCapabilityFamily family = (RuntimeCapabilityFamily)values.GetValue(i);
-                PyralisAuthoringFact fact = PyralisRuntimeCapabilityCatalog.FindPrimaryFactByFamily(family);
+                PyralisAuthoringFact fact = PyralisCapabilityVocabulary.FindPrimaryFactByFamily(family);
                 if (!ReflectiveFactMatchesIntent(fact, capabilities, lane, axioms))
                     continue;
 

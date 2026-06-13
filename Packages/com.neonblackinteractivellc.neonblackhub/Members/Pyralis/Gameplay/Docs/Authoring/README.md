@@ -35,13 +35,13 @@ Create assets through the native Project-window Create menu under `NeonBlack`. U
 
 Authoring guidance is product code. When changing first-scene or route-guided setup behavior, keep these surfaces aligned in the same maintenance slice:
 
-- feature-owned contracts and convention facts
-- `PyralisSetupRouteAnalysis`
+- feature-owned contracts, dependency-tree references, and convention facts
+- `PyralisSetupDependencyTree` and `PyralisSetupRouteAnalysis`
 - `PyralisSetupFlowValidator`
 - `PyralisSceneReadinessValidator`
-- `PyralisAuthoringRouteProof`
+- `PyralisAuthoringRouteProof` and `PyralisProofFamilyVocabulary`
 - `PyralisAuthoringSetupGraph` and graph projection rows
 - Inspector field guides
 - these docs
 
-Do not create new setup truth in docs alone. Put reusable meaning in the authoring spine first, then make docs explain it.
+Do not create new setup truth in docs alone. Put feature meaning in contracts, reflected setup/reference meaning in the dependency tree, readiness in validators/graph evidence, and generic wording in grammar/vocabulary first, then make docs explain it.

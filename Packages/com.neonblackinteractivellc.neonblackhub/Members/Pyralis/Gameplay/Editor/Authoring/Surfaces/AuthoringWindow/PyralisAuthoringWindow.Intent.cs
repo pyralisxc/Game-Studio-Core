@@ -362,7 +362,7 @@ namespace NeonBlack.Gameplay.Editor
             for (int i = 0; i < families.Length; i++)
             {
                 RuntimeCapabilityFamily family = families[i];
-                RuntimeCapabilitySelection existing = PyralisRuntimeCapabilityCatalogRenderer.GetCapabilitySelection(setupProfile, family);
+                RuntimeCapabilitySelection existing = PyralisCapabilityVocabularyRenderer.GetCapabilitySelection(setupProfile, family);
                 next.Add(new RuntimeCapabilitySelection
                 {
                     capabilityFamily = family,

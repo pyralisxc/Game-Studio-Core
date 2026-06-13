@@ -71,7 +71,9 @@ In plain English:
 - `ResolvedAuthoringContractRegistry` is the authoritative source for feature-owned authoring contracts.
 - Feature contracts are declared in feature code with `[AuthoringContract]`.
 - Contracts are discovered reflectively and normalized once; validation, proof guidance, inspector handoffs, setup graph links, and cookbook facts should consume resolved contracts instead of rescanning raw attributes.
-- `PyralisAuthoringFactRegistry` is the single cookbook aggregator for runtime capability cards, reflection, setup-flow facts, route proofs, inspector handoffs, convention facts, route intents, and scene evidence.
+- `PyralisAuthoringGrammarRegistry` aggregates vocabulary/default facts, reflection, setup-flow facts, proof templates, inspector handoffs, convention facts, route intents, and scene evidence. It is grammar/audit input, not the operating model.
+- `PyralisSetupDependencyTree` owns serialized setup/reference discovery.
+- `PyralisAuthoringSetupGraph` compiles contracts, dependency-tree references, validators, grammar, and selected Unity context into the readiness/proof model consumed by the Authoring Window.
 - Convention facts stay as explicit source calls from the main fact registry. Do not add a parallel provider-discovery layer unless a new spine capability genuinely needs extension-point behavior.
 - `GameplaySessionBootstrap` is the runtime startup object in the scene.
 - `SessionDefinition` is the whole play session.
@@ -196,7 +198,7 @@ The **Intent**, **Guide**, **Overview**, **Map**, **Validate**, and **Facts** ta
 - customization: the fields and assets where the user expresses taste, art, tuning, rules, layout, and feature behavior
 - recommended next options: nearby capabilities that commonly complete the selected project shape without becoming presets
 
-The Authoring Window implementation should stay split by responsibility. Keep `PyralisAuthoringWindow` as the UI shell and selection/mode coordinator. Put canonical route facts in `PyralisSetupRouteAnalysis`, route presentation in `PyralisAuthoringRouteDescriptor`, first playable proof and proof-chain text in `PyralisAuthoringRouteProof`, current setup priority in `PyralisAuthoringSetupGraphProjection`, capability checkbox behavior in `PyralisAuthoringCapabilitySelection`, capability explanation rows in `PyralisAuthoringCapabilityGuidance`, scene-surface route wording in `PyralisAuthoringSceneSurfaceGuidance`, and cookbook-to-intent ranking in `PyralisAuthoringIntentAdvisor`. Add new game systems to contracts, setup-flow facts, graph projections, or cookbook facts before adding more drawing logic to the window.
+The Authoring Window implementation should stay split by responsibility. Keep `PyralisAuthoringWindow` as the UI shell, active setup graph cache, selection, and mode coordinator. Put route resolution in `PyralisSetupRouteAnalysis` and `PyralisSetupDependencyTree`, route presentation in `PyralisAuthoringRouteDescriptor`, route-derived proof identity in `PyralisAuthoringRouteProof`, fallback proof wording in `PyralisProofFamilyVocabulary`, current setup priority in `PyralisAuthoringSetupGraphProjection`, capability checkbox behavior in `PyralisAuthoringCapabilitySelection`, capability explanation rows in `PyralisAuthoringCapabilityGuidance`, scene-surface route wording in `PyralisAuthoringSceneSurfaceGuidance`, and cookbook-to-intent ranking in `PyralisAuthoringIntentAdvisor`. Add new game systems to contracts, validators, dependency-tree coverage, or grammar vocabulary before adding more drawing logic to the window.
 
 Setup flow rows should be structured facts, not just display strings. Each `PyralisSetupFlowStep` should carry a stable step id, a work intent (`Foundation`, `RequiredSetup`, `ProofEnhancer`, or `FeatureCard`), evidence, target object, and native Unity action when one is known. This lets Overview decide what to do first even when many systems are open: blockers go to `Do Now`, proof enhancers stay near the first proof, and feature-card work waits until the current proof is reliable. Do not key new feature behavior only from row labels or warning copy.
 
@@ -270,7 +272,7 @@ The core chain uses route-aware shared guidance:
 - `GameModeDefinition` reads its setup profile before recommending camera, playfield, feature, combat, scoring, or respawn wiring.
 - `SessionDefinition` explains participants, pawn/no-pawn expectations, and whether shared input is only optional.
 - `GameplaySessionBootstrap` inspects the assigned session graph and reports scene-level next steps.
-- `PyralisAuthoringRouteProof`, `PyralisAuthoringCapabilityGuidance`, and `PyralisAuthoringSceneSurfaceGuidance` own reusable first-proof, capability, recommended-next, and scene-surface wording.
+- `PyralisProofFamilyVocabulary`, `PyralisAuthoringCapabilityGuidance`, and `PyralisAuthoringSceneSurfaceGuidance` own reusable fallback proof, capability, recommended-next, and scene-surface wording. Feature-specific setup meaning belongs in contracts/reflection and should reach UI through graph evidence.
 
 Each guided Inspector should answer compactly:
 

@@ -1480,9 +1480,9 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void PyralisAuthoringFactRegistry_SetupFlowFacts_CoverStableStepIds()
+        public void PyralisAuthoringGrammarRegistry_SetupFlowFacts_CoverStableStepIds()
         {
-            Assert.That(PyralisAuthoringFactRegistry.HasDuplicateStableIds(out string duplicateStableId), Is.False, duplicateStableId);
+            Assert.That(PyralisAuthoringGrammarRegistry.HasDuplicateStableIds(out string duplicateStableId), Is.False, duplicateStableId);
 
             foreach (PyralisSetupFlowStepId stepId in System.Enum.GetValues(typeof(PyralisSetupFlowStepId)))
             {
@@ -1492,7 +1492,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 string stableId = PyralisSetupFlowGuidance.GetStableId(stepId);
                 Assert.That(stableId, Is.Not.Empty, stepId.ToString());
 
-                PyralisAuthoringFact fact = PyralisAuthoringFactRegistry.Find(stableId);
+                PyralisAuthoringFact fact = PyralisAuthoringGrammarRegistry.Find(stableId);
                 Assert.That(fact, Is.Not.Null, stableId);
                 Assert.That(fact.Kind, Is.EqualTo(PyralisAuthoringFactKind.SetupNode));
                 Assert.That(fact.SourceKind, Is.EqualTo(PyralisAuthoringFactSourceKind.SetupFlow));
@@ -1501,9 +1501,9 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void PyralisAuthoringFactRegistry_TwoDPawnMovement_RelatesCapabilityToSetupNodes()
+        public void PyralisAuthoringGrammarRegistry_TwoDPawnMovement_RelatesCapabilityToSetupNodes()
         {
-            PyralisAuthoringFact capability = PyralisAuthoringFactRegistry.Find("capability.2d-pawn-movement");
+            PyralisAuthoringFact capability = PyralisAuthoringGrammarRegistry.Find("capability.2d-pawn-movement");
             Assert.That(capability, Is.Not.Null);
             Assert.That(capability.Kind, Is.EqualTo(PyralisAuthoringFactKind.RuntimeCapability));
             Assert.That(capability.RelatedStableIds, Does.Contain("proof.1p-pawn-movement"));
@@ -1519,7 +1519,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             foreach (string stableId in requiredPawnSetupFacts)
             {
-                PyralisAuthoringFact setupFact = PyralisAuthoringFactRegistry.Find(stableId);
+                PyralisAuthoringFact setupFact = PyralisAuthoringGrammarRegistry.Find(stableId);
                 Assert.That(setupFact, Is.Not.Null, stableId);
                 Assert.That(setupFact.RelatedStableIds, Does.Contain("capability.2d-pawn-movement"), stableId);
                 Assert.That(setupFact.RelatedStableIds, Does.Contain("proof.1p-pawn-movement"), stableId);
@@ -1528,9 +1528,9 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void PyralisAuthoringFactRegistry_OnePlayerPawnProof_ConnectsCapabilitySetupAndProof()
+        public void PyralisAuthoringGrammarRegistry_OnePlayerPawnProof_ConnectsCapabilitySetupAndProof()
         {
-            PyralisAuthoringFact proof = PyralisAuthoringFactRegistry.Find("proof.1p-pawn-movement");
+            PyralisAuthoringFact proof = PyralisAuthoringGrammarRegistry.Find("proof.1p-pawn-movement");
             Assert.That(proof, Is.Not.Null);
             Assert.That(proof.Kind, Is.EqualTo(PyralisAuthoringFactKind.Proof));
             Assert.That(proof.WorkIntent, Is.EqualTo("FirstProof"));
@@ -1546,9 +1546,9 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void PyralisAuthoringFactRegistry_InspectorHandoffFacts_LinkNativeInspectorFieldsToSetup()
+        public void PyralisAuthoringGrammarRegistry_InspectorHandoffFacts_LinkNativeInspectorFieldsToSetup()
         {
-            PyralisAuthoringFact bootstrapSession = PyralisAuthoringFactRegistry.Find("inspector.gameplay-session-bootstrap.session-definition");
+            PyralisAuthoringFact bootstrapSession = PyralisAuthoringGrammarRegistry.Find("inspector.gameplay-session-bootstrap.session-definition");
             Assert.That(bootstrapSession, Is.Not.Null);
             Assert.That(bootstrapSession.Kind, Is.EqualTo(PyralisAuthoringFactKind.AssignmentField));
             Assert.That(bootstrapSession.SourceKind, Is.EqualTo(PyralisAuthoringFactSourceKind.InspectorGuide));
@@ -1557,37 +1557,37 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(bootstrapSession.AssignmentFields, Does.Contain("GameplaySessionBootstrap.sessionDefinition -> SessionDefinition"));
             Assert.That(bootstrapSession.RelatedStableIds, Does.Contain("setup.assign-session-definition"));
 
-            PyralisAuthoringFact pawnPrefab = PyralisAuthoringFactRegistry.Find("inspector.pawn-definition.pawn-prefab");
+            PyralisAuthoringFact pawnPrefab = PyralisAuthoringGrammarRegistry.Find("inspector.pawn-definition.pawn-prefab");
             Assert.That(pawnPrefab, Is.Not.Null);
             Assert.That(pawnPrefab.RelatedStableIds, Does.Contain("setup.assign-participant-pawn"));
             Assert.That(pawnPrefab.RelatedStableIds, Does.Contain("capability.2d-pawn-movement"));
             Assert.That(pawnPrefab.RelatedStableIds, Does.Contain("proof.1p-pawn-movement"));
 
-            PyralisAuthoringFact inputNames = PyralisAuthoringFactRegistry.Find("inspector.input-profile.gameplay-action-names");
+            PyralisAuthoringFact inputNames = PyralisAuthoringGrammarRegistry.Find("inspector.input-profile.gameplay-action-names");
             Assert.That(inputNames, Is.Not.Null);
             Assert.That(inputNames.Kind, Is.EqualTo(PyralisAuthoringFactKind.CustomizationMoment));
             Assert.That(inputNames.WorkIntent, Is.EqualTo("ProofEnhancer"));
             Assert.That(inputNames.CustomizationMoments[0], Does.Contain("InputProfile Gameplay Action Names"));
             Assert.That(inputNames.NativeActions[0].Verb, Is.EqualTo("Customize"));
 
-            PyralisAuthoringFact boardRules = PyralisAuthoringFactRegistry.Find("inspector.game-mode-definition.board-and-turn-rules");
+            PyralisAuthoringFact boardRules = PyralisAuthoringGrammarRegistry.Find("inspector.game-mode-definition.board-and-turn-rules");
             Assert.That(boardRules, Is.Not.Null);
             Assert.That(boardRules.AssignmentFields[0], Does.Contain("GameModeDefinition.boardDefinition"));
             Assert.That(boardRules.RelatedStableIds, Does.Contain("route.tabletop-card"));
             Assert.That(boardRules.RelatedStableIds, Does.Contain("proof.board-card-action"));
 
-            PyralisAuthoringFact cameraFields = PyralisAuthoringFactRegistry.Find("inspector.cinemachine-camera-rig-controller.camera-fields");
+            PyralisAuthoringFact cameraFields = PyralisAuthoringGrammarRegistry.Find("inspector.cinemachine-camera-rig-controller.camera-fields");
             Assert.That(cameraFields, Is.Not.Null);
             Assert.That(cameraFields.AssignmentFields[0], Does.Contain("CinemachineCameraRigController.cameraRigProfile"));
             Assert.That(cameraFields.RelatedStableIds, Does.Contain("proof.camera-cursor-world"));
 
-            PyralisAuthoringFact featureFields = PyralisAuthoringFactRegistry.Find("inspector.feature-module-definition.profile-runtime-network");
+            PyralisAuthoringFact featureFields = PyralisAuthoringGrammarRegistry.Find("inspector.feature-module-definition.profile-runtime-network");
             Assert.That(featureFields, Is.Not.Null);
             Assert.That(featureFields.AssignmentFields[0], Does.Contain("FeatureModuleDefinition.profileAsset"));
             Assert.That(featureFields.RelatedStableIds, Does.Contain("route.custom-object-feature"));
             Assert.That(featureFields.RelatedStableIds, Does.Contain("proof.network-ownership"));
 
-            PyralisAuthoringFact cameraTuning = PyralisAuthoringFactRegistry.Find("inspector.camera-rig-profile.framing-fields");
+            PyralisAuthoringFact cameraTuning = PyralisAuthoringGrammarRegistry.Find("inspector.camera-rig-profile.framing-fields");
             Assert.That(cameraTuning, Is.Not.Null);
             Assert.That(cameraTuning.Kind, Is.EqualTo(PyralisAuthoringFactKind.CustomizationMoment));
             Assert.That(cameraTuning.NativeActions[0].Verb, Is.EqualTo("Customize"));
@@ -1595,11 +1595,11 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void PyralisAuthoringFactRegistry_ConventionFacts_ExposeUnityMetadataAndSerializedFields()
+        public void PyralisAuthoringGrammarRegistry_ConventionFacts_ExposeUnityMetadataAndSerializedFields()
         {
-            Assert.That(PyralisAuthoringFactRegistry.HasDuplicateStableIds(out string duplicateStableId), Is.False, duplicateStableId);
+            Assert.That(PyralisAuthoringGrammarRegistry.HasDuplicateStableIds(out string duplicateStableId), Is.False, duplicateStableId);
 
-            PyralisAuthoringFact sessionCreate = PyralisAuthoringFactRegistry.Find("reflection.create-asset-menu.session-definition");
+            PyralisAuthoringFact sessionCreate = PyralisAuthoringGrammarRegistry.Find("reflection.create-asset-menu.session-definition");
             Assert.That(sessionCreate, Is.Not.Null);
             Assert.That(sessionCreate.Kind, Is.EqualTo(PyralisAuthoringFactKind.Definition));
             Assert.That(sessionCreate.SourceKind, Is.EqualTo(PyralisAuthoringFactSourceKind.Reflection));
@@ -1608,26 +1608,26 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(sessionCreate.NativeActions[0].Target, Does.Contain("Assets/Create/NeonBlack/Definitions/Session Definition"));
             Assert.That(sessionCreate.RelatedStableIds, Does.Contain("setup.assign-session-definition"));
 
-            PyralisAuthoringFact inputCreate = PyralisAuthoringFactRegistry.Find("reflection.create-asset-menu.input-profile");
+            PyralisAuthoringFact inputCreate = PyralisAuthoringGrammarRegistry.Find("reflection.create-asset-menu.input-profile");
             Assert.That(inputCreate, Is.Not.Null);
             Assert.That(inputCreate.Kind, Is.EqualTo(PyralisAuthoringFactKind.Profile));
             Assert.That(inputCreate.RequiredProfiles, Does.Contain("InputProfile"));
             Assert.That(inputCreate.RelatedStableIds, Does.Contain("inspector.input-profile.gameplay-action-names"));
 
-            PyralisAuthoringFact bootstrapComponent = PyralisAuthoringFactRegistry.Find("reflection.add-component-menu.gameplay-session-bootstrap");
+            PyralisAuthoringFact bootstrapComponent = PyralisAuthoringGrammarRegistry.Find("reflection.add-component-menu.gameplay-session-bootstrap");
             Assert.That(bootstrapComponent, Is.Not.Null);
             Assert.That(bootstrapComponent.Kind, Is.EqualTo(PyralisAuthoringFactKind.SceneComponent));
             Assert.That(bootstrapComponent.RequiredSceneComponents, Does.Contain("GameplaySessionBootstrap"));
             Assert.That(bootstrapComponent.NativeActions[0].FieldOrComponent, Does.Contain("NeonBlack/Gameplay/Setup/Gameplay Session Bootstrap"));
 
-            PyralisAuthoringFact movementRequirements = PyralisAuthoringFactRegistry.Find("reflection.require-component.pawn-2d-movement-component");
+            PyralisAuthoringFact movementRequirements = PyralisAuthoringGrammarRegistry.Find("reflection.require-component.pawn-2d-movement-component");
             Assert.That(movementRequirements, Is.Not.Null);
             Assert.That(movementRequirements.SourceKind, Is.EqualTo(PyralisAuthoringFactSourceKind.Reflection));
             Assert.That(movementRequirements.RequiredUnitySurfaces, Does.Contain("Rigidbody2D"));
             Assert.That(movementRequirements.RequiredUnitySurfaces, Does.Contain("PolygonCollider2D"));
             Assert.That(movementRequirements.RelatedStableIds, Does.Contain("proof.1p-pawn-movement"));
 
-            PyralisAuthoringFact pawnPrefabField = PyralisAuthoringFactRegistry.Find("convention.serialized-field.pawn-definition.pawn-prefab");
+            PyralisAuthoringFact pawnPrefabField = PyralisAuthoringGrammarRegistry.Find("convention.serialized-field.pawn-definition.pawn-prefab");
             Assert.That(pawnPrefabField, Is.Not.Null);
             Assert.That(pawnPrefabField.Kind, Is.EqualTo(PyralisAuthoringFactKind.AssignmentField));
             Assert.That(pawnPrefabField.SourceKind, Is.EqualTo(PyralisAuthoringFactSourceKind.Convention));
@@ -1636,59 +1636,59 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(pawnPrefabField.RelatedStableIds, Does.Contain("capability.2d-pawn-movement"));
             Assert.That(pawnPrefabField.RelatedStableIds, Does.Contain("proof.1p-pawn-movement"));
 
-            PyralisAuthoringFact boardCreate = PyralisAuthoringFactRegistry.Find("reflection.create-asset-menu.board-definition");
+            PyralisAuthoringFact boardCreate = PyralisAuthoringGrammarRegistry.Find("reflection.create-asset-menu.board-definition");
             Assert.That(boardCreate, Is.Not.Null);
             Assert.That(boardCreate.Kind, Is.EqualTo(PyralisAuthoringFactKind.Definition));
             Assert.That(boardCreate.NativeActions[0].Target, Does.Contain("Assets/Create/NeonBlack/Rules/Board Definition"));
             Assert.That(boardCreate.RelatedStableIds, Does.Contain("proof.board-card-action"));
 
-            PyralisAuthoringFact cameraProfileCreate = PyralisAuthoringFactRegistry.Find("reflection.create-asset-menu.camera-rig-profile");
+            PyralisAuthoringFact cameraProfileCreate = PyralisAuthoringGrammarRegistry.Find("reflection.create-asset-menu.camera-rig-profile");
             Assert.That(cameraProfileCreate, Is.Not.Null);
             Assert.That(cameraProfileCreate.Kind, Is.EqualTo(PyralisAuthoringFactKind.Profile));
             Assert.That(cameraProfileCreate.RequiredProfiles, Does.Contain("CameraRigProfile"));
             Assert.That(cameraProfileCreate.RelatedStableIds, Does.Contain("proof.camera-cursor-world"));
 
-            PyralisAuthoringFact featureModuleCreate = PyralisAuthoringFactRegistry.Find("reflection.create-asset-menu.feature-module-definition");
+            PyralisAuthoringFact featureModuleCreate = PyralisAuthoringGrammarRegistry.Find("reflection.create-asset-menu.feature-module-definition");
             Assert.That(featureModuleCreate, Is.Not.Null);
             Assert.That(featureModuleCreate.RequiredDefinitions, Does.Contain("FeatureModuleDefinition"));
             Assert.That(featureModuleCreate.RelatedStableIds, Does.Contain("proof.custom-object-effect"));
 
-            PyralisAuthoringFact tabletopPresenterComponent = PyralisAuthoringFactRegistry.Find("reflection.add-component-menu.tabletop-board-grid-presenter");
+            PyralisAuthoringFact tabletopPresenterComponent = PyralisAuthoringGrammarRegistry.Find("reflection.add-component-menu.tabletop-board-grid-presenter");
             Assert.That(tabletopPresenterComponent, Is.Not.Null);
             Assert.That(tabletopPresenterComponent.Kind, Is.EqualTo(PyralisAuthoringFactKind.SceneComponent));
             Assert.That(tabletopPresenterComponent.RequiredSceneComponents, Does.Contain("TabletopBoardGridPresenter"));
             Assert.That(tabletopPresenterComponent.RelatedStableIds, Does.Contain("proof.board-card-action"));
 
-            PyralisAuthoringFact enemyAiComponent = PyralisAuthoringFactRegistry.Find("reflection.add-component-menu.enemy-ai");
+            PyralisAuthoringFact enemyAiComponent = PyralisAuthoringGrammarRegistry.Find("reflection.add-component-menu.enemy-ai");
             Assert.That(enemyAiComponent, Is.Not.Null);
             Assert.That(enemyAiComponent.Kind, Is.EqualTo(PyralisAuthoringFactKind.UnitySurface));
             Assert.That(enemyAiComponent.RelatedStableIds, Does.Contain("proof.npc-enemy-behavior"));
 
-            PyralisAuthoringFact cameraRigField = PyralisAuthoringFactRegistry.Find("convention.serialized-field.cinemachine-camera-rig-controller.camera-rig-profile");
+            PyralisAuthoringFact cameraRigField = PyralisAuthoringGrammarRegistry.Find("convention.serialized-field.cinemachine-camera-rig-controller.camera-rig-profile");
             Assert.That(cameraRigField, Is.Not.Null);
             Assert.That(cameraRigField.AssignmentFields[0], Does.Contain("CinemachineCameraRigController.cameraRigProfile"));
             Assert.That(cameraRigField.RelatedStableIds, Does.Contain("capability.camera-follow-bounds"));
         }
 
         [Test]
-        public void PyralisAuthoringFactRegistry_ExplicitConventionFactsPreserveFactSurface()
+        public void PyralisAuthoringGrammarRegistry_ExplicitConventionFactsPreserveFactSurface()
         {
             IReadOnlyList<PyralisAuthoringFact> bridgeFacts = PyralisConventionAuthoringFacts.GetAuthoringFacts();
-            IReadOnlyList<PyralisAuthoringFact> intentFacts = PyralisRouteIntentAuthoringFactProvider.GetAuthoringFacts();
+            IReadOnlyList<PyralisAuthoringFact> intentFacts = PyralisIntentVocabulary.GetAuthoringFacts();
 
             AssertFactsReachMainRegistry(bridgeFacts);
             AssertFactsReachMainRegistry(intentFacts);
 
-            Assert.That(PyralisAuthoringFactRegistry.Find("reflection.create-asset-menu.participant-definition"), Is.Not.Null);
+            Assert.That(PyralisAuthoringGrammarRegistry.Find("reflection.create-asset-menu.participant-definition"), Is.Not.Null);
         }
 
         [Test]
-        public void PyralisAuthoringFactRegistry_GameTypeIntentFacts_AreStudioWideConventionFacts()
+        public void PyralisAuthoringGrammarRegistry_GameTypeIntentFacts_AreStudioWideConventionFacts()
         {
-            Assert.That(PyralisAuthoringFactRegistry.HasDuplicateStableIds(out string duplicateStableId), Is.False, duplicateStableId);
-            Assert.That(PyralisAuthoringFactRegistry.GetFacts(PyralisAuthoringFactKind.RouteIntent).Count, Is.GreaterThanOrEqualTo(7));
+            Assert.That(PyralisAuthoringGrammarRegistry.HasDuplicateStableIds(out string duplicateStableId), Is.False, duplicateStableId);
+            Assert.That(PyralisAuthoringGrammarRegistry.GetFacts(PyralisAuthoringFactKind.RouteIntent).Count, Is.GreaterThanOrEqualTo(7));
 
-            PyralisAuthoringFact sideView = PyralisAuthoringFactRegistry.Find("intent.2d-side-view-action");
+            PyralisAuthoringFact sideView = PyralisAuthoringGrammarRegistry.Find("intent.2d-side-view-action");
             Assert.That(sideView, Is.Not.Null);
             Assert.That(sideView.Kind, Is.EqualTo(PyralisAuthoringFactKind.RouteIntent));
             Assert.That(sideView.SourceKind, Is.EqualTo(PyralisAuthoringFactSourceKind.Convention));
@@ -1698,7 +1698,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(sideView.GoalTags, Does.Contain("AnimationPresentation"));
 Assert.That(sideView.RelatedStableIds, Does.Contain("capability.2d-pawn-movement"));
 
-            PyralisAuthoringFact brawler = PyralisAuthoringFactRegistry.Find("intent.pawn-brawler");
+            PyralisAuthoringFact brawler = PyralisAuthoringGrammarRegistry.Find("intent.pawn-brawler");
             Assert.That(brawler, Is.Not.Null);
             Assert.That(brawler.GoalTags, Does.Contain("Combat"));
             Assert.That(brawler.GoalTags, Does.Contain("JumpTraversal"));
@@ -1706,7 +1706,7 @@ Assert.That(sideView.RelatedStableIds, Does.Contain("capability.2d-pawn-movement
             Assert.That(brawler.GoalTags, Does.Contain("AnimationPresentation"));
 Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile-proof"));
 
-            PyralisAuthoringFact topDown = PyralisAuthoringFactRegistry.Find("intent.2d-top-down-plane");
+            PyralisAuthoringFact topDown = PyralisAuthoringGrammarRegistry.Find("intent.2d-top-down-plane");
             Assert.That(topDown, Is.Not.Null);
             Assert.That(topDown.RouteRelevance, Does.Contain("top-down"));
             Assert.That(topDown.CanWait, Does.Contain("side-view gravity ground"));
@@ -1857,7 +1857,7 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
             for (int i = 0; i < facts.Count; i++)
             {
                 PyralisAuthoringFact directFact = facts[i];
-                PyralisAuthoringFact registryFact = PyralisAuthoringFactRegistry.Find(directFact.StableId);
+                PyralisAuthoringFact registryFact = PyralisAuthoringGrammarRegistry.Find(directFact.StableId);
 
                 Assert.That(registryFact, Is.Not.Null, directFact.StableId);
                 Assert.That(registryFact.Kind, Is.EqualTo(directFact.Kind), directFact.StableId);
@@ -1904,9 +1904,9 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
         }
 
         [Test]
-        public void PyralisAuthoringFactRegistry_RouteCoverageFacts_NameBroadAuthoringSurfaces()
+        public void PyralisAuthoringGrammarRegistry_RouteCoverageFacts_NameBroadAuthoringSurfaces()
         {
-            Assert.That(PyralisAuthoringFactRegistry.HasDuplicateStableIds(out string duplicateStableId), Is.False, duplicateStableId);
+            Assert.That(PyralisAuthoringGrammarRegistry.HasDuplicateStableIds(out string duplicateStableId), Is.False, duplicateStableId);
 
             string[] routeFamilies =
             {
@@ -1921,7 +1921,7 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
 
             foreach (string stableId in routeFamilies)
             {
-                PyralisAuthoringFact route = PyralisAuthoringFactRegistry.Find(stableId);
+                PyralisAuthoringFact route = PyralisAuthoringGrammarRegistry.Find(stableId);
                 Assert.That(route, Is.Not.Null, stableId);
                 Assert.That(route.Kind, Is.EqualTo(PyralisAuthoringFactKind.RouteFamily), stableId);
                 Assert.That(route.SourceKind, Is.EqualTo(PyralisAuthoringFactSourceKind.HandAuthoredGuideCard), stableId);
@@ -1933,27 +1933,27 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
                 Assert.That(route.NativeActions[1].Surface, Is.EqualTo(PyralisAuthoringActionSurface.PlayMode), stableId);
             }
 
-            PyralisAuthoringFact pawn = PyralisAuthoringFactRegistry.Find("route.pawn-actor");
+            PyralisAuthoringFact pawn = PyralisAuthoringGrammarRegistry.Find("route.pawn-actor");
             Assert.That(pawn.RelatedStableIds, Does.Contain("capability.2d-pawn-movement"));
             Assert.That(pawn.RelatedStableIds, Does.Contain("proof.1p-pawn-movement"));
             Assert.That(pawn.RequiredDefinitions, Does.Contain("PawnDefinition"));
             Assert.That(pawn.RequiredUnitySurfaces, Does.Contain("PawnRoot"));
 
-            PyralisAuthoringFact tabletop = PyralisAuthoringFactRegistry.Find("route.tabletop-card");
+            PyralisAuthoringFact tabletop = PyralisAuthoringGrammarRegistry.Find("route.tabletop-card");
             Assert.That(tabletop.LaneTags, Does.Contain("TabletopBoard"));
             Assert.That(tabletop.UnsupportedLaneTags, Does.Contain("Sprite2D"));
             Assert.That(tabletop.RequiredDefinitions, Does.Contain("BoardDefinition"));
 
-            PyralisAuthoringFact networking = PyralisAuthoringFactRegistry.Find("route.networking");
+            PyralisAuthoringFact networking = PyralisAuthoringGrammarRegistry.Find("route.networking");
             Assert.That(networking.LaneTags, Does.Contain("Networked"));
             Assert.That(networking.AssignmentFields, Does.Contain("SessionDefinition.networkMode"));
             Assert.That(networking.RelatedStableIds, Does.Contain("proof.network-ownership"));
         }
 
         [Test]
-        public void PyralisAuthoringFactRegistry_RouteProofFacts_NameBroadFirstProofs()
+        public void PyralisAuthoringGrammarRegistry_RouteProofFacts_NameBroadFirstProofs()
         {
-            Assert.That(PyralisAuthoringFactRegistry.HasDuplicateStableIds(out string duplicateStableId), Is.False, duplicateStableId);
+            Assert.That(PyralisAuthoringGrammarRegistry.HasDuplicateStableIds(out string duplicateStableId), Is.False, duplicateStableId);
 
             string[] proofIds =
             {
@@ -1970,7 +1970,7 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
 
             foreach (string stableId in proofIds)
             {
-                PyralisAuthoringFact proof = PyralisAuthoringFactRegistry.Find(stableId);
+                PyralisAuthoringFact proof = PyralisAuthoringGrammarRegistry.Find(stableId);
                 Assert.That(proof, Is.Not.Null, stableId);
                 Assert.That(proof.Kind, Is.EqualTo(PyralisAuthoringFactKind.Proof), stableId);
                 Assert.That(proof.SourceKind, Is.EqualTo(PyralisAuthoringFactSourceKind.SetupFlow), stableId);
@@ -1982,28 +1982,28 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
                 Assert.That(proof.NativeActions[0].Surface, Is.EqualTo(PyralisAuthoringActionSurface.PlayMode), stableId);
             }
 
-            PyralisAuthoringFact tabletopProof = PyralisAuthoringFactRegistry.Find("proof.board-card-action");
+            PyralisAuthoringFact tabletopProof = PyralisAuthoringGrammarRegistry.Find("proof.board-card-action");
             Assert.That(tabletopProof.LaneTags, Does.Contain("TabletopBoard"));
             Assert.That(tabletopProof.UnsupportedLaneTags, Does.Contain("Sprite2D"));
             Assert.That(tabletopProof.RelatedStableIds, Does.Contain("route.tabletop-card"));
             Assert.That(tabletopProof.RelatedStableIds, Does.Contain("capability.interaction-action-selection"));
 
-            PyralisAuthoringFact uiProof = PyralisAuthoringFactRegistry.Find("proof.ui-hud-menu");
+            PyralisAuthoringFact uiProof = PyralisAuthoringGrammarRegistry.Find("proof.ui-hud-menu");
             Assert.That(uiProof.RequiredSceneComponents, Is.Empty);
             Assert.That(uiProof.RelatedStableIds, Does.Contain("route.ui-hud-menu"));
 
-            PyralisAuthoringFact cameraProof = PyralisAuthoringFactRegistry.Find("proof.camera-cursor-world");
+            PyralisAuthoringFact cameraProof = PyralisAuthoringGrammarRegistry.Find("proof.camera-cursor-world");
             Assert.That(cameraProof.RelatedStableIds, Does.Contain("capability.camera-follow-bounds"));
 
-            PyralisAuthoringFact networkProof = PyralisAuthoringFactRegistry.Find("proof.network-ownership");
+            PyralisAuthoringFact networkProof = PyralisAuthoringGrammarRegistry.Find("proof.network-ownership");
             Assert.That(networkProof.LaneTags, Does.Contain("Networked"));
             Assert.That(networkProof.RequiredSceneComponents, Is.Empty);
         }
 
         [Test]
-        public void PyralisAuthoringFactRegistry_SceneEvidenceFacts_LinkSurfaceGuidanceToRouteProofs()
+        public void PyralisAuthoringGrammarRegistry_SceneEvidenceFacts_LinkSurfaceGuidanceToRouteProofs()
         {
-            Assert.That(PyralisAuthoringFactRegistry.HasDuplicateStableIds(out string duplicateStableId), Is.False, duplicateStableId);
+            Assert.That(PyralisAuthoringGrammarRegistry.HasDuplicateStableIds(out string duplicateStableId), Is.False, duplicateStableId);
 
             string[] sceneEvidenceIds =
             {
@@ -2017,7 +2017,7 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
 
             foreach (string stableId in sceneEvidenceIds)
             {
-                PyralisAuthoringFact sceneEvidence = PyralisAuthoringFactRegistry.Find(stableId);
+                PyralisAuthoringFact sceneEvidence = PyralisAuthoringGrammarRegistry.Find(stableId);
                 Assert.That(sceneEvidence, Is.Not.Null, stableId);
                 Assert.That(sceneEvidence.Kind, Is.EqualTo(PyralisAuthoringFactKind.SceneComponent), stableId);
                 Assert.That(sceneEvidence.SourceKind, Is.EqualTo(PyralisAuthoringFactSourceKind.SceneEvidence), stableId);
@@ -2027,17 +2027,17 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
                 Assert.That(sceneEvidence.NativeActions[0].Surface, Is.EqualTo(PyralisAuthoringActionSurface.Hierarchy), stableId);
             }
 
-            PyralisAuthoringFact uiEvidence = PyralisAuthoringFactRegistry.Find("scene-evidence.ui-hud-menus");
+            PyralisAuthoringFact uiEvidence = PyralisAuthoringGrammarRegistry.Find("scene-evidence.ui-hud-menus");
             Assert.That(uiEvidence.RequiredSceneComponents, Does.Contain("Canvas"));
             Assert.That(uiEvidence.RequiredSceneComponents, Does.Contain("EventSystem"));
             Assert.That(uiEvidence.RelatedStableIds, Does.Contain("proof.ui-hud-menu"));
 
-            PyralisAuthoringFact selectionEvidence = PyralisAuthoringFactRegistry.Find("scene-evidence.board-action-selection");
+            PyralisAuthoringFact selectionEvidence = PyralisAuthoringGrammarRegistry.Find("scene-evidence.board-action-selection");
             Assert.That(selectionEvidence.RequiredSceneComponents, Does.Contain("TabletopBoardGridPresenter"));
             Assert.That(selectionEvidence.RelatedStableIds, Does.Contain("proof.board-card-action"));
             Assert.That(selectionEvidence.RelatedStableIds, Does.Contain("proof.action-selection"));
 
-            PyralisAuthoringFact encounterEvidence = PyralisAuthoringFactRegistry.Find("scene-evidence.pickups-hazards-enemies");
+            PyralisAuthoringFact encounterEvidence = PyralisAuthoringGrammarRegistry.Find("scene-evidence.pickups-hazards-enemies");
             Assert.That(encounterEvidence.RequiredSceneComponents, Does.Contain("EnemySpawner"));
             Assert.That(encounterEvidence.RelatedStableIds, Does.Contain("proof.npc-enemy-behavior"));
             Assert.That(encounterEvidence.RelatedStableIds, Does.Contain("proof.custom-object-effect"));
@@ -2064,39 +2064,39 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
         }
 
         [Test]
-        public void PyralisAuthoringFactRegistry_FactExplorerCoverage_IncludesCurrentAuthoring2Kinds()
+        public void PyralisAuthoringGrammarRegistry_FactExplorerCoverage_IncludesCurrentAuthoring2Kinds()
         {
-            Assert.That(PyralisAuthoringFactRegistry.GetFacts(PyralisAuthoringFactKind.RouteFamily).Count, Is.GreaterThanOrEqualTo(7));
-            Assert.That(PyralisAuthoringFactRegistry.GetFacts(PyralisAuthoringFactKind.RuntimeCapability).Count, Is.GreaterThanOrEqualTo(5));
-            Assert.That(PyralisAuthoringFactRegistry.GetFacts(PyralisAuthoringFactKind.SetupNode).Count, Is.GreaterThanOrEqualTo(10));
-            Assert.That(PyralisAuthoringFactRegistry.GetFacts(PyralisAuthoringFactKind.Definition).Count, Is.GreaterThanOrEqualTo(15));
-            Assert.That(PyralisAuthoringFactRegistry.GetFacts(PyralisAuthoringFactKind.Profile).Count, Is.GreaterThanOrEqualTo(9));
-            Assert.That(PyralisAuthoringFactRegistry.GetFacts(PyralisAuthoringFactKind.SceneComponent).Count, Is.GreaterThanOrEqualTo(14));
-            Assert.That(PyralisAuthoringFactRegistry.GetFacts(PyralisAuthoringFactKind.UnitySurface).Count, Is.GreaterThanOrEqualTo(7));
-            Assert.That(PyralisAuthoringFactRegistry.GetFacts(PyralisAuthoringFactKind.Proof).Count, Is.GreaterThanOrEqualTo(9));
-            Assert.That(PyralisAuthoringFactRegistry.GetFacts(PyralisAuthoringFactKind.AssignmentField).Count, Is.GreaterThanOrEqualTo(20));
-            Assert.That(PyralisAuthoringFactRegistry.GetFacts(PyralisAuthoringFactKind.CustomizationMoment).Count, Is.GreaterThanOrEqualTo(2));
-            Assert.That(PyralisAuthoringFactRegistry.Find("capability.2d-pawn-movement"), Is.Not.Null);
-            Assert.That(PyralisAuthoringFactRegistry.Find("proof.1p-pawn-movement"), Is.Not.Null);
-            Assert.That(PyralisAuthoringFactRegistry.Find("proof.board-card-action"), Is.Not.Null);
-            Assert.That(PyralisAuthoringFactRegistry.Find("proof.ui-hud-menu"), Is.Not.Null);
-            Assert.That(PyralisAuthoringFactRegistry.Find("proof.camera-cursor-world"), Is.Not.Null);
-            Assert.That(PyralisAuthoringFactRegistry.Find("proof.network-ownership"), Is.Not.Null);
-            Assert.That(PyralisAuthoringFactRegistry.Find("inspector.input-profile.gameplay-action-names"), Is.Not.Null);
-            Assert.That(PyralisAuthoringFactRegistry.Find("reflection.create-asset-menu.session-definition"), Is.Not.Null);
-            Assert.That(PyralisAuthoringFactRegistry.Find("reflection.create-asset-menu.board-definition"), Is.Not.Null);
-            Assert.That(PyralisAuthoringFactRegistry.Find("reflection.create-asset-menu.feature-module-definition"), Is.Not.Null);
-            Assert.That(PyralisAuthoringFactRegistry.Find("reflection.add-component-menu.tabletop-board-grid-presenter"), Is.Not.Null);
-            Assert.That(PyralisAuthoringFactRegistry.Find("reflection.add-component-menu.cinemachine-camera-rig-controller"), Is.Not.Null);
-            Assert.That(PyralisAuthoringFactRegistry.Find("reflection.add-component-menu.gameplay-session-bootstrap"), Is.Not.Null);
-            Assert.That(PyralisAuthoringFactRegistry.Find("scene-evidence.ui-hud-menus"), Is.Not.Null);
-            Assert.That(PyralisAuthoringFactRegistry.Find("scene-evidence.board-action-selection"), Is.Not.Null);
-            Assert.That(PyralisAuthoringFactRegistry.Find("convention.serialized-field.pawn-definition.pawn-prefab"), Is.Not.Null);
-            Assert.That(PyralisAuthoringFactRegistry.Find("convention.serialized-field.game-mode-definition.board-definition"), Is.Not.Null);
-            Assert.That(PyralisAuthoringFactRegistry.Find("inspector.game-mode-definition.board-and-turn-rules"), Is.Not.Null);
-            Assert.That(PyralisAuthoringFactRegistry.Find("inspector.feature-module-definition.profile-runtime-network"), Is.Not.Null);
-            Assert.That(PyralisAuthoringFactRegistry.Find("route.tabletop-card"), Is.Not.Null);
-            Assert.That(PyralisAuthoringFactRegistry.Find("route.networking"), Is.Not.Null);
+            Assert.That(PyralisAuthoringGrammarRegistry.GetFacts(PyralisAuthoringFactKind.RouteFamily).Count, Is.GreaterThanOrEqualTo(7));
+            Assert.That(PyralisAuthoringGrammarRegistry.GetFacts(PyralisAuthoringFactKind.RuntimeCapability).Count, Is.GreaterThanOrEqualTo(5));
+            Assert.That(PyralisAuthoringGrammarRegistry.GetFacts(PyralisAuthoringFactKind.SetupNode).Count, Is.GreaterThanOrEqualTo(10));
+            Assert.That(PyralisAuthoringGrammarRegistry.GetFacts(PyralisAuthoringFactKind.Definition).Count, Is.GreaterThanOrEqualTo(15));
+            Assert.That(PyralisAuthoringGrammarRegistry.GetFacts(PyralisAuthoringFactKind.Profile).Count, Is.GreaterThanOrEqualTo(9));
+            Assert.That(PyralisAuthoringGrammarRegistry.GetFacts(PyralisAuthoringFactKind.SceneComponent).Count, Is.GreaterThanOrEqualTo(14));
+            Assert.That(PyralisAuthoringGrammarRegistry.GetFacts(PyralisAuthoringFactKind.UnitySurface).Count, Is.GreaterThanOrEqualTo(7));
+            Assert.That(PyralisAuthoringGrammarRegistry.GetFacts(PyralisAuthoringFactKind.Proof).Count, Is.GreaterThanOrEqualTo(9));
+            Assert.That(PyralisAuthoringGrammarRegistry.GetFacts(PyralisAuthoringFactKind.AssignmentField).Count, Is.GreaterThanOrEqualTo(20));
+            Assert.That(PyralisAuthoringGrammarRegistry.GetFacts(PyralisAuthoringFactKind.CustomizationMoment).Count, Is.GreaterThanOrEqualTo(2));
+            Assert.That(PyralisAuthoringGrammarRegistry.Find("capability.2d-pawn-movement"), Is.Not.Null);
+            Assert.That(PyralisAuthoringGrammarRegistry.Find("proof.1p-pawn-movement"), Is.Not.Null);
+            Assert.That(PyralisAuthoringGrammarRegistry.Find("proof.board-card-action"), Is.Not.Null);
+            Assert.That(PyralisAuthoringGrammarRegistry.Find("proof.ui-hud-menu"), Is.Not.Null);
+            Assert.That(PyralisAuthoringGrammarRegistry.Find("proof.camera-cursor-world"), Is.Not.Null);
+            Assert.That(PyralisAuthoringGrammarRegistry.Find("proof.network-ownership"), Is.Not.Null);
+            Assert.That(PyralisAuthoringGrammarRegistry.Find("inspector.input-profile.gameplay-action-names"), Is.Not.Null);
+            Assert.That(PyralisAuthoringGrammarRegistry.Find("reflection.create-asset-menu.session-definition"), Is.Not.Null);
+            Assert.That(PyralisAuthoringGrammarRegistry.Find("reflection.create-asset-menu.board-definition"), Is.Not.Null);
+            Assert.That(PyralisAuthoringGrammarRegistry.Find("reflection.create-asset-menu.feature-module-definition"), Is.Not.Null);
+            Assert.That(PyralisAuthoringGrammarRegistry.Find("reflection.add-component-menu.tabletop-board-grid-presenter"), Is.Not.Null);
+            Assert.That(PyralisAuthoringGrammarRegistry.Find("reflection.add-component-menu.cinemachine-camera-rig-controller"), Is.Not.Null);
+            Assert.That(PyralisAuthoringGrammarRegistry.Find("reflection.add-component-menu.gameplay-session-bootstrap"), Is.Not.Null);
+            Assert.That(PyralisAuthoringGrammarRegistry.Find("scene-evidence.ui-hud-menus"), Is.Not.Null);
+            Assert.That(PyralisAuthoringGrammarRegistry.Find("scene-evidence.board-action-selection"), Is.Not.Null);
+            Assert.That(PyralisAuthoringGrammarRegistry.Find("convention.serialized-field.pawn-definition.pawn-prefab"), Is.Not.Null);
+            Assert.That(PyralisAuthoringGrammarRegistry.Find("convention.serialized-field.game-mode-definition.board-definition"), Is.Not.Null);
+            Assert.That(PyralisAuthoringGrammarRegistry.Find("inspector.game-mode-definition.board-and-turn-rules"), Is.Not.Null);
+            Assert.That(PyralisAuthoringGrammarRegistry.Find("inspector.feature-module-definition.profile-runtime-network"), Is.Not.Null);
+            Assert.That(PyralisAuthoringGrammarRegistry.Find("route.tabletop-card"), Is.Not.Null);
+            Assert.That(PyralisAuthoringGrammarRegistry.Find("route.networking"), Is.Not.Null);
         }
 
         [Test]
@@ -2291,7 +2291,7 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
         }
 
         [Test]
-        public void PyralisAuthoringFactRegistry_Native1PMovementChecklist_ExposesCreateAndAddComponentFacts()
+        public void PyralisAuthoringGrammarRegistry_Native1PMovementChecklist_ExposesCreateAndAddComponentFacts()
         {
             string[] expectedFactIds =
             {
@@ -2314,12 +2314,12 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
 
             foreach (string factId in expectedFactIds)
             {
-                PyralisAuthoringFact fact = PyralisAuthoringFactRegistry.Find(factId);
+                PyralisAuthoringFact fact = PyralisAuthoringGrammarRegistry.Find(factId);
                 Assert.That(fact, Is.Not.Null, $"Missing native authoring fact `{factId}`.");
                 Assert.That(fact.NativeActions, Is.Not.Empty, $"Native authoring fact `{factId}` should expose a Unity action.");
             }
 
-            PyralisAuthoringFact movement = PyralisAuthoringFactRegistry.Find("reflection.add-component-menu.motor-2d-input-adapter");
+            PyralisAuthoringFact movement = PyralisAuthoringGrammarRegistry.Find("reflection.add-component-menu.motor-2d-input-adapter");
             Assert.That(movement.NativeActions[0].Surface, Is.EqualTo(PyralisAuthoringActionSurface.Inspector));
             Assert.That(movement.NativeActions[0].Verb, Is.EqualTo("Add Component"));
             Assert.That(movement.RelatedStableIds, Does.Contain("proof.1p-pawn-movement"));

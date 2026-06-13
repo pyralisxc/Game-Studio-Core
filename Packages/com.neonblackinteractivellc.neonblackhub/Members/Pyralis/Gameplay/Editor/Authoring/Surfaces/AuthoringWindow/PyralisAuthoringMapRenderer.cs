@@ -7,10 +7,8 @@ namespace NeonBlack.Gameplay.Editor
 {
     internal static class PyralisAuthoringMapRenderer
     {
-        public static void Draw(Object activeSetup, Object selection)
+        public static void Draw(Object activeSetup, Object selection, PyralisAuthoringSetupGraph graph)
         {
-            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(activeSetup);
-
             EditorGUILayout.LabelField("Setup Map", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox("Use this page to understand how the active setup is connected. Edit actual fields in the Inspector when a row names a missing link.", MessageType.Info);
             DrawActiveAndSelectedContext(activeSetup, selection);

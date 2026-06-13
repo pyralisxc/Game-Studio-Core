@@ -56,6 +56,8 @@ namespace NeonBlack.Gameplay.Editor
         private int _authoringCacheVersion;
         private string _cachedIntentModelKey;
         private PyralisAuthoringIntentModel _cachedIntentModel;
+        private string _cachedSetupGraphKey;
+        private PyralisAuthoringSetupGraph _cachedSetupGraph;
 
         private VisualElement _contentRoot;
 
@@ -223,16 +225,17 @@ namespace NeonBlack.Gameplay.Editor
                 case AuthoringWindowMode.Guide:
                     DrawGuideMode(
                         selection,
-                        activeSetup);
+                        activeSetup,
+                        GetCachedSetupGraph(activeSetup != null ? activeSetup : selection));
                     break;
                 case AuthoringWindowMode.Map:
-                    PyralisAuthoringMapRenderer.Draw(activeSetup, selection);
+                    PyralisAuthoringMapRenderer.Draw(activeSetup, selection, GetCachedSetupGraph(activeSetup));
                     break;
                 case AuthoringWindowMode.Validate:
-                    PyralisAuthoringValidateRenderer.Draw(activeSetup);
+                    PyralisAuthoringValidateRenderer.Draw(activeSetup, GetCachedSetupGraph(activeSetup));
                     break;
                 case AuthoringWindowMode.Facts:
-                    PyralisAuthoringFactExplorerRenderer.Draw(activeSetup);
+                    PyralisAuthoringFactExplorerRenderer.Draw(activeSetup, GetCachedSetupGraph(activeSetup));
                     break;
             }
         }
@@ -296,6 +299,8 @@ namespace NeonBlack.Gameplay.Editor
             _authoringCacheVersion++;
             _cachedIntentModelKey = null;
             _cachedIntentModel = null;
+            _cachedSetupGraphKey = null;
+            _cachedSetupGraph = null;
         }
 
         private static bool ShouldStartInIntent(Object activeSetup, Object selectionSetup, Object sceneFallbackSetup, AuthoringWindowMode mode)
@@ -316,7 +321,7 @@ namespace NeonBlack.Gameplay.Editor
             bool selectedSetupProfile = selection is GameSetupProfile;
             Object currentStepSelection = selectedSetupProfile ? selection : activeSetup != null ? activeSetup : selection;
             Object graphSource = activeSetup != null ? activeSetup : selectedSetupProfile ? selection : null;
-            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(graphSource);
+            PyralisAuthoringSetupGraph graph = GetCachedSetupGraph(graphSource);
             PyralisAuthoringCurrentStepGraphRow currentStep = PyralisAuthoringSetupGraphProjection.BuildCurrentStepRow(graph);
             PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(activeSetup, graph);
 
@@ -363,6 +368,25 @@ namespace NeonBlack.Gameplay.Editor
             _cachedIntentModel = PyralisAuthoringSetupGraphProjection.BuildIntentModel(
                 new PyralisAuthoringIntentSelection(_intentLane, _intentCapabilities, _intentAxioms));
             return _cachedIntentModel;
+        }
+
+        private PyralisAuthoringSetupGraph GetCachedSetupGraph(Object graphSource)
+        {
+            string key = GetSetupGraphCacheKey(graphSource);
+            if (string.Equals(_cachedSetupGraphKey, key, StringComparison.Ordinal) && _cachedSetupGraph != null)
+                return _cachedSetupGraph;
+
+            _cachedSetupGraphKey = key;
+            _cachedSetupGraph = PyralisAuthoringSetupGraphBuilder.Build(graphSource);
+            return _cachedSetupGraph;
+        }
+
+        private string GetSetupGraphCacheKey(Object graphSource)
+        {
+            string sourceKey = graphSource != null
+                ? GlobalObjectId.GetGlobalObjectIdSlow(graphSource).ToString()
+                : "null";
+            return sourceKey + ":" + _authoringCacheVersion;
         }
 
         private static void DrawIntentRows(string title, string description, IReadOnlyList<PyralisAuthoringIntentRow> rows, string tooltip, int collapsedLimit = 0)

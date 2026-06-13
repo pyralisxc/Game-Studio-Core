@@ -64,9 +64,9 @@ namespace NeonBlack.Gameplay.Editor
         public static string GetTooltip(RuntimeCapabilityLaneTag lane) => _tooltips.TryGetValue(lane, out var t) ? t : "A presentation lane perspective.";
     }
 
-    public sealed class RuntimeCapabilityCard
+    public sealed class PyralisCapabilityVocabularyCard
     {
-        public RuntimeCapabilityCard(
+        public PyralisCapabilityVocabularyCard(
             string stableId,
             string displayName,
             RuntimeCapabilityFamily capabilityFamily,
@@ -253,11 +253,11 @@ namespace NeonBlack.Gameplay.Editor
         }
     }
 
-    public static class PyralisRuntimeCapabilityCatalog
+    public static class PyralisCapabilityVocabulary
     {
-        private static readonly RuntimeCapabilityCard[] Cards =
+        private static readonly PyralisCapabilityVocabularyCard[] Cards =
         {
-            new RuntimeCapabilityCard(
+            new PyralisCapabilityVocabularyCard(
                 "capability.2d-pawn-movement",
                 "2D Pawn Movement",
                 RuntimeCapabilityFamily.CharacterPawnGameplay,
@@ -308,7 +308,7 @@ namespace NeonBlack.Gameplay.Editor
                     "setup.tune-movement-and-input-feel"
                 }),
 
-            new RuntimeCapabilityCard(
+            new PyralisCapabilityVocabularyCard(
                 "capability.3d-pawn-movement",
                 "3D / 2.5D Pawn Movement",
                 RuntimeCapabilityFamily.CharacterPawnGameplay,
@@ -365,7 +365,7 @@ namespace NeonBlack.Gameplay.Editor
                     "setup.tune-movement-and-input-feel"
                 }),
 
-            new RuntimeCapabilityCard(
+            new PyralisCapabilityVocabularyCard(
                 "capability.camera-follow-bounds",
                 "Camera Follow And Bounds",
                 RuntimeCapabilityFamily.CameraInput,
@@ -398,7 +398,7 @@ namespace NeonBlack.Gameplay.Editor
                 "The Cinemachine Rig is the most flexible camera solution. Use 'Camera Bounds' to prevent the player from seeing 'off-map' areas.",
                 "https://docs.neonblack.com/pyralis/camera"),
 
-            new RuntimeCapabilityCard(
+            new PyralisCapabilityVocabularyCard(
                 "capability.interaction-action-selection",
                 "Interaction Or Action Selection",
                 RuntimeCapabilityFamily.ActionTargeting,
@@ -430,7 +430,7 @@ namespace NeonBlack.Gameplay.Editor
                 "Interaction is the bridge between input and logic. Always provide a clear visual prompt when the player is in range of an interactable object.",
                 "https://docs.neonblack.com/pyralis/interaction"),
 
-            new RuntimeCapabilityCard(
+            new PyralisCapabilityVocabularyCard(
                 "capability.combat-projectile-proof",
                 "Combat Attack Proof",
                 RuntimeCapabilityFamily.Combat,
@@ -473,7 +473,7 @@ namespace NeonBlack.Gameplay.Editor
                 "Melee combat relies on 'HitBox' zones. Ensure your attack sequences trigger these zones during the active frames of the animation.",
                 "https://docs.neonblack.com/pyralis/combat"),
 
-            new RuntimeCapabilityCard(
+            new PyralisCapabilityVocabularyCard(
                 "capability.npc-enemy-setup",
                 "NPC / Enemy Actor Setup",
                 RuntimeCapabilityFamily.Combat,
@@ -522,7 +522,7 @@ namespace NeonBlack.Gameplay.Editor
                     "reflection.add-component-menu.enemy-spawner"
                 }),
 
-            new RuntimeCapabilityCard(
+            new PyralisCapabilityVocabularyCard(
                 "capability.ui-scoring-feedback",
                 "UI And Scoring Feedback",
                 RuntimeCapabilityFamily.ScoringObjectives,
@@ -556,14 +556,14 @@ namespace NeonBlack.Gameplay.Editor
                 "https://docs.neonblack.com/pyralis/ui")
 };
 
-        public static IReadOnlyList<RuntimeCapabilityCard> All => Cards;
+        public static IReadOnlyList<PyralisCapabilityVocabularyCard> All => Cards;
 
         public static IReadOnlyList<PyralisAuthoringFact> GetAuthoringFacts()
         {
             List<PyralisAuthoringFact> facts = new List<PyralisAuthoringFact>();
             for (int i = 0; i < Cards.Length; i++)
             {
-                RuntimeCapabilityCard card = Cards[i];
+                PyralisCapabilityVocabularyCard card = Cards[i];
                 if (card == null)
                     continue;
 
@@ -573,11 +573,11 @@ namespace NeonBlack.Gameplay.Editor
             return facts.ToArray();
         }
 
-        public static RuntimeCapabilityCard FindPrimaryByFamily(RuntimeCapabilityFamily family)
+        public static PyralisCapabilityVocabularyCard FindPrimaryByFamily(RuntimeCapabilityFamily family)
         {
             for (int i = 0; i < Cards.Length; i++)
             {
-                RuntimeCapabilityCard card = Cards[i];
+                PyralisCapabilityVocabularyCard card = Cards[i];
                 if (card.CapabilityFamily == family)
                     return card;
             }
@@ -587,7 +587,7 @@ namespace NeonBlack.Gameplay.Editor
 
         public static PyralisAuthoringFact FindPrimaryFactByFamily(RuntimeCapabilityFamily family)
         {
-            RuntimeCapabilityCard card = FindPrimaryByFamily(family);
+            PyralisCapabilityVocabularyCard card = FindPrimaryByFamily(family);
             return card != null ? BuildAuthoringFact(card) : null;
         }
 
@@ -604,7 +604,7 @@ namespace NeonBlack.Gameplay.Editor
             return false;
         }
 
-        private static PyralisAuthoringFact BuildAuthoringFact(RuntimeCapabilityCard card)
+        private static PyralisAuthoringFact BuildAuthoringFact(PyralisCapabilityVocabularyCard card)
         {
             if (card == null || card.Fact == null)
                 return null;

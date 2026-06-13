@@ -78,6 +78,11 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void PyralisEditor_Source_OrganizesAuthoringBySpineAndSurface()
         {
+            Assert.That(Directory.Exists(GameplayEditorLayer("Authoring", "Grammar")), Is.True);
+            Assert.That(Directory.Exists(GameplayEditorLayer("Authoring", "Grammar", "Registry")), Is.True);
+            Assert.That(Directory.Exists(GameplayEditorLayer("Authoring", "Grammar", "CapabilityVocabulary")), Is.True);
+            Assert.That(Directory.Exists(GameplayEditorLayer("Authoring", "Grammar", "IntentVocabulary")), Is.True);
+            Assert.That(Directory.Exists(GameplayEditorLayer("Authoring", "Grammar", "ProofVocabulary")), Is.True);
             Assert.That(Directory.Exists(GameplayEditorLayer("Authoring", "Spine", "Facts")), Is.True);
             Assert.That(Directory.Exists(GameplayEditorLayer("Authoring", "Spine", "Routes")), Is.True);
             Assert.That(Directory.Exists(GameplayEditorLayer("Authoring", "Spine", "Graph")), Is.True);
@@ -90,7 +95,9 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(File.Exists(GameplayEditorLayer("Authoring", "README.md")), Is.True);
             Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Spine", "README.md")), Is.True);
             Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Surfaces", "README.md")), Is.True);
-            Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Spine", "Facts", "PyralisAuthoringFactRegistry.cs")), Is.True);
+            Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Grammar", "Registry", "PyralisAuthoringGrammarRegistry.cs")), Is.True);
+            Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Grammar", "CapabilityVocabulary", "PyralisCapabilityVocabulary.cs")), Is.True);
+            Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Grammar", "IntentVocabulary", "PyralisIntentVocabulary.cs")), Is.True);
             Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Spine", "Graph", "PyralisAuthoringOverviewModel.cs")), Is.True);
             Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Spine", "Graph", "PyralisAuthoringSetupGraphProjection.cs")), Is.True);
             Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Spine", "Routes", "PyralisAuthoringRouteProof.cs")), Is.True);
@@ -130,20 +137,31 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void PyralisAuthoringWindow_MapAndValidateTabs_ReadGraphProjectionNotLegacyModels()
         {
+            string windowPath = FindGameplayEditorFile("PyralisAuthoringWindow.cs");
             string mapRendererPath = FindGameplayEditorFile("PyralisAuthoringMapRenderer.cs");
             string validateRendererPath = FindGameplayEditorFile("PyralisAuthoringValidateRenderer.cs");
+            string factRendererPath = FindGameplayEditorFile("PyralisAuthoringFactExplorerRenderer.cs");
+            string guidePath = FindGameplayEditorFile("PyralisAuthoringWindow.Guide.cs");
 
+            string windowSource = File.ReadAllText(windowPath);
             string mapSource = File.ReadAllText(mapRendererPath);
             string validateSource = File.ReadAllText(validateRendererPath);
+            string factSource = File.ReadAllText(factRendererPath);
+            string guideSource = File.ReadAllText(guidePath);
 
-            Assert.That(mapSource.Contains("PyralisAuthoringSetupGraphBuilder.Build"), Is.True);
+            Assert.That(windowSource.Contains("_cachedSetupGraph"), Is.True);
+            Assert.That(windowSource.Contains("GetCachedSetupGraph"), Is.True);
+            Assert.That(windowSource.Contains("PyralisAuthoringSetupGraphBuilder.Build(graphSource)"), Is.True);
+            Assert.That(mapSource.Contains("PyralisAuthoringSetupGraphBuilder.Build"), Is.False);
+            Assert.That(mapSource.Contains("PyralisAuthoringSetupGraph graph"), Is.True);
             Assert.That(mapSource.Contains("PyralisAuthoringSetupGraphProjection.BuildSetupMapRows"), Is.True);
             Assert.That(mapSource.Contains("PyralisAuthoringSetupGraphProjection.BuildMapConnectionRows"), Is.True);
             Assert.That(mapSource.Contains("PyralisAuthoringRouteReport"), Is.False);
             Assert.That(mapSource.Contains("PyralisAuthoringValidationModel"), Is.False);
             Assert.That(mapSource.Contains("PyralisSetupRouteAnalysis.Build"), Is.False);
 
-            Assert.That(validateSource.Contains("PyralisAuthoringSetupGraphBuilder.Build"), Is.True);
+            Assert.That(validateSource.Contains("PyralisAuthoringSetupGraphBuilder.Build"), Is.False);
+            Assert.That(validateSource.Contains("PyralisAuthoringSetupGraph graph"), Is.True);
             Assert.That(validateSource.Contains("PyralisAuthoringSetupGraphProjection.BuildValidationSections"), Is.True);
             Assert.That(validateSource.Contains("PyralisAuthoringSetupGraphProjection.BuildValidationDetailRows"), Is.True);
             Assert.That(validateSource.Contains("PyralisAuthoringSetupGraphProjection.BuildValidationRows"), Is.False);
@@ -151,6 +169,11 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(validateSource.Contains("PyralisAuthoringValidationModel"), Is.False);
             Assert.That(validateSource.Contains("PyralisSetupFlowValidator.BuildReport"), Is.False);
             Assert.That(validateSource.Contains("PyralisSceneReadinessValidator.BuildReport"), Is.False);
+
+            Assert.That(factSource.Contains("PyralisAuthoringSetupGraphBuilder.Build"), Is.False);
+            Assert.That(factSource.Contains("PyralisAuthoringSetupGraph graph"), Is.True);
+            Assert.That(guideSource.Contains("PyralisAuthoringSetupGraphBuilder.Build"), Is.False);
+            Assert.That(guideSource.Contains("PyralisAuthoringSetupGraph contextGraph"), Is.True);
         }
 
         [Test]
@@ -261,6 +284,14 @@ namespace NeonBlack.Gameplay.Tests.Editor
                     source.Contains("PyralisAuthoringIntentAdvisor"),
                     Is.False,
                     $"{fileName} should read intent summaries through graph projection instead of direct advisor fallback.");
+
+                if (fileName != "PyralisAuthoringWindow.cs")
+                {
+                    Assert.That(
+                        source.Contains("PyralisAuthoringSetupGraphBuilder.Build"),
+                        Is.False,
+                        $"{fileName} should receive the cached graph from the Authoring Window shell.");
+                }
             }
         }
 
@@ -268,16 +299,16 @@ namespace NeonBlack.Gameplay.Tests.Editor
         public void PyralisAuthoringWindow_FactsAndCapabilityCatalogReadThroughGraphProjection()
         {
             string factRendererPath = FindGameplayEditorFile("PyralisAuthoringFactExplorerRenderer.cs");
-            string catalogRendererPath = FindGameplayEditorFile("PyralisRuntimeCapabilityCatalogRenderer.cs");
+            string catalogRendererPath = FindGameplayEditorFile("PyralisCapabilityVocabularyRenderer.cs");
             string graphProjectionPath = FindGameplayEditorFile("PyralisAuthoringSetupGraphProjection.cs");
 
             string factRendererSource = File.ReadAllText(factRendererPath);
             string catalogRendererSource = File.ReadAllText(catalogRendererPath);
             string graphProjectionSource = File.ReadAllText(graphProjectionPath);
 
-            Assert.That(factRendererSource.Contains("PyralisAuthoringFactRegistry.AllFacts"), Is.False);
+            Assert.That(factRendererSource.Contains("PyralisAuthoringGrammarRegistry.AllFacts"), Is.False);
             Assert.That(factRendererSource.Contains("PyralisAuthoringSetupGraphProjection.BuildFactExplorerFacts"), Is.True);
-            Assert.That(catalogRendererSource.Contains("PyralisAuthoringFactRegistry.AllFacts"), Is.False);
+            Assert.That(catalogRendererSource.Contains("PyralisAuthoringGrammarRegistry.AllFacts"), Is.False);
             Assert.That(catalogRendererSource.Contains("PyralisAuthoringSetupGraphProjection.BuildRuntimeCapabilityFactsForCapability"), Is.True);
             Assert.That(catalogRendererSource.Contains("PyralisAuthoringSetupGraphProjection.BuildRuntimeCapabilityFactsForLane"), Is.True);
             Assert.That(graphProjectionSource.Contains("BuildFactExplorerFacts"), Is.True);
@@ -640,16 +671,16 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void PyralisEditor_RuntimeCapabilityCards_AreBackedByStableAuthoringFacts()
+        public void PyralisEditor_PyralisCapabilityVocabularyCards_AreBackedByStableAuthoringFacts()
         {
-            Assert.That(PyralisAuthoringFactRegistry.HasDuplicateStableIds(out string duplicateStableId), Is.False, duplicateStableId);
+            Assert.That(PyralisAuthoringGrammarRegistry.HasDuplicateStableIds(out string duplicateStableId), Is.False, duplicateStableId);
 
-            IReadOnlyList<RuntimeCapabilityCard> cards = PyralisRuntimeCapabilityCatalog.All;
+            IReadOnlyList<PyralisCapabilityVocabularyCard> cards = PyralisCapabilityVocabulary.All;
             Assert.That(cards.Count, Is.GreaterThanOrEqualTo(5));
 
             for (int i = 0; i < cards.Count; i++)
             {
-                RuntimeCapabilityCard card = cards[i];
+                PyralisCapabilityVocabularyCard card = cards[i];
                 Assert.That(card.StableId, Is.Not.Empty);
                 Assert.That(card.Fact, Is.Not.Null);
                 Assert.That(card.Fact.StableId, Is.EqualTo(card.StableId));
@@ -664,7 +695,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 Assert.That(card.Fact.AssignmentFields, Is.Empty);
                 Assert.That(card.Fact.CustomizationMoments, Is.Empty);
 
-                PyralisAuthoringFact registeredFact = PyralisAuthoringFactRegistry.Find(card.StableId);
+                PyralisAuthoringFact registeredFact = PyralisAuthoringGrammarRegistry.Find(card.StableId);
                 Assert.That(registeredFact, Is.Not.Null);
                 Assert.That(registeredFact.StableId, Is.EqualTo(card.Fact.StableId));
                 Assert.That(registeredFact.Kind, Is.EqualTo(PyralisAuthoringFactKind.RuntimeCapability));
@@ -673,9 +704,9 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void PyralisEditor_RuntimeCapabilityCatalog_DoesNotOwnRetiredRecipePaths()
+        public void PyralisEditor_CapabilityVocabulary_DoesNotOwnRetiredRecipePaths()
         {
-            string catalogPath = FindGameplayEditorFile("PyralisRuntimeCapabilityCatalog.cs");
+            string catalogPath = FindGameplayEditorFile("PyralisCapabilityVocabulary.cs");
             string proofPath = FindGameplayEditorFile("PyralisAuthoringRouteProof.cs");
             string catalogSource = File.ReadAllText(catalogPath);
             string proofSource = File.ReadAllText(proofPath);
@@ -686,7 +717,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(catalogSource.Contains("ProofStepLabel"), Is.False);
             Assert.That(catalogSource.Contains("ProofStepSuccessCriteria"), Is.False);
             Assert.That(proofSource.Contains("FindProofStepCard"), Is.False);
-            Assert.That(proofSource.Contains("RuntimeCapabilityCatalog.All"), Is.False);
+            Assert.That(proofSource.Contains("PyralisCapabilityVocabulary.All"), Is.False);
         }
 
         [Test]
@@ -768,7 +799,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             string gameplayRoot = GameplayRoot;
             string overlayPath = FindGameplayEditorFile("PyralisReflectiveInspectorOverlay.cs");
             string guidePath = FindGameplayEditorFile("PyralisInspectorGuide.cs");
-            string factRegistryPath = FindGameplayEditorFile("PyralisAuthoringFactRegistry.cs");
+            string factRegistryPath = FindGameplayEditorFile("PyralisAuthoringGrammarRegistry.cs");
             string factScannerPath = FindGameplayEditorFile("PyralisReflectiveFactScanner.cs");
             string routeAnalysisPath = FindGameplayEditorFile("PyralisSetupRouteAnalysis.cs");
             string graphProjectionPath = FindGameplayEditorFile("PyralisAuthoringSetupGraphProjection.cs");
@@ -803,7 +834,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(factScannerSource.Contains("CreateAssetMenuAttribute"), Is.True);
             Assert.That(factScannerSource.Contains("AddComponentMenu"), Is.True);
             Assert.That(factScannerSource.Contains("SerializedField"), Is.True);
-            Assert.That(graphProjectionSource.Contains("PyralisAuthoringRouteProof"), Is.True);
+            Assert.That(graphProjectionSource.Contains("PyralisAuthoringRouteProof"), Is.False);
             Assert.That(graphProjectionSource.Contains("BuildCurrentStepRow"), Is.True);
             Assert.That(currentStepGuidanceSource.Contains("Inspector -> Add Component"), Is.True);
             Assert.That(currentStepGuidanceSource.Contains("GameplaySessionBootstrap"), Is.True);
@@ -824,7 +855,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
         private static bool SourceContainsAuthoringExportSpine(string source)
         {
-            return source.Contains("PyralisAuthoringFactRegistry")
+            return source.Contains("PyralisAuthoringGrammarRegistry")
                 || source.Contains("PyralisAuthoringIssue")
                 || source.Contains("PyralisSetupFlowValidator")
                 || source.Contains("PyralisAuthoringWindow");

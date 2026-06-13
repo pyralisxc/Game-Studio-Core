@@ -367,7 +367,7 @@ namespace NeonBlack.Gameplay.Editor
 
         public static IReadOnlyList<PyralisAuthoringFact> BuildFactExplorerFacts(PyralisAuthoringSetupGraph graph)
         {
-            return PyralisAuthoringFactRegistry.AllFacts;
+            return PyralisAuthoringGrammarRegistry.AllFacts;
         }
 
         public static IReadOnlyList<PyralisAuthoringFact> BuildRuntimeCapabilityFactsForCapability(
@@ -377,7 +377,7 @@ namespace NeonBlack.Gameplay.Editor
             if (capability == AuthoringCapability.None)
                 return Array.Empty<PyralisAuthoringFact>();
 
-            return PyralisAuthoringFactRegistry.AllFacts
+            return PyralisAuthoringGrammarRegistry.AllFacts
                 .Where(fact => fact != null
                     && (fact.Kind == PyralisAuthoringFactKind.RuntimeCapability
                         || fact.Kind == PyralisAuthoringFactKind.FeatureContract)
@@ -390,7 +390,7 @@ namespace NeonBlack.Gameplay.Editor
             RuntimeCapabilityLaneTag laneTag)
         {
             string laneName = laneTag.ToString();
-            return PyralisAuthoringFactRegistry.AllFacts
+            return PyralisAuthoringGrammarRegistry.AllFacts
                 .Where(fact => fact != null
                     && IsRuntimeCapabilityCatalogFactKind(fact.Kind)
                     && (fact.HasLane(laneName) || fact.IsExplicitlyUnsupported(laneName)))

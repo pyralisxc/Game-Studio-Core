@@ -50,7 +50,7 @@ Target capabilities:
 - in-window success prompts
 - field explanations connected to actual Unity objects
 - guided authoring surface with progressive disclosure
-- guide-only Runtime Capability Catalog cards browsable by both game goal and runtime lane
+- guide-only Capability Vocabulary cards browsable by capability and runtime lane
 - searchable mechanic glossary
 - setup checklist export
 - one-click scene audit
@@ -59,20 +59,20 @@ Target capabilities:
 - guided repair actions
 - visual route dependency graph
 
-The Runtime Capability Catalog is the first guide-card model slice. It should remain guide-only while the native Unity setup path is being proven: cards explain what a capability adds, when to use it, required definitions/profiles, scene and prefab components, assignment fields, customization moments, deferrable work, and first proof. Do not add asset or component creation to this catalog until the manual path has been repeatedly proven.
+The Capability Vocabulary is a guide-only grammar slice. It should remain guide-only while the native Unity setup path is being proven: cards explain what a broad capability adds, when to use it, native setup surfaces, customization moments, deferrable work, and first proof vocabulary. Feature-specific requirements should move into contracts/reflection and graph evidence, not into new hardcoded vocabulary cards.
 
 After the runtime capability slice is stable, expand the same guide-card model to the whole setup surface: pawns, NPCs/enemies, custom objects, UI, world, and networking. The goal is one maintainable card vocabulary rendered in multiple views, not separate manuals for runtime patterns, prefab setup, scene setup, and validation.
 
-Authoring 2.0 is now planned as a typed authoring fact pipeline:
+Authoring 2.0 now runs through the contract/dependency-tree/graph pipeline:
 
 ```text
-runtime/data conventions
-  -> capability and route facts
-      -> evidence, native actions, issue codes, and proof states
-          -> Authoring Window, inspectors, setup flow, validators, catalog, and docs
+gameplay code and authored setup
+  -> contracts + reflected dependency tree + validators + grammar vocabulary
+      -> resolved setup graph
+          -> Authoring Window, inspectors, setup flow, validators, Facts, and docs
 ```
 
-The first implementation step is `PyralisAuthoringFactRegistry`: a read-only spine for stable ids, provenance, confidence, native Unity actions, evidence/proof vocabulary, and capability-card facts. Keep the current Runtime Capability Catalog visible behavior stable while moving its meaning into facts. Do not build a whole-codebase scraper first. Current checkpoint status: runtime capability cards are fact-backed, setup-flow step ids now contribute setup-node facts, 2D pawn movement setup nodes are related to the `capability.2d-pawn-movement` fact, broad `proof.*` facts now name first-proof targets for pawn movement, board/card action, action selection, NPC/enemy behavior, custom object effects, UI/HUD/menu events, camera/cursor/world framing, generated content, and network ownership, route-family facts now name broad authoring surfaces the system must support, scene-evidence facts connect current scene-surface guidance rows to route/proof ids, Validate cards expose typed `PyralisAuthoringIssue` metadata, inspector handoff facts relate native Inspector assignment/customization to setup nodes and route proofs, and feature-owned `[AuthoringContract]` metadata feeds setup-profile capability guidance, profile/runtime/lane validation, unsupported-lane cautions, developer first-proof guidance, and proof target rows in the Authoring Window. The Authoring Window has a read-only `Facts` tab for registry coverage, provenance, native actions, requirements, customization moments, and relationships. Reflection and convention facts are added through explicit source calls in `PyralisAuthoringFactRegistry`; do not add a second provider-discovery registry for facts. Optional beginner semantic location tags show a top Authoring Window legend plus generated fact/action badges.
+The active foundation is the resolved setup graph. `PyralisAuthoringGrammarRegistry`, `PyralisCapabilityVocabulary`, and `PyralisProofFamilyVocabulary` provide stable ids, fallback wording, native action vocabulary, and audit facts. Contracts own feature-specific setup meaning, `PyralisSetupDependencyTree` owns serialized reference discovery, and validators own runtime/scene readiness. The Authoring Window has a read-only `Facts` tab for grammar and provenance coverage, but visible setup guidance should project from graph output instead of rebuilding route, proof, or validation meaning locally.
 
 Authoring 2.0 rollout order:
 
