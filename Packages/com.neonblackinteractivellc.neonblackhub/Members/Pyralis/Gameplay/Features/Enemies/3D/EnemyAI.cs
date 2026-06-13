@@ -24,6 +24,7 @@ namespace NeonBlack.Gameplay.Features.Enemies
         Lane = "AI",
         Relevance = "Canonical 3D/2.5D AI controller; handles patrol, detection, and attack states.",
         AssignmentFields = new[] { nameof(moveSpeed), nameof(enemyFeatureProfile), nameof(patrolPoints) },
+        FirstProofTargetId = "proof.npc-enemy-behavior",
         FirstProof = "Place enemy and player in scene. Verify enemy enters 'Chase' state when player enters detection range.",
         NativeSetup = new[] { "Add EnemyAI to 3D actor.", "Assign EnemyFeatureProfile.", "Configure Detection Module ranges." },
         ExpertAdvice = "EnemyAI separates 'Tactics' and 'Steering'. Use 'EnemyFeatureProfile' to define shared stats like Aggro Range and Attack Cooldowns.",

@@ -420,7 +420,6 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 return;
 
             Undo.RecordObject(serializedBootstrap.targetObject, "Restore Pyralis First-Scene Defaults");
-            SetBool(serializedBootstrap, "autoCreateCoreServices", true);
             SetBool(serializedBootstrap, "injectLoadedScenesOnBuild", true);
             serializedBootstrap.ApplyModifiedProperties();
         }

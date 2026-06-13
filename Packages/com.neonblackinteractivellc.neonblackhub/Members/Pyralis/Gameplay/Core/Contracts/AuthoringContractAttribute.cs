@@ -87,23 +87,25 @@ namespace NeonBlack.Gameplay.Core.Contracts
         public string AxiomKeywords { get; set; }
 
         /// <summary>
-        /// Interfaces that must be implemented for this contract to be considered satisfied.
+        /// Runtime or authoring interfaces that this contract depends on.
+        /// Use dependency metadata for system relationships that can be reflected from code.
         /// </summary>
         public Type[] RequiredInterfaces { get; set; }
 
         /// <summary>
-        /// Fully qualified names of interfaces that must be implemented. 
+        /// Fully qualified names of runtime or authoring interfaces that this contract depends on.
         /// Use this for cross-assembly references where the source assembly cannot reference the interface type directly.
         /// </summary>
         public string[] RequiredInterfaceNames { get; set; }
 
         /// <summary>
-        /// Components that must be present on a GameObject for this contract to be considered satisfied.
+        /// Physical Unity components that must be present on the relevant authored object.
+        /// Use this for placement requirements that dependency reflection cannot infer.
         /// </summary>
         public Type[] RequiredComponents { get; set; }
 
         /// <summary>
-        /// Fully qualified names of components that must be present.
+        /// Fully qualified names of physical Unity components that must be present on the relevant authored object.
         /// Use this for cross-assembly references where the source assembly cannot reference the component type directly.
         /// </summary>
         public string[] RequiredComponentNames { get; set; }

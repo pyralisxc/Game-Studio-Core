@@ -1535,7 +1535,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(proof.WorkIntent, Is.EqualTo("FirstProof"));
             Assert.That(proof.FirstProof, Does.Contain("One participant spawns one pawn"));
             Assert.That(proof.RequiredDefinitions, Does.Contain("PawnDefinition"));
-            Assert.That(proof.RequiredPrefabComponents, Does.Contain("PawnRoot"));
+            Assert.That(proof.RequiredUnitySurfaces, Does.Contain("PawnRoot"));
             Assert.That(proof.NativeActions.Length, Is.GreaterThanOrEqualTo(1));
             Assert.That(proof.NativeActions[0].Surface, Is.EqualTo(PyralisAuthoringActionSurface.PlayMode));
             Assert.That(proof.RelatedStableIds, Does.Contain("capability.2d-pawn-movement"));
@@ -1622,8 +1622,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
             PyralisAuthoringFact movementRequirements = PyralisAuthoringFactRegistry.Find("reflection.require-component.pawn-2d-movement-component");
             Assert.That(movementRequirements, Is.Not.Null);
             Assert.That(movementRequirements.SourceKind, Is.EqualTo(PyralisAuthoringFactSourceKind.Reflection));
-            Assert.That(movementRequirements.RequiredPrefabComponents, Does.Contain("Rigidbody2D"));
-            Assert.That(movementRequirements.RequiredPrefabComponents, Does.Contain("PolygonCollider2D"));
+            Assert.That(movementRequirements.RequiredUnitySurfaces, Does.Contain("Rigidbody2D"));
+            Assert.That(movementRequirements.RequiredUnitySurfaces, Does.Contain("PolygonCollider2D"));
             Assert.That(movementRequirements.RelatedStableIds, Does.Contain("proof.1p-pawn-movement"));
 
             PyralisAuthoringFact pawnPrefabField = PyralisAuthoringFactRegistry.Find("convention.serialized-field.pawn-definition.pawn-prefab");
@@ -1660,7 +1660,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             PyralisAuthoringFact enemyAiComponent = PyralisAuthoringFactRegistry.Find("reflection.add-component-menu.enemy-ai");
             Assert.That(enemyAiComponent, Is.Not.Null);
-            Assert.That(enemyAiComponent.Kind, Is.EqualTo(PyralisAuthoringFactKind.PrefabComponent));
+            Assert.That(enemyAiComponent.Kind, Is.EqualTo(PyralisAuthoringFactKind.UnitySurface));
             Assert.That(enemyAiComponent.RelatedStableIds, Does.Contain("proof.npc-enemy-behavior"));
 
             PyralisAuthoringFact cameraRigField = PyralisAuthoringFactRegistry.Find("convention.serialized-field.cinemachine-camera-rig-controller.camera-rig-profile");
@@ -1936,7 +1936,7 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
             Assert.That(pawn.RelatedStableIds, Does.Contain("capability.2d-pawn-movement"));
             Assert.That(pawn.RelatedStableIds, Does.Contain("proof.1p-pawn-movement"));
             Assert.That(pawn.RequiredDefinitions, Does.Contain("PawnDefinition"));
-            Assert.That(pawn.RequiredPrefabComponents, Does.Contain("PawnRoot"));
+            Assert.That(pawn.RequiredUnitySurfaces, Does.Contain("PawnRoot"));
 
             PyralisAuthoringFact tabletop = PyralisAuthoringFactRegistry.Find("route.tabletop-card");
             Assert.That(tabletop.LaneTags, Does.Contain("TabletopBoard"));
@@ -2074,7 +2074,7 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
             Assert.That(PyralisAuthoringFactRegistry.GetFacts(PyralisAuthoringFactKind.Definition).Count, Is.GreaterThanOrEqualTo(15));
             Assert.That(PyralisAuthoringFactRegistry.GetFacts(PyralisAuthoringFactKind.Profile).Count, Is.GreaterThanOrEqualTo(9));
             Assert.That(PyralisAuthoringFactRegistry.GetFacts(PyralisAuthoringFactKind.SceneComponent).Count, Is.GreaterThanOrEqualTo(14));
-            Assert.That(PyralisAuthoringFactRegistry.GetFacts(PyralisAuthoringFactKind.PrefabComponent).Count, Is.GreaterThanOrEqualTo(7));
+            Assert.That(PyralisAuthoringFactRegistry.GetFacts(PyralisAuthoringFactKind.UnitySurface).Count, Is.GreaterThanOrEqualTo(7));
             Assert.That(PyralisAuthoringFactRegistry.GetFacts(PyralisAuthoringFactKind.Proof).Count, Is.GreaterThanOrEqualTo(9));
             Assert.That(PyralisAuthoringFactRegistry.GetFacts(PyralisAuthoringFactKind.AssignmentField).Count, Is.GreaterThanOrEqualTo(20));
             Assert.That(PyralisAuthoringFactRegistry.GetFacts(PyralisAuthoringFactKind.CustomizationMoment).Count, Is.GreaterThanOrEqualTo(2));

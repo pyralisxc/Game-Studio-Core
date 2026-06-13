@@ -113,7 +113,7 @@ namespace NeonBlack.Gameplay.Editor
             AddJoined(parts, card.RequiredDefinitions, "Definitions");
             AddJoined(parts, card.RequiredProfiles, "Profiles");
             AddJoined(parts, card.RequiredSceneComponents, "Scene");
-            AddJoined(parts, card.RequiredPrefabComponents, "Prefab");
+            AddJoined(parts, card.RequiredUnitySurfaces, "Unity");
 
             if (parts.Count == 0)
                 return card.FirstProof;

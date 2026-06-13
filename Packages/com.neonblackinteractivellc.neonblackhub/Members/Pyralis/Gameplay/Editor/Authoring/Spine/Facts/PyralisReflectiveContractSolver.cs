@@ -179,8 +179,8 @@ namespace NeonBlack.Gameplay.Editor
                 }
             }
 
-            // Check Interfaces/Components from FeatureContract/PrefabComponent kind
-            if (fact.Kind == PyralisAuthoringFactKind.FeatureContract || fact.Kind == PyralisAuthoringFactKind.PrefabComponent)
+            // Check Interfaces/Components from FeatureContract/UnitySurface kind
+            if (fact.Kind == PyralisAuthoringFactKind.FeatureContract || fact.Kind == PyralisAuthoringFactKind.UnitySurface)
             {
                 // We don't easily have the original Type here unless we look it up from the StableId or Registry.
                 // For now, if it's already satisfied by scene components, we are good.

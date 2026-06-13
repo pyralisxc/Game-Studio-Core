@@ -24,6 +24,7 @@ namespace NeonBlack.Gameplay.Features.Characters
             "Configure LayerMasks for ground check if Jump is enabled."
         },
         AssignmentFields = new[] { nameof(moveSpeed), nameof(dashEnabled), nameof(dashSpeed), nameof(dashCooldown), nameof(jumpEnabled), nameof(jumpVelocity), nameof(groundLayer), nameof(cameraBoundsSource), nameof(targetCamera), nameof(gameplayStateSource) },
+        FirstProofTargetId = "proof.1p-pawn-movement",
         FirstProof = "Pawn responds to input in the scene. Use the Scene View to verify the Ground Check raycast (if side-view) is hitting the correct layer.",
         ExpertAdvice = "Top-down route: leave Jump Enabled off and set Gravity Scale to 0. Side-view route: enable Jump, set Ground Layer, and ensure Rigidbody2D 'Collision Detection' is set to Continuous for high-speed dashes."
     )]

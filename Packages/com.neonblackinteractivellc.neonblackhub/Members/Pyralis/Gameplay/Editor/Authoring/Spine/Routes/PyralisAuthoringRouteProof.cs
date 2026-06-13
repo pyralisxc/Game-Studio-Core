@@ -201,6 +201,7 @@ namespace NeonBlack.Gameplay.Editor
     public sealed class PyralisAuthoringRouteProof
     {
         private PyralisAuthoringRouteProof(
+            string stableId,
             string label,
             string guidance,
             string setupSurface,
@@ -209,6 +210,7 @@ namespace NeonBlack.Gameplay.Editor
             string firstUnityFocus,
             PyralisAuthoringProofStep[] proofChain = null)
         {
+            StableId = stableId ?? string.Empty;
             Label = label;
             Guidance = guidance;
             SetupSurface = setupSurface;
@@ -218,6 +220,7 @@ namespace NeonBlack.Gameplay.Editor
             ProofChain = proofChain ?? System.Array.Empty<PyralisAuthoringProofStep>();
         }
 
+        public string StableId { get; }
         public string Label { get; }
         public string Guidance { get; }
         public string SetupSurface { get; }
@@ -464,7 +467,7 @@ namespace NeonBlack.Gameplay.Editor
                 "https://docs.neonblack.com/pyralis/networking",
                 new[] { "route.networking", "capability.2d-pawn-movement", "capability.combat-projectile-proof" }));
 
-            return facts;
+            return PyralisContractProofFactProjector.EnrichRouteProofFacts(facts);
         }
 
         public static PyralisAuthoringFact FindProofFact(string stableId)
@@ -499,7 +502,7 @@ namespace NeonBlack.Gameplay.Editor
             string[] requiredDefinitions,
             string[] requiredProfiles,
             string[] requiredSceneComponents,
-            string[] requiredPrefabComponents,
+            string[] requiredUnitySurfaces,
             string[] assignmentFields,
             string[] customizationMoments,
             string[] canWait,
@@ -525,7 +528,7 @@ namespace NeonBlack.Gameplay.Editor
                 requiredDefinitions: requiredDefinitions,
                 requiredProfiles: requiredProfiles,
                 requiredSceneComponents: requiredSceneComponents,
-                requiredPrefabComponents: requiredPrefabComponents,
+                requiredUnitySurfaces: requiredUnitySurfaces,
                 assignmentFields: assignmentFields,
                 customizationMoments: customizationMoments,
                 canWait: canWait,
@@ -560,6 +563,7 @@ namespace NeonBlack.Gameplay.Editor
             if (route == null || !route.HasSelectedCapabilities)
             {
                 return new PyralisAuthoringRouteProof(
+                    string.Empty,
                     "Choose Capability Ingredients",
                     "Use Intent or the GameSetupProfile Runtime Capabilities section to describe the route before wiring scene objects.",
                     "Choose capability families before deciding which scene or prefab surface matters.",
@@ -598,6 +602,7 @@ namespace NeonBlack.Gameplay.Editor
                 return BuildNetworkProof(route, proofChain);
 
             return new PyralisAuthoringRouteProof(
+                string.Empty,
                 "Smallest Playable Proof",
                 "Run one route-specific interaction in Play mode, confirm the result is visible or inspectable, then expand optional setup.",
                 "One small route-owned Unity scene surface that can show a result in Play mode.",
@@ -614,6 +619,7 @@ namespace NeonBlack.Gameplay.Editor
                 : "Defer scoring, HUD, pickups, combat, networking, enemy setup, respawn complexity, and advanced camera polish until one 1P pawn movement proof is reliable.";
 
             return new PyralisAuthoringRouteProof(
+                "proof.1p-pawn-movement",
                 "1P Pawn Movement Proof",
                 "Run a minimal Play-mode proof: wire one participant input profile to one pawn-backed participant, spawn the pawn, then confirm one visible movement input path before adding combat, HUD, enemies, score rules, or network authority.",
                 "One participant, one PawnDefinition with prefab, one scene Transform in Spawn Points, and one Input Profile path on that participant or SessionDefinition.defaultInputProfile. Add camera bounds only if framing is part of this proof.",
@@ -630,6 +636,7 @@ namespace NeonBlack.Gameplay.Editor
                 : "First Unity focus: create board/card/seat state and one selection surface. Keep pawn fields empty while the route is seat, hand, faction, board, or menu driven.";
 
             return new PyralisAuthoringRouteProof(
+                "proof.board-card-action",
                 "Board/Card Action Proof",
                 "Run one rules-backed selection in Play mode: choose one board space, card, seat command, or turn action, then confirm the route accepts, rejects, or resolves it through a visible selection surface.",
                 "One board, card, seat, or command selection surface. Use a TabletopBoardGridPresenter, TabletopBoardSelectionBridge, card-hand presenter, UI button, cursor bridge, collider/raycast target, or project-owned equivalent.",
@@ -642,6 +649,7 @@ namespace NeonBlack.Gameplay.Editor
         private static PyralisAuthoringRouteProof BuildActionProof(PyralisAuthoringRouteDescriptor route, PyralisAuthoringProofStep[] proofChain)
         {
             return new PyralisAuthoringRouteProof(
+                "proof.action-selection",
                 "Action Selection Proof",
                 "Run one command in Play mode and confirm it reaches its resolver with a clear accepted, rejected, completed, or failed result before expanding menus, cards, or ability lists.",
                 "One selectable command surface, such as a button, card, board space, cursor target, or action presenter connected to one ActionDefinition.",
@@ -654,6 +662,7 @@ namespace NeonBlack.Gameplay.Editor
         private static PyralisAuthoringRouteProof BuildProjectileProof(PyralisAuthoringRouteDescriptor route, PyralisAuthoringProofStep[] proofChain)
         {
             return new PyralisAuthoringRouteProof(
+                "proof.custom-object-effect",
                 "Projectile Proof",
                 "Run one shot in Play mode from the chosen source, verify it spawns or traces and resolves impact, miss, or expiry, then add more projectile routes.",
                 "One firing source plus one ProjectileLauncher2D, ProjectileLauncher3D, or project-owned launcher adapter connected to a ProjectileDefinition, ProjectileImpactDefinition, and FireModeDefinition.",
@@ -666,6 +675,7 @@ namespace NeonBlack.Gameplay.Editor
         private static PyralisAuthoringRouteProof BuildCombatProof(PyralisAuthoringRouteDescriptor route, PyralisAuthoringProofStep[] proofChain)
         {
             return new PyralisAuthoringRouteProof(
+                "proof.npc-enemy-behavior",
                 "Combat Proof",
                 "Run one attack in Play mode and confirm one visible hit, block, damage, or reaction path before building a larger combat loop.",
                 "One attacker, one target, one hitbox/hurtbox path, one CombatActionDefinition or CombatSequenceDefinition, and one visible reaction.",
@@ -678,6 +688,7 @@ namespace NeonBlack.Gameplay.Editor
         private static PyralisAuthoringRouteProof BuildScoringProof(PyralisAuthoringRouteDescriptor route, PyralisAuthoringProofStep[] proofChain)
         {
             return new PyralisAuthoringRouteProof(
+                "proof.ui-hud-menu",
                 "Scoring Proof",
                 "Run one score/objective event in Play mode, confirm the service value changes, then connect only the first HUD label that proves the route output.",
                 "One score or objective service plus one visible or inspectable output that changes when the proof action happens.",
@@ -690,6 +701,7 @@ namespace NeonBlack.Gameplay.Editor
         private static PyralisAuthoringRouteProof BuildCameraProof(PyralisAuthoringRouteDescriptor route, PyralisAuthoringProofStep[] proofChain)
         {
             return new PyralisAuthoringRouteProof(
+                "proof.camera-cursor-world",
                 "Camera/Cursor Proof",
                 "Run one cursor, selector, or follow-target interaction in Play mode, verify camera/cursor selection responds, then add broader selection logic.",
                 "One Cinemachine-backed camera, cursor, bounds, or selection-control surface that visibly responds to route input. Use CinemachineCameraRigController with CameraRigProfile for shared/split camera and 2D visible bounds.",
@@ -702,6 +714,7 @@ namespace NeonBlack.Gameplay.Editor
         private static PyralisAuthoringRouteProof BuildProceduralProof(PyralisAuthoringRouteDescriptor route, PyralisAuthoringProofStep[] proofChain)
         {
             return new PyralisAuthoringRouteProof(
+                "proof.generated-content",
                 "Generated Content Proof",
                 "Generate one output and inspect it in the scene or logs before making generated content required for progression.",
                 "One generator output that can be inspected in the scene or logged as a deterministic result, with authored chunks, sockets, seeds, spawn budgets, or board layouts visible enough to debug.",
@@ -714,6 +727,7 @@ namespace NeonBlack.Gameplay.Editor
         private static PyralisAuthoringRouteProof BuildNetworkProof(PyralisAuthoringRouteDescriptor route, PyralisAuthoringProofStep[] proofChain)
         {
             return new PyralisAuthoringRouteProof(
+                "proof.network-ownership",
                 "Network Ownership Proof",
                 "Confirm the local route first, then start a host/client scene and verify the participant owns the expected pawn or control surface.",
                 "A locally working route plus NetworkManager, UnityTransport, network prefab registration, NetworkObject setup, and authority metadata for the objects that must replicate.",

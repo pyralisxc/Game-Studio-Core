@@ -18,7 +18,7 @@ namespace NeonBlack.Gameplay.Editor
         Definition,
         Profile,
         SceneComponent,
-        PrefabComponent,
+        UnitySurface,
         AssignmentField,
         CustomizationMoment,
         Issue,
@@ -65,7 +65,7 @@ public PyralisAuthoringFact(
             string[] requiredDefinitions = null,
             string[] requiredProfiles = null,
             string[] requiredSceneComponents = null,
-            string[] requiredPrefabComponents = null,
+            string[] requiredUnitySurfaces = null,
             string[] assignmentFields = null,
             string[] customizationMoments = null,
             string[] canWait = null,
@@ -95,7 +95,7 @@ public PyralisAuthoringFact(
             RequiredDefinitions = requiredDefinitions ?? System.Array.Empty<string>();
             RequiredProfiles = requiredProfiles ?? System.Array.Empty<string>();
             RequiredSceneComponents = requiredSceneComponents ?? System.Array.Empty<string>();
-            RequiredPrefabComponents = requiredPrefabComponents ?? System.Array.Empty<string>();
+            RequiredUnitySurfaces = requiredUnitySurfaces ?? System.Array.Empty<string>();
             AssignmentFields = assignmentFields ?? System.Array.Empty<string>();
             CustomizationMoments = customizationMoments ?? System.Array.Empty<string>();
             CanWait = canWait ?? System.Array.Empty<string>();
@@ -126,7 +126,7 @@ public PyralisAuthoringFact(
         public string[] RequiredDefinitions { get; }
         public string[] RequiredProfiles { get; }
         public string[] RequiredSceneComponents { get; }
-        public string[] RequiredPrefabComponents { get; }
+        public string[] RequiredUnitySurfaces { get; }
         public string[] AssignmentFields { get; }
         public string[] CustomizationMoments { get; }
         public string[] CanWait { get; }

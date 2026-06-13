@@ -103,7 +103,7 @@ namespace NeonBlack.Gameplay.Editor
                 routeRelevance,
                 string.Empty,
                 requiredSceneComponents: kind == PyralisAuthoringFactKind.SceneComponent ? new[] { typeName } : null,
-                requiredPrefabComponents: kind == PyralisAuthoringFactKind.PrefabComponent ? new[] { typeName } : null,
+                requiredUnitySurfaces: kind == PyralisAuthoringFactKind.UnitySurface ? new[] { typeName } : null,
                 nativeActions: new[]
                 {
                     new PyralisAuthoringNativeAction(
@@ -135,13 +135,13 @@ namespace NeonBlack.Gameplay.Editor
             facts.Add(new PyralisAuthoringFact(
                 stableId,
                 displayName,
-                PyralisAuthoringFactKind.PrefabComponent,
+                PyralisAuthoringFactKind.UnitySurface,
                 PyralisAuthoringFactSourceKind.Reflection,
                 PyralisAuthoringConfidence.Explicit,
                 typeof(T).Name + " declares required Unity components through RequireComponent metadata.",
                 routeRelevance,
                 string.Empty,
-                requiredPrefabComponents: requiredComponents.ToArray(),
+                requiredUnitySurfaces: requiredComponents.ToArray(),
                 nativeActions: new[]
                 {
                     new PyralisAuthoringNativeAction(

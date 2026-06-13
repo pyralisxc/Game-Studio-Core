@@ -46,6 +46,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
             string expertAdvice = null,
             string moduleId = null,
             string setupNodeId = null,
+            string authoringLane = null,
             string relevance = null,
             string manualPath = null)
         {
@@ -77,6 +78,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
             ExpertAdvice = expertAdvice ?? string.Empty;
             ModuleId = moduleId ?? string.Empty;
             SetupNodeId = setupNodeId ?? string.Empty;
+            AuthoringLane = authoringLane ?? string.Empty;
             Relevance = relevance ?? string.Empty;
             ManualPath = manualPath ?? string.Empty;
         }
@@ -86,6 +88,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
         public string AuthoringCategory { get; }
         public string ModuleId { get; }
         public string SetupNodeId { get; }
+        public string AuthoringLane { get; }
         public Type RequiredProfileType { get; }
         public string[] RequiredRuntimeInterfaceNames { get; }
         public ActorPresentationMode[] SupportedPresentationModes { get; }

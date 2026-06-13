@@ -185,13 +185,13 @@ Important rules:
 
 - every reusable feature module should provide an explicit `[AuthoringContract]` on the owning feature type
 - `ResolvedAuthoringContractRegistry` discovers contracts reflectively; do not add central hardcoded module-id registries
-- the contract must declare required profile type, runtime prefab interfaces/components, supported lanes, unsupported lanes, action roles, native setup actions, assignment fields, customization moments, developer first-proof guidance, and `SetupNodeId` when the contract enriches a stable resolved setup graph node
+- the contract must declare required profile type, dependency interfaces, physical Unity component placement requirements, supported lanes, unsupported lanes, action roles, native setup actions, assignment fields, customization moments, developer first-proof guidance, and `SetupNodeId` when the contract enriches a stable resolved setup graph node
 - every declared `FirstProofTargetId` must map to a real `PyralisAuthoringRouteProof` fact
 - every feature module must declare network intent
-- runtime prefabs must expose the required feature runtime contracts
+- runtime prefabs must expose the required feature runtime interfaces, while actor roots, scene roots, UI roots, and other authored objects must expose only the physical component requirements declared for that placement
 - feature-owned authored profiles should live with the feature whenever practical
 
-The Authoring Window reads these contracts for setup guidance, proof target guidance, and unsupported lane cautions. The feature module Inspector and contract validator use the same contract data for profile, runtime-interface, and lane validation. Keep feature-specific authoring rules in the feature contract; central definitions should only keep generic `FeatureModuleDefinition` rules.
+The Authoring Window reads these contracts for setup guidance, proof target guidance, dependency surfaces, physical Unity placement requirements, and unsupported lane cautions. The feature module Inspector and contract validator use the same contract data for profile, runtime-interface, and lane validation. Keep feature-specific authoring rules in the feature contract; central definitions should only keep generic `FeatureModuleDefinition` rules.
 
 When adding a module, add the contract metadata, asmdef references, `.meta` files, registry tests, validation tests, proof-target tests, and docs update in the same slice. Do not patch generated `.csproj` files; refresh Unity so project files are regenerated from the package assets.
 

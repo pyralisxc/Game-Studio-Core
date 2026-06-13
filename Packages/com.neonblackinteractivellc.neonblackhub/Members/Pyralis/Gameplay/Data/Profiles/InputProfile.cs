@@ -119,6 +119,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Axioms = AuthoringWorldAxiom.None,
         ProfileType = typeof(InputProfile),
         AssignmentFields = new[] { nameof(actions), nameof(actionBindings), nameof(primaryActionMap) },
+        FirstProofTargetId = "proof.1p-pawn-movement",
         FirstProof = "Verify that input actions mapped in this profile correctly drive character movement and actions.",
         ExpertAdvice = "InputProfile decouples gameplay logic from physical keys. Use the action role to map common verbs (Jump, Dash) across different control schemes.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/input",

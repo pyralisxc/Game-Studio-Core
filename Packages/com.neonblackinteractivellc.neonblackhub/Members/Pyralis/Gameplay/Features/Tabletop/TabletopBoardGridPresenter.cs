@@ -15,6 +15,7 @@ namespace NeonBlack.Gameplay.Features.Tabletop
         Capability = AuthoringCapability.Tabletop | AuthoringCapability.Grid, 
         Relevance = "Inspector Add Component path for a board presenter that can build selectable tabletop spaces.",
         AssignmentFields = new[] { nameof(boardDefinition), nameof(movePolicyDefinition), nameof(spacePrefab), nameof(piecePrefab) },
+        FirstProofTargetId = "proof.board-card-action",
         FirstProof = "Click 'Rebuild Board' in the inspector and verify the grid is generated.",
         NativeSetup = new[] { "Add TabletopBoardGridPresenter to a scene object.", "Assign Board, Move Policy, and Turn Order definitions.", "Assign Space and Piece prefabs." },
         ExpertAdvice = "Bridges the abstract BoardDefinition to scene objects. It handles coordinate mapping (X,Y) to world positions. Ensure your cell size matches your visual assets.",

@@ -25,6 +25,7 @@ namespace NeonBlack.Gameplay.Presentation.Camera
             "Assign Shared Camera Behaviour (Cinemachine virtual camera)."
         },
         AssignmentFields = new[] { nameof(cameraRigProfile), nameof(sharedCameraBehaviour), nameof(targetCamera) },
+        FirstProofTargetId = "proof.camera-cursor-world",
         FirstProof = "Enter Play Mode. Verify the camera rig frames the spawned player pawn automatically. In Split-Screen, verify two viewports are created.",
         ExpertAdvice = "The Camera Rig handles multi-user framing. For 2D projects, ensure your 'Target Camera' is set to Orthographic. Use '2D Bounds Framing' on the rig root to keep the camera within the designed level boundaries.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/camera"

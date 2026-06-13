@@ -83,7 +83,7 @@ namespace NeonBlack.Gameplay.Editor
             string[] requiredDefinitions,
             string[] requiredProfiles,
             string[] requiredSceneComponents,
-            string[] requiredPrefabComponents,
+            string[] requiredUnitySurfaces,
             string[] assignmentFields,
             string[] customizationMoments,
             string[] canWait,
@@ -109,7 +109,7 @@ namespace NeonBlack.Gameplay.Editor
             RequiredDefinitions = requiredDefinitions ?? System.Array.Empty<string>();
             RequiredProfiles = requiredProfiles ?? System.Array.Empty<string>();
             RequiredSceneComponents = requiredSceneComponents ?? System.Array.Empty<string>();
-            RequiredPrefabComponents = requiredPrefabComponents ?? System.Array.Empty<string>();
+            RequiredUnitySurfaces = requiredUnitySurfaces ?? System.Array.Empty<string>();
             AssignmentFields = assignmentFields ?? System.Array.Empty<string>();
             CustomizationMoments = customizationMoments ?? System.Array.Empty<string>();
             CanWait = canWait ?? System.Array.Empty<string>();
@@ -133,7 +133,7 @@ namespace NeonBlack.Gameplay.Editor
                 RequiredDefinitions,
                 RequiredProfiles,
                 RequiredSceneComponents,
-                RequiredPrefabComponents,
+                RequiredUnitySurfaces,
                 AssignmentFields,
                 CustomizationMoments,
                 CanWait,
@@ -159,7 +159,7 @@ namespace NeonBlack.Gameplay.Editor
         public string[] RequiredDefinitions { get; }
         public string[] RequiredProfiles { get; }
         public string[] RequiredSceneComponents { get; }
-        public string[] RequiredPrefabComponents { get; }
+        public string[] RequiredUnitySurfaces { get; }
         public string[] AssignmentFields { get; }
         public string[] CustomizationMoments { get; }
         public string[] CanWait { get; }

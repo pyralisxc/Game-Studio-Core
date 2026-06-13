@@ -12,6 +12,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
         Capability = AuthoringCapability.Tabletop | AuthoringCapability.Grid, 
         Relevance = "Project-window creation path for tabletop board layouts and starting pieces.",
         AssignmentFields = new[] { nameof(width), nameof(height), nameof(startingPieces) },
+        FirstProofTargetId = "proof.board-card-action",
         FirstProof = "Verify the board dimensions and starting pieces are correct in the Board Presenter.",
         NativeSetup = new[] { "Create Asset" }
     )]

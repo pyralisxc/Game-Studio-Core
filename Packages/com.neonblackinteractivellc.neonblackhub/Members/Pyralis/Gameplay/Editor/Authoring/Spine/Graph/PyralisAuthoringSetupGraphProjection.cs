@@ -170,7 +170,11 @@ namespace NeonBlack.Gameplay.Editor
 
         public static PyralisAuthoringGraphNode FindCurrentProofNode(PyralisAuthoringSetupGraph graph)
         {
-            return FindNode(graph, "proof.current");
+            if (graph == null)
+                return null;
+
+            IReadOnlyList<PyralisAuthoringGraphNode> proofNodes = graph.FindNodes(PyralisAuthoringGraphNodeKind.Proof);
+            return proofNodes.Count > 0 ? proofNodes[0] : null;
         }
 
         public static PyralisAuthoringGraphNode FindFirstUnresolvedNode(PyralisAuthoringSetupGraph graph)

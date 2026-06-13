@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Presentation.Animation;
 using UnityEditor;
 using UnityEngine;
@@ -69,7 +70,7 @@ namespace NeonBlack.Gameplay.Editor
                             type.Name + " asset exists in the chosen project folder")
                     },
                     workIntent: "NativeCreatePath",
-                    relatedStableIds: InferRelatedStableIds(type)));
+                    relatedStableIds: BuildDependencyRelatedStableIds(type)));
             }
 
             foreach (Type type in GetGameplayObjectTypes())
@@ -85,7 +86,7 @@ namespace NeonBlack.Gameplay.Editor
                     {
                         PyralisAuthoringFactKind kind = IsSceneComponent(type, attribute.componentMenu)
                             ? PyralisAuthoringFactKind.SceneComponent
-                            : PyralisAuthoringFactKind.PrefabComponent;
+                            : PyralisAuthoringFactKind.UnitySurface;
 
                         facts.Add(new PyralisAuthoringFact(
                             stableId,
@@ -97,7 +98,7 @@ namespace NeonBlack.Gameplay.Editor
                             $"Add {type.Name} through the Inspector when this route needs the component.",
                             string.Empty,
                             requiredSceneComponents: kind == PyralisAuthoringFactKind.SceneComponent ? new[] { type.Name } : null,
-                            requiredPrefabComponents: kind == PyralisAuthoringFactKind.PrefabComponent ? new[] { type.Name } : null,
+                            requiredUnitySurfaces: kind == PyralisAuthoringFactKind.UnitySurface ? new[] { type.Name } : null,
                             nativeActions: new[]
                             {
                                 new PyralisAuthoringNativeAction(
@@ -108,7 +109,7 @@ namespace NeonBlack.Gameplay.Editor
                                     type.Name + " is present on the selected scene object or prefab")
                             },
                             workIntent: "NativeComponentMenu",
-                            relatedStableIds: InferRelatedStableIds(type)));
+                            relatedStableIds: BuildDependencyRelatedStableIds(type)));
                     }
                 }
 
@@ -188,13 +189,13 @@ namespace NeonBlack.Gameplay.Editor
             facts.Add(new PyralisAuthoringFact(
                 stableId,
                 AuthoringCapabilityRegistry.PrettifyTypeName(type.Name) + " Requirements",
-                PyralisAuthoringFactKind.PrefabComponent,
+                PyralisAuthoringFactKind.UnitySurface,
                 PyralisAuthoringFactSourceKind.Reflection,
                 PyralisAuthoringConfidence.Explicit,
                 $"{type.Name} declares required Unity components through RequireComponent metadata.",
-                "Unity component requirements that shape prefab composition.",
+                "Unity component requirements that shape Unity object composition.",
                 string.Empty,
-                requiredPrefabComponents: requiredComponents.ToArray(),
+                requiredUnitySurfaces: requiredComponents.ToArray(),
                 nativeActions: new[]
                 {
                     new PyralisAuthoringNativeAction(
@@ -205,7 +206,7 @@ namespace NeonBlack.Gameplay.Editor
                         "Unity can satisfy or preserve the required component stack")
                 },
                 workIntent: "RequiredComponentContract",
-                relatedStableIds: InferRelatedStableIds(type)));
+                relatedStableIds: BuildDependencyRelatedStableIds(type)));
         }
 
         private static void AddSerializedFieldFacts(Type type, List<PyralisAuthoringFact> facts, HashSet<string> seenStableIds)
@@ -244,7 +245,7 @@ namespace NeonBlack.Gameplay.Editor
                             "the serialized Inspector field holds the user's authored value")
                     },
                     workIntent: "InspectorFieldConvention",
-                    relatedStableIds: InferRelatedStableIds(type, field)));
+                    relatedStableIds: BuildDependencyRelatedStableIds(type, field)));
             }
         }
 
@@ -265,8 +266,9 @@ namespace NeonBlack.Gameplay.Editor
                 $"Feature contract for {contract.AuthoringCategory} module setup and lane compatibility.",
                 $"Feature contract for {contract.AuthoringCategory} lane coverage and compatibility.",
                 contract.FirstProofTargetId,
+                goalTags: BuildGoalTags(contract),
                 requiredProfiles: GetRequiredProfiles(contract.RequiredProfileType),
-                requiredPrefabComponents: NormalizeTypeNames(contract.RequiredRuntimeInterfaceNames),
+                requiredUnitySurfaces: NormalizeTypeNames(contract.RequiredRuntimeInterfaceNames, contract.RequiredComponentNames),
                 laneTags: ToStringArray(contract.SupportedPresentationModes),
                 unsupportedLaneTags: ToStringArray(contract.UnsupportedPresentationModes),
                 assignmentFields: MergeAndDeDuplicateFields(contract.AssignmentFields, discoveredAssignment),
@@ -282,6 +284,31 @@ namespace NeonBlack.Gameplay.Editor
                 removableInVersion: contract.RemovableInVersion,
                 documentationURL: contract.DocumentationURL,
                 expertAdvice: contract.ExpertAdvice);
+        }
+
+        private static string[] BuildGoalTags(ResolvedAuthoringContract contract)
+        {
+            List<string> tags = new List<string>();
+            if (contract == null)
+                return Array.Empty<string>();
+
+            foreach (AuthoringCapability capability in AuthoringCapabilityRegistry.GetAllIndividualCapabilities())
+            {
+                if ((contract.Capability & capability) != 0)
+                    AddGoalTag(tags, AuthoringCapabilityRegistry.GetDisplayName(capability));
+            }
+
+            AddGoalTag(tags, contract.AuthoringCategory);
+            AddGoalTag(tags, contract.AuthoringLane);
+            return tags.ToArray();
+        }
+
+        private static void AddGoalTag(List<string> tags, string value)
+        {
+            if (string.IsNullOrWhiteSpace(value) || tags.Contains(value))
+                return;
+
+            tags.Add(value);
         }
 
         private static void DiscoverAuthoringFields(Type type, List<string> assignmentFields, List<string> customizationMoments)
@@ -398,6 +425,28 @@ namespace NeonBlack.Gameplay.Editor
             return normalized;
         }
 
+        private static string[] NormalizeTypeNames(string[] first, string[] second)
+        {
+            HashSet<string> seen = new HashSet<string>(StringComparer.Ordinal);
+            List<string> normalized = new List<string>();
+            AddNames(first);
+            AddNames(second);
+            return normalized.ToArray();
+
+            void AddNames(string[] source)
+            {
+                if (source == null)
+                    return;
+
+                for (int i = 0; i < source.Length; i++)
+                {
+                    string name = SimplifyTypeName(source[i]);
+                    if (!string.IsNullOrWhiteSpace(name) && seen.Add(name))
+                        normalized.Add(name);
+                }
+            }
+        }
+
         private static string SimplifyTypeName(string typeName)
         {
             if (string.IsNullOrWhiteSpace(typeName))
@@ -458,50 +507,132 @@ namespace NeonBlack.Gameplay.Editor
                 requiredComponents.Add(typeName);
         }
 
-        private static string[] InferRelatedStableIds(Type type, FieldInfo field = null)
+        private static string[] BuildDependencyRelatedStableIds(Type type, FieldInfo field = null)
         {
             List<string> related = new List<string>();
-            string value = ((type != null ? type.Name : string.Empty) + " " +
-                (type != null ? type.FullName : string.Empty) + " " +
-                (field != null ? field.Name : string.Empty) + " " +
-                (field != null ? field.FieldType.Name : string.Empty)).ToLowerInvariant();
 
-            void Add(string stableId)
-            {
-                if (!related.Contains(stableId))
-                    related.Add(stableId);
-            }
-
-            if (value.Contains("session"))
-                Add("setup.assign-session-definition");
-            if (value.Contains("game mode") || value.Contains("gamemode") || value.Contains("setup"))
-                Add("setup.assign-game-mode");
-            if (value.Contains("participant"))
-                Add("setup.assign-participant-pawn");
-            if (value.Contains("pawn") || value.Contains("motor") || value.Contains("movement") || value.Contains("input"))
-            {
-                Add("capability.2d-pawn-movement");
-                Add("proof.1p-pawn-movement");
-            }
-            if (value.Contains("inputprofile") || value.Contains("gameplayactions") || value.Contains("gameplay-actions"))
-                Add("inspector.input-profile.gameplay-action-names");
-            if (value.Contains("board") || value.Contains("turn") || value.Contains("tabletop") || value.Contains("card"))
-                Add("proof.board-card-action");
-            if (value.Contains("camera") || value.Contains("playfield"))
-            {
-                Add("capability.camera-follow-bounds");
-                Add("proof.camera-cursor-world");
-            }
-            if (value.Contains("featuremodule") || value.Contains("feature module") || value.Contains("profileasset"))
-                Add("proof.custom-object-effect");
-            if (value.Contains("enemy") || value.Contains("combat") || value.Contains("projectile") || value.Contains("health"))
-                Add("proof.npc-enemy-behavior");
-            if (value.Contains("ui") || value.Contains("hud") || value.Contains("feedback"))
-                Add("proof.ui-hud-menu");
-            if (value.Contains("network"))
-                Add("proof.network-ownership");
+            AddRelatedContracts(type, related);
+            if (field != null)
+                AddRelatedContracts(GetAuthoringFieldType(field.FieldType), related);
+            AddCoreSetupFallback(type, field, related);
 
             return related.Count > 0 ? related.ToArray() : Array.Empty<string>();
+        }
+
+        private static void AddRelatedContracts(Type type, List<string> related)
+        {
+            if (type == null)
+                return;
+
+            IReadOnlyList<ResolvedAuthoringContract> contracts = ResolvedAuthoringContractRegistry.All;
+            for (int i = 0; i < contracts.Count; i++)
+            {
+                ResolvedAuthoringContract contract = contracts[i];
+                if (contract == null || !ContractDependsOnType(contract, type))
+                    continue;
+
+                AddRelatedStableId(related, contract.StableId);
+                AddRelatedStableId(related, contract.SetupNodeId);
+                AddRelatedStableId(related, contract.FirstProofTargetId);
+                AddCapabilityFactStableIds(contract, related);
+            }
+        }
+
+        private static void AddCapabilityFactStableIds(ResolvedAuthoringContract contract, List<string> related)
+        {
+            if (contract == null || contract.Capability == AuthoringCapability.None)
+                return;
+
+            RuntimeCapabilityFamily[] families = PyralisRuntimeCapabilityFamilyMap.GetFamilies(
+                contract.Capability,
+                RuntimeCapabilityLaneTag.Mixed,
+                contract.Axioms);
+            for (int i = 0; i < families.Length; i++)
+            {
+                RuntimeCapabilityCard card = PyralisRuntimeCapabilityCatalog.FindPrimaryByFamily(families[i]);
+                if (card != null && card.Fact != null)
+                    AddRelatedStableId(related, card.Fact.StableId);
+            }
+        }
+
+        private static bool ContractDependsOnType(ResolvedAuthoringContract contract, Type type)
+        {
+            if (contract.SourceType == type || contract.RequiredProfileType == type)
+                return true;
+
+            string fullName = type.FullName;
+            if (string.IsNullOrWhiteSpace(fullName))
+                return false;
+
+            return ContainsTypeName(contract.RequiredRuntimeInterfaceNames, fullName);
+        }
+
+        private static bool ContainsTypeName(string[] names, string fullName)
+        {
+            if (names == null)
+                return false;
+
+            for (int i = 0; i < names.Length; i++)
+            {
+                if (string.Equals(names[i], fullName, StringComparison.Ordinal))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static Type GetAuthoringFieldType(Type fieldType)
+        {
+            if (fieldType == null)
+                return null;
+
+            if (fieldType.IsArray)
+                return fieldType.GetElementType();
+
+            if (fieldType.IsGenericType)
+            {
+                Type[] arguments = fieldType.GetGenericArguments();
+                if (arguments != null && arguments.Length == 1)
+                    return arguments[0];
+            }
+
+            return fieldType;
+        }
+
+        private static void AddCoreSetupFallback(Type type, FieldInfo field, List<string> related)
+        {
+            if (type == null)
+                return;
+
+            AddKnownSetupType(type, related);
+            if (field != null)
+                AddKnownSetupType(GetAuthoringFieldType(field.FieldType), related);
+        }
+
+        private static void AddKnownSetupType(Type type, List<string> related)
+        {
+            if (type == null)
+                return;
+
+            string name = type.Name;
+            if (name == "SessionDefinition")
+                AddRelatedStableId(related, "setup.assign-session-definition");
+            else if (name == "GameModeDefinition")
+                AddRelatedStableId(related, "setup.assign-game-mode");
+            else if (name == "GameSetupProfile")
+                AddRelatedStableId(related, "setup.assign-setup-profile");
+            else if (name == "ParticipantDefinition")
+                AddRelatedStableId(related, "setup.assign-default-participants");
+            else if (name == "InputProfile")
+                AddRelatedStableId(related, "inspector.input-profile.gameplay-action-names");
+        }
+
+        private static void AddRelatedStableId(List<string> related, string stableId)
+        {
+            if (string.IsNullOrWhiteSpace(stableId) || related.Contains(stableId))
+                return;
+
+            related.Add(stableId);
         }
 
         private static string ToStableSlug(string value)

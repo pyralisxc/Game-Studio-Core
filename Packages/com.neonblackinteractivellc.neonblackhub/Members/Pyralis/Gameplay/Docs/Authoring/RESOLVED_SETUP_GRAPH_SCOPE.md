@@ -25,7 +25,7 @@ The current authoring system is organized, but setup meaning is still interprete
 - `PyralisSetupFlowValidator` reports setup-chain readiness.
 - `PyralisSceneReadinessValidator` reports concrete scene and prefab evidence.
 - `PyralisAuthoringRouteProof`, `PyralisAuthoringOverviewModel`, `PyralisAuthoringValidationModel`, `PyralisAuthoringRouteReport`, graph projections, and tab renderers each project pieces of that truth.
-- `PyralisContractProofFactProjector` fills missing proof facts from resolved feature contracts when a contract owns a proof target that is not already covered by the broad central proof grammar.
+- `PyralisContractProofFactProjector` enriches broad route proof facts from resolved feature contracts that target the same `FirstProofTargetId`, then fills genuinely new contract-owned proof ids when no broad proof exists yet.
 
 That is workable, but it still means feature work can require too many authoring touch points. The graph migration should reduce that pressure so normal feature development is:
 
@@ -162,11 +162,15 @@ Current implementation: selected setup assets, bootstrap roots, pawn roots, and 
 
 Only after the graph proves which metadata it repeatedly needs, enrich `[AuthoringContract]`.
 
-Current implementation: `SetupNodeId` is available on `[AuthoringContract]` and normalized onto `ResolvedAuthoringContract`. Use it when a contract enriches a stable graph setup concept such as `bootstrap.root`, `session.definition`, `mode.definition`, `setup.profile`, `participant.default`, or `pawn.definition`. The graph links contract nodes to those setup nodes, selected-context projection prefers the setup node when a selected contract declares one, and cookbook facts include the setup node as a related stable id. This replaces repeated type-to-setup guessing without adding a separate mapping registry.
+Current implementation: `SetupNodeId` is available on `[AuthoringContract]` and normalized onto `ResolvedAuthoringContract`. Use it when a contract enriches a stable graph setup concept such as `bootstrap.root`, `session.definition`, `mode.definition`, `setup.profile`, `participant.default`, or `pawn.definition`. Do not add a `SetupNodeId` just because a component has a native setup action; HUD binders, projectile launchers, board presenters, services, and similar feature pieces should usually remain contract, evidence, requirement, or native-action nodes unless the graph has promoted that concept into the setup spine. The graph links contract nodes to declared setup nodes, selected-context projection prefers the setup node when a selected contract declares one, and cookbook facts include the setup node as a related stable id. This replaces repeated type-to-setup guessing without adding a separate mapping registry.
 
-Current implementation: `FirstProofTargetId` remains the machine-readable proof route and `FirstProof` remains human developer guidance. `PyralisAuthoringRouteProof` still owns broad route proof grammar such as pawn movement, tabletop action, UI/HUD, camera/cursor, generated content, and networking. `PyralisContractProofFactProjector` only fills proof facts for contract-owned proof ids that do not already exist in that broad grammar, so new feature contracts can become visible without adding another central proof switch.
+Current implementation: `FirstProofTargetId` remains the machine-readable proof route and `FirstProof` remains human developer guidance. Explicit `FirstProofTargetId` values win. When a contract does not declare one, `ResolvedAuthoringContractRegistry` may infer it from dependency-connected contracts only if the graph yields exactly one distinct proof route. Ambiguous routes stay blank instead of guessing. `PyralisAuthoringRouteProof` still owns broad route proof grammar such as pawn movement, tabletop action, UI/HUD, camera/cursor, generated content, and networking. `PyralisContractProofFactProjector` merges contract-owned profiles, components, assignments, customization moments, native actions, related ids, axioms, capability tags, and authoring lanes into matching broad proof facts, then fills proof facts for contract-owned proof ids that do not already exist in the broad grammar.
 
 Current implementation: `PyralisRuntimeCapabilityFamilyMap` is the shared translation layer from reflected `AuthoringCapability` flags, route lane, and world axioms into `RuntimeCapabilityFamily` rows. Intent projection and reflective contract validation consume this map instead of maintaining separate capability-family switches. Keep this as spine grammar: it describes how contract vocabulary maps to setup-family vocabulary, but it must not create assets, imply presets, or choose game content.
+
+Current implementation: `ProfileType` is profile metadata only. It must not automatically imply `IFeatureModuleRuntime`, scene components, Unity object components, or service ownership. `RequiredInterfaces` and `RequiredInterfaceNames` describe dependency surfaces that code can implement. `RequiredComponents` and `RequiredComponentNames` describe physical Unity placement requirements that reflection cannot infer, such as actor-root, scene-root, UI-root, or runtime-prefab components. This keeps core profiles such as input, setup, camera, and settings from accidentally projecting as feature-module runtime requirements while still letting contracts own the setup truth reflection cannot see.
+
+Current implementation: route proof graph nodes use stable proof ids from `PyralisAuthoringRouteProof.StableId` and enriched proof facts. Capability nodes may relate to proof ids through their fact `RelatedStableIds`, but graph construction must not synthesize proof ids from display labels or proof-step labels.
 
 Remaining candidates:
 
@@ -188,7 +192,7 @@ Node kinds:
 - contract
 - proof
 - scene surface
-- prefab requirement
+- Unity surface requirement
 - assignment field
 - validation evidence
 

@@ -39,7 +39,6 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
 
             SerializedObject serializedBootstrap = new SerializedObject(bootstrap);
             SessionDefinition session = GetObjectReference<SessionDefinition>(serializedBootstrap, "sessionDefinition");
-            bool autoCreateCoreServices = GetBool(serializedBootstrap, "autoCreateCoreServices");
             bool injectLoadedScenesOnBuild = GetBool(serializedBootstrap, "injectLoadedScenesOnBuild");
             int spawnPointCount = GetArraySize(serializedBootstrap, "spawnPoints");
             CinemachineCameraRigController cameraRig = GetObjectReference<CinemachineCameraRigController>(serializedBootstrap, "cameraRigController");
@@ -119,12 +118,12 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
 
             steps.Add(new PyralisSetupFlowStep(
                 "First-Scene Defaults",
-                autoCreateCoreServices && injectLoadedScenesOnBuild ? PyralisSetupFlowStepStatus.Ready : PyralisSetupFlowStepStatus.Recommended,
-                autoCreateCoreServices && injectLoadedScenesOnBuild
+                injectLoadedScenesOnBuild ? PyralisSetupFlowStepStatus.Ready : PyralisSetupFlowStepStatus.Recommended,
+                injectLoadedScenesOnBuild
                     ? "Bootstrap startup ownership and loaded-scene injection are ready for a first proof."
                     : "For first-scene proofs, keep bootstrap startup ownership on this root and inject loaded scenes unless this intent deliberately uses a custom composition flow.",
                 bootstrap,
-                autoCreateCoreServices && injectLoadedScenesOnBuild ? PyralisSetupFlowActionKind.SelectObject : PyralisSetupFlowActionKind.RestoreFirstSceneDefaults,
+                injectLoadedScenesOnBuild ? PyralisSetupFlowActionKind.SelectObject : PyralisSetupFlowActionKind.RestoreFirstSceneDefaults,
                 stepId: PyralisSetupFlowStepId.FirstSceneDefaults));
 
             steps.Add(new PyralisSetupFlowStep(
@@ -254,12 +253,10 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 GetGameplayStateServiceStatus(
                     setupRouteReady,
                     route.UsesPawnGameplay() || route.UsesScoring(),
-                    autoCreateCoreServices,
                     hasGameplayStateService),
                 GetGameplayStateServiceMessage(
                     setupRouteReady,
                     route.UsesPawnGameplay() || route.UsesScoring(),
-                    autoCreateCoreServices,
                     hasGameplayStateService),
                 gameplayStateService,
                 stepId: PyralisSetupFlowStepId.AssignGameplayStateService));
@@ -836,7 +833,6 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
         private static PyralisSetupFlowStepStatus GetGameplayStateServiceStatus(
             bool setupReady,
             bool required,
-            bool autoCreateCoreServices,
             bool ready)
         {
             if (!setupReady)
@@ -845,15 +841,12 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             if (!required)
                 return ready ? PyralisSetupFlowStepStatus.Ready : PyralisSetupFlowStepStatus.Optional;
 
-            return autoCreateCoreServices || ready
-                ? PyralisSetupFlowStepStatus.Ready
-                : PyralisSetupFlowStepStatus.Recommended;
+            return PyralisSetupFlowStepStatus.Ready;
         }
 
         private static string GetGameplayStateServiceMessage(
             bool setupReady,
             bool required,
-            bool autoCreateCoreServices,
             bool ready)
         {
             if (!setupReady)
@@ -864,14 +857,9 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 return ready ? "Gameplay state service is present." : "Gameplay state service is optional for this setup route.";
             }
 
-            if (autoCreateCoreServices)
-            {
-                return "GameplaySessionBootstrap provisions session-state services at startup for the selected first proof.";
-            }
-
             return ready
                 ? "Scene has an IGameplayStateReader for active/dead/game-over aware systems."
-                : "Add an IGameplayStateReader only when this intent uses a custom gameplay-state service; otherwise keep the standard bootstrap startup path.";
+                : "GameplaySessionBootstrap provisions SessionStateService through the supported startup path; add a custom IGameplayStateReader only when this intent deliberately owns gameplay state differently.";
 
         }
 

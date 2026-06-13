@@ -39,7 +39,7 @@ namespace NeonBlack.Gameplay.Editor
             DrawFactGroup(PyralisAuthoringFactKind.Definition, facts);
             DrawFactGroup(PyralisAuthoringFactKind.Profile, facts);
             DrawFactGroup(PyralisAuthoringFactKind.SceneComponent, facts);
-            DrawFactGroup(PyralisAuthoringFactKind.PrefabComponent, facts);
+            DrawFactGroup(PyralisAuthoringFactKind.UnitySurface, facts);
         }
 
         private static void DrawFactCoverageSummary(IReadOnlyList<PyralisAuthoringFact> facts)
@@ -147,6 +147,7 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringWindowPrimitives.DrawMiniField("Feature Contract", contract.StableId);
                 PyralisAuthoringWindowPrimitives.DrawMiniField("Required Profile", contract.RequiredProfileType != null ? contract.RequiredProfileType.Name : "None for this module.");
                 PyralisAuthoringWindowPrimitives.DrawMiniList("Runtime Interfaces", contract.RequiredRuntimeInterfaceNames);
+                PyralisAuthoringWindowPrimitives.DrawMiniList("Required Unity Components", contract.RequiredComponentNames);
                 PyralisAuthoringWindowPrimitives.DrawMiniList("Supported Lanes", ToPresentationModeNames(contract.SupportedPresentationModes));
                 PyralisAuthoringWindowPrimitives.DrawMiniList("Unsupported / Caution Lanes", ToPresentationModeNames(contract.UnsupportedPresentationModes));
                 if (!string.IsNullOrWhiteSpace(contract.UnsupportedLaneMessage))
@@ -166,6 +167,7 @@ namespace NeonBlack.Gameplay.Editor
             AddSemanticTag(PyralisAuthoringSemanticTag.Project, tags);
             AddSemanticTag(PyralisAuthoringSemanticTag.Inspector, tags);
             AddSemanticTagIfAny(contract.RequiredRuntimeInterfaceNames, PyralisAuthoringSemanticTag.Prefab, tags);
+            AddSemanticTagIfAny(contract.RequiredComponentNames, PyralisAuthoringSemanticTag.Prefab, tags);
             AddSemanticTagIfAny(contract.ConsumedActionRoles, PyralisAuthoringSemanticTag.Input, tags);
             if (!string.IsNullOrWhiteSpace(contract.FirstProofTargetId))
                 AddSemanticTag(PyralisAuthoringSemanticTag.PlayMode, tags);
@@ -303,7 +305,7 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringWindowPrimitives.DrawMiniList("Required Definitions", fact.RequiredDefinitions);
                 PyralisAuthoringWindowPrimitives.DrawMiniList("Required Profiles", fact.RequiredProfiles);
                 PyralisAuthoringWindowPrimitives.DrawMiniList("Required Scene Components", fact.RequiredSceneComponents);
-                PyralisAuthoringWindowPrimitives.DrawMiniList("Required Prefab Components", fact.RequiredPrefabComponents);
+                PyralisAuthoringWindowPrimitives.DrawMiniList("Required Unity Surfaces", fact.RequiredUnitySurfaces);
                 PyralisAuthoringWindowPrimitives.DrawMiniList("Assignment Fields", fact.AssignmentFields);
                 PyralisAuthoringWindowPrimitives.DrawMiniList("Customization Moments", fact.CustomizationMoments);
                 PyralisAuthoringWindowPrimitives.DrawMiniList("Can Wait", fact.CanWait);
@@ -348,7 +350,7 @@ namespace NeonBlack.Gameplay.Editor
             AddSemanticTagIfAny(fact.RequiredDefinitions, PyralisAuthoringSemanticTag.Definition, tags);
             AddSemanticTagIfAny(fact.RequiredProfiles, PyralisAuthoringSemanticTag.Profile, tags);
             AddSemanticTagIfAny(fact.RequiredSceneComponents, PyralisAuthoringSemanticTag.Hierarchy, tags);
-            AddSemanticTagIfAny(fact.RequiredPrefabComponents, PyralisAuthoringSemanticTag.Prefab, tags);
+            AddSemanticTagIfAny(fact.RequiredUnitySurfaces, PyralisAuthoringSemanticTag.Prefab, tags);
             AddSemanticTagIfAny(fact.AssignmentFields, PyralisAuthoringSemanticTag.Inspector, tags);
             AddSemanticTagIfAny(fact.CustomizationMoments, PyralisAuthoringSemanticTag.Inspector, tags);
 
@@ -362,7 +364,7 @@ namespace NeonBlack.Gameplay.Editor
             AddSemanticTagForText(string.Join(" ", fact.RequiredDefinitions), tags);
             AddSemanticTagForText(string.Join(" ", fact.RequiredProfiles), tags);
             AddSemanticTagForText(string.Join(" ", fact.RequiredSceneComponents), tags);
-            AddSemanticTagForText(string.Join(" ", fact.RequiredPrefabComponents), tags);
+            AddSemanticTagForText(string.Join(" ", fact.RequiredUnitySurfaces), tags);
             AddSemanticTagForText(string.Join(" ", fact.AssignmentFields), tags);
             AddSemanticTagForText(string.Join(" ", fact.CustomizationMoments), tags);
 
@@ -390,7 +392,7 @@ namespace NeonBlack.Gameplay.Editor
                     AddSemanticTag(PyralisAuthoringSemanticTag.Hierarchy, tags);
                     AddSemanticTag(PyralisAuthoringSemanticTag.Component, tags);
                     break;
-                case PyralisAuthoringFactKind.PrefabComponent:
+                case PyralisAuthoringFactKind.UnitySurface:
                     AddSemanticTag(PyralisAuthoringSemanticTag.Prefab, tags);
                     AddSemanticTag(PyralisAuthoringSemanticTag.Component, tags);
                     break;

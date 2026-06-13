@@ -126,7 +126,144 @@ namespace NeonBlack.Gameplay.Core.Contracts
             }
 #endif
 
+            ResolveDependencyProofTargets(contracts);
             return contracts;
+        }
+
+        private static void ResolveDependencyProofTargets(List<ResolvedAuthoringContract> contracts)
+        {
+            if (contracts == null || contracts.Count == 0)
+                return;
+
+            for (int i = 0; i < contracts.Count; i++)
+            {
+                ResolvedAuthoringContract contract = contracts[i];
+                if (contract == null || !string.IsNullOrWhiteSpace(contract.FirstProofTargetId))
+                    continue;
+
+                string inferredProofTargetId = InferDependencyProofTargetId(contract, contracts);
+                if (string.IsNullOrWhiteSpace(inferredProofTargetId))
+                    continue;
+
+                contracts[i] = WithFirstProofTargetId(contract, inferredProofTargetId);
+            }
+        }
+
+        private static string InferDependencyProofTargetId(
+            ResolvedAuthoringContract contract,
+            IReadOnlyList<ResolvedAuthoringContract> contracts)
+        {
+            HashSet<string> proofTargets = new HashSet<string>(StringComparer.Ordinal);
+
+            for (int i = 0; i < contracts.Count; i++)
+            {
+                ResolvedAuthoringContract candidate = contracts[i];
+                if (candidate == null
+                    || candidate == contract
+                    || string.IsNullOrWhiteSpace(candidate.FirstProofTargetId))
+                {
+                    continue;
+                }
+
+                if (ContractsAreDependencyConnected(contract, candidate))
+                    proofTargets.Add(candidate.FirstProofTargetId);
+            }
+
+            if (proofTargets.Count != 1)
+                return string.Empty;
+
+            foreach (string proofTarget in proofTargets)
+                return proofTarget;
+
+            return string.Empty;
+        }
+
+        private static bool ContractsAreDependencyConnected(
+            ResolvedAuthoringContract first,
+            ResolvedAuthoringContract second)
+        {
+            return ContractReferencesType(first, second.SourceType)
+                || ContractReferencesType(second, first.SourceType)
+                || TypeConnectsToContract(first.SourceType, second)
+                || TypeConnectsToContract(second.SourceType, first);
+        }
+
+        private static bool ContractReferencesType(ResolvedAuthoringContract contract, Type type)
+        {
+            if (contract == null || type == null)
+                return false;
+
+            if (contract.RequiredProfileType == type)
+                return true;
+
+            string fullName = type.FullName;
+            if (string.IsNullOrWhiteSpace(fullName))
+                return false;
+
+            return ContainsTypeName(contract.RequiredRuntimeInterfaceNames, fullName);
+        }
+
+        private static bool ContainsTypeName(string[] typeNames, string fullName)
+        {
+            if (typeNames == null || string.IsNullOrWhiteSpace(fullName))
+                return false;
+
+            for (int i = 0; i < typeNames.Length; i++)
+            {
+                if (string.Equals(typeNames[i], fullName, StringComparison.Ordinal))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static bool TypeConnectsToContract(Type type, ResolvedAuthoringContract contract)
+        {
+            if (type == null || contract == null || contract.SourceType == null)
+                return false;
+
+            if (contract.SourceType.IsAssignableFrom(type) || type.IsAssignableFrom(contract.SourceType))
+                return true;
+
+            return ContractReferencesType(contract, type);
+        }
+
+        private static ResolvedAuthoringContract WithFirstProofTargetId(
+            ResolvedAuthoringContract contract,
+            string firstProofTargetId)
+        {
+            return new ResolvedAuthoringContract(
+                stableId: contract.StableId,
+                displayName: contract.DisplayName,
+                authoringCategory: contract.AuthoringCategory,
+                requiredProfileType: contract.RequiredProfileType,
+                requiredRuntimeInterfaceNames: contract.RequiredRuntimeInterfaceNames,
+                supportedPresentationModes: contract.SupportedPresentationModes,
+                unsupportedPresentationModes: contract.UnsupportedPresentationModes,
+                unsupportedLaneMessage: contract.UnsupportedLaneMessage,
+                consumedActionRoles: contract.ConsumedActionRoles,
+                nativeSetup: contract.NativeSetup,
+                firstProofTargetId: firstProofTargetId,
+                firstProofGuidance: contract.FirstProofGuidance,
+                sourceType: contract.SourceType,
+                axioms: contract.Axioms,
+                workIntent: contract.WorkIntent,
+                confidence: contract.Confidence,
+                assignmentFields: contract.AssignmentFields,
+                customizationMoments: contract.CustomizationMoments,
+                requiredComponentNames: contract.RequiredComponentNames,
+                capability: contract.Capability,
+                priority: (AuthoringPriority)contract.Priority,
+                priorityValueOverride: contract.PriorityValueOverride,
+                deprecatedInVersion: contract.DeprecatedInVersion,
+                removableInVersion: contract.RemovableInVersion,
+                documentationURL: contract.DocumentationURL,
+                expertAdvice: contract.ExpertAdvice,
+                moduleId: contract.ModuleId,
+                setupNodeId: contract.SetupNodeId,
+                authoringLane: contract.AuthoringLane,
+                relevance: contract.Relevance,
+                manualPath: contract.ManualPath);
         }
 
         private static ResolvedAuthoringContract CreateFromAttribute(Type type, AuthoringContractAttribute attr)
@@ -148,13 +285,6 @@ namespace NeonBlack.Gameplay.Core.Contracts
                     if (!string.IsNullOrWhiteSpace(ifaceName) && !interfaceNames.Contains(ifaceName))
                         interfaceNames.Add(ifaceName);
                 }
-            }
-
-            if (attr.ProfileType != null)
-            {
-                const string runtimeInterface = "NeonBlack.Gameplay.Features.Composition.IFeatureModuleRuntime";
-                if (!interfaceNames.Contains(runtimeInterface))
-                    interfaceNames.Add(runtimeInterface);
             }
 
             List<string> componentNames = new List<string>();
@@ -218,6 +348,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
                 expertAdvice: attr.ExpertAdvice,
                 moduleId: attr.ModuleId,
                 setupNodeId: attr.SetupNodeId,
+                authoringLane: attr.Lane,
                 relevance: attr.Relevance,
                 manualPath: attr.ManualPath
             );
@@ -315,6 +446,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
                 expertAdvice: FirstNonEmpty(current.ExpertAdvice, incoming.ExpertAdvice),
                 moduleId: FirstNonEmpty(current.ModuleId, incoming.ModuleId),
                 setupNodeId: FirstNonEmpty(current.SetupNodeId, incoming.SetupNodeId),
+                authoringLane: FirstNonEmpty(current.AuthoringLane, incoming.AuthoringLane),
                 relevance: FirstNonEmpty(current.Relevance, incoming.Relevance),
                 manualPath: FirstNonEmpty(current.ManualPath, incoming.ManualPath));
         }

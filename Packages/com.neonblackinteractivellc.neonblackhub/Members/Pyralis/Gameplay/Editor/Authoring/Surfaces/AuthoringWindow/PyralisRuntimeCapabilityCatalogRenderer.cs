@@ -70,7 +70,7 @@ namespace NeonBlack.Gameplay.Editor
                 List<PyralisAuthoringFact> facts = PyralisAuthoringFactRegistry.AllFacts
                     .Where(f => f.Kind == PyralisAuthoringFactKind.RuntimeCapability 
                                 || f.Kind == PyralisAuthoringFactKind.FeatureContract
-                                || f.Kind == PyralisAuthoringFactKind.PrefabComponent
+                                || f.Kind == PyralisAuthoringFactKind.UnitySurface
                                 || f.Kind == PyralisAuthoringFactKind.Profile
                                 || f.Kind == PyralisAuthoringFactKind.Definition)
                     .Where(f => f.HasLane(laneName) || f.IsExplicitlyUnsupported(laneName)).ToList();
@@ -129,7 +129,7 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringWindowPrimitives.DrawMiniList("Required Definitions", fact.RequiredDefinitions);
                 PyralisAuthoringWindowPrimitives.DrawMiniList("Required Profiles", fact.RequiredProfiles);
                 PyralisAuthoringWindowPrimitives.DrawMiniList("Required Scene Components", fact.RequiredSceneComponents);
-                PyralisAuthoringWindowPrimitives.DrawMiniList("Required Prefab Components", fact.RequiredPrefabComponents);
+                PyralisAuthoringWindowPrimitives.DrawMiniList("Required Unity Surfaces", fact.RequiredUnitySurfaces);
                 PyralisAuthoringWindowPrimitives.DrawMiniList("Assignment Fields", fact.AssignmentFields);
                 PyralisAuthoringWindowPrimitives.DrawMiniList("Customization Moments", fact.CustomizationMoments);
                 PyralisAuthoringWindowPrimitives.DrawMiniList("Can Wait", fact.CanWait);
