@@ -588,8 +588,23 @@ namespace NeonBlack.Gameplay.Editor
 
         public static IReadOnlyList<RuntimeCapabilityCard> All => Cards;
 
+        public static IReadOnlyList<PyralisAuthoringFact> GetAuthoringFacts()
+        {
+            List<PyralisAuthoringFact> facts = new List<PyralisAuthoringFact>();
+            for (int i = 0; i < Cards.Length; i++)
+            {
+                RuntimeCapabilityCard card = Cards[i];
+                if (card == null)
+                    continue;
+
+                facts.Add(BuildAuthoringFact(card));
+            }
+
+            return facts.ToArray();
+        }
+
         public static List<RuntimeCapabilityCard> GetByGoal(string goal)
-{
+        {
             List<RuntimeCapabilityCard> matches = new List<RuntimeCapabilityCard>();
             for (int i = 0; i < Cards.Length; i++)
             {
@@ -622,6 +637,195 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             return null;
+        }
+
+        public static PyralisAuthoringFact FindPrimaryFactByFamily(RuntimeCapabilityFamily family)
+        {
+            RuntimeCapabilityCard card = FindPrimaryByFamily(family);
+            return card != null ? BuildAuthoringFact(card) : null;
+        }
+
+        public static bool HasContractCoverage(RuntimeCapabilityFamily family)
+        {
+            IReadOnlyList<ResolvedAuthoringContract> contracts = ResolvedAuthoringContractRegistry.All;
+            for (int i = 0; i < contracts.Count; i++)
+            {
+                ResolvedAuthoringContract contract = contracts[i];
+                if (ContractMatchesFamily(contract, family))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static PyralisAuthoringFact BuildAuthoringFact(RuntimeCapabilityCard card)
+        {
+            if (card == null || card.Fact == null)
+                return null;
+
+            List<ResolvedAuthoringContract> contracts = GetContractsForFamily(card.CapabilityFamily);
+            if (contracts.Count == 0)
+                return card.Fact;
+
+            List<string> requiredProfiles = new List<string>();
+            List<string> requiredUnitySurfaces = new List<string>();
+            List<string> assignmentFields = new List<string>();
+            List<string> customizationMoments = new List<string>();
+            List<string> relatedStableIds = new List<string>();
+            List<string> goalTags = new List<string>();
+            AuthoringWorldAxiom axioms = card.Fact.Axioms;
+            AuthoringCapability capability = card.Fact.Capability;
+
+            AddRangeDistinct(requiredProfiles, card.Fact.RequiredProfiles);
+            AddRangeDistinct(requiredUnitySurfaces, card.Fact.RequiredUnitySurfaces);
+            AddRangeDistinct(assignmentFields, card.Fact.AssignmentFields);
+            AddRangeDistinct(customizationMoments, card.Fact.CustomizationMoments);
+            AddRangeDistinct(relatedStableIds, card.Fact.RelatedStableIds);
+            AddRangeDistinct(goalTags, card.Fact.GoalTags);
+
+            for (int i = 0; i < contracts.Count; i++)
+            {
+                ResolvedAuthoringContract contract = contracts[i];
+                if (contract == null)
+                    continue;
+
+                AddRangeDistinct(requiredProfiles, PyralisReflectiveFactScanner.GetRequiredProfiles(contract.RequiredProfileType));
+                AddRangeDistinct(requiredUnitySurfaces, SimplifyTypeNames(contract.RequiredRuntimeInterfaceNames, contract.RequiredComponentNames));
+                AddRangeDistinct(assignmentFields, contract.AssignmentFields);
+                AddRangeDistinct(customizationMoments, contract.CustomizationMoments);
+                AddDistinct(relatedStableIds, contract.StableId);
+                AddDistinct(relatedStableIds, contract.SetupNodeId);
+                AddDistinct(relatedStableIds, contract.FirstProofTargetId);
+                AddRangeDistinct(goalTags, BuildGoalTags(contract));
+                axioms |= contract.Axioms;
+                capability |= contract.Capability;
+            }
+
+            string routeRelevance = card.Fact.RouteRelevance;
+            routeRelevance = string.IsNullOrWhiteSpace(routeRelevance)
+                ? "Contract/reflection-enriched capability projection."
+                : routeRelevance + " Contract/reflection-enriched capability projection.";
+
+            return new PyralisAuthoringFact(
+                card.Fact.StableId,
+                card.Fact.DisplayName,
+                card.Fact.Kind,
+                card.Fact.SourceKind,
+                card.Fact.Confidence,
+                card.Fact.Summary,
+                routeRelevance,
+                card.Fact.FirstProof,
+                MergeDistinct(card.Fact.GoalTags, goalTags),
+                card.Fact.LaneTags,
+                card.Fact.UnsupportedLaneTags,
+                card.Fact.RequiredDefinitions,
+                requiredProfiles.ToArray(),
+                card.Fact.RequiredSceneComponents,
+                requiredUnitySurfaces.ToArray(),
+                assignmentFields.ToArray(),
+                customizationMoments.ToArray(),
+                card.Fact.CanWait,
+                card.Fact.NativeActions,
+                card.Fact.WorkIntent,
+                relatedStableIds.ToArray(),
+                axioms,
+                capability,
+                (AuthoringPriority)card.Fact.Priority,
+                card.Fact.PriorityValueOverride,
+                card.Fact.DeprecatedInVersion,
+                card.Fact.RemovableInVersion,
+                card.Fact.DocumentationURL,
+                card.Fact.ExpertAdvice);
+        }
+
+        private static List<ResolvedAuthoringContract> GetContractsForFamily(RuntimeCapabilityFamily family)
+        {
+            List<ResolvedAuthoringContract> matches = new List<ResolvedAuthoringContract>();
+            IReadOnlyList<ResolvedAuthoringContract> contracts = ResolvedAuthoringContractRegistry.All;
+            for (int i = 0; i < contracts.Count; i++)
+            {
+                ResolvedAuthoringContract contract = contracts[i];
+                if (ContractMatchesFamily(contract, family))
+                    matches.Add(contract);
+            }
+
+            return matches;
+        }
+
+        private static bool ContractMatchesFamily(ResolvedAuthoringContract contract, RuntimeCapabilityFamily family)
+        {
+            if (contract == null || contract.Capability == AuthoringCapability.None)
+                return false;
+
+            return PyralisRuntimeCapabilityFamilyMap.CapabilityMatchesFamily(contract.Capability, family);
+        }
+
+        private static string[] BuildGoalTags(ResolvedAuthoringContract contract)
+        {
+            List<string> tags = new List<string>();
+            foreach (AuthoringCapability capability in AuthoringCapabilityRegistry.GetAllIndividualCapabilities())
+            {
+                if ((contract.Capability & capability) != 0)
+                    AddDistinct(tags, AuthoringCapabilityRegistry.GetDisplayName(capability));
+            }
+
+            AddDistinct(tags, contract.AuthoringCategory);
+            AddDistinct(tags, contract.AuthoringLane);
+            return tags.ToArray();
+        }
+
+        private static string[] SimplifyTypeNames(string[] interfaceNames, string[] componentNames)
+        {
+            List<string> names = new List<string>();
+            AddSimplifiedNames(names, interfaceNames);
+            AddSimplifiedNames(names, componentNames);
+            return names.ToArray();
+        }
+
+        private static void AddSimplifiedNames(List<string> target, string[] names)
+        {
+            if (names == null)
+                return;
+
+            for (int i = 0; i < names.Length; i++)
+            {
+                string name = names[i];
+                if (string.IsNullOrWhiteSpace(name))
+                    continue;
+
+                int lastDot = name.LastIndexOf('.');
+                AddDistinct(target, lastDot >= 0 && lastDot < name.Length - 1 ? name.Substring(lastDot + 1) : name);
+            }
+        }
+
+        private static string[] MergeDistinct(string[] first, List<string> second)
+        {
+            List<string> values = new List<string>();
+            AddRangeDistinct(values, first);
+            if (second != null)
+            {
+                for (int i = 0; i < second.Count; i++)
+                    AddDistinct(values, second[i]);
+            }
+
+            return values.ToArray();
+        }
+
+        private static void AddRangeDistinct(List<string> target, string[] values)
+        {
+            if (values == null)
+                return;
+
+            for (int i = 0; i < values.Length; i++)
+                AddDistinct(target, values[i]);
+        }
+
+        private static void AddDistinct(List<string> target, string value)
+        {
+            if (string.IsNullOrWhiteSpace(value) || target.Contains(value))
+                return;
+
+            target.Add(value);
         }
     }
 

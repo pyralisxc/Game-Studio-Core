@@ -332,7 +332,6 @@ namespace NeonBlack.Gameplay.Editor
             PyralisAuthoringOverviewRenderer.DrawPlayModeChecklist(model);
             PyralisAuthoringOverviewRenderer.DrawLane("Do Now", "Only intent-required missing or blocked work appears here.", model.DoNow);
             PyralisAuthoringOverviewRenderer.DrawLane("Proof Enhancers", "Useful before Play Mode when they make the first proof clearer.", model.DoSoon);
-            PyralisAuthoringOverviewRenderer.DrawGraphProofSupport(graph);
             DrawCurrentStepPanel(currentStepSelection, currentStep);
         }
 

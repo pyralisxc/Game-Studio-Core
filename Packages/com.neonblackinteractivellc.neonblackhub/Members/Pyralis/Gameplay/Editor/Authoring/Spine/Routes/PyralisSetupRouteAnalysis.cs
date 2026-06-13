@@ -120,27 +120,38 @@ namespace NeonBlack.Gameplay.Editor
 
         public static PyralisSetupRouteAnalysis Build(GameplaySessionBootstrap bootstrap)
         {
-            if (bootstrap == null)
-                return Build((SessionDefinition)null);
-
-            SerializedObject serializedBootstrap = new SerializedObject(bootstrap);
-            SessionDefinition session = serializedBootstrap.FindProperty("sessionDefinition")?.objectReferenceValue as SessionDefinition;
-            return Build(session);
+            PyralisSetupDependencyTree dependencyTree = PyralisSetupDependencyTree.Build(bootstrap);
+            return BuildResolved(dependencyTree.Session, dependencyTree.Mode, dependencyTree.SetupProfile);
         }
 
         public static PyralisSetupRouteAnalysis Build(SessionDefinition session)
         {
-            GameModeDefinition mode = session != null ? session.defaultGameMode : null;
-            return Build(mode, session);
+            PyralisSetupDependencyTree dependencyTree = PyralisSetupDependencyTree.Build(session);
+            return BuildResolved(dependencyTree.Session, dependencyTree.Mode, dependencyTree.SetupProfile);
         }
 
         public static PyralisSetupRouteAnalysis Build(GameModeDefinition mode, SessionDefinition session = null)
         {
-            GameSetupProfile setupProfile = mode != null ? mode.setupProfile : null;
-            return Build(setupProfile, session, mode);
+            PyralisSetupDependencyTree dependencyTree = PyralisSetupDependencyTree.Build(session != null ? session : mode);
+            GameModeDefinition resolvedMode = mode != null ? mode : dependencyTree.Mode;
+            GameSetupProfile resolvedSetupProfile = resolvedMode != null ? resolvedMode.setupProfile : dependencyTree.SetupProfile;
+            return BuildResolved(session != null ? session : dependencyTree.Session, resolvedMode, resolvedSetupProfile);
         }
 
         public static PyralisSetupRouteAnalysis Build(GameSetupProfile setupProfile, SessionDefinition session = null, GameModeDefinition mode = null)
+        {
+            UnityEngine.Object dependencySource = session != null
+                ? session
+                : mode != null
+                    ? mode
+                    : setupProfile;
+            PyralisSetupDependencyTree dependencyTree = PyralisSetupDependencyTree.Build(dependencySource);
+            GameModeDefinition resolvedMode = mode != null ? mode : dependencyTree.Mode;
+            GameSetupProfile resolvedSetupProfile = setupProfile != null ? setupProfile : resolvedMode != null ? resolvedMode.setupProfile : dependencyTree.SetupProfile;
+            return BuildResolved(session != null ? session : dependencyTree.Session, resolvedMode, resolvedSetupProfile);
+        }
+
+        private static PyralisSetupRouteAnalysis BuildResolved(SessionDefinition session, GameModeDefinition mode, GameSetupProfile setupProfile)
         {
             RuntimePatternDefinition[] patterns = setupProfile != null ? setupProfile.runtimePatterns : null;
             RuntimeCapabilityFamily[] capabilityFamilies = CollectCapabilityFamilies(setupProfile, patterns);
@@ -674,7 +685,7 @@ namespace NeonBlack.Gameplay.Editor
                     return $"Pawn prefab `{pawn.pawnPrefab.name}` is missing an input adapter that implements IPawnInputModule so the selected InputProfile can reach movement.";
                 }
 
-                List<string> pawnIssues = PyralisAuthoringValidationModel.BuildPawnRouteValidationIssues(pawn);
+                List<string> pawnIssues = PyralisPawnPrefabReadinessAnalysis.BuildIssues(pawn);
                 if (pawnIssues.Count > 0)
                 {
                     issueKind = PyralisParticipantPawnIssueKind.PawnValidation;

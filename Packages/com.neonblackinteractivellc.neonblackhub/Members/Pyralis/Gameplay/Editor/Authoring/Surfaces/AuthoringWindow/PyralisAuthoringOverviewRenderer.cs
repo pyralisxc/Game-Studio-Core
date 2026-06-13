@@ -164,42 +164,6 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringWindowText.DrawSemanticMiniLabel(item.Detail);
         }
 
-        public static void DrawGraphProofSupport(PyralisAuthoringSetupGraph graph)
-        {
-            IReadOnlyList<PyralisAuthoringGraphConnectionRow> rows = PyralisAuthoringSetupGraphProjection.BuildProofSupportRows(graph);
-            if (rows == null || rows.Count == 0)
-                return;
-
-            EditorGUILayout.Space(4f);
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
-            {
-                EditorGUILayout.LabelField("Graph Proof Support", EditorStyles.miniBoldLabel);
-                PyralisAuthoringWindowText.DrawSemanticMiniLabel("These rows come from resolved graph edges. They show which capabilities and contracts support the current first proof.");
-                EditorGUI.indentLevel++;
-                for (int i = 0; i < rows.Count; i++)
-                    DrawGraphProofSupportRow(rows[i]);
-                EditorGUI.indentLevel--;
-            }
-        }
-
-        private static void DrawGraphProofSupportRow(PyralisAuthoringGraphConnectionRow row)
-        {
-            if (row == null)
-                return;
-
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
-            {
-                EditorGUILayout.LabelField(row.FromLabel, row.ToLabel, EditorStyles.boldLabel);
-                PyralisAuthoringWindowPrimitives.DrawMiniField("Relationship", row.Relationship);
-                if (!string.IsNullOrWhiteSpace(row.Detail))
-                    PyralisAuthoringWindowPrimitives.DrawMiniField("Meaning", row.Detail);
-                if (row.From != null && !string.IsNullOrWhiteSpace(row.From.Guidance))
-                    PyralisAuthoringWindowPrimitives.DrawMiniField("Why It Matters", row.From.Guidance);
-                if (row.From != null)
-                    PyralisAuthoringWindowPrimitives.DrawMiniList("Setup Fields", row.From.AssignmentFields);
-            }
-        }
-
         public static void DrawLane(string title, string description, IReadOnlyList<PyralisAuthoringOverviewIssue> issues)
         {
             EditorGUILayout.Space(6f);

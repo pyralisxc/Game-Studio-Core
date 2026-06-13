@@ -26,12 +26,12 @@ namespace NeonBlack.Gameplay.Editor
                 DrawSelectionGuide(selection, contextGraph);
 
                 EditorGUILayout.Space(10f);
-                DrawCurrentIntentGuide(GetCachedIntentModel());
+                DrawCurrentIntentGuide(contextGraph);
                 DrawReflectiveContracts(contextGraph);
             }
             else
             {
-                DrawCurrentIntentGuide(GetCachedIntentModel());
+                DrawCurrentIntentGuide(contextGraph);
                 DrawReflectiveContracts(contextGraph);
 
                 EditorGUILayout.Space(10f);
@@ -86,13 +86,25 @@ namespace NeonBlack.Gameplay.Editor
             }
         }
 
-        private static void DrawCurrentIntentGuide(PyralisAuthoringIntentModel model)
+        private void DrawCurrentIntentGuide(PyralisAuthoringSetupGraph graph)
         {
             EditorGUILayout.LabelField("Current Intent Guide", EditorStyles.boldLabel);
+
+            IReadOnlyList<PyralisAuthoringGuideGraphRow> graphRows = PyralisAuthoringSetupGraphProjection.BuildCurrentIntentGuideRows(graph);
+            if (graphRows != null && graphRows.Count > 0)
+            {
+                PyralisAuthoringWindowText.DrawSemanticHelpBox(
+                    "Graph-ranked route guidance for the active setup. Intent shapes the setup profile; Guide renders the resulting graph path.",
+                    MessageType.Info);
+                DrawGuideGraphRows(graphRows);
+                return;
+            }
+
             PyralisAuthoringWindowText.DrawSemanticHelpBox(
-                "Ranked cookbook cards for the selected Intent. Use these to decide what to create, inspect, customize, or defer. Facts remains the full dictionary outside the current intent.",
+                "Pre-setup intent guidance from the cookbook. Create or select a GameSetupProfile so Guide can filter the resolved setup graph instead of showing planning cards.",
                 MessageType.Info);
 
+            PyralisAuthoringIntentModel model = GetCachedIntentModel();
             if (model == null)
             {
                 EditorGUILayout.LabelField("No intent model is available yet.", EditorStyles.wordWrappedMiniLabel);
@@ -118,6 +130,51 @@ namespace NeonBlack.Gameplay.Editor
                 "Useful facts that are not a clean fit for the selected lane. Keep them visible as tradeoffs, not primary steps.",
                 model.Cautions,
                 "Cautions help prevent pawn, combat, UI, board, or networking assumptions from leaking into the wrong route.");
+        }
+
+        private static void DrawGuideGraphRows(IReadOnlyList<PyralisAuthoringGuideGraphRow> rows)
+        {
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                for (int i = 0; i < rows.Count; i++)
+                    DrawGuideGraphRow(rows[i]);
+            }
+        }
+
+        private static void DrawGuideGraphRow(PyralisAuthoringGuideGraphRow row)
+        {
+            if (row == null || row.Node == null)
+                return;
+
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                string foldoutKey = "Pyralis.AuthoringWindow.Guide.Graph." + row.StableId;
+                bool expanded = GetFoldout(IntentRowFoldouts, foldoutKey, row.EvidenceState == PyralisAuthoringGraphEvidenceState.Missing || row.EvidenceState == PyralisAuthoringGraphEvidenceState.Blocked);
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    expanded = EditorGUILayout.Foldout(expanded, new GUIContent(row.Label, row.Message), true);
+                    GUILayout.FlexibleSpace();
+                    EditorGUILayout.LabelField(GetIntentTierLabel(row.Tier), GUILayout.Width(96f));
+                    EditorGUILayout.LabelField(row.State.ToString(), GUILayout.Width(84f));
+                }
+
+                SetFoldout(IntentRowFoldouts, foldoutKey, expanded);
+                PyralisAuthoringWindowPrimitives.DrawMiniField("Why", row.Reason, "Why this graph node is visible for the active setup route.");
+                PyralisAuthoringWindowPrimitives.DrawMiniField("Evidence", row.EvidenceState.ToString(), "Readiness state from the resolved setup graph.");
+                PyralisAuthoringWindowPrimitives.DrawMiniField("Source", row.SourceOrigin.ToString(), "Where this graph node's setup meaning came from.");
+                PyralisAuthoringWindowPrimitives.DrawMiniField("First Proof", row.FirstProof, "The smallest proof or success criterion this graph row supports.");
+
+                if (!expanded)
+                {
+                    PyralisAuthoringWindowPrimitives.DrawMiniList("Customization", row.CustomizationMoments, "Creator-owned choices to make after the route skeleton is understood.", 2);
+                    return;
+                }
+
+                PyralisAuthoringWindowPrimitives.DrawMiniField("What It Means", row.Message, "Guidance from the resolved setup graph node.");
+                PyralisAuthoringWindowPrimitives.DrawMiniList("Native Setup", row.NativeSetup, "Unity Project, Hierarchy, Inspector, or Play Mode actions named by the graph.");
+                PyralisAuthoringWindowPrimitives.DrawMiniList("Assignment Fields", row.AssignmentFields, "Unity fields or objects the creator may need to inspect or assign.");
+                PyralisAuthoringWindowPrimitives.DrawMiniList("Customization", row.CustomizationMoments, "Creator-owned choices. Authoring guides these choices; it does not pick them.");
+            }
         }
 
         private static void DrawReflectiveContracts(PyralisAuthoringSetupGraph graph)

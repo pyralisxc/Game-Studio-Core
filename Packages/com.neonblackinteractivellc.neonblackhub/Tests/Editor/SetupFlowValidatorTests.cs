@@ -387,12 +387,13 @@ namespace NeonBlack.Gameplay.Tests.Editor
             serializedBootstrap.ApplyModifiedPropertiesWithoutUndo();
 
             PyralisSetupFlowReport setupFlow = PyralisSetupFlowValidator.BuildReport(bootstrap);
-            PyralisAuthoringRouteReport routeReport = PyralisAuthoringRouteReport.Build(bootstrap);
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
+            PyralisAuthoringCurrentStepGraphRow currentStep = PyralisAuthoringSetupGraphProjection.BuildCurrentStepRow(graph);
 
             Assert.That(setupFlow.GetStep("Assign Input Profile").Status, Is.EqualTo(PyralisSetupFlowStepStatus.Missing));
             Assert.That(setupFlow.GetStep("Assign Input Profile").Message, Does.Contain("assign Actions"));
-            Assert.That(routeReport.NextStep, Does.Contain("assign Actions"));
-            Assert.That(routeReport.NextStep, Does.Not.Contain("Enter Play Mode"));
+            Assert.That(currentStep.Message, Does.Contain("assign Actions"));
+            Assert.That(currentStep.Message, Does.Not.Contain("Enter Play Mode"));
 
             Object.DestroyImmediate(session);
             Object.DestroyImmediate(participant);
@@ -706,7 +707,11 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 PyralisAuthoringSetupGraphProjection.BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.Blocked);
 
             Assert.That(requiredRows.Count, Is.GreaterThan(0));
-            Assert.That(requiredRows.Any(row => row.NodeId.StartsWith("scenereadiness.", System.StringComparison.Ordinal)), Is.True);
+            Assert.That(
+                requiredRows.Any(row =>
+                    row.NodeId.StartsWith("scenereadiness.prefabcontract.requiredbeforeplay.", System.StringComparison.Ordinal)
+                    && !row.NodeId.EndsWith(".0", System.StringComparison.Ordinal)),
+                Is.True);
             Assert.That(requiredRows.Any(row => row.Message.Contains("IPawnMotor")), Is.True);
             Assert.That(requiredRows.Any(row => row.NativeAction.Contains("prefab root")), Is.True);
 
@@ -2098,196 +2103,6 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
         }
 
         [Test]
-        public void PyralisAuthoringValidationModel_BootstrapRoute_AddsSceneSurfaceAuditCards()
-        {
-            GameObject root = new GameObject("Gameplay Root");
-            GameplaySessionBootstrap bootstrap = root.AddComponent<GameplaySessionBootstrap>();
-            RuntimePatternDefinition tabletop = CreateRuntimePattern(
-                "pattern.tabletop.validation",
-                "Tabletop",
-                RuntimeCapabilityFamily.BoardCardTabletop,
-                ParticipantEmbodimentRequirement.NonPawnSurfaceRequired,
-                RuntimeControlSurface.BoardSeat);
-            RuntimePatternDefinition action = CreateRuntimePattern(
-                "pattern.action.validation",
-                "Action Selection",
-                RuntimeCapabilityFamily.ActionTargeting,
-                ParticipantEmbodimentRequirement.NonPawnSurfaceRequired,
-                RuntimeControlSurface.MenuSelection);
-            GameSetupProfile setupProfile = ScriptableObject.CreateInstance<GameSetupProfile>();
-            setupProfile.runtimePatterns = new[] { tabletop, action };
-            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
-            mode.setupProfile = setupProfile;
-            ParticipantDefinition participant = ScriptableObject.CreateInstance<ParticipantDefinition>();
-            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
-            session.defaultGameMode = mode;
-            session.defaultParticipants = new[] { participant };
-            SetObjectReference(bootstrap, "sessionDefinition", session);
-            PyralisAuthoringRouteReport report = PyralisAuthoringRouteReport.Build(bootstrap);
-
-            PyralisAuthoringValidationModel model = PyralisAuthoringValidationModel.Build(bootstrap, report);
-
-            PyralisAuthoringValidationIssue uiIssue = model.Issues.First(issue => issue.IssueCode == "sceneSurface.ui-hud-menus.missing");
-            PyralisAuthoringValidationIssue selectionIssue = model.Issues.First(issue => issue.IssueCode == "sceneSurface.board-action-selection.missing");
-            Assert.That(uiIssue.Category, Is.EqualTo(PyralisAuthoringValidationCategory.SceneObjects));
-            Assert.That(uiIssue.Problem, Does.Contain("UI / HUD / Menus"));
-            Assert.That(uiIssue.WhyItMatters, Does.Contain("Validate found"));
-            Assert.That(uiIssue.InspectionHint, Does.Contain("Canvas"));
-            Assert.That(uiIssue.AffectedMember, Is.EqualTo("Scene surface: UI / HUD / Menus"));
-            Assert.That(uiIssue.Expected, Does.Contain("route-owned UI surface"));
-            Assert.That(uiIssue.Found, Does.Contain("No Canvas"));
-            Assert.That(uiIssue.SuccessLooksLike, Does.Contain("Pressing Play shows"));
-            Assert.That(uiIssue.HasAuditEvidence, Is.True);
-            Assert.That(uiIssue.Target, Is.EqualTo(bootstrap));
-            Assert.That(uiIssue.GuidanceActionLabel, Is.EqualTo("Open Map"));
-            Assert.That(uiIssue.HasGuidanceAction, Is.True);
-            Assert.That(selectionIssue.InspectionHint, Does.Contain("selection surface"));
-            Assert.That(selectionIssue.Expected, Does.Contain("selection surface"));
-            Assert.That(selectionIssue.SuccessLooksLike, Does.Contain("choose one legal action"));
-
-            Object.DestroyImmediate(session);
-            Object.DestroyImmediate(participant);
-            Object.DestroyImmediate(mode);
-            Object.DestroyImmediate(setupProfile);
-            Object.DestroyImmediate(action);
-            Object.DestroyImmediate(tabletop);
-            Object.DestroyImmediate(root);
-        }
-
-        [Test]
-        public void PyralisAuthoringValidationModel_BootstrapWithoutSession_SurfacesMissingSessionDefinition()
-        {
-            GameObject root = new GameObject("Gameplay Root");
-            GameplaySessionBootstrap bootstrap = root.AddComponent<GameplaySessionBootstrap>();
-            PyralisAuthoringRouteReport report = PyralisAuthoringRouteReport.Build(bootstrap);
-
-            PyralisAuthoringValidationModel model = PyralisAuthoringValidationModel.Build(bootstrap, report);
-
-            PyralisAuthoringValidationIssue issue = model.Issues.First(card => card.IssueCode == "bootstrap.sessionDefinition.missing");
-            Assert.That(model.HasIssues, Is.True);
-            Assert.That(issue.Category, Is.EqualTo(PyralisAuthoringValidationCategory.SessionSetup));
-            Assert.That(issue.Problem, Does.Contain("Session Definition is not assigned"));
-            Assert.That(issue.AffectedMember, Is.EqualTo("GameplaySessionBootstrap.sessionDefinition"));
-            Assert.That(issue.Target, Is.EqualTo(bootstrap));
-            Assert.That(issue.GuidanceActionLabel, Is.EqualTo("Open Bootstrap Guide"));
-            Assert.That(model.TypedIssues.Select(typedIssue => typedIssue.IssueCode), Does.Contain("bootstrap.sessionDefinition.missing"));
-
-            Object.DestroyImmediate(root);
-        }
-
-        [Test]
-        public void PyralisAuthoringValidationModel_SessionIssue_ExposesTypedIssueMetadata()
-        {
-            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
-
-            PyralisAuthoringRouteReport report = PyralisAuthoringRouteReport.Build(session);
-            PyralisAuthoringValidationModel model = PyralisAuthoringValidationModel.Build(session, report);
-
-            PyralisAuthoringValidationIssue cardIssue = model.Issues.First(issue => issue.IssueCode == "session.defaultGameMode.missing");
-            PyralisAuthoringIssue typedIssue = cardIssue.TypedIssue;
-
-            Assert.That(model.TypedIssues.Select(issue => issue.IssueCode), Does.Contain("session.defaultGameMode.missing"));
-            Assert.That(typedIssue, Is.Not.Null);
-            Assert.That(typedIssue.IssueCode, Is.EqualTo("session.defaultGameMode.missing"));
-            Assert.That(typedIssue.Severity, Is.EqualTo(PyralisAuthoringIssueSeverity.Required));
-            Assert.That(typedIssue.WorkIntent, Is.EqualTo(PyralisSetupFlowWorkIntent.RequiredSetup.ToString()));
-            Assert.That(typedIssue.EvidenceState, Is.EqualTo(PyralisAuthoringEvidenceState.Missing));
-            Assert.That(typedIssue.FieldOrComponent, Is.EqualTo("SessionDefinition.defaultGameMode"));
-            Assert.That(typedIssue.NativeAction, Is.Not.Null);
-            Assert.That(typedIssue.NativeAction.Value.Surface, Is.EqualTo(PyralisAuthoringActionSurface.Inspector));
-
-            Object.DestroyImmediate(session);
-        }
-
-        [Test]
-        public void PyralisAuthoringValidationModel_SceneSurfaceIssue_ExposesProofEnhancerTypedIssue()
-        {
-            GameObject root = new GameObject("Gameplay Root");
-            GameplaySessionBootstrap bootstrap = root.AddComponent<GameplaySessionBootstrap>();
-            RuntimePatternDefinition tabletop = CreateRuntimePattern(
-                "pattern.tabletop.typed.validation",
-                "Tabletop",
-                RuntimeCapabilityFamily.BoardCardTabletop,
-                ParticipantEmbodimentRequirement.NonPawnSurfaceRequired,
-                RuntimeControlSurface.BoardSeat);
-            GameSetupProfile setupProfile = ScriptableObject.CreateInstance<GameSetupProfile>();
-            setupProfile.runtimePatterns = new[] { tabletop };
-            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
-            mode.setupProfile = setupProfile;
-            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
-            session.defaultGameMode = mode;
-            SetObjectReference(bootstrap, "sessionDefinition", session);
-            PyralisAuthoringRouteReport report = PyralisAuthoringRouteReport.Build(bootstrap);
-
-            PyralisAuthoringValidationModel model = PyralisAuthoringValidationModel.Build(bootstrap, report);
-
-            PyralisAuthoringValidationIssue sceneIssue = model.Issues.First(issue => issue.IssueCode == "sceneSurface.board-action-selection.missing");
-            PyralisAuthoringIssue typedIssue = sceneIssue.TypedIssue;
-            Assert.That(typedIssue.Severity, Is.EqualTo(PyralisAuthoringIssueSeverity.Recommended));
-            Assert.That(typedIssue.WorkIntent, Is.EqualTo(PyralisSetupFlowWorkIntent.ProofEnhancer.ToString()));
-            Assert.That(typedIssue.EvidenceState, Is.EqualTo(PyralisAuthoringEvidenceState.Missing));
-            Assert.That(typedIssue.TargetObject, Is.EqualTo("scene Hierarchy"));
-            Assert.That(typedIssue.NativeAction, Is.Not.Null);
-            Assert.That(typedIssue.NativeAction.Value.Surface, Is.EqualTo(PyralisAuthoringActionSurface.Hierarchy));
-            Assert.That(typedIssue.NativeAction.Value.Verb, Is.EqualTo("Create or link"));
-
-            Object.DestroyImmediate(session);
-            Object.DestroyImmediate(mode);
-            Object.DestroyImmediate(setupProfile);
-            Object.DestroyImmediate(tabletop);
-            Object.DestroyImmediate(root);
-        }
-
-        [Test]
-        public void PyralisAuthoringValidationModel_BootstrapRoute_AddsPrefabReadinessAuditCards()
-        {
-            GameObject root = new GameObject("Gameplay Root");
-            GameplaySessionBootstrap bootstrap = root.AddComponent<GameplaySessionBootstrap>();
-            GameObject pawnPrefab = new GameObject("Bare Pawn");
-            PawnDefinition pawn = ScriptableObject.CreateInstance<PawnDefinition>();
-            pawn.pawnPrefab = pawnPrefab;
-            ParticipantDefinition participant = ScriptableObject.CreateInstance<ParticipantDefinition>();
-            participant.defaultPawn = pawn;
-            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
-            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
-            session.defaultGameMode = mode;
-            session.defaultParticipants = new[] { participant };
-            SetObjectReference(bootstrap, "sessionDefinition", session);
-            PyralisAuthoringRouteReport report = PyralisAuthoringRouteReport.Build(bootstrap);
-
-            PyralisAuthoringValidationModel model = PyralisAuthoringValidationModel.Build(bootstrap, report);
-
-            PyralisAuthoringValidationIssue pawnRootIssue = model.Issues.First(issue =>
-                issue.IssueCode.StartsWith("prefabReadiness.required.")
-                && issue.Found.Contains("PawnRoot"));
-            Assert.That(pawnRootIssue.Category, Is.EqualTo(PyralisAuthoringValidationCategory.PawnsActors));
-            Assert.That(pawnRootIssue.Problem, Does.Contain("Required prefab readiness issue"));
-            Assert.That(pawnRootIssue.AffectedMember, Is.EqualTo("PawnDefinition.pawnPrefab"));
-            Assert.That(pawnRootIssue.WhyItMatters, Does.Contain("audit"));
-            Assert.That(pawnRootIssue.InspectionHint, Does.Contain("pawn prefab root"));
-            Assert.That(pawnRootIssue.Expected, Does.Contain("PawnRoot"));
-            Assert.That(pawnRootIssue.SuccessLooksLike, Does.Contain("spawn or control one pawn"));
-            Assert.That(pawnRootIssue.Target, Is.EqualTo(pawnPrefab));
-            Assert.That(pawnRootIssue.PrimaryActionLabel, Is.EqualTo("Inspect Pawn Setup"));
-            Assert.That(pawnRootIssue.GuidanceActionLabel, Is.EqualTo("Open Map"));
-            Assert.That(pawnRootIssue.HasGuidanceAction, Is.True);
-            Assert.That(pawnRootIssue.HasAuditEvidence, Is.True);
-            Assert.That(pawnRootIssue.TypedIssue.IssueCode, Does.StartWith("prefabReadiness.required."));
-            Assert.That(pawnRootIssue.TypedIssue.Severity, Is.EqualTo(PyralisAuthoringIssueSeverity.Required));
-            Assert.That(pawnRootIssue.TypedIssue.EvidenceState, Is.EqualTo(PyralisAuthoringEvidenceState.CandidateDetected));
-            Assert.That(pawnRootIssue.TypedIssue.WorkIntent, Is.EqualTo(PyralisSetupFlowWorkIntent.RequiredSetup.ToString()));
-            Assert.That(pawnRootIssue.TypedIssue.NativeAction, Is.Not.Null);
-            Assert.That(pawnRootIssue.TypedIssue.NativeAction.Value.Surface, Is.EqualTo(PyralisAuthoringActionSurface.Inspector));
-
-            Object.DestroyImmediate(session);
-            Object.DestroyImmediate(mode);
-            Object.DestroyImmediate(participant);
-            Object.DestroyImmediate(pawn);
-            Object.DestroyImmediate(pawnPrefab);
-            Object.DestroyImmediate(root);
-        }
-
-        [Test]
         public void PyralisAuthoringCapabilitySelection_ReplacesOneCapabilityWithoutDroppingOthers()
         {
             RuntimePatternDefinition pawn = CreateRuntimePattern(
@@ -2378,39 +2193,6 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
             Assert.That(model.DoNow.First(issue => issue.Label == "Assign Session Definition").NativeActionGuidance, Does.Contain("then confirm"));
 
             Object.DestroyImmediate(root);
-        }
-
-        [Test]
-        public void PyralisAuthoringRouteReport_PlainSceneObject_GuidesAddComponentBeforeAssetWiring()
-        {
-            GameObject root = new GameObject("Gameplay Root");
-
-            PyralisAuthoringRouteReport report = PyralisAuthoringRouteReport.Build(root);
-
-            Assert.That(report.RouteName, Is.EqualTo("Scene object selected"));
-            Assert.That(report.NextStep, Does.Contain("Inspector -> Add Component"));
-            Assert.That(report.NextStep, Does.Contain("GameplaySessionBootstrap"));
-            Assert.That(report.RouteGuidance, Does.Contain("Hierarchy"));
-
-            Object.DestroyImmediate(root);
-        }
-
-        [Test]
-        public void PyralisAuthoringRouteReport_MainCamera_DoesNotSuggestBootstrapOnCamera()
-        {
-            GameObject cameraRoot = new GameObject("Main Camera");
-            cameraRoot.AddComponent<Camera>();
-
-            PyralisAuthoringRouteReport report = PyralisAuthoringRouteReport.Build(cameraRoot);
-
-            Assert.That(report.RouteName, Is.EqualTo("Scene support object selected"));
-            Assert.That(report.NextStep, Does.Contain("Create or select a Gameplay Root"));
-            Assert.That(report.NextStep, Does.Contain("add GameplaySessionBootstrap there"));
-            Assert.That(report.NextStep, Does.Not.Contain("on `Main Camera`"));
-            Assert.That(report.RouteGuidance, Does.Contain("camera"));
-            Assert.That(report.RouteGuidance, Does.Contain("active setup"));
-
-            Object.DestroyImmediate(cameraRoot);
         }
 
         [Test]
@@ -2583,32 +2365,7 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
         }
 
         [Test]
-        public void PyralisAuthoringValidationModel_PawnIssue_BuildsInspectionCard()
-        {
-            PawnDefinition pawn = ScriptableObject.CreateInstance<PawnDefinition>();
-            PyralisAuthoringRouteReport report = PyralisAuthoringRouteReport.Build(pawn);
-
-            PyralisAuthoringValidationModel model = PyralisAuthoringValidationModel.Build(pawn, report);
-
-            Assert.That(model.HasIssues, Is.True);
-            PyralisAuthoringValidationIssue issue = model.Issues.First();
-            Assert.That(issue.IssueCode, Is.EqualTo("pawn.pawnPrefab.missing"));
-            Assert.That(issue.Category, Is.EqualTo(PyralisAuthoringValidationCategory.PawnsActors));
-            Assert.That(issue.Problem, Does.Contain("pawn prefab"));
-            Assert.That(issue.AffectedMember, Is.EqualTo("PawnDefinition.pawnPrefab"));
-            Assert.That(issue.WhyItMatters, Does.Contain("Pawn-backed routes"));
-            Assert.That(issue.InspectionHint, Does.Contain("PawnDefinition"));
-            Assert.That(issue.Target, Is.EqualTo(pawn));
-            Assert.That(issue.CanInspectTarget, Is.True);
-            Assert.That(issue.PrimaryActionLabel, Is.EqualTo("Inspect Pawn Setup"));
-            Assert.That(issue.GuidanceActionLabel, Is.EqualTo("Open Pawn Guide"));
-            Assert.That(issue.HasGuidanceAction, Is.True);
-
-            Object.DestroyImmediate(pawn);
-        }
-
-        [Test]
-        public void PyralisAuthoringRouteReport_Pawn2DPrefab_FlagsEnvironmentSizedSpriteAndPhysicsDefaults()
+        public void PyralisPawnPrefabReadinessAnalysis_Pawn2DPrefab_FlagsEnvironmentSizedSpriteAndPhysicsDefaults()
         {
             PawnDefinition pawn = ScriptableObject.CreateInstance<PawnDefinition>();
             GameObject root = new GameObject("Large Visual Pawn");
@@ -2626,13 +2383,11 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
                 renderer.sprite = sprite;
                 pawn.pawnPrefab = root;
 
-                PyralisAuthoringRouteReport report = PyralisAuthoringRouteReport.Build(pawn);
-                PyralisAuthoringValidationModel model = PyralisAuthoringValidationModel.Build(pawn, report);
+                List<string> issues = PyralisPawnPrefabReadinessAnalysis.BuildIssues(pawn);
 
-                Assert.That(report.ValidationIssues.Any(issue => issue.Contains("Gravity Scale to 0")), Is.True);
-                Assert.That(report.ValidationIssues.Any(issue => issue.Contains("Freeze Rotation")), Is.True);
-                Assert.That(report.ValidationIssues.Any(issue => issue.Contains("environment-sized sprite")), Is.True);
-                Assert.That(model.Issues.Any(issue => issue.IssueCode == "pawn.prefab.sprite.environmentSized"), Is.True);
+                Assert.That(issues.Any(issue => issue.Contains("Gravity Scale to 0")), Is.True);
+                Assert.That(issues.Any(issue => issue.Contains("Freeze Rotation")), Is.True);
+                Assert.That(issues.Any(issue => issue.Contains("environment-sized sprite")), Is.True);
             }
             finally
             {
@@ -2641,109 +2396,6 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
                 Object.DestroyImmediate(root);
                 Object.DestroyImmediate(pawn);
             }
-        }
-
-        [Test]
-        public void PyralisAuthoringValidationModel_SetupPatternIssue_PreservesSetupProfileGuidance()
-        {
-            GameSetupProfile setupProfile = ScriptableObject.CreateInstance<GameSetupProfile>();
-            setupProfile.runtimePatterns = System.Array.Empty<RuntimePatternDefinition>();
-            PyralisAuthoringRouteReport report = PyralisAuthoringRouteReport.Build(setupProfile);
-
-            PyralisAuthoringValidationModel model = PyralisAuthoringValidationModel.Build(setupProfile, report);
-
-            Assert.That(model.Issues.Select(issue => issue.Category), Does.Contain(PyralisAuthoringValidationCategory.SetupProfile));
-            PyralisAuthoringValidationIssue setupIssue = model.Issues.First(issue => issue.Category == PyralisAuthoringValidationCategory.SetupProfile);
-            Assert.That(setupIssue.IssueCode, Is.EqualTo("setupProfile.runtimeCapabilities.missing"));
-            Assert.That(setupIssue.Problem, Does.Contain("runtime capability"));
-            Assert.That(setupIssue.AffectedMember, Is.EqualTo("GameSetupProfile.runtimeCapabilities"));
-            Assert.That(setupIssue.WhyItMatters, Does.Contain("setup profile"));
-            Assert.That(setupIssue.InspectionHint, Does.Contain("GameSetupProfile"));
-            Assert.That(setupIssue.Target, Is.EqualTo(setupProfile));
-            Assert.That(setupIssue.PrimaryActionLabel, Is.EqualTo("Inspect Setup Profile"));
-            Assert.That(setupIssue.GuidanceActionLabel, Is.EqualTo("Open Setup Profile"));
-            Assert.That(setupIssue.HasGuidanceAction, Is.True);
-
-            Object.DestroyImmediate(setupProfile);
-        }
-
-        [Test]
-        public void PyralisAuthoringValidationModel_SessionIssue_UsesStructuredIssueCode()
-        {
-            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
-            session.defaultGameMode = null;
-            session.defaultParticipants = System.Array.Empty<ParticipantDefinition>();
-            PyralisAuthoringRouteReport report = PyralisAuthoringRouteReport.Build(session);
-
-            PyralisAuthoringValidationModel model = PyralisAuthoringValidationModel.Build(session, report);
-
-            Assert.That(model.Issues.Select(issue => issue.IssueCode), Does.Contain("session.defaultGameMode.missing"));
-            Assert.That(model.Issues.Select(issue => issue.IssueCode), Does.Contain("session.defaultParticipants.missing"));
-            PyralisAuthoringValidationIssue modeIssue = model.Issues.First(issue => issue.IssueCode == "session.defaultGameMode.missing");
-            PyralisAuthoringValidationIssue participantIssue = model.Issues.First(issue => issue.IssueCode == "session.defaultParticipants.missing");
-            Assert.That(modeIssue.AffectedMember, Is.EqualTo("SessionDefinition.defaultGameMode"));
-            Assert.That(modeIssue.PrimaryActionLabel, Is.EqualTo("Inspect Session Chain"));
-            Assert.That(modeIssue.GuidanceActionLabel, Is.EqualTo("Open Session Guide"));
-            Assert.That(modeIssue.HasGuidanceAction, Is.True);
-            Assert.That(participantIssue.PrimaryActionLabel, Is.EqualTo("Inspect Participant Setup"));
-            Assert.That(participantIssue.GuidanceActionLabel, Is.EqualTo("Open Participant Guide"));
-            Assert.That(participantIssue.HasGuidanceAction, Is.True);
-
-            Object.DestroyImmediate(session);
-        }
-
-        [Test]
-        public void PyralisAuthoringValidationModel_GameModeIssue_UsesStructuredIssueCode()
-        {
-            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
-            mode.setupProfile = null;
-            mode.enableRespawn = false;
-            mode.startingLives = 1;
-            PyralisAuthoringRouteReport report = PyralisAuthoringRouteReport.Build(mode);
-
-            PyralisAuthoringValidationModel model = PyralisAuthoringValidationModel.Build(mode, report);
-
-            Assert.That(model.Issues.Select(issue => issue.IssueCode), Does.Contain("gameMode.setupProfile.missing"));
-            Assert.That(model.Issues.Select(issue => issue.IssueCode), Does.Contain("gameMode.startingLives.respawnDisabled"));
-            PyralisAuthoringValidationIssue setupProfileIssue = model.Issues.First(issue => issue.IssueCode == "gameMode.setupProfile.missing");
-            Assert.That(setupProfileIssue.AffectedMember, Is.EqualTo("GameModeDefinition.setupProfile"));
-            Assert.That(setupProfileIssue.PrimaryActionLabel, Is.EqualTo("Inspect Setup Profile"));
-            Assert.That(setupProfileIssue.GuidanceActionLabel, Is.EqualTo("Open Game Rules Guide"));
-            Assert.That(setupProfileIssue.HasGuidanceAction, Is.True);
-
-            Object.DestroyImmediate(mode);
-        }
-
-        [Test]
-        public void PyralisAuthoringValidationModel_FixableSlots_OpenFocusedGuides()
-        {
-            RuntimePatternDefinition duplicatePattern = CreateRuntimePattern(
-                "pattern.duplicate",
-                "Duplicate Pattern",
-                RuntimeCapabilityFamily.Combat,
-                ParticipantEmbodimentRequirement.OptionalPawn,
-                RuntimeControlSurface.Pawn);
-            GameSetupProfile setupProfile = ScriptableObject.CreateInstance<GameSetupProfile>();
-            setupProfile.runtimeCapabilities = new[]
-            {
-                new RuntimeCapabilitySelection { capabilityFamily = RuntimeCapabilityFamily.Combat },
-                null,
-                new RuntimeCapabilitySelection { capabilityFamily = RuntimeCapabilityFamily.Combat }
-            };
-            setupProfile.runtimePatterns = new[] { duplicatePattern };
-            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
-            session.defaultParticipants = new ParticipantDefinition[] { null };
-
-            PyralisAuthoringValidationModel setupModel = PyralisAuthoringValidationModel.Build(setupProfile, PyralisAuthoringRouteReport.Build(setupProfile));
-            PyralisAuthoringValidationModel sessionModel = PyralisAuthoringValidationModel.Build(session, PyralisAuthoringRouteReport.Build(session));
-
-            Assert.That(setupModel.Issues.First(issue => issue.IssueCode == "setupProfile.runtimeCapabilities.slot.empty").GuidanceActionLabel, Is.EqualTo("Open Setup Profile"));
-            Assert.That(setupModel.Issues.First(issue => issue.IssueCode == "setupProfile.runtimeCapabilities.duplicate").GuidanceActionLabel, Is.EqualTo("Open Setup Profile"));
-            Assert.That(sessionModel.Issues.First(issue => issue.IssueCode == "session.defaultParticipants.slot.empty").GuidanceActionLabel, Is.EqualTo("Open Participant Guide"));
-
-            Object.DestroyImmediate(session);
-            Object.DestroyImmediate(setupProfile);
-            Object.DestroyImmediate(duplicatePattern);
         }
 
         [Test]
@@ -2973,7 +2625,6 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
             SetObjectReference(bootstrap, "sessionDefinition", session);
 
             PyralisSetupFlowReport report = PyralisSetupFlowValidator.BuildReport(bootstrap);
-            PyralisAuthoringRouteReport routeReport = PyralisAuthoringRouteReport.Build(bootstrap);
             PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
             PyralisAuthoringOverviewModel overview = PyralisAuthoringOverviewModel.Build(bootstrap, graph);
 
@@ -3043,7 +2694,7 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
         }
 
         [Test]
-        public void PyralisAuthoringRouteReport_LocalJoin_WithPlayerInputManagerMissingPrefab_DoesNotTellUserToEnterPlayMode()
+        public void PyralisSetupFlowValidator_LocalJoin_WithPlayerInputManagerMissingPrefab_BlocksPlayMode()
         {
             GameObject root = new GameObject("Gameplay Root");
             GameplaySessionBootstrap bootstrap = root.AddComponent<GameplaySessionBootstrap>();
@@ -3086,11 +2737,16 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
             spawnPoints.GetArrayElementAtIndex(1).objectReferenceValue = secondSpawn.transform;
             serializedBootstrap.ApplyModifiedPropertiesWithoutUndo();
 
-            PyralisAuthoringRouteReport report = PyralisAuthoringRouteReport.Build(bootstrap);
+            PyralisSetupFlowReport report = PyralisSetupFlowValidator.BuildReport(bootstrap);
+            PyralisSetupFlowStep inputManagerStep = report.GetStep("Assign Player Input Manager");
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
+            IReadOnlyList<PyralisAuthoringValidationGraphRow> missingRows =
+                PyralisAuthoringSetupGraphProjection.BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.Missing);
 
-            Assert.That(report.RouteName, Is.EqualTo("Pawn-backed local-join route"));
-            Assert.That(report.NextStep, Does.Contain("PlayerInputManager > Player Prefab"));
-            Assert.That(report.NextStep, Does.Not.Contain("Enter Play Mode"));
+            Assert.That(inputManagerStep.Status, Is.EqualTo(PyralisSetupFlowStepStatus.Missing));
+            Assert.That(inputManagerStep.Message, Does.Contain("PlayerInputManager > Player Prefab"));
+            Assert.That(inputManagerStep.Message, Does.Not.Contain("Enter Play Mode"));
+            Assert.That(missingRows.Any(row => row.Message.Contains("PlayerInputManager > Player Prefab")), Is.True);
 
             Object.DestroyImmediate(session);
             Object.DestroyImmediate(firstParticipant);
@@ -3146,22 +2802,22 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
         }
 
         [Test]
-        public void PyralisAuthoringRouteReport_EmptySession_AsksForDefaultGameModeBeforeRuntimePatterns()
+        public void PyralisAuthoringCurrentStep_EmptySession_AsksForDefaultGameModeBeforeRuntimePatterns()
         {
             SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
 
-            PyralisAuthoringRouteReport report = PyralisAuthoringRouteReport.Build(session);
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(session);
+            PyralisAuthoringCurrentStepGraphRow currentStep = PyralisAuthoringSetupGraphProjection.BuildCurrentStepRow(graph);
 
-            Assert.That(report.RouteName, Is.EqualTo("No setup route selected"));
-            Assert.That(report.NextStep, Does.Contain("Default Game Mode"));
-            Assert.That(report.NextStep, Does.Not.Contain("RuntimePatternDefinition"));
-            Assert.That(report.RouteGuidance, Does.Contain("native Unity creation and Inspector fields"));
+            Assert.That(currentStep.RouteName, Is.EqualTo("No setup route selected"));
+            Assert.That(currentStep.Message, Does.Contain("Default Game Mode"));
+            Assert.That(currentStep.Message, Does.Not.Contain("RuntimePatternDefinition"));
 
             Object.DestroyImmediate(session);
         }
 
         [Test]
-        public void PyralisAuthoringRouteReport_NoPawnSetup_TellsRoutePawnPrefabCanStayEmpty()
+        public void PyralisAuthoringOverviewModel_NoPawnSetup_TellsRoutePawnPrefabCanStayEmpty()
         {
             RuntimePatternDefinition tabletop = CreateRuntimePattern(
                 "pattern.tabletop",
@@ -3180,11 +2836,14 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
             session.defaultGameMode = mode;
             session.defaultParticipants = new[] { participant };
 
-            PyralisAuthoringRouteReport report = PyralisAuthoringRouteReport.Build(session);
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(session);
+            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(session, graph);
 
-            Assert.That(report.RouteName, Is.EqualTo("Tabletop route"));
-            Assert.That(report.NextStep, Does.Contain("one selection surface"));
-            Assert.That(report.RouteGuidance, Does.Contain("Pawn prefab can stay empty"));
+            Assert.That(model.RouteName, Is.EqualTo("Tabletop route"));
+            Assert.That(model.BestNextAction, Does.Contain("selection surface"));
+            Assert.That(model.Later.Any(issue =>
+                issue.Label.Contains("Pawn")
+                && issue.Message.Contains("does not currently need actor bodies")), Is.True);
 
             Object.DestroyImmediate(session);
             Object.DestroyImmediate(participant);
@@ -3194,7 +2853,7 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
         }
 
         [Test]
-        public void PyralisAuthoringRouteReport_PawnBootstrap_ReactsToAssignedSpawnPoints()
+        public void PyralisSetupFlowValidator_PawnBootstrap_ReactsToAssignedSpawnPoints()
         {
             GameObject root = new GameObject("Gameplay Root");
             GameplaySessionBootstrap bootstrap = root.AddComponent<GameplaySessionBootstrap>();
@@ -3245,25 +2904,32 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
             spawnPoints.GetArrayElementAtIndex(0).objectReferenceValue = spawn.transform;
             serializedBootstrap.ApplyModifiedPropertiesWithoutUndo();
 
-            PyralisAuthoringRouteReport mismatchReport = PyralisAuthoringRouteReport.Build(bootstrap);
+            PyralisSetupFlowReport mismatchReport = PyralisSetupFlowValidator.BuildReport(bootstrap);
+            PyralisSetupFlowStep mismatchSpawnPointStep = mismatchReport.GetStep("Assign Spawn Points");
+            PyralisAuthoringSetupGraph mismatchGraph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
+            IReadOnlyList<PyralisAuthoringValidationGraphRow> mismatchRows =
+                PyralisAuthoringSetupGraphProjection.BuildValidationRows(mismatchGraph, PyralisAuthoringGraphEvidenceState.Missing);
 
-            Assert.That(mismatchReport.NextStep, Does.Contain("1 assigned spawn point(s) for 2 default participant(s)"));
-            Assert.That(mismatchReport.NextStep, Does.Contain("clean 1P proof"));
+            Assert.That(mismatchSpawnPointStep.Status, Is.EqualTo(PyralisSetupFlowStepStatus.Missing));
+            Assert.That(mismatchSpawnPointStep.Message, Does.Contain("1 assigned spawn point(s) for 2 default participant(s)"));
+            Assert.That(mismatchSpawnPointStep.Message, Does.Contain("clean 1P proof"));
+            Assert.That(mismatchRows.Any(row => row.Message.Contains("1 assigned spawn point(s) for 2 default participant(s)")), Is.True);
 
             session.defaultParticipants = new[] { playerOne };
             session.maxParticipants = 1;
-            PyralisAuthoringRouteReport missingPlayfieldReport = PyralisAuthoringRouteReport.Build(bootstrap);
+            PyralisAuthoringSetupGraph missingPlayfieldGraph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
+            PyralisAuthoringOverviewModel missingPlayfieldModel = PyralisAuthoringOverviewModel.Build(bootstrap, missingPlayfieldGraph);
 
-            Assert.That(missingPlayfieldReport.NextStep, Does.Contain("Environment / Playfield"));
-            Assert.That(missingPlayfieldReport.NextStep, Does.Not.Contain("Enter Play Mode"));
-            Assert.That(missingPlayfieldReport.RouteGuidance, Does.Contain("spawn point only says where the pawn appears"));
+            Assert.That(missingPlayfieldModel.BestNextAction, Does.Contain("Environment / Playfield"));
+            Assert.That(missingPlayfieldModel.BestNextAction, Does.Not.Contain("Enter Play Mode"));
 
             GameObject ground = new GameObject("Ground");
             ground.AddComponent<BoxCollider2D>();
-            PyralisAuthoringRouteReport readyReport = PyralisAuthoringRouteReport.Build(bootstrap);
+            PyralisAuthoringSetupGraph readyGraph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
+            PyralisAuthoringOverviewModel readyModel = PyralisAuthoringOverviewModel.Build(bootstrap, readyGraph);
 
-            Assert.That(readyReport.NextStep, Does.Contain("Enter Play Mode"));
-            Assert.That(readyReport.NextStep, Does.Contain("moves"));
+            Assert.That(readyModel.ReadyToPressPlay, Is.True);
+            Assert.That(readyModel.FirstProofSuccessCriteria, Does.Contain("moves"));
 
             Object.DestroyImmediate(session);
             Object.DestroyImmediate(playerTwo);

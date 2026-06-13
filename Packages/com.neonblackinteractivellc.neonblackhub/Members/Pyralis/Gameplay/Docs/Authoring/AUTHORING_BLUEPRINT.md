@@ -109,11 +109,10 @@ Keep the implementation split by responsibility:
 | `PyralisAuthoringWindow` | UI shell, active setup state, selection, and mode coordination |
 | `PyralisAuthoringRouteDescriptor` | route facts inferred from setup patterns and selected context |
 | `PyralisAuthoringRouteProof` | first playable proof names, success criteria, and deferred work for each route family |
-| `PyralisAuthoringRouteReport` | selected-object diagnosis, validation issues, target jumps, and route report rows |
 | `PyralisAuthoringOverviewModel` | Overview read model for graph-projected lanes, first proof text, and Play Mode checklist |
 | `PyralisAuthoringCapabilitySelection` | Capability-row helpers used by Intent-to-`GameSetupProfile` sync and optional `RuntimePatternDefinition` metadata |
 | `PyralisRuntimeCapabilityCatalog` | guide-only capability cards indexed by game-goal and runtime-lane tags |
-| `PyralisAuthoringIntentAdvisor` | Cookbook-to-intent read model that ranks route-intent, capability, contract, and proof facts from selected world/playfield, control shape, lane, and goals for Guide cards and other tab projections |
+| `PyralisAuthoringIntentAdvisor` | Cookbook-to-intent read model that ranks route-intent, capability, contract, and proof facts from selected world/playfield, control shape, lane, and goals for pre-setup planning and fallback guidance |
 | `PyralisAuthoringSetupGraph` | read-only resolved graph of setup nodes, edges, evidence, proof targets, selected context, and source contracts |
 | `PyralisAuthoringSetupGraphProjection` | Map, Overview, Guide, Validate, reflective-contract, and selected-context projection rows derived from the resolved setup graph |
 | `PyralisAuthoringCapabilityGuidance` | selected capability, recommended next, environment, and route-intent guidance rows |
@@ -129,7 +128,7 @@ The active guidance pipeline is:
 Runtime contracts
   -> Definition/Profile assets
       -> Route analysis
-          -> Resolved setup graph and shared authoring guidance models
+          -> Resolved setup graph and graph-backed authoring projections
               -> Map, Overview, Guide, validation cards, inspector handoffs, and docs
 ```
 
@@ -182,7 +181,7 @@ Core concepts:
 - `Evidence`: why the tool believes something is ready, missing, optional, or not needed for this route.
 - `Work Intent`: whether the row is foundation setup, required setup, a proof enhancer, or a feature card.
 
-The first Authoring 2.0 foundation is `PyralisAuthoringFactRegistry`. It is a read-only typed fact spine used to keep guide cards, validation issues, inspector handoffs, and setup rows on stable ids instead of display text. Runtime capability cards, reflected contracts, setup-flow rows, route proof facts, route-family coverage facts, scene-evidence facts, inspector handoff facts, convention facts, route intents, and typed `PyralisAuthoringIssue` metadata all flow through that single registry. Feature-owned `[AuthoringContract]` metadata feeds setup-profile capability guidance, profile/runtime/lane validation, unsupported-lane cautions, developer first-proof guidance, and resolved proof target rows. Convention facts do not use a second provider-discovery registry. `PyralisAuthoringIntentAdvisor` projects registry facts into a compact route-choice summary for Intent and ranked current-intent cards for Guide. Intent chooses the route shape; Guide owns the card wall; Facts remains the full cookbook and dictionary. Beginner semantic location tags give the Authoring Window a top legend strip plus generated fact/action badges for Project, Hierarchy, Inspector, Component, Prefab, Definition, Profile, Input, UI, Animation, Audio, and Play Mode.
+The first Authoring 2.0 foundation is `PyralisAuthoringFactRegistry`. It is a read-only typed fact spine used to keep guide cards, validation issues, inspector handoffs, and setup rows on stable ids instead of display text. Runtime capability cards, reflected contracts, setup-flow rows, route proof facts, route-family coverage facts, scene-evidence facts, inspector handoff facts, convention facts, route intents, and typed `PyralisAuthoringIssue` metadata all flow through that single registry. Feature-owned `[AuthoringContract]` metadata feeds setup-profile capability guidance, profile/runtime/lane validation, unsupported-lane cautions, developer first-proof guidance, and resolved proof target rows. Convention facts do not use a second provider-discovery registry. `PyralisAuthoringIntentAdvisor` projects registry facts into a compact route-choice summary for Intent and pre-setup planning. Intent chooses the route shape; Guide owns the graph-filtered route guide when setup exists; Facts remains the full cookbook and dictionary. Beginner semantic location tags give the Authoring Window a top legend strip plus generated fact/action badges for Project, Hierarchy, Inspector, Component, Prefab, Definition, Profile, Input, UI, Animation, Audio, and Play Mode.
 
 The registry should grow in this order:
 

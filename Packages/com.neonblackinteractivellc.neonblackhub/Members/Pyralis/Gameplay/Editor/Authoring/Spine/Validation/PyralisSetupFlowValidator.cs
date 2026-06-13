@@ -43,7 +43,9 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             int spawnPointCount = GetArraySize(serializedBootstrap, "spawnPoints");
             CinemachineCameraRigController cameraRig = GetObjectReference<CinemachineCameraRigController>(serializedBootstrap, "cameraRigController");
             bool hasCameraRig = cameraRig != null;
-            bool hasPlayerInputManager = GetObjectReference<Object>(serializedBootstrap, "playerInputManager") != null;
+            PlayerInputManager playerInputManager = GetObjectReference<PlayerInputManager>(serializedBootstrap, "playerInputManager");
+            bool hasPlayerInputManager = playerInputManager != null;
+            bool hasUsablePlayerInputManager = !hasPlayerInputManager || playerInputManager.playerPrefab != null;
             bool hasLifetimeScope = bootstrap.GetComponent<PyralisGameplayLifetimeScope>() != null;
 
             PyralisSetupRouteAnalysis route = PyralisSetupRouteAnalysis.Build(session);
@@ -52,6 +54,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             bool hasSelectedCapabilities = route.HasValidPatterns;
             bool requiresPawn = route.RequiresPawn;
             bool hasParticipants = route.HasParticipants;
+            int assignedParticipantCount = CountAssignedParticipants(session);
             bool hasParticipantPawn = route.HasAnyDefaultPawn;
             string participantPawnIssue = route.ParticipantPawnIssue;
             PawnDefinition firstPawn = GetFirstPawnDefinition(session);
@@ -194,8 +197,8 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
 
             steps.Add(new PyralisSetupFlowStep(
                 "Assign Spawn Points",
-                GetSpawnPointStatus(setupRouteReady, requiresPawn, spawnPointCount),
-                GetSpawnPointMessage(setupRouteReady, requiresPawn, spawnPointCount),
+                GetSpawnPointStatus(setupRouteReady, requiresPawn, spawnPointCount, assignedParticipantCount),
+                GetSpawnPointMessage(setupRouteReady, requiresPawn, spawnPointCount, assignedParticipantCount),
                 bootstrap,
                 stepId: PyralisSetupFlowStepId.AssignSpawnPoints));
 
@@ -208,9 +211,9 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
 
             steps.Add(new PyralisSetupFlowStep(
                 "Assign Player Input Manager",
-                GetRequiredRouteServiceStatus(setupRouteReady, route.LikelyUsesInputManager(), hasPlayerInputManager),
-                GetPlayerInputMessage(setupRouteReady, route.LikelyUsesInputManager(), hasPlayerInputManager),
-                GetObjectReference<Object>(serializedBootstrap, "playerInputManager"),
+                GetPlayerInputManagerStatus(setupRouteReady, route.LikelyUsesInputManager(), hasPlayerInputManager, hasUsablePlayerInputManager),
+                GetPlayerInputMessage(setupRouteReady, route.LikelyUsesInputManager(), hasPlayerInputManager, hasUsablePlayerInputManager),
+                playerInputManager,
                 stepId: PyralisSetupFlowStepId.AssignPlayerInputManager));
 
             steps.Add(new PyralisSetupFlowStep(
@@ -378,7 +381,11 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 : PyralisSetupFlowStepStatus.Missing;
         }
 
-        private static PyralisSetupFlowStepStatus GetSpawnPointStatus(bool setupReady, bool requiresPawn, int spawnPointCount)
+        private static PyralisSetupFlowStepStatus GetSpawnPointStatus(
+            bool setupReady,
+            bool requiresPawn,
+            int spawnPointCount,
+            int assignedParticipantCount)
         {
             if (!setupReady)
                 return PyralisSetupFlowStepStatus.Blocked;
@@ -386,7 +393,32 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             if (!requiresPawn)
                 return spawnPointCount > 0 ? PyralisSetupFlowStepStatus.Ready : PyralisSetupFlowStepStatus.Optional;
 
-            return spawnPointCount > 0 ? PyralisSetupFlowStepStatus.Ready : PyralisSetupFlowStepStatus.Missing;
+            if (spawnPointCount <= 0)
+                return PyralisSetupFlowStepStatus.Missing;
+
+            int requiredSpawnPoints = Math.Max(1, assignedParticipantCount);
+            return spawnPointCount >= requiredSpawnPoints
+                ? PyralisSetupFlowStepStatus.Ready
+                : PyralisSetupFlowStepStatus.Missing;
+        }
+
+        private static PyralisSetupFlowStepStatus GetPlayerInputManagerStatus(
+            bool setupReady,
+            bool recommended,
+            bool hasPlayerInputManager,
+            bool hasUsablePlayerInputManager)
+        {
+            if (!setupReady)
+                return PyralisSetupFlowStepStatus.Blocked;
+
+            if (!recommended)
+                return hasPlayerInputManager && hasUsablePlayerInputManager
+                    ? PyralisSetupFlowStepStatus.Ready
+                    : PyralisSetupFlowStepStatus.Optional;
+
+            return hasPlayerInputManager && hasUsablePlayerInputManager
+                ? PyralisSetupFlowStepStatus.Ready
+                : PyralisSetupFlowStepStatus.Missing;
         }
 
         private static PyralisSetupFlowStepStatus GetRecommendationStatus(bool setupReady, bool recommended, bool ready)
@@ -598,6 +630,21 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             return inputProfileReference != null ? inputProfileReference : (Object)pawn;
         }
 
+        private static int CountAssignedParticipants(SessionDefinition session)
+        {
+            if (session == null || session.defaultParticipants == null)
+                return 0;
+
+            int count = 0;
+            for (int i = 0; i < session.defaultParticipants.Length; i++)
+            {
+                if (session.defaultParticipants[i] != null)
+                    count++;
+            }
+
+            return count;
+        }
+
         private static PawnDefinition GetFirstPawnDefinition(SessionDefinition session)
         {
             if (session == null || session.defaultParticipants == null)
@@ -684,7 +731,11 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             return string.Empty;
         }
 
-        private static string GetSpawnPointMessage(bool setupReady, bool requiresPawn, int spawnPointCount)
+        private static string GetSpawnPointMessage(
+            bool setupReady,
+            bool requiresPawn,
+            int spawnPointCount,
+            int assignedParticipantCount)
         {
             if (!setupReady)
                 return "Choose setup capabilities before deciding whether spawn points are required.";
@@ -694,9 +745,14 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                     ? "Spawn points are assigned, which is allowed when this setup spawns actor bodies."
                     : "Spawn points can stay empty for no-pawn board/card/menu/camera routes.";
 
-            return spawnPointCount > 0
-                ? "Spawn points are assigned for pawn-backed participants."
-                : "Selected setup requires pawns. Add spawn point transforms to the bootstrap.";
+            if (spawnPointCount <= 0)
+                return "Selected setup requires pawns. Add spawn point transforms to the bootstrap.";
+
+            int requiredSpawnPoints = Math.Max(1, assignedParticipantCount);
+            if (spawnPointCount < requiredSpawnPoints)
+                return $"Selected setup has {spawnPointCount} assigned spawn point(s) for {requiredSpawnPoints} default participant(s). Add one spawn point per starting participant, or set the session to a clean 1P proof before Play Mode.";
+
+            return "Spawn points are assigned for pawn-backed participants.";
         }
 
         private static string GetCameraRigMessage(bool setupReady, bool requiredForFirstProof, bool requires2DBounds, bool recommended, bool ready, bool usable2DBounds)
@@ -789,17 +845,24 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             return childCamera != null && childCamera.orthographic;
         }
 
-        private static string GetPlayerInputMessage(bool setupReady, bool recommended, bool ready)
+        private static string GetPlayerInputMessage(
+            bool setupReady,
+            bool recommended,
+            bool hasPlayerInputManager,
+            bool hasUsablePlayerInputManager)
         {
             if (!setupReady)
                 return "Choose setup capabilities before deciding local join wiring.";
 
+            if (hasPlayerInputManager && !hasUsablePlayerInputManager)
+                return "Configure PlayerInputManager > Player Prefab before Play Mode, or disable local join for this proof. Unity PlayerInputManager logs runtime errors when join is enabled without a Player Prefab; use a dedicated PlayerInput prefab for local join, not the spawned pawn prefab unless that prefab is intentionally the input-join prefab.";
+
             if (!recommended)
-                return ready
+                return hasPlayerInputManager
                     ? "PlayerInputManager is assigned."
                     : "PlayerInputManager is optional for single-player, AI-only, menu-only, and no-join prototypes. Add it only when multiple local players can join.";
 
-            return ready
+            return hasPlayerInputManager
                 ? "PlayerInputManager is assigned for local join, and ParticipantInputRouter will subscribe to join/leave events."
                 : "Selected setup looks like multi-participant local join. For a 1P proof, select/open the SessionDefinition asset and set Max Participants to 1. For local join, create an Input Root, add Unity PlayerInputManager, assign a dedicated PlayerInput prefab, configure Join Behavior/Input Actions, then drag the component into Bootstrap > Player Input Manager.";
         }

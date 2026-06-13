@@ -51,34 +51,21 @@ namespace NeonBlack.Gameplay.Editor
 
         public static System.Collections.Generic.IReadOnlyList<PyralisAuthoringFact> GetAuthoringFacts()
         {
+            return PyralisContractProofFactProjector.EnrichRouteProofFacts(GetFallbackAuthoringFacts());
+        }
+
+        public static System.Collections.Generic.IReadOnlyList<PyralisAuthoringFact> GetFallbackAuthoringFacts()
+        {
             System.Collections.Generic.List<PyralisAuthoringFact> facts = new System.Collections.Generic.List<PyralisAuthoringFact>();
-            facts.Add(CreateProofFact(
+            facts.Add(CreateFallbackProofFact(
                 "proof.1p-pawn-movement",
                 "1P Pawn Movement Proof",
                 "Run one local pawn-backed movement proof before adding combat, HUD, enemies, scoring, or networking.",
-                "2D pawn movement route",
+                "Generic pawn-backed route proof.",
                 "One participant spawns one pawn, the selected InputProfile reaches a pawn input module, movement is visibly responsive, and the Game view follows the runtime shared camera focus.",
                 new[] { "Movement" },
                 new[] { RuntimeCapabilityLaneTag.Sprite2D },
                 System.Array.Empty<RuntimeCapabilityLaneTag>(),
-                new[] { "SessionDefinition", "ParticipantDefinition", "PawnDefinition" },
-                new[] { "InputProfile", "PawnMovementProfile", "PawnPresentationProfile" },
-                new[] { "GameplaySessionBootstrap", "PyralisGameplayLifetimeScope", "Spawn Point Transform" },
-                new[] { "PawnRoot", "IPawnMotor", "IPawnInputModule", "IPawnPresentationModule" },
-                new[]
-                {
-                    "SessionDefinition.defaultParticipants -> ParticipantDefinition",
-                    "ParticipantDefinition.defaultPawn -> PawnDefinition",
-                    "PawnDefinition.pawnPrefab -> pawn prefab",
-                    "Pawn prefab input module -> mapped InputProfile Move action",
-                    "GameplaySessionBootstrap.spawnPoints -> scene spawn Transform"
-                },
-                new[]
-                {
-                    "Tune pawn visuals, collision, pivot, and lane presentation.",
-                    "Tune PawnMovementProfile speed/acceleration/jump/dash feel.",
-                    "Map InputProfile action names to the project's input action asset."
-                },
                 new[] { "combat", "projectiles", "HUD", "scoring", "pickups", "hazards", "networking", "local join" },
                 "the active 2D pawn route",
                 "press Play after the selected intent's Do Now setup is clear; move the pawn through the mapped input path and watch the Game view",
@@ -102,21 +89,15 @@ namespace NeonBlack.Gameplay.Editor
                     "setup.tune-movement-and-input-feel"
                 }));
 
-            facts.Add(CreateProofFact(
+            facts.Add(CreateFallbackProofFact(
                 "proof.board-card-action",
                 "Board Card Action Proof",
                 "Run one rules-backed tabletop selection before adding card UX, AI turns, campaign flow, or networking.",
-                "tabletop board/card route",
+                "Generic no-pawn tabletop route proof.",
                 "One board space, card, seat command, or turn action is selected; Pyralis accepts or rejects it through rules; and board/card/turn state visibly or inspectably changes.",
                 new[] { "Tabletop", "Interaction" },
                 new[] { RuntimeCapabilityLaneTag.TabletopBoard, RuntimeCapabilityLaneTag.UiMenuOnly, RuntimeCapabilityLaneTag.CameraCursor },
                 new[] { RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.ThirdPerson3D },
-                new[] { "BoardDefinition", "BoardMovePolicyDefinition", "TurnOrderDefinition", "ActionDefinition" },
-                System.Array.Empty<string>(),
-                new[] { "TabletopBoardGridPresenter or equivalent board/card selection surface", "Canvas or cursor bridge when selection is UI-driven" },
-                System.Array.Empty<string>(),
-                new[] { "GameModeDefinition.boardDefinition", "GameModeDefinition.turnOrderDefinition", "selection surface -> action resolver" },
-                new[] { "Choose board layout, legal moves, turn/phase order, card/seat ownership, and selection feedback." },
                 new[] { "pawn actors", "final board art", "full card UX", "AI turns", "shops", "deckbuilding", "networking", "campaign flow" },
                 "the active tabletop route",
                 "press Play after one board/card/seat command surface is wired; choose one legal or illegal action",
@@ -125,21 +106,15 @@ namespace NeonBlack.Gameplay.Editor
                 "https://docs.neonblack.com/pyralis/tabletop",
                 new[] { "route.tabletop-card", "capability.interaction-action-selection", "capability.ui-scoring-feedback" }));
 
-            facts.Add(CreateProofFact(
+            facts.Add(CreateFallbackProofFact(
                 "proof.action-selection",
                 "Action Selection Proof",
                 "Run one selected command before expanding menus, cards, ability lists, animation polish, or AI.",
-                "action/menu/cursor route",
+                "Generic action, menu, or cursor route proof.",
                 "One command reaches its resolver and reports accepted, rejected, completed, or failed.",
                 new[] { "Interaction", "Tabletop" },
                 new[] { RuntimeCapabilityLaneTag.UiMenuOnly, RuntimeCapabilityLaneTag.TabletopBoard, RuntimeCapabilityLaneTag.CameraCursor, RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.ThirdPerson3D },
                 System.Array.Empty<RuntimeCapabilityLaneTag>(),
-                new[] { "ActionDefinition" },
-                new[] { "InputProfile when input drives the command", "InteractionFeatureProfile when actor interaction is used" },
-                new[] { "UI button, cursor target, card, board space, interaction trigger, or pawn action surface" },
-                new[] { "lane-specific action trigger when the source is a pawn" },
-                new[] { "Action presenter or resolver -> ActionDefinition", "selected surface -> action resolver or bridge" },
-                new[] { "Choose command source, target filtering, costs, cooldowns, prompts, and accepted/rejected feedback." },
                 new[] { "large menus", "card rewards", "ability trees", "animation polish", "AI", "scoring", "networking" },
                 "the active action route",
                 "press Play and select one command from its authored surface",
@@ -148,21 +123,15 @@ namespace NeonBlack.Gameplay.Editor
                 "https://docs.neonblack.com/pyralis/interaction",
                 new[] { "route.custom-object-feature", "route.ui-hud-menu", "route.tabletop-card", "capability.interaction-action-selection" }));
 
-            facts.Add(CreateProofFact(
+            facts.Add(CreateFallbackProofFact(
                 "proof.npc-enemy-behavior",
                 "NPC Enemy Behavior Proof",
                 "Run one NPC or enemy behavior proof before building encounter waves, boss phases, vendors, or broad AI systems.",
-                "NPC/enemy actor route",
+                "Generic NPC or enemy actor route proof.",
                 "One NPC or enemy appears, is detected or interacted with, and performs one authored behavior or combat reaction.",
                 new[] { "NpcsEnemies", "Combat", "Interaction" },
                 new[] { RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Billboard2_5D, RuntimeCapabilityLaneTag.ThirdPerson3D },
                 new[] { RuntimeCapabilityLaneTag.UiMenuOnly },
-                new[] { "NpcDefinition", "ParticipantDefinition or enemy actor definition", "FeatureModuleDefinition" },
-                new[] { "EnemyFeatureProfile", "EnemyCombatProfile", "EnemyReactionProfile", "EnemyAmbientFeatureProfile" },
-                new[] { "Spawner, encounter zone, dialogue/vendor/quest presenter, or authored actor root" },
-                new[] { "enemy/NPC runtime components", "HealthComponent when combat is expected" },
-                new[] { "FeatureModuleDefinition.profileAsset", "actor prefab -> enemy/NPC runtime components" },
-                new[] { "Choose AI role, faction/team, patrol/encounter surface, dialogue/vendor/quest content, and combat reaction style." },
                 new[] { "waves", "boss phases", "shops", "quest chains", "loot tables", "network replication", "full AI debugging" },
                 "the active NPC/enemy route",
                 "press Play after one NPC/enemy surface is wired; trigger one interaction, detection, or attack",
@@ -171,21 +140,15 @@ namespace NeonBlack.Gameplay.Editor
                 "https://docs.neonblack.com/pyralis/enemies",
                 new[] { "route.npc-enemy-actor", "capability.combat-projectile-proof", "capability.interaction-action-selection" }));
 
-            facts.Add(CreateProofFact(
+            facts.Add(CreateFallbackProofFact(
                 "proof.custom-object-effect",
                 "Custom Object Effect Proof",
                 "Run one custom object, feature, trigger, pickup, hazard, turret, trap, or service effect before treating it as a full system.",
-                "custom object/feature route",
+                "Generic custom object or feature route proof.",
                 "One authored scene object or feature produces a visible accepted, rejected, completed, damaged, collected, triggered, or scored effect.",
                 new[] { "Interaction", "Combat", "Scoring" },
                 new[] { RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Billboard2_5D, RuntimeCapabilityLaneTag.ThirdPerson3D, RuntimeCapabilityLaneTag.TabletopBoard },
                 System.Array.Empty<RuntimeCapabilityLaneTag>(),
-                new[] { "FeatureModuleDefinition", "ActionDefinition or feature-specific definition when commands are involved" },
-                new[] { "PickupFeatureProfile", "HazardFeedbackProfile", "InteractionFeatureProfile, or feature-specific profile" },
-                new[] { "authored trigger, pickup, hazard, actor feature host, or feature runtime object" },
-                new[] { "feature runtime component for the selected lane" },
-                new[] { "FeatureModuleDefinition.runtimePrefab", "feature profile -> runtime component" },
-                new[] { "Choose whether the object is scenery, trigger, pickup, hazard, turret, trap, service, or custom action source." },
                 new[] { "secondary variants", "spawn tables", "economy", "large VFX", "network replication", "shipping automation" },
                 "the active custom object route",
                 "press Play and trigger one authored object or feature",
@@ -194,21 +157,15 @@ namespace NeonBlack.Gameplay.Editor
                 "https://docs.neonblack.com/pyralis/features",
                 new[] { "route.custom-object-feature", "capability.interaction-action-selection", "capability.combat-projectile-proof", "capability.ui-scoring-feedback" }));
 
-            facts.Add(CreateProofFact(
+            facts.Add(CreateFallbackProofFact(
                 "proof.ui-hud-menu",
                 "UI HUD Menu Proof",
                 "Run one UI, HUD, prompt, score, health, feedback, or menu event before building full navigation or result screens.",
-                "UI/HUD/menu route",
+                "Generic UI, HUD, menu, or feedback route proof.",
                 "One UI event changes visible state or sends one command to a resolver.",
                 new[] { "UiHud", "Scoring", "Interaction" },
                 new[] { RuntimeCapabilityLaneTag.UiMenuOnly, RuntimeCapabilityLaneTag.TabletopBoard, RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.ThirdPerson3D },
                 System.Array.Empty<RuntimeCapabilityLaneTag>(),
-                new[] { "ActionDefinition when UI triggers gameplay commands" },
-                new[] { "SettingsProfile when settings or rebinding are part of the route" },
-                new[] { "Canvas", "EventSystem", "HUD/menu presenter or feedback panel" },
-                System.Array.Empty<string>(),
-                new[] { "HUD presenter -> gameplay service", "UI button/menu/card -> action resolver or command surface" },
-                new[] { "Choose layout, labels, navigation order, feedback timing, accessibility, and whether UI is screen-space or world-space." },
                 new[] { "full menu navigation", "save slots", "results screens", "leaderboards", "achievements", "localization polish" },
                 "the active UI/HUD/menu route",
                 "press Play and trigger one UI, HUD, prompt, score, health, feedback, or menu event",
@@ -217,21 +174,15 @@ namespace NeonBlack.Gameplay.Editor
                 "https://docs.neonblack.com/pyralis/ui",
                 new[] { "route.ui-hud-menu", "capability.ui-scoring-feedback", "capability.interaction-action-selection" }));
 
-            facts.Add(CreateProofFact(
+            facts.Add(CreateFallbackProofFact(
                 "proof.camera-cursor-world",
                 "Camera Cursor World Proof",
                 "Run one camera, cursor, bounds, or world-surface proof before adding multi-target framing or cinematic polish.",
-                "world/camera route",
+                "Generic world, camera, cursor, or bounds route proof.",
                 "One input or selected target changes camera, cursor, framing, bounds, highlighted surface, or scene visibility as authored.",
                 new[] { "Camera", "Movement", "Interaction" },
                 new[] { RuntimeCapabilityLaneTag.CameraCursor, RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Billboard2_5D, RuntimeCapabilityLaneTag.ThirdPerson3D, RuntimeCapabilityLaneTag.TabletopBoard },
                 System.Array.Empty<RuntimeCapabilityLaneTag>(),
-                System.Array.Empty<string>(),
-                new[] { "CameraRigProfile", "PlayfieldProfile" },
-                new[] { "Camera Root", "CinemachineCameraRigController", "physical Camera", "camera bounds source or world surface" },
-                System.Array.Empty<string>(),
-                new[] { "GameplaySessionBootstrap.cameraRigController", "CinemachineCameraRigController.cameraRigProfile", "camera bounds source" },
-                new[] { "Choose orthographic/perspective framing, follow target, bounds, split-screen behavior, and scene-service ownership." },
                 new[] { "multi-target cameras", "split-screen polish", "camera shake", "cinematic transitions", "full action targeting" },
                 "the active camera/cursor/world route",
                 "press Play and move/select the authored camera, cursor, target, bounds, or world surface",
@@ -240,21 +191,15 @@ namespace NeonBlack.Gameplay.Editor
                 "https://docs.neonblack.com/pyralis/camera",
                 new[] { "route.world-camera", "capability.camera-follow-bounds", "setup.assign-camera-rig", "setup.assign-camera-bounds-service" }));
 
-            facts.Add(CreateProofFact(
+            facts.Add(CreateFallbackProofFact(
                 "proof.generated-content",
                 "Generated Content Proof",
                 "Generate one inspectable output before making generated content required for progression.",
-                "procedural/generated-content route",
+                "Generic procedural or generated-content route proof.",
                 "One generated output is deterministic enough to inspect in the scene or logs and does not block the route if generation is disabled.",
                 new[] { "Interaction", "Scoring" },
                 new[] { RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.TabletopBoard, RuntimeCapabilityLaneTag.CameraCursor },
                 System.Array.Empty<RuntimeCapabilityLaneTag>(),
-                new[] { "segment, chunk, board layout, spawn table, or feature-specific generation definition" },
-                new[] { "generator profile, spawn budget, socket rule, or board layout profile" },
-                new[] { "generator output root or logged deterministic output" },
-                System.Array.Empty<string>(),
-                new[] { "generator profile -> authored chunks/sockets/seeds/spawn budgets" },
-                new[] { "Choose chunks, sockets, seeds, spawn budgets, board layouts, and validation surfaces before hiding generation behind game flow." },
                 new[] { "full biomes", "unreachable-room validation", "rewards", "difficulty curves", "runtime dependency on generation" },
                 "the active generated-content route",
                 "press Play or run the route-owned generation action and inspect the output root or log",
@@ -263,21 +208,15 @@ namespace NeonBlack.Gameplay.Editor
                 "https://docs.neonblack.com/pyralis/generation",
                 new[] { "route.custom-object-feature", "route.world-camera" }));
 
-            facts.Add(CreateProofFact(
+            facts.Add(CreateFallbackProofFact(
                 "proof.network-ownership",
                 "Network Ownership Proof",
                 "Confirm the local proof first, then prove one host/client ownership path before expanding replication.",
-                "networking authority route",
+                "Generic network ownership or authority route proof.",
                 "Host/client can connect, the owned participant controls the expected surface, and one replicated state change is visible without breaking the local proof.",
                 new[] { "Networking", "Movement", "Combat" },
                 new[] { RuntimeCapabilityLaneTag.Mixed, RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.ThirdPerson3D },
                 new[] { RuntimeCapabilityLaneTag.TabletopBoard },
-                new[] { "SessionDefinition" },
-                System.Array.Empty<string>(),
-                new[] { "GameplaySessionBootstrap", "PyralisGameplayLifetimeScope", "NetworkManager", "UnityTransport" },
-                new[] { "NetworkObject", "network-aware pawn or participant runtime components when the selected lane supports them" },
-                new[] { "SessionDefinition.networkMode", "SessionDefinition.localFirst", "NetworkManager.NetworkPrefabs", "networked ownership/authority service configuration" },
-                new[] { "Choose local-only, host, client, or server authority and decide which participant actions replicate." },
                 new[] { "prediction", "rollback", "matchmaking", "backend persistence", "broad replication", "Steam lobby integration" },
                 "the active networking route",
                 "after the local proof passes, start host/client and exercise the owned participant surface",
@@ -286,7 +225,7 @@ namespace NeonBlack.Gameplay.Editor
                 "https://docs.neonblack.com/pyralis/networking",
                 new[] { "route.networking", "capability.2d-pawn-movement", "capability.combat-projectile-proof" }));
 
-            return PyralisContractProofFactProjector.EnrichRouteProofFacts(facts);
+            return facts;
         }
 
         public static PyralisAuthoringFact FindProofFact(string stableId)
@@ -307,6 +246,47 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             return PyralisContractProofFactProjector.FindProofFact(stableId, existingProofIds);
+        }
+
+        private static PyralisAuthoringFact CreateFallbackProofFact(
+            string stableId,
+            string displayName,
+            string summary,
+            string routeRelevance,
+            string firstProof,
+            string[] goalTags,
+            RuntimeCapabilityLaneTag[] laneTags,
+            RuntimeCapabilityLaneTag[] unsupportedLaneTags,
+            string[] canWait,
+            string nativeActionTarget,
+            string nativeActionInstructions,
+            string nativeActionSuccess,
+            string expertAdvice,
+            string documentationURL,
+            string[] relatedStableIds)
+        {
+            return CreateProofFact(
+                stableId,
+                displayName,
+                summary,
+                routeRelevance,
+                firstProof,
+                goalTags,
+                laneTags,
+                unsupportedLaneTags,
+                System.Array.Empty<string>(),
+                System.Array.Empty<string>(),
+                System.Array.Empty<string>(),
+                System.Array.Empty<string>(),
+                System.Array.Empty<string>(),
+                System.Array.Empty<string>(),
+                canWait,
+                nativeActionTarget,
+                nativeActionInstructions,
+                nativeActionSuccess,
+                expertAdvice,
+                documentationURL,
+                relatedStableIds);
         }
 
         private static PyralisAuthoringFact CreateProofFact(

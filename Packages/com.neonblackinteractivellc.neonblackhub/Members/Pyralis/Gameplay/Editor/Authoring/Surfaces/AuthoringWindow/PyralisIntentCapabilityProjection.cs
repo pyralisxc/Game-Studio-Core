@@ -14,7 +14,12 @@ namespace NeonBlack.Gameplay.Editor
             RuntimeCapabilityLaneTag lane,
             AuthoringWorldAxiom axioms)
         {
-            return PyralisRuntimeCapabilityFamilyMap.GetFamilies(capabilities, lane, axioms);
+            RuntimeCapabilityFamily[] reflected = PyralisReflectiveCapabilityDependencyProjection.BuildRuntimeFamilies(
+                capabilities,
+                lane,
+                axioms);
+            RuntimeCapabilityFamily[] fallback = PyralisRuntimeCapabilityFamilyMap.GetFamilies(capabilities, lane, axioms);
+            return MergeDistinct(reflected, fallback);
         }
 
         public static RuntimePatternDefinition[] FilterRuntimePatternsToFamilies(
@@ -29,5 +34,26 @@ namespace NeonBlack.Gameplay.Editor
                 .ToArray();
         }
 
+        private static RuntimeCapabilityFamily[] MergeDistinct(
+            RuntimeCapabilityFamily[] reflected,
+            RuntimeCapabilityFamily[] fallback)
+        {
+            List<RuntimeCapabilityFamily> families = new List<RuntimeCapabilityFamily>();
+            AddRangeDistinct(families, reflected);
+            AddRangeDistinct(families, fallback);
+            return families.ToArray();
+        }
+
+        private static void AddRangeDistinct(List<RuntimeCapabilityFamily> target, RuntimeCapabilityFamily[] source)
+        {
+            if (source == null)
+                return;
+
+            for (int i = 0; i < source.Length; i++)
+            {
+                if (!target.Contains(source[i]))
+                    target.Add(source[i]);
+            }
+        }
     }
 }

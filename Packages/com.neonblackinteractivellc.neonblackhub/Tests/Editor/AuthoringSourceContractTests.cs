@@ -13,6 +13,7 @@ using NeonBlack.Gameplay.Editor;
 using NeonBlack.Gameplay.Editor.Inspectors;
 using NeonBlack.Gameplay.Core.Runtime;
 using NUnit.Framework;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -122,6 +123,130 @@ namespace NeonBlack.Gameplay.Tests.Editor
         {
             AssertReflectiveAuthoringLayerSupportsCurrentTruth();
         }
+
+        [Test]
+        public void PyralisAuthoringWindow_MapAndValidateTabs_ReadGraphProjectionNotLegacyModels()
+        {
+            string mapRendererPath = FindGameplayEditorFile("PyralisAuthoringMapRenderer.cs");
+            string validateRendererPath = FindGameplayEditorFile("PyralisAuthoringValidateRenderer.cs");
+
+            string mapSource = File.ReadAllText(mapRendererPath);
+            string validateSource = File.ReadAllText(validateRendererPath);
+
+            Assert.That(mapSource.Contains("PyralisAuthoringSetupGraphBuilder.Build"), Is.True);
+            Assert.That(mapSource.Contains("PyralisAuthoringSetupGraphProjection.BuildSetupMapRows"), Is.True);
+            Assert.That(mapSource.Contains("PyralisAuthoringSetupGraphProjection.BuildMapConnectionRows"), Is.True);
+            Assert.That(mapSource.Contains("PyralisAuthoringRouteReport"), Is.False);
+            Assert.That(mapSource.Contains("PyralisAuthoringValidationModel"), Is.False);
+            Assert.That(mapSource.Contains("PyralisSetupRouteAnalysis.Build"), Is.False);
+
+            Assert.That(validateSource.Contains("PyralisAuthoringSetupGraphBuilder.Build"), Is.True);
+            Assert.That(validateSource.Contains("PyralisAuthoringSetupGraphProjection.BuildValidationRows"), Is.True);
+            Assert.That(validateSource.Contains("PyralisAuthoringRouteReport"), Is.False);
+            Assert.That(validateSource.Contains("PyralisAuthoringValidationModel"), Is.False);
+            Assert.That(validateSource.Contains("PyralisSetupFlowValidator.BuildReport"), Is.False);
+            Assert.That(validateSource.Contains("PyralisSceneReadinessValidator.BuildReport"), Is.False);
+        }
+
+        [Test]
+        public void PyralisAuthoringWindow_OverviewModel_DelegatesReadinessAndProofProjectionToGraph()
+        {
+            string overviewModelPath = FindGameplayEditorFile("PyralisAuthoringOverviewModel.cs");
+            string overviewSource = File.ReadAllText(overviewModelPath);
+
+            Assert.That(overviewSource.Contains("PyralisAuthoringSetupGraphProjection.BuildOverviewIssues"), Is.True);
+            Assert.That(overviewSource.Contains("PyralisAuthoringSetupGraphProjection.BuildOverviewPlayModeChecklist"), Is.True);
+            Assert.That(overviewSource.Contains("PyralisAuthoringSetupGraphProjection.GetOverviewFirstProofLabel"), Is.True);
+            Assert.That(overviewSource.Contains("PyralisAuthoringRouteReport"), Is.False);
+            Assert.That(overviewSource.Contains("PyralisAuthoringValidationModel"), Is.False);
+            Assert.That(overviewSource.Contains("PyralisSetupFlowValidator.BuildReport"), Is.False);
+            Assert.That(overviewSource.Contains("PyralisSceneReadinessValidator.BuildReport"), Is.False);
+            Assert.That(overviewSource.Contains("private static PyralisAuthoringOverviewIssue BuildIssue"), Is.False);
+            Assert.That(overviewSource.Contains("private static List<PyralisAuthoringPlayModeChecklistItem> BuildPlayModeChecklist"), Is.False);
+        }
+
+        [Test]
+        public void PyralisAuthoringWindow_TabsKeepProofAndContractAuditInFactsOrGuide()
+        {
+            string overviewRendererPath = FindGameplayEditorFile("PyralisAuthoringOverviewRenderer.cs");
+            string factRendererPath = FindGameplayEditorFile("PyralisAuthoringFactExplorerRenderer.cs");
+            string guidePath = FindGameplayEditorFile("PyralisAuthoringWindow.Guide.cs");
+
+            string overviewSource = File.ReadAllText(overviewRendererPath);
+            string factSource = File.ReadAllText(factRendererPath);
+            string guideSource = File.ReadAllText(guidePath);
+
+            Assert.That(overviewSource.Contains("BuildProofSupportRows"), Is.False);
+            Assert.That(factSource.Contains("BuildProofSupportRows"), Is.True);
+            Assert.That(factSource.Contains("BuildReflectiveContractRows"), Is.True);
+            Assert.That(guideSource.Contains("BuildCurrentIntentGuideRows"), Is.True);
+            Assert.That(guideSource.Contains("BuildReflectiveContractRows"), Is.True);
+        }
+
+        [Test]
+        public void PyralisAuthoringWindow_GuideUsesGraphProjectionBeforeIntentAdvisorFallback()
+        {
+            string guidePath = FindGameplayEditorFile("PyralisAuthoringWindow.Guide.cs");
+            string guideSource = File.ReadAllText(guidePath);
+
+            Assert.That(guideSource.Contains("PyralisAuthoringSetupGraphProjection.BuildCurrentIntentGuideRows"), Is.True);
+            Assert.That(guideSource.Contains("DrawGuideGraphRows(graphRows)"), Is.True);
+            Assert.That(guideSource.Contains("Pre-setup intent guidance"), Is.True);
+            Assert.That(guideSource.Contains("DrawCurrentIntentGuide(GetCachedIntentModel"), Is.False);
+        }
+
+        [Test]
+        public void PyralisAuthoringWindow_SurfacesDoNotRecomputeGraphSourceTruth()
+        {
+            string authoringWindowRoot = GameplayEditorLayer("Authoring", "Surfaces", "AuthoringWindow");
+            string[] surfaceFiles = Directory.GetFiles(authoringWindowRoot, "*.cs", SearchOption.AllDirectories);
+
+            foreach (string file in surfaceFiles)
+            {
+                string fileName = Path.GetFileName(file);
+                string source = File.ReadAllText(file);
+
+                Assert.That(
+                    source.Contains("PyralisSetupFlowValidator.BuildReport"),
+                    Is.False,
+                    $"{fileName} should read setup-flow evidence through the resolved setup graph.");
+                Assert.That(
+                    source.Contains("PyralisSceneReadinessValidator.BuildReport"),
+                    Is.False,
+                    $"{fileName} should read scene-readiness evidence through the resolved setup graph.");
+                Assert.That(
+                    source.Contains("PyralisSetupRouteAnalysis.Build"),
+                    Is.False,
+                    $"{fileName} should read route shape through graph projection or setup context, not direct route analysis.");
+
+                bool allowedIntentAdvisor =
+                    string.Equals(fileName, "PyralisAuthoringWindow.cs", StringComparison.Ordinal)
+                    || string.Equals(fileName, "PyralisAuthoringWindow.Intent.cs", StringComparison.Ordinal);
+                if (!allowedIntentAdvisor)
+                {
+                    Assert.That(
+                        source.Contains("PyralisAuthoringIntentAdvisor"),
+                        Is.False,
+                        $"{fileName} should not use the pre-setup Intent advisor fallback.");
+                }
+            }
+        }
+
+        [Test]
+        public void PyralisAuthoringWindow_IntentProjectionUsesReflectionBeforeFallbackMap()
+        {
+            string projectionPath = FindGameplayEditorFile("PyralisIntentCapabilityProjection.cs");
+            string projectionSource = File.ReadAllText(projectionPath);
+
+            int reflectedIndex = projectionSource.IndexOf("PyralisReflectiveCapabilityDependencyProjection.BuildRuntimeFamilies", StringComparison.Ordinal);
+            int fallbackIndex = projectionSource.IndexOf("PyralisRuntimeCapabilityFamilyMap.GetFamilies", StringComparison.Ordinal);
+
+            Assert.That(reflectedIndex, Is.GreaterThanOrEqualTo(0));
+            Assert.That(fallbackIndex, Is.GreaterThanOrEqualTo(0));
+            Assert.That(reflectedIndex, Is.LessThan(fallbackIndex));
+            Assert.That(FindGameplayEditorFile("PyralisReflectiveCapabilityDependencyProjection.cs"), Is.Not.Empty);
+        }
+
         [Test]
         public void PyralisEditor_Source_GuidesTabletopSelectionBridgeAuthoring()
         {
@@ -479,7 +604,12 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 Assert.That(card.Fact.SourceKind, Is.EqualTo(PyralisAuthoringFactSourceKind.HandAuthoredGuideCard));
                 Assert.That(card.Fact.Confidence, Is.EqualTo(PyralisAuthoringConfidence.Explicit));
                 Assert.That(card.Fact.NativeActions.Length, Is.GreaterThanOrEqualTo(1));
-                Assert.That(PyralisAuthoringFactRegistry.Find(card.StableId), Is.SameAs(card.Fact));
+
+                PyralisAuthoringFact registeredFact = PyralisAuthoringFactRegistry.Find(card.StableId);
+                Assert.That(registeredFact, Is.Not.Null);
+                Assert.That(registeredFact.StableId, Is.EqualTo(card.Fact.StableId));
+                Assert.That(registeredFact.Kind, Is.EqualTo(PyralisAuthoringFactKind.RuntimeCapability));
+                Assert.That(registeredFact.Confidence, Is.EqualTo(PyralisAuthoringConfidence.Explicit));
             }
         }
 
@@ -565,7 +695,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
             string factRegistryPath = FindGameplayEditorFile("PyralisAuthoringFactRegistry.cs");
             string factScannerPath = FindGameplayEditorFile("PyralisReflectiveFactScanner.cs");
             string routeAnalysisPath = FindGameplayEditorFile("PyralisSetupRouteAnalysis.cs");
-            string routeReportPath = FindGameplayEditorFile("PyralisAuthoringRouteReport.cs");
+            string graphProjectionPath = FindGameplayEditorFile("PyralisAuthoringSetupGraphProjection.cs");
+            string currentStepGuidancePath = FindGameplayEditorFile("PyralisCurrentStepPrimaryActionGuidance.cs");
             string authoringWindowPath = FindGameplayEditorFile("PyralisAuthoringWindow.cs");
 
             Assert.That(File.Exists(overlayPath), Is.True);
@@ -573,7 +704,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(File.Exists(factRegistryPath), Is.True);
             Assert.That(File.Exists(factScannerPath), Is.True);
             Assert.That(File.Exists(routeAnalysisPath), Is.True);
-            Assert.That(File.Exists(routeReportPath), Is.True);
+            Assert.That(File.Exists(graphProjectionPath), Is.True);
+            Assert.That(File.Exists(currentStepGuidancePath), Is.True);
             Assert.That(File.Exists(authoringWindowPath), Is.True);
 
             string overlaySource = File.ReadAllText(overlayPath);
@@ -581,7 +713,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
             string factRegistrySource = File.ReadAllText(factRegistryPath);
             string factScannerSource = File.ReadAllText(factScannerPath);
             string routeAnalysisSource = File.ReadAllText(routeAnalysisPath);
-            string routeReportSource = File.ReadAllText(routeReportPath);
+            string graphProjectionSource = File.ReadAllText(graphProjectionPath);
+            string currentStepGuidanceSource = File.ReadAllText(currentStepGuidancePath);
             string authoringWindowSource = File.ReadAllText(authoringWindowPath);
 
             Assert.That(
@@ -594,8 +727,14 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(factScannerSource.Contains("CreateAssetMenuAttribute"), Is.True);
             Assert.That(factScannerSource.Contains("AddComponentMenu"), Is.True);
             Assert.That(factScannerSource.Contains("SerializedField"), Is.True);
-            Assert.That(routeReportSource.Contains("RuntimeCapabilityLaneTag") || routeReportSource.Contains("PyralisAuthoringRouteProof"), Is.True);
-            Assert.That(routeReportSource.Contains("PyralisAuthoringRouteProof"), Is.True);
+            Assert.That(graphProjectionSource.Contains("PyralisAuthoringRouteProof"), Is.True);
+            Assert.That(graphProjectionSource.Contains("BuildCurrentStepRow"), Is.True);
+            Assert.That(currentStepGuidanceSource.Contains("Inspector -> Add Component"), Is.True);
+            Assert.That(currentStepGuidanceSource.Contains("GameplaySessionBootstrap"), Is.True);
+            Assert.That(currentStepGuidanceSource.Contains("IsSceneSupportObject"), Is.True);
+            Assert.That(currentStepGuidanceSource.Contains("Camera Root"), Is.True);
+            Assert.That(currentStepGuidanceSource.Contains("PyralisSetupFlowValidator.BuildReport"), Is.False);
+            Assert.That(currentStepGuidanceSource.Contains("PyralisSetupRouteAnalysis.Build"), Is.False);
             Assert.That(authoringWindowSource.Contains("Starter Packs"), Is.False);
             Assert.That(authoringWindowSource.Contains("CreatePawnStarterPack"), Is.False);
             Assert.That(authoringWindowSource.Contains("CreateTabletopStarterPack"), Is.False);

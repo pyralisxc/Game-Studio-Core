@@ -65,7 +65,7 @@ namespace NeonBlack.Gameplay.Editor
             actionRow.style.flexDirection = FlexDirection.Row;
             actionRow.style.marginTop = 4f;
             var guideButton = new Button(() => SwitchMode(AuthoringWindowMode.Guide)) { text = "Open Guide" };
-            guideButton.tooltip = "Show ranked cookbook cards for this intent without applying a preset.";
+            guideButton.tooltip = "Show the graph-filtered route guide for this intent without applying a preset.";
             var overviewButton = new Button(() => SwitchMode(AuthoringWindowMode.Overview)) { text = "Open Overview" };
             overviewButton.tooltip = "Return to the current setup route once a scene root or setup asset exists.";
             var applyButton = new Button(ApplyIntentToActiveSetupProfile) { text = "Apply To Setup Profile", name = "applyIntentToSetupProfile" };
@@ -315,9 +315,9 @@ namespace NeonBlack.Gameplay.Editor
                 return "Intent is shaped. Create or select a GameSetupProfile so these choices become the route contract read by Overview, Guide, Map, and Validate.";
 
             if (_intentHasUnappliedSetupChanges)
-                return $"Intent is shaped. Click Apply To Setup Profile to update `{setupProfile.name}` runtime capability rows, then open Guide for ranked cookbook cards.";
+                return $"Intent is shaped. Click Apply To Setup Profile to update `{setupProfile.name}` runtime capability rows, then open Guide for the graph-filtered route path.";
 
-            return $"Intent matches the active GameSetupProfile `{setupProfile.name}`. Open Guide for ranked cookbook cards, then use Project, Hierarchy, and Inspector to create and wire your own setup.";
+            return $"Intent matches the active GameSetupProfile `{setupProfile.name}`. Open Guide for the graph-filtered route path, then use Project, Hierarchy, and Inspector to create and wire your own setup.";
         }
 
         private bool HasCompleteCoreAxioms()

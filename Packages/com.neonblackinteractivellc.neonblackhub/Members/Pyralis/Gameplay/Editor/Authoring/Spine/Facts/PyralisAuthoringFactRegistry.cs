@@ -74,11 +74,12 @@ namespace NeonBlack.Gameplay.Editor
                 }
             }
 
-            IReadOnlyList<RuntimeCapabilityCard> cards = PyralisRuntimeCapabilityCatalog.All;
-            for (int i = 0; i < cards.Count; i++)
+            IReadOnlyList<PyralisAuthoringFact> capabilityFacts = PyralisRuntimeCapabilityCatalog.GetAuthoringFacts();
+            for (int i = 0; i < capabilityFacts.Count; i++)
             {
-                if (cards[i] != null && seenIds.Add(cards[i].Fact.StableId))
-                    facts.Add(cards[i].Fact);
+                PyralisAuthoringFact fact = capabilityFacts[i];
+                if (fact != null && seenIds.Add(fact.StableId))
+                    facts.Add(fact);
             }
 
             AddRange(PyralisReflectiveFactScanner.ScanProject());

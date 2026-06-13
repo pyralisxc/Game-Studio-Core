@@ -25,6 +25,7 @@ namespace NeonBlack.Gameplay.Editor
             AddContractNodes(nodes, edges, activeProofNodeId);
             AddSetupFlowEvidence(source, nodes, edges);
             AddSceneReadinessEvidence(source, nodes, edges);
+            AddProofBlockerEdges(nodes, edges, activeProofNodeId);
 
             return new PyralisAuthoringSetupGraph(source, route, nodes, edges);
         }
@@ -177,23 +178,27 @@ namespace NeonBlack.Gameplay.Editor
             {
                 RuntimeCapabilityFamily family = families[i];
                 RuntimeCapabilityCard card = PyralisRuntimeCapabilityCatalog.FindPrimaryByFamily(family);
+                PyralisAuthoringFact fact = PyralisRuntimeCapabilityCatalog.FindPrimaryFactByFamily(family);
                 string nodeId = GetCapabilityNodeId(family, card);
                 string proofTarget = GetCapabilityProofTargetId(card);
+                bool hasContractCoverage = PyralisRuntimeCapabilityCatalog.HasContractCoverage(family);
 
                 AddNode(nodes, new PyralisAuthoringGraphNode(
                     nodeId,
-                    card != null ? card.DisplayName : family.ToString(),
+                    fact != null ? fact.DisplayName : card != null ? card.DisplayName : family.ToString(),
                     PyralisAuthoringGraphNodeKind.Capability,
                     card != null ? PyralisAuthoringGraphSourceKind.RuntimeCapabilityCatalog : PyralisAuthoringGraphSourceKind.SetupProfile,
                     PyralisAuthoringGraphEvidenceState.Ready,
                     family,
-                    AuthoringCapability.None,
+                    fact != null ? fact.Capability : AuthoringCapability.None,
                     proofTarget,
-                    card != null ? card.WhatItAdds : string.Empty,
-                    card != null ? Combine(card.RequiredDefinitions, card.RequiredProfiles, card.RequiredSceneComponents, card.RequiredUnitySurfaces) : Array.Empty<string>(),
-                    card != null ? card.AssignmentFields : Array.Empty<string>(),
-                    card != null ? card.CustomizationMoments : Array.Empty<string>(),
-                    sourceOrigin: card != null ? PyralisAuthoringGraphSourceOrigin.LegacyFact : PyralisAuthoringGraphSourceOrigin.UserAuthoredSetup));
+                    fact != null ? fact.Summary : card != null ? card.WhatItAdds : string.Empty,
+                    fact != null ? Combine(fact.RequiredDefinitions, fact.RequiredProfiles, fact.RequiredSceneComponents, fact.RequiredUnitySurfaces) : Array.Empty<string>(),
+                    fact != null ? fact.AssignmentFields : Array.Empty<string>(),
+                    fact != null ? fact.CustomizationMoments : Array.Empty<string>(),
+                    sourceOrigin: hasContractCoverage
+                        ? PyralisAuthoringGraphSourceOrigin.Contract
+                        : card != null ? PyralisAuthoringGraphSourceOrigin.LegacyFact : PyralisAuthoringGraphSourceOrigin.UserAuthoredSetup));
 
                 AddEdge(edges, "setup.profile", nodeId, PyralisAuthoringGraphEdgeKind.Satisfies, "selected capability");
                 AddEdge(edges, "capability.selected", nodeId, PyralisAuthoringGraphEdgeKind.RelatesTo, "includes");
@@ -371,7 +376,10 @@ namespace NeonBlack.Gameplay.Editor
             for (int i = 0; i < steps.Count; i++)
             {
                 PyralisSetupFlowStep step = steps[i];
-                string nodeId = "setupflow." + NormalizeId(step.StepId != PyralisSetupFlowStepId.Unknown ? step.StepId.ToString() : step.Label);
+                string setupNodeId = step.StepId != PyralisSetupFlowStepId.Unknown
+                    ? PyralisSetupFlowGuidance.GetStableId(step.StepId)
+                    : string.Empty;
+                string nodeId = BuildSetupFlowEvidenceNodeId(step, setupNodeId);
                 bool reflectedContractEvidence = step.StepId == PyralisSetupFlowStepId.Unknown
                     && step.WorkIntent == PyralisSetupFlowWorkIntent.ProofEnhancer;
                 AddNode(nodes, new PyralisAuthoringGraphNode(
@@ -387,6 +395,7 @@ namespace NeonBlack.Gameplay.Editor
                     sourceObject: step.ReferencedObject,
                     sourceOrigin: reflectedContractEvidence ? PyralisAuthoringGraphSourceOrigin.Contract : PyralisAuthoringGraphSourceOrigin.RuntimeEvidence));
                 AddEdge(edges, "bootstrap.root", nodeId, PyralisAuthoringGraphEdgeKind.RelatesTo, "setup evidence");
+                AddEdge(edges, setupNodeId, nodeId, PyralisAuthoringGraphEdgeKind.RelatesTo, "setup flow evidence");
             }
         }
 
@@ -400,7 +409,7 @@ namespace NeonBlack.Gameplay.Editor
             for (int i = 0; i < issues.Count; i++)
             {
                 PyralisSceneReadinessIssue issue = issues[i];
-                string nodeId = "scenereadiness." + NormalizeId(issue.Category + "-" + issue.Severity + "-" + i);
+                string nodeId = BuildSceneReadinessEvidenceNodeId(issue);
                 AddNode(nodes, new PyralisAuthoringGraphNode(
                     nodeId,
                     issue.Category.ToString(),
@@ -413,6 +422,59 @@ namespace NeonBlack.Gameplay.Editor
                     sourceOrigin: PyralisAuthoringGraphSourceOrigin.RuntimeEvidence));
                 AddEdge(edges, "bootstrap.root", nodeId, PyralisAuthoringGraphEdgeKind.RelatesTo, "scene readiness");
             }
+        }
+
+        private static string BuildSetupFlowEvidenceNodeId(PyralisSetupFlowStep step, string setupNodeId)
+        {
+            if (!string.IsNullOrWhiteSpace(setupNodeId))
+                return "setupflow." + NormalizeId(setupNodeId);
+
+            string label = step != null ? step.Label : string.Empty;
+            return "setupflow." + NormalizeId(label);
+        }
+
+        private static string BuildSceneReadinessEvidenceNodeId(PyralisSceneReadinessIssue issue)
+        {
+            if (issue == null)
+                return "scenereadiness.unknown";
+
+            string category = NormalizeId(issue.Category.ToString());
+            string severity = NormalizeId(issue.Severity.ToString());
+            string messageHash = ComputeStableHash(issue.Category + "|" + issue.Severity + "|" + issue.Message);
+            return "scenereadiness." + category + "." + severity + "." + messageHash;
+        }
+
+        private static void AddProofBlockerEdges(
+            List<PyralisAuthoringGraphNode> nodes,
+            List<PyralisAuthoringGraphEdge> edges,
+            string activeProofNodeId)
+        {
+            if (string.IsNullOrWhiteSpace(activeProofNodeId))
+                return;
+
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                PyralisAuthoringGraphNode node = nodes[i];
+                if (node == null || string.Equals(node.StableId, activeProofNodeId, StringComparison.Ordinal))
+                    continue;
+
+                if (!BlocksProof(node))
+                    continue;
+
+                AddEdge(edges, activeProofNodeId, node.StableId, PyralisAuthoringGraphEdgeKind.BlockedBy, "missing required setup");
+            }
+        }
+
+        private static bool BlocksProof(PyralisAuthoringGraphNode node)
+        {
+            bool missing = node.EvidenceState == PyralisAuthoringGraphEvidenceState.Missing
+                || node.EvidenceState == PyralisAuthoringGraphEvidenceState.Blocked;
+            if (!missing)
+                return false;
+
+            return node.Kind == PyralisAuthoringGraphNodeKind.SetupChain
+                || node.Kind == PyralisAuthoringGraphNodeKind.UnitySurfaceRequirement
+                || node.Kind == PyralisAuthoringGraphNodeKind.ValidationEvidence;
         }
 
         private static void AddNode(List<PyralisAuthoringGraphNode> nodes, PyralisAuthoringGraphNode node)
@@ -549,7 +611,7 @@ namespace NeonBlack.Gameplay.Editor
                 return null;
 
             IReadOnlyList<PyralisAuthoringFact> proofFacts =
-                PyralisContractProofFactProjector.EnrichRouteProofFacts(PyralisAuthoringRouteProof.GetAuthoringFacts());
+                PyralisAuthoringRouteProof.GetAuthoringFacts();
             for (int i = 0; i < proofFacts.Count; i++)
             {
                 PyralisAuthoringFact fact = proofFacts[i];
@@ -573,6 +635,22 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             return new string(chars).Trim('-');
+        }
+
+        private static string ComputeStableHash(string value)
+        {
+            unchecked
+            {
+                uint hash = 2166136261;
+                string normalized = value ?? string.Empty;
+                for (int i = 0; i < normalized.Length; i++)
+                {
+                    hash ^= normalized[i];
+                    hash *= 16777619;
+                }
+
+                return hash.ToString("x8");
+            }
         }
 
         private static string[] Combine(params string[][] groups)

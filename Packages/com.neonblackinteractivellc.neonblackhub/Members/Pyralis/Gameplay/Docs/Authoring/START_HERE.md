@@ -45,7 +45,7 @@ The Authoring Window has six modes:
 
 - **Overview**: shows the route-aware decision dashboard: current setup state, Best Next Action, first proof, and the next one to three useful moves.
 - **Intent**: lets you describe the route with world/playfield, control shape, presentation lane, and capability toggles without applying presets.
-- **Guide**: shows ranked cookbook cards for the current intent, then explains what the selected script or asset does, which values matter, and what to wire first.
+- **Guide**: shows graph-filtered route rows for the active setup, then explains what the selected script or asset does, which values matter, and what to wire first.
 - **Map**: shows the setup topology, current links, readiness rows, scene-surface evidence, and Inspector jump targets without editing fields.
 - **Validate**: shows validation issues for the selected setup object.
 - **Facts**: shows the read-only cookbook and dictionary so coverage and provenance can be audited.
@@ -74,7 +74,7 @@ The Authoring Window is the route guide. Open it from the Setup Flow when you ne
 
 Use the Authoring Window as a senior setup companion, not a scene generator. It should explain why a route needs a pawn, board surface, camera/cursor, action resolver, input profile, or UI presenter, then send you to the normal Unity object or Inspector field where you make the creative choice.
 
-When a `GameSetupProfile` is active, the Authoring Window projects the same cookbook through each tab. **Intent** owns route shaping, **Guide** owns ranked cards and selected-object help, **Overview** owns the next one to three moves, **Map** owns topology, **Validate** owns readiness issues, and **Facts** owns the full dictionary. The tabs read selected runtime capabilities first and optional runtime patterns second, then explain:
+When a `GameSetupProfile` is active, the Authoring Window projects the same resolved setup graph through each tab. **Intent** owns route shaping, **Guide** owns graph-filtered route rows and selected-object help, **Overview** owns the next one to three moves, **Map** owns topology, **Validate** owns readiness issues, and **Facts** owns the full dictionary. The tabs read selected runtime capabilities first and optional runtime patterns second, then explain:
 
 - the **Intent** tab DNA axioms, presentation lane, and Engine Spine capabilities that define what kind of game route is being authored
 - design questions to answer before setup, such as what the player controls, what kind of space the game happens in, and what the first proof of interaction should be
@@ -88,7 +88,7 @@ When a `GameSetupProfile` is active, the Authoring Window projects the same cook
 The Authoring Window guidance is route-aware:
 
 - `GameSetupProfile` stores the runtime capability ingredients you selected. Optional `RuntimePatternDefinition` assets can enrich advanced route metadata, but they are not required for the generic setup path.
-- Intent is the visible route-shaping surface. When a setup profile is active, Intent writes matching runtime capability rows so Overview, Guide, Map, and Validate read one shared contract.
+- Intent is the visible route-shaping surface. When a setup profile is active, Intent writes matching runtime capability rows from reflected, contract-enriched capability facts first so Overview, Guide, Map, and Validate read one shared contract.
 - `GameModeDefinition` uses its setup profile to explain the active route.
 - `SessionDefinition` explains whether participants need pawns, input, seats, hands, factions, camera, cursor, or menu surfaces.
 - `GameplaySessionBootstrap` checks the assigned session chain and shows the consolidated Setup Flow checklist.
