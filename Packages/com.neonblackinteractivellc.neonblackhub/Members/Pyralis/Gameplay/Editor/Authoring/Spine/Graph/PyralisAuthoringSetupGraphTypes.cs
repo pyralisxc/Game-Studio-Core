@@ -13,7 +13,7 @@ namespace NeonBlack.Gameplay.Editor
         Contract,
         Proof,
         SceneSurface,
-        PrefabRequirement,
+        UnitySurfaceRequirement,
         AssignmentField,
         ValidationEvidence
     }
@@ -29,6 +29,18 @@ namespace NeonBlack.Gameplay.Editor
         SetupFlow,
         SceneReadiness,
         RouteProof
+    }
+
+    public enum PyralisAuthoringGraphSourceOrigin
+    {
+        Unknown,
+        UserAuthoredSetup,
+        Reflection,
+        Contract,
+        RuntimeEvidence,
+        SpineGrammar,
+        SpineFallback,
+        LegacyFact
     }
 
     public enum PyralisAuthoringGraphEvidenceState
@@ -47,7 +59,8 @@ namespace NeonBlack.Gameplay.Editor
         DependsOn,
         Satisfies,
         Recommends,
-        BlocksProof
+        SupportsProof,
+        BlockedBy
     }
 
     public sealed class PyralisAuthoringGraphNode
@@ -68,7 +81,8 @@ namespace NeonBlack.Gameplay.Editor
             string blockingReason = null,
             PyralisAuthoringNativeAction? nativeAction = null,
             ResolvedAuthoringContract sourceContract = null,
-            UnityEngine.Object sourceObject = null)
+            UnityEngine.Object sourceObject = null,
+            PyralisAuthoringGraphSourceOrigin sourceOrigin = PyralisAuthoringGraphSourceOrigin.Unknown)
         {
             StableId = stableId ?? string.Empty;
             Label = label ?? string.Empty;
@@ -86,6 +100,9 @@ namespace NeonBlack.Gameplay.Editor
             NativeAction = nativeAction;
             SourceContract = sourceContract;
             SourceObject = sourceObject;
+            SourceOrigin = sourceOrigin == PyralisAuthoringGraphSourceOrigin.Unknown
+                ? InferSourceOrigin(sourceKind)
+                : sourceOrigin;
         }
 
         public string StableId { get; }
@@ -104,6 +121,23 @@ namespace NeonBlack.Gameplay.Editor
         public PyralisAuthoringNativeAction? NativeAction { get; }
         public ResolvedAuthoringContract SourceContract { get; }
         public UnityEngine.Object SourceObject { get; }
+        public PyralisAuthoringGraphSourceOrigin SourceOrigin { get; }
+
+        private static PyralisAuthoringGraphSourceOrigin InferSourceOrigin(PyralisAuthoringGraphSourceKind sourceKind)
+        {
+            return sourceKind switch
+            {
+                PyralisAuthoringGraphSourceKind.SetupProfile => PyralisAuthoringGraphSourceOrigin.UserAuthoredSetup,
+                PyralisAuthoringGraphSourceKind.RuntimePattern => PyralisAuthoringGraphSourceOrigin.UserAuthoredSetup,
+                PyralisAuthoringGraphSourceKind.AuthoringContract => PyralisAuthoringGraphSourceOrigin.Contract,
+                PyralisAuthoringGraphSourceKind.SetupFlow => PyralisAuthoringGraphSourceOrigin.RuntimeEvidence,
+                PyralisAuthoringGraphSourceKind.SceneReadiness => PyralisAuthoringGraphSourceOrigin.RuntimeEvidence,
+                PyralisAuthoringGraphSourceKind.RuntimeCapabilityCatalog => PyralisAuthoringGraphSourceOrigin.LegacyFact,
+                PyralisAuthoringGraphSourceKind.FactRegistry => PyralisAuthoringGraphSourceOrigin.LegacyFact,
+                PyralisAuthoringGraphSourceKind.RouteProof => PyralisAuthoringGraphSourceOrigin.SpineFallback,
+                _ => PyralisAuthoringGraphSourceOrigin.Unknown
+            };
+        }
     }
 
     public sealed class PyralisAuthoringGraphEdge

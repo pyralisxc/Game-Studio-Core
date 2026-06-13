@@ -14,7 +14,6 @@ namespace NeonBlack.Gameplay.Editor
     {
         public static void Draw(
             Object selection,
-            PyralisAuthoringRouteReport report,
             PyralisAuthoringSetupGraph graph,
             PyralisAuthoringCurrentStepGraphRow currentStep,
             Action<RuntimePatternDefinition> fillMissingRuntimePatternText)
@@ -66,7 +65,7 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             if (selection is SessionDefinition or GameModeDefinition or ParticipantDefinition or PawnDefinition or FeatureModuleDefinition)
-                EditorGUILayout.HelpBox(report.RouteGuidance, MessageType.Info);
+                EditorGUILayout.HelpBox(GetGraphContextGuidance(graph, selection, currentStep), MessageType.Info);
         }
 
         private static void DrawGraphContext(PyralisAuthoringSelectedContextGraphRow row)
@@ -86,6 +85,21 @@ namespace NeonBlack.Gameplay.Editor
             if (!string.IsNullOrWhiteSpace(row.NativeSetup))
                 EditorGUILayout.LabelField("Native Setup", row.NativeSetup, EditorStyles.wordWrappedMiniLabel);
             EditorGUI.indentLevel--;
+        }
+
+        private static string GetGraphContextGuidance(
+            PyralisAuthoringSetupGraph graph,
+            Object selection,
+            PyralisAuthoringCurrentStepGraphRow currentStep)
+        {
+            PyralisAuthoringSelectedContextGraphRow row = PyralisAuthoringSetupGraphProjection.BuildSelectedContextRow(graph, selection);
+            if (row != null && !string.IsNullOrWhiteSpace(row.RuntimeMeaning))
+                return row.RuntimeMeaning;
+
+            if (currentStep != null && !string.IsNullOrWhiteSpace(currentStep.Message))
+                return currentStep.Message;
+
+            return "Use the Inspector for this selected asset, and use Map or Validate to see how it participates in the resolved setup graph.";
         }
 
         private static void DrawGameObjectContext(GameObject gameObject)

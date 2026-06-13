@@ -18,14 +18,18 @@ namespace NeonBlack.Gameplay.Editor
             PyralisAuthoringWindowText.DrawSemanticHelpBox("Read-only coverage view. Facts explain what Pyralis knows about capabilities, setup nodes, proof paths, Inspector handoffs, validation vocabulary, and future convention-derived guidance. Use native Unity surfaces for creation, assignment, customization, and Play Mode proof.", MessageType.Info);
 
             IReadOnlyList<PyralisAuthoringFact> facts = PyralisAuthoringFactRegistry.AllFacts;
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(activeSetup);
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 EditorGUILayout.LabelField("Active Setup", activeSetup != null ? $"{activeSetup.name} ({activeSetup.GetType().Name})" : "No active setup selected");
+                EditorGUILayout.LabelField("Graph Nodes", graph.Nodes.Count.ToString());
+                EditorGUILayout.LabelField("Graph Edges", graph.Edges.Count.ToString());
                 EditorGUILayout.LabelField("Total Facts", facts.Count.ToString());
                 DrawFactCoverageSummary(facts);
             }
 
-            DrawFeatureContractSetupProfiles();
+            DrawGraphContractCoverage(graph);
+            DrawGraphProofCoverage(graph);
 
             DrawFactGroup(PyralisAuthoringFactKind.RuntimeCapability, facts);
             DrawFactGroup(PyralisAuthoringFactKind.FeatureContract, facts);
@@ -72,20 +76,20 @@ namespace NeonBlack.Gameplay.Editor
             return count;
         }
 
-        private static void DrawFeatureContractSetupProfiles()
+        private static void DrawGraphContractCoverage(PyralisAuthoringSetupGraph graph)
         {
-            IReadOnlyList<ResolvedAuthoringContract> contracts = ResolvedAuthoringContractRegistry.All;
+            IReadOnlyList<PyralisAuthoringReflectiveContractGraphRow> rows = PyralisAuthoringSetupGraphProjection.BuildReflectiveContractRows(graph);
             EditorGUILayout.Space(8f);
-            EditorGUILayout.LabelField("Contract-Backed Feature Module Setup", EditorStyles.boldLabel);
-            PyralisAuthoringWindowText.DrawSemanticHelpBox("Read-only setup guidance generated from feature-owned authoring contracts. Use native Unity surfaces for asset creation, Prefab/Component composition, Inspector assignment, object picking, and Play Mode proof.", MessageType.Info);
+            EditorGUILayout.LabelField("Graph Contract Coverage", EditorStyles.boldLabel);
+            PyralisAuthoringWindowText.DrawSemanticHelpBox("Contract rows shown here are resolved graph nodes. The raw cookbook below remains a migration/reference dictionary.", MessageType.Info);
 
-            if (contracts == null || contracts.Count == 0)
+            if (rows == null || rows.Count == 0)
             {
-                EditorGUILayout.LabelField("No feature contracts discovered. Tag interfaces with [AuthoringContract(ModuleId=\"...\")] for reflective discovery.", EditorStyles.wordWrappedMiniLabel);
+                EditorGUILayout.LabelField("No contract graph nodes were resolved yet.", EditorStyles.wordWrappedMiniLabel);
                 return;
             }
 
-            Dictionary<string, List<ResolvedAuthoringContract>> contractsByCategory = BuildContractsByCategory(contracts);
+            Dictionary<string, List<ResolvedAuthoringContract>> contractsByCategory = BuildContractsByCategory(rows);
             List<string> categories = new List<string>(contractsByCategory.Keys);
             categories.Sort(System.StringComparer.OrdinalIgnoreCase);
 
@@ -108,12 +112,41 @@ namespace NeonBlack.Gameplay.Editor
             }
         }
 
-        private static Dictionary<string, List<ResolvedAuthoringContract>> BuildContractsByCategory(IReadOnlyList<ResolvedAuthoringContract> contracts)
+        private static void DrawGraphProofCoverage(PyralisAuthoringSetupGraph graph)
+        {
+            IReadOnlyList<PyralisAuthoringGraphConnectionRow> rows = PyralisAuthoringSetupGraphProjection.BuildProofSupportRows(graph);
+            EditorGUILayout.Space(8f);
+            EditorGUILayout.LabelField("Graph Proof Coverage", EditorStyles.boldLabel);
+            if (rows == null || rows.Count == 0)
+            {
+                EditorGUILayout.LabelField("No proof-support graph edges are resolved for the active setup yet.", EditorStyles.wordWrappedMiniLabel);
+                return;
+            }
+
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                for (int i = 0; i < rows.Count; i++)
+                {
+                    PyralisAuthoringGraphConnectionRow row = rows[i];
+                    if (row == null)
+                        continue;
+
+                    EditorGUILayout.LabelField(row.FromLabel, row.ToLabel, EditorStyles.miniBoldLabel);
+                    EditorGUI.indentLevel++;
+                    PyralisAuthoringWindowPrimitives.DrawMiniField("Relationship", row.Relationship);
+                    if (!string.IsNullOrWhiteSpace(row.Detail))
+                        PyralisAuthoringWindowPrimitives.DrawMiniField("Meaning", row.Detail);
+                    EditorGUI.indentLevel--;
+                }
+            }
+        }
+
+        private static Dictionary<string, List<ResolvedAuthoringContract>> BuildContractsByCategory(IReadOnlyList<PyralisAuthoringReflectiveContractGraphRow> rows)
         {
             Dictionary<string, List<ResolvedAuthoringContract>> contractsByCategory = new Dictionary<string, List<ResolvedAuthoringContract>>();
-            for (int i = 0; i < contracts.Count; i++)
+            for (int i = 0; i < rows.Count; i++)
             {
-                ResolvedAuthoringContract contract = contracts[i];
+                ResolvedAuthoringContract contract = rows[i]?.Contract;
                 if (contract == null)
                     continue;
 

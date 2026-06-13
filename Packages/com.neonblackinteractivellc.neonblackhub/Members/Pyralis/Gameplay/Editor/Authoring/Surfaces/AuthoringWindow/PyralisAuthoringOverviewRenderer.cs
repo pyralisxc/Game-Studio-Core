@@ -9,18 +9,16 @@ namespace NeonBlack.Gameplay.Editor
 {
     internal static class PyralisAuthoringOverviewRenderer
     {
-        public static void DrawGuidanceCard(PyralisAuthoringOverviewModel model, PyralisAuthoringRouteReport report, PyralisAuthoringSetupGraph graph)
+        public static void DrawGuidanceCard(PyralisAuthoringOverviewModel model, PyralisAuthoringSetupGraph graph)
         {
             if (model == null)
                 return;
 
             EditorGUILayout.LabelField("Next Setup Guidance", EditorStyles.miniBoldLabel);
-            PyralisAuthoringCurrentStepGraphRow currentStep = PyralisAuthoringSetupGraphProjection.BuildCurrentStepRow(graph, report);
+            PyralisAuthoringCurrentStepGraphRow currentStep = PyralisAuthoringSetupGraphProjection.BuildCurrentStepRow(graph);
             string guidance = currentStep != null && !string.IsNullOrWhiteSpace(currentStep.Message)
                 ? currentStep.Message
-                : report != null && !string.IsNullOrWhiteSpace(report.RouteGuidance)
-                    ? report.RouteGuidance
-                    : model.FirstProofGuidance;
+                : model.FirstProofGuidance;
             PyralisAuthoringWindowText.DrawSemanticHelpBox(guidance, MessageType.Info);
             PyralisAuthoringWindowPrimitives.DrawMiniField("Intent vs Setup", "Intent shapes the route. Project, Hierarchy, and Inspector create and wire the user's actual setup.");
             PyralisAuthoringWindowPrimitives.DrawMiniField("Next", currentStep != null && !string.IsNullOrWhiteSpace(currentStep.Label) ? currentStep.Label : model.BestNextAction);
@@ -166,81 +164,40 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringWindowText.DrawSemanticMiniLabel(item.Detail);
         }
 
-        public static void DrawContractProofGuidance(Object activeSetup, PyralisAuthoringRouteReport report)
+        public static void DrawGraphProofSupport(PyralisAuthoringSetupGraph graph)
         {
-            IReadOnlyList<ResolvedAuthoringContractProofGuidanceRow> rows = ResolvedAuthoringContractProofGuidance.Build(activeSetup, report);
+            IReadOnlyList<PyralisAuthoringGraphConnectionRow> rows = PyralisAuthoringSetupGraphProjection.BuildProofSupportRows(graph);
             if (rows == null || rows.Count == 0)
                 return;
 
             EditorGUILayout.Space(4f);
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                EditorGUILayout.LabelField("Contract Proof Targets", EditorStyles.miniBoldLabel);
-                PyralisAuthoringWindowText.DrawSemanticMiniLabel("Feature modules included in this setup can enhance the first proof, but Play Mode remains the proof pass.");
+                EditorGUILayout.LabelField("Graph Proof Support", EditorStyles.miniBoldLabel);
+                PyralisAuthoringWindowText.DrawSemanticMiniLabel("These rows come from resolved graph edges. They show which capabilities and contracts support the current first proof.");
                 EditorGUI.indentLevel++;
                 for (int i = 0; i < rows.Count; i++)
-                    DrawContractProofGuidanceRow(rows[i]);
+                    DrawGraphProofSupportRow(rows[i]);
                 EditorGUI.indentLevel--;
             }
         }
 
-        public static void DrawContractProofGuidanceRow(ResolvedAuthoringContractProofGuidanceRow row)
+        private static void DrawGraphProofSupportRow(PyralisAuthoringGraphConnectionRow row)
         {
-            if (row == null || row.Contract == null)
+            if (row == null)
                 return;
 
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                string proofLabel = row.ProofFact != null ? row.ProofFact.DisplayName : row.Contract.FirstProofTargetId;
-                EditorGUILayout.LabelField(row.Contract.DisplayName, proofLabel, EditorStyles.boldLabel);
-                PyralisAuthoringWindowPrimitives.DrawMiniField("Feature Module", row.Contract.StableId);
-                PyralisAuthoringWindowPrimitives.DrawMiniField("Proof Target", string.IsNullOrWhiteSpace(row.Contract.FirstProofTargetId) ? "None recorded." : row.Contract.FirstProofTargetId);
-                PyralisAuthoringWindowPrimitives.DrawMiniField("Proof Target Exists", row.ProofTargetExists ? "Yes - this contract maps to a route proof card." : "No - the contract points at a missing route proof card.");
-                if (!string.IsNullOrWhiteSpace(row.Contract.FirstProofGuidance))
-                {
-                    PyralisAuthoringWindowPrimitives.DrawMiniField("Developer Proof Guidance", row.Contract.FirstProofGuidance);
-                }
-
-                PyralisAuthoringWindowPrimitives.DrawMiniField("Proof Status", GetContractProofStatusText(row));
-
-                if (row.ProofFact != null)
-                {
-                    PyralisAuthoringWindowPrimitives.DrawMiniField("Play Mode Proof", row.ProofFact.FirstProof);
-                    PyralisAuthoringWindowPrimitives.DrawMiniList("Proof Setup Fields", row.ProofFact.AssignmentFields);
-                }
-
-                if (row.HasUnsupportedLaneCaution)
-                    PyralisAuthoringWindowPrimitives.DrawMiniField("Unsupported Lane Cautions", GetUnsupportedLaneCaution(row));
-                else
-                    PyralisAuthoringWindowPrimitives.DrawMiniList("Unsupported Lane Cautions", PyralisAuthoringFactExplorerRenderer.ToPresentationModeNames(row.Contract.UnsupportedPresentationModes));
+                EditorGUILayout.LabelField(row.FromLabel, row.ToLabel, EditorStyles.boldLabel);
+                PyralisAuthoringWindowPrimitives.DrawMiniField("Relationship", row.Relationship);
+                if (!string.IsNullOrWhiteSpace(row.Detail))
+                    PyralisAuthoringWindowPrimitives.DrawMiniField("Meaning", row.Detail);
+                if (row.From != null && !string.IsNullOrWhiteSpace(row.From.Guidance))
+                    PyralisAuthoringWindowPrimitives.DrawMiniField("Why It Matters", row.From.Guidance);
+                if (row.From != null)
+                    PyralisAuthoringWindowPrimitives.DrawMiniList("Setup Fields", row.From.AssignmentFields);
             }
-        }
-
-        private static string GetContractProofStatusText(ResolvedAuthoringContractProofGuidanceRow row)
-        {
-            if (row == null)
-                return "No proof guidance available.";
-
-            switch (row.State)
-            {
-                case ResolvedAuthoringContractProofState.ProofTargetMissing:
-                    return "Blocked: proof target is missing from PyralisAuthoringRouteProof.";
-                case ResolvedAuthoringContractProofState.ProofBlockedBySetup:
-                    return "Proof target exists, but route setup still has blockers. Clear Do Now before Play Mode.";
-                default:
-                    return "Proof not run in Play Mode. Enter Play only after the selected intent's Do Now setup is clear, then verify this proof target.";
-            }
-        }
-
-        private static string GetUnsupportedLaneCaution(ResolvedAuthoringContractProofGuidanceRow row)
-        {
-            if (row == null || row.Contract == null || !row.ActiveLane.HasValue)
-                return "No active lane caution.";
-
-            if (!string.IsNullOrWhiteSpace(row.Contract.UnsupportedLaneMessage))
-                return row.Contract.UnsupportedLaneMessage;
-
-            return $"{row.Contract.DisplayName} does not support {row.ActiveLane.Value}. Choose a supported feature module or change the pawn presentation profile before Play Mode.";
         }
 
         public static void DrawLane(string title, string description, IReadOnlyList<PyralisAuthoringOverviewIssue> issues)

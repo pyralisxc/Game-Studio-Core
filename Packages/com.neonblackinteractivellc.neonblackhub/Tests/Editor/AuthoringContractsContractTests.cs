@@ -618,12 +618,132 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             Assert.That(graph.TryFindNode("setup.profile", out PyralisAuthoringGraphNode setupNode), Is.True);
             Assert.That(setupNode.EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.Ready));
+            Assert.That(setupNode.SourceOrigin, Is.EqualTo(PyralisAuthoringGraphSourceOrigin.UserAuthoredSetup));
+            Assert.That(graph.TryFindNode("capability.selected", out PyralisAuthoringGraphNode capabilitySummaryNode), Is.True);
+            Assert.That(capabilitySummaryNode.Kind, Is.EqualTo(PyralisAuthoringGraphNodeKind.Capability));
+            Assert.That(capabilitySummaryNode.EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.Ready));
             Assert.That(graph.TryFindNode("capability.2d-pawn-movement", out PyralisAuthoringGraphNode pawnNode), Is.True);
             Assert.That(pawnNode.Kind, Is.EqualTo(PyralisAuthoringGraphNodeKind.Capability));
+            Assert.That(pawnNode.SourceOrigin, Is.EqualTo(PyralisAuthoringGraphSourceOrigin.LegacyFact));
             Assert.That(graph.TryFindNode("proof.1p-pawn-movement", out PyralisAuthoringGraphNode proofNode), Is.True);
             Assert.That(proofNode.Kind, Is.EqualTo(PyralisAuthoringGraphNodeKind.Proof));
-            Assert.That(graph.Edges.Any(edge => edge.ToNodeId == "proof.1p-pawn-movement"), Is.True);
+            Assert.That(proofNode.SourceOrigin, Is.EqualTo(PyralisAuthoringGraphSourceOrigin.SpineFallback));
+            Assert.That(
+                graph.Edges.Any(edge =>
+                    edge.FromNodeId == "capability.2d-pawn-movement"
+                    && edge.ToNodeId == "proof.1p-pawn-movement"
+                    && edge.Kind == PyralisAuthoringGraphEdgeKind.SupportsProof),
+                Is.True);
+            IReadOnlyList<PyralisAuthoringGraphConnectionRow> connectionRows = PyralisAuthoringSetupGraphProjection.BuildMapConnectionRows(graph);
+            Assert.That(
+                connectionRows.Any(row =>
+                    row.Edge.Kind == PyralisAuthoringGraphEdgeKind.SupportsProof
+                    && row.From.StableId == "capability.2d-pawn-movement"
+                    && row.To.StableId == "proof.1p-pawn-movement"
+                    && row.Relationship == "supports proof"),
+                Is.True);
+            Assert.That(
+                PyralisAuthoringSetupGraphProjection.BuildProofSupportRows(graph).Any(row =>
+                    row.From.StableId == "capability.2d-pawn-movement"
+                    && row.To.StableId == "proof.1p-pawn-movement"),
+                Is.True);
+            Assert.That(
+                graph.Edges.Any(edge =>
+                    edge.ToNodeId == "proof.1p-pawn-movement"
+                    && edge.Kind == PyralisAuthoringGraphEdgeKind.BlockedBy),
+                Is.False,
+                "Capability support must not be represented as a proof blocker.");
             Assert.That(PyralisAuthoringSetupGraphProjection.FindCurrentProofNode(graph)?.StableId, Is.EqualTo("proof.1p-pawn-movement"));
+
+            UnityEngine.Object.DestroyImmediate(setupProfile);
+        }
+
+        [Test]
+        public void AuthoringSetupGraph_TracksSourceOriginForMigrationReadiness()
+        {
+            GameObject root = new GameObject("Graph Origin Readiness");
+            GameplaySessionBootstrap bootstrap = root.AddComponent<GameplaySessionBootstrap>();
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
+
+            Assert.That(graph.TryFindNode("bootstrap.root", out PyralisAuthoringGraphNode bootstrapNode), Is.True);
+            Assert.That(bootstrapNode.SourceOrigin, Is.EqualTo(PyralisAuthoringGraphSourceOrigin.SpineGrammar));
+            Assert.That(graph.TryFindNode("contract.feature.actor.traversal.topdown-hop", out PyralisAuthoringGraphNode contractNode), Is.True);
+            Assert.That(contractNode.SourceOrigin, Is.EqualTo(PyralisAuthoringGraphSourceOrigin.Contract));
+            Assert.That(
+                graph.Nodes.Any(node =>
+                    node != null
+                    && node.StableId.StartsWith("setupflow.", StringComparison.Ordinal)
+                    && node.SourceOrigin == PyralisAuthoringGraphSourceOrigin.RuntimeEvidence),
+                Is.True);
+            Assert.That(
+                PyralisAuthoringSetupGraphProjection.BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.Missing)
+                    .Concat(PyralisAuthoringSetupGraphProjection.BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.Blocked))
+                    .Any(row => !string.IsNullOrWhiteSpace(row.OriginLabel)),
+                Is.True);
+
+            UnityEngine.Object.DestroyImmediate(root);
+        }
+
+        [Test]
+        public void AuthoringSetupGraph_ProjectsRuntimePatternsAsUserAuthoredSetupNodes()
+        {
+            GameSetupProfile setupProfile = ScriptableObject.CreateInstance<GameSetupProfile>();
+            RuntimePatternDefinition pattern = ScriptableObject.CreateInstance<RuntimePatternDefinition>();
+            pattern.patternId = "pattern.editor-test";
+            pattern.displayName = "Editor Test Pattern";
+            pattern.description = "Test pattern description.";
+            pattern.capabilityFamily = RuntimeCapabilityFamily.CameraInput;
+            setupProfile.runtimePatterns = new[] { pattern };
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(setupProfile);
+
+            Assert.That(graph.TryFindNode("runtime-pattern.pattern-editor-test", out PyralisAuthoringGraphNode patternNode), Is.True);
+            Assert.That(patternNode.SourceKind, Is.EqualTo(PyralisAuthoringGraphSourceKind.RuntimePattern));
+            Assert.That(patternNode.SourceOrigin, Is.EqualTo(PyralisAuthoringGraphSourceOrigin.UserAuthoredSetup));
+            Assert.That(patternNode.SourceObject, Is.SameAs(pattern));
+
+            UnityEngine.Object.DestroyImmediate(pattern);
+            UnityEngine.Object.DestroyImmediate(setupProfile);
+        }
+
+        [Test]
+        public void AuthoringOverviewModel_DoesNotRebuildVisibleProofGuidanceFromRouteProof()
+        {
+            string overviewSource = File.ReadAllText(
+                Path.Combine(GameplayRoot, "Editor", "Authoring", "Spine", "Routes", "PyralisAuthoringOverviewModel.cs"));
+
+            Assert.That(overviewSource.Contains("PyralisAuthoringRouteProof.Build"), Is.False);
+        }
+
+        [Test]
+        public void AuthoringSetupGraph_TabletopRouteStaysNoPawnAndSupportsBoardProof()
+        {
+            GameSetupProfile setupProfile = ScriptableObject.CreateInstance<GameSetupProfile>();
+            setupProfile.runtimeCapabilities = new[]
+            {
+                new RuntimeCapabilitySelection { capabilityFamily = RuntimeCapabilityFamily.BoardCardTabletop }
+            };
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(setupProfile);
+
+            Assert.That(graph.RouteAnalysis.RequiresPawn, Is.False);
+            Assert.That(graph.TryFindNode("pawn.definition", out PyralisAuthoringGraphNode pawnNode), Is.True);
+            Assert.That(pawnNode.Kind, Is.EqualTo(PyralisAuthoringGraphNodeKind.UnitySurfaceRequirement));
+            Assert.That(pawnNode.EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.Ready));
+            Assert.That(pawnNode.Guidance, Does.Contain("No-pawn route"));
+            Assert.That(graph.TryFindNode("proof.board-card-action", out PyralisAuthoringGraphNode proofNode), Is.True);
+            Assert.That(proofNode.Kind, Is.EqualTo(PyralisAuthoringGraphNodeKind.Proof));
+            PyralisAuthoringGraphNode tabletopCapabilityNode = graph.Nodes.FirstOrDefault(node =>
+                node.Kind == PyralisAuthoringGraphNodeKind.Capability
+                && node.CapabilityFamily == RuntimeCapabilityFamily.BoardCardTabletop);
+            Assert.That(tabletopCapabilityNode, Is.Not.Null);
+            Assert.That(
+                graph.Edges.Any(edge =>
+                    edge.FromNodeId == tabletopCapabilityNode.StableId
+                    && edge.ToNodeId == "proof.board-card-action"
+                    && edge.Kind == PyralisAuthoringGraphEdgeKind.SupportsProof),
+                Is.True);
 
             UnityEngine.Object.DestroyImmediate(setupProfile);
         }
@@ -651,6 +771,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(participantNode.EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.Ready));
             Assert.That(participantNode.SourceObject, Is.SameAs(participant));
             Assert.That(graph.TryFindNode("pawn.definition", out PyralisAuthoringGraphNode pawnNode), Is.True);
+            Assert.That(pawnNode.Kind, Is.EqualTo(PyralisAuthoringGraphNodeKind.UnitySurfaceRequirement));
             Assert.That(pawnNode.EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.Ready));
             Assert.That(pawnNode.SourceObject, Is.SameAs(pawn));
             Assert.That(graph.TryFindNode("scene.surfaces", out PyralisAuthoringGraphNode surfaceSummaryNode), Is.True);
@@ -680,6 +801,74 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(rows.Select(row => row.Label), Does.Contain("Scene Surfaces"));
             Assert.That(PyralisAuthoringSetupGraphProjection.FindCurrentProofNode(graph), Is.Not.Null);
             Assert.That(PyralisAuthoringSetupGraphProjection.FindFirstUnresolvedNode(graph), Is.Not.Null);
+
+            UnityEngine.Object.DestroyImmediate(setupProfile);
+        }
+
+        [Test]
+        public void AuthoringSetupGraphProjection_ValidationRowsIncludeSetupFlowEvidence()
+        {
+            GameObject root = new GameObject("Bootstrap Validation Graph");
+            GameplaySessionBootstrap bootstrap = root.AddComponent<GameplaySessionBootstrap>();
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
+            PyralisAuthoringValidationGraphRow[] rows = PyralisAuthoringSetupGraphProjection
+                .BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.Missing)
+                .Concat(PyralisAuthoringSetupGraphProjection.BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.Blocked))
+                .ToArray();
+
+            Assert.That(
+                rows.Any(row =>
+                    row.Node != null
+                    && row.Node.SourceKind == PyralisAuthoringGraphSourceKind.SetupFlow
+                    && row.NodeId.StartsWith("setupflow.", StringComparison.Ordinal)),
+                Is.True);
+
+            UnityEngine.Object.DestroyImmediate(root);
+        }
+
+        [Test]
+        public void AuthoringSetupGraphProjection_ValidationRowsIncludeSetupChainAndCapabilityReadiness()
+        {
+            GameSetupProfile setupProfile = ScriptableObject.CreateInstance<GameSetupProfile>();
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(setupProfile);
+            IReadOnlyList<PyralisAuthoringValidationGraphRow> missingRows =
+                PyralisAuthoringSetupGraphProjection.BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.Missing);
+
+            Assert.That(missingRows.Any(row => row.NodeId == "session.definition"), Is.True);
+            Assert.That(missingRows.Any(row => row.NodeId == "mode.definition"), Is.True);
+            Assert.That(missingRows.Any(row => row.NodeId == "capability.selected"), Is.True);
+
+            UnityEngine.Object.DestroyImmediate(setupProfile);
+        }
+
+        [Test]
+        public void AuthoringSetupGraphProjection_BlankSourceNamesMissingGameplayRoot()
+        {
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(null);
+            PyralisAuthoringCurrentStepGraphRow currentStep = PyralisAuthoringSetupGraphProjection.BuildCurrentStepRow(graph);
+
+            Assert.That(graph.TryFindNode("bootstrap.root", out PyralisAuthoringGraphNode bootstrapNode), Is.True);
+            Assert.That(bootstrapNode.EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.Missing));
+            Assert.That(bootstrapNode.NativeAction.HasValue, Is.True);
+            Assert.That(currentStep.Label, Is.EqualTo("Gameplay Root"));
+            Assert.That(currentStep.Message, Does.Contain("GameplaySessionBootstrap"));
+        }
+
+        [Test]
+        public void AuthoringOverviewModel_UsesGraphReadinessForDoNow()
+        {
+            GameSetupProfile setupProfile = ScriptableObject.CreateInstance<GameSetupProfile>();
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(setupProfile);
+            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(
+                setupProfile,
+                graph);
+
+            Assert.That(model.DoNow.Any(issue => issue.Label == "Session Definition"), Is.True);
+            Assert.That(model.DoNow.Any(issue => issue.Label == "Game Mode Definition"), Is.True);
+            Assert.That(model.DoNow.Any(issue => issue.Label == "Capabilities"), Is.True);
 
             UnityEngine.Object.DestroyImmediate(setupProfile);
         }
@@ -845,53 +1034,6 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(proof.GoalTags, Does.Contain("Traversal"));
             Assert.That(proof.RelatedStableIds, Does.Contain("feature.actor.traversal.topdown-hop"));
             Assert.That(proof.RouteRelevance, Does.Contain("Reflective contract inputs"));
-        }
-
-        [TestCase("actor.traversal.topdown-hop", "proof.1p-pawn-movement", "1P Pawn Movement Proof")]
-        [TestCase("actor.interaction", "proof.action-selection", "Action Selection Proof")]
-        [TestCase("actor.traversal.3d", "proof.npc-enemy-behavior", "NPC Enemy Behavior Proof")]
-        public void ContractProofGuidance_MapsIncludedModulesToRouteProofCards(string moduleId, string proofId, string proofLabel)
-        {
-            FeatureModuleDefinition module = ScriptableObject.CreateInstance<FeatureModuleDefinition>();
-            module.moduleId = moduleId;
-            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
-            mode.requiredFeatureModules = new[] { module };
-
-            IReadOnlyList<ResolvedAuthoringContractProofGuidanceRow> rows = ResolvedAuthoringContractProofGuidance.Build(mode, null);
-
-            Assert.That(rows.Count, Is.EqualTo(1));
-            Assert.That(rows[0].Contract.StableId, Is.EqualTo($"feature.{moduleId}"));
-            Assert.That(rows[0].Contract.FirstProofTargetId, Is.EqualTo(proofId));
-            Assert.That(rows[0].ProofTargetExists, Is.True);
-            Assert.That(rows[0].ProofFact.DisplayName, Is.EqualTo(proofLabel));
-            Assert.That(rows[0].State, Is.EqualTo(ResolvedAuthoringContractProofState.ProofNotRunInPlayMode));
-            Assert.That(rows[0].PlayModeProofRequired, Is.True);
-
-            UnityEngine.Object.DestroyImmediate(mode);
-            UnityEngine.Object.DestroyImmediate(module);
-        }
-
-        [Test]
-        public void ContractProofGuidance_ReportsUnsupportedPawnLaneCaution()
-        {
-            FeatureModuleDefinition module = ScriptableObject.CreateInstance<FeatureModuleDefinition>();
-            module.moduleId = "actor.traversal.3d";
-            PawnPresentationProfile presentation = ScriptableObject.CreateInstance<PawnPresentationProfile>();
-            presentation.presentationMode = ActorPresentationMode.Sprite2D;
-            PawnDefinition pawn = ScriptableObject.CreateInstance<PawnDefinition>();
-            pawn.presentationProfile = presentation;
-            pawn.featureModules = new[] { module };
-
-            IReadOnlyList<ResolvedAuthoringContractProofGuidanceRow> rows = ResolvedAuthoringContractProofGuidance.Build(pawn, null);
-
-            Assert.That(rows.Count, Is.EqualTo(1));
-            Assert.That(rows[0].ProofTargetExists, Is.True);
-            Assert.That(rows[0].HasUnsupportedLaneCaution, Is.True);
-            Assert.That(rows[0].ActiveLane, Is.EqualTo(ActorPresentationMode.Sprite2D));
-
-            UnityEngine.Object.DestroyImmediate(pawn);
-            UnityEngine.Object.DestroyImmediate(presentation);
-            UnityEngine.Object.DestroyImmediate(module);
         }
 
         [Test]

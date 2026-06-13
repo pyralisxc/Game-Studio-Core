@@ -478,9 +478,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
             session.defaultParticipants = new[] { participant };
             SetObjectReference(bootstrap, "sessionDefinition", session);
 
-            PyralisAuthoringRouteReport routeReport = PyralisAuthoringRouteReport.Build(bootstrap);
             PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
-            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(bootstrap, routeReport, graph);
+            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(bootstrap, graph);
 
             Assert.That(model.RouteName, Is.EqualTo("Tabletop route"));
             Assert.That(model.ReadyToPressPlay, Is.True);
@@ -522,9 +521,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
             session.defaultParticipants = new[] { participant };
             SetObjectReference(bootstrap, "sessionDefinition", session);
 
-            PyralisAuthoringRouteReport routeReport = PyralisAuthoringRouteReport.Build(bootstrap);
             PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
-            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(bootstrap, routeReport, graph);
+            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(bootstrap, graph);
 
             Assert.That(model.RouteName, Is.EqualTo("Pawn-backed route"));
             Assert.That(model.ReadyToPressPlay, Is.False);
@@ -608,9 +606,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
             prefab.AddComponent<TestPawnPresentation>();
             prefab.AddComponent<TestPawnInput>();
             PyralisSetupFlowReport readyReport = PyralisSetupFlowValidator.BuildReport(bootstrap);
-            PyralisAuthoringRouteReport routeReport = PyralisAuthoringRouteReport.Build(bootstrap);
             PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
-            PyralisAuthoringOverviewModel overview = PyralisAuthoringOverviewModel.Build(bootstrap, routeReport, graph);
+            PyralisAuthoringOverviewModel overview = PyralisAuthoringOverviewModel.Build(bootstrap, graph);
 
             Assert.That(readyReport.GetStep("Assign Participant Pawn").Status, Is.EqualTo(PyralisSetupFlowStepStatus.Ready));
             Assert.That(readyReport.GetStep("Tune Pawn Visuals And Collision").Status, Is.EqualTo(PyralisSetupFlowStepStatus.Recommended));
@@ -758,9 +755,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
             SetObjectReference(bootstrap, "sessionDefinition", session);
 
             PyralisSceneReadinessReport readiness = PyralisSceneReadinessValidator.BuildReport(bootstrap);
-            PyralisAuthoringRouteReport routeReport = PyralisAuthoringRouteReport.Build(bootstrap);
             PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
-            PyralisAuthoringOverviewModel overview = PyralisAuthoringOverviewModel.Build(bootstrap, routeReport, graph);
+            PyralisAuthoringOverviewModel overview = PyralisAuthoringOverviewModel.Build(bootstrap, graph);
 
             Assert.That(readiness.IsReady, Is.True);
             Assert.That(readiness.GetIssues(PyralisSceneReadinessSeverity.ProofEnhancer).Any(issue => issue.Category == PyralisSceneReadinessCategory.Physics), Is.True);
@@ -2344,7 +2340,7 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
         [Test]
         public void PyralisAuthoringOverviewModel_NoActiveSetup_GuidesBlankSceneFoundation()
         {
-            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(null, null, null);
+            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(null, null);
 
             Assert.That(model.ReadyToPressPlay, Is.False);
             Assert.That(model.FirstProofLabel, Is.EqualTo("Create Setup Foundation"));
@@ -2362,10 +2358,8 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
         {
             GameObject root = new GameObject("Gameplay Root");
             GameplaySessionBootstrap bootstrap = root.AddComponent<GameplaySessionBootstrap>();
-            PyralisAuthoringRouteReport routeReport = PyralisAuthoringRouteReport.Build(bootstrap);
-
             PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
-            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(bootstrap, routeReport, graph);
+            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(bootstrap, graph);
 
             Assert.That(model.ReadyToPressPlay, Is.False);
             Assert.That(model.DoNow.Select(issue => issue.Label), Does.Contain("Assign Session Definition"));
@@ -2440,10 +2434,8 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
             session.defaultGameMode = mode;
             session.defaultParticipants = new[] { participant };
             SetObjectReference(bootstrap, "sessionDefinition", session);
-            PyralisAuthoringRouteReport routeReport = PyralisAuthoringRouteReport.Build(bootstrap);
-
             PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
-            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(bootstrap, routeReport, graph);
+            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(bootstrap, graph);
 
             Assert.That(model.DoNow.Select(issue => issue.Label), Does.Contain("Tabletop Runtime Contract"));
             Assert.That(model.DoSoon.Select(issue => issue.Label), Does.Contain("Assign Tabletop Selection Surface"));
@@ -2484,10 +2476,8 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
             session.defaultGameMode = mode;
             session.defaultParticipants = new[] { participant };
             SetObjectReference(bootstrap, "sessionDefinition", session);
-            PyralisAuthoringRouteReport routeReport = PyralisAuthoringRouteReport.Build(bootstrap);
-
             PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
-            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(bootstrap, routeReport, graph);
+            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(bootstrap, graph);
 
             Assert.That(model.FirstProofLabel, Is.EqualTo("1P Pawn Movement Proof"));
             Assert.That(model.FirstProofGuidance, Does.Contain("spawn the pawn"));
@@ -2577,10 +2567,8 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
             session.defaultGameMode = mode;
             session.defaultParticipants = new[] { participant };
             SetObjectReference(bootstrap, "sessionDefinition", session);
-            PyralisAuthoringRouteReport routeReport = PyralisAuthoringRouteReport.Build(bootstrap);
-
             PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
-            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(bootstrap, routeReport, graph);
+            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(bootstrap, graph);
 
             Assert.That(model.FirstProofLabel, Is.EqualTo("Board/Card Action Proof"));
             Assert.That(model.FirstProofGuidance, Does.Contain("rules-backed selection"));
@@ -2987,7 +2975,7 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
             PyralisSetupFlowReport report = PyralisSetupFlowValidator.BuildReport(bootstrap);
             PyralisAuthoringRouteReport routeReport = PyralisAuthoringRouteReport.Build(bootstrap);
             PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
-            PyralisAuthoringOverviewModel overview = PyralisAuthoringOverviewModel.Build(bootstrap, routeReport, graph);
+            PyralisAuthoringOverviewModel overview = PyralisAuthoringOverviewModel.Build(bootstrap, graph);
 
             PyralisSetupFlowStep cameraRigStep = report.GetStep("Assign Camera Rig");
             Assert.That(cameraRigStep.Status, Is.EqualTo(PyralisSetupFlowStepStatus.Recommended));

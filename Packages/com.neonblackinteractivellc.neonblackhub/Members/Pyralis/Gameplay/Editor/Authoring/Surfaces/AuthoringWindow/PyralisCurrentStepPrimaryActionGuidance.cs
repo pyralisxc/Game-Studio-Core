@@ -26,7 +26,6 @@ namespace NeonBlack.Gameplay.Editor
     {
         public static PyralisPrimaryActionGuidance Build(
             Object selection,
-            PyralisAuthoringRouteReport report,
             PyralisAuthoringCurrentStepGraphRow currentStep = null)
         {
             if (currentStep != null && currentStep.HasNode)
@@ -149,8 +148,10 @@ namespace NeonBlack.Gameplay.Editor
                     "Pawn is optional for this route; leave it empty for seats, hands, factions, camera, cursor, menu, or board-driven participants.");
             }
 
-            string fallback = report != null && report.ValidationIssues.Count > 0
-                ? "Review validation issues next."
+            string fallback = currentStep != null
+                && (currentStep.EvidenceState == PyralisAuthoringGraphEvidenceState.Missing
+                    || currentStep.EvidenceState == PyralisAuthoringGraphEvidenceState.Blocked)
+                ? "Review the current graph step and validation evidence next."
                 : "No one-click setup action is needed for this selection.";
             return new PyralisPrimaryActionGuidance(string.Empty, MessageType.None, fallback);
         }

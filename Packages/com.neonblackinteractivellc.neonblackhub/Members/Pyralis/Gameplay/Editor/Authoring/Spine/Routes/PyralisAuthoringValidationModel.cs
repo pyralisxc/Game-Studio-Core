@@ -119,6 +119,11 @@ namespace NeonBlack.Gameplay.Editor
             return Build(null, report);
         }
 
+        public static PyralisAuthoringValidationModel Build(Object target)
+        {
+            return Build(target, PyralisAuthoringRouteReport.Build(target));
+        }
+
         public static PyralisAuthoringValidationModel Build(Object target, PyralisAuthoringRouteReport report)
         {
             if (report == null)

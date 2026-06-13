@@ -56,12 +56,6 @@ namespace NeonBlack.Gameplay.Editor
         private int _authoringCacheVersion;
         private string _cachedIntentModelKey;
         private PyralisAuthoringIntentModel _cachedIntentModel;
-        private int _cachedActiveReportVersion = -1;
-        private int _cachedSelectionReportVersion = -1;
-        private Object _cachedActiveReportTarget;
-        private Object _cachedSelectionReportTarget;
-        private PyralisAuthoringRouteReport _cachedActiveReport;
-        private PyralisAuthoringRouteReport _cachedSelectionReport;
 
         private VisualElement _contentRoot;
 
@@ -224,22 +218,18 @@ namespace NeonBlack.Gameplay.Editor
                 case AuthoringWindowMode.Overview:
                     DrawOverviewMode(
                         activeSetup,
-                        selection,
-                        GetCachedRouteReport(activeSetup, true),
-                        GetCachedRouteReport(selection, false));
+                        selection);
                     break;
                 case AuthoringWindowMode.Guide:
                     DrawGuideMode(
                         selection,
-                        GetCachedRouteReport(selection, false),
-                        activeSetup,
-                        GetCachedRouteReport(activeSetup, true));
+                        activeSetup);
                     break;
                 case AuthoringWindowMode.Map:
-                    PyralisAuthoringMapRenderer.Draw(activeSetup, selection, GetCachedRouteReport(activeSetup, true));
+                    PyralisAuthoringMapRenderer.Draw(activeSetup, selection);
                     break;
                 case AuthoringWindowMode.Validate:
-                    PyralisAuthoringValidateRenderer.Draw(activeSetup, GetCachedRouteReport(activeSetup, true), TryRunGuidanceAction);
+                    PyralisAuthoringValidateRenderer.Draw(activeSetup);
                     break;
                 case AuthoringWindowMode.Facts:
                     PyralisAuthoringFactExplorerRenderer.Draw(activeSetup);
@@ -308,28 +298,6 @@ namespace NeonBlack.Gameplay.Editor
             _cachedIntentModel = null;
         }
 
-        private PyralisAuthoringRouteReport GetCachedRouteReport(Object target, bool activeSetupReport)
-        {
-            if (activeSetupReport)
-            {
-                if (_cachedActiveReportVersion == _authoringCacheVersion && _cachedActiveReportTarget == target)
-                    return _cachedActiveReport;
-
-                _cachedActiveReportVersion = _authoringCacheVersion;
-                _cachedActiveReportTarget = target;
-                _cachedActiveReport = PyralisAuthoringRouteReport.Build(target);
-                return _cachedActiveReport;
-            }
-
-            if (_cachedSelectionReportVersion == _authoringCacheVersion && _cachedSelectionReportTarget == target)
-                return _cachedSelectionReport;
-
-            _cachedSelectionReportVersion = _authoringCacheVersion;
-            _cachedSelectionReportTarget = target;
-            _cachedSelectionReport = PyralisAuthoringRouteReport.Build(target);
-            return _cachedSelectionReport;
-        }
-
         private static bool ShouldStartInIntent(Object activeSetup, Object selectionSetup, Object sceneFallbackSetup, AuthoringWindowMode mode)
         {
             return mode == AuthoringWindowMode.Overview
@@ -343,19 +311,19 @@ namespace NeonBlack.Gameplay.Editor
                 && sceneFallbackSetup == null;
         }
 
-        private void DrawOverviewMode(Object activeSetup, Object selection, PyralisAuthoringRouteReport report, PyralisAuthoringRouteReport selectionReport)
+        private void DrawOverviewMode(Object activeSetup, Object selection)
         {
             bool selectedSetupProfile = selection is GameSetupProfile;
             Object currentStepSelection = selectedSetupProfile ? selection : activeSetup != null ? activeSetup : selection;
-            PyralisAuthoringRouteReport currentStepReport = selectedSetupProfile ? selectionReport : activeSetup != null ? report : selectionReport;
-            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(activeSetup);
-            PyralisAuthoringCurrentStepGraphRow currentStep = PyralisAuthoringSetupGraphProjection.BuildCurrentStepRow(graph, currentStepReport);
-            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(activeSetup, report, graph);
+            Object graphSource = activeSetup != null ? activeSetup : selectedSetupProfile ? selection : null;
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(graphSource);
+            PyralisAuthoringCurrentStepGraphRow currentStep = PyralisAuthoringSetupGraphProjection.BuildCurrentStepRow(graph);
+            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(activeSetup, graph);
 
             EditorGUILayout.LabelField("Overview", EditorStyles.boldLabel);
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                PyralisAuthoringOverviewRenderer.DrawGuidanceCard(model, report, graph);
+                PyralisAuthoringOverviewRenderer.DrawGuidanceCard(model, graph);
                 PyralisAuthoringOverviewRenderer.DrawActionButtons(model, OpenIntentFromOverview, OpenMapFromOverview, OpenValidateFromOverview);
             }
 
@@ -364,8 +332,8 @@ namespace NeonBlack.Gameplay.Editor
             PyralisAuthoringOverviewRenderer.DrawPlayModeChecklist(model);
             PyralisAuthoringOverviewRenderer.DrawLane("Do Now", "Only intent-required missing or blocked work appears here.", model.DoNow);
             PyralisAuthoringOverviewRenderer.DrawLane("Proof Enhancers", "Useful before Play Mode when they make the first proof clearer.", model.DoSoon);
-            PyralisAuthoringOverviewRenderer.DrawContractProofGuidance(activeSetup, report);
-            DrawCurrentStepPanel(currentStepSelection, currentStepReport, currentStep);
+            PyralisAuthoringOverviewRenderer.DrawGraphProofSupport(graph);
+            DrawCurrentStepPanel(currentStepSelection, currentStep);
         }
 
         private void OpenIntentFromOverview()
@@ -455,75 +423,6 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringWindowPrimitives.DrawMiniList("Customization", row.Fact.CustomizationMoments, "Creator-owned choices. Authoring guides these choices; it does not pick them.");
                 PyralisAuthoringWindowPrimitives.DrawMiniList("Can Wait", row.Fact.CanWait, "Useful work to defer until the route's first proof is readable.");
             }
-        }
-
-        private bool TryRunGuidanceAction(PyralisAuthoringValidationIssue issue)
-        {
-            if (issue == null || issue.Target == null)
-                return false;
-
-            if (issue.IssueCode != null
-                && (issue.IssueCode.StartsWith("sceneSurface.", System.StringComparison.Ordinal)
-                    || issue.IssueCode.StartsWith("prefabReadiness.", System.StringComparison.Ordinal)))
-            {
-                return OpenMapForTarget(issue.Target);
-            }
-
-            switch (issue.IssueCode)
-            {
-                case "session.defaultGameMode.missing":
-                case "session.defaultParticipants.missing":
-                case "session.defaultParticipants.slot.empty":
-                case "gameMode.setupProfile.missing":
-                case "setupProfile.runtimePatterns.missing":
-                case "setupProfile.runtimePatterns.slot.empty":
-                case "setupProfile.runtimePatterns.duplicate":
-                case "pawn.pawnPrefab.missing":
-                    return OpenGuideForTarget(issue.Target);
-
-                default:
-                    return false;
-            }
-        }
-
-        private bool OpenMapForTarget(Object target)
-        {
-            if (target == null)
-                return false;
-
-            Selection.activeObject = target;
-            EditorGUIUtility.PingObject(target);
-
-            if (PyralisAuthoringSetupContextResolver.CanUseAsActiveSetup(target))
-            {
-                _pinnedActiveSetup = PyralisAuthoringSetupContextResolver.GetSetupContext(target);
-                InvalidateAuthoringCache();
-            }
-
-            _mode = AuthoringWindowMode.Map;
-            _mapScroll = Vector2.zero;
-            Repaint();
-            return true;
-        }
-
-        private bool OpenGuideForTarget(Object target)
-        {
-            if (target == null)
-                return false;
-
-            Selection.activeObject = target;
-            EditorGUIUtility.PingObject(target);
-
-            if (PyralisAuthoringSetupContextResolver.CanUseAsActiveSetup(target))
-            {
-                _pinnedActiveSetup = PyralisAuthoringSetupContextResolver.GetSetupContext(target);
-                InvalidateAuthoringCache();
-            }
-
-            _mode = AuthoringWindowMode.Guide;
-            _guideScroll = Vector2.zero;
-            Repaint();
-            return true;
         }
 
         private static void FillMissingRuntimePatternText(RuntimePatternDefinition pattern)

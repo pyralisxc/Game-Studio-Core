@@ -11,19 +11,19 @@ namespace NeonBlack.Gameplay.Editor
 {
     public partial class PyralisAuthoringWindow
     {
-        private void DrawGuideMode(Object selection, PyralisAuthoringRouteReport report, Object activeSetup, PyralisAuthoringRouteReport activeSetupReport)
+        private void DrawGuideMode(Object selection, Object activeSetup)
         {
             PyralisAuthoringSetupGraph contextGraph = PyralisAuthoringSetupGraphBuilder.Build(activeSetup != null ? activeSetup : selection);
-            PyralisAuthoringCurrentStepGraphRow currentStep = PyralisAuthoringSetupGraphProjection.BuildCurrentStepRow(contextGraph, report);
+            PyralisAuthoringCurrentStepGraphRow currentStep = PyralisAuthoringSetupGraphProjection.BuildCurrentStepRow(contextGraph);
             if (ShouldShowSelectionFirstGuide(selection, activeSetup))
             {
                 EditorGUILayout.LabelField("Selected Object Next Step", EditorStyles.boldLabel);
-                DrawCurrentStepPanel(selection, report, currentStep);
+                DrawCurrentStepPanel(selection, currentStep);
 
                 EditorGUILayout.Space(10f);
                 EditorGUILayout.LabelField("What This Selection Does", EditorStyles.boldLabel);
-                PyralisSelectedContextRenderer.Draw(selection, report, contextGraph, currentStep, FillMissingRuntimePatternText);
-                DrawSelectionGuide(selection, report, contextGraph);
+                PyralisSelectedContextRenderer.Draw(selection, contextGraph, currentStep, FillMissingRuntimePatternText);
+                DrawSelectionGuide(selection, contextGraph);
 
                 EditorGUILayout.Space(10f);
                 DrawCurrentIntentGuide(GetCachedIntentModel());
@@ -36,8 +36,8 @@ namespace NeonBlack.Gameplay.Editor
 
                 EditorGUILayout.Space(10f);
                 EditorGUILayout.LabelField("What This Selection Does", EditorStyles.boldLabel);
-                PyralisSelectedContextRenderer.Draw(selection, report, contextGraph, currentStep, FillMissingRuntimePatternText);
-                DrawSelectionGuide(selection, report, contextGraph);
+                PyralisSelectedContextRenderer.Draw(selection, contextGraph, currentStep, FillMissingRuntimePatternText);
+                DrawSelectionGuide(selection, contextGraph);
             }
 
             if (activeSetup == null || activeSetup == selection)
@@ -48,11 +48,10 @@ namespace NeonBlack.Gameplay.Editor
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 EditorGUILayout.LabelField("Active Setup", $"{activeSetup.name} ({activeSetup.GetType().Name})", EditorStyles.wordWrappedLabel);
-                if (activeSetupReport != null)
-                {
-                    EditorGUILayout.LabelField("Route", activeSetupReport.RouteName, EditorStyles.wordWrappedLabel);
-                    EditorGUILayout.LabelField("Next Required Step", activeSetupReport.NextStep, EditorStyles.wordWrappedLabel);
-                }
+                PyralisAuthoringSetupGraph activeGraph = PyralisAuthoringSetupGraphBuilder.Build(activeSetup);
+                PyralisAuthoringCurrentStepGraphRow activeCurrentStep = PyralisAuthoringSetupGraphProjection.BuildCurrentStepRow(activeGraph);
+                EditorGUILayout.LabelField("Route", activeCurrentStep.RouteName, EditorStyles.wordWrappedLabel);
+                EditorGUILayout.LabelField("Next Required Step", activeCurrentStep.Message, EditorStyles.wordWrappedLabel);
             }
         }
 
@@ -63,7 +62,7 @@ namespace NeonBlack.Gameplay.Editor
                 && selectedGameObject.GetComponent<GameplaySessionBootstrap>() == null;
         }
 
-        private static void DrawCurrentStepPanel(Object selection, PyralisAuthoringRouteReport report, PyralisAuthoringCurrentStepGraphRow currentStep)
+        private static void DrawCurrentStepPanel(Object selection, PyralisAuthoringCurrentStepGraphRow currentStep)
         {
             if (currentStep == null)
                 return;
@@ -75,7 +74,7 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringWindowText.DrawSemanticHelpBox(currentStep.Message, GetCurrentStepMessageType(currentStep));
 
                 EditorGUILayout.LabelField("Primary Action", EditorStyles.miniBoldLabel);
-                DrawPrimaryAction(selection, report, currentStep);
+                DrawPrimaryAction(selection, currentStep);
 
                 const string key = "Pyralis.AuthoringWindow.CurrentStep.Why";
                 bool isOpen = ServiceStepFoldouts.TryGetValue(key, out bool value) && value;
@@ -83,7 +82,7 @@ namespace NeonBlack.Gameplay.Editor
                 ServiceStepFoldouts[key] = isOpen;
 
                 if (isOpen)
-                    PyralisAuthoringWindowText.DrawSemanticMiniLabel(!string.IsNullOrWhiteSpace(currentStep.Detail) ? currentStep.Detail : report?.RouteGuidance);
+                    PyralisAuthoringWindowText.DrawSemanticMiniLabel(currentStep.Detail);
             }
         }
 
@@ -170,14 +169,14 @@ namespace NeonBlack.Gameplay.Editor
             }
         }
 
-        private static void DrawPrimaryAction(Object selection, PyralisAuthoringRouteReport report, PyralisAuthoringCurrentStepGraphRow currentStep)
+        private static void DrawPrimaryAction(Object selection, PyralisAuthoringCurrentStepGraphRow currentStep)
         {
             if (currentStep != null && currentStep.NativeAction.HasValue)
             {
                 PyralisAuthoringSurfaceBeacon.DrawNativeAction(currentStep.NativeAction.Value, currentStep.NativeAction.Value.ToGuidanceSentence());
             }
 
-            PyralisPrimaryActionGuidance guidance = PyralisCurrentStepPrimaryActionGuidance.Build(selection, report, currentStep);
+            PyralisPrimaryActionGuidance guidance = PyralisCurrentStepPrimaryActionGuidance.Build(selection, currentStep);
             if (!string.IsNullOrWhiteSpace(guidance.Message))
                 PyralisAuthoringWindowText.DrawSemanticHelpBox(guidance.Message, guidance.MessageType);
             if (!string.IsNullOrWhiteSpace(guidance.Detail))
@@ -227,7 +226,7 @@ namespace NeonBlack.Gameplay.Editor
             return names.Count > 0 ? string.Join(", ", names) : string.Empty;
         }
 
-        private static void DrawSelectionGuide(Object selection, PyralisAuthoringRouteReport report, PyralisAuthoringSetupGraph graph)
+        private static void DrawSelectionGuide(Object selection, PyralisAuthoringSetupGraph graph)
         {
             PyralisAuthoringSelectedContextGraphRow selectedContext = PyralisAuthoringSetupGraphProjection.BuildSelectedContextRow(graph, selection);
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
@@ -237,11 +236,11 @@ namespace NeonBlack.Gameplay.Editor
 
                 EditorGUILayout.Space(4f);
                 EditorGUILayout.LabelField("What To Check First", EditorStyles.miniBoldLabel);
-                EditorGUILayout.LabelField(!string.IsNullOrWhiteSpace(selectedContext.NextCheck) ? selectedContext.NextCheck : report.NextStep, EditorStyles.wordWrappedMiniLabel);
+                EditorGUILayout.LabelField(!string.IsNullOrWhiteSpace(selectedContext.NextCheck) ? selectedContext.NextCheck : "Use Map and Validate to find the next unresolved graph node.", EditorStyles.wordWrappedMiniLabel);
 
                 EditorGUILayout.Space(4f);
                 EditorGUILayout.LabelField("Runtime Meaning", EditorStyles.miniBoldLabel);
-                EditorGUILayout.LabelField(!string.IsNullOrWhiteSpace(selectedContext.RuntimeMeaning) ? selectedContext.RuntimeMeaning : report.RouteGuidance, EditorStyles.wordWrappedMiniLabel);
+                EditorGUILayout.LabelField(!string.IsNullOrWhiteSpace(selectedContext.RuntimeMeaning) ? selectedContext.RuntimeMeaning : "No graph context has been resolved for this selection yet.", EditorStyles.wordWrappedMiniLabel);
             }
         }
     }

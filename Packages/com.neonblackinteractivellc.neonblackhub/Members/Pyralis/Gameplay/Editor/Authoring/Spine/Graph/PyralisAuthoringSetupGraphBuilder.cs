@@ -18,6 +18,7 @@ namespace NeonBlack.Gameplay.Editor
 
             AddSetupChainNodes(source, route, nodes, edges);
             AddCapabilityNodes(route, nodes, edges);
+            AddRuntimePatternNodes(route, nodes, edges);
             AddParticipantNodes(route, nodes, edges);
             AddSceneSurfaceNodes(source, nodes, edges);
             string activeProofNodeId = AddProofNode(route, nodes, edges);
@@ -53,8 +54,21 @@ namespace NeonBlack.Gameplay.Editor
                 "Gameplay Root",
                 PyralisAuthoringGraphNodeKind.SetupChain,
                 PyralisAuthoringGraphSourceKind.SetupFlow,
-                source is GameplaySessionBootstrap ? PyralisAuthoringGraphEvidenceState.Ready : PyralisAuthoringGraphEvidenceState.Unknown,
-                sourceObject: source as GameplaySessionBootstrap));
+                source is GameplaySessionBootstrap ? PyralisAuthoringGraphEvidenceState.Ready : PyralisAuthoringGraphEvidenceState.Missing,
+                guidance: source is GameplaySessionBootstrap
+                    ? "GameplaySessionBootstrap is the active setup root."
+                    : "Create or select a Gameplay Root scene object with GameplaySessionBootstrap before wiring SessionDefinition, participants, pawn, input, and camera.",
+                nativeSetup: new[] { "Hierarchy -> Create Empty -> name it Gameplay Root; Inspector -> Add Component -> GameplaySessionBootstrap" },
+                nativeAction: source is GameplaySessionBootstrap
+                    ? null
+                    : new PyralisAuthoringNativeAction(
+                        "Create or select",
+                        PyralisAuthoringActionSurface.Hierarchy,
+                        "Gameplay Root",
+                        "right-click -> Create Empty, name it Gameplay Root, then use Inspector -> Add Component -> GameplaySessionBootstrap",
+                        "Overview can inspect the active setup route"),
+                sourceObject: source as GameplaySessionBootstrap,
+                sourceOrigin: PyralisAuthoringGraphSourceOrigin.SpineGrammar));
 
             AddNode(nodes, new PyralisAuthoringGraphNode(
                 "session.definition",
@@ -62,7 +76,10 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringGraphNodeKind.SetupChain,
                 PyralisAuthoringGraphSourceKind.SetupFlow,
                 route != null && route.Session != null ? PyralisAuthoringGraphEvidenceState.Ready : PyralisAuthoringGraphEvidenceState.Missing,
-                sourceObject: route?.Session));
+                sourceObject: route?.Session,
+                sourceOrigin: route != null && route.Session != null
+                    ? PyralisAuthoringGraphSourceOrigin.UserAuthoredSetup
+                    : PyralisAuthoringGraphSourceOrigin.SpineGrammar));
 
             AddNode(nodes, new PyralisAuthoringGraphNode(
                 "mode.definition",
@@ -70,7 +87,10 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringGraphNodeKind.SetupChain,
                 PyralisAuthoringGraphSourceKind.SetupFlow,
                 route != null && route.Mode != null ? PyralisAuthoringGraphEvidenceState.Ready : PyralisAuthoringGraphEvidenceState.Missing,
-                sourceObject: route?.Mode));
+                sourceObject: route?.Mode,
+                sourceOrigin: route != null && route.Mode != null
+                    ? PyralisAuthoringGraphSourceOrigin.UserAuthoredSetup
+                    : PyralisAuthoringGraphSourceOrigin.SpineGrammar));
 
             AddNode(nodes, new PyralisAuthoringGraphNode(
                 "setup.profile",
@@ -78,7 +98,10 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringGraphNodeKind.SetupChain,
                 PyralisAuthoringGraphSourceKind.SetupProfile,
                 route != null && route.SetupProfile != null ? PyralisAuthoringGraphEvidenceState.Ready : PyralisAuthoringGraphEvidenceState.Missing,
-                sourceObject: route?.SetupProfile));
+                sourceObject: route?.SetupProfile,
+                sourceOrigin: route != null && route.SetupProfile != null
+                    ? PyralisAuthoringGraphSourceOrigin.UserAuthoredSetup
+                    : PyralisAuthoringGraphSourceOrigin.SpineGrammar));
 
             AddEdge(edges, "bootstrap.root", "session.definition", PyralisAuthoringGraphEdgeKind.DependsOn, "reads");
             AddEdge(edges, "session.definition", "mode.definition", PyralisAuthoringGraphEdgeKind.DependsOn, "default mode");
@@ -107,18 +130,24 @@ namespace NeonBlack.Gameplay.Editor
                     ? "Players, seats, hands, factions, or command owners are assigned."
                     : "Assign at least one default participant.",
                 assignmentFields: new[] { "SessionDefinition.defaultParticipants" },
-                sourceObject: participant != null ? participant : session));
+                sourceObject: participant != null ? participant : session,
+                sourceOrigin: participant != null || session != null
+                    ? PyralisAuthoringGraphSourceOrigin.UserAuthoredSetup
+                    : PyralisAuthoringGraphSourceOrigin.SpineGrammar));
 
             AddNode(nodes, new PyralisAuthoringGraphNode(
                 "pawn.definition",
                 requiresPawn ? "Pawn Definition" : "Pawn / No Pawn",
-                PyralisAuthoringGraphNodeKind.PrefabRequirement,
+                PyralisAuthoringGraphNodeKind.UnitySurfaceRequirement,
                 PyralisAuthoringGraphSourceKind.SetupFlow,
                 pawnReady ? PyralisAuthoringGraphEvidenceState.Ready : PyralisAuthoringGraphEvidenceState.Missing,
                 guidance: GetPawnGuidance(route),
                 assignmentFields: new[] { "ParticipantDefinition.defaultPawn" },
                 blockingReason: pawnReady ? string.Empty : route?.ParticipantPawnIssue,
-                sourceObject: pawn != null ? pawn : participant != null ? participant : session));
+                sourceObject: pawn != null ? pawn : participant != null ? participant : session,
+                sourceOrigin: pawn != null || participant != null || session != null
+                    ? PyralisAuthoringGraphSourceOrigin.UserAuthoredSetup
+                    : PyralisAuthoringGraphSourceOrigin.SpineGrammar));
 
             AddEdge(edges, "session.definition", "participant.default", PyralisAuthoringGraphEdgeKind.DependsOn, "default participants");
             AddEdge(edges, "participant.default", "pawn.definition", PyralisAuthoringGraphEdgeKind.DependsOn, "pawn route");
@@ -130,6 +159,20 @@ namespace NeonBlack.Gameplay.Editor
             List<PyralisAuthoringGraphEdge> edges)
         {
             RuntimeCapabilityFamily[] families = route?.CapabilityFamilies ?? Array.Empty<RuntimeCapabilityFamily>();
+            bool hasCapabilities = families.Length > 0;
+            AddNode(nodes, new PyralisAuthoringGraphNode(
+                "capability.selected",
+                "Capabilities",
+                PyralisAuthoringGraphNodeKind.Capability,
+                route != null && route.SetupProfile != null ? PyralisAuthoringGraphSourceKind.SetupProfile : PyralisAuthoringGraphSourceKind.Unknown,
+                hasCapabilities ? PyralisAuthoringGraphEvidenceState.Ready : PyralisAuthoringGraphEvidenceState.Missing,
+                guidance: GetCapabilitySummaryGuidance(route, hasCapabilities),
+                sourceObject: route?.SetupProfile,
+                sourceOrigin: route != null && route.SetupProfile != null
+                    ? PyralisAuthoringGraphSourceOrigin.UserAuthoredSetup
+                    : PyralisAuthoringGraphSourceOrigin.SpineGrammar));
+            AddEdge(edges, "setup.profile", "capability.selected", PyralisAuthoringGraphEdgeKind.Satisfies, "selected capabilities");
+
             for (int i = 0; i < families.Length; i++)
             {
                 RuntimeCapabilityFamily family = families[i];
@@ -149,9 +192,45 @@ namespace NeonBlack.Gameplay.Editor
                     card != null ? card.WhatItAdds : string.Empty,
                     card != null ? Combine(card.RequiredDefinitions, card.RequiredProfiles, card.RequiredSceneComponents, card.RequiredUnitySurfaces) : Array.Empty<string>(),
                     card != null ? card.AssignmentFields : Array.Empty<string>(),
-                    card != null ? card.CustomizationMoments : Array.Empty<string>()));
+                    card != null ? card.CustomizationMoments : Array.Empty<string>(),
+                    sourceOrigin: card != null ? PyralisAuthoringGraphSourceOrigin.LegacyFact : PyralisAuthoringGraphSourceOrigin.UserAuthoredSetup));
 
                 AddEdge(edges, "setup.profile", nodeId, PyralisAuthoringGraphEdgeKind.Satisfies, "selected capability");
+                AddEdge(edges, "capability.selected", nodeId, PyralisAuthoringGraphEdgeKind.RelatesTo, "includes");
+            }
+        }
+
+        private static void AddRuntimePatternNodes(
+            PyralisSetupRouteAnalysis route,
+            List<PyralisAuthoringGraphNode> nodes,
+            List<PyralisAuthoringGraphEdge> edges)
+        {
+            RuntimePatternDefinition[] patterns = route?.Patterns ?? Array.Empty<RuntimePatternDefinition>();
+            for (int i = 0; i < patterns.Length; i++)
+            {
+                RuntimePatternDefinition pattern = patterns[i];
+                if (pattern == null)
+                    continue;
+
+                string nodeId = "runtime-pattern." + NormalizeId(!string.IsNullOrWhiteSpace(pattern.patternId) ? pattern.patternId : pattern.name);
+                string guidance = !string.IsNullOrWhiteSpace(pattern.setupNotes)
+                    ? pattern.setupNotes
+                    : pattern.description;
+                AddNode(nodes, new PyralisAuthoringGraphNode(
+                    nodeId,
+                    !string.IsNullOrWhiteSpace(pattern.displayName) ? pattern.displayName : pattern.name,
+                    PyralisAuthoringGraphNodeKind.Capability,
+                    PyralisAuthoringGraphSourceKind.RuntimePattern,
+                    PyralisAuthoringGraphEvidenceState.Ready,
+                    pattern.capabilityFamily,
+                    guidance: guidance,
+                    nativeSetup: pattern.requiredRuntimeSystems ?? Array.Empty<string>(),
+                    customizationMoments: pattern.optionalRuntimeSystems ?? Array.Empty<string>(),
+                    sourceObject: pattern,
+                    sourceOrigin: PyralisAuthoringGraphSourceOrigin.UserAuthoredSetup));
+
+                AddEdge(edges, "setup.profile", nodeId, PyralisAuthoringGraphEdgeKind.Satisfies, "runtime pattern");
+                AddEdge(edges, "capability.selected", nodeId, PyralisAuthoringGraphEdgeKind.RelatesTo, "advanced route metadata");
             }
         }
 
@@ -176,12 +255,13 @@ namespace NeonBlack.Gameplay.Editor
                 AddNode(nodes, new PyralisAuthoringGraphNode(
                     nodeId,
                     row.Surface,
-                    PyralisAuthoringGraphNodeKind.SceneSurface,
-                    PyralisAuthoringGraphSourceKind.SceneReadiness,
-                    ConvertSceneSurfaceEvidence(row.EvidenceState),
-                    guidance: row.Current,
-                    nativeSetup: !string.IsNullOrWhiteSpace(row.NextFix) ? new[] { row.NextFix } : Array.Empty<string>(),
-                    blockingReason: row.SupportsFirstProofAttempt ? string.Empty : row.NextFix));
+                PyralisAuthoringGraphNodeKind.SceneSurface,
+                PyralisAuthoringGraphSourceKind.SceneReadiness,
+                ConvertSceneSurfaceEvidence(row.EvidenceState),
+                guidance: row.Current,
+                nativeSetup: !string.IsNullOrWhiteSpace(row.NextFix) ? new[] { row.NextFix } : Array.Empty<string>(),
+                blockingReason: row.SupportsFirstProofAttempt ? string.Empty : row.NextFix,
+                sourceOrigin: PyralisAuthoringGraphSourceOrigin.RuntimeEvidence));
                 AddEdge(edges, "bootstrap.root", nodeId, PyralisAuthoringGraphEdgeKind.RelatesTo, "scene surface");
 
                 if (!row.SupportsFirstProofAttempt)
@@ -202,7 +282,8 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringGraphSourceKind.SceneReadiness,
                 missingRecommended == 0 ? PyralisAuthoringGraphEvidenceState.Ready : PyralisAuthoringGraphEvidenceState.Missing,
                 guidance: sceneSurfaceMessage,
-                blockingReason: missingRecommended == 0 ? string.Empty : sceneSurfaceMessage));
+                blockingReason: missingRecommended == 0 ? string.Empty : sceneSurfaceMessage,
+                sourceOrigin: PyralisAuthoringGraphSourceOrigin.RuntimeEvidence));
             AddEdge(edges, "bootstrap.root", "scene.surfaces", PyralisAuthoringGraphEdgeKind.RelatesTo, "scene surface summary");
         }
 
@@ -228,13 +309,16 @@ namespace NeonBlack.Gameplay.Editor
                 proofTargetId: proofNodeId,
                 guidance: proof.Guidance,
                 nativeSetup: new[] { proof.SetupSurface },
-                blockingReason: proof.SuccessCriteria));
+                blockingReason: proof.SuccessCriteria,
+                sourceOrigin: proofFact != null && proofFact.SourceKind == PyralisAuthoringFactSourceKind.FeatureContract
+                    ? PyralisAuthoringGraphSourceOrigin.Contract
+                    : PyralisAuthoringGraphSourceOrigin.SpineFallback));
 
             RuntimeCapabilityFamily[] families = route?.CapabilityFamilies ?? Array.Empty<RuntimeCapabilityFamily>();
             for (int i = 0; i < families.Length; i++)
             {
                 RuntimeCapabilityCard card = PyralisRuntimeCapabilityCatalog.FindPrimaryByFamily(families[i]);
-                AddEdge(edges, GetCapabilityNodeId(families[i], card), proofNodeId, PyralisAuthoringGraphEdgeKind.BlocksProof, "supports proof");
+                AddEdge(edges, GetCapabilityNodeId(families[i], card), proofNodeId, PyralisAuthoringGraphEdgeKind.SupportsProof, "supports proof");
             }
 
             return proofNodeId;
@@ -263,7 +347,8 @@ namespace NeonBlack.Gameplay.Editor
                     nativeSetup: contract.NativeSetup,
                     assignmentFields: contract.AssignmentFields,
                     customizationMoments: contract.CustomizationMoments,
-                    sourceContract: contract));
+                    sourceContract: contract,
+                    sourceOrigin: GetContractSourceOrigin(contract)));
 
                 if (!string.IsNullOrWhiteSpace(contract.FirstProofTargetId)
                     && string.Equals(contract.FirstProofTargetId, activeProofNodeId, StringComparison.Ordinal))
@@ -299,7 +384,8 @@ namespace NeonBlack.Gameplay.Editor
                     nativeSetup: step.NativeAction.HasValue ? new[] { FormatNativeAction(step.NativeAction.Value) } : Array.Empty<string>(),
                     blockingReason: step.IsRequiredIssue ? step.Message : string.Empty,
                     nativeAction: step.NativeAction,
-                    sourceObject: step.ReferencedObject));
+                    sourceObject: step.ReferencedObject,
+                    sourceOrigin: reflectedContractEvidence ? PyralisAuthoringGraphSourceOrigin.Contract : PyralisAuthoringGraphSourceOrigin.RuntimeEvidence));
                 AddEdge(edges, "bootstrap.root", nodeId, PyralisAuthoringGraphEdgeKind.RelatesTo, "setup evidence");
             }
         }
@@ -323,7 +409,8 @@ namespace NeonBlack.Gameplay.Editor
                     ConvertSceneReadinessSeverity(issue.Severity),
                     guidance: issue.Message,
                     nativeSetup: !string.IsNullOrWhiteSpace(issue.NativeAction) ? new[] { issue.NativeAction } : Array.Empty<string>(),
-                    blockingReason: issue.Severity == PyralisSceneReadinessSeverity.RequiredBeforePlay ? issue.Message : string.Empty));
+                    blockingReason: issue.Severity == PyralisSceneReadinessSeverity.RequiredBeforePlay ? issue.Message : string.Empty,
+                    sourceOrigin: PyralisAuthoringGraphSourceOrigin.RuntimeEvidence));
                 AddEdge(edges, "bootstrap.root", nodeId, PyralisAuthoringGraphEdgeKind.RelatesTo, "scene readiness");
             }
         }
@@ -405,6 +492,20 @@ namespace NeonBlack.Gameplay.Editor
             return route.ParticipantPawnIssue;
         }
 
+        private static string GetCapabilitySummaryGuidance(PyralisSetupRouteAnalysis route, bool hasCapabilities)
+        {
+            if (route == null || route.SetupProfile == null)
+                return "Create or assign the setup profile before choosing capabilities.";
+
+            if (!hasCapabilities || !route.HasAssignedPatterns)
+                return "Choose capability ingredients before scene wiring.";
+
+            if (!route.HasValidPatterns)
+                return "Fix setup capability validation before trusting route guidance.";
+
+            return route.RouteName;
+        }
+
         private static string GetCapabilityNodeId(RuntimeCapabilityFamily family, RuntimeCapabilityCard card)
         {
             if (card != null && card.Fact != null && !string.IsNullOrWhiteSpace(card.Fact.StableId))
@@ -429,6 +530,17 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             return string.Empty;
+        }
+
+        private static PyralisAuthoringGraphSourceOrigin GetContractSourceOrigin(ResolvedAuthoringContract contract)
+        {
+            if (contract == null)
+                return PyralisAuthoringGraphSourceOrigin.Contract;
+
+            return contract.Confidence == PyralisAuthoringConfidence.Inferred
+                || contract.Confidence == PyralisAuthoringConfidence.ConventionDerived
+                    ? PyralisAuthoringGraphSourceOrigin.Reflection
+                    : PyralisAuthoringGraphSourceOrigin.Contract;
         }
 
         private static PyralisAuthoringFact ResolveProofFact(PyralisAuthoringRouteProof proof)

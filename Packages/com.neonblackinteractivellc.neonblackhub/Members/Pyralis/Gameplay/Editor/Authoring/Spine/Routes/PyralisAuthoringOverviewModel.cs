@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using NeonBlack.Gameplay.Editor.Inspectors;
 using UnityEngine;
 
@@ -110,17 +111,19 @@ namespace NeonBlack.Gameplay.Editor
 
         public static PyralisAuthoringOverviewModel Build(
             Object activeSetup,
-            PyralisAuthoringRouteReport routeReport,
             PyralisAuthoringSetupGraph graph)
         {
-            string routeName = routeReport != null ? routeReport.RouteName : "No setup route selected";
+            PyralisAuthoringRouteDescriptor route = PyralisAuthoringRouteDescriptor.Build(graph?.RouteAnalysis);
+            string routeName = route != null && !string.IsNullOrWhiteSpace(route.RouteName)
+                ? route.RouteName
+                : "No setup route selected";
             List<PyralisAuthoringOverviewIssue> doNow = new List<PyralisAuthoringOverviewIssue>();
             List<PyralisAuthoringOverviewIssue> doSoon = new List<PyralisAuthoringOverviewIssue>();
             List<PyralisAuthoringOverviewIssue> later = new List<PyralisAuthoringOverviewIssue>();
 
             if (graph == null || graph.Source == null)
             {
-                AddNoActiveSetupIssues(activeSetup, routeReport, doNow);
+                AddNoActiveSetupIssues(activeSetup, graph, doNow);
                 return new PyralisAuthoringOverviewModel(
                     routeName,
                     false,
@@ -137,7 +140,6 @@ namespace NeonBlack.Gameplay.Editor
                     later);
             }
 
-            PyralisAuthoringRouteDescriptor route = PyralisAuthoringRouteDescriptor.Build(graph.RouteAnalysis);
             for (int i = 0; i < graph.Nodes.Count; i++)
             {
                 PyralisAuthoringGraphNode node = graph.Nodes[i];
@@ -165,13 +167,13 @@ namespace NeonBlack.Gameplay.Editor
                 routeName,
                 requiredSetupClear,
                 GetBestNextAction(doNow, doSoon),
-                GetFirstProofLabel(route),
-                GetFirstProofGuidance(route),
-                GetFirstProofSetupSurface(route),
-                GetFirstProofSuccessCriteria(route),
-                GetFirstProofDeferUntilAfter(route),
-                GetFirstProofChainSummary(route),
-                BuildPlayModeChecklist(graph, route),
+                GetFirstProofLabel(graph),
+                GetFirstProofGuidance(graph),
+                GetFirstProofSetupSurface(graph),
+                GetFirstProofSuccessCriteria(graph),
+                GetFirstProofDeferUntilAfter(graph),
+                GetFirstProofChainSummary(graph),
+                BuildPlayModeChecklist(graph),
                 doNow,
                 doSoon,
                 later);
@@ -189,12 +191,12 @@ namespace NeonBlack.Gameplay.Editor
         }
 
         private static List<PyralisAuthoringPlayModeChecklistItem> BuildPlayModeChecklist(
-            PyralisAuthoringSetupGraph graph,
-            PyralisAuthoringRouteDescriptor route)
+            PyralisAuthoringSetupGraph graph)
         {
             List<PyralisAuthoringPlayModeChecklistItem> items = new List<PyralisAuthoringPlayModeChecklistItem>();
             bool requiredClear = CountDoNowBlockers(graph) == 0;
             PyralisAuthoringGraphNode firstRequired = FindFirstDoNowBlocker(graph);
+            PyralisAuthoringGraphNode proofNode = PyralisAuthoringSetupGraphProjection.FindCurrentProofNode(graph);
             items.Add(new PyralisAuthoringPlayModeChecklistItem(
                 "Required setup",
                 requiredClear,
@@ -202,8 +204,10 @@ namespace NeonBlack.Gameplay.Editor
 
             items.Add(new PyralisAuthoringPlayModeChecklistItem(
                 "First proof target",
-                route != null,
-                route != null ? PyralisAuthoringRouteProof.Build(route).SuccessCriteria : "Select a route so Pyralis can name the smallest proof."));
+                proofNode != null,
+                proofNode != null && !string.IsNullOrWhiteSpace(proofNode.BlockingReason)
+                    ? proofNode.BlockingReason
+                    : "Select a route so Pyralis can name the smallest proof."));
 
             AddReadinessChecklistItem(
                 items,
@@ -278,32 +282,13 @@ namespace NeonBlack.Gameplay.Editor
 
         private static void AddNoActiveSetupIssues(
             Object activeSetup,
-            PyralisAuthoringRouteReport routeReport,
+            PyralisAuthoringSetupGraph graph,
             List<PyralisAuthoringOverviewIssue> doNow)
         {
-            if (routeReport != null && routeReport.ValidationIssues.Count > 0)
-            {
-                for (int i = 0; i < routeReport.ValidationIssues.Count; i++)
-                {
-                    string issue = routeReport.ValidationIssues[i];
-                    if (string.IsNullOrWhiteSpace(issue))
-                        continue;
-
-                    doNow.Add(new PyralisAuthoringOverviewIssue(
-                        PyralisAuthoringOverviewLane.DoNow,
-                        "Selected Asset Validation",
-                        PyralisSetupFlowStepStatus.Missing,
-                        issue,
-                        activeSetup,
-                        "Validation comes from the selected asset because no GameplaySessionBootstrap is active.",
-                        GetNativeActionGuidance("Selected Asset Validation", issue)));
-                }
-
-                return;
-            }
-
-            string message = routeReport != null
-                ? routeReport.NextStep
+            PyralisAuthoringGraphNode bootstrapNode = null;
+            graph?.TryFindNode("bootstrap.root", out bootstrapNode);
+            string message = bootstrapNode != null && !string.IsNullOrWhiteSpace(bootstrapNode.Guidance)
+                ? bootstrapNode.Guidance
                 : "Create a Gameplay Root scene object with GameplaySessionBootstrap, then create and assign a SessionDefinition.";
             doNow.Add(new PyralisAuthoringOverviewIssue(
                 PyralisAuthoringOverviewLane.DoNow,
@@ -312,7 +297,9 @@ namespace NeonBlack.Gameplay.Editor
                 message,
                 activeSetup,
                 "Overview needs a GameplaySessionBootstrap route before it can judge scene readiness.",
-                GetNativeActionGuidance("Create Gameplay Root", message)));
+                bootstrapNode != null && bootstrapNode.NativeAction.HasValue
+                    ? bootstrapNode.NativeAction.Value.ToGuidanceSentence()
+                    : GetNativeActionGuidance("Create Gameplay Root", message)));
         }
 
         private static PyralisAuthoringOverviewIssue BuildIssue(PyralisAuthoringGraphNode node)
@@ -320,8 +307,7 @@ namespace NeonBlack.Gameplay.Editor
             if (node == null || node.EvidenceState == PyralisAuthoringGraphEvidenceState.Ready)
                 return null;
 
-            if (node.SourceKind != PyralisAuthoringGraphSourceKind.SetupFlow
-                && node.SourceKind != PyralisAuthoringGraphSourceKind.SceneReadiness)
+            if (!PyralisAuthoringSetupGraphProjection.IsReadinessNode(node))
                 return null;
 
             PyralisAuthoringOverviewLane lane = GetLane(node);
@@ -346,8 +332,13 @@ namespace NeonBlack.Gameplay.Editor
 
             if (node.EvidenceState == PyralisAuthoringGraphEvidenceState.Missing)
             {
-                if (node.SourceKind == PyralisAuthoringGraphSourceKind.SetupFlow)
+                if (node.Kind == PyralisAuthoringGraphNodeKind.SetupChain
+                    || node.Kind == PyralisAuthoringGraphNodeKind.UnitySurfaceRequirement
+                    || node.SourceKind == PyralisAuthoringGraphSourceKind.SetupFlow
+                    || string.Equals(node.StableId, "capability.selected", System.StringComparison.Ordinal))
+                {
                     return PyralisAuthoringOverviewLane.DoNow;
+                }
 
                 return PyralisAuthoringOverviewLane.DoSoon;
             }
@@ -403,8 +394,13 @@ namespace NeonBlack.Gameplay.Editor
             if (node.EvidenceState == PyralisAuthoringGraphEvidenceState.Blocked)
                 return true;
 
-            return node.SourceKind == PyralisAuthoringGraphSourceKind.SetupFlow
-                && node.EvidenceState == PyralisAuthoringGraphEvidenceState.Missing;
+            if (node.EvidenceState != PyralisAuthoringGraphEvidenceState.Missing)
+                return false;
+
+            return node.Kind == PyralisAuthoringGraphNodeKind.SetupChain
+                || node.Kind == PyralisAuthoringGraphNodeKind.UnitySurfaceRequirement
+                || node.SourceKind == PyralisAuthoringGraphSourceKind.SetupFlow
+                || string.Equals(node.StableId, "capability.selected", System.StringComparison.Ordinal);
         }
 
         private static PyralisSetupFlowStepStatus GetStatus(PyralisAuthoringGraphEvidenceState evidenceState)
@@ -488,34 +484,48 @@ namespace NeonBlack.Gameplay.Editor
             return string.Empty;
         }
 
-        private static string GetFirstProofLabel(PyralisAuthoringRouteDescriptor route)
+        private static string GetFirstProofLabel(PyralisAuthoringSetupGraph graph)
         {
-            return PyralisAuthoringRouteProof.Build(route).Label;
+            return PyralisAuthoringSetupGraphProjection.FindCurrentProofNode(graph)?.Label ?? "Create Setup Foundation";
         }
 
-        private static string GetFirstProofGuidance(PyralisAuthoringRouteDescriptor route)
+        private static string GetFirstProofGuidance(PyralisAuthoringSetupGraph graph)
         {
-            return PyralisAuthoringRouteProof.Build(route).Guidance;
+            return PyralisAuthoringSetupGraphProjection.FindCurrentProofNode(graph)?.Guidance
+                ?? "Create a Gameplay Root scene object with GameplaySessionBootstrap, then create and assign the first SessionDefinition asset.";
         }
 
-        private static string GetFirstProofSetupSurface(PyralisAuthoringRouteDescriptor route)
+        private static string GetFirstProofSetupSurface(PyralisAuthoringSetupGraph graph)
         {
-            return PyralisAuthoringRouteProof.Build(route).SetupSurface;
+            PyralisAuthoringGraphNode proofNode = PyralisAuthoringSetupGraphProjection.FindCurrentProofNode(graph);
+            return proofNode != null && proofNode.NativeSetup.Length > 0
+                ? proofNode.NativeSetup[0]
+                : "Hierarchy object plus Project asset foundation.";
         }
 
-        private static string GetFirstProofSuccessCriteria(PyralisAuthoringRouteDescriptor route)
+        private static string GetFirstProofSuccessCriteria(PyralisAuthoringSetupGraph graph)
         {
-            return PyralisAuthoringRouteProof.Build(route).SuccessCriteria;
+            return PyralisAuthoringSetupGraphProjection.FindCurrentProofNode(graph)?.BlockingReason
+                ?? "Overview can inspect the bootstrap route and name the first playable proof.";
         }
 
-        private static string GetFirstProofDeferUntilAfter(PyralisAuthoringRouteDescriptor route)
+        private static string GetFirstProofDeferUntilAfter(PyralisAuthoringSetupGraph graph)
         {
-            return PyralisAuthoringRouteProof.Build(route).DeferUntilAfter;
+            PyralisAuthoringGraphNode unresolved = PyralisAuthoringSetupGraphProjection.FindFirstUnresolvedNode(graph);
+            return unresolved != null
+                ? "Defer expansion until this graph node is clear: " + unresolved.Label
+                : "Defer broad polish until the graph-backed first proof runs in Play Mode.";
         }
 
-        private static string GetFirstProofChainSummary(PyralisAuthoringRouteDescriptor route)
+        private static string GetFirstProofChainSummary(PyralisAuthoringSetupGraph graph)
         {
-            return PyralisAuthoringRouteProof.Build(route).ProofChainSummary;
+            IReadOnlyList<PyralisAuthoringGraphConnectionRow> rows = PyralisAuthoringSetupGraphProjection.BuildProofSupportRows(graph);
+            if (rows.Count == 0)
+                return "Graph proof chain: setup route -> active proof target.";
+
+            return "Graph proof chain: " + string.Join(
+                " -> ",
+                rows.Select(row => row.FromLabel).Distinct().Concat(new[] { rows[0].ToLabel }));
         }
     }
 

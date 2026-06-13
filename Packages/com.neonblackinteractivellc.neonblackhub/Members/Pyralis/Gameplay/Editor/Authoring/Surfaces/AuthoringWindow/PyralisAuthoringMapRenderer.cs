@@ -7,7 +7,7 @@ namespace NeonBlack.Gameplay.Editor
 {
     internal static class PyralisAuthoringMapRenderer
     {
-        public static void Draw(Object activeSetup, Object selection, PyralisAuthoringRouteReport report)
+        public static void Draw(Object activeSetup, Object selection)
         {
             PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(activeSetup);
 
@@ -15,6 +15,7 @@ namespace NeonBlack.Gameplay.Editor
             EditorGUILayout.HelpBox("Use this page to understand how the active setup is connected. Edit actual fields in the Inspector when a row names a missing link.", MessageType.Info);
             DrawActiveAndSelectedContext(activeSetup, selection);
             DrawYouAreHereChain(graph);
+            DrawGraphConnections(graph);
             DrawSceneSurfaceSnapshot(graph);
             DrawReadinessSummary(graph);
         }
@@ -82,6 +83,46 @@ namespace NeonBlack.Gameplay.Editor
             {
                 for (int i = 0; i < surfaceNodes.Count; i++)
                     DrawSceneSurfaceRow(surfaceNodes[i]);
+            }
+        }
+
+        private static void DrawGraphConnections(PyralisAuthoringSetupGraph graph)
+        {
+            EditorGUILayout.Space(12f);
+            EditorGUILayout.LabelField("Graph Connections", EditorStyles.boldLabel);
+            PyralisAuthoringWindowText.DrawSemanticHelpBox("These rows come from the resolved setup graph. They show how setup chain nodes, capabilities, contracts, proof targets, and scene evidence are connected.", MessageType.Info);
+
+            IReadOnlyList<PyralisAuthoringGraphConnectionRow> rows = PyralisAuthoringSetupGraphProjection.BuildMapConnectionRows(graph);
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                if (rows.Count == 0)
+                {
+                    EditorGUILayout.LabelField("No graph connections were resolved yet.", EditorStyles.wordWrappedMiniLabel);
+                    return;
+                }
+
+                int visibleCount = Mathf.Min(rows.Count, 32);
+                for (int i = 0; i < visibleCount; i++)
+                    DrawGraphConnectionRow(rows[i]);
+
+                if (visibleCount < rows.Count)
+                    EditorGUILayout.LabelField($"{rows.Count - visibleCount} more reflected connections are hidden here. Use Facts when you need the full cookbook audit.", EditorStyles.wordWrappedMiniLabel);
+            }
+        }
+
+        private static void DrawGraphConnectionRow(PyralisAuthoringGraphConnectionRow row)
+        {
+            if (row == null)
+                return;
+
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.LabelField($"{row.FromLabel} -> {row.ToLabel}", EditorStyles.miniBoldLabel);
+                EditorGUI.indentLevel++;
+                PyralisAuthoringWindowPrimitives.DrawMiniField("Relationship", row.Relationship);
+                if (!string.IsNullOrWhiteSpace(row.Detail))
+                    PyralisAuthoringWindowPrimitives.DrawMiniField("Meaning", row.Detail);
+                EditorGUI.indentLevel--;
             }
         }
 

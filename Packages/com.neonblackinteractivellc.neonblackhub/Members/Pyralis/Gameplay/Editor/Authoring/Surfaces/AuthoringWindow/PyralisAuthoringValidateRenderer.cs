@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using NeonBlack.Gameplay.Core.Contracts;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -9,10 +7,7 @@ namespace NeonBlack.Gameplay.Editor
 {
     internal static class PyralisAuthoringValidateRenderer
     {
-        public static void Draw(
-            Object activeSetup,
-            PyralisAuthoringRouteReport report,
-            Func<PyralisAuthoringValidationIssue, bool> runGuidanceAction)
+        public static void Draw(Object activeSetup)
         {
             EditorGUILayout.LabelField("Validate Active Setup", EditorStyles.boldLabel);
 
@@ -22,48 +17,70 @@ namespace NeonBlack.Gameplay.Editor
                 return;
             }
 
-            PyralisAuthoringValidationModel model = PyralisAuthoringValidationModel.Build(activeSetup, report);
             PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(activeSetup);
+            PyralisAuthoringCurrentStepGraphRow currentStep = PyralisAuthoringSetupGraphProjection.BuildCurrentStepRow(graph);
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 EditorGUILayout.LabelField("Active Setup", activeSetup.name);
-                EditorGUILayout.LabelField("Route", model.RouteName);
-                EditorGUILayout.LabelField("Next Step", model.NextStep, EditorStyles.wordWrappedLabel);
-                DrawValidateReadinessBuckets(graph);
+                EditorGUILayout.LabelField("Route", currentStep.RouteName);
+                EditorGUILayout.LabelField("Next Step", currentStep.Message, EditorStyles.wordWrappedLabel);
             }
 
-            if (!model.HasIssues)
+            bool hasGraphReadiness = DrawValidateReadinessBuckets(graph);
+            if (!hasGraphReadiness)
             {
                 EditorGUILayout.HelpBox("No validation issues found for the selected item.", MessageType.Info);
                 return;
             }
 
-            DrawValidationIssueGroup(PyralisAuthoringValidationCategory.SessionSetup, model.Issues, runGuidanceAction);
-            DrawValidationIssueGroup(PyralisAuthoringValidationCategory.GameRules, model.Issues, runGuidanceAction);
-            DrawValidationIssueGroup(PyralisAuthoringValidationCategory.SetupProfile, model.Issues, runGuidanceAction);
-            DrawValidationIssueGroup(PyralisAuthoringValidationCategory.PlayersSeats, model.Issues, runGuidanceAction);
-            DrawValidationIssueGroup(PyralisAuthoringValidationCategory.PawnsActors, model.Issues, runGuidanceAction);
-            DrawValidationIssueGroup(PyralisAuthoringValidationCategory.SceneObjects, model.Issues, runGuidanceAction);
-            DrawValidationIssueGroup(PyralisAuthoringValidationCategory.CodeContract, model.Issues, runGuidanceAction);
-            DrawValidationIssueGroup(PyralisAuthoringValidationCategory.Other, model.Issues, runGuidanceAction);
+            EditorGUILayout.Space(8f);
+            EditorGUILayout.LabelField("Graph Evidence Details", EditorStyles.boldLabel);
+            DrawGraphEvidenceDetails(graph);
         }
 
-        private static void DrawValidateReadinessBuckets(PyralisAuthoringSetupGraph graph)
+        private static bool DrawValidateReadinessBuckets(PyralisAuthoringSetupGraph graph)
         {
             if (graph == null)
-                return;
+                return false;
 
             IReadOnlyList<PyralisAuthoringValidationGraphRow> required = PyralisAuthoringSetupGraphProjection.BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.Blocked);
             IReadOnlyList<PyralisAuthoringValidationGraphRow> recommended = PyralisAuthoringSetupGraphProjection.BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.Missing);
             IReadOnlyList<PyralisAuthoringValidationGraphRow> enhancers = PyralisAuthoringSetupGraphProjection.BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.CandidateDetected);
             if (required.Count == 0 && recommended.Count == 0 && enhancers.Count == 0)
-                return;
+                return false;
 
-            EditorGUILayout.Space(4f);
-            EditorGUILayout.LabelField("Graph Readiness Evidence", EditorStyles.miniBoldLabel);
+            EditorGUILayout.Space(8f);
+            EditorGUILayout.LabelField("Resolved Graph Readiness", EditorStyles.boldLabel);
             DrawReadinessBucket("Required Before Play", required, MessageType.Error);
             DrawReadinessBucket("Recommended Before Play", recommended, MessageType.Warning);
             DrawReadinessBucket("Proof Enhancers", enhancers, MessageType.Info);
+            return true;
+        }
+
+        private static void DrawGraphEvidenceDetails(PyralisAuthoringSetupGraph graph)
+        {
+            List<PyralisAuthoringValidationGraphRow> rows = new List<PyralisAuthoringValidationGraphRow>();
+            rows.AddRange(PyralisAuthoringSetupGraphProjection.BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.Blocked));
+            rows.AddRange(PyralisAuthoringSetupGraphProjection.BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.Missing));
+            rows.AddRange(PyralisAuthoringSetupGraphProjection.BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.CandidateDetected));
+
+            string currentGroup = string.Empty;
+            for (int i = 0; i < rows.Count; i++)
+            {
+                PyralisAuthoringValidationGraphRow row = rows[i];
+                if (row == null)
+                    continue;
+
+                string group = string.IsNullOrWhiteSpace(row.SourceLabel) ? "Graph Evidence" : row.SourceLabel;
+                if (!string.Equals(group, currentGroup, System.StringComparison.Ordinal))
+                {
+                    EditorGUILayout.Space(4f);
+                    EditorGUILayout.LabelField(group, EditorStyles.miniBoldLabel);
+                    currentGroup = group;
+                }
+
+                DrawGraphEvidenceCard(row);
+            }
         }
 
         private static void DrawReadinessBucket(
@@ -84,98 +101,41 @@ namespace NeonBlack.Gameplay.Editor
                     continue;
 
                 string text = string.IsNullOrWhiteSpace(issue.NativeAction)
-                    ? $"{issue.Message}\nGraph node: {issue.NodeId}"
-                    : $"{issue.Message}\nGraph node: {issue.NodeId}\nNext native action: {issue.NativeAction}";
+                    ? $"{issue.Label}: {issue.Message}\nGraph node: {issue.NodeId}\nSource: {issue.SourceLabel}\nOrigin: {issue.OriginLabel}"
+                    : $"{issue.Label}: {issue.Message}\nGraph node: {issue.NodeId}\nSource: {issue.SourceLabel}\nOrigin: {issue.OriginLabel}\nNext native action: {issue.NativeAction}";
                 EditorGUILayout.HelpBox(text, messageType);
+                if (issue.CanInspectTarget && GUILayout.Button("Inspect " + issue.Label))
+                    PyralisAuthoringWindowPrimitives.SelectAndPing(issue.Target);
             }
 
             if (issues.Count > visible)
                 EditorGUILayout.LabelField("+" + (issues.Count - visible) + " more readiness item(s)", EditorStyles.miniLabel);
         }
 
-        private static void DrawValidationIssueGroup(
-            PyralisAuthoringValidationCategory category,
-            IReadOnlyList<PyralisAuthoringValidationIssue> issues,
-            Func<PyralisAuthoringValidationIssue, bool> runGuidanceAction)
+        private static void DrawGraphEvidenceCard(PyralisAuthoringValidationGraphRow issue)
         {
-            bool drewAny = false;
+            if (issue == null)
+                return;
 
-            for (int i = 0; i < issues.Count; i++)
-            {
-                PyralisAuthoringValidationIssue issue = issues[i];
-                if (issue == null || issue.Category != category)
-                    continue;
-
-                if (!drewAny)
-                {
-                    EditorGUILayout.Space(4f);
-                    EditorGUILayout.LabelField(PyralisAuthoringValidationModel.GetCategoryTitle(category), EditorStyles.miniBoldLabel);
-                    drewAny = true;
-                }
-
-                DrawValidationIssueCard(issue, runGuidanceAction);
-            }
-        }
-
-        private static void DrawValidationIssueCard(
-            PyralisAuthoringValidationIssue issue,
-            Func<PyralisAuthoringValidationIssue, bool> runGuidanceAction)
-        {
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                EditorGUILayout.LabelField("Issue Code", issue.IssueCode, EditorStyles.wordWrappedMiniLabel);
-                EditorGUILayout.LabelField("Problem", issue.Problem, EditorStyles.wordWrappedLabel);
-                EditorGUILayout.LabelField("Affected Field", issue.AffectedMember, EditorStyles.wordWrappedMiniLabel);
-                EditorGUILayout.LabelField("Why It Matters", issue.WhyItMatters, EditorStyles.wordWrappedMiniLabel);
-                EditorGUILayout.LabelField("Inspect Next", issue.InspectionHint, EditorStyles.wordWrappedMiniLabel);
-                DrawValidationIssueTypedMetadata(issue);
-                DrawValidationIssueEvidence(issue);
+                EditorGUILayout.LabelField(issue.Label, issue.NodeId, EditorStyles.boldLabel);
+                EditorGUILayout.LabelField("Evidence", issue.EvidenceState.ToString(), EditorStyles.wordWrappedMiniLabel);
+                EditorGUILayout.LabelField("Origin", issue.OriginLabel, EditorStyles.wordWrappedMiniLabel);
+                if (!string.IsNullOrWhiteSpace(issue.Message))
+                    EditorGUILayout.LabelField("Problem", issue.Message, EditorStyles.wordWrappedLabel);
+                if (!string.IsNullOrWhiteSpace(issue.NativeAction))
+                    EditorGUILayout.LabelField("Native Unity Action", issue.NativeAction, EditorStyles.wordWrappedMiniLabel);
+                if (issue.Node != null && issue.Node.AssignmentFields.Length > 0)
+                    PyralisAuthoringWindowPrimitives.DrawMiniList("Fields", issue.Node.AssignmentFields);
+                if (issue.Node != null && issue.Node.CustomizationMoments.Length > 0)
+                    PyralisAuthoringWindowPrimitives.DrawMiniList("Customization", issue.Node.CustomizationMoments);
+                if (!string.IsNullOrWhiteSpace(issue.Node?.BlockingReason))
+                    EditorGUILayout.LabelField("Blocking Reason", issue.Node.BlockingReason, EditorStyles.wordWrappedMiniLabel);
 
-                if (issue.HasGuidanceAction && GUILayout.Button(issue.GuidanceActionLabel))
-                    runGuidanceAction?.Invoke(issue);
-
-                if (issue.CanInspectTarget && GUILayout.Button(issue.PrimaryActionLabel))
+                if (issue.CanInspectTarget && GUILayout.Button("Inspect Target"))
                     PyralisAuthoringWindowPrimitives.SelectAndPing(issue.Target);
             }
-        }
-
-        private static void DrawValidationIssueTypedMetadata(PyralisAuthoringValidationIssue issue)
-        {
-            PyralisAuthoringIssue typedIssue = issue?.TypedIssue;
-            if (typedIssue == null)
-                return;
-
-            EditorGUILayout.Space(2f);
-            EditorGUILayout.LabelField("Typed Issue", EditorStyles.miniBoldLabel);
-            EditorGUI.indentLevel++;
-            EditorGUILayout.LabelField("Severity", typedIssue.Severity.ToString(), EditorStyles.wordWrappedMiniLabel);
-            EditorGUILayout.LabelField("Work Intent", typedIssue.WorkIntent, EditorStyles.wordWrappedMiniLabel);
-            EditorGUILayout.LabelField("Evidence", PyralisAuthoringLabelUtility.GetEvidenceLabel(typedIssue.EvidenceState), EditorStyles.wordWrappedMiniLabel);
-            if (!string.IsNullOrWhiteSpace(typedIssue.FieldOrComponent))
-                EditorGUILayout.LabelField("Field / Component", typedIssue.FieldOrComponent, EditorStyles.wordWrappedMiniLabel);
-            if (typedIssue.NativeAction.HasValue)
-            {
-                EditorGUILayout.LabelField("Native Unity Action", EditorStyles.miniBoldLabel);
-                PyralisAuthoringSurfaceBeacon.DrawNativeAction(typedIssue.NativeAction.Value, typedIssue.NativeAction.Value.ToGuidanceSentence());
-            }
-            EditorGUI.indentLevel--;
-        }
-
-        private static void DrawValidationIssueEvidence(PyralisAuthoringValidationIssue issue)
-        {
-            if (issue == null || !issue.HasAuditEvidence)
-                return;
-
-            EditorGUILayout.Space(2f);
-            EditorGUILayout.LabelField("Audit Evidence", EditorStyles.miniBoldLabel);
-            EditorGUI.indentLevel++;
-            if (!string.IsNullOrWhiteSpace(issue.Expected))
-                EditorGUILayout.LabelField("Expected", issue.Expected, EditorStyles.wordWrappedMiniLabel);
-            if (!string.IsNullOrWhiteSpace(issue.Found))
-                EditorGUILayout.LabelField("Found", issue.Found, EditorStyles.wordWrappedMiniLabel);
-            if (!string.IsNullOrWhiteSpace(issue.SuccessLooksLike))
-                EditorGUILayout.LabelField("Success Looks Like", issue.SuccessLooksLike, EditorStyles.wordWrappedMiniLabel);
-            EditorGUI.indentLevel--;
         }
     }
 }
