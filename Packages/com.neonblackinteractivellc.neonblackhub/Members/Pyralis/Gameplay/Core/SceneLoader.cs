@@ -8,7 +8,7 @@ using UnityEngine.UI;
 namespace NeonBlack.Gameplay.Core.Runtime
 {
     /// <summary>
-    /// Singleton that handles all scene transitions with a fade.
+    /// Scene navigation service that handles transitions with a generated fade canvas.
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Setup,

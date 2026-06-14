@@ -42,19 +42,18 @@ creates or connects the core persistent scene services, applies session-owned de
 
 `PyralisGameplayLifetimeScope` is the runtime DI graph. It registers scope-owned components and
 explicit contracts so injected scene objects resolve the same bootstrap-owned services.
-Treat `PyralisGameplayLifetimeScope as the singular source of truth` for runtime dependency composition.
+Treat `PyralisGameplayLifetimeScope` as the singular source of truth for runtime dependency composition.
 
 New runtime dependencies should prefer constructor or method injection, explicit service contracts,
 bootstrap configuration, participant/session services, or feature-owned runtime contexts. Do not add
-a second platform service registry or broad static service locator beside VContainer.
+a parallel registry or broad static service locator beside VContainer.
 
-Static `Instance` properties on persistence helpers are compatibility and duplicate-control surfaces.
-They are not the beginner dependency path and should clear themselves on teardown or subsystem
-registration.
+Static compatibility surfaces are not the beginner dependency path. Keep them narrow, document why
+they still exist, and prefer explicit runtime contracts when adding new dependencies.
 
 ### Scene Navigation
 
-User-facing scene flow should depend on `ISceneNavigator`, not on `SceneLoader.Instance`, `SceneFader.Instance`, or `SceneNavigator.LoadScene(...)`.
+User-facing scene flow should depend on `ISceneNavigator` resolved from the bootstrap/lifetime-scope path, not on global scene-loading calls.
 
 Default implementations:
 

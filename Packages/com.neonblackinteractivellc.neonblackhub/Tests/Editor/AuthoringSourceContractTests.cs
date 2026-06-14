@@ -254,7 +254,10 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(selectedContextSource.Contains(".presentationLanes"), Is.False);
             Assert.That(selectedContextSource.Contains(".firstProofRequirements"), Is.False);
             Assert.That(selectedContextSource.Contains(".runtimePatterns"), Is.False);
-            Assert.That(selectedContextSource.Contains("RuntimePatternAuthoringText"), Is.False);
+
+            string graphProjectionPath = FindGameplayEditorFile("PyralisAuthoringSetupGraphProjection.cs");
+            string graphProjectionSource = File.ReadAllText(graphProjectionPath);
+            Assert.That(graphProjectionSource.Contains("PyralisRuntimePatternVocabulary"), Is.True);
         }
 
         [Test]

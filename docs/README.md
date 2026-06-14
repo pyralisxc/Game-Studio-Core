@@ -1,15 +1,10 @@
 # Game Studio Core Docs Index
 
-This folder is not the live Pyralis product manual. It holds repository-level audits and historical implementation plans used by Codex-style development sessions.
+This folder is not the live Pyralis product manual. It holds repository-level audits used by Codex-style development sessions.
 
 ## Active Repository Notes
 
 - `authoring-coverage-audit.md` - current authoring coverage and setup-flow validation snapshot.
-
-## Historical Planning Notes
-
-- `superpowers/plans/` - dated implementation plans. These are execution history, not the current backlog.
-- `superpowers/specs/` - dated specs used to shape earlier implementation slices. These are useful context, not live setup instructions.
 
 ## Active Pyralis Product Docs
 

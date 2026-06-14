@@ -5,9 +5,8 @@ using UnityEngine;
 namespace NeonBlack.Gameplay.Characters
 {
 /// <summary>
-/// Lightweight static registry that exposes the current player Transform.
-/// Preferred path for systems that need a quick global reference to the primary participant
-/// without participating in the full DI lifecycle.
+/// Compatibility bridge for older scene wiring that still asks for a primary player Transform.
+/// New gameplay should use participant/session services, injected contracts, or explicit runtime context.
 /// </summary>
 public class PlayerRegistry : MonoBehaviour, IPlayerProvider
 {
@@ -54,10 +53,10 @@ public class PlayerRegistry : MonoBehaviour, IPlayerProvider
 
     private static Transform ResolveEffectivePlayer()
     {
-        // 1. Try to resolve via the high-level participant roster service (the preferred path)
+        // 1. Try to resolve via the participant-aware bridge before falling back to local compatibility state.
         if (ParticipantQueryUtility.TryResolvePlayerProvider(out IPlayerProvider provider) && provider != null)
         {
-            // If the provider IS a PlayerRegistry, we use the static registration
+            // If the provider is a PlayerRegistry, use the local registration
             // to avoid infinite recursion if ParticipantQueryUtility returned this class.
             if (provider is PlayerRegistry)
                 return _player;
@@ -65,7 +64,7 @@ public class PlayerRegistry : MonoBehaviour, IPlayerProvider
             return provider.GetPlayerTransform();
         }
 
-        // 2. Fallback to the local static registration
+        // 2. Compatibility fallback for scenes that still carry PlayerRegistry directly.
         return _player;
     }
 

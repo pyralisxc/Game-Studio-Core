@@ -1796,7 +1796,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 .ToArray();
 
             Assert.That(offenders, Is.Empty,
-                "Do not reintroduce a second platform service registry beside VContainer and bootstrap-owned services. Offenders: " + string.Join(", ", offenders));
+                "Do not reintroduce a parallel service registry beside VContainer and bootstrap-owned services. Offenders: " + string.Join(", ", offenders));
         }
 
         [Test]

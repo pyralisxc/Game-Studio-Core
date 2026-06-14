@@ -17,7 +17,7 @@ Use this checklist when adding a new gameplay domain.
 - Define authored assets in the feature's `Data` area unless they are truly cross-feature.
 - Implement runtime behavior through `IFeatureModuleRuntime`.
 - Declare `FeatureNetworkRole`, `authoringCategory`, and `gizmoMode` on each `FeatureModuleDefinition`.
-- Use the platform service registry or explicit initialization context instead of new global lookups.
+- Use `PyralisGameplayLifetimeScope`, explicit initialization context, participant/session services, or feature-owned runtime context instead of new global lookups.
 
 ## Required Validation
 

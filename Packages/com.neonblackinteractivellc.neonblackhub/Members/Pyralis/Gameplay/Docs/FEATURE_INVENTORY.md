@@ -307,8 +307,6 @@ Foundation added:
 - `RpgVendorPanelPresenter`
 - `RpgLoadoutPanelPresenter`
 - `RpgSkillTreePanelPresenter`
-- `RpgHubProofRouteFactory`
-- `RpgHubProofRouteIds`
 - `RpgGoldenSampleIds`
 - `RpgGoldenSampleFactory`
 - `RpgGoldenSampleRuntime`

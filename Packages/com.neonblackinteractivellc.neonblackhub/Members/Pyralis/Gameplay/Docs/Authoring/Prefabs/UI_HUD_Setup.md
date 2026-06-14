@@ -211,7 +211,7 @@ The first skill tree body writes directly to `SkillTreeService` and reads availa
 
 To reproduce the RPG proof route:
 
-1. Use `RpgHubProofRouteFactory.CreateHub()` as the reference hub route, or mirror its ids in a `HubDefinition` asset.
+1. Create a `HubDefinition` asset with stable ids for dialogue, quest board, vendor, loadout, trainer, and portal prompts.
 2. Wire `HubInteractionSceneController`, `HubInteractionHudPresenter`, `RpgHubPanelRouter`, and route presenters for Dialogue, QuestBoard, Vendor, Loadout, Trainer, and Portal flow.
 3. Configure panel bodies with matching data:
    - Dialogue graph id: `dialogue.rpg-proof.elder`
@@ -222,7 +222,7 @@ To reproduce the RPG proof route:
 4. Seed the owner inventory with `item.rpg-proof.gold` and the owner progression with at least one skill point.
 5. Select prompts in this order to verify the full route: Elder dialogue, Quest Board, Apothecary, Loadout Station, Hero Trainer, Arena Portal.
 
-The package PlayMode proof `RpgHubProofRouteRuntimeTests` builds this route in memory and verifies prompt refresh, dialogue playback, quest start, vendor purchase, loadout equip, skill unlock, and arena scene request without relying on fragile hand-edited scene YAML.
+The package PlayMode proof `RpgHubProofRouteRuntimeTests` builds this route from a test fixture and verifies prompt refresh, dialogue playback, quest start, vendor purchase, loadout equip, skill unlock, and arena scene request without relying on fragile hand-edited scene YAML or production proof factories.
 
 ---
 

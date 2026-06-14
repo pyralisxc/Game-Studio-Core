@@ -1456,7 +1456,7 @@ namespace NeonBlack.Gameplay.Editor
 
             return !string.IsNullOrWhiteSpace(pattern.description)
                 ? pattern.description
-                : RuntimePatternAuthoringText.GetSuggestedDescription(pattern);
+                : PyralisRuntimePatternVocabulary.GetSuggestedDescription(pattern);
         }
 
         private static string GetRuntimePatternSetupNotes(RuntimePatternDefinition pattern)
@@ -1466,7 +1466,7 @@ namespace NeonBlack.Gameplay.Editor
 
             return !string.IsNullOrWhiteSpace(pattern.setupNotes)
                 ? pattern.setupNotes
-                : RuntimePatternAuthoringText.GetSuggestedSetupNotes(pattern);
+                : PyralisRuntimePatternVocabulary.GetSuggestedSetupNotes(pattern);
         }
 
         private static string GetRuntimePatternLabel(RuntimePatternDefinition pattern)

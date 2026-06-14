@@ -318,9 +318,4 @@ Avoid active-doc language that implies a second visible-tab model is still suppo
 
 ## Implementation Artifacts
 
-The Phase 1 design and implementation plan live at:
-
-- `docs/superpowers/specs/2026-06-12-read-only-authoring-setup-graph-design.md`
-- `docs/superpowers/plans/2026-06-12-read-only-authoring-setup-graph.md`
-
-Future agents should use this scope document for the full migration boundary and the plan document for the first implementation slice.
+The dated implementation artifacts have been retired from active repository docs. Future agents should use this scope document, `AUTHORING_BLUEPRINT.md`, `AUTHORING_MODEL.md`, and the graph/dependency-tree tests as the durable migration boundary.

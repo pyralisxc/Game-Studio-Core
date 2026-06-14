@@ -9,18 +9,18 @@ namespace NeonBlack.Gameplay.Features.Settings
 {
 
 /// <summary>
-/// Singleton that loads, applies, and saves player settings via PlayerPrefs.
+/// Runtime settings service that loads, applies, and saves player settings via PlayerPrefs.
 ///
 /// Settings managed:
-///   MusicVolume         — pushed to the "MusicVolume" exposed parameter on the AudioMixer (dB)
-///   SFXVolume           — pushed to the "SFXVolume" exposed parameter on the AudioMixer (dB)
-///   MasterVolume        — pushed to AudioListener.volume
-///   JoystickDeadzone    — pushed to registered IInputSettingsReceivers
-///   SwapControls        — pushed to registered IInputSettingsReceivers
+///   MusicVolume         - pushed to the "MusicVolume" exposed parameter on the AudioMixer (dB)
+///   SFXVolume           - pushed to the "SFXVolume" exposed parameter on the AudioMixer (dB)
+///   MasterVolume        - pushed to AudioListener.volume
+///   JoystickDeadzone    - pushed to registered IInputSettingsReceivers
+///   SwapControls        - pushed to registered IInputSettingsReceivers
 ///
 /// SETUP:
 ///   1. Attach to a persistent GameObject (GameManager or DontDestroyOnLoad root).
-///   2. Assign a SettingsProfile asset — it provides the AudioMixer and all default values.
+///   2. Assign a SettingsProfile asset - it provides the AudioMixer and all default values.
 ///   3. Optionally override the Mixer field directly if the profile mixer is unavailable.
 /// </summary>
 [AuthoringContract(
@@ -51,7 +51,7 @@ public class SettingsManager : MonoBehaviour, IGameplaySettingsApplier, IInputSe
     [SerializeField, Tooltip("Direct AudioMixer override. If assigned, takes priority over the profile mixer.")]
     private AudioMixer _mixerOverride;
 
-    // ── PlayerPrefs keys ───────────────────────────────────────────────
+    // PlayerPrefs keys
     private const string KeyMusicVolume      = "Settings_MusicVolume";
     private const string KeySFXVolume        = "Settings_SFXVolume";
     private const string KeyMasterVolume     = "Settings_MasterVolume";
@@ -59,11 +59,11 @@ public class SettingsManager : MonoBehaviour, IGameplaySettingsApplier, IInputSe
     private const string KeySwapControls     = "Settings_SwapControls";
     private const string KeyGamepadDeadzone  = "Settings_GamepadDeadzone";
 
-    // ── AudioMixer exposed parameter names ────────────────────────────────
+    // AudioMixer exposed parameter names
     private const string MixerMusicParam = "MusicVolume";
     private const string MixerSFXParam   = "SFXVolume";
 
-    // ── Live values ──────────────────────────────────────────────────
+    // Live values
     public float MusicVolume      { get; private set; }
     public float SFXVolume        { get; private set; }
     public float MasterVolume     { get; private set; }
@@ -71,7 +71,7 @@ public class SettingsManager : MonoBehaviour, IGameplaySettingsApplier, IInputSe
     public bool  SwapControls     { get; private set; }
     public float GamepadDeadzone  { get; private set; }
 
-    // ── Resolved mixer ─────────────────────────────────────────────
+    // Resolved mixer
     private AudioMixer Mixer => _mixerOverride != null ? _mixerOverride
         : (settingsProfile != null ? settingsProfile.mixer : null);
 
@@ -95,7 +95,7 @@ public class SettingsManager : MonoBehaviour, IGameplaySettingsApplier, IInputSe
         if (paused) Save();
     }
 
-    // ── Public setters ────────────────────────────────────────────────────
+    // Public setters
     public void SetMusicVolume(float value)
     {
         MusicVolume = Mathf.Clamp01(value);
@@ -155,7 +155,7 @@ public class SettingsManager : MonoBehaviour, IGameplaySettingsApplier, IInputSe
         GamepadDeadzone  = PlayerPrefs.GetFloat(KeyGamepadDeadzone,  defGamepad);
     }
 
-    // ── Internal ──────────────────────────────────────────────────────────
+    // Internal
     private void ApplyMixer()
     {
         SetMixerVolume(MixerMusicParam, MusicVolume);
@@ -170,7 +170,7 @@ public class SettingsManager : MonoBehaviour, IGameplaySettingsApplier, IInputSe
         mixer.SetFloat(parameter, dB);
     }
 
-    // ── Input Settings Receivers ──────────────────────────────────────────
+    // Input settings receivers
     private readonly List<IInputSettingsReceiver> _inputReceivers = new List<IInputSettingsReceiver>();
 
     public void RegisterInputReceiver(IInputSettingsReceiver receiver)

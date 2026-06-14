@@ -6,7 +6,7 @@ using UnityEngine;
 namespace NeonBlack.Gameplay.Core.Runtime
 {
     /// <summary>
-    /// Singleton manager for game time effects.
+    /// Runtime service for global time-scale effects such as hit pause.
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Setup,

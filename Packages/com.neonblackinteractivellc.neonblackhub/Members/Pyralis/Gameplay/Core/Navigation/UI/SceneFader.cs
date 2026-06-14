@@ -8,7 +8,7 @@ using UnityEngine.UI;
 namespace NeonBlack.Gameplay.Core.Navigation
 {
     /// <summary>
-    /// Singleton that fades the screen to black before loading a new scene and back in after it loads.
+    /// Scene navigation service that fades the screen before and after loading scenes.
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Setup,

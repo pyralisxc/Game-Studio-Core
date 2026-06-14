@@ -1,8 +1,6 @@
 using System;
-using System.Linq;
 using NeonBlack.Gameplay.Core.Rpg;
 using NeonBlack.Gameplay.Data.Definitions.Rpg;
-using NeonBlack.Gameplay.Features.Rpg.Proof;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -13,7 +11,7 @@ namespace NeonBlack.Gameplay.Tests.Runtime
         [Test]
         public void RpgOwnerSaveData_CaptureAndApply_RestoresOwnerStateAcrossFreshServices()
         {
-            RpgOwnerKey owner = RpgHubProofRouteFactory.CreateDefaultOwner();
+            RpgOwnerKey owner = RpgHubProofRouteTestFixture.CreateDefaultOwner();
             EquipmentSlotDefinition weaponSlot = CreateSlot();
             EquippableItemDefinition sword = CreateSword();
             SkillTreeDefinition tree = CreateSkillTree();
@@ -25,19 +23,19 @@ namespace NeonBlack.Gameplay.Tests.Runtime
                 EquipmentService equipment = new EquipmentService();
                 SkillTreeService skills = new SkillTreeService(progression);
                 DialogueService dialogue = new DialogueService(progression, inventory, quests, skills);
-                IQuestDefinition quest = RpgHubProofRouteFactory.CreateQuest();
-                IDialogueGraph graph = RpgHubProofRouteFactory.CreateDialogueGraph();
-                INpcProfile npc = RpgHubProofRouteFactory.CreateNpc();
+                IQuestDefinition quest = RpgHubProofRouteTestFixture.CreateQuest();
+                IDialogueGraph graph = RpgHubProofRouteTestFixture.CreateDialogueGraph();
+                INpcProfile npc = RpgHubProofRouteTestFixture.CreateNpc();
 
-                Assert.That(inventory.TryAddItem(owner, RpgHubProofRouteIds.GoldItemId, 7, out _), Is.True);
-                Assert.That(inventory.TryAddItem(owner, RpgHubProofRouteIds.HerbItemId, 2, out _), Is.True);
+                Assert.That(inventory.TryAddItem(owner, RpgHubProofRouteTestFixture.Ids.GoldItemId, 7, out _), Is.True);
+                Assert.That(inventory.TryAddItem(owner, RpgHubProofRouteTestFixture.Ids.HerbItemId, 2, out _), Is.True);
                 Assert.That(quests.TryStartQuest(owner, quest, out _), Is.True);
-                Assert.That(quests.ReportObjectiveProgress(owner, quest, RpgHubProofRouteIds.QuestObjectiveId, 2, out _, out _), Is.True);
+                Assert.That(quests.ReportObjectiveProgress(owner, quest, RpgHubProofRouteTestFixture.Ids.QuestObjectiveId, 2, out _, out _), Is.True);
                 Assert.That(equipment.TryEquip(owner, weaponSlot, sword, out _), Is.True);
-                Assert.That(skills.TryUnlock(owner, tree, RpgHubProofRouteIds.SkillRootNodeId, out _), Is.True);
+                Assert.That(skills.TryUnlock(owner, tree, RpgHubProofRouteTestFixture.Ids.SkillRootNodeId, out _), Is.True);
                 dialogue.SetDialogueFlag(owner, "flag.met-elder", true);
                 Assert.That(dialogue.TryStartSession(owner, npc, graph, out _, out _), Is.True);
-                Assert.That(dialogue.TrySelectChoice(owner, graph, RpgHubProofRouteIds.DialogueAcceptChoiceId, out _, out _), Is.True);
+                Assert.That(dialogue.TrySelectChoice(owner, graph, RpgHubProofRouteTestFixture.Ids.DialogueAcceptChoiceId, out _, out _), Is.True);
 
                 RpgOwnerSaveData save = RpgOwnerSaveData.Capture(
                     owner,
@@ -48,11 +46,11 @@ namespace NeonBlack.Gameplay.Tests.Runtime
                     skills,
                     dialogue,
                     new RpgHubReturnSnapshot(
-                        RpgHubProofRouteIds.HubId,
-                        RpgHubProofRouteIds.HubSceneId,
+                        RpgHubProofRouteTestFixture.Ids.HubId,
+                        RpgHubProofRouteTestFixture.Ids.HubSceneId,
                         "spawn.default",
-                        RpgHubProofRouteIds.PortalInteractableId,
-                        RpgHubProofRouteIds.ArenaSceneId));
+                        RpgHubProofRouteTestFixture.Ids.PortalInteractableId,
+                        RpgHubProofRouteTestFixture.Ids.ArenaSceneId));
 
                 InventoryService restoredInventory = new InventoryService();
                 ProgressionService restoredProgression = new ProgressionService(null);
@@ -68,18 +66,18 @@ namespace NeonBlack.Gameplay.Tests.Runtime
                     restoredQuests,
                     restoredSkills,
                     restoredDialogue,
-                    itemId => itemId == RpgHubProofRouteIds.SwordItemId ? sword : null);
+                    itemId => itemId == RpgHubProofRouteTestFixture.Ids.SwordItemId ? sword : null);
 
-                Assert.That(restoredInventory.GetItemCount(owner, RpgHubProofRouteIds.GoldItemId), Is.EqualTo(7));
-                Assert.That(restoredInventory.GetItemCount(owner, RpgHubProofRouteIds.HerbItemId), Is.EqualTo(2));
+                Assert.That(restoredInventory.GetItemCount(owner, RpgHubProofRouteTestFixture.Ids.GoldItemId), Is.EqualTo(7));
+                Assert.That(restoredInventory.GetItemCount(owner, RpgHubProofRouteTestFixture.Ids.HerbItemId), Is.EqualTo(2));
                 Assert.That(restoredProgression.GetState(owner).SkillPoints, Is.EqualTo(progression.GetState(owner).SkillPoints));
-                Assert.That(restoredQuests.GetProgress(owner, RpgHubProofRouteIds.QuestId).Status, Is.EqualTo(QuestStatus.Active));
-                Assert.That(restoredQuests.GetProgress(owner, RpgHubProofRouteIds.QuestId).GetObjectiveProgress(RpgHubProofRouteIds.QuestObjectiveId), Is.EqualTo(2));
-                Assert.That(restoredEquipment.GetEquippedItemId(owner, RpgHubProofRouteIds.WeaponSlotId), Is.EqualTo(RpgHubProofRouteIds.SwordItemId));
-                Assert.That(restoredSkills.GetUnlockCount(owner, RpgHubProofRouteIds.SkillRootNodeId), Is.EqualTo(1));
+                Assert.That(restoredQuests.GetProgress(owner, RpgHubProofRouteTestFixture.Ids.QuestId).Status, Is.EqualTo(QuestStatus.Active));
+                Assert.That(restoredQuests.GetProgress(owner, RpgHubProofRouteTestFixture.Ids.QuestId).GetObjectiveProgress(RpgHubProofRouteTestFixture.Ids.QuestObjectiveId), Is.EqualTo(2));
+                Assert.That(restoredEquipment.GetEquippedItemId(owner, RpgHubProofRouteTestFixture.Ids.WeaponSlotId), Is.EqualTo(RpgHubProofRouteTestFixture.Ids.SwordItemId));
+                Assert.That(restoredSkills.GetUnlockCount(owner, RpgHubProofRouteTestFixture.Ids.SkillRootNodeId), Is.EqualTo(1));
                 Assert.That(restoredDialogue.HasDialogueFlag(owner, "flag.met-elder"), Is.True);
                 Assert.That(restoredDialogue.GetSessionSnapshot(owner).Ended, Is.True);
-                Assert.That(save.HubReturn.RequestedSceneId, Is.EqualTo(RpgHubProofRouteIds.ArenaSceneId));
+                Assert.That(save.HubReturn.RequestedSceneId, Is.EqualTo(RpgHubProofRouteTestFixture.Ids.ArenaSceneId));
             }
             finally
             {
@@ -133,7 +131,7 @@ namespace NeonBlack.Gameplay.Tests.Runtime
         private static EquipmentSlotDefinition CreateSlot()
         {
             EquipmentSlotDefinition slot = ScriptableObject.CreateInstance<EquipmentSlotDefinition>();
-            slot.slotId = RpgHubProofRouteIds.WeaponSlotId;
+            slot.slotId = RpgHubProofRouteTestFixture.Ids.WeaponSlotId;
             slot.displayName = "Weapon";
             return slot;
         }
@@ -141,18 +139,18 @@ namespace NeonBlack.Gameplay.Tests.Runtime
         private static EquippableItemDefinition CreateSword()
         {
             EquippableItemDefinition item = ScriptableObject.CreateInstance<EquippableItemDefinition>();
-            item.itemId = RpgHubProofRouteIds.SwordItemId;
+            item.itemId = RpgHubProofRouteTestFixture.Ids.SwordItemId;
             item.displayName = "Proof Sword";
-            item.allowedSlotIds = new[] { RpgHubProofRouteIds.WeaponSlotId };
+            item.allowedSlotIds = new[] { RpgHubProofRouteTestFixture.Ids.WeaponSlotId };
             return item;
         }
 
         private static SkillTreeDefinition CreateSkillTree()
         {
             SkillTreeDefinition tree = ScriptableObject.CreateInstance<SkillTreeDefinition>();
-            tree.treeId = RpgHubProofRouteIds.SkillTreeId;
+            tree.treeId = RpgHubProofRouteTestFixture.Ids.SkillTreeId;
             tree.displayName = "Proof Hero";
-            tree.nodes = new[] { new SkillNodeDefinition(RpgHubProofRouteIds.SkillRootNodeId, "Root Training", 1) };
+            tree.nodes = new[] { new SkillNodeDefinition(RpgHubProofRouteTestFixture.Ids.SkillRootNodeId, "Root Training", 1) };
             return tree;
         }
     }

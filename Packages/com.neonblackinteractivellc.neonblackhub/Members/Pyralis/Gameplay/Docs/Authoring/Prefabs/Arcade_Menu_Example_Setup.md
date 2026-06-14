@@ -137,7 +137,7 @@ Primary scripts:
 
 - `GameManager` now lives in `Features/GameFlow/2D`
 - `DifficultyManager` now lives in `Features/Hazards/2D`
-- `PlayerRegistry` now lives in `Features/Characters`
+- `PlayerRegistry` remains in `Features/Characters` as an older compatibility bridge, not a new-scene requirement
 - `CinemachineCameraRigController` lives in `Presentation/Camera`; `CameraShake` lives in `Presentation/Visuals`
 - `InputZoneSet` now lives in `Features/Input/2D`
 - `UIManager` now lives in `Features/GameFlow/2D/UI`
@@ -147,7 +147,6 @@ Primary scripts:
 ### Optional scene pieces
 
 - `PlayerInputManager` for local join flows
-- `PlayerRegistry`
 - `CinemachineCameraRigController`
 - `CameraShake`
 - `StillnessBonus2D`

@@ -129,7 +129,7 @@ Do not build the map flat. Sequence it this way:
 7. Steam/shipping layer.
 8. Expand into card, swarm, roguelite, RPG, and multiplayer routes.
 
-Current authoring focus: deepen the tabletop/action route first as the second graph-centered contrast proof after the side-scroller structural checkpoint. The Authoring Window should make its proof loop explicit: one board/card/seat/action selection surface, one rules-backed accepted or rejected action, one visible or inspectable board/card/turn-state change, and clear guidance about deferring pawn actors, final art, full card UX, AI, networking, and campaign flow until that first proof works. Use `docs/superpowers/plans/2026-06-05-pyralis-authoring-proof-tester-handoff.md` as the operating packet for proof-test agents.
+Current authoring focus: deepen graph-centered proof routes from the package docs and Authoring Window itself. The tabletop/action route should prove one board/card/seat/action selection surface, one rules-backed accepted or rejected action, one visible or inspectable board/card/turn-state change, and clear guidance about deferring pawn actors, final art, full card UX, AI, networking, and campaign flow until that first proof works. Proof-test agents should use `Docs/Authoring/START_HERE.md`, `Docs/Authoring/AUTHORING_MODEL.md`, `Docs/Authoring/CANONICAL_SETUP.md`, and the live Authoring Window tabs as the operating packet.
 
 ## Slice 1: Action And Targeting Core
 
@@ -373,16 +373,7 @@ Build order:
 9. Open-Zone Readiness - foundational code added
 10. Golden RPG Sample
 
-First implementation plan:
-
-- `docs/superpowers/plans/2026-05-26-pyralis-rpg-progression-foundation.md`
-- `docs/superpowers/plans/2026-05-26-pyralis-native-narrative-phase-6a.md`
-- `docs/superpowers/plans/2026-05-26-pyralis-native-narrative-editor-phase-6b.md`
-- `docs/superpowers/specs/2026-05-26-pyralis-player-experience-framework-design.md`
-- `docs/superpowers/plans/2026-05-26-pyralis-player-experience-phase-7a-hub-interaction-spine.md`
-- `docs/superpowers/plans/2026-05-26-pyralis-player-experience-phase-7b-hud-prompt-surface.md`
-- `docs/superpowers/plans/2026-05-26-pyralis-rpg-phase-8-persistence.md`
-- `docs/superpowers/plans/2026-05-26-pyralis-rpg-phase-9-open-zone-readiness.md`
+The implementation history has been folded into current package docs and runtime tests. Treat this roadmap, `FEATURE_DEVELOPMENT_SCOPE.md`, `RPG_SYSTEMS_ROADMAP.md`, and the active source contracts as the durable RPG direction instead of dated external plan files.
 
 ## Current Priority
 

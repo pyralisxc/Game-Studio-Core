@@ -8,6 +8,7 @@ using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Features.Characters;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace NeonBlack.Gameplay.Tests.Editor
 {
@@ -124,6 +125,32 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(model.BestNextAction, Is.Not.Empty);
 
             Object.DestroyImmediate(root);
+        }
+
+        [Test]
+        public void InputProfileSync_SmokeMapsUnityInputActionsToGameplayRows()
+        {
+            InputActionAsset actions = ScriptableObject.CreateInstance<InputActionAsset>();
+            InputActionMap player = actions.AddActionMap("Player");
+            player.AddAction("Move", InputActionType.Value, expectedControlLayout: "Vector2");
+            player.AddAction("Attack", InputActionType.Button, expectedControlLayout: "Button");
+            player.AddAction("Emote", InputActionType.Button, expectedControlLayout: "Button");
+
+            InputProfile profile = ScriptableObject.CreateInstance<InputProfile>();
+            profile.actions = actions;
+            profile.primaryActionMap = "Player";
+            profile.actionBindings = System.Array.Empty<GameplayInputActionBinding>();
+
+            bool changed = InputProfileInputActionSync.SyncFromAssignedActions(profile, includeCustomActions: true, out string summary);
+
+            Assert.That(changed, Is.True, summary);
+            Assert.That(profile.FindBinding(GameplayInputActionRole.Move)?.actionName, Is.EqualTo("Move"));
+            Assert.That(profile.FindBinding(GameplayInputActionRole.Move)?.requiredForProof, Is.True);
+            Assert.That(profile.FindBinding(GameplayInputActionRole.AttackPrimary)?.actionName, Is.EqualTo("Attack"));
+            Assert.That(profile.FindCustomBinding("Emote")?.actionName, Is.EqualTo("Emote"));
+
+            Object.DestroyImmediate(profile);
+            Object.DestroyImmediate(actions);
         }
     }
 

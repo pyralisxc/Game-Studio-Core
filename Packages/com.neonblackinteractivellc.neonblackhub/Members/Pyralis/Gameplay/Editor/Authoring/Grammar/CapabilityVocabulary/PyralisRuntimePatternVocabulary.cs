@@ -1,8 +1,8 @@
 using NeonBlack.Gameplay.Data.Definitions;
 
-namespace NeonBlack.Gameplay.Editor.Inspectors
+namespace NeonBlack.Gameplay.Editor
 {
-    internal static class RuntimePatternAuthoringText
+    internal static class PyralisRuntimePatternVocabulary
     {
         public static string GetSuggestedDescription(RuntimePatternDefinition pattern)
         {

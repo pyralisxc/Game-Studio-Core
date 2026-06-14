@@ -199,7 +199,6 @@ Typical player object:
 
 Optional support components:
 
-- `PlayerRegistry`
 - `PlayerInputManager`
 - `CinemachineCameraRigController`
 - `CameraShake`
@@ -209,7 +208,7 @@ Optional support components:
 
 Optional support ownership:
 
-- `Features/Characters/PlayerRegistry` for explicit participant lookup in scenes that still need it
+- `Features/Characters/PlayerRegistry` only for older compatibility scenes that still need a primary-player bridge
 - `Features/Settings/SettingsManager` for reusable settings flow shared by menu-driven scenes
 - `Features/GameFlow/2D/UI/UIManager` for 2D HUD and game-over presentation
 - `Presentation/Camera/CinemachineCameraRigController` for 2D camera framing and visible bounds

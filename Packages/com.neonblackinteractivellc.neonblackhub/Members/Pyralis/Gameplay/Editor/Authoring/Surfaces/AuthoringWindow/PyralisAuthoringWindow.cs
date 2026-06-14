@@ -449,10 +449,10 @@ namespace NeonBlack.Gameplay.Editor
             Undo.RecordObject(pattern, "Fill Runtime Pattern Guidance Text");
 
             if (string.IsNullOrWhiteSpace(pattern.description))
-                pattern.description = RuntimePatternAuthoringText.GetSuggestedDescription(pattern);
+                pattern.description = PyralisRuntimePatternVocabulary.GetSuggestedDescription(pattern);
 
             if (string.IsNullOrWhiteSpace(pattern.setupNotes))
-                pattern.setupNotes = RuntimePatternAuthoringText.GetSuggestedSetupNotes(pattern);
+                pattern.setupNotes = PyralisRuntimePatternVocabulary.GetSuggestedSetupNotes(pattern);
 
             pattern.Sanitize();
             EditorUtility.SetDirty(pattern);
