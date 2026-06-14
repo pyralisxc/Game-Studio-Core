@@ -66,7 +66,7 @@ When a test finds friction, classify it before fixing:
 |---|---|
 | Missing required reference, invisible prefab, null profile, or runtime service assumption | Fix code, validation, or authored asset shape |
 | User must choose art, tuning, level shape, route capability, input device policy, or UI composition | Guide the Unity workflow and name the relevant fields |
-| Optional system appears required before the first proof | Move it to Proof Enhancers or Feature Cards |
+| Optional system appears required before the first proof | Move it to Proof Enhancers or optional capability vocabulary |
 | Inspector duplicates route instructions | Keep compact field-local help and hand off to Authoring |
 | Authoring loses context when selecting child assets or prefabs | Improve active-route inference, pinning, and "you are here" language |
 
@@ -94,7 +94,7 @@ Power users can bypass the Authoring Window while they experiment, but reusable 
 
 ## Export Footprint Boundary
 
-Authoring 2.0 should make setup intelligence visible in the Unity Editor without making exported games carry that editor weight. Authoring providers, fact registries, validators, custom inspectors, proof tooling, live-test notes, and Authoring Window UI belong in `Editor` folders or editor-only assemblies unless there is a deliberate runtime reason to ship them.
+Authoring should make setup intelligence visible in the Unity Editor without making exported games carry that editor weight. Authoring providers, grammar registries, validators, custom inspectors, proof tooling, live-test notes, and Authoring Window UI belong in `Editor` folders or editor-only assemblies unless there is a deliberate runtime reason to ship them.
 
 Runtime code should stay modular by route. A route migration should not add broad always-loaded references that pull unrelated systems or large assets into a player build. Scene, prefab, ScriptableObject, `Resources`, Addressables, and bootstrap references are the export-size boundary to watch: if a route does not use a system or asset, it should not be referenced by that route's runtime setup just because the authoring model knows the system exists.
 
@@ -178,9 +178,9 @@ Core concepts:
 - `Issue`: required, recommended, optional, blocked, or not-needed setup work.
 - `Action`: inspect, create, assign, repair, explain, copy checklist, or open documentation.
 - `Evidence`: why the tool believes something is ready, missing, optional, or not needed for this route.
-- `Work Intent`: whether the row is foundation setup, required setup, a proof enhancer, or a feature card.
+- `Work Intent`: whether the row is foundation setup, required setup, a proof enhancer, or optional capability vocabulary.
 
-The active Authoring 2.0 foundation is the contract/dependency-tree/graph pipeline. `PyralisAuthoringGrammarRegistry` aggregates vocabulary, reflected facts, setup-flow facts, proof templates, inspector handoffs, route intents, scene evidence, and convention facts so projections have stable ids and wording. It is an audit and grammar source, not the primary operating model. Feature-owned `[AuthoringContract]` metadata owns semantic setup meaning; `PyralisSetupDependencyTree` owns serialized setup/reference discovery; validators own scene/runtime readiness; `PyralisAuthoringSetupGraph` compiles those inputs into the single readiness/proof model consumed by tabs. `PyralisAuthoringIntentAdvisor` projects grammar facts into compact pre-setup planning. Intent chooses the route shape; Guide owns the graph-filtered route guide when setup exists; Facts remains the full cookbook and dictionary.
+The active authoring foundation is the contract/dependency-tree/graph pipeline. `PyralisAuthoringGrammarRegistry` aggregates vocabulary, reflected facts, setup-flow facts, proof templates, inspector handoffs, route intents, scene evidence, and convention facts so projections have stable ids and wording. It is an audit and grammar source, not the primary operating model. Feature-owned `[AuthoringContract]` metadata owns semantic setup meaning; `PyralisSetupDependencyTree` owns serialized setup/reference discovery; validators own scene/runtime readiness; `PyralisAuthoringSetupGraph` compiles those inputs into the single readiness/proof model consumed by tabs. `PyralisAuthoringIntentAdvisor` projects grammar facts into compact pre-setup planning. Intent chooses the route shape; Guide owns the graph-filtered route guide when setup exists; Facts remains the full cookbook and dictionary.
 
 The grammar and graph inputs should grow in this order:
 
@@ -232,7 +232,7 @@ Recommended setup should not all land in the same visual priority. Use work inte
 - `Foundation`: useful visibility or defaults that keep the scene inspectable.
 - `RequiredSetup`: missing links that block the named first proof.
 - `ProofEnhancer`: customization or scene support that makes the first proof believable, readable, or easier to debug.
-- `FeatureCard`: optional systems, advanced route capabilities, polish, or next proof-chain work that should not compete with the current proof.
+- `OptionalCapability`: optional systems, advanced route capabilities, polish, or next proof-chain work that should not compete with the current proof.
 
 ## Capability Vocabulary
 
@@ -285,13 +285,13 @@ Overview is the daily home base. It should show:
 - You Are Here chain
 - selected context
 - concise readiness summary
-- first playable proof card
+- first playable proof target
 
 Organize progress into three lanes:
 
 - `Do Now`: intent-required missing or blocked work only.
 - `Proof Enhancers`: setup recommended by the selected intent that can make the first proof easier to read but should not block it once `Do Now` is clear.
-- `Feature Cards`: optional next capabilities, polish, advanced systems, and nice-to-have proof.
+- `Optional Capabilities`: optional next capabilities, polish, advanced systems, and nice-to-have proof.
 
 If the developer is tired or lost, Overview should still make the next move obvious.
 
@@ -304,7 +304,7 @@ Cameron should be able to test the Authoring Window flow with one active route w
 3. Confirm Overview names the route and shows `Flow Test Status`.
 4. Clear `Do Now` items before trusting Play Mode.
 5. Use `Proof Enhancers` only when the first proof would be hard to read without them.
-6. Leave `Feature Cards` alone unless the current proof specifically needs that capability.
+6. Leave optional capabilities alone unless the current proof specifically needs that capability.
 7. Use `Inspect Best Target`, `Open Map`, and `Open Validate` to move between object inspection, dependency mapping, and issue triage.
 8. Press Play only for the first proof named by Overview.
 
@@ -385,7 +385,7 @@ Each detector should return typed evidence. A detected object means "we found a 
 
 Every route should recommend one small proof before asking for broad setup.
 
-Overview should show a first playable proof card rendered from graph proof nodes with:
+Overview should show a first playable proof target rendered from graph proof nodes with:
 
 - setup surface
 - success criteria
@@ -458,7 +458,7 @@ Expected result:
 
 ### Phase 2: Overview As Keep-Going Screen
 
-Refactor Overview around `Do Now`, `Proof Enhancers`, and `Feature Cards`.
+Refactor Overview around `Do Now`, `Proof Enhancers`, and optional capability vocabulary.
 
 Expected result:
 

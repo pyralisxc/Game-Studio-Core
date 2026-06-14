@@ -28,6 +28,17 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
+        public void ContractRegistry_SmokeReflectsCodeProvenRequirements()
+        {
+            ResolvedAuthoringContract contract =
+                ResolvedAuthoringContractRegistry.FindByType(typeof(ContractReflectionRequirementFixture));
+
+            Assert.That(contract, Is.Not.Null);
+            Assert.That(contract.RequiredRuntimeInterfaceNames, Does.Contain(typeof(IContractReflectionRequirementFixture).FullName));
+            Assert.That(contract.RequiredComponentNames, Does.Contain(typeof(RectTransform).FullName));
+        }
+
+        [Test]
         public void IntentProjection_SmokeUsesCapabilityDescriptors()
         {
             PyralisAuthoringIntentModel model = PyralisAuthoringIntentAdvisor.Build(
@@ -114,5 +125,17 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             Object.DestroyImmediate(root);
         }
+    }
+
+    internal interface IContractReflectionRequirementFixture
+    {
+    }
+
+    [RequireComponent(typeof(RectTransform))]
+    [AuthoringContract(
+        Capability = AuthoringCapability.Setup,
+        Relevance = "Editor smoke fixture for reflected contract requirements.")]
+    internal sealed class ContractReflectionRequirementFixture : MonoBehaviour, IContractReflectionRequirementFixture
+    {
     }
 }

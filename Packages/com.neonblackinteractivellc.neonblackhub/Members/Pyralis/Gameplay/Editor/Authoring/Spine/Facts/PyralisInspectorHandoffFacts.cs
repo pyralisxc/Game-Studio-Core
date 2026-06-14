@@ -44,13 +44,13 @@ namespace NeonBlack.Gameplay.Editor
 
                 CreateAssignmentFact(
                     "inspector.game-setup-profile.runtime-capabilities",
-                    "GameSetupProfile Runtime Capabilities",
-                    "Select runtime capability families that describe the supported route ingredients.",
+                    "GameSetupProfile Capability Ingredients",
+                    "Runtime Capabilities stores the capability ingredients chosen in Intent so the graph can explain route readiness.",
                     "Capability setup",
                     "GameSetupProfile.runtimeCapabilities -> RuntimeCapabilitySelection[]",
                     "GameSetupProfile",
                     "Runtime Capabilities",
-                    "the setup flow can distinguish pawn, no-pawn, combat, UI, camera, scoring, tabletop, and network needs",
+                    "the graph can distinguish pawn, no-pawn, combat, UI, camera, scoring, tabletop, and network needs",
                     new[] { "setup.add-runtime-patterns" }),
 
                 CreateAssignmentFact(

@@ -36,9 +36,14 @@ namespace NeonBlack.Gameplay.Editor
 
             var capabilityContainer = new VisualElement() { name = "capabilityContainer" };
             capabilityContainer.AddToClassList("section");
-            var capTitle = new Label("ENGINE SPINE CAPABILITIES");
+            var capTitle = new Label("CAPABILITY INGREDIENTS");
             capTitle.AddToClassList("section-title");
             capabilityContainer.Add(capTitle);
+            var capHelp = new Label("Toggle the gameplay ingredients this route needs. These are not presets; they become setup-profile capability rows that the graph uses to explain what to create and wire.");
+            capHelp.style.whiteSpace = WhiteSpace.Normal;
+            capHelp.style.opacity = 0.75f;
+            capHelp.style.marginBottom = 6f;
+            capabilityContainer.Add(capHelp);
             PopulateCapabilities(capabilityContainer);
 
             var advisorContainer = new VisualElement() { name = "advisorContainer" };
@@ -53,7 +58,7 @@ namespace NeonBlack.Gameplay.Editor
             intentContract.style.marginBottom = 6f;
             advisorContainer.Add(intentContract);
 
-            var intentSummary = new Label("Project DNA is defined by... Engine Spine capabilities: ...") { name = "intentSummary" };
+            var intentSummary = new Label("Project DNA is defined by... capability ingredients: ...") { name = "intentSummary" };
             intentSummary.AddToClassList("intent-card-summary");
             advisorContainer.Add(intentSummary);
 
@@ -70,8 +75,8 @@ namespace NeonBlack.Gameplay.Editor
             guideButton.tooltip = "Show the graph-filtered route guide for this intent without applying a preset.";
             var overviewButton = new Button(() => SwitchMode(AuthoringWindowMode.Overview)) { text = "Open Overview" };
             overviewButton.tooltip = "Return to the current setup route once a scene root or setup asset exists.";
-            var applyButton = new Button(ApplyIntentToActiveSetupProfile) { text = "Apply To Setup Profile", name = "applyIntentToSetupProfile" };
-            applyButton.tooltip = "Write the selected intent capability families into the active GameSetupProfile runtime capability rows.";
+            var applyButton = new Button(ApplyIntentToActiveSetupProfile) { text = "Apply Capability Ingredients", name = "applyIntentToSetupProfile" };
+            applyButton.tooltip = "Write only the selected capability families into the active GameSetupProfile.runtimeCapabilities rows. This does not create assets, wire fields, or choose content.";
             applyButton.SetEnabled(GetActiveIntentSetupProfile() != null && _intentCapabilities != AuthoringCapability.None);
             actionRow.Add(applyButton);
             actionRow.Add(guideButton);
@@ -357,8 +362,7 @@ namespace NeonBlack.Gameplay.Editor
             Label summaryLabel = root.Q<Label>("intentSummary");
             if (summaryLabel == null) return;
 
-            var selection = new PyralisAuthoringIntentSelection(_intentLane, _intentCapabilities, _intentAxioms);
-            PyralisAuthoringIntentModel model = PyralisAuthoringSetupGraphProjection.BuildIntentModel(selection);
+            PyralisAuthoringIntentModel model = GetCachedIntentModel();
 
             summaryLabel.text = model.Summary;
             Label nextLabel = root.Q<Label>("intentNext");
@@ -373,17 +377,17 @@ namespace NeonBlack.Gameplay.Editor
         private string GetIntentReadinessMessage()
         {
             if (!HasCompleteCoreAxioms())
-                return "Choose the DNA axioms first: dimensionality, physics gravity, sequence timeline, and spatial topology. Then choose the Engine Spine capabilities for this proof.";
+                return "Choose the DNA axioms first: dimensionality, physics gravity, sequence timeline, and spatial topology. Then choose the capability ingredients for this proof.";
 
             if (_intentCapabilities == AuthoringCapability.None)
-                return "Choose Engine Spine capabilities that describe the game. The active GameSetupProfile will store matching runtime capability rows for Overview, Guide, Map, and Validate.";
+                return "Choose capability ingredients that describe the game. When applied, the active GameSetupProfile stores them in Runtime Capabilities so Overview, Guide, Map, and Validate can read the route.";
 
             GameSetupProfile setupProfile = GetActiveIntentSetupProfile();
             if (setupProfile == null)
-                return "Intent is shaped. Create or select a GameSetupProfile so these choices become the route contract read by Overview, Guide, Map, and Validate.";
+                return "Intent is shaped. Create or select a GameSetupProfile, then apply these capability ingredients so the graph can guide the route.";
 
             if (_intentHasUnappliedSetupChanges)
-                return $"Intent is shaped. Click Apply To Setup Profile to update `{setupProfile.name}` runtime capability rows, then open Guide for the graph-filtered route path.";
+                return $"Intent is shaped. Click Apply Capability Ingredients to update `{setupProfile.name}` Runtime Capabilities, then open Guide for the graph-filtered route path.";
 
             return $"Intent matches the active GameSetupProfile `{setupProfile.name}`. Open Guide for the graph-filtered route path, then use Project, Hierarchy, and Inspector to create and wire your own setup.";
         }

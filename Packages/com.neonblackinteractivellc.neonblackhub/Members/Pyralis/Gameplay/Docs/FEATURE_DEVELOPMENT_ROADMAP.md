@@ -29,7 +29,7 @@ A route is complete when it has:
 
 Use this checklist as the product gate for every game lane. A brawler route, tabletop route, card route, survival route, shooter route, RPG route, or procedural route is not done just because the runtime system exists. It is done when a Unity developer can create the route, understand the setup chain, validate common mistakes, run the smallest proof, and keep going without rebuilding the framework.
 
-During the Authoring 2.0 proof period, proof scenes and temporary authored values are evidence fixtures, not the product path. They should prove that the Authoring Window, inspectors, facts, validators, contracts, and runtime code can guide native Unity authoring. They must not become hidden route generators, starter packs, or preset paths. Multiple unfinished structural proofs are acceptable when the remaining work is explicitly Cameron/user-owned art, animation, input, tuning, game-feel, or design validation.
+During the authoring proof period, proof scenes and temporary authored values are evidence fixtures, not the product path. They should prove that the Authoring Window, inspectors, graph facts, validators, contracts, and runtime code can guide native Unity authoring. They must not become hidden route generators, starter packs, or preset paths. Multiple unfinished structural proofs are acceptable when the remaining work is explicitly Cameron/user-owned art, animation, input, tuning, game-feel, or design validation.
 
 ## Full Studio Toolkit Feature Map
 
@@ -63,7 +63,7 @@ The Capability Vocabulary is a guide-only grammar slice. It should remain guide-
 
 After the runtime capability slice is stable, expand the same contract/dependency-tree/graph model to the whole setup surface: pawns, NPCs/enemies, custom objects, UI, world, and networking. Vocabulary should supply fallback wording only; feature-specific setup truth should come from contracts, reflection, validators, and graph evidence.
 
-Authoring 2.0 now runs through the contract/dependency-tree/graph pipeline:
+Authoring now runs through the contract/dependency-tree/graph pipeline:
 
 ```text
 gameplay code and authored setup
@@ -74,11 +74,11 @@ gameplay code and authored setup
 
 The active foundation is the resolved setup graph. `PyralisAuthoringGrammarRegistry`, `PyralisCapabilityVocabulary`, and `PyralisProofFamilyVocabulary` provide stable ids, fallback wording, native action vocabulary, and audit facts. Contracts own feature-specific setup meaning, `PyralisSetupDependencyTree` owns serialized reference discovery, and validators own runtime/scene readiness. The Authoring Window has a read-only `Facts` tab for grammar and provenance coverage, but visible setup guidance should project from graph output instead of rebuilding route, proof, or validation meaning locally.
 
-Authoring 2.0 rollout order:
+Authoring rollout order:
 
 1. normalize existing runtime capability cards, setup-flow rows, and common guide language into typed facts - active foundation started
 2. migrate one complete route, starting with 2D pawn movement, through the registry - setup-node relationships, first proof fact, and first Sprite2D convention provider are started
-3. prove the route manually through native Unity authoring before calling it Authoring 2.0 ready
+3. prove the route manually through native Unity authoring before calling it authoring-ready
 4. add typed validator issues with stable issue codes - started in the Validate model and visible cards, still needs broader inspector/field coverage
 5. add route proof facts that connect setup nodes, scene evidence, and first Play Mode proof - broad proof targets and scene-evidence fact anchors are in place, still needs manual Computer Use proof notes
 6. add inspector handoff facts for selected field/component guidance - expanded across core setup, 2D pawn/input, tabletop, camera, feature-module, and selected route fields; still needs more per-route field audits after live testing
@@ -129,7 +129,7 @@ Do not build the map flat. Sequence it this way:
 7. Steam/shipping layer.
 8. Expand into card, swarm, roguelite, RPG, and multiplayer routes.
 
-Current authoring focus: deepen the tabletop/action route first as the second Authoring 2.0 contrast proof after the side-scroller structural checkpoint. The Authoring Window should make its proof loop explicit: one board/card/seat/action selection surface, one rules-backed accepted or rejected action, one visible or inspectable board/card/turn-state change, and clear guidance about deferring pawn actors, final art, full card UX, AI, networking, and campaign flow until that first proof works. Use `docs/superpowers/plans/2026-06-05-pyralis-authoring-proof-tester-handoff.md` as the operating packet for proof-test agents.
+Current authoring focus: deepen the tabletop/action route first as the second graph-centered contrast proof after the side-scroller structural checkpoint. The Authoring Window should make its proof loop explicit: one board/card/seat/action selection surface, one rules-backed accepted or rejected action, one visible or inspectable board/card/turn-state change, and clear guidance about deferring pawn actors, final art, full card UX, AI, networking, and campaign flow until that first proof works. Use `docs/superpowers/plans/2026-06-05-pyralis-authoring-proof-tester-handoff.md` as the operating packet for proof-test agents.
 
 ## Slice 1: Action And Targeting Core
 

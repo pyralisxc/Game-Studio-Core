@@ -167,7 +167,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 GetDependentStatus(setupProfile != null, hasSelectedCapabilities),
                 setupProfile == null
                     ? "Assign Setup Profile first."
-                    : !route.HasAssignedPatterns ? "Open Authoring Window -> Intent, choose DNA axioms and Engine Spine capabilities, then keep the GameSetupProfile active so those choices save to runtime capabilities." : hasSelectedCapabilities ? "Setup profile has selected capability intent." : "Fix setup capability validation issues before continuing.",
+                    : !route.HasAssignedPatterns ? "Open Authoring Window -> Intent, choose DNA axioms and capability ingredients, then keep the GameSetupProfile active so those choices save to Runtime Capabilities." : hasSelectedCapabilities ? "Setup profile has selected capability intent." : "Fix setup capability validation issues before continuing.",
                 setupProfile,
                 stepId: PyralisSetupFlowStepId.AddRuntimePatterns));
 

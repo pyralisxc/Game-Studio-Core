@@ -287,6 +287,8 @@ namespace NeonBlack.Gameplay.Core.Contracts
                 }
             }
 
+            AddImplementedInterfaceNames(type, interfaceNames);
+
             List<string> componentNames = new List<string>();
             if (attr.RequiredComponents != null)
             {
@@ -306,10 +308,12 @@ namespace NeonBlack.Gameplay.Core.Contracts
                 }
             }
 
-            #pragma warning disable CS0618 // Type or member is obsolete
-                        string categoryLabel = attr.Capability != AuthoringCapability.None
-                            ? GetCapabilityDisplayNames(attr.Capability)
-                            : string.Empty;
+            AddRequireComponentNames(type, componentNames);
+
+#pragma warning disable CS0618 // Type or member is obsolete
+            string categoryLabel = attr.Capability != AuthoringCapability.None
+                ? GetCapabilityDisplayNames(attr.Capability)
+                : string.Empty;
 #pragma warning restore CS0618
 
             string stableId = !string.IsNullOrWhiteSpace(attr.ModuleId)
@@ -415,6 +419,51 @@ namespace NeonBlack.Gameplay.Core.Contracts
             return !string.IsNullOrWhiteSpace(attr.FirstProofTargetId) ? attr.FirstProofTargetId : string.Empty;
         }
 
+        private static void AddImplementedInterfaceNames(Type type, List<string> interfaceNames)
+        {
+            if (type == null || interfaceNames == null || type.IsInterface)
+                return;
+
+            Type[] interfaces = type.GetInterfaces();
+            for (int i = 0; i < interfaces.Length; i++)
+            {
+                Type iface = interfaces[i];
+                if (iface == null || string.IsNullOrWhiteSpace(iface.FullName))
+                    continue;
+
+                AddDistinct(interfaceNames, iface.FullName);
+            }
+        }
+
+        private static void AddRequireComponentNames(Type type, List<string> componentNames)
+        {
+            if (type == null || componentNames == null || !typeof(MonoBehaviour).IsAssignableFrom(type))
+                return;
+
+            object[] attributes = type.GetCustomAttributes(typeof(RequireComponent), true);
+            for (int i = 0; i < attributes.Length; i++)
+            {
+                if (attributes[i] is not RequireComponent attribute)
+                    continue;
+
+                AddRequireComponentName(attribute, "m_Type0", componentNames);
+                AddRequireComponentName(attribute, "m_Type1", componentNames);
+                AddRequireComponentName(attribute, "m_Type2", componentNames);
+            }
+        }
+
+        private static void AddRequireComponentName(RequireComponent attribute, string fieldName, List<string> componentNames)
+        {
+            if (attribute == null || componentNames == null)
+                return;
+
+            FieldInfo field = typeof(RequireComponent).GetField(fieldName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (field == null || field.GetValue(attribute) is not Type componentType || string.IsNullOrWhiteSpace(componentType.FullName))
+                return;
+
+            AddDistinct(componentNames, componentType.FullName);
+        }
+
         private static ResolvedAuthoringContract MergeContracts(ResolvedAuthoringContract current, ResolvedAuthoringContract incoming)
         {
             return new ResolvedAuthoringContract(
@@ -491,6 +540,14 @@ namespace NeonBlack.Gameplay.Core.Contracts
                         merged.Add(value);
                 }
             }
+        }
+
+        private static void AddDistinct(List<string> values, string value)
+        {
+            if (values == null || string.IsNullOrWhiteSpace(value) || values.Contains(value))
+                return;
+
+            values.Add(value);
         }
 
         private static ActorPresentationMode[] MergeDistinct(ActorPresentationMode[] first, ActorPresentationMode[] second)

@@ -83,12 +83,12 @@ namespace NeonBlack.Gameplay.Editor
     public static class PyralisAuthoringGuidance
     {
         public const string RelatedByIntent = "Related by the selected route intent.";
-        public const string MatchesCapabilities = "Matches the selected Spine capabilities.";
+        public const string MatchesCapabilities = "Matches the selected capability ingredients.";
         public const string MatchesLane = "Matches the selected lane.";
         public const string GeneralReflectiveFact = "Relevant reflective authoring fact.";
         public const string CautionAgainstLane = "Useful context, but this fact cautions against {0}.";
         public const string MatchingIntentSummary = "Active focus currently resembles {0} for {1}. DNA Axioms provide {2} grounding.";
-        public const string AxiomFoundationSummary = "DNA Axioms define the project as {0}. Engine Spine capabilities: {1}.";
+        public const string AxiomFoundationSummary = "DNA Axioms define the project as {0}. Capability ingredients: {1}.";
     }
 
     public static class PyralisAuthoringIntentAdvisor

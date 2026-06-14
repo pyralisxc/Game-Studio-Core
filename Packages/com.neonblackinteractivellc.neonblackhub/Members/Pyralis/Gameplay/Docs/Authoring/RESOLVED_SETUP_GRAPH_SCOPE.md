@@ -15,7 +15,7 @@ Gameplay systems
 
 The graph is the authoring memory. Tabs are projections. Contracts and existing Unity setup evidence are the source material. Map, Validate, Overview, Guide, Facts, and selected-context surfaces should read graph projections instead of reconstructing route, proof, or validation meaning locally.
 
-The old route-report and validation-card paths are archived and removed. Do not recreate `PyralisAuthoringRouteReport`, `PyralisAuthoringValidationModel`, or tab-local setup card models beside the graph. Route proof cards, capability cards, route analysis, setup-flow validation, scene-readiness validation, and facts still exist where they earn their keep as source inputs, fallback grammar, or audit dictionaries.
+The old route-report and validation-card paths are archived and removed. Do not recreate `PyralisAuthoringRouteReport`, `PyralisAuthoringValidationModel`, or tab-local setup card models beside the graph. Route proof templates, capability vocabulary, route analysis, setup-flow validation, scene-readiness validation, and grammar facts still exist where they earn their keep as source inputs, fallback grammar, or audit dictionaries.
 
 When a graph projection replaces an older active path, archive the useful migration context under `Docs/_Archive/Migration/`, then delete the migrated code or tests instead of leaving a silent parallel implementation behind. The archive is a temporary map for future cleanup; it is not a second source of authoring truth.
 

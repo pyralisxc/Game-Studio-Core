@@ -119,11 +119,14 @@ namespace NeonBlack.Gameplay.Editor
 
     public static class PyralisAuthoringCapabilityDescriptorRegistry
     {
+        private static readonly Lazy<IReadOnlyList<PyralisAuthoringCapabilityDescriptor>> _allDescriptors =
+            new Lazy<IReadOnlyList<PyralisAuthoringCapabilityDescriptor>>(BuildDescriptors);
+
         public static IReadOnlyList<PyralisAuthoringCapabilityDescriptor> All
         {
             get
             {
-                return BuildDescriptors();
+                return _allDescriptors.Value;
             }
         }
 

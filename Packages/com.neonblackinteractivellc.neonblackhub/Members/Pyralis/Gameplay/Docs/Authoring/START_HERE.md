@@ -76,7 +76,7 @@ Use the Authoring Window as a senior setup companion, not a scene generator. It 
 
 When a `GameSetupProfile` is active, the Authoring Window projects the same resolved setup graph through each tab. **Intent** owns route shaping, **Guide** owns graph-filtered route rows and selected-object help, **Overview** owns the next one to three moves, **Map** owns topology, **Validate** owns readiness issues, and **Facts** owns the full dictionary. The tabs read selected runtime capabilities first and optional runtime patterns second, then explain:
 
-- the **Intent** tab DNA axioms, presentation lane, and Engine Spine capabilities that define what kind of game route is being authored
+- the **Intent** tab DNA axioms, presentation lane, and capability ingredients that define what kind of game route is being authored
 - design questions to answer before setup, such as what the player controls, what kind of space the game happens in, and what the first proof of interaction should be
 - what kind of route the setup currently resembles, such as pawn action, brawler/fighter, tabletop, action-selection, projectile, or scoring loop
 - what each selected capability changes in the game
@@ -88,7 +88,7 @@ When a `GameSetupProfile` is active, the Authoring Window projects the same reso
 The Authoring Window guidance is route-aware:
 
 - `GameSetupProfile` stores the runtime capability ingredients you selected. Optional `RuntimePatternDefinition` assets can enrich advanced route metadata, but they are not required for the generic setup path.
-- Intent is the visible route-shaping surface. When a setup profile is active, Intent writes matching runtime capability rows from reflected capability descriptors so Overview, Guide, Map, and Validate read one shared graph.
+- Intent is the visible route-shaping surface. When a setup profile is active, Intent writes matching capability ingredients to `GameSetupProfile.runtimeCapabilities` from reflected capability descriptors so Overview, Guide, Map, and Validate read one shared graph.
 - `GameModeDefinition` uses its setup profile to explain the active route.
 - `SessionDefinition` explains whether participants need pawns, input, seats, hands, factions, camera, cursor, or menu surfaces.
 - `GameplaySessionBootstrap` checks the assigned session chain and shows the consolidated Setup Flow checklist.
@@ -130,7 +130,7 @@ Think of it this way: `GameplaySessionBootstrap` is the first runtime object. `S
 
 - Required:
   - one `Gameplay Root` with `GameplaySessionBootstrap` (+ optional `PyralisGameplayLifetimeScope`);
-  - `SessionDefinition -> GameModeDefinition -> GameSetupProfile -> runtime capability rows`;
+  - `SessionDefinition -> GameModeDefinition -> GameSetupProfile -> capability ingredients`;
   - one default participant with `Input Profile` and `Default Pawn`;
   - one pawn prefab with `PawnRoot`, `Motor2D` + `Motor2DInputAdapter` + `Pawn2DMovementComponent` + `Pawn2DPresentationComponent` (or 2.5D/3D equivalent);
   - the pawn prefab inspected in Prefab Mode or Inspector so every required component/reference is understood and editable. The guided proof should treat the prefab as user-owned setup, not a hidden generated answer;
@@ -168,7 +168,7 @@ Before creating assets, remember:
 Manual path:
 
 - `GameSetupProfile`
-- optional existing `RuntimePatternDefinition` assets only when the generic runtime capability rows need advanced reusable metadata
+- optional existing `RuntimePatternDefinition` assets only when the generic capability ingredients need advanced reusable metadata
 - `SessionDefinition`
 - `GameModeDefinition`
 - `ParticipantDefinition`
@@ -179,7 +179,7 @@ Create new `RuntimePatternDefinition` assets only when the cookbook facts do not
 
 Wire the assets in this order:
 
-1. Use the Authoring Window **Intent** tab to choose DNA axioms, presentation lane, and Engine Spine capabilities. When a `GameSetupProfile` is active, those choices save to `runtimeCapabilities`. Optional `RuntimePatternDefinition` assets are advanced route contracts for extra metadata.
+1. Use the Authoring Window **Intent** tab to choose DNA axioms, presentation lane, and capability ingredients. When a `GameSetupProfile` is active, those choices save to `runtimeCapabilities`. Optional `RuntimePatternDefinition` assets are advanced route contracts for extra metadata.
 2. Assign `GameSetupProfile` to `GameModeDefinition.setupProfile`.
 3. Assign `GameModeDefinition` to `SessionDefinition.defaultGameMode`.
 4. Assign participant definitions to the `SessionDefinition`.

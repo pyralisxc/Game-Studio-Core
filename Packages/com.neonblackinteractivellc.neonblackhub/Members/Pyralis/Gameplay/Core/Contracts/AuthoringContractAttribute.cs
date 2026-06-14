@@ -5,7 +5,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
 {
     /// <summary>
     /// Metadata attribute used to tag classes and interfaces for reflective discovery by the Pyralis Authoring Window.
-    /// This allows the system to automatically surface features in the Guide and Facts tabs without manual registration.
+    /// This allows contracts and reflection to feed the resolved setup graph without manual UI registration.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true)]
     public class AuthoringContractAttribute : Attribute
@@ -40,7 +40,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
         public string RemovableInVersion { get; set; }
 
         /// <summary>
-        /// Stable feature module identity used by reflective authoring and proof-card mapping.
+        /// Stable feature module identity used by reflective authoring and proof-target mapping.
         /// </summary>
         public string ModuleId { get; set; }
 
@@ -88,7 +88,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
 
         /// <summary>
         /// Runtime or authoring interfaces that this contract depends on.
-        /// Use dependency metadata for system relationships that can be reflected from code.
+        /// Omit interfaces implemented directly by the source type; the resolver reflects those automatically.
         /// </summary>
         public Type[] RequiredInterfaces { get; set; }
 
@@ -100,7 +100,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
 
         /// <summary>
         /// Physical Unity components that must be present on the relevant authored object.
-        /// Use this for placement requirements that dependency reflection cannot infer.
+        /// Omit components declared through RequireComponent; the resolver reflects those automatically.
         /// </summary>
         public Type[] RequiredComponents { get; set; }
 
@@ -151,7 +151,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
         public string FirstProof { get; set; }
 
         /// <summary>
-        /// Stable proof-card id used when this contract should route to a first-proof guide.
+        /// Stable proof target id used when this contract should route to first-proof guidance.
         /// Keep FirstProof as human developer guidance; use this only for machine-readable proof routing.
         /// </summary>
         public string FirstProofTargetId { get; set; }

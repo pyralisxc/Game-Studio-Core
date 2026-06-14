@@ -102,7 +102,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
             if ((runtimeCapabilities == null || runtimeCapabilities.Length == 0)
                 && (runtimePatterns == null || runtimePatterns.Length == 0))
             {
-                issues.Add("Open Authoring Window -> Intent, choose DNA axioms and Engine Spine capabilities, then keep this GameSetupProfile active so the route saves to runtime capabilities.");
+                issues.Add("Open Authoring Window -> Intent, choose DNA axioms and capability ingredients, then keep this GameSetupProfile active so the route saves to Runtime Capabilities.");
                 return issues;
             }
 

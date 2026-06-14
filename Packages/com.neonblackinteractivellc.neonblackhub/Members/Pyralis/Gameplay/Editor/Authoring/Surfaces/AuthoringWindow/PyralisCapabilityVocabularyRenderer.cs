@@ -23,10 +23,10 @@ namespace NeonBlack.Gameplay.Editor
 
         public static void Draw(GameSetupProfile setupProfile)
         {
-            EditorGUILayout.LabelField("Capability Vocabulary", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Runtime Capability Reference", EditorStyles.boldLabel);
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                PyralisAuthoringWindowText.DrawSemanticMiniLabel("Browse fallback capability language by game goal or runtime lane. Readiness and setup status come from the graph-backed Overview, Guide, Map, and Validate tabs.");
+                PyralisAuthoringWindowText.DrawSemanticMiniLabel("Use this as a dictionary for capability ingredients. Intent writes selected ingredients into GameSetupProfile.runtimeCapabilities; the graph-backed Overview, Guide, Map, and Validate tabs decide what is ready or missing.");
 
                 DrawRuntimeCapabilityVocabularyByGoal(setupProfile);
                 DrawRuntimeCapabilityVocabularyByLane(setupProfile);

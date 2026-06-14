@@ -174,7 +174,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                         "Choose",
                         PyralisAuthoringActionSurface.AuthoringWindow,
                         "Intent",
-                        "set DNA axioms, choose the presentation lane, and toggle the Engine Spine capabilities that describe this route while the GameSetupProfile is active; leave RuntimePatternDefinition empty unless this route needs an advanced reusable contract",
+                        "set DNA axioms, choose the presentation lane, and toggle the capability ingredients that describe this route while the GameSetupProfile is active; leave RuntimePatternDefinition empty unless this route needs an advanced reusable contract",
                         "Capability ingredients are selected");
                 case PyralisSetupFlowStepId.AssignDefaultParticipants:
                     return new PyralisAuthoringNativeAction(

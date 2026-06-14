@@ -15,7 +15,7 @@ namespace NeonBlack.Gameplay.Editor
         public static void Draw(Object activeSetup, PyralisAuthoringSetupGraph graph)
         {
             EditorGUILayout.LabelField("Fact Explorer", EditorStyles.boldLabel);
-            PyralisAuthoringWindowText.DrawSemanticHelpBox("Read-only coverage view. Facts explain what Pyralis knows about capabilities, setup nodes, proof paths, Inspector handoffs, validation vocabulary, and future convention-derived guidance. Use native Unity surfaces for creation, assignment, customization, and Play Mode proof.", MessageType.Info);
+            PyralisAuthoringWindowText.DrawSemanticHelpBox("Read-only cookbook view. Facts explain Pyralis vocabulary, reflected contracts, proof targets, Inspector handoffs, and validation language. Setup readiness comes from the graph; creation, assignment, customization, and Play Mode proof stay in native Unity surfaces.", MessageType.Info);
 
             IReadOnlyList<PyralisAuthoringFact> facts = PyralisAuthoringSetupGraphProjection.BuildCookbookFacts(graph);
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
@@ -80,7 +80,7 @@ namespace NeonBlack.Gameplay.Editor
             IReadOnlyList<PyralisAuthoringReflectiveContractGraphRow> rows = PyralisAuthoringSetupGraphProjection.BuildReflectiveContractRows(graph);
             EditorGUILayout.Space(8f);
             EditorGUILayout.LabelField("Graph Contract Coverage", EditorStyles.boldLabel);
-            PyralisAuthoringWindowText.DrawSemanticHelpBox("Contract rows shown here are resolved graph nodes. The raw cookbook below remains a migration/reference dictionary.", MessageType.Info);
+            PyralisAuthoringWindowText.DrawSemanticHelpBox("Contract rows shown here are resolved graph nodes. The cookbook below is a read-only dictionary for vocabulary, conventions, and reflected setup language.", MessageType.Info);
 
             if (rows == null || rows.Count == 0)
             {
@@ -305,7 +305,7 @@ namespace NeonBlack.Gameplay.Editor
             if (count == 0)
             {
                 EditorGUI.indentLevel++;
-                EditorGUILayout.LabelField("No facts yet. This is a coverage gap for future Authoring 2.0 work.", EditorStyles.wordWrappedMiniLabel);
+                EditorGUILayout.LabelField("No facts in this dictionary section yet.", EditorStyles.wordWrappedMiniLabel);
                 EditorGUI.indentLevel--;
                 return;
             }
