@@ -106,7 +106,7 @@ namespace NeonBlack.Gameplay.Editor
 
                 EditorGUI.indentLevel++;
                 for (int contractIndex = 0; contractIndex < categoryContracts.Count; contractIndex++)
-                    DrawFeatureContractSetupProfile(categoryContracts[contractIndex]);
+                    DrawFeatureContractSetupDetails(categoryContracts[contractIndex]);
                 EditorGUI.indentLevel--;
             }
         }
@@ -167,7 +167,7 @@ namespace NeonBlack.Gameplay.Editor
             return contractsByCategory;
         }
 
-        private static void DrawFeatureContractSetupProfile(ResolvedAuthoringContract contract)
+        private static void DrawFeatureContractSetupDetails(ResolvedAuthoringContract contract)
         {
             if (contract == null)
                 return;

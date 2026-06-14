@@ -4,9 +4,9 @@ Use this guide for supported 3D combat scene setup. All 3D systems now live unde
 
 ## Before You Wire This
 
-Start with a `GameSetupProfile` assigned to `GameModeDefinition.setupProfile`.
+Start with a `SessionDefinition` assigned to `GameplaySessionBootstrap.sessionDefinition` and a `GameModeDefinition` assigned to `SessionDefinition.defaultGameMode`.
 
-Recommended runtime patterns:
+Recommended route capabilities:
 
 - Realtime Character
 - Combat
@@ -14,7 +14,7 @@ Recommended runtime patterns:
 - Camera/Cursor Control for menu and camera ownership
 - Projectile Combat if the brawler supports guns, spells, thrown objects, turrets, or ranged enemy attacks
 
-Resolve setup-profile validation before wiring menu panels, pawn prefabs, cameras, encounters, enemies, or combat objects.
+Resolve route validation before wiring menu panels, pawn prefabs, cameras, encounters, enemies, or combat objects.
 
 ## Main menu scene
 

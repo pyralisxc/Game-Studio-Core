@@ -252,12 +252,11 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(selectedContextSource.Contains(".description"), Is.False);
             Assert.That(selectedContextSource.Contains(".setupNotes"), Is.False);
             Assert.That(selectedContextSource.Contains(".presentationLanes"), Is.False);
-            Assert.That(selectedContextSource.Contains(".firstProofRequirements"), Is.False);
-            Assert.That(selectedContextSource.Contains(".runtimePatterns"), Is.False);
 
             string graphProjectionPath = FindGameplayEditorFile("PyralisAuthoringSetupGraphProjection.cs");
             string graphProjectionSource = File.ReadAllText(graphProjectionPath);
-            Assert.That(graphProjectionSource.Contains("PyralisRuntimePatternVocabulary"), Is.True);
+            Assert.That(graphProjectionSource.Contains("BuildSelectedContextRow"), Is.True);
+            Assert.That(graphProjectionSource.Contains("BuildSelectedContextDetails"), Is.True);
         }
 
         [Test]
@@ -439,15 +438,15 @@ namespace NeonBlack.Gameplay.Tests.Editor
             string runtimeMarker = File.ReadAllText(runtimeMarkerPath);
             string editorMarker = File.ReadAllText(editorMarkerPath);
 
-            Assert.That(packageJson.Contains("\"version\": \"0.2.0\""), Is.True);
+            Assert.That(packageJson.Contains("\"version\": \"0.2.8\""), Is.True);
             Assert.That(packageJson.Contains("\"samples\""), Is.True);
             Assert.That(packageJson.Contains("\"Samples~/Example\""), Is.True);
             Assert.That(packageJson.Contains("\"com.unity.addressables\": \"2.9.1\""), Is.True);
             Assert.That(packageJson.Contains("\"com.unity.localization\": \"1.5.8\""), Is.True);
             Assert.That(packageJson.Contains("\"com.unity.netcode.gameobjects\": \"2.10.0\""), Is.True);
             Assert.That(packageJson.Contains("\"com.unity.transport\": \"2.6.0\""), Is.True);
-            Assert.That(runtimeMarker.Contains("Version   = \"0.2.0\""), Is.True);
-            Assert.That(editorMarker.Contains("Version   = \"0.2.0\""), Is.True);
+            Assert.That(runtimeMarker.Contains("Version   = \"0.2.8\""), Is.True);
+            Assert.That(editorMarker.Contains("Version   = \"0.2.8\""), Is.True);
         }
 
         [Test]

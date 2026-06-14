@@ -196,7 +196,7 @@ Status: foundational code added.
 
 Required platform capabilities:
 
-- hub runtime pattern definition.
+- hub capability vocabulary and graph proof nodes.
 - hub entrances, portals, quest boards, vendors, loadout stations, skill trainers, and minigame launch points.
 - scene-flow integration through existing shell/loading systems.
 - setup validation for missing destination scenes, missing conditions, and unresolved reward targets.

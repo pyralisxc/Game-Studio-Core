@@ -20,7 +20,7 @@ namespace NeonBlack.Gameplay.Editor
                 ? currentStep.Message
                 : model.FirstProofGuidance;
             PyralisAuthoringWindowText.DrawSemanticHelpBox(guidance, MessageType.Info);
-            PyralisAuthoringWindowPrimitives.DrawMiniField("Intent vs Setup", "Intent chooses capability ingredients. The setup profile stores them; Project, Hierarchy, and Inspector create and wire the user's actual setup.");
+            PyralisAuthoringWindowPrimitives.DrawMiniField("Intent vs Setup", "Intent chooses capability ingredients for graph focus; Project, Hierarchy, and Inspector create and wire the user's actual setup.");
             PyralisAuthoringWindowPrimitives.DrawMiniField("Next", currentStep != null && !string.IsNullOrWhiteSpace(currentStep.Label) ? currentStep.Label : model.BestNextAction);
             if (currentStep != null && currentStep.NativeAction.HasValue)
                 PyralisAuthoringSurfaceBeacon.DrawNativeAction(currentStep.NativeAction.Value, currentStep.NativeAction.Value.ToGuidanceSentence());

@@ -49,7 +49,7 @@ bootstrap configuration, participant/session services, or feature-owned runtime 
 a parallel registry or broad static service locator beside VContainer.
 
 Static compatibility surfaces are not the beginner dependency path. Keep them narrow, document why
-they still exist, and prefer explicit runtime contracts when adding new dependencies.
+they still exist, and prefer explicit reflected contracts when adding new dependencies.
 
 ### Scene Navigation
 

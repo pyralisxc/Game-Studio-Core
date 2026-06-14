@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Characters;
+using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
-using NeonBlack.Gameplay.Data.Profiles;
 using UnityEditor;
 using UnityEngine;
 
@@ -57,12 +57,7 @@ namespace NeonBlack.Gameplay.Editor
         private PyralisSetupRouteAnalysis(
             SessionDefinition session,
             GameModeDefinition mode,
-            GameSetupProfile setupProfile,
-            RuntimePatternDefinition[] patterns,
             RuntimeCapabilityFamily[] capabilityFamilies,
-            string[] requiredRuntimeSystems,
-            bool hasAssignedPatterns,
-            bool hasValidPatterns,
             bool requiresPawn,
             bool hasParticipants,
             bool hasAnyDefaultPawn,
@@ -72,12 +67,8 @@ namespace NeonBlack.Gameplay.Editor
         {
             Session = session;
             Mode = mode;
-            SetupProfile = setupProfile;
-            Patterns = patterns;
             CapabilityFamilies = capabilityFamilies ?? System.Array.Empty<RuntimeCapabilityFamily>();
-            RequiredRuntimeSystems = requiredRuntimeSystems;
-            HasAssignedPatterns = hasAssignedPatterns;
-            HasValidPatterns = hasValidPatterns;
+            HasSelectedCapabilities = CapabilityFamilies.Length > 0;
             RequiresPawn = requiresPawn;
             HasParticipants = hasParticipants;
             HasAnyDefaultPawn = hasAnyDefaultPawn;
@@ -88,12 +79,8 @@ namespace NeonBlack.Gameplay.Editor
 
         public SessionDefinition Session { get; }
         public GameModeDefinition Mode { get; }
-        public GameSetupProfile SetupProfile { get; }
-        public RuntimePatternDefinition[] Patterns { get; }
         public RuntimeCapabilityFamily[] CapabilityFamilies { get; }
-        public string[] RequiredRuntimeSystems { get; }
-        public bool HasAssignedPatterns { get; }
-        public bool HasValidPatterns { get; }
+        public bool HasSelectedCapabilities { get; }
         public bool RequiresPawn { get; }
         public bool HasParticipants { get; }
         public bool HasAnyDefaultPawn { get; }
@@ -106,7 +93,7 @@ namespace NeonBlack.Gameplay.Editor
         {
             get
             {
-                if (SetupProfile == null || !HasValidPatterns)
+                if (!HasSelectedCapabilities)
                     return "No setup route selected";
 
                 if (RouteFacts.Length == 0)
@@ -121,44 +108,38 @@ namespace NeonBlack.Gameplay.Editor
         public static PyralisSetupRouteAnalysis Build(GameplaySessionBootstrap bootstrap)
         {
             PyralisSetupDependencyTree dependencyTree = PyralisSetupDependencyTree.Build(bootstrap);
-            return BuildResolved(dependencyTree.Session, dependencyTree.Mode, dependencyTree.SetupProfile);
+            return BuildResolved(dependencyTree.Session, dependencyTree.Mode);
         }
 
         public static PyralisSetupRouteAnalysis Build(SessionDefinition session)
         {
             PyralisSetupDependencyTree dependencyTree = PyralisSetupDependencyTree.Build(session);
-            return BuildResolved(dependencyTree.Session, dependencyTree.Mode, dependencyTree.SetupProfile);
+            return BuildResolved(dependencyTree.Session, dependencyTree.Mode);
         }
 
         public static PyralisSetupRouteAnalysis Build(GameModeDefinition mode, SessionDefinition session = null)
         {
             PyralisSetupDependencyTree dependencyTree = PyralisSetupDependencyTree.Build(session != null ? session : mode);
             GameModeDefinition resolvedMode = mode != null ? mode : dependencyTree.Mode;
-            GameSetupProfile resolvedSetupProfile = resolvedMode != null ? resolvedMode.setupProfile : dependencyTree.SetupProfile;
-            return BuildResolved(session != null ? session : dependencyTree.Session, resolvedMode, resolvedSetupProfile);
+            return BuildResolved(session != null ? session : dependencyTree.Session, resolvedMode);
         }
 
-        public static PyralisSetupRouteAnalysis Build(GameSetupProfile setupProfile, SessionDefinition session = null, GameModeDefinition mode = null)
+        public static PyralisSetupRouteAnalysis Build(UnityEngine.Object source)
         {
-            UnityEngine.Object dependencySource = session != null
-                ? session
-                : mode != null
-                    ? mode
-                    : setupProfile;
-            PyralisSetupDependencyTree dependencyTree = PyralisSetupDependencyTree.Build(dependencySource);
-            GameModeDefinition resolvedMode = mode != null ? mode : dependencyTree.Mode;
-            GameSetupProfile resolvedSetupProfile = setupProfile != null ? setupProfile : resolvedMode != null ? resolvedMode.setupProfile : dependencyTree.SetupProfile;
-            return BuildResolved(session != null ? session : dependencyTree.Session, resolvedMode, resolvedSetupProfile);
+            if (source is GameplaySessionBootstrap bootstrap)
+                return Build(bootstrap);
+            if (source is SessionDefinition session)
+                return Build(session);
+            if (source is GameModeDefinition mode)
+                return Build(mode);
+
+            return BuildResolved(null, null);
         }
 
-        private static PyralisSetupRouteAnalysis BuildResolved(SessionDefinition session, GameModeDefinition mode, GameSetupProfile setupProfile)
+        private static PyralisSetupRouteAnalysis BuildResolved(SessionDefinition session, GameModeDefinition mode)
         {
-            RuntimePatternDefinition[] patterns = setupProfile != null ? setupProfile.runtimePatterns : null;
-            RuntimeCapabilityFamily[] capabilityFamilies = CollectCapabilityFamilies(setupProfile, patterns);
-            string[] requiredRuntimeSystems = CollectRequiredRuntimeSystems(patterns);
-            bool hasAssignedPatterns = capabilityFamilies.Length > 0 || CheckHasAssignedPatterns(patterns);
-            bool hasValidPatterns = capabilityFamilies.Length > 0 || CheckHasValidPatterns(patterns);
-            bool requiresPawn = ContainsFamily(capabilityFamilies, RuntimeCapabilityFamily.CharacterPawnGameplay) || RequiresPawnPattern(patterns);
+            RuntimeCapabilityFamily[] capabilityFamilies = CollectCapabilityFamilies(session, mode);
+            bool requiresPawn = ContainsFamily(capabilityFamilies, RuntimeCapabilityFamily.CharacterPawnGameplay);
             bool hasParticipants = CheckHasParticipants(session);
             bool hasAnyDefaultPawn = CheckHasAnyDefaultPawn(session);
             string participantPawnIssue = GetParticipantPawnIssue(session, out PyralisParticipantPawnIssueKind participantPawnIssueKind);
@@ -167,12 +148,7 @@ namespace NeonBlack.Gameplay.Editor
             return new PyralisSetupRouteAnalysis(
                 session,
                 mode,
-                setupProfile,
-                patterns,
                 capabilityFamilies,
-                requiredRuntimeSystems,
-                hasAssignedPatterns,
-                hasValidPatterns,
                 requiresPawn,
                 hasParticipants,
                 hasAnyDefaultPawn,
@@ -183,22 +159,15 @@ namespace NeonBlack.Gameplay.Editor
 
         public bool UsesCamera()
         {
-            return RequiresAnyFirstProof(
-                    RuntimePatternFirstProofRequirement.CameraRig,
-                    RuntimePatternFirstProofRequirement.CameraBounds2D,
-                    RuntimePatternFirstProofRequirement.CameraBoundsService)
-                || HasFamily(RuntimeCapabilityFamily.CameraInput)
-                || SupportsSurface(RuntimeControlSurface.Camera)
-                || SupportsSurface(RuntimeControlSurface.Cursor);
+            return HasFamily(RuntimeCapabilityFamily.CameraInput);
         }
 
         public bool LikelyUsesInputManager()
         {
-            return RequiresFirstProof(RuntimePatternFirstProofRequirement.PlayerInputManager)
-                || Session != null
+            return Session != null
                 && Session.networkMode == GameplayNetworkMode.LocalOnly
                 && Session.GetEffectiveMaxParticipants() > 1
-                && SupportsSurface(RuntimeControlSurface.Pawn);
+                && UsesPawnGameplay();
         }
 
         public bool UsesPlayfield()
@@ -210,178 +179,37 @@ namespace NeonBlack.Gameplay.Editor
 
         public bool UsesScoring()
         {
-            return RequiresFirstProof(RuntimePatternFirstProofRequirement.ScoreService)
-                || HasFamily(RuntimeCapabilityFamily.ScoringObjectives);
+            return HasFamily(RuntimeCapabilityFamily.ScoringObjectives);
         }
 
         public bool UsesPawnGameplay()
         {
-            return HasFamily(RuntimeCapabilityFamily.CharacterPawnGameplay)
-                || SupportsSurface(RuntimeControlSurface.Pawn);
+            return HasFamily(RuntimeCapabilityFamily.CharacterPawnGameplay);
         }
 
         public bool Requires2DCameraBounds()
         {
-            if (!UsesPawnGameplay() || Patterns == null)
-                return false;
-
-            bool hasExplicitFirstProofRequirements = false;
-            for (int i = 0; i < Patterns.Length; i++)
-            {
-                RuntimePatternDefinition pattern = Patterns[i];
-                if (!IsValidPattern(pattern))
-                    continue;
-
-                if (pattern.firstProofRequirements != RuntimePatternFirstProofRequirement.None)
-                {
-                    hasExplicitFirstProofRequirements = true;
-                    if (pattern.RequiresFirstProof(RuntimePatternFirstProofRequirement.CameraBounds2D))
-                        return true;
-                }
-            }
-
-            if (hasExplicitFirstProofRequirements)
-                return false;
-
-            for (int i = 0; i < Patterns.Length; i++)
-            {
-                RuntimePatternDefinition pattern = Patterns[i];
-                if (!IsValidPattern(pattern))
-                    continue;
-
-                string patternText = $"{pattern.patternId} {pattern.displayName} {pattern.description} {pattern.setupNotes}";
-                if (ContainsIgnoreCase(patternText, "3d")
-                    || ContainsIgnoreCase(patternText, "3D")
-                    || ContainsIgnoreCase(patternText, "billboard")
-                    || ContainsIgnoreCase(patternText, "rigged"))
-                {
-                    continue;
-                }
-
-                if (ContainsIgnoreCase(patternText, "2d")
-                    || ContainsIgnoreCase(patternText, "2D")
-                    || ContainsIgnoreCase(patternText, "sprite"))
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return UsesPawnGameplay() && Mode != null && Mode.cameraRigProfile != null;
         }
 
         public bool UsesProjectileCombat()
         {
-            return RequiresFirstProof(RuntimePatternFirstProofRequirement.ProjectileOrHitboxSource)
-                || HasFamily(RuntimeCapabilityFamily.GunsProjectiles);
+            return HasFamily(RuntimeCapabilityFamily.GunsProjectiles);
         }
 
         public bool UsesTabletopContract()
         {
-            return RequiresFirstProof(RuntimePatternFirstProofRequirement.TabletopRuntimeContract)
-                || HasFamily(RuntimeCapabilityFamily.BoardCardTabletop)
-                || SupportsSurface(RuntimeControlSurface.BoardSeat)
-                || SupportsSurface(RuntimeControlSurface.BoardPiece)
-                || SupportsSurface(RuntimeControlSurface.CardHand);
+            return HasFamily(RuntimeCapabilityFamily.BoardCardTabletop);
         }
 
         public bool UsesActionSelection()
         {
-            return RequiresFirstProof(RuntimePatternFirstProofRequirement.SelectionSurface)
-                || HasFamily(RuntimeCapabilityFamily.ActionTargeting)
-                || SupportsSurface(RuntimeControlSurface.MenuSelection)
-                || SupportsSurface(RuntimeControlSurface.Cursor)
-                || SupportsSurface(RuntimeControlSurface.CardHand);
-        }
-
-        public bool RequiresFirstProof(RuntimePatternFirstProofRequirement requirement)
-        {
-            if (Patterns == null || requirement == RuntimePatternFirstProofRequirement.None)
-                return false;
-
-            for (int i = 0; i < Patterns.Length; i++)
-            {
-                RuntimePatternDefinition pattern = Patterns[i];
-                if (IsValidPattern(pattern) && pattern.RequiresFirstProof(requirement))
-                    return true;
-            }
-
-            return false;
-        }
-
-        private bool RequiresAnyFirstProof(params RuntimePatternFirstProofRequirement[] requirements)
-        {
-            if (requirements == null)
-                return false;
-
-            for (int i = 0; i < requirements.Length; i++)
-            {
-                if (RequiresFirstProof(requirements[i]))
-                    return true;
-            }
-
-            return false;
-        }
-
-        public bool RequiresRuntimeSystem(string token)
-        {
-            if (RequiredRuntimeSystems == null || string.IsNullOrWhiteSpace(token))
-                return false;
-
-            for (int i = 0; i < RequiredRuntimeSystems.Length; i++)
-            {
-                string requiredSystem = RequiredRuntimeSystems[i];
-                if (!string.IsNullOrWhiteSpace(requiredSystem)
-                    && requiredSystem.IndexOf(token, System.StringComparison.OrdinalIgnoreCase) >= 0)
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return HasFamily(RuntimeCapabilityFamily.ActionTargeting);
         }
 
         private bool HasFamily(RuntimeCapabilityFamily family)
         {
-            if (ContainsFamily(CapabilityFamilies, family))
-                return true;
-
-            if (Patterns == null)
-                return false;
-            for (int i = 0; i < Patterns.Length; i++)
-            {
-                if (IsValidPattern(Patterns[i]) && Patterns[i].capabilityFamily == family)
-                    return true;
-            }
-
-            return false;
-        }
-
-        private bool SupportsSurface(RuntimeControlSurface surface)
-        {
-            if (Patterns == null)
-                return false;
-
-            for (int i = 0; i < Patterns.Length; i++)
-            {
-                if (IsValidPattern(Patterns[i]) && Patterns[i].SupportsControlSurface(surface))
-                    return true;
-            }
-
-            return false;
-        }
-
-        private static bool CheckHasAssignedPatterns(RuntimePatternDefinition[] patterns)
-        {
-            if (patterns == null)
-                return false;
-
-            for (int i = 0; i < patterns.Length; i++)
-            {
-                if (patterns[i] != null)
-                    return true;
-            }
-
-            return false;
+            return ContainsFamily(CapabilityFamilies, family);
         }
 
         private static bool ContainsIgnoreCase(string value, string token)
@@ -391,97 +219,110 @@ namespace NeonBlack.Gameplay.Editor
                 && value.IndexOf(token, System.StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
-        private static bool CheckHasValidPatterns(RuntimePatternDefinition[] patterns)
-        {
-            if (patterns == null)
-                return false;
-
-            for (int i = 0; i < patterns.Length; i++)
-            {
-                if (IsValidPattern(patterns[i]))
-                    return true;
-            }
-
-            return false;
-        }
-
-        private static string[] CollectRequiredRuntimeSystems(RuntimePatternDefinition[] patterns)
-        {
-            if (patterns == null)
-                return System.Array.Empty<string>();
-
-            List<string> requiredSystems = new List<string>();
-            for (int i = 0; i < patterns.Length; i++)
-            {
-                RuntimePatternDefinition pattern = patterns[i];
-                if (!IsValidPattern(pattern) || pattern.requiredRuntimeSystems == null)
-                    continue;
-
-                for (int systemIndex = 0; systemIndex < pattern.requiredRuntimeSystems.Length; systemIndex++)
-                {
-                    string requiredSystem = pattern.requiredRuntimeSystems[systemIndex];
-                    if (string.IsNullOrWhiteSpace(requiredSystem) || Contains(requiredSystems, requiredSystem))
-                        continue;
-
-                    requiredSystems.Add(requiredSystem.Trim());
-                }
-            }
-
-            return requiredSystems.ToArray();
-        }
-
-        private static bool Contains(List<string> values, string candidate)
-        {
-            for (int i = 0; i < values.Count; i++)
-            {
-                if (string.Equals(values[i], candidate, System.StringComparison.OrdinalIgnoreCase))
-                    return true;
-            }
-
-            return false;
-        }
-
-        private static bool RequiresPawnPattern(RuntimePatternDefinition[] patterns)
-        {
-            if (patterns == null)
-                return false;
-
-            for (int i = 0; i < patterns.Length; i++)
-            {
-                RuntimePatternDefinition pattern = patterns[i];
-                if (IsValidPattern(pattern) && pattern.participantEmbodiment == ParticipantEmbodimentRequirement.RequiredPawn)
-                    return true;
-            }
-
-            return false;
-        }
-
-        private static RuntimeCapabilityFamily[] CollectCapabilityFamilies(GameSetupProfile setupProfile, RuntimePatternDefinition[] patterns)
+        private static RuntimeCapabilityFamily[] CollectCapabilityFamilies(SessionDefinition session, GameModeDefinition mode)
         {
             List<RuntimeCapabilityFamily> families = new List<RuntimeCapabilityFamily>();
-            if (setupProfile != null && setupProfile.runtimeCapabilities != null)
-            {
-                for (int i = 0; i < setupProfile.runtimeCapabilities.Length; i++)
-                {
-                    RuntimeCapabilitySelection selection = setupProfile.runtimeCapabilities[i];
-                    if (selection == null)
-                        continue;
-
-                    AddFamily(families, selection.capabilityFamily);
-                }
-            }
-
-            if (patterns != null)
-            {
-                for (int i = 0; i < patterns.Length; i++)
-                {
-                    RuntimePatternDefinition pattern = patterns[i];
-                    if (IsValidPattern(pattern))
-                        AddFamily(families, pattern.capabilityFamily);
-                }
-            }
+            AddFamiliesFromMode(families, mode);
+            AddFamiliesFromParticipants(families, session);
 
             return families.ToArray();
+        }
+
+        private static void AddFamiliesFromMode(List<RuntimeCapabilityFamily> families, GameModeDefinition mode)
+        {
+            if (mode == null)
+                return;
+
+            AddFamily(families, RuntimeCapabilityFamily.PlatformCore);
+
+            if (mode.requiredFeatureModules != null && mode.requiredFeatureModules.Length > 0)
+            {
+                for (int i = 0; i < mode.requiredFeatureModules.Length; i++)
+                    AddFamiliesFromFeatureModule(families, mode.requiredFeatureModules[i]);
+            }
+
+            if (mode.enableCombat)
+                AddFamily(families, RuntimeCapabilityFamily.Combat);
+            if (mode.enableScore)
+                AddFamily(families, RuntimeCapabilityFamily.ScoringObjectives);
+            if (mode.boardDefinition != null || mode.turnOrderDefinition != null || mode.boardTerminalConditions != null && mode.boardTerminalConditions.Length > 0)
+                AddFamily(families, RuntimeCapabilityFamily.BoardCardTabletop);
+            if (mode.cameraRigProfile != null)
+                AddFamily(families, RuntimeCapabilityFamily.CameraInput);
+            if (mode.playfieldProfile != null)
+                AddFamily(families, RuntimeCapabilityFamily.CharacterPawnGameplay);
+        }
+
+        private static void AddFamiliesFromParticipants(List<RuntimeCapabilityFamily> families, SessionDefinition session)
+        {
+            if (session == null)
+                return;
+
+            if (session.networkMode != GameplayNetworkMode.LocalOnly)
+                AddFamily(families, RuntimeCapabilityFamily.Networking);
+
+            if (session.defaultInputProfile != null)
+                AddFamily(families, RuntimeCapabilityFamily.CameraInput);
+
+            if (session.defaultParticipants == null)
+                return;
+
+            for (int i = 0; i < session.defaultParticipants.Length; i++)
+            {
+                ParticipantDefinition participant = session.defaultParticipants[i];
+                if (participant == null)
+                    continue;
+
+                if (participant.inputProfile != null)
+                    AddFamily(families, RuntimeCapabilityFamily.CameraInput);
+
+                PawnDefinition pawn = participant.defaultPawn;
+                if (pawn == null)
+                    continue;
+
+                AddFamily(families, RuntimeCapabilityFamily.CharacterPawnGameplay);
+
+                if (pawn.combatProfile != null)
+                    AddFamily(families, RuntimeCapabilityFamily.Combat);
+                if (pawn.presentationProfile != null || pawn.animationProfile != null)
+                    AddFamily(families, RuntimeCapabilityFamily.AnimationPresentation);
+                if (pawn.defaultInputProfile != null)
+                    AddFamily(families, RuntimeCapabilityFamily.CameraInput);
+                if (pawn.featureModules != null)
+                {
+                    for (int moduleIndex = 0; moduleIndex < pawn.featureModules.Length; moduleIndex++)
+                        AddFamiliesFromFeatureModule(families, pawn.featureModules[moduleIndex]);
+                }
+            }
+        }
+
+        private static void AddFamiliesFromFeatureModule(List<RuntimeCapabilityFamily> families, FeatureModuleDefinition module)
+        {
+            if (module == null)
+                return;
+
+            ResolvedAuthoringContract contract = ResolvedAuthoringContractRegistry.FindByModuleId(module.moduleId);
+            if (contract != null)
+            {
+                RuntimeCapabilityFamily[] reflectedFamilies = PyralisAuthoringCapabilityDescriptorRegistry.BuildRuntimeFamilies(
+                    contract.Capability,
+                    RuntimeCapabilityLaneTag.Mixed,
+                    contract.Axioms);
+                for (int i = 0; i < reflectedFamilies.Length; i++)
+                    AddFamily(families, reflectedFamilies[i]);
+            }
+
+            string haystack = $"{module.moduleId} {module.displayName} {module.authoringCategory}";
+            if (ContainsIgnoreCase(haystack, "combat") || ContainsIgnoreCase(haystack, "damage"))
+                AddFamily(families, RuntimeCapabilityFamily.Combat);
+            if (ContainsIgnoreCase(haystack, "projectile") || ContainsIgnoreCase(haystack, "gun"))
+                AddFamily(families, RuntimeCapabilityFamily.GunsProjectiles);
+            if (ContainsIgnoreCase(haystack, "score") || ContainsIgnoreCase(haystack, "objective"))
+                AddFamily(families, RuntimeCapabilityFamily.ScoringObjectives);
+            if (ContainsIgnoreCase(haystack, "input") || ContainsIgnoreCase(haystack, "camera"))
+                AddFamily(families, RuntimeCapabilityFamily.CameraInput);
+            if (ContainsIgnoreCase(haystack, "animation") || ContainsIgnoreCase(haystack, "presentation") || ContainsIgnoreCase(haystack, "feedback"))
+                AddFamily(families, RuntimeCapabilityFamily.AnimationPresentation);
         }
 
         private static void AddFamily(List<RuntimeCapabilityFamily> families, RuntimeCapabilityFamily family)
@@ -584,23 +425,6 @@ namespace NeonBlack.Gameplay.Editor
                 default:
                     return false;
             }
-        }
-
-        private static bool ContainsFamily(RuntimePatternDefinition[] patterns, RuntimeCapabilityFamily family)
-        {
-            for (int i = 0; i < patterns.Length; i++)
-            {
-                RuntimePatternDefinition pattern = patterns[i];
-                if (IsValidPattern(pattern) && pattern.capabilityFamily == family)
-                    return true;
-            }
-
-            return false;
-        }
-
-        private static bool IsValidPattern(RuntimePatternDefinition pattern)
-        {
-            return pattern != null && pattern.GetValidationIssues().Count == 0;
         }
 
         private static bool CheckHasParticipants(SessionDefinition session)

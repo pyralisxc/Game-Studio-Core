@@ -1,18 +1,18 @@
-# Optional Runtime Contract Cookbook
+# Route Capability Cookbook
 
-Use this guide only when a selected `GameSetupProfile.runtimeCapabilities` row needs advanced reusable metadata. First-shape setup through Runtime Capabilities; optional `RuntimePatternDefinition` assets can enrich a route with presentation/runtime lanes, control surfaces, and first-proof requirements when the generic capability language is not enough.
+Use this guide when choosing the capability language for a route. First-shape setup comes from `SessionDefinition`, `GameModeDefinition`, participants, pawns, feature modules, scene evidence, contracts/reflection, and grammar vocabulary. Do not create or assign a separate gameplay asset for route capability metadata.
 
 ## Core Rule
 
-A game setup can use more than one runtime capability. Optional runtime contracts describe additional control surfaces and proof requirements, not exclusive genres or presets.
+A game setup can use more than one runtime capability. Reflected contracts and grammar vocabulary describe control surfaces and proof requirements; they are not exclusive genres or presets.
 
-Select capability families in `GameSetupProfile`, then assign that setup profile to `GameModeDefinition.setupProfile`. When an optional runtime contract is used, it should declare presentation/runtime lanes and first-proof requirements so Overview, Guide, Map, and Validate can explain the same setup facts without text guessing.
+Use Intent to filter the graph, then wire the actual setup through `SessionDefinition.defaultGameMode`, `GameModeDefinition` fields, participants, pawns, feature modules, scene evidence, contracts/reflection, and grammar vocabulary. First-proof requirements should resolve as graph proof nodes so Overview, Guide, Map, and Validate can explain the same setup facts without text guessing.
 
-Authoring should react to selected capabilities first and optional contracts second. A pawn action setup should prioritize pawn prefab, input, spawn, camera, and movement proof. A tabletop setup should not ask for pawn fields; it should prioritize board/card/action/cursor surfaces. A scoring setup should not block Play Mode before one score-changing event exists. The route should guide the developer's creative choices instead of forcing every game through one starter scene.
+Authoring should react to graph-filtered capabilities. A pawn action setup should prioritize pawn prefab, input, spawn, camera, and movement proof. A tabletop setup should not ask for pawn fields; it should prioritize board/card/action/cursor surfaces. A scoring setup should not block Play Mode before one score-changing event exists. The route should guide the developer's creative choices instead of forcing every game through one starter scene.
 
-## Common Optional Contract Overlaps
+## Common Capability Overlaps
 
-| Game direction | Recommended patterns | Pawn required? |
+| Game direction | Capability filters | Pawn required? |
 |---|---|---|
 | 2D arcade score loop | Realtime Character, Scoring/Objectives, Camera/Cursor Control | Usually |
 | 2D procedural sidescroller | Realtime Character, Procedural Generation, Scoring/Objectives, Animation/Presentation | Usually |
@@ -52,8 +52,8 @@ Avoid `PawnRoot` when the participant controls a board, hand of cards, cursor, c
 
 Before wiring scene objects:
 
-- the `GameSetupProfile` includes every major runtime surface the scene expects
-- `GameModeDefinition.setupProfile` is assigned
+- the reflected route includes every major runtime surface the scene expects
+- `SessionDefinition.defaultGameMode` is assigned and required `GameModeDefinition` fields are filled
 - pawn-required setups have a participant and pawn authoring path
 - non-pawn setups include a camera, cursor, menu, board, or UI control path
 - projectile-heavy setups include projectile combat

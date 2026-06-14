@@ -1,4 +1,4 @@
-﻿# Multiplayer Setup - Step-by-Step
+# Multiplayer Setup - Step-by-Step
 
 Covers two different multiplayer routes:
 
@@ -11,15 +11,15 @@ Do not mix those routes accidentally. Local multiplayer is for one Unity process
 
 ## Before You Wire This
 
-Start with a `GameSetupProfile` assigned to `GameModeDefinition.setupProfile`.
+Start with a `SessionDefinition` assigned to `GameplaySessionBootstrap.sessionDefinition` and a `GameModeDefinition` assigned to `SessionDefinition.defaultGameMode`.
 
-Recommended runtime patterns:
+Recommended route capabilities:
 
 - Realtime Character for local co-op or versus pawn play
 - Camera/Cursor Control when participants control a camera, cursor, menu, faction, or tabletop seat
 - Board/Card/Tabletop for local shared-board or shared-card games
 
-Resolve setup-profile validation before assigning participant slots, player input, split-screen settings, spawn points, or camera behavior.
+Resolve route validation before assigning participant slots, player input, split-screen settings, spawn points, or camera behavior.
 
 ---
 

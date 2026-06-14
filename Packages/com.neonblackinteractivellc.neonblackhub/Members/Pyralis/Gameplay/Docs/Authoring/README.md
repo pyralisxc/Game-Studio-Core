@@ -13,7 +13,7 @@ The Authoring Window, Inspector field guides, setup validation, and route facts 
 | I am improving the Authoring Window | `AUTHORING_BLUEPRINT.md`, then `AUTHORING_MODEL.md` |
 | I am working on the resolved setup graph | `RESOLVED_SETUP_GRAPH_SCOPE.md`, then `AUTHORING_BLUEPRINT.md` |
 | I need the technical contract | `CANONICAL_SETUP.md` |
-| I need to choose runtime patterns | `RUNTIME_PATTERN_COOKBOOK.md` |
+| I need to choose route capabilities | `ROUTE_CAPABILITY_COOKBOOK.md` |
 | I need scene-level route requirements | `SCENE_SETUP_GUIDE.md` |
 | I need feature or prefab wiring | the matching guide in `Prefabs/` |
 | I am changing architecture or folder rules | `Systems/Architecture_Overview.md`, `Systems/Migration_and_Readability_Standard.md` |
@@ -22,10 +22,9 @@ The Authoring Window, Inspector field guides, setup validation, and route facts 
 
 Most game setups use this chain:
 
-1. `GameSetupProfile` with selected runtime capability ingredients
-2. optional existing `RuntimePatternDefinition` assets only when generic capabilities need advanced reusable metadata
-3. `GameModeDefinition`
-4. `SessionDefinition`
+1. `SessionDefinition` and `GameModeDefinition` with participants, pawns, feature modules, scene evidence, contracts/reflection, and grammar vocabulary
+2. `GameModeDefinition`
+3. `SessionDefinition`
 5. `ParticipantDefinition`
 6. `PawnDefinition` only when the game needs pawn-backed actor bodies
 

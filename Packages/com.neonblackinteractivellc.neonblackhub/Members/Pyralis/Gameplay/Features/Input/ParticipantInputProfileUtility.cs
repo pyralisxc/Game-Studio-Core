@@ -119,7 +119,7 @@ namespace NeonBlack.Gameplay.Features.Input
         public static bool HasRequiredBinding(InputProfile profile, GameplayInputActionRole role)
         {
             GameplayInputActionBinding binding = profile != null ? profile.FindBinding(role) : null;
-            return binding != null && binding.requiredForProof;
+            return binding != null && binding.requiredForGameplay;
         }
 
         public static void LogMissingAction(Object context, string componentName, InputProfile profile, string actionRole, string actionName)

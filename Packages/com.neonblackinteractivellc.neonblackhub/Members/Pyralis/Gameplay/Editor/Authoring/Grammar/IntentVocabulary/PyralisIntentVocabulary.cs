@@ -29,7 +29,7 @@ namespace NeonBlack.Gameplay.Editor
                     laneTags: new[] { RuntimeCapabilityLaneTag.Sprite2D.ToString() },
                     assignmentFields: new[]
                     {
-                        "GameSetupProfile.runtimeCapabilities -> 2D movement ingredients",
+                        "Intent capability filter -> 2D movement ingredients",
                         "PawnDefinition.pawnPrefab -> Sprite2D pawn prefab",
                         "PawnMovementProfile -> side-view movement and jump feel"
                     },
@@ -272,7 +272,7 @@ namespace NeonBlack.Gameplay.Editor
                     },
                     assignmentFields: new[]
                     {
-                        "GameSetupProfile.runtimeCapabilities -> tabletop/action ingredients",
+                        "Intent capability filter -> tabletop/action ingredients",
                         "SessionDefinition.defaultParticipants -> seats, factions, hands, or command owners",
                         "ActionDefinition -> legal action or card command"
                     },
@@ -359,7 +359,7 @@ namespace NeonBlack.Gameplay.Editor
                     },
                     assignmentFields: new[]
                     {
-                        "GameSetupProfile.runtimeCapabilities -> selected ingredients",
+                        "Intent capability filter -> selected ingredients",
                         "FeatureModuleDefinition -> custom reusable systems when they graduate into Pyralis",
                         "Proof target facts -> choose the first small observable chain"
                     },

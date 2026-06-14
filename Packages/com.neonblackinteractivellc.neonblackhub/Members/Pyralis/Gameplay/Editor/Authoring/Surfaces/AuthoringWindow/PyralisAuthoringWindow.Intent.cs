@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
-using NeonBlack.Gameplay.Data.Profiles;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -39,7 +38,7 @@ namespace NeonBlack.Gameplay.Editor
             var capTitle = new Label("CAPABILITY INGREDIENTS");
             capTitle.AddToClassList("section-title");
             capabilityContainer.Add(capTitle);
-            var capHelp = new Label("Toggle the gameplay ingredients this route needs. These are not presets; they become setup-profile capability rows that the graph uses to explain what to create and wire.");
+            var capHelp = new Label("Toggle the gameplay ingredients this route needs. These are not presets; Intent filters the graph while gameplay setup stays in native Unity assets and scene objects.");
             capHelp.style.whiteSpace = WhiteSpace.Normal;
             capHelp.style.opacity = 0.75f;
             capHelp.style.marginBottom = 6f;
@@ -75,10 +74,6 @@ namespace NeonBlack.Gameplay.Editor
             guideButton.tooltip = "Show the graph-filtered route guide for this intent without applying a preset.";
             var overviewButton = new Button(() => SwitchMode(AuthoringWindowMode.Overview)) { text = "Open Overview" };
             overviewButton.tooltip = "Return to the current setup route once a scene root or setup asset exists.";
-            var applyButton = new Button(ApplyIntentToActiveSetupProfile) { text = "Apply Capability Ingredients", name = "applyIntentToSetupProfile" };
-            applyButton.tooltip = "Write only the selected capability families into the active GameSetupProfile.runtimeCapabilities rows. This does not create assets, wire fields, or choose content.";
-            applyButton.SetEnabled(GetActiveIntentSetupProfile() != null && _intentCapabilities != AuthoringCapability.None);
-            actionRow.Add(applyButton);
             actionRow.Add(guideButton);
             actionRow.Add(overviewButton);
             advisorContainer.Add(actionRow);
@@ -356,9 +351,6 @@ namespace NeonBlack.Gameplay.Editor
             if (nextLabel != null)
                 nextLabel.text = GetIntentReadinessMessage();
 
-            Button applyButton = root.Q<Button>("applyIntentToSetupProfile");
-            if (applyButton != null)
-                applyButton.SetEnabled(GetActiveIntentSetupProfile() != null && _intentCapabilities != AuthoringCapability.None);
         }
 
         private string GetIntentReadinessMessage()
@@ -367,16 +359,12 @@ namespace NeonBlack.Gameplay.Editor
                 return "Choose the DNA axioms first: dimensionality, physics gravity, sequence timeline, and spatial topology. Then choose the capability ingredients for this proof.";
 
             if (_intentCapabilities == AuthoringCapability.None)
-                return "Choose capability ingredients that describe the game. When applied, the active GameSetupProfile stores them in Runtime Capabilities so Overview, Guide, Map, and Validate can read the route.";
-
-            GameSetupProfile setupProfile = GetActiveIntentSetupProfile();
-            if (setupProfile == null)
-                return "Intent is shaped. Create or select a GameSetupProfile, then apply these capability ingredients so the graph can guide the route.";
+                return "Choose capability ingredients that describe the game. Intent filters the graph; gameplay setup stays in native Unity assets and scene objects.";
 
             if (_intentHasUnappliedSetupChanges)
-                return $"Intent is shaped. Click Apply Capability Ingredients to update `{setupProfile.name}` Runtime Capabilities, then open Guide for the graph-filtered route path.";
+                return "Intent is shaped. Open Guide for the graph-filtered route path, then create or wire the Unity assets the graph marks missing.";
 
-            return $"Intent matches the active GameSetupProfile `{setupProfile.name}`. Open Guide for the graph-filtered route path, then use Project, Hierarchy, and Inspector to create and wire your own setup.";
+            return "Intent is shaped. Open Guide for the graph-filtered route path, then use Project, Hierarchy, and Inspector to create and wire your own setup.";
         }
 
         private bool HasCompleteCoreAxioms()
@@ -384,55 +372,9 @@ namespace NeonBlack.Gameplay.Editor
             return AuthoringWorldAxiomRegistry.HasCompleteCoreAxioms(_intentAxioms);
         }
 
-        private GameSetupProfile GetActiveIntentSetupProfile()
-        {
-            Object selection = Selection.activeObject;
-            Object selectionSetup = PyralisAuthoringSetupContextResolver.GetSetupContext(selection);
-            Object sceneFallbackSetup = PyralisAuthoringSetupContextResolver.GetSceneFallbackSetup(selection, selectionSetup);
-            Object activeSetup = PyralisAuthoringSetupContextResolver.ResolveActiveSetup(selection, selectionSetup, sceneFallbackSetup, _pinnedActiveSetup, _lastActiveSetup);
-            return selection as GameSetupProfile
-                ?? PyralisAuthoringSetupContextResolver.GetSelectedSetupProfile(activeSetup, PyralisAuthoringSetupContextResolver.GetSelectedMode(activeSetup, PyralisAuthoringSetupContextResolver.GetSelectedSession(activeSetup, PyralisAuthoringSetupContextResolver.GetSelectedBootstrap(activeSetup))));
-        }
-
         private void MarkIntentSetupChangesPending()
         {
             _intentHasUnappliedSetupChanges = true;
-        }
-
-        private void ApplyIntentToActiveSetupProfile()
-        {
-            if (_intentCapabilities == AuthoringCapability.None)
-                return;
-
-            GameSetupProfile setupProfile = GetActiveIntentSetupProfile();
-            if (setupProfile == null)
-                return;
-
-            RuntimeCapabilityFamily[] families = PyralisIntentCapabilityProjection.BuildRuntimeFamilies(_intentCapabilities, _intentLane, _intentAxioms);
-            if (families.Length == 0)
-                return;
-
-            Undo.RecordObject(setupProfile, "Sync Intent To Setup Profile");
-            List<RuntimeCapabilitySelection> next = new List<RuntimeCapabilitySelection>();
-
-            for (int i = 0; i < families.Length; i++)
-            {
-                RuntimeCapabilityFamily family = families[i];
-                RuntimeCapabilitySelection existing = PyralisCapabilityVocabularyRenderer.GetCapabilitySelection(setupProfile, family);
-                next.Add(new RuntimeCapabilitySelection
-                {
-                    capabilityFamily = family,
-                    patternDefinition = existing?.patternDefinition,
-                    requiredForFirstProof = existing?.requiredForFirstProof ?? true
-                });
-            }
-
-            setupProfile.runtimeCapabilities = next.ToArray();
-            setupProfile.runtimePatterns = PyralisIntentCapabilityProjection.FilterRuntimePatternsToFamilies(setupProfile.runtimePatterns, families);
-            EditorUtility.SetDirty(setupProfile);
-            _intentHasUnappliedSetupChanges = false;
-            InvalidateAuthoringCache();
-            UpdateAdvisor(rootVisualElement);
         }
     }
 }

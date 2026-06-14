@@ -6,15 +6,15 @@ Covers `UIManager`, the HUD panel, and the game-over panel. Used in 2D arcade-st
 
 ## Before You Wire This
 
-Start with a `GameSetupProfile` assigned to `GameModeDefinition.setupProfile`.
+Start with a `SessionDefinition` assigned to `GameplaySessionBootstrap.sessionDefinition` and a `GameModeDefinition` assigned to `SessionDefinition.defaultGameMode`.
 
-Recommended runtime patterns:
+Recommended route capabilities:
 
 - Scoring/Objectives for score, timer, round result, and victory display
 - Realtime Character when HUD state follows pawn health, combat, pickups, hazards, or respawn
 - Board/Card/Tabletop or Turn/Menu Action when UI represents cursor selection, card zones, action menus, or round phases without a pawn controller
 
-Resolve setup-profile validation before wiring HUD labels, score services, game-over panels, settings screens, or scene navigation buttons.
+Resolve route validation before wiring HUD labels, score services, game-over panels, settings screens, or scene navigation buttons.
 
 ---
 
@@ -27,7 +27,7 @@ Resolve setup-profile validation before wiring HUD labels, score services, game-
 
 ## Step 1 - Create the Canvas
 
-1. In the Hierarchy, right-click → **UI → Canvas**.
+1. In the Hierarchy, right-click â†’ **UI â†’ Canvas**.
 2. Set **Render Mode** to `Screen Space - Overlay`.
 3. Ensure the Canvas has an `EventSystem` in the scene (Unity creates one automatically with the first Canvas).
 
@@ -35,7 +35,7 @@ Resolve setup-profile validation before wiring HUD labels, score services, game-
 
 ## Step 2 - Build the HUD panel
 
-1. Inside the Canvas, right-click → **Create Empty**. Rename it `HUDPanel`.
+1. Inside the Canvas, right-click â†’ **Create Empty**. Rename it `HUDPanel`.
 2. Add the following children:
    - A **TextMeshPro - Text (UI)** object named `ScoreLabel`. Position it top-left or top-center.
    - A **TextMeshPro - Text (UI)** object named `TimeLabel`. Position it top-right or below the score.
@@ -45,7 +45,7 @@ Resolve setup-profile validation before wiring HUD labels, score services, game-
 
 ## Step 3 - Build the game-over panel
 
-1. Inside the Canvas, right-click → **Create Empty**. Rename it `GameOverPanel`.
+1. Inside the Canvas, right-click â†’ **Create Empty**. Rename it `GameOverPanel`.
 2. Add the following children:
    - A **TextMeshPro - Text (UI)** named `FinalScoreLabel` - shows the player's final score.
    - A **TextMeshPro - Text (UI)** named `HighScoreLabel` - shows the all-time high score.
@@ -58,7 +58,7 @@ Resolve setup-profile validation before wiring HUD labels, score services, game-
 ## Step 4 - Add UIManager to the Canvas
 
 1. Select your Canvas GameObject.
-2. Add Component → `UIManager`.
+2. Add Component â†’ `UIManager`.
 3. Wire all fields in the Inspector:
 
 **Panels**

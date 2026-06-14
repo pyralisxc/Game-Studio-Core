@@ -50,8 +50,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
 
             PyralisSetupRouteAnalysis route = PyralisSetupRouteAnalysis.Build(session);
             GameModeDefinition mode = route.Mode;
-            GameSetupProfile setupProfile = route.SetupProfile;
-            bool hasSelectedCapabilities = route.HasValidPatterns;
+            bool hasSelectedCapabilities = route.HasSelectedCapabilities;
             bool requiresPawn = route.RequiresPawn;
             bool hasParticipants = route.HasParticipants;
             int assignedParticipantCount = CountAssignedParticipants(session);
@@ -61,7 +60,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             bool hasParticipantInputProfile = HasAnyParticipantInputProfile(session);
             string participantInputProfileIssue = GetParticipantInputIssue(session);
             bool hasUsableParticipantInputProfile = hasParticipantInputProfile && string.IsNullOrWhiteSpace(participantInputProfileIssue);
-            bool setupRouteReady = setupProfile != null && hasSelectedCapabilities;
+            bool setupRouteReady = hasSelectedCapabilities;
             bool needsCameraRigForFirstProof = setupRouteReady && route.UsesPawnGameplay();
             bool needs2DCameraBounds = setupRouteReady && route.Requires2DCameraBounds();
             bool has2DCameraBounds = !needs2DCameraBounds || HasUsable2DCameraBounds(cameraRig, mode);
@@ -86,7 +85,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 ? tabletopGridPresenter
                 : tabletopSelectionBridge != null
                     ? tabletopSelectionBridge
-                    : (Object)setupProfile;
+                    : (Object)mode;
             bool hasCanvas = sceneEvidence.HasCanvas;
             Canvas canvas = sceneEvidence.Canvas;
             UIManager uiManager = sceneEvidence.UiManager;
@@ -102,12 +101,6 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                         : canvas != null
                             ? canvas
                             : (Object)bootstrap;
-            PyralisRuntimeSystemClaimReport runtimeSystemClaimReport = PyralisRuntimeSystemClaimResolver.BuildReport(
-                route.RequiredRuntimeSystems,
-                new PyralisRuntimeSystemClaimContext(
-                    participantPawnIssue,
-                    sceneEvidence,
-                    mode != null && mode.enableScore));
             PyralisSceneReadinessReport sceneReadinessReport = PyralisSceneReadinessValidator.BuildReport(bootstrap);
 
             steps.Add(new PyralisSetupFlowStep(
@@ -162,22 +155,13 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 stepId: PyralisSetupFlowStepId.AssignDefaultGameMode));
 
             steps.Add(new PyralisSetupFlowStep(
-                "Assign Setup Profile",
-                GetDependentStatus(mode != null, setupProfile != null),
+                "Resolve Route Capabilities",
+                GetDependentStatus(mode != null, hasSelectedCapabilities),
                 mode == null
                     ? "Assign Default Game Mode first."
-                    : setupProfile != null ? "Game mode has a GameSetupProfile." : "Assign GameModeDefinition > Setup Profile.",
-                setupProfile,
-                stepId: PyralisSetupFlowStepId.AssignSetupProfile));
-
-            steps.Add(new PyralisSetupFlowStep(
-                "Choose Capabilities",
-                GetDependentStatus(setupProfile != null, hasSelectedCapabilities),
-                setupProfile == null
-                    ? "Assign Setup Profile first."
-                    : !route.HasAssignedPatterns ? "Open Authoring Window -> Intent, choose DNA axioms and capability ingredients, then keep the GameSetupProfile active so those choices save to Runtime Capabilities." : hasSelectedCapabilities ? "Setup profile has selected capability intent." : "Fix setup capability validation issues before continuing.",
-                setupProfile,
-                stepId: PyralisSetupFlowStepId.AddRuntimePatterns));
+                    : hasSelectedCapabilities ? "The graph reflected route capabilities from authored gameplay setup, feature modules, participants, mode flags, or contracts." : "Open Intent to filter the guide, then create or wire gameplay assets so contracts and serialized references expose route capabilities.",
+                mode,
+                stepId: PyralisSetupFlowStepId.ResolveRouteCapabilities));
 
             steps.Add(new PyralisSetupFlowStep(
                 "Assign Default Participants",
@@ -304,7 +288,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 "Tabletop Runtime Contract",
                 GetTabletopContractStatus(setupRouteReady, route.UsesTabletopContract(), hasTabletopContract),
                 GetTabletopContractMessage(setupRouteReady, route.UsesTabletopContract(), hasTabletopContract),
-                tabletopContractReference != null ? tabletopContractReference : setupProfile,
+                tabletopContractReference != null ? tabletopContractReference : mode,
                 stepId: PyralisSetupFlowStepId.TabletopRuntimeContract));
 
             steps.Add(new PyralisSetupFlowStep(
@@ -324,12 +308,6 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             // Reflective contracts derived from AuthoringContract attributes
             var reflectiveReport = PyralisReflectiveContractSolver.BuildReport(bootstrap);
             steps.AddRange(reflectiveReport.Steps);
-
-            steps.Add(new PyralisSetupFlowStep(
-                "Resolve Runtime System Claims",
-                GetRuntimeSystemClaimsStatus(setupRouteReady, runtimeSystemClaimReport),
-                GetRuntimeSystemClaimsMessage(setupRouteReady, runtimeSystemClaimReport),
-                setupProfile));
 
             steps.Add(new PyralisSetupFlowStep(
                 "Scene And Prefab Readiness",
@@ -448,12 +426,12 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             return hasTarget ? PyralisSetupFlowStepStatus.Recommended : PyralisSetupFlowStepStatus.Optional;
         }
 
-        private static PyralisSetupFlowStepStatus GetCameraRigStatus(bool setupReady, bool requiredForFirstProof, bool recommended, bool ready, bool usable2DBounds)
+        private static PyralisSetupFlowStepStatus GetCameraRigStatus(bool setupReady, bool proofRequiresCameraRig, bool recommended, bool ready, bool usable2DBounds)
         {
             if (!setupReady)
                 return PyralisSetupFlowStepStatus.Blocked;
 
-            if (requiredForFirstProof)
+            if (proofRequiresCameraRig)
                 return ready && usable2DBounds ? PyralisSetupFlowStepStatus.Ready : PyralisSetupFlowStepStatus.Missing;
 
             if (!recommended)
@@ -495,33 +473,6 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             return hasTabletopSelectionSurface ? PyralisSetupFlowStepStatus.Ready : PyralisSetupFlowStepStatus.Recommended;
         }
 
-        private static PyralisSetupFlowStepStatus GetRuntimeSystemClaimsStatus(bool setupReady, PyralisRuntimeSystemClaimReport report)
-        {
-            if (!setupReady)
-                return PyralisSetupFlowStepStatus.Blocked;
-
-            if (report == null || !report.HasDeclaredClaims)
-                return PyralisSetupFlowStepStatus.Optional;
-
-            return report.HasUnverifiedClaims
-                ? PyralisSetupFlowStepStatus.Recommended
-                : PyralisSetupFlowStepStatus.Ready;
-        }
-
-        private static string GetRuntimeSystemClaimsMessage(bool setupReady, PyralisRuntimeSystemClaimReport report)
-        {
-            if (!setupReady)
-                return "Choose setup capabilities before resolving declared runtime system claims.";
-
-            if (report == null || !report.HasDeclaredClaims)
-                return "No explicit Required Runtime Systems are declared by optional route contracts.";
-
-            if (!report.HasUnverifiedClaims)
-                return "Declared Required Runtime Systems are covered by bootstrap services, pawn validation, or concrete scene-service checks.";
-
-            return "These declared Required Runtime Systems still need project verification or deeper prefab checks: " + report.UnverifiedSummary + ".";
-        }
-
         private static PyralisSetupFlowStepStatus GetSceneReadinessStatus(bool setupReady, PyralisSceneReadinessReport report)
         {
             if (!setupReady)
@@ -538,7 +489,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
         private static string GetSceneReadinessMessage(bool setupReady, PyralisSceneReadinessReport report)
         {
             if (!setupReady)
-                return "Choose a valid setup profile and capability intent before checking scene and prefab readiness.";
+                return "Choose a valid capability intent before checking scene and prefab readiness.";
 
             if (report == null)
                 return "Scene and prefab readiness could not be evaluated.";
@@ -763,12 +714,12 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             return "Spawn points are assigned for pawn-backed participants.";
         }
 
-        private static string GetCameraRigMessage(bool setupReady, bool requiredForFirstProof, bool requires2DBounds, bool recommended, bool ready, bool usable2DBounds)
+        private static string GetCameraRigMessage(bool setupReady, bool proofRequiresCameraRig, bool requires2DBounds, bool recommended, bool ready, bool usable2DBounds)
         {
             if (!setupReady)
                 return "Choose setup capabilities before deciding camera rig wiring.";
 
-            if (requiredForFirstProof)
+            if (proofRequiresCameraRig)
             {
                 if (!ready)
                     return "Pawn movement needs camera bounds before the first Play Mode proof. Keep or create one physical Unity Camera, usually the default Main Camera; do not delete it for the normal Cinemachine route. Create Camera Root, add CinemachineCameraRigController, create or choose a separate Cinemachine Camera for Shared Camera Behaviour, verify the physical Main Camera is tagged MainCamera with Cinemachine Brain, assign that physical camera as Target Camera, then drag Camera Root from Hierarchy into Bootstrap > Camera Rig Controller.";
@@ -969,9 +920,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 && (route.UsesScoring()
                     || route.UsesPawnGameplay()
                     || route.UsesTabletopContract()
-                    || route.UsesActionSelection()
-                    || route.RequiresRuntimeSystem("HUD")
-                    || route.RequiresRuntimeSystem("UI"));
+                    || route.UsesActionSelection());
 
             if (!recommended)
                 return ready || hasCanvas ? PyralisSetupFlowStepStatus.Ready : PyralisSetupFlowStepStatus.Optional;

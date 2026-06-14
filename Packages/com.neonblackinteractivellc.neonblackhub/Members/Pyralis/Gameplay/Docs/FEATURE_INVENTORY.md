@@ -1,4 +1,4 @@
-﻿# NeonBlack Gameplay Feature Inventory
+# NeonBlack Gameplay Feature Inventory
 
 This is the current feature surface available in NeonBlack Gameplay after the shared-core refactor pass.
 
@@ -69,19 +69,18 @@ Available definitions:
 - `PawnDefinition`
 - `GameModeDefinition`
 - `FeatureModuleDefinition`
-- `RuntimePatternDefinition`
+- route capability graph vocabulary
 - `BoardDefinition`
 - `BoardPieceDefinition`
 - `PhaseDefinition`
 - `TurnOrderDefinition`
-- `RuntimeControlSurface`
-- `ParticipantEmbodimentRequirement`
 - `RuntimeCapabilityFamily`
+- graph evidence for control shape, pawn/no-pawn route, and proof readiness
 
 Available profiles:
 
 - `InputProfile`
-- `GameSetupProfile`
+- `SessionDefinition`/`GameModeDefinition` route
 - `PawnMovementProfile`
 - `PawnCombatProfile`
 - `PawnTraversalProfile`
@@ -92,10 +91,10 @@ Available profiles:
 
 What this gives us:
 
-- authored setup profiles for overlapping game-loop expectations
-- a profile-level way to say a game is, for example, realtime character plus projectile combat rather than one exclusive genre
+- authored session/mode/participant/feature-module graphs for overlapping game-loop expectations
+- a route-graph way to say a game is, for example, realtime character plus projectile combat rather than one exclusive genre
 - validation for participant embodiment expectations, including non-pawn control surfaces such as camera, cursor, board seat, card hand, menu selection, faction, or system/AI
-- optional `GameModeDefinition.setupProfile` linkage so game-mode validation can surface setup-profile issues before scene wiring
+- `GameModeDefinition` fields, participants, pawns, feature modules, and grammar vocabulary so validation can surface route issues before scene wiring
 - optional `GameModeDefinition.boardDefinition` and `GameModeDefinition.turnOrderDefinition` links so game-mode validation can surface core rules issues before scene wiring
 
 ### Shared Services
@@ -675,8 +674,8 @@ Available:
 - custom inspector for `HazardData`
 - custom inspector for `InputZoneSet`
 - custom inspector for `UIOrientationHandler`
-- custom inspector for `RuntimePatternDefinition`
-- custom inspector for `GameSetupProfile`
+- graph-backed route capability authoring guidance
+- custom inspectors for session, mode, participant, pawn, feature-module, and route-contract assets
 - custom inspectors for the new shared-core definitions and profiles
 - active `Create -> NeonBlack` definition/profile/runtime-pattern asset paths, with reusable route learning captured as facts, validation, and generic native-authoring guidance
 
@@ -690,7 +689,7 @@ These are the main areas where features exist but are not fully generalized yet:
 - some menu/game scene flows still assume the older adapter-specific setup
 - action and targeting now include queue/resolution foundations, but they are not yet wired through realtime, turn-based, tactical, board, card, and menu-driven feature modules
 - guns and projectile support now has authored delivery, fire-mode definitions, deterministic command planning, 2D/3D command launchers, optional prefab pooling, runtime magazine state, impact effect routing, and sample authoring assets, but not yet charge/recoil policies, inventory-level ammo ownership, trail/material presets, or sample weapon prefabs
-- runtime pattern setup now describes composable game-loop intent, but does not yet generate scenes or inspect required scene services
+- route capability setup now describes composable game-loop intent, but does not yet generate scenes or inspect required scene services
 - procedural generation is not yet a canonical feature family; side-scrolling 2D generation should start with authored chunks, sockets, budgets, seeds, and validation
 - board, card, and tabletop setup now has a core rules spine for board spaces, board pieces, occupancy, capture, turn order, phases, queued board moves, queued turn advancement, basic move policy assets, terminal condition assets, and game-mode validation, but cards, decks, hands, zones, named tabletop rule packs, and samples are still next-step work
 - animation mapping is data-driven, but editor tooling should become more helpful for prebuilt Animator Controllers and partial mappings

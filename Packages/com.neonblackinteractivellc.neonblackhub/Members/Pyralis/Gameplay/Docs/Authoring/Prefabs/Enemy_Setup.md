@@ -6,16 +6,16 @@ This guide walks through setting up an enemy using `EnemyAI` and optionally spaw
 
 ## Before You Wire This
 
-Start with a `GameSetupProfile` assigned to `GameModeDefinition.setupProfile`.
+Start with a `SessionDefinition` assigned to `GameplaySessionBootstrap.sessionDefinition` and a `GameModeDefinition` assigned to `SessionDefinition.defaultGameMode`.
 
-Recommended runtime patterns:
+Recommended route capabilities:
 
 - Combat
 - Realtime Character when enemies fight pawn-controlled actors
 - Projectile Combat when enemies fire projectiles, hitscan, spells, or thrown attacks
 - Animation/Presentation when enemies use Animator-driven states
 
-Resolve setup-profile validation before building enemy prefabs, attack assets, spawners, or encounter links.
+Resolve route validation before building enemy prefabs, attack assets, spawners, or encounter links.
 
 ---
 
@@ -29,7 +29,7 @@ Resolve setup-profile validation before building enemy prefabs, attack assets, s
 
 ## Step 1 - Build the enemy prefab
 
-1. In the **Hierarchy**, right-click → **Create Empty**. Rename it `Enemy` (or your enemy's name).
+1. In the **Hierarchy**, right-click â†’ **Create Empty**. Rename it `Enemy` (or your enemy's name).
 2. With the enemy object selected, add the following components via **Add Component**:
 
 | Component | Notes |
@@ -40,7 +40,7 @@ Resolve setup-profile validation before building enemy prefabs, attack assets, s
 | `Animator` | Required. Assign your Animator Controller (see Step 3). |
 | `EnemyAI` | The main behavior script. |
 
-3. Right-click the enemy root → **Create Empty** child. Rename it `HitBox_Attack`.
+3. Right-click the enemy root â†’ **Create Empty** child. Rename it `HitBox_Attack`.
    - Add a **Collider** (BoxCollider or CapsuleCollider) to this child and size it to your attack reach.
    - Add a `HitBox` component to the same child.
    - Set the collider to **Is Trigger = true**.
@@ -53,7 +53,7 @@ Resolve setup-profile validation before building enemy prefabs, attack assets, s
 
 `EnemyAttack` is a ScriptableObject that defines one attack move (damage, range, cooldown, animation trigger).
 
-1. Right-click in the Project window → **Create → NeonBlack → Gameplay → Combat → Enemy Attack**.
+1. Right-click in the Project window â†’ **Create â†’ NeonBlack â†’ Gameplay â†’ Combat â†’ Enemy Attack**.
 2. Name it (e.g. `Attack_Punch`).
 3. In the Inspector on the asset, fill in:
    - **Hit Box Zone** - type the name that matches the HitBox child you created (e.g. `HitBox_Attack`).
@@ -122,7 +122,7 @@ Your Animator Controller needs the following parameters for `EnemyAI` to drive i
 
 `EnemySpawner` manages spawning and respawning enemies at runtime. You do not need it if you are placing enemies directly in the scene.
 
-1. In the **Hierarchy**, right-click → **Create Empty**. Rename it `EnemySpawner`.
+1. In the **Hierarchy**, right-click â†’ **Create Empty**. Rename it `EnemySpawner`.
 2. Add the `EnemySpawner` component.
 3. In the Inspector:
 
@@ -131,7 +131,7 @@ Your Animator Controller needs the following parameters for `EnemyAI` to drive i
 
 **Spawn Points** (optional)
 - Leave empty to spawn at the spawner's own position.
-- Or create child empty GameObjects under `EnemySpawner` (right-click → Create Empty), position them, and drag them into **Spawn Points**.
+- Or create child empty GameObjects under `EnemySpawner` (right-click â†’ Create Empty), position them, and drag them into **Spawn Points**.
 - **Spawn Radius** - scatter enemies randomly within this radius around each point.
 
 **Spawn Mode**
@@ -149,7 +149,7 @@ Your Animator Controller needs the following parameters for `EnemyAI` to drive i
 
 1. Press **Play**.
 2. Walk your player into the enemy's `Aggro Range`.
-3. The enemy should transition from patrol → chase → attack.
+3. The enemy should transition from patrol â†’ chase â†’ attack.
 4. When the enemy's health reaches zero, the `Death` trigger fires and the GameObject is destroyed.
 5. If `EnemySpawner` is set to **Continuous**, a replacement should appear after `Respawn Delay` seconds.
 

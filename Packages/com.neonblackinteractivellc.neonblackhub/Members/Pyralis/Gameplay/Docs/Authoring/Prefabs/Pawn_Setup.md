@@ -1,4 +1,4 @@
-﻿# Pawn Setup
+# Pawn Setup
 
 This chapter is for games that need actor bodies in the scene.
 
@@ -6,18 +6,18 @@ Skip it for pure board games, card games, camera-only scenes, menu combat, or tu
 
 ## Before You Wire This
 
-Start with a `GameSetupProfile` assigned to `GameModeDefinition.setupProfile`.
+Start with a `SessionDefinition` assigned to `GameplaySessionBootstrap.sessionDefinition` and a `GameModeDefinition` assigned to `SessionDefinition.defaultGameMode`.
 
 When you add a 3D pawn-stack component in Unity, use the Pyralis Authoring Window for route setup and the component's Inspector Field Guide for field-local checks before leaving the component. `Motor3D`, `Pawn3DInputModule`, `Pawn3DMovementComponent`, `Pawn3DTraversalComponent`, and `Pawn3DPresentationComponent` each explain what they do, which sibling components they expect, what can stay empty, and which missing pieces are required, recommended, or optional. Use this chapter when you want the longer written reference.
 
-Recommended runtime patterns:
+Recommended route capabilities:
 
 - Realtime Character when participants control pawns
 - Combat if the pawn can attack, block, take damage, or trigger reactions
 - Projectile Combat if the pawn can fire weapons, spells, or thrown objects
 - Animation/Presentation if the pawn uses sprite, billboard, or rigged Animator presentation
 
-Resolve setup-profile validation before building pawn prefabs or assigning pawn profiles. If the selected setup does not require a pawn, use this guide only for optional actor presentation rather than forcing a character controller into the game.
+Resolve route validation before building pawn prefabs or assigning pawn profiles. If the selected setup does not require a pawn, use this guide only for optional actor presentation rather than forcing a character controller into the game.
 
 ## Shared Pawn Chain
 

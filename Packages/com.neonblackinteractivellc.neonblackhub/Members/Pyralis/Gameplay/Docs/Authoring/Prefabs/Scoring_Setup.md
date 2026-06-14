@@ -6,15 +6,15 @@ Covers `ParticipantScoreService`, high-score persistence, and hooking pickups an
 
 ## Before You Wire This
 
-Start with a `GameSetupProfile` assigned to `GameModeDefinition.setupProfile`.
+Start with a `SessionDefinition` assigned to `GameplaySessionBootstrap.sessionDefinition` and a `GameModeDefinition` assigned to `SessionDefinition.defaultGameMode`.
 
-Recommended runtime patterns:
+Recommended route capabilities:
 
 - Scoring/Objectives
 - Realtime Character for score loops driven by pawns, pickups, hazards, or combat
 - Board/Card/Tabletop for score, victory points, resources, or round results without pawns
 
-Resolve setup-profile validation before adding score services, score UI, pickups, high-score save flow, or end-of-round hooks.
+Resolve route validation before adding score services, score UI, pickups, high-score save flow, or end-of-round hooks.
 
 ---
 
@@ -29,7 +29,7 @@ Resolve setup-profile validation before adding score services, score UI, pickups
 
 `ParticipantScoreService` must be in your gameplay scene. One instance per scene is all you need.
 
-1. On a dedicated scene systems object, or on your 2D `GameManager` when using that flow, Add Component → `ParticipantScoreService`.
+1. On a dedicated scene systems object, or on your 2D `GameManager` when using that flow, Add Component â†’ `ParticipantScoreService`.
 2. Wire the Inspector events:
    - **On Points Changed** - fires with the current point total whenever points change. Wire this to a `UIManager` or score display label if you want live updates separate from `UIManager`'s own subscription.
    - **On High Score Beaten** - fires once per session when the new total surpasses the saved best. Wire this to a visual effect, sound, or banner if desired.

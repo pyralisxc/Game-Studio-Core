@@ -4,7 +4,7 @@ Use these guides after `Docs/Authoring/START_HERE.md` and `Docs/Authoring/AUTHOR
 
 These chapters should read like clear Unity implementation instructions, not shorthand reference notes. Each guide should say what to create, what to click, what to assign, what can stay empty, and how to validate the setup in Play Mode.
 
-Every prefab guide starts with a `Before You Wire This` section. Read that section first, select matching existing runtime patterns in a `GameSetupProfile`, assign the profile to `GameModeDefinition.setupProfile`, and resolve validation before wiring scene objects in Unity. Create new runtime pattern assets only when you are defining an advanced custom setup category.
+Every prefab guide starts with a `Before You Wire This` section. Read that section first, make sure the session/mode/participant chain exposes the route you are wiring, and resolve validation before wiring scene objects in Unity. Use Intent, graph vocabulary, contracts/reflection, and scene evidence to shape the route; do not create a separate gameplay asset for prefab setup metadata.
 
 Beginner rule: do not read every guide in this folder. Pick the one for the thing you are wiring right now.
 
@@ -16,9 +16,9 @@ Beginner rule: do not read every guide in this folder. Pick the one for the thin
 4. `Camera_Setup.md` - choose follow, cursor, board, menu, or camera-owned control behavior.
 5. Feature-specific guides such as combat, scoring, pickups, hazards, UI, settings, scene flow, multiplayer, and respawn.
 
-## Runtime Pattern Map
+## Route Capability Map
 
-| Guide | Primary runtime patterns |
+| Guide | Primary route capabilities |
 |---|---|
 | `Arcade_Menu_Example_Setup.md` | Realtime Character, Scoring/Objectives, Camera/Cursor Control |
 | `Brawler_Menu_Example_Setup.md` | Realtime Character, Combat, Animation/Presentation, optional Projectile Combat |
@@ -26,7 +26,7 @@ Beginner rule: do not read every guide in this folder. Pick the one for the thin
 | `Combat_Definitions_Setup.md` | Combat, Projectile Combat, Turn/Menu Action |
 | `Encounter_Zones_Setup.md` | Realtime Character, Combat, Camera/Cursor Control |
 | `Enemy_Setup.md` | Combat, Realtime Character, Projectile Combat, Animation/Presentation |
-| `Feature_Module_Framework_Setup.md` | Depends on module; select every pattern the module expects |
+| `Feature_Module_Framework_Setup.md` | Depends on module; select every capability the module expects |
 | `Hazard_Difficulty_Setup.md` | Realtime Character, Scoring/Objectives, Procedural Generation |
 | `Health_Combat_Setup.md` | Combat, Realtime Character, Projectile Combat, Turn/Menu Action |
 | `Multiplayer_Setup.md` | Realtime Character, Camera/Cursor Control, Board/Card/Tabletop |
@@ -43,9 +43,9 @@ Beginner rule: do not read every guide in this folder. Pick the one for the thin
 
 Pyralis does not require every game to have a character controller. For board, card, tabletop, puzzle board, menu, or camera-only interaction:
 
-- choose `Board/Card/Tabletop`, `Camera/Cursor Control`, and/or `Turn/Menu Action` runtime patterns
+- choose `Board/Card/Tabletop`, `Camera/Cursor Control`, and/or `Turn/Menu Action` route capabilities
 - avoid adding `PawnRoot` unless the game needs actor pieces with authored pawn behavior
-- wire UI, cursor, camera, turn, scoring, and scene-flow guides around the setup profile rather than forcing a realtime character stack
+- wire UI, cursor, camera, turn, scoring, and scene-flow guides around the reflected route rather than forcing a realtime character stack
 
 ## Unity Wiring Rule
 

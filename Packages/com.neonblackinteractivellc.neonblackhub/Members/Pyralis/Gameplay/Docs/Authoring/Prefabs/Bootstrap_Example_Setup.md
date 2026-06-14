@@ -12,11 +12,11 @@ The first place to check progress is the `GameplaySessionBootstrap` Inspector's 
 
 Start with the setup intent:
 
-- select or create a `GameSetupProfile`
-- choose runtime capability ingredients in the Authoring Window Intent tab or in `GameSetupProfile.runtimeCapabilities`
-- add existing `RuntimePatternDefinition` assets only when the generic capability ingredients need advanced reusable metadata
-- assign the setup profile to `GameModeDefinition.setupProfile`
-- resolve setup-profile validation before placing scene services
+- select or create a `SessionDefinition` and `GameModeDefinition`
+- use the Authoring Window Intent tab to filter route guidance while the graph reflects capabilities from authored setup references and contracts
+- use Intent, graph vocabulary, contracts/reflection, and scene evidence for route capability metadata
+- assign the `GameModeDefinition` to `SessionDefinition.defaultGameMode` and fill the mode fields the route needs
+- resolve route validation before placing scene services
 
 Use manual native authoring for validation passes. Future scaffold tooling can capture a proven route later as editable project assets, but it should not replace the test of whether Setup Flow and the Authoring Window can guide asset creation and field wiring.
 
@@ -25,13 +25,12 @@ Use manual native authoring for validation passes. Future scaffold tooling can c
 Manually create the always-needed assets:
 
 - `SessionDefinition`
-- `GameSetupProfile`
 - `GameModeDefinition`
 - `ParticipantDefinition`
 
 Optional enrichment:
 
-- existing `RuntimePatternDefinition` assets only when a capability needs reusable route detail that the generic family cannot express
+- graph vocabulary, contracts/reflection, and scene evidence when a capability needs reusable route detail
 
 For pawn-backed games, also create:
 
@@ -58,16 +57,16 @@ Keep the bootstrap selected after this assignment. The **Setup Flow** monitor wi
 
 - missing `SessionDefinition`
 - missing default `GameModeDefinition`
-- missing `GameSetupProfile`
-- missing or invalid runtime capability ingredients
-- optional runtime pattern metadata only when the selected setup uses it
+- missing authored route evidence from mode fields, participants, pawns, feature modules, or contracts
+- missing or invalid route evidence
+- optional route capability metadata only when the selected setup uses it
 - missing participants
 - pawn and spawn-point requirements only when selected capabilities require pawns
 - camera, input, playfield, and scoring recommendations only when selected capabilities imply them
 
 The monitor is a safe checklist, not a scene generator. It can select and ping existing objects, copy the checklist, open the authoring window, add a visible `PyralisGameplayLifetimeScope` to this root, and restore first-scene bootstrap defaults. It does not create a whole scene, edit prefabs, or automatically wire referenced assets.
 
-The authoring window mirrors this flow by showing the selected bootstrap/session/setup route, readiness, native next steps, and validation. Create assets from the Project window and wire references in the Inspector so the folderbase and ownership stay visible.
+The authoring window mirrors this flow by showing the selected bootstrap/session/mode route, readiness, native next steps, and validation. Create assets from the Project window and wire references in the Inspector so the folderbase and ownership stay visible.
 
 For a 1P movement proof, treat these as the route-required setup items:
 
@@ -91,7 +90,7 @@ At runtime, the bootstrap creates the core child services it needs when they are
 
 ## 2A. Add optional scene roots
 
-Only add the roots your `GameSetupProfile` actually needs.
+Only add the roots the active route actually needs.
 
 | Root object | Attach | Use when |
 |---|---|---|

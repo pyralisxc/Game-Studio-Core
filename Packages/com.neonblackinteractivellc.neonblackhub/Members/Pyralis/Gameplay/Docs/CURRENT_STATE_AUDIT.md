@@ -31,7 +31,7 @@ These are now true platform capabilities, not transitional goals:
 - authored profiles for movement, combat, traversal, presentation, camera, playfield, input, and settings
 - feature runtime initialization through `FeatureRuntimeInitializationContext`
 - actor composition through `ActorFeatureContext` and narrowed core contracts
-- transport-agnostic networking ownership contracts in `Core/Contracts/Networking`
+- transport-agnostic networking ownership contracts in `Core/ContractInterfaces/Networking`
 - NGO-specific behavior isolated in `NeonBlack.Gameplay.Networking`
 
 ## Assembly State
@@ -97,7 +97,7 @@ These were major refactor blockers and are now resolved or intentionally stabili
 - participant registration now reassigns duplicate preferred seats to the next available seat, and overflow participant spawning falls back to seat-offset placement rather than clamping everyone to the last spawn point
 - traversal climb/hang cleanup restores the controller, movement state, and climb zone when the component is disabled mid-action
 - setup flow now includes a scene/prefab readiness gate before scene authoring: it checks authored participant seats, missing scripts on referenced roots, pawn prefab runtime interfaces, enabled feature module prefab validation, projectile prefab runtime-body/physics compatibility, and networked pawn `NetworkObject`/`NetworkManager` readiness without depending on the optional Networking assembly
-- setup flow now treats invalid `RuntimePatternDefinition` assets as blocking, not ready, so empty or malformed runtime patterns cannot falsely clear the beginner checklist
+- setup flow now treats invalid reflected route evidence as blocking, not ready, so empty or malformed route capabilities cannot falsely clear the beginner checklist
 - active authoring validation treats native Unity setup, user-owned prefabs, and disposable proof-scene evidence as the first-route evidence
 - feature runtime lifecycle hardening now destroys previously instantiated feature runtime objects during `ActorFeatureHost` reinitialization, cancels delayed projectile commands when launchers are disabled, makes feedback/traversal feature runtimes tolerate null initialization contexts, and keeps 3D traversal dependencies explicit through `RequireComponent`
 - fresh Unity batch validation on 2026-05-24 passed EditMode `189/189` and PlayMode `63/63`; the working Test Runner route is batchmode without `-quit`, because Unity Test Framework 1.6 ignores command-line tests when `-quit` is specified
@@ -145,13 +145,12 @@ Current focus:
 
 ### 3. Setup Validation Is Production-Ready; Keep Deepening Lane-Specific Checks
 
-The setup lane is now explicit enough to start prefab/scene setup without pretending every route is complete runtime gameplay. The supported readiness gate covers selected runtime capabilities, optional route contracts, session/mode/setup-profile links, participant seats, pawn prefab runtime interfaces, feature-module prefab validation, projectile prefab/runtime-body compatibility, scoring services, projectile launchers, referenced scene roots, missing scripts, and networking MVP wiring.
+The setup lane is now explicit enough to start prefab/scene setup without pretending every route is complete runtime gameplay. The supported readiness gate covers reflected route capabilities, grammar vocabulary, session/mode/participant links, participant seats, pawn prefab runtime interfaces, feature-module prefab validation, projectile prefab/runtime-body compatibility, scoring services, projectile launchers, referenced scene roots, missing scripts, and networking MVP wiring.
 
 Current examples:
 
 - `Editor/Authoring/Spine/Validation/PyralisSetupFlowValidator.cs`
 - `Editor/Authoring/Spine/Validation/PyralisSceneReadinessValidator.cs`
-- `Editor/Authoring/Spine/Validation/PyralisRuntimeSystemClaimResolver.cs`
 - `Editor/Authoring/Surfaces/AuthoringWindow/PyralisAuthoringWindow.cs`
 - `Networking/Runtime/PyralisNetworkSetupValidator.cs`
 
@@ -352,7 +351,7 @@ Current focus:
 2. Harden the Game Shell route first: boot/loading/menu/settings/credits, scene navigation, Build Settings guidance, and shell proof.
 3. Bring Pawn-Backed Action to parity across `Sprite2D`, `Billboard2_5D`, and `Rigged3D`; do not call the route ready while one lane is only partially proven.
 4. Finish Non-Pawn Tabletop as a guided no-pawn prototype route with board selection, action queue, turn flow, and terminal condition proof.
-5. Run a beginner/friend trial or simulated beginner pass and feed the friction back into inspectors, setup flow, docs, cookbook facts, optional route contracts, and generic setup guidance.
+5. Run a beginner/friend trial or simulated beginner pass and feed the friction back into inspectors, setup flow, docs, cookbook facts, grammar vocabulary, and generic setup guidance.
 
 After the MVP route gates are moving, continue these standing hardening tracks:
 

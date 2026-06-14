@@ -11,7 +11,7 @@ Active docs should describe the current product truth. Dated audits, superseded 
 - `Authoring/CANONICAL_SETUP.md` - technical setup contract.
 - `Authoring/AUTHORING_MODEL.md` - asset, profile, runtime, and authoring relationship map.
 - `Authoring/AUTHORING_BLUEPRINT.md` - Authoring Window product and implementation blueprint.
-- `Authoring/RUNTIME_PATTERN_COOKBOOK.md` - composable runtime-pattern guidance.
+- `Authoring/ROUTE_CAPABILITY_COOKBOOK.md` - composable route-capability guidance.
 
 ## Current State And Readiness
 

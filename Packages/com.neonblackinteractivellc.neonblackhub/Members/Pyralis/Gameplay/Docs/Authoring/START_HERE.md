@@ -1,4 +1,4 @@
-﻿# Pyralis Setup: Start Here
+# Pyralis Setup: Start Here
 
 This is the first-scene path. Use it when you are opening Unity and asking, "What do I create first?"
 
@@ -37,9 +37,9 @@ That is enough for a first proof of life.
 
 Core Pyralis setup assets include compact Inspector guidance, and the **Pyralis Authoring Window** is the central setup UI layer. Keep the Authoring Window open while you select scene objects and assets; it summarizes the selected route, validation state, next step, and Pyralis component stack. Use the Inspector for direct field editing and field-local help.
 
-The top of the Authoring Window shows the **Active Setup**. Leave it following selection for quick browsing, or use **Pin Selection As Active Setup** on a bootstrap, session, game mode, or setup profile when you want the window to keep tracking one game setup while you inspect child objects, components, prefabs, and assets. **Overview** and **Map** use the active setup; **Guide** still explains the current Unity selection.
+The top of the Authoring Window shows the **Active Setup**. Leave it following selection for quick browsing, or use **Pin Selection As Active Setup** on a bootstrap, session, game mode, or setup route when you want the window to keep tracking one game setup while you inspect child objects, components, prefabs, and assets. **Overview** and **Map** use the active setup; **Guide** still explains the current Unity selection.
 
-Start from the `GameplaySessionBootstrap` Inspector whenever you are unsure where you are in setup. Its **Setup Flow** monitor reads the scene root, `SessionDefinition`, `GameModeDefinition`, `GameSetupProfile`, selected runtime capabilities and resolved runtime patterns, participants, pawns, spawn points, camera, input, playfield, and scoring settings, then shows the next required step first.
+Start from the `GameplaySessionBootstrap` Inspector whenever you are unsure where you are in setup. Its **Setup Flow** monitor reads the scene root, `SessionDefinition`, `GameModeDefinition`, reflected route capabilities, grammar vocabulary, participants, pawns, spawn points, camera, input, playfield, and scoring settings, then shows the next required step first.
 
 The Authoring Window has six modes:
 
@@ -59,7 +59,7 @@ For the first-pass proof, use this native flow:
 The Authoring Window also shows a **Setup Chain** map for the current selection:
 
 ```text
-Bootstrap -> Session -> Game Mode -> Setup Profile -> Runtime Capabilities -> Participants -> Pawns
+Bootstrap -> Session -> Game Mode -> Participants -> Pawns -> Feature Modules -> Contracts
 ```
 
 Use it as a setup-prep surface, not as another Inspector. It diagnoses which part of the chain is ready, which part needs setup, and when a core link is missing it tells you the native Unity path to create the asset or object and which Inspector field owns the assignment. Use **Inspect Asset** only when you need to jump to the Inspector for field-level editing.
@@ -74,7 +74,7 @@ The Authoring Window is the route guide. Open it from the Setup Flow when you ne
 
 Use the Authoring Window as a senior setup companion, not a scene generator. It should explain why a route needs a pawn, board surface, camera/cursor, action resolver, input profile, or UI presenter, then send you to the normal Unity object or Inspector field where you make the creative choice.
 
-When a `GameSetupProfile` is active, the Authoring Window projects the same resolved setup graph through each tab. **Intent** owns route shaping, **Guide** owns graph-filtered route rows and selected-object help, **Overview** owns the next one to three moves, **Map** owns topology, **Validate** owns readiness issues, and **Facts** owns the full dictionary. The tabs read selected runtime capabilities first and optional runtime patterns second, then explain:
+When a session/mode route is active, the Authoring Window projects the same resolved setup graph through each tab. **Intent** owns graph filtering, **Guide** owns graph-filtered route rows and selected-object help, **Overview** owns the next one to three moves, **Map** owns topology, **Validate** owns readiness issues, and **Facts** owns the full dictionary. The tabs read reflected route capabilities from the authored setup, contracts/reflection, and grammar vocabulary, then explain:
 
 - the **Intent** tab DNA axioms, presentation lane, and capability ingredients that define what kind of game route is being authored
 - design questions to answer before setup, such as what the player controls, what kind of space the game happens in, and what the first proof of interaction should be
@@ -87,9 +87,9 @@ When a `GameSetupProfile` is active, the Authoring Window projects the same reso
 
 The Authoring Window guidance is route-aware:
 
-- `GameSetupProfile` stores the runtime capability ingredients you selected. Optional `RuntimePatternDefinition` assets can enrich advanced route metadata, but they are not required for the generic setup path.
-- Intent is the visible route-shaping surface. When a setup profile is active, Intent writes matching capability ingredients to `GameSetupProfile.runtimeCapabilities` from reflected capability descriptors so Overview, Guide, Map, and Validate read one shared graph.
-- `GameModeDefinition` uses its setup profile to explain the active route.
+- `SessionDefinition`, `GameModeDefinition`, participants, pawns, feature modules, and contracts expose the route capabilities the graph can prove.
+- Intent is the visible route-filtering surface. It narrows and explains the graph from reflected capability descriptors; it does not create assets, assign fields, or mutate gameplay objects.
+- `GameModeDefinition` contributes scene, rule, board, turn, playfield, camera, scoring, combat, respawn, and feature-module signals to the active route.
 - `SessionDefinition` explains whether participants need pawns, input, seats, hands, factions, camera, cursor, or menu surfaces.
 - `GameplaySessionBootstrap` checks the assigned session chain and shows the consolidated Setup Flow checklist.
 
@@ -98,10 +98,10 @@ Use the visible Authoring Window summary for route progress, first proof, setup-
 ## The Short Version
 
 1. Pick the route first:
-   - pawn-backed movement route -> realtime character pattern, participant, pawn, input, spawn point, camera
-   - no-pawn route (board/card/cursor/action) -> tabletop/action/camera patterns, participant seats, control surface, UI or board state
+   - pawn-backed movement route -> realtime character capability, participant, pawn, input, spawn point, camera
+   - no-pawn route (board/card/cursor/action) -> tabletop/action/camera capabilities, participant seats, control surface, UI or board state
 2. In the Project window, open the folder that should own this proof, check that the Project content pane/breadcrumb is inside that folder, then create the needed definition/profile assets there with **Create -> NeonBlack**.
-3. Open your session + profile assets (`SessionDefinition`, `GameSetupProfile`, etc.) and confirm whether the flow is pawn-backed.
+3. Open your session, mode, participant, pawn, and profile assets and confirm whether the flow is pawn-backed.
 4. In Hierarchy, right-click -> **Create Empty** and name it `Gameplay Root`.
 5. Select `Gameplay Root` and use the Inspector **Add Component** search bar to add:
    - `GameplaySessionBootstrap`
@@ -130,7 +130,7 @@ Think of it this way: `GameplaySessionBootstrap` is the first runtime object. `S
 
 - Required:
   - one `Gameplay Root` with `GameplaySessionBootstrap` (+ optional `PyralisGameplayLifetimeScope`);
-  - `SessionDefinition -> GameModeDefinition -> GameSetupProfile -> capability ingredients`;
+  - `GameplaySessionBootstrap -> SessionDefinition -> GameModeDefinition -> participants/pawns/feature modules/contracts`;
   - one default participant with `Input Profile` and `Default Pawn`;
   - one pawn prefab with `PawnRoot`, `Motor2D` + `Motor2DInputAdapter` + `Pawn2DMovementComponent` + `Pawn2DPresentationComponent` (or 2.5D/3D equivalent);
   - the pawn prefab inspected in Prefab Mode or Inspector so every required component/reference is understood and editable. The guided proof should treat the prefab as user-owned setup, not a hidden generated answer;
@@ -146,7 +146,7 @@ Think of it this way: `GameplaySessionBootstrap` is the first runtime object. `S
 
 Choose the closest starting point:
 
-| If you are making... | Start with these runtime patterns | Pawn needed? |
+| If you are making... | Filter toward these capabilities | Pawn needed? |
 |---|---|---|
 | 2D character game | Realtime Character, Camera/Cursor Control | Usually |
 | 2D arcade score loop | Realtime Character, Scoring/Objectives, Camera/Cursor Control | Usually |
@@ -156,7 +156,7 @@ Choose the closest starting point:
 | Card game | Board/Card/Tabletop, Turn/Menu Action, Scoring/Objectives, Camera/Cursor Control | No |
 | Camera-only interaction | Camera/Cursor Control, Scoring/Objectives if needed | No |
 
-The patterns are not genres. They are setup signals. A game can use several at once.
+The capabilities are not genres. They are setup signals. A game can use several at once.
 
 ## Step 2: Create The Authoring Assets
 
@@ -167,23 +167,23 @@ Before creating assets, remember:
 
 Manual path:
 
-- `GameSetupProfile`
-- optional existing `RuntimePatternDefinition` assets only when the generic capability ingredients need advanced reusable metadata
+- `SessionDefinition`
+- `GameModeDefinition`
 - `SessionDefinition`
 - `GameModeDefinition`
 - `ParticipantDefinition`
 - `PawnDefinition` only for pawn-backed games
 - supporting profiles such as input, movement, combat, camera, settings, presentation, and animation
 
-Create new `RuntimePatternDefinition` assets only when the cookbook facts do not describe the kind of setup you are building. For a first afternoon game, start with Intent capabilities and existing route contracts; do not begin by designing a new setup taxonomy.
+For a first afternoon game, start with Intent capabilities and the existing graph vocabulary; do not begin by designing a new setup taxonomy.
 
 Wire the assets in this order:
 
-1. Use the Authoring Window **Intent** tab to choose DNA axioms, presentation lane, and capability ingredients. When a `GameSetupProfile` is active, those choices save to `runtimeCapabilities`. Optional `RuntimePatternDefinition` assets are advanced route contracts for extra metadata.
-2. Assign `GameSetupProfile` to `GameModeDefinition.setupProfile`.
-3. Assign `GameModeDefinition` to `SessionDefinition.defaultGameMode`.
-4. Assign participant definitions to the `SessionDefinition`.
-5. For pawn games, assign each participant a `PawnDefinition`.
+1. Use the Authoring Window **Intent** tab to choose DNA axioms, presentation lane, and capability filters for the guide.
+2. Assign `GameModeDefinition` to `SessionDefinition.defaultGameMode`.
+3. Assign participant definitions to the `SessionDefinition`.
+4. For pawn games, assign each participant a `PawnDefinition`.
+5. Add feature modules, mode rules, profiles, and reflected contracts only when the route needs them.
 
 Template or scaffold tooling is not the current first-test path. Use manual native authoring while validating the guide. After a route is proven repeatable, future tooling may capture that route as editable project assets, but it should never replace the manual proof that the setup chain is understandable.
 
@@ -232,7 +232,7 @@ Treat these as optional until route proof works:
 
 ## Step 4: Add Optional Scene Roots
 
-Only add what matches your setup profile.
+Only add what matches the active route.
 
 | Root object | Add this when... | Common components |
 |---|---|---|
@@ -347,7 +347,7 @@ Read only the guide that matches your immediate task:
 
 Pyralis setup works like this:
 
-- `GameSetupProfile` says what kind of runtime the game expects.
+- The reflected session/mode graph says what kind of runtime the game expects.
 - `SessionDefinition` says who is playing and which mode starts.
 - `GameplaySessionBootstrap` creates the shared runtime services.
 - Optional scene roots provide camera, UI, scoring, settings, scene flow, and playfield behavior.

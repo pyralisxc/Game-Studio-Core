@@ -35,7 +35,7 @@ The MVP readiness gate tracks these dimensions:
 
 | Capability | Game Shell | Pawn Action Sprite2D | Pawn Action Billboard2_5D | Pawn Action Rigged3D | Non-Pawn Tabletop |
 | --- | --- | --- | --- | --- | --- |
-| Route setup profile | Guided Needs Proof | Guided Needs Proof | Guided Needs Proof | Guided Needs Proof | Guided Needs Proof |
+| Route setup graph | Guided Needs Proof | Guided Needs Proof | Guided Needs Proof | Guided Needs Proof | Guided Needs Proof |
 | Scene root setup | Guided Needs Proof | Guided Needs Proof | Guided Needs Proof | Guided Needs Proof | Guided Needs Proof |
 | Session and participant setup | Foundation Only | Ready | Ready | Ready | Guided Needs Proof |
 | Pawn or no-pawn correctness | Deferred | Guided Needs Proof | Guided Needs Proof | Guided Needs Proof | Guided Needs Proof |
@@ -170,14 +170,14 @@ This supporting inventory preserves the older feature-family view. The MVP Route
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Action and targeting | `ActionDefinition` | `ActionExecutionContext`, target descriptors, validation and resolution results, `QueuedAction` | `IActionResolver`, `IActionQueueService`, `ActionQueueService` | Definition validation | Runtime and editor tests | Generic projectile/action guidance uses this foundation | Guided Needs Proof |
 | Guns and projectiles | `ProjectileDefinition`, `FireModeDefinition`, `ProjectileImpactDefinition` | Fire requests, spawn commands, magazine state | 2D and 3D launchers, pooling handle, impact effect player | Definition validation | Runtime and editor tests | Generic projectile/fire-mode/impact guidance | Guided Needs Proof |
-| Runtime capability setup | `GameSetupProfile`, optional `RuntimePatternDefinition` | Capability/profile validation data | Game mode setup-profile validation | Custom inspectors and validation tests | Editor tests | Generic capability setup and optional contracts | Guided Needs Proof |
+| Route capability setup | `SessionDefinition`, `GameModeDefinition`, participants, pawns, feature modules, scene evidence, contracts/reflection, and grammar vocabulary | Capability/profile validation data | Game mode route validation | Custom inspectors and validation tests | Editor tests | Generic capability setup and graph vocabulary | Guided Needs Proof |
 | Core Rules Spine | `BoardDefinition`, `BoardPieceDefinition`, `BoardMovePolicyDefinition`, `BoardTerminalConditionDefinition`, `PhaseDefinition`, `TurnOrderDefinition`, `GameModeDefinition` links | `BoardRuntimeState`, `BoardSpaceState`, `BoardPieceState`, `BoardCoordinate`, `TurnRuntimeState`, `BoardMoveActionPayload`, `BoardMovePolicy`, `BoardTerminalCondition` | `IBoardStateService`, `IBoardMovePolicy`, `IBoardTerminalCondition`, `ITurnOrderService`, `BoardMoveActionResolver`, `TurnAdvanceActionResolver` | Board, piece, move-policy, terminal-condition, phase, turn, and game-mode validation | Runtime and editor tests | Tabletop capability setup uses this spine | Guided Needs Proof |
 | Board/card/tabletop | Board, move-policy, terminal-condition, and turn assets | Board occupancy, movement, capture state, shape and offset move policy evaluation, terminal-state evaluation, turn cursor | Board move and turn-advance action resolvers | Board, move-policy, terminal-condition, turn, and setup-flow claim validation | Foundation tests and authoring source contracts | Generic tabletop setup; scene/UI proof still pending | Guided Needs Proof |
 | Realtime 2D arcade | Existing profiles, pawns, hazards, pickups, scoring | 2D pawn and feature state | Explicit scene/game flow services | Existing inspectors and setup checks | Existing EditMode and PlayMode coverage | Existing arcade setup paths | Guided Needs Proof |
 | 3D brawler | Existing pawn, combat, traversal, enemy, zone, and camera definitions/profiles | 3D pawn, combat, traversal, enemy, and encounter runtime | Explicit runtime modules | Existing custom inspectors | Existing EditMode and PlayMode coverage | Generic brawler setup and existing scenes | Guided Needs Proof |
-| Side-scrolling shooter | Realtime pattern plus projectile definitions | Projectile planning and 2D launcher state | 2D pawn, projectile launcher, scoring/hazard services | Partial via projectile/pawn/setup validation | Projectile and 2D tests | Not yet as a polished sample | Foundation Only |
+| Side-scrolling shooter | Realtime character capability plus projectile definitions | Projectile planning and 2D launcher state | 2D pawn, projectile launcher, scoring/hazard services | Partial via projectile/pawn/setup validation | Projectile and 2D tests | Not yet as a polished sample | Foundation Only |
 | Chess variant | Board, piece, and turn authoring foundations | Board occupancy, piece capture, and turn order state | Board and turn contracts only | Foundation validation | Foundation tests | Not yet | Foundation Only |
-| FPS | Realtime pattern plus projectile definitions | Projectile planning and 3D launcher state | 3D pawn/camera/projectile services | Partial via projectile/pawn/setup validation | Projectile and 3D tests | Not yet as a polished sample | Foundation Only |
+| FPS | Realtime character capability plus projectile definitions | Projectile planning and 3D launcher state | 3D pawn/camera/projectile services | Partial via projectile/pawn/setup validation | Projectile and 3D tests | Not yet as a polished sample | Foundation Only |
 
 ## Core Rules Spine
 
@@ -198,7 +198,7 @@ The Core Rules Spine is the shared layer for non-realtime and rules-driven games
 2. Move Pawn-Backed Action toward `Ready` only when `Sprite2D`, `Billboard2_5D`, and `Rigged3D` all satisfy the five-part completion bar.
 3. Move Non-Pawn Tabletop toward `Ready` with a no-pawn from-scratch walkthrough, board selection, action queue, turn flow, terminal condition proof, and no pawn/spawn false positives.
 4. Move Network Chain MVP toward `Ready` with a clean host/client proof path, clear NGO setup guidance, and validation that keeps local co-op and networked sessions separate.
-5. Keep Unity-only authoring UX current with guided inspectors, Create Asset menu coverage, cookbook facts, optional route contracts, and setup validation for each creator-facing asset.
+5. Keep Unity-only authoring UX current with guided inspectors, Create Asset menu coverage, cookbook facts, grammar vocabulary, and setup validation for each creator-facing asset.
 6. Track the RPG Systems Platform through `RPG_SYSTEMS_ROADMAP.md` and move its phases toward `Ready` only when runtime, authoring, guidance, validation, and proof exist.
 
 ## RPG Systems Platform

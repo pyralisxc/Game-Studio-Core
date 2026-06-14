@@ -15,7 +15,6 @@ namespace NeonBlack.Gameplay.Features.Rpg.UI
         ModuleId = "rpg.vendor.ui",
         Capability = AuthoringCapability.Inventory,
         Lane = "RPG",
-        RequiredInterfaces = new[] { typeof(IRuntimeValidationProvider) },
         RequiredComponentNames = new[] { "TMPro.TextMeshProUGUI" },
         FirstProof = "Verify that the vendor panel displays offers and correctly calculates total prices."
     )]

@@ -6,15 +6,15 @@ Designer-facing language can call these **abilities**. The implementation langua
 
 ## Before You Wire This
 
-Start with a `GameSetupProfile` assigned to `GameModeDefinition.setupProfile`.
+Start with a `SessionDefinition` assigned to `GameplaySessionBootstrap.sessionDefinition` and a `GameModeDefinition` assigned to `SessionDefinition.defaultGameMode`.
 
-Recommended runtime patterns depend on the feature:
+Recommended route capabilities depend on the feature:
 
 - Realtime Character for pawn-installed movement, traversal, combat, pickup, or feedback modules
 - Combat or Projectile Combat for damage, status, reaction, and ranged-delivery modules
 - Board/Card/Tabletop or Turn/Menu Action when a future feature module is not pawn-first
 
-Resolve setup-profile validation before adding feature modules to `PawnDefinition`, enemy profiles, or actor feature hosts.
+Resolve route validation before adding feature modules to `PawnDefinition`, enemy profiles, or actor feature hosts.
 
 ## Core runtime shape
 

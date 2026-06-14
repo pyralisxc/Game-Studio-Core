@@ -51,7 +51,7 @@ With the standard bootstrap-owned service path enabled, the bootstrap creates th
 
 You usually do not need to create those service objects by hand for a first scene.
 
-Create additional root objects only when the selected runtime patterns need them:
+Create additional root objects only when the selected route capabilities need them:
 
 | Root object | Attach | Use when |
 |---|---|---|
@@ -65,18 +65,17 @@ Create additional root objects only when the selected runtime patterns need them
 
 `GameplaySessionBootstrap` is the supported composition root. New scenes should not build their own global service wiring.
 
-Beginner rule: start with only `Gameplay Root`, then add the optional roots that match the capability ingredients in your `GameSetupProfile`.
+Beginner rule: start with only `Gameplay Root`, then add optional roots that match the reflected route from `SessionDefinition`, `GameModeDefinition`, participants, pawns, feature modules, and contracts.
 
 ## 2. Required Authoring Chain
 
 Create these authored assets for every new setup:
 
-- `GameSetupProfile`
 - `SessionDefinition`
 - `GameModeDefinition`
 - at least one `ParticipantDefinition`
 
-Select one or more runtime capability families in `GameSetupProfile.runtimeCapabilities`. Optional `RuntimePatternDefinition` contracts are advanced metadata only; create or assign them when a capability needs reusable route detail that the generic family cannot express.
+Use the Authoring Window Intent tab as a graph filter while you wire real gameplay assets. The reflected route capabilities come from `SessionDefinition`, `GameModeDefinition`, participants, pawns, feature modules, scene evidence, contracts/reflection, and grammar vocabulary.
 
 Create pawn assets only when a participant needs an actor body in the scene:
 
@@ -93,16 +92,16 @@ Create non-pawn setup assets only when the selected capabilities need them:
 
 Template or scaffold tooling is not the active first-test path. The primary learning and validation path is the Authoring Window guiding native Unity setup: create assets in the selected project folder, add components through the Inspector, and assign references through Inspector fields. Future scaffolds must be downstream of a manually proven route and must not count as authoring-validation evidence.
 
-Before wiring scenes or prefabs, use the `GameSetupProfile` inspector to confirm:
+Before wiring scenes or prefabs, use the Authoring Window and asset Inspectors to confirm:
 
-- the setup selects the intended overlapping runtime capabilities
+- the setup selects the intended overlapping route capabilities
 - pawn-backed games include a pawn-compatible capability
 - board, card, tabletop, camera, cursor, or menu games include non-pawn control surfaces
 - projectile-heavy games include projectile or combat capabilities
 - turn/menu games include action or targeting capabilities
 - validation issues are resolved or intentionally deferred
 
-Assign the setup profile to `GameModeDefinition.setupProfile` so game-mode validation can surface setup problems early.
+Assign `GameModeDefinition` to `SessionDefinition.defaultGameMode`, then fill the mode fields, participants, pawns, feature modules, profiles, and grammar vocabulary and reflected contracts that the route needs so validation can surface setup problems early.
 
 ## 3. Participant And Pawn Wiring
 
@@ -281,7 +280,7 @@ HUD is now split into:
 1. `Docs/Authoring/START_HERE.md`
 2. `Docs/Authoring/AUTHORING_MODEL.md`
 3. `Docs/Authoring/Prefabs/Bootstrap_Example_Setup.md`
-4. `Docs/Authoring/RUNTIME_PATTERN_COOKBOOK.md` when choosing or authoring setup patterns
+4. `Docs/Authoring/ROUTE_CAPABILITY_COOKBOOK.md` when choosing capability filters
 5. `Docs/Authoring/Prefabs/Pawn_Setup.md` only for pawn-backed games
 6. feature-specific setup docs as needed
 7. `Docs/Authoring/Systems/Architecture_Overview.md` when changing architecture

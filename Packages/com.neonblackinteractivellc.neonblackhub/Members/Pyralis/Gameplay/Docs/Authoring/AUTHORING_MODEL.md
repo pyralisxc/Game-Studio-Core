@@ -30,7 +30,7 @@ For Pyralis, good authoring means a person can:
 
 - select the `GameplaySessionBootstrap` scene object
 - open the assigned `SessionDefinition`
-- follow the chain into `GameModeDefinition`, `GameSetupProfile`, participants, pawns, profiles, and feature modules
+- follow the chain into `GameModeDefinition`, participants, pawns, profiles, feature modules, and grammar vocabulary and reflected contracts
 - see validation warnings near the assets or components that need attention
 - understand which fields are required, optional, route-specific, or safe to leave empty
 
@@ -54,9 +54,7 @@ From there, the authored asset chain is:
 ```text
 SessionDefinition
   -> GameModeDefinition
-      -> GameSetupProfile
-          -> Runtime Capabilities
-              -> optional RuntimePatternDefinition[]
+      -> mode rules, required feature modules, board/turn definitions, playfield/camera profiles
   -> ParticipantDefinition[]
       -> PawnDefinition optional
           -> pawn prefab
@@ -78,9 +76,8 @@ In plain English:
 - `GameplaySessionBootstrap` is the runtime startup object in the scene.
 - `SessionDefinition` is the whole play session.
 - `GameModeDefinition` is the active mode or ruleset for that session.
-- `GameSetupProfile` describes the kind of runtime the mode expects.
-- `GameSetupProfile` runtime capabilities are the beginner-facing capability selections. Intent derives those rows from reflected capability descriptors that prefer contracts and dependency reflection, then use vocabulary only for fallback wording.
-- Selected runtime capability families are the beginner-facing route ingredients. Optional `RuntimePatternDefinition` assets can add reusable advanced metadata such as participant embodiment, supported control surfaces, presentation/runtime lanes, and first-proof requirements when the generic capability family is not descriptive enough.
+- The setup route is inferred from `SessionDefinition`, `GameModeDefinition`, participants, pawns, feature modules, scene evidence, contracts/reflection, and grammar vocabulary.
+- Reflected route capabilities are the beginner-facing capability signals. Intent filters those graph signals through reflected capability descriptors that prefer contracts and dependency reflection, then use vocabulary only for fallback wording.
 - `ParticipantDefinition` describes a player, AI, seat, team, or participant slot.
 - `PawnDefinition` is used only when a participant needs an actor body.
 
@@ -101,8 +98,7 @@ Definitions are identity and relationship assets.
 | Asset | Owns | Points to | Use it when |
 |---|---|---|---|
 | `SessionDefinition` | session name, max participants, join/camera defaults | default `GameModeDefinition`, default `InputProfile`, `SettingsProfile`, participant list | every playable setup |
-| `GameModeDefinition` | scene names, enabled systems, mode rules | `GameSetupProfile`, `PlayfieldProfile`, `CameraRigProfile`, required feature modules | every playable mode |
-| `RuntimePatternDefinition` | optional reusable route contract plus route-facing description/setup notes, presentation/runtime lanes, and first-proof requirements | companion/cautionary runtime contracts | adding advanced metadata when a capability family alone cannot describe the route |
+| `GameModeDefinition` | scene names, enabled systems, mode rules | `PlayfieldProfile`, `CameraRigProfile`, required feature modules, board and turn definitions | every playable mode |
 | `ParticipantDefinition` | display name, team, seat, auto-join defaults | default `PawnDefinition`, participant `InputProfile` | each player, AI, seat, faction, hand, or participant slot |
 | `PawnDefinition` | one actor body setup | pawn prefab, pawn profiles, feature modules | only when the participant owns an actor body |
 | `FeatureModuleDefinition` | reusable actor/pawn capability or ability declaration | runtime prefab, profile asset, supported presentation modes | adding modular abilities such as pickups, feedback, status, interaction, traversal, guard/reaction, or custom actor modules |
@@ -125,7 +121,6 @@ Profiles are tuning assets. They tell runtime components how to behave.
 
 | Asset | Tunes | Usually assigned from |
 |---|---|---|
-| `GameSetupProfile` | selected runtime capabilities, resolved runtime patterns, and setup notes | `GameModeDefinition.setupProfile` |
 | `InputProfile` | Input System actions, action map, gameplay action-name mapping, device/control expectations | `SessionDefinition`, `ParticipantDefinition`, `PawnDefinition` |
 | `SettingsProfile` | default audio/settings values | `SessionDefinition` |
 | `PlayfieldProfile` | movement bounds, depth, clamp rules | `GameModeDefinition` |
@@ -149,9 +144,7 @@ Profiles are tuning assets. They tell runtime components how to behave.
 
 Rule of thumb: if the asset mostly contains numbers, toggles, curves, references to effects, or tuning options, it is probably a profile.
 
-`GameSetupProfile` is the one slightly weird case: it is called a profile because it describes setup intent, but it acts like the bridge between mode definition and runtime pattern definitions.
-
-Runtime pattern descriptions are part of the setup manual. Fill `description` with what the pattern is for, and fill `setupNotes` with the native Unity steps a developer should follow next. Set `presentationLanes` to the runtime surfaces the pattern can guide, and set `firstProofRequirements` to the scene/service evidence the first playable proof should expose. Those fields appear in the pattern Inspector, the Authoring Window selected-object context, route validation, and any `GameSetupProfile` that references the pattern.
+Route capability descriptions belong in contracts/reflection and grammar vocabulary. First-proof requirements should resolve as graph proof nodes from contracts, dependency evidence, validators, and proof vocabulary rather than from a separate gameplay/runtime asset.
 
 ## Authoring Window And Inspectors
 
@@ -168,9 +161,9 @@ The **Pyralis Authoring Window** is the central setup UI layer. It has six modes
 
 For the concise product north star, read `AUTHORING_EXPERIENCE_VISION.md`. For mode responsibilities, evidence model, implementation phases, and maintenance rules for this window, read `AUTHORING_BLUEPRINT.md`.
 
-The window keeps an **Active Setup** at the top. When no setup is pinned, the active setup follows the current Unity selection whenever the selection can infer a `GameplaySessionBootstrap`, `SessionDefinition`, `GameModeDefinition`, or `GameSetupProfile`. When nothing is selected and exactly one `GameplaySessionBootstrap` exists in the open scene, the Authoring Window treats that scene root as the active setup instead of falling back to an empty state. When a loose newly-created setup asset is selected and the remembered or single scene setup still needs that asset assigned to its next field, the active setup stays on the scene setup story so the guide does not skip past the wiring step. When a setup is pinned, **Overview** and **Map** keep using that steady setup route while **Guide** continues to explain the current selection. This lets guided users click through prefabs, child objects, and component fields, or clear selection entirely, without losing the main setup story.
+The window keeps an **Active Setup** at the top. When no setup is pinned, the active setup follows the current Unity selection whenever the selection can infer a `GameplaySessionBootstrap`, `SessionDefinition`, `GameModeDefinition`, `ParticipantDefinition`, or `PawnDefinition`. When nothing is selected and exactly one `GameplaySessionBootstrap` exists in the open scene, the Authoring Window treats that scene root as the active setup instead of falling back to an empty state. When a loose newly-created setup asset is selected and the remembered or single scene setup still needs that asset assigned to its next field, the active setup stays on the scene setup story so the guide does not skip past the wiring step. When a setup is pinned, **Overview** and **Map** keep using that steady setup route while **Guide** continues to explain the current selection. This lets guided users click through prefabs, child objects, and component fields, or clear selection entirely, without losing the main setup story.
 
-The native Project-window Create path should stay beginner ordered under `NeonBlack`. In `NeonBlack > Definitions`, `Session Definition` comes first because it is the first setup asset a new route needs, followed by Game Mode, Participant, Pawn, Runtime Pattern, Feature Module, Action, and Animation definitions. In `NeonBlack > Profiles`, setup-chain profiles come first: Game Setup, Input, Playfield, Camera Rig, Pawn Movement, Pawn Traversal, Pawn Presentation, Pawn Animation, Pawn Combat, then Settings before broader feature profiles. Do not move first-route setup behind preset/profile paths.
+The native Project-window Create path should stay beginner ordered under `NeonBlack`. In `NeonBlack > Definitions`, `Session Definition` comes first because it is the first setup asset a new route needs, followed by Game Mode, Participant, Pawn, Route Capability, Feature Module, Action, and Animation definitions. In `NeonBlack > Profiles`, setup-chain profiles come first: Game Setup, Input, Playfield, Camera Rig, Pawn Movement, Pawn Traversal, Pawn Presentation, Pawn Animation, Pawn Combat, then Settings before broader feature profiles. Do not move first-route setup behind preset/profile paths.
 
 Unity's built-in dock tabs such as Project, Hierarchy, Inspector, Scene, and Game are native Editor chrome, not Pyralis UI. The authoring color system should still guide users toward those surfaces, but prefer durable semantic labels, field guidance, inspector beacons, overlays, or optional window-focus aids over unsupported Unity skin/layout hacks that repaint built-in tab text.
 
@@ -198,9 +191,9 @@ Imported asset packs are valid proof material when they are treated as creator-o
 
 Good validation notes should record where the guide helped, where Unity navigation was naturally a learning curve, where Pyralis guidance was missing or too forceful, which code warnings or validators were improved, and which customization choices stayed in the tester's hands.
 
-The **Intent**, **Guide**, **Overview**, **Map**, **Validate**, and **Facts** tabs are projections from the same authoring spine. The read-only resolved setup graph is built from contracts, dependency-tree route analysis, setup-flow evidence, scene-readiness evidence, selected Unity context, and generic grammar fallback wording. Foundational contracts can declare `SetupNodeId` so the graph connects reflected contracts to stable setup concepts without parallel mapping files. The graph does not create assets or apply presets; it explains what the selected intent and current setup imply. Intent owns only the creator's route choices and a compact summary. When a setup profile is active, Intent converts selected toggles into capability ingredients stored in `GameSetupProfile.runtimeCapabilities` through reflected capability descriptors produced from contracts, dependency reflection, and fallback vocabulary. Guide prefers `PyralisAuthoringSetupGraphProjection.BuildCurrentIntentGuideRows(...)` so active setup guidance comes from blockers, proof nodes, selected capabilities, and reflected contracts in the graph; fallback vocabulary only fills generic wording gaps. Overview extracts the best next one to three setup moves and can surface graph priority/proof data. Map projects current setup topology from graph rows. Validate projects graph-grouped readiness evidence while the concrete Unity checks stay in the setup-flow and scene-readiness validators. Facts shows the graph and grammar dictionary, including facts outside the current route. Genre words are summaries of selected ingredients, not source data. Intent should not apply suggested defaults, create assets, choose optional runtime contracts, wire a scene, or imply that the user has accepted a preset. For side-view brawler work, `Movement`, `Jump / Traversal`, `Combat`, `Input`, and `Animation / Presentation` are visible route-shaping capabilities because they are the first decisions a creator brings with imported art, sprites, animations, and attack feel. For top-down 2D work, free X/Y movement, bounds, targeting, camera framing, and optional hop/dash semantics outrank side-view gravity ground. For tabletop/card/UI work, no-pawn surfaces, action selection, seats/hands/factions, and visible state changes outrank pawn prefab setup. Each proof pass should improve contracts, dependency reflection, validators, and graph projection first, then let every tab benefit from the corrected reflection. The feature guide reads `GameSetupProfile.runtimeCapabilities` and optional runtime contracts, then explains the selected capabilities:
+The **Intent**, **Guide**, **Overview**, **Map**, **Validate**, and **Facts** tabs are projections from the same authoring spine. The read-only resolved setup graph is built from contracts, dependency-tree route analysis, setup-flow evidence, scene-readiness evidence, selected Unity context, and generic grammar fallback wording. Foundational contracts can declare `SetupNodeId` so the graph connects reflected contracts to stable setup concepts without parallel mapping files. The graph does not create assets or apply presets; it explains what the selected intent and current setup imply. Intent owns only the creator's route filters, questions, and compact summary. It filters reflected capability descriptors produced from contracts, dependency reflection, scene evidence, and fallback vocabulary; it does not write route selections back into gameplay assets. Guide prefers `PyralisAuthoringSetupGraphProjection.BuildCurrentIntentGuideRows(...)` so active setup guidance comes from blockers, proof nodes, selected capabilities, and reflected contracts in the graph; fallback vocabulary only fills generic wording gaps. Overview extracts the best next one to three setup moves and can surface graph priority/proof data. Map projects current setup topology from graph rows. Validate projects graph-grouped readiness evidence while the concrete Unity checks stay in the setup-flow and scene-readiness validators. Facts shows the graph and grammar dictionary, including facts outside the current route. Genre words are summaries of selected ingredients, not source data. Intent should not apply suggested defaults, create assets, choose grammar vocabulary and reflected contracts, wire a scene, or imply that the user has accepted a preset. For side-view brawler work, `Movement`, `Jump / Traversal`, `Combat`, `Input`, and `Animation / Presentation` are visible route-shaping capabilities because they are the first decisions a creator brings with imported art, sprites, animations, and attack feel. For top-down 2D work, free X/Y movement, bounds, targeting, camera framing, and optional hop/dash semantics outrank side-view gravity ground. For tabletop/card/UI work, no-pawn surfaces, action selection, seats/hands/factions, and visible state changes outrank pawn prefab setup. Each proof pass should improve contracts, dependency reflection, validators, and graph projection first, then let every tab benefit from the corrected reflection. The feature guide reads the reflected route capabilities and grammar vocabulary and reflected contracts, then explains the selected capabilities:
 
-- design capabilities: checkbox/dropdown selection for route-facing capability families; optional `RuntimePatternDefinition` contracts can enrich advanced metadata
+- design capabilities: checkbox/dropdown selection for route-facing capability families; contracts/reflection and grammar vocabulary enrich graph metadata
 - design prompts: what world/playfield the project uses, what the user controls, which capabilities are active, and which focused proof should come next
 - gameplay effect: what this capability adds to the game
 - world/environment contract: how plain Unity geometry, colliders, layers, bounds, zones, anchors, and selectable surfaces affect Pyralis
@@ -208,13 +201,13 @@ The **Intent**, **Guide**, **Overview**, **Map**, **Validate**, and **Facts** ta
 - customization: the fields and assets where the user expresses taste, art, tuning, rules, layout, and feature behavior
 - recommended next options: nearby capabilities that commonly complete the selected project shape without becoming presets
 
-The Authoring Window implementation should stay split by responsibility. Keep `PyralisAuthoringWindow` as the UI shell, active setup graph cache, selection, and mode coordinator. Put route resolution in `PyralisSetupRouteAnalysis` and `PyralisSetupDependencyTree`, graph compilation in `PyralisAuthoringSetupGraphBuilder`, graph projection in `PyralisAuthoringSetupGraphProjection`, reflected capability descriptors in `PyralisAuthoringCapabilityDescriptorRegistry`, fallback proof wording in `PyralisProofFamilyVocabulary`, capability checkbox behavior in `PyralisAuthoringCapabilitySelection`, scene-surface route wording in `PyralisAuthoringSceneSurfaceGuidance`, and pre-setup intent fallback ranking in `PyralisAuthoringIntentAdvisor`. Add new game systems to contracts, validators, dependency-tree coverage, or grammar vocabulary before adding more drawing logic to the window.
+The Authoring Window implementation should stay split by responsibility. Keep `PyralisAuthoringWindow` as the UI shell, active setup graph cache, selection, and mode coordinator. Put route resolution in `PyralisSetupRouteAnalysis` and `PyralisSetupDependencyTree`, graph compilation in `PyralisAuthoringSetupGraphBuilder`, graph projection in `PyralisAuthoringSetupGraphProjection`, reflected capability descriptors in `PyralisAuthoringCapabilityDescriptorRegistry`, fallback proof wording in `PyralisProofFamilyVocabulary`, route capability vocabulary in `PyralisCapabilityVocabulary`, scene-surface route wording in `PyralisAuthoringSceneSurfaceGuidance`, and pre-setup intent fallback ranking in `PyralisAuthoringIntentAdvisor`. Add new game systems to contracts, validators, dependency-tree coverage, or grammar vocabulary before adding more drawing logic to the window.
 
 Setup flow rows should be structured facts, not just display strings. Each `PyralisSetupFlowStep` should carry a stable step id, a work intent (`Foundation`, `RequiredSetup`, `ProofEnhancer`, or `FeatureCard`), evidence, target object, and native Unity action when one is known. This lets Overview decide what to do first even when many systems are open: blockers go to `Do Now`, proof enhancers stay near the first proof, and feature-card work waits until the current proof is reliable. Do not key new feature behavior only from row labels or warning copy.
 
 Scene readiness should use structured buckets instead of one flat warning stream:
 
-- **Required Before Play**: issues that break or invalidate the first proof, such as missing pawn runtime contracts, wrong Input System UI module, duplicate active EventSystems/listeners, blank active SpriteRenderers, missing required network surfaces, or missing required prefab scripts.
+- **Required Before Play**: issues that break or invalidate the first proof, such as missing pawn reflected contracts, wrong Input System UI module, duplicate active EventSystems/listeners, blank active SpriteRenderers, missing required network surfaces, or missing required prefab scripts.
 - **Recommended Before Play**: useful setup that improves confidence but should not block every route, such as camera/audio visibility guidance when the scene has not claimed that surface yet.
 - **Proof Enhancers**: route/taste checks that make the proof feel better, such as camera framing, pawn visual/collider fit, movement feel, one clear physics lane, UI labels, board layout, pickup placement, and local-input clarity.
 
@@ -225,7 +218,7 @@ Authoring UI performance is part of the contract. Expensive graph builds, scene-
 The **Map** tab owns the first-read setup map:
 
 ```text
-Scene Root -> Session -> Game Rules -> Setup Profile -> Capabilities -> Participants -> Pawn / No Pawn -> Scene Surfaces
+Scene Root -> Session -> Game Rules -> Setup Route -> Capabilities -> Participants -> Pawn / No Pawn -> Scene Surfaces
 ```
 
 Each row should show whether the current route needs that link, whether it is ready, what asset or scene object is current, and where to inspect next. Pawn status must come from the route descriptor: pawn-backed routes should ask for a `PawnDefinition`, while no-pawn tabletop, board, card, camera, cursor, and menu routes should explicitly say that empty pawn fields are correct.
@@ -234,7 +227,7 @@ The **Scene Surface Scan** is the bridge between setup assets and ordinary Unity
 
 For example, a pawn plus combat route can be described as a brawler/fighter/action route because the selected capabilities imply pawn actors, movement, combat actions, presentation, input, camera, HUD, and feedback. A tabletop route should instead say that pawn fields can stay empty and that the next useful surfaces are board/card state, action selection, camera/cursor, and UI.
 
-Intent is the guided editor for the route selection model persisted by the `GameSetupProfile` Inspector's Runtime Capabilities section. DNA axioms describe the world contract, the presentation lane describes the runtime surface, and capability ingredient toggles describe what the author is trying to build. When a setup profile is active, those Intent choices write matching `runtimeCapabilities` entries so validation, route reading, Map, Overview, and Guide all read the same contract. Optional `RuntimePatternDefinition` assets can still enrich selected families with advanced metadata, but they are not the first-shape route selector and should be created only when the existing capability language cannot describe the game.
+Intent is the guided graph filter for route selection. DNA axioms describe the world contract, the presentation lane describes the runtime surface, and capability toggles describe what the author is trying to build. Those choices filter reflected capabilities for validation, route reading, Map, Overview, and Guide; they do not mutate gameplay objects.
 
 Environment authoring is part of the route even when the objects do not carry Pyralis scripts. Ground, walls, platforms, tilemaps, terrain, card slots, table props, board squares, rooms, and arena boundaries can remain ordinary Unity objects. Pyralis should teach which observable contracts matter:
 
@@ -250,8 +243,8 @@ Background and world-art setup is intentionally broad. A route may use 2D flat s
 Field explanations should name the actual selected field whenever possible. Examples:
 
 - `defaultGameMode`: chooses the ruleset this session starts with.
-- `setupProfile`: chooses which runtime route the mode expects.
-- `runtimeCapabilities`: decide whether pawns, board/card UI, camera/cursor, action menus, combat, projectiles, scoring, networking, or procedural systems are expected.
+- `SessionDefinition.defaultGameMode` / mode fields: chooses which runtime route the mode expects.
+- reflected route capabilities: decide whether pawns, board/card UI, camera/cursor, action menus, combat, projectiles, scoring, networking, or procedural systems are expected.
 - `defaultPawn`: stays empty for seats, hands, factions, menus, or camera-only participants, and is required when the selected route needs actor bodies.
 - `movementProfile`: controls speed, acceleration, jump feel, braking, and similar motion tuning.
 - `presentationProfile`: chooses whether the pawn is presented as Sprite2D, Billboard2_5D, Rigged3D, or another supported presentation stack.
@@ -267,8 +260,7 @@ The Authoring Window should keep the core setup chain understandable whenever it
 GameplaySessionBootstrap
   -> SessionDefinition
       -> GameModeDefinition
-          -> GameSetupProfile
-              -> RuntimePatternDefinition[]
+          -> mode rules, required feature modules, grammar vocabulary and reflected contracts
       -> ParticipantDefinition[]
           -> PawnDefinition optional
 ```
@@ -277,9 +269,9 @@ When one of those core links is missing, the window should point to the native U
 
 The core chain uses route-aware shared guidance:
 
-- `RuntimePatternDefinition` explains one capability, the control surfaces and presentation lanes it supports, and the first-proof scene/service evidence it expects.
-- `GameSetupProfile` combines selected capabilities and explains the next setup route.
-- `GameModeDefinition` reads its setup profile before recommending camera, playfield, feature, combat, scoring, or respawn wiring.
+- Capability grammar explains reusable fallback wording for control surfaces, presentation lanes, and first-proof scene/service evidence when contracts or reflection do not provide more specific facts.
+- Reflected route analysis combines session, mode, participant, pawn, feature-module, contract, and scene evidence before explaining the next setup route.
+- `GameModeDefinition` contributes mode fields before guidance recommends camera, playfield, feature, combat, scoring, or respawn wiring.
 - `SessionDefinition` explains participants, pawn/no-pawn expectations, and whether shared input is only optional.
 - `GameplaySessionBootstrap` inspects the assigned session graph and reports scene-level next steps.
 - `PyralisProofFamilyVocabulary`, `PyralisCapabilityVocabulary`, and `PyralisAuthoringSceneSurfaceGuidance` own reusable fallback proof, capability, and scene-surface wording. Feature-specific setup meaning belongs in contracts/reflection and should reach UI through graph evidence.
@@ -308,8 +300,7 @@ Scene root
   -> Bootstrap
       -> SessionDefinition
           -> GameModeDefinition
-              -> GameSetupProfile
-                  -> RuntimePatternDefinition[]
+              -> mode rules, required feature modules, grammar vocabulary and reflected contracts
           -> ParticipantDefinition[]
               -> PawnDefinition optional
                   -> Profiles
@@ -345,7 +336,7 @@ Common costs:
 
 For Pyralis, the highest-value authoring improvements are:
 
-- keep `GameSetupProfile` and runtime patterns visible before prefab wiring starts
+- keep session, mode, participant, pawn, feature-module, contract/reflection, and scene evidence visible before prefab wiring starts
 - make the Authoring Window the live setup checklist and keep `GameplaySessionBootstrap` Inspector guidance compact
 - prefer explicit participant/session references over tag searches or hidden global discovery
 - keep route guidance centralized in the shared authoring models
@@ -405,7 +396,6 @@ Minimum authoring chain:
 ```text
 SessionDefinition
   -> GameModeDefinition
-      -> GameSetupProfile
   -> ParticipantDefinition
       -> PawnDefinition
           -> Pawn prefab with PawnRoot
@@ -433,10 +423,7 @@ Minimum authoring chain:
 ```text
 SessionDefinition
   -> GameModeDefinition
-      -> GameSetupProfile
-          -> Board/Card/Tabletop
-          -> Turn/Menu Action
-          -> Camera/Cursor Control
+      -> board, turn, camera, UI, scoring, and feature-module fields as needed
   -> ParticipantDefinition
 ```
 
@@ -568,32 +555,30 @@ Keep shared scene systems out of pawn prefabs unless the prefab is intentionally
 For a pawn-backed prototype:
 
 1. Start from the `GameplaySessionBootstrap` Setup Flow monitor.
-2. Create or assign `GameSetupProfile`.
-3. Choose runtime capability families that describe the route.
-4. Create or assign `GameModeDefinition`.
-5. Create or assign `SessionDefinition`.
-6. Create or assign `ParticipantDefinition`.
-7. Create `PawnDefinition` and pawn profiles.
-8. Wire scene roots and prefab references only when the monitor asks for them.
+2. Create or assign `SessionDefinition`.
+3. Create or assign `GameModeDefinition`.
+4. Create or assign `ParticipantDefinition`.
+5. Create `PawnDefinition` and pawn profiles.
+6. Add feature modules, mode fields, and grammar vocabulary and reflected contracts that describe the route.
+7. Wire scene roots and prefab references only when the monitor asks for them.
 
 For a non-pawn prototype:
 
 1. Start from the `GameplaySessionBootstrap` Setup Flow monitor.
-2. Create or assign `GameSetupProfile`.
-3. Choose runtime capability families that describe the route.
-4. Create or assign `GameModeDefinition`.
-5. Create or assign `SessionDefinition`.
-6. Create or assign `ParticipantDefinition`.
-7. Add UI/camera/playfield/scoring scene roots only when the selected capabilities need them.
-8. Add board/card/turn-specific runtime components as the first playable loop needs them.
+2. Create or assign `SessionDefinition`.
+3. Create or assign `GameModeDefinition`.
+4. Create or assign `ParticipantDefinition`.
+5. Add board, card, turn, camera, UI, scoring, feature-module, contract, and scene evidence that describes the route.
+6. Add UI/camera/playfield/scoring scene roots only when the reflected route needs them.
+7. Add board/card/turn-specific runtime components as the first playable loop needs them.
 
-Do not promote manually proven routes into active starter packs or presets. Capture reusable learning as cookbook facts, validation rules, optional route contracts, or generic setup guidance instead.
+Do not promote manually proven routes into active starter packs or presets. Capture reusable learning as cookbook facts, validation rules, grammar vocabulary, or generic setup guidance instead.
 
 ## Common Confusions
 
-`GameSetupProfile` is not the same as `GameModeDefinition`.
+The reflected setup route is not one asset.
 
-- The setup profile says what runtime surfaces the game expects.
+- The setup route is inferred from session, mode, participants, pawns, feature modules, scene evidence, contracts/reflection, and grammar vocabulary.
 - The game mode says which scenes, systems, playfield, camera, and rules are active.
 
 `ParticipantDefinition` is not the same as `PawnDefinition`.
@@ -620,9 +605,8 @@ If you are lost, walk the chain from top to bottom:
 
 1. What session is running?
 2. What game mode is active?
-3. What setup profile describes that mode?
-4. What runtime patterns are selected?
-5. What participants exist?
-6. Does each participant need a pawn?
-7. Which profiles tune that pawn or scene system?
-8. Which runtime components read those assets?
+3. What participants exist?
+4. Does each participant need a pawn?
+5. Which profiles tune that pawn or scene system?
+6. Which feature modules, contracts, scene evidence, and grammar vocabulary add route meaning?
+7. Which runtime components read those assets?

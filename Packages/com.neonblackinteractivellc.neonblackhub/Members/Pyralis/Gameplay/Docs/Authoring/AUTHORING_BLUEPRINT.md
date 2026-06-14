@@ -53,7 +53,7 @@ Pro-trustworthy means the system does not pretend missing runtime wiring is a le
 
 Guidance should stay reactive to the selected route and the developer's customization:
 
-- explain the current `GameSetupProfile.runtimePatterns`, not a hard-coded genre path
+- explain the current grammar vocabulary and reflected contracts, not a hard-coded genre path
 - show which links are required, recommended, optional, or not needed for this route
 - point to the Inspector field or Unity object where the developer expresses taste
 - point missing asset-chain gaps to native Project-window Create paths and Inspector assignment fields
@@ -66,7 +66,7 @@ When a test finds friction, classify it before fixing:
 |---|---|
 | Missing required reference, invisible prefab, null profile, or runtime service assumption | Fix code, validation, or authored asset shape |
 | User must choose art, tuning, level shape, route capability, input device policy, or UI composition | Guide the Unity workflow and name the relevant fields |
-| Optional system appears required before the first proof | Move it to Proof Enhancers or optional capability vocabulary |
+| Optional system appears required before the first proof | Move it to Proof Enhancers or Optional Capabilities |
 | Inspector duplicates route instructions | Keep compact field-local help and hand off to Authoring |
 | Authoring loses context when selecting child assets or prefabs | Improve active-route inference, pinning, and "you are here" language |
 
@@ -78,7 +78,7 @@ The Authoring Window is the central setup service for Pyralis.
 
 The Inspector remains the direct field editor. The Authoring Window reads the current route, diagnoses readiness, explains selected context, and recommends the next useful move by naming the native Unity action and Inspector field to use.
 
-Scene, prefab, and asset authoring must stay guidance-first. Unity scene objects and authoring assets often need project-specific folders, names, components, layers, art, input modules, camera choices, and designer intent that Pyralis should not hide. The active path is native Unity authoring: create definitions, profiles, runtime patterns, prefabs, components, and scene objects yourself while Authoring Window cards audit, explain, show evidence, describe success, and point to the right Unity object, Create path, Inspector field, or checklist.
+Scene, prefab, and asset authoring must stay guidance-first. Unity scene objects and authoring assets often need project-specific folders, names, components, layers, art, input modules, camera choices, and designer intent that Pyralis should not hide. The active path is native Unity authoring: create definitions, profiles, prefabs, components, and scene objects yourself while Authoring Window cards audit, explain, show evidence, describe success, and point to the right Unity object, Create path, Inspector field, or checklist.
 
 Do not turn scene-surface warnings into hidden one-click creation flows. The author owns the scene; Pyralis makes the setup chain legible.
 
@@ -107,9 +107,8 @@ Keep the implementation split by responsibility:
 | Owner | Responsibility |
 |---|---|
 | `PyralisAuthoringWindow` | UI shell, active setup state, selection, and mode coordination |
-| `PyralisAuthoringRouteDescriptor` | route facts inferred from setup patterns and selected context |
+| `PyralisAuthoringRouteDescriptor` | route facts inferred from authored setup, graph vocabulary, and selected context |
 | `PyralisAuthoringOverviewModel` | Overview read model for graph-projected lanes, first proof text, and Play Mode checklist |
-| `PyralisAuthoringCapabilitySelection` | Capability-row helpers used by Intent-to-`GameSetupProfile` sync and optional `RuntimePatternDefinition` metadata |
 | `PyralisAuthoringCapabilityDescriptorRegistry` | reflected capability descriptors built from contracts first and fallback vocabulary second |
 | `PyralisCapabilityVocabulary` | fallback capability labels, summaries, and native setup wording indexed by capability and runtime lane |
 | `PyralisProofFamilyVocabulary` | generic fallback proof family templates |
@@ -160,7 +159,7 @@ Gameplay code / feature code
 | Gameplay code | runtime behavior, interfaces, components, profiles, definitions, feature modules | authoring prose that belongs in contracts |
 | `[AuthoringContract]` | feature meaning, capability, relevance, proof guidance, native setup meaning, customization moments, unsupported lane messages | code-proven requirements that reflection can infer |
 | Reflection | implemented interfaces, `[RequireComponent]`, serialized fields, `CreateAssetMenu`, `AddComponentMenu`, feature/profile links | human meaning, route taste, or proof copy |
-| Dependency tree | setup/reference structure: bootstrap, session, mode, setup profile, participants, pawns, prefabs, profiles, feature modules | UI labels or route guidance text |
+| Dependency tree | setup/reference structure: bootstrap, session, mode, setup route, participants, pawns, prefabs, profiles, feature modules | UI labels or route guidance text |
 | Scene evidence | bootstrap-scoped scene components and candidate surfaces visible in the open scene | proof results or broad scene-quality policy |
 | Validators | readiness, blockers, missing references, invalid combinations, severity, native action targets | persistent feature meaning or grammar wording |
 | Grammar/vocabulary | labels, summaries, generic proof templates, fallback language, native Unity surface names | feature-specific setup truth or route decisions |
@@ -210,8 +209,8 @@ The Authoring Window should keep this chain visible whenever it can infer it fro
 GameplaySessionBootstrap
   -> SessionDefinition
       -> GameModeDefinition
-          -> GameSetupProfile
-              -> RuntimePatternDefinition[]
+          -> reflected route capabilities
+              -> grammar vocabulary
       -> ParticipantDefinition[]
           -> PawnDefinition optional
               -> pawn prefab
@@ -225,7 +224,7 @@ The user-facing Map chain is:
 Scene Root
 -> Session
 -> Game Rules
--> Setup Profile
+-> Setup Route
 -> Capabilities
 -> Participants
 -> Pawn / No Pawn
@@ -243,11 +242,11 @@ Move the window toward structured authoring facts that every mode can consume.
 Core concepts:
 
 - `Route`: the inferred game surface, such as pawn action, tabletop, action/menu, camera/cursor, scoring, networking, or a hybrid route.
-- `Setup Node`: one row in the authoring chain, such as bootstrap, session, game mode, setup profile, runtime patterns, participants, pawn/no-pawn state, and scene surfaces.
+- `Setup Node`: one row in the authoring chain, such as bootstrap, session, game mode, setup route, route capabilities, participants, pawn/no-pawn state, and scene surfaces.
 - `Issue`: required, recommended, optional, blocked, or not-needed setup work.
 - `Action`: inspect, create, assign, repair, explain, copy checklist, or open documentation.
 - `Evidence`: why the tool believes something is ready, missing, optional, or not needed for this route.
-- `Work Intent`: whether the row is foundation setup, required setup, a proof enhancer, or optional capability vocabulary.
+- `Work Intent`: whether the row is foundation setup, required setup, a proof enhancer, or an optional capability.
 
 The active authoring foundation is the contract/dependency-tree/graph pipeline. `PyralisAuthoringGrammarRegistry` aggregates vocabulary, reflected facts, setup-flow facts, proof templates, inspector handoffs, route intents, scene evidence, and convention facts so projections have stable ids and wording. It is an audit and grammar source, not the primary operating model. Feature-owned `[AuthoringContract]` metadata owns semantic setup meaning; `PyralisSetupDependencyTree` owns serialized setup/reference discovery; validators own scene/runtime readiness; `PyralisAuthoringSetupGraph` compiles those inputs into the single readiness/proof model consumed by tabs. `PyralisAuthoringIntentAdvisor` projects grammar facts into compact pre-setup planning. Intent chooses the route shape; Guide owns the graph-filtered route guide when setup exists; Facts remains the full cookbook and dictionary.
 
@@ -325,7 +324,7 @@ Capability vocabulary cards are fallback wording. The graph-facing capability su
 
 The vocabulary must stay guide-only. It may select, ping, explain, or copy checklist text, but it must not create or assign assets, add components, or treat generated scaffolding as validation evidence. Users should still use native Unity surfaces: Project window asset creation, Hierarchy object creation, Inspector Add Component, Inspector field assignment, object picker, customization through serialized fields, and Play Mode proof.
 
-The same contract/dependency-tree/graph model should expand beyond runtime patterns into the whole setup path: session setup, participants, pawns, NPCs/enemies, custom interactables, pickups, hazards, camera/world bounds, UI/HUD/menus, scoring/objectives, tabletop/control surfaces, and networking.
+The same contract/dependency-tree/graph model should expand beyond route capabilities into the whole setup path: session setup, participants, pawns, NPCs/enemies, custom interactables, pickups, hazards, camera/world bounds, UI/HUD/menus, scoring/objectives, tabletop/control surfaces, and networking.
 
 ## Mode Responsibilities
 
@@ -369,7 +368,7 @@ If the developer is tired or lost, Overview should still make the next move obvi
 Cameron should be able to test the Authoring Window flow with one active route without reading code:
 
 1. Open `NeonBlack/Gameplay/Pyralis Authoring Window`.
-2. Select or pin one `GameplaySessionBootstrap`, `SessionDefinition`, `GameModeDefinition`, or `GameSetupProfile`.
+2. Select or pin one `GameplaySessionBootstrap`, `SessionDefinition`, `GameModeDefinition`, or `SessionDefinition`/`GameModeDefinition` route.
 3. Confirm Overview names the route and shows `Flow Test Status`.
 4. Clear `Do Now` items before trusting Play Mode.
 5. Use `Proof Enhancers` only when the first proof would be hard to read without them.
@@ -428,7 +427,7 @@ When a future helper action exists, it should:
 - select or ping the created object
 - avoid choosing design taste such as art, exact tuning, level layout, or final feature list
 
-New `RuntimePatternDefinition` assets are manual authoring work. The guided flow should choose existing patterns.
+The guided flow should use Intent, reflected setup evidence, contracts, and grammar vocabulary. It should not ask users to create or assign a separate gameplay asset for route capability metadata.
 
 ## Scene Surface Scan
 
@@ -527,7 +526,7 @@ Expected result:
 
 ### Phase 2: Overview As Keep-Going Screen
 
-Refactor Overview around `Do Now`, `Proof Enhancers`, and optional capability vocabulary.
+Refactor Overview around `Do Now`, `Proof Enhancers`, and Optional Capabilities.
 
 Expected result:
 

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Data.Definitions;
-using NeonBlack.Gameplay.Data.Profiles;
 using UnityEditor;
 using UnityEngine;
 
@@ -13,11 +12,8 @@ namespace NeonBlack.Gameplay.Editor
         BootstrapRoot,
         SessionDefinition,
         GameModeDefinition,
-        SetupProfile,
         Participant,
         PawnDefinition,
-        RuntimeCapability,
-        RuntimePattern,
         FeatureModule,
         Profile,
         Prefab,
@@ -79,19 +75,16 @@ namespace NeonBlack.Gameplay.Editor
         public GameplaySessionBootstrap Bootstrap { get; private set; }
         public SessionDefinition Session { get; private set; }
         public GameModeDefinition Mode { get; private set; }
-        public GameSetupProfile SetupProfile { get; private set; }
         public ParticipantDefinition FirstParticipant { get; private set; }
         public PawnDefinition FirstPawn { get; private set; }
         public IReadOnlyList<ParticipantDefinition> Participants => _participants;
         public IReadOnlyList<PawnDefinition> Pawns => _pawns;
-        public IReadOnlyList<RuntimePatternDefinition> RuntimePatterns => _runtimePatterns;
         public IReadOnlyList<FeatureModuleDefinition> FeatureModules => _featureModules;
         public IReadOnlyList<PyralisSetupDependencyNode> Nodes => _nodes;
         public IReadOnlyList<PyralisSetupDependencyEdge> Edges => _edges;
 
         private readonly List<ParticipantDefinition> _participants = new List<ParticipantDefinition>();
         private readonly List<PawnDefinition> _pawns = new List<PawnDefinition>();
-        private readonly List<RuntimePatternDefinition> _runtimePatterns = new List<RuntimePatternDefinition>();
         private readonly List<FeatureModuleDefinition> _featureModules = new List<FeatureModuleDefinition>();
 
         public static PyralisSetupDependencyTree Build(UnityEngine.Object source)
@@ -129,9 +122,6 @@ namespace NeonBlack.Gameplay.Editor
             if (source is GameModeDefinition selectedMode)
                 Mode = selectedMode;
 
-            if (source is GameSetupProfile selectedSetup)
-                SetupProfile = selectedSetup;
-
             if (source is ParticipantDefinition selectedParticipant)
                 FirstParticipant = selectedParticipant;
 
@@ -140,9 +130,6 @@ namespace NeonBlack.Gameplay.Editor
 
             if (Session != null && Mode == null)
                 Mode = GetObjectReference<GameModeDefinition>(Session, "defaultGameMode");
-
-            if (Mode != null && SetupProfile == null)
-                SetupProfile = GetObjectReference<GameSetupProfile>(Mode, "setupProfile");
 
             if (Session != null && FirstParticipant == null)
             {
@@ -169,12 +156,6 @@ namespace NeonBlack.Gameplay.Editor
             if (Mode != null)
                 AddRangeDistinct(_featureModules, GetArrayReferences<FeatureModuleDefinition>(Mode, "requiredFeatureModules"));
 
-            if (SetupProfile != null)
-            {
-                AddRangeDistinct(_runtimePatterns, GetArrayReferences<RuntimePatternDefinition>(SetupProfile, "runtimePatterns"));
-                AddRuntimeCapabilityPatternReferences(SetupProfile);
-            }
-
             for (int i = 0; i < _pawns.Count; i++)
             {
                 PawnDefinition pawn = _pawns[i];
@@ -190,61 +171,16 @@ namespace NeonBlack.Gameplay.Editor
             AddNode("bootstrap.root", "Gameplay Root", PyralisSetupDependencyNodeKind.BootstrapRoot, Bootstrap, string.Empty);
             AddNode("session.definition", "Session Definition", PyralisSetupDependencyNodeKind.SessionDefinition, Session, "GameplaySessionBootstrap.sessionDefinition");
             AddNode("mode.definition", "Game Mode Definition", PyralisSetupDependencyNodeKind.GameModeDefinition, Mode, "SessionDefinition.defaultGameMode");
-            AddNode("setup.profile", "Game Setup Profile", PyralisSetupDependencyNodeKind.SetupProfile, SetupProfile, "GameModeDefinition.setupProfile");
             AddNode("participant.default", "Participants", PyralisSetupDependencyNodeKind.Participant, FirstParticipant, "SessionDefinition.defaultParticipants");
             AddNode("pawn.definition", "Pawn Definition", PyralisSetupDependencyNodeKind.PawnDefinition, FirstPawn, "ParticipantDefinition.defaultPawn");
-            AddSetupProfileDependencyNodes();
             AddModeDependencyNodes();
             AddParticipantDependencyNodes();
             AddPawnDependencyNodes();
 
             AddEdge("bootstrap.root", "session.definition", "sessionDefinition", "reads");
             AddEdge("session.definition", "mode.definition", "defaultGameMode", "default mode");
-            AddEdge("mode.definition", "setup.profile", "setupProfile", "setup profile");
             AddEdge("session.definition", "participant.default", "defaultParticipants", "default participants");
             AddEdge("participant.default", "pawn.definition", "defaultPawn", "pawn route");
-        }
-
-        private void AddSetupProfileDependencyNodes()
-        {
-            if (SetupProfile == null)
-                return;
-
-            SerializedObject serializedSetup = new SerializedObject(SetupProfile);
-            SerializedProperty capabilities = serializedSetup.FindProperty("runtimeCapabilities");
-            if (capabilities != null && capabilities.isArray)
-            {
-                for (int i = 0; i < capabilities.arraySize; i++)
-                {
-                    SerializedProperty capability = capabilities.GetArrayElementAtIndex(i);
-                    if (capability == null)
-                        continue;
-
-                    SerializedProperty family = capability.FindPropertyRelative("capabilityFamily");
-                    SerializedProperty pattern = capability.FindPropertyRelative("patternDefinition");
-                    string label = family != null
-                        ? ((RuntimeCapabilityFamily)family.enumValueIndex).ToString()
-                        : "Runtime Capability";
-                    string nodeId = "setup.capability." + i;
-                    AddNode(nodeId, label, PyralisSetupDependencyNodeKind.RuntimeCapability, SetupProfile, $"GameSetupProfile.runtimeCapabilities[{i}]");
-                    AddEdge("setup.profile", nodeId, $"runtimeCapabilities[{i}]", "runtime capability");
-
-                    if (pattern != null && pattern.objectReferenceValue is RuntimePatternDefinition patternDefinition)
-                    {
-                        string patternNodeId = "runtime-pattern." + i;
-                        AddNode(patternNodeId, GetObjectLabel(patternDefinition), PyralisSetupDependencyNodeKind.RuntimePattern, patternDefinition, $"GameSetupProfile.runtimeCapabilities[{i}].patternDefinition");
-                        AddEdge(nodeId, patternNodeId, "patternDefinition", "capability pattern");
-                    }
-                }
-            }
-
-            for (int i = 0; i < _runtimePatterns.Count; i++)
-            {
-                RuntimePatternDefinition pattern = _runtimePatterns[i];
-                string nodeId = "setup.runtime-pattern." + i;
-                AddNode(nodeId, GetObjectLabel(pattern), PyralisSetupDependencyNodeKind.RuntimePattern, pattern, $"GameSetupProfile.runtimePatterns[{i}]");
-                AddEdge("setup.profile", nodeId, $"runtimePatterns[{i}]", "runtime pattern");
-            }
         }
 
         private void AddModeDependencyNodes()
@@ -387,21 +323,6 @@ namespace NeonBlack.Gameplay.Editor
         private void AddEdge(string fromNodeId, string toNodeId, string fieldPath, string label)
         {
             _edges.Add(new PyralisSetupDependencyEdge(fromNodeId, toNodeId, fieldPath, label));
-        }
-
-        private void AddRuntimeCapabilityPatternReferences(GameSetupProfile setupProfile)
-        {
-            SerializedObject serializedSetup = new SerializedObject(setupProfile);
-            SerializedProperty capabilities = serializedSetup.FindProperty("runtimeCapabilities");
-            if (capabilities == null || !capabilities.isArray)
-                return;
-
-            for (int i = 0; i < capabilities.arraySize; i++)
-            {
-                SerializedProperty capability = capabilities.GetArrayElementAtIndex(i);
-                SerializedProperty pattern = capability?.FindPropertyRelative("patternDefinition");
-                AddDistinct(_runtimePatterns, pattern?.objectReferenceValue as RuntimePatternDefinition);
-            }
         }
 
         private static T GetObjectReference<T>(UnityEngine.Object owner, string propertyPath) where T : UnityEngine.Object

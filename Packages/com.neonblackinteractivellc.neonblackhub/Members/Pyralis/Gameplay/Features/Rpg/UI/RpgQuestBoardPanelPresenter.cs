@@ -16,7 +16,6 @@ namespace NeonBlack.Gameplay.Features.Rpg.UI
         ModuleId = "rpg.quest.ui",
         Capability = AuthoringCapability.Dialogue,
         Lane = "RPG",
-        RequiredInterfaces = new[] { typeof(IRuntimeValidationProvider) },
         RequiredComponentNames = new[] { "TMPro.TextMeshProUGUI" },
         FirstProof = "Verify that the quest board displays the list of quests and correctly handles quest selection."
     )]

@@ -56,11 +56,11 @@ When another teammate opens the shared Game Studio Core project folder, Unity sh
 Before debugging script errors on another machine, check the package source that Unity is actually reading:
 
 1. Open `Packages/com.neonblackinteractivellc.neonblackhub/package.json`.
-2. Confirm `"version": "0.2.0"`.
+2. Confirm `"version": "0.2.8"`.
 3. Confirm the package has `Members/Pyralis/Gameplay/`.
 4. Confirm `Packages/manifest.json` does not reference `com.studiotools.core`.
 
-If `package.json` still says an older version, that machine has an older copy of the package folder and needs the current project files. If `package.json` says `0.2.0` but Unity Package Manager still displays an older version, close Unity, remove the local `Library/PackageCache/com.neonblackinteractivellc.neonblackhub*` cache entry if one exists, reopen the project, and let Unity re-resolve packages. The shared project uses the embedded package under `Packages/`; the package cache is only Unity-generated local state.
+If `package.json` still says an older version, that machine has an older copy of the package folder and needs the current project files. If `package.json` says `0.2.8` but Unity Package Manager still displays an older version, close Unity, remove the local `Library/PackageCache/com.neonblackinteractivellc.neonblackhub*` cache entry if one exists, reopen the project, and let Unity re-resolve packages. The shared project uses the embedded package under `Packages/`; the package cache is only Unity-generated local state.
 
 ## Quick start
 

@@ -47,7 +47,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             string bootstrap = File.ReadAllText(bootstrapPath);
 
             Assert.That(startHere.Contains("Setup Flow"), Is.True);
-            Assert.That(startHere.Contains("Create new `RuntimePatternDefinition` assets only when"), Is.True);
+            Assert.That(startHere.Contains("route capability"), Is.True);
             Assert.That(canonical.Contains("`Docs/Authoring/START_HERE.md`"), Is.True);
             Assert.That(canonical.Contains("MANUAL.md"), Is.False);
             Assert.That(canonical.Contains("map Pyralis gameplay roles to your project's action names"), Is.True);
@@ -118,8 +118,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(blueprint.Contains("If the answer is \"UI projection,\" the file should not be discovering route truth."), Is.True);
             Assert.That(model.Contains("Contracts + reflection + dependency tree + scene evidence + validators + grammar"), Is.True);
             Assert.That(bootstrap.Contains("choose runtime capability ingredients"), Is.True);
-            Assert.That(bootstrap.Contains("- one or more existing `RuntimePatternDefinition` assets"), Is.False);
-            Assert.That(bootstrap.Contains("assign one or more existing `RuntimePatternDefinition` assets"), Is.False);
+            Assert.That(bootstrap.Contains("choose runtime capability ingredients"), Is.True);
         }
 
         [Test]

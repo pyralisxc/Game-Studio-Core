@@ -1,4 +1,4 @@
-﻿# Scene Flow Setup - Step-by-Step
+# Scene Flow Setup - Step-by-Step
 
 Covers the Game Shell MVP route: boot scene, loading scene, main menu, settings, credits, and gameplay scene transition through `SceneFader`, `LoadingScreenController`, `MainMenuManager`, and `ISceneNavigator`.
 
@@ -6,15 +6,15 @@ Covers the Game Shell MVP route: boot scene, loading scene, main menu, settings,
 
 ## Before You Wire This
 
-Start with a `GameSetupProfile` assigned to `GameModeDefinition.setupProfile`.
+Start with a `SessionDefinition` assigned to `GameplaySessionBootstrap.sessionDefinition` and a `GameModeDefinition` assigned to `SessionDefinition.defaultGameMode`.
 
-Recommended runtime patterns:
+Recommended route capabilities:
 
 - Platform Core for shared scene bootstrapping, navigation, and setup validation
 - Camera/Cursor Control when the player is the camera, cursor, menu focus, or tabletop selection surface
 - Realtime Character, Board/Card/Tabletop, or Turn/Menu Action based on the destination scene's actual control model
 
-Resolve setup-profile validation before assigning menu destinations, faders, loading screens, or restart flow.
+Resolve route validation before assigning menu destinations, faders, loading screens, or restart flow.
 
 ---
 

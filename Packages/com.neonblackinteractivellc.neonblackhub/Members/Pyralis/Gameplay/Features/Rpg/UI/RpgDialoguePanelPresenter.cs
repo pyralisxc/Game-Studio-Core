@@ -16,7 +16,6 @@ namespace NeonBlack.Gameplay.Features.Rpg.UI
         ModuleId = "rpg.dialogue.ui",
         Capability = AuthoringCapability.Dialogue,
         Lane = "RPG",
-        RequiredInterfaces = new[] { typeof(IRuntimeValidationProvider) },
         RequiredComponentNames = new[] { "TMPro.TextMeshProUGUI" },
         NativeSetup = new[] { "Add to a Canvas-backed RPG dialogue panel.", "Assign speaker, line, choice, and issue labels from the UI hierarchy." },
         AssignmentFields = new[] { nameof(routePresenter), nameof(dialogueGraphs), nameof(npcProfiles), nameof(speakerLabel), nameof(lineLabel), nameof(choiceButtons) },

@@ -1,6 +1,5 @@
 using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Data.Definitions;
-using NeonBlack.Gameplay.Data.Profiles;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -63,10 +62,6 @@ namespace NeonBlack.Gameplay.Editor
             if (selection is GameModeDefinition && rememberedSession != null)
                 return rememberedSession.defaultGameMode == null;
 
-            GameModeDefinition rememberedMode = GetSelectedMode(rememberedSetup, rememberedSession);
-            if (selection is GameSetupProfile && rememberedMode != null)
-                return rememberedMode.setupProfile == null;
-
             return false;
         }
 
@@ -96,8 +91,7 @@ namespace NeonBlack.Gameplay.Editor
                 return linkedBootstrap;
 
             if (selection is SessionDefinition
-                || selection is GameModeDefinition
-                || selection is GameSetupProfile)
+                || selection is GameModeDefinition)
                 return selection;
 
             GameplaySessionBootstrap bootstrap = GetSelectedBootstrap(selection);
@@ -162,14 +156,10 @@ namespace NeonBlack.Gameplay.Editor
                 return false;
 
             if (selection == mode
-                || selection == mode.setupProfile
                 || selection == mode.playfieldProfile
                 || selection == mode.cameraRigProfile
                 || selection == mode.turnOrderDefinition
                 || selection == mode.boardDefinition)
-                return true;
-
-            if (SetupProfileReferencesSelection(mode.setupProfile, selection))
                 return true;
 
             if (mode.requiredFeatureModules != null)
@@ -188,26 +178,6 @@ namespace NeonBlack.Gameplay.Editor
                     if (selection == mode.boardTerminalConditions[i])
                         return true;
                 }
-            }
-
-            return false;
-        }
-
-        private static bool SetupProfileReferencesSelection(GameSetupProfile setupProfile, Object selection)
-        {
-            if (setupProfile == null)
-                return false;
-
-            if (selection == setupProfile)
-                return true;
-
-            if (setupProfile.runtimePatterns == null)
-                return false;
-
-            for (int i = 0; i < setupProfile.runtimePatterns.Length; i++)
-            {
-                if (selection == setupProfile.runtimePatterns[i])
-                    return true;
             }
 
             return false;
@@ -318,14 +288,6 @@ namespace NeonBlack.Gameplay.Editor
                 return mode;
 
             return session != null ? session.defaultGameMode : null;
-        }
-
-        public static GameSetupProfile GetSelectedSetupProfile(Object selection, GameModeDefinition mode)
-        {
-            if (selection is GameSetupProfile setupProfile)
-                return setupProfile;
-
-            return mode != null ? mode.setupProfile : null;
         }
 
     }

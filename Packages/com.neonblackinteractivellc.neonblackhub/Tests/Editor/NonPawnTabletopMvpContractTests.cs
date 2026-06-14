@@ -68,7 +68,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             string guidance = File.ReadAllText(FindGameplayEditorFile("PyralisSetupFlowGuidance.cs"));
             string routeAnalysis = File.ReadAllText(FindGameplayEditorFile("PyralisSetupRouteAnalysis.cs"));
 
-            StringAssert.Contains("ParticipantEmbodimentRequirement.RequiredPawn", routeAnalysis);
+            StringAssert.Contains("RequiresPawn", routeAnalysis);
             StringAssert.Contains("No participant pawn is required for this setup route.", validator);
             StringAssert.Contains("Spawn points can stay empty for no-pawn board/card/menu/camera routes.", validator);
             StringAssert.Contains("Tabletop Runtime Contract", guidance);

@@ -4,16 +4,16 @@ Use shared combat definitions to author combat types once and reuse them across 
 
 ## Before You Wire This
 
-Start with a `GameSetupProfile` assigned to `GameModeDefinition.setupProfile`.
+Start with a `SessionDefinition` assigned to `GameplaySessionBootstrap.sessionDefinition` and a `GameModeDefinition` assigned to `SessionDefinition.defaultGameMode`.
 
-Recommended runtime patterns:
+Recommended route capabilities:
 
 - Combat
 - Realtime Character for brawlers, fighters, and action games
 - Projectile Combat when combat actions fire projectiles or hitscan commands
 - Turn/Menu Action when combat is selected through menus, tactics UI, cards, or command queues
 
-Resolve setup-profile validation before creating combat definitions, assigning pawn combat profiles, or wiring hitboxes/projectiles.
+Resolve route validation before creating combat definitions, assigning pawn combat profiles, or wiring hitboxes/projectiles.
 
 ## Core Assets
 

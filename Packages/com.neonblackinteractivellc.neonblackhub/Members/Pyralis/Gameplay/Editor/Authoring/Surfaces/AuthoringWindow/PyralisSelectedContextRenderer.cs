@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Data.Definitions;
-using NeonBlack.Gameplay.Data.Profiles;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -14,8 +13,7 @@ namespace NeonBlack.Gameplay.Editor
         public static void Draw(
             Object selection,
             PyralisAuthoringSetupGraph graph,
-            PyralisAuthoringCurrentStepGraphRow currentStep,
-            Action<RuntimePatternDefinition> fillMissingRuntimePatternText)
+            PyralisAuthoringCurrentStepGraphRow currentStep)
         {
             EditorGUILayout.Space(12f);
             EditorGUILayout.LabelField("Selected Authoring Context", EditorStyles.boldLabel);
@@ -39,8 +37,6 @@ namespace NeonBlack.Gameplay.Editor
                     EditorGUIUtility.PingObject(selection);
                 }
 
-                if (selection is RuntimePatternDefinition pattern)
-                    DrawRuntimePatternActions(pattern, selectedContext, fillMissingRuntimePatternText);
             }
 
             if (selection is GameObject gameObject)
@@ -170,30 +166,6 @@ namespace NeonBlack.Gameplay.Editor
                     EditorGUILayout.HelpBox(currentStep.Message, GetMessageType(currentStep.EvidenceState));
                 else
                     EditorGUILayout.HelpBox("Required setup is clear. Run the first proof pass first, then handle recommended items while the route grows.", MessageType.Info);
-            }
-        }
-
-        private static void DrawRuntimePatternActions(
-            RuntimePatternDefinition pattern,
-            PyralisAuthoringSelectedContextGraphRow selectedContext,
-            Action<RuntimePatternDefinition> fillMissingRuntimePatternText)
-        {
-            EditorGUILayout.Space(4f);
-            EditorGUILayout.LabelField("Runtime Pattern Actions", EditorStyles.boldLabel);
-
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                using (new EditorGUI.DisabledScope(selectedContext == null || !selectedContext.HasMissingRuntimePatternText))
-                {
-                    if (GUILayout.Button(new GUIContent("Fill Missing Text From Fields", "Fills only empty Description and Setup Notes from the selected pattern fields. It does not choose a route, assign requirements, or create setup content.")))
-                        fillMissingRuntimePatternText?.Invoke(pattern);
-                }
-
-                using (new EditorGUI.DisabledScope(selectedContext == null || string.IsNullOrWhiteSpace(selectedContext.CopyGuidance)))
-                {
-                    if (GUILayout.Button("Copy Guidance"))
-                        EditorGUIUtility.systemCopyBuffer = selectedContext.CopyGuidance;
-                }
             }
         }
 

@@ -21,7 +21,7 @@ A route is complete when it has:
 - prefab and scene setup path
 - Authoring Window guidance
 - validation
-- generic setup guidance, cookbook facts, or optional route contracts after the manual authoring path is proven
+- generic setup guidance, cookbook facts, or grammar vocabulary after the manual authoring path is proven
 - sample or proof scene evidence
 - first playable proof
 - docs
@@ -103,7 +103,7 @@ After the authoring layer can explain and validate routes, expand the runtime su
 - Procedural and content generation: rooms/chunks, sockets, encounter budgets, spawn tables, seeded generation, previews, unreachable-room validation, loot/reward/wave generation, board layouts, difficulty curves, and biomes.
 - Multiplayer and networking: lobby/host/client flow, network prefab validation, authority models, ownership transfer, replicated health/score/state, input streaming, prediction/reconciliation, projectile replication, disconnect/reconnect, match flow, and Steamworks lobby integration.
 - Steam and shipping: Steamworks, achievements, stats, cloud saves, rich presence, controller and Steam Deck checks, build pipeline, versioning, logs/crashes, localization, credits/legal, save migration, and demo support.
-- Studio production tools: project naming/folder conventions, asset/build validation, automated playtest scenes, content dashboards, balance tables, generated designer docs, mechanic test scenes, performance budgets, dependency health checks, sample projects, cookbook facts, optional route contracts, and reusable features.
+- Studio production tools: project naming/folder conventions, asset/build validation, automated playtest scenes, content dashboards, balance tables, generated designer docs, mechanic test scenes, performance budgets, dependency health checks, sample projects, cookbook facts, grammar vocabulary, and reusable features.
 
 ### Major Game Lanes
 
@@ -207,25 +207,23 @@ Not included yet:
 - inventory-level ammo ownership across multiple fire modes
 - projectile trail/impact material presets
 
-## Slice 3: Runtime Pattern Setup
+## Slice 3: Route Capability Setup
 
 Status: foundational code added.
 
 Goal:
 
-- create composable setup profiles that describe overlapping game-loop expectations without making game type an exclusive dropdown
+- create composable setup routes that describe overlapping game-loop expectations without making game type an exclusive dropdown
 
 Initial deliverables added:
 
-- `RuntimeControlSurface`
-- `ParticipantEmbodimentRequirement`
 - `RuntimeCapabilityFamily`
-- `RuntimePatternDefinition`
-- `GameSetupProfile`
-- validation for missing identity, missing control surfaces, pawn/non-pawn mismatches, duplicate setup patterns, and cautionary pattern combinations
+- graph vocabulary for capability family, control shape, pawn/no-pawn route evidence, and proof nodes
+- `SessionDefinition`/`GameModeDefinition` route
+- validation for missing identity, pawn/no-pawn mismatches, duplicate setup evidence, and cautionary capability combinations
 - runtime capability families and optional contracts for realtime character, projectile combat, turn/menu action, board/card/tabletop, camera/cursor control, and composed brawler-with-projectiles setup
-- setup-profile and runtime-pattern custom inspectors
-- optional `GameModeDefinition.setupProfile` linkage so game-mode validation includes setup-profile issues
+- route capability and graph-backed authoring inspectors
+- optional `SessionDefinition.defaultGameMode` and `GameModeDefinition` fields linkage so game-mode validation includes route issues
 
 Not included yet:
 
@@ -382,7 +380,7 @@ Use `CORE_PACKAGE_READINESS_CHECKPOINTS.md` as the near-term product gate.
 1. Make the Authoring Window the route auditor and tutor: guided checklists, first proofs, exact issue cards, scene surface evidence, common mistake detection, and safe repair actions.
 2. Finish Rules-Driven Tabletop MVP: expanded named move policies, richer capture/occupancy policies, additional terminal conditions, generic setup guidance, first proof, and beginner setup docs.
 3. Prove Local Two-Player Side-Scrolling Shooter MVP: local participant setup, 2D projectile launcher setup path, scene readiness validation, proof scene path, and first proof.
-4. Keep Unity-Only Authoring UX current: guided inspectors, Create Asset menu coverage, cookbook facts, optional route contracts, and setup validation for every new creator-facing asset.
+4. Keep Unity-Only Authoring UX current: guided inspectors, Create Asset menu coverage, cookbook facts, grammar vocabulary, and setup validation for every new creator-facing asset.
 5. Preserve Runtime Parity Hardening: update matrix, inventory, tests, and docs whenever a lane changes status.
 6. Start RPG Systems Platform only as coherent tested slices that preserve participant-owned, actor-agnostic architecture.
 

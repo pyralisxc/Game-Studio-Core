@@ -21,9 +21,7 @@ namespace NeonBlack.Gameplay.Editor
     public enum PyralisAuthoringGraphSourceKind
     {
         Unknown,
-        SetupProfile,
         CapabilityVocabulary,
-        RuntimePattern,
         AuthoringContract,
         GrammarRegistry,
         SetupFlow,
@@ -146,8 +144,6 @@ namespace NeonBlack.Gameplay.Editor
         {
             return sourceKind switch
             {
-                PyralisAuthoringGraphSourceKind.SetupProfile => PyralisAuthoringGraphSourceOrigin.UserAuthoredSetup,
-                PyralisAuthoringGraphSourceKind.RuntimePattern => PyralisAuthoringGraphSourceOrigin.UserAuthoredSetup,
                 PyralisAuthoringGraphSourceKind.AuthoringContract => PyralisAuthoringGraphSourceOrigin.Contract,
                 PyralisAuthoringGraphSourceKind.SetupFlow => PyralisAuthoringGraphSourceOrigin.RuntimeEvidence,
                 PyralisAuthoringGraphSourceKind.SceneReadiness => PyralisAuthoringGraphSourceOrigin.RuntimeEvidence,

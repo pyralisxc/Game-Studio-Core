@@ -1,19 +1,19 @@
-﻿# Arcade Setup
+# Arcade Setup
 
 Use this guide for supported 2D score-loop scene setup. All 2D systems now live under `Members/Pyralis/Gameplay/Features/[Name]/2D/`.
 
 ## Before You Wire This
 
-Start with a `GameSetupProfile` assigned to `GameModeDefinition.setupProfile`.
+Start with a `SessionDefinition` assigned to `GameplaySessionBootstrap.sessionDefinition` and a `GameModeDefinition` assigned to `SessionDefinition.defaultGameMode`.
 
-Recommended runtime patterns:
+Recommended route capabilities:
 
 - Realtime Character
 - Scoring/Objectives
 - Camera/Cursor Control if the scene uses menu or camera-owned selection
 - Projectile Combat if the arcade loop includes guns, spells, traps, or turrets
 
-Resolve setup-profile validation before wiring menu, scene flow, pawn, scoring, pickup, or hazard objects.
+Resolve route validation before wiring menu, scene flow, pawn, scoring, pickup, or hazard objects.
 
 ## What this guide covers
 

@@ -6,16 +6,16 @@ Covers `HealthComponent`, `HitBox`, `WeaponData`, `KnockbackReceiver`, and `Dama
 
 ## Before You Wire This
 
-Start with a `GameSetupProfile` assigned to `GameModeDefinition.setupProfile`.
+Start with a `SessionDefinition` assigned to `GameplaySessionBootstrap.sessionDefinition` and a `GameModeDefinition` assigned to `SessionDefinition.defaultGameMode`.
 
-Recommended runtime patterns:
+Recommended route capabilities:
 
 - Combat
 - Realtime Character for direct pawn/enemy fighting
 - Projectile Combat for guns, spells, hitscan, thrown objects, or ranged hazards
 - Turn/Menu Action for tactics, card combat, or menu-selected attacks
 
-Resolve setup-profile validation before attaching health, hitboxes, weapons, damage numbers, or knockback receivers.
+Resolve route validation before attaching health, hitboxes, weapons, damage numbers, or knockback receivers.
 
 ---
 
@@ -31,7 +31,7 @@ Resolve setup-profile validation before attaching health, hitboxes, weapons, dam
 ## Step 1 - Add HealthComponent to a character
 
 1. Select the root GameObject of your player or enemy prefab.
-2. Add Component → search `HealthComponent` → click it.
+2. Add Component â†’ search `HealthComponent` â†’ click it.
 3. In the Inspector, set the following fields:
 
 **Stats**
@@ -73,7 +73,7 @@ Resolve setup-profile validation before attaching health, hitboxes, weapons, dam
 
 `WeaponData` holds the stats for one weapon or attack type.
 
-1. Right-click in the Project window → **Create → NeonBlack → Gameplay → Combat → Weapon Data**.
+1. Right-click in the Project window â†’ **Create â†’ NeonBlack â†’ Gameplay â†’ Combat â†’ Weapon Data**.
 2. Name it (e.g. `WeaponData_Punch`).
 3. Fill in the Inspector:
 
@@ -102,10 +102,10 @@ Resolve setup-profile validation before attaching health, hitboxes, weapons, dam
 A `HitBox` lives on a child GameObject inside your character prefab. It defines the volume of an attack.
 
 1. Open your character prefab in Prefab Mode.
-2. Right-click the root → **Create Empty** child. Rename it `HitBox_Punch` (or whatever matches your `WeaponData.hitBoxZone`).
+2. Right-click the root â†’ **Create Empty** child. Rename it `HitBox_Punch` (or whatever matches your `WeaponData.hitBoxZone`).
 3. With `HitBox_Punch` selected, add a **BoxCollider** (or SphereCollider). Do **not** check **Is Trigger** - the `HitBox` script uses an overlap query, not a trigger.
 4. Position and size the collider to cover the attack reach.
-5. Add Component → `HitBox`.
+5. Add Component â†’ `HitBox`.
 6. Fill in the Inspector:
 
 **Owner**
@@ -155,14 +155,14 @@ Hit pause and camera shake are explicit service hooks. New prefabs should wire t
 ## How damage flows at runtime
 
 ```
-Motor3D dispatches Attack → PawnCombatBehaviour.HandleAttack()
-  → activates HitBox.Fire(damage, knockback)
-  → HitBox runs Physics.OverlapBox
-  → finds HealthComponent on hit targets (different faction only)
-  → calls target.TakeDamage(damage, hitPoint, attacker)
-  → HealthComponent fires OnDamaged event
-  → KnockbackReceiver.ApplyKnockback called with direction * force
-  → health reaches 0 → OnDeath fires
+Motor3D dispatches Attack â†’ PawnCombatBehaviour.HandleAttack()
+  â†’ activates HitBox.Fire(damage, knockback)
+  â†’ HitBox runs Physics.OverlapBox
+  â†’ finds HealthComponent on hit targets (different faction only)
+  â†’ calls target.TakeDamage(damage, hitPoint, attacker)
+  â†’ HealthComponent fires OnDamaged event
+  â†’ KnockbackReceiver.ApplyKnockback called with direction * force
+  â†’ health reaches 0 â†’ OnDeath fires
 ```
 
 ---

@@ -1,6 +1,5 @@
 using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Data.Definitions;
-using NeonBlack.Gameplay.Data.Profiles;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Editor
@@ -9,20 +8,16 @@ namespace NeonBlack.Gameplay.Editor
     {
         private PyralisAuthoringRouteDescriptor(PyralisSetupRouteAnalysis analysis)
         {
-            Analysis = analysis ?? PyralisSetupRouteAnalysis.Build((GameSetupProfile)null);
+            Analysis = analysis ?? PyralisSetupRouteAnalysis.Build((Object)null);
         }
 
         public PyralisSetupRouteAnalysis Analysis { get; }
         public SessionDefinition Session => Analysis.Session;
         public GameModeDefinition Mode => Analysis.Mode;
-        public GameSetupProfile SetupProfile => Analysis.SetupProfile;
-        public RuntimePatternDefinition[] Patterns => Analysis.Patterns ?? System.Array.Empty<RuntimePatternDefinition>();
         public RuntimeCapabilityFamily[] CapabilityFamilies => Analysis.CapabilityFamilies ?? System.Array.Empty<RuntimeCapabilityFamily>();
-        public string[] RequiredRuntimeSystems => Analysis.RequiredRuntimeSystems ?? System.Array.Empty<string>();
         public PyralisAuthoringRouteFact[] RouteFacts => Analysis.RouteFacts ?? System.Array.Empty<PyralisAuthoringRouteFact>();
         public PyralisAuthoringRouteFact PrimaryRouteFact => Analysis.PrimaryRouteFact;
-        public bool HasAssignedPatterns => Analysis.HasAssignedPatterns;
-        public bool HasValidPatterns => Analysis.HasValidPatterns;
+        public bool HasSelectedCapabilities => Analysis.HasSelectedCapabilities;
         public bool RequiresPawn => Analysis.RequiresPawn;
         public bool HasParticipants => Analysis.HasParticipants;
         public bool HasAnyDefaultPawn => Analysis.HasAnyDefaultPawn;
@@ -41,7 +36,6 @@ namespace NeonBlack.Gameplay.Editor
         public bool HasProcedural => HasFamily(RuntimeCapabilityFamily.ProceduralGeneration);
         public bool HasNetworking => HasFamily(RuntimeCapabilityFamily.Networking);
         public bool HasPlatformCore => HasFamily(RuntimeCapabilityFamily.PlatformCore);
-        public bool HasSelectedCapabilities => CapabilityFamilies.Length > 0 || HasValidPatterns;
 
         public bool UsesWorld => HasSelectedCapabilities && (Analysis.UsesPlayfield() || Analysis.UsesPawnGameplay() || Analysis.UsesProjectileCombat());
         public bool UsesCamera => HasSelectedCapabilities && Analysis.UsesCamera();
@@ -56,13 +50,7 @@ namespace NeonBlack.Gameplay.Editor
             GameplaySessionBootstrap bootstrap = PyralisAuthoringSetupContextResolver.GetSelectedBootstrap(activeSetup);
             SessionDefinition session = PyralisAuthoringSetupContextResolver.GetSelectedSession(activeSetup, bootstrap);
             GameModeDefinition mode = PyralisAuthoringSetupContextResolver.GetSelectedMode(activeSetup, session);
-            GameSetupProfile setupProfile = PyralisAuthoringSetupContextResolver.GetSelectedSetupProfile(activeSetup, mode);
-            return Build(setupProfile, session, mode);
-        }
-
-        public static PyralisAuthoringRouteDescriptor Build(GameSetupProfile setupProfile, SessionDefinition session = null, GameModeDefinition mode = null)
-        {
-            return Build(PyralisSetupRouteAnalysis.Build(setupProfile, session, mode));
+            return Build(PyralisSetupRouteAnalysis.Build(mode, session));
         }
 
         public static PyralisAuthoringRouteDescriptor Build(PyralisSetupRouteAnalysis analysis)
@@ -78,36 +66,7 @@ namespace NeonBlack.Gameplay.Editor
                     return true;
             }
 
-            for (int i = 0; i < Patterns.Length; i++)
-            {
-                RuntimePatternDefinition pattern = Patterns[i];
-                if (IsValidPattern(pattern) && pattern.capabilityFamily == family)
-                    return true;
-            }
-
             return false;
-        }
-
-        public bool SupportsSurface(RuntimeControlSurface surface)
-        {
-            for (int i = 0; i < Patterns.Length; i++)
-            {
-                RuntimePatternDefinition pattern = Patterns[i];
-                if (IsValidPattern(pattern) && pattern.SupportsControlSurface(surface))
-                    return true;
-            }
-
-            return false;
-        }
-
-        public bool RequiresRuntimeSystem(string token)
-        {
-            return Analysis.RequiresRuntimeSystem(token);
-        }
-
-        private static bool IsValidPattern(RuntimePatternDefinition pattern)
-        {
-            return pattern != null && pattern.GetValidationIssues().Count == 0;
         }
     }
 }

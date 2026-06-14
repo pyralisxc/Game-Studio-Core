@@ -29,7 +29,6 @@ namespace NeonBlack.Gameplay.Data.Definitions
         Capability = AuthoringCapability.Setup, 
         Relevance = "Authoring container for attachable runtime logic, used to extend Pawns or Game Modes with modular functionality.",
         AssignmentFields = new[] { nameof(moduleId), nameof(displayName), nameof(profileAsset), nameof(runtimePrefab) },
-        FirstProofTargetId = "proof.custom-object-effect",
         FirstProof = "Add this Feature Module to the 'Required Feature Modules' list on a Game Mode or Pawn Definition.",
         NativeSetup = new[] { "Create Asset.", "Define Module ID.", "Assign Runtime Prefab and Profile Asset." },
         ExpertAdvice = "Module ID must be unique across the project. Use 'OfflineOnly' network role for purely visual or local-state modules.",

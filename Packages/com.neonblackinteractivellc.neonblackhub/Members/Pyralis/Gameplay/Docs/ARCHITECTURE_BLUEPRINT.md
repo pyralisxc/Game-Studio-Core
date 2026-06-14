@@ -73,7 +73,7 @@ The maintainable path is:
 
 - one obvious scene entrypoint,
 - one obvious top-level session asset,
-- visible links from mode intent to setup profile to runtime patterns,
+- visible links from session, mode, participants, pawns, feature modules, scene evidence, grammar vocabulary, and reflected contracts,
 - validation messages near the fields that caused them,
 - feature-owned authoring contracts that feed setup guidance, validation, facts, and proof targets.
 
@@ -245,9 +245,9 @@ Examples:
 
 Control surfaces should route through participant ownership and input/action contracts rather than forcing all games through pawn movement.
 
-### Runtime Pattern
+### Route Capability
 
-A reusable optional route contract that describes a capability family and its participant/control-surface expectations.
+A graph-readable capability family and its participant/control-surface expectations.
 
 Examples:
 
@@ -260,21 +260,7 @@ Examples:
 - procedural segments
 - animation mapping
 
-Runtime patterns are composable. A game mode should be able to combine realtime character, projectile combat, side-scrolling playfield, scoring, and animation mapping without pretending those are separate frameworks.
-
-### Game Setup Profile
-
-An authored profile that selects multiple runtime patterns to describe one game loop.
-
-Examples:
-
-- brawler with projectiles
-- side-scrolling shooter
-- card battler
-- tactics prototype
-- camera/cursor tabletop game
-
-This profile is the bridge between product intent and future setup tooling. It is not a runtime manager and should not execute game logic directly.
+Route capabilities are composable. A game mode should be able to combine realtime character, projectile combat, side-scrolling playfield, scoring, and animation mapping without pretending those are separate frameworks.
 
 ## Target Data Model
 
@@ -324,31 +310,28 @@ Defines:
 
 Future mode definitions may also reference turn, action, board, card, or procedural generation profiles when the game is not pawn-controller-first.
 
-### RuntimePatternDefinition
+### Reflected Route Capability Graph
 
 Defines:
 
-- stable pattern id,
-- display name and setup notes,
 - capability family,
 - supported control surfaces,
 - participant embodiment requirement,
 - required and optional runtime systems,
-- recommended companion patterns,
-- cautionary companion patterns.
+- companion and cautionary capability relationships,
+- first-proof vocabulary and graph proof evidence.
 
-Patterns should be used as reusable setup vocabulary, not as exclusive game-type labels.
+Route capability data is inferred from `SessionDefinition`, `GameModeDefinition`, participants, pawns, feature modules, scene evidence, contracts/reflection, and grammar vocabulary. It is reusable setup vocabulary, not an exclusive game-type label or a separate gameplay/runtime data asset.
 
-### GameSetupProfile
+### Reflected Setup Route
 
 Defines:
 
-- setup name and summary,
-- selected runtime patterns,
-- setup notes,
-- validation for missing pattern metadata, duplicate pattern ids, pawn/non-pawn mismatch, and cautionary combinations.
+- the route capabilities inferred from session, mode, participants, pawns, feature modules, scene evidence, contracts/reflection, and grammar vocabulary,
+- setup notes from graph vocabulary, facts, and reflected contracts,
+- validation for missing route evidence, pawn/non-pawn mismatch, invalid feature modules, and cautionary combinations.
 
-Game setup profiles should become the object future wizards, sample generators, and setup validators read before creating or inspecting scene content.
+Future wizards, sample generators, and setup validators should read the reflected route graph before creating or inspecting scene content.
 
 ### PlayfieldProfile
 
@@ -562,7 +545,7 @@ Break large pawn scripts into modules with clear responsibilities.
 
 Move mode identity out of folders and into authored definitions.
 
-Arcade and brawler should remain example assemblies of shared parts, with reusable learning captured as capability facts, validation rules, optional route contracts, and generic setup guidance rather than presets.
+Arcade and brawler should remain example assemblies of shared parts, with reusable learning captured as capability facts, validation rules, grammar vocabulary, and generic setup guidance rather than presets.
 
 ### Target 5: Documentation As Source Of Truth
 

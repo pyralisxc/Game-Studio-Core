@@ -167,7 +167,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                         customKey = action.name,
                         actionName = action.name,
                         valueType = GetValueType(action),
-                        requiredForProof = false
+                        requiredForGameplay = false
                     };
                     ApplyAction(binding, map, action);
                     binding.Sanitize(profile.primaryActionMap);
@@ -220,7 +220,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 actionMap = source.actionMap,
                 actionName = source.actionName,
                 valueType = source.valueType,
-                requiredForProof = source.requiredForProof,
+                requiredForGameplay = source.requiredForGameplay,
                 animationSignalKey = source.animationSignalKey
             };
         }
@@ -279,7 +279,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                     || !string.Equals(left.actionMap, right.actionMap, StringComparison.Ordinal)
                     || !string.Equals(left.actionName, right.actionName, StringComparison.Ordinal)
                     || left.valueType != right.valueType
-                    || left.requiredForProof != right.requiredForProof
+                    || left.requiredForGameplay != right.requiredForGameplay
                     || !string.Equals(left.animationSignalKey, right.animationSignalKey, StringComparison.Ordinal))
                 {
                     return false;

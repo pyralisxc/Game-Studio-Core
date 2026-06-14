@@ -15,7 +15,6 @@ namespace NeonBlack.Gameplay.Features.Hazards
         Relevance = "Provides visual feedback (flashes, popups) for hazard states like activation, explosion, and collection.",
         Lane = "Hazard",
         ProfileType = typeof(HazardFeedbackProfile),
-        RequiredInterfaces = new[] { typeof(IRuntimeValidationProvider) },
         RequiredComponentNames = new[] { "NeonBlack.Gameplay.Presentation.Visuals.SpriteFlasher" },
         NativeSetup = new[]
         {

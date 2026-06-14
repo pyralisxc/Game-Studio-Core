@@ -1,6 +1,6 @@
-using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Data.Definitions.Rules;
 using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Data.Profiles;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -15,7 +15,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
         SetupNodeId = "mode.definition",
         Lane = "Rules",
         Relevance = "Defines the project-owned rules, required feature modules, and scene targets for a gameplay session.",
-        AssignmentFields = new[] { nameof(setupProfile), nameof(playfieldProfile), nameof(cameraRigProfile), nameof(requiredFeatureModules), nameof(gameplayScene) },
+        AssignmentFields = new[] { nameof(playfieldProfile), nameof(cameraRigProfile), nameof(requiredFeatureModules), nameof(gameplayScene) },
         FirstProof = "Assign this Game Mode Definition to a Session Definition asset.",
         ExpertAdvice = "Start neutral, then enable only the systems this route actually uses. Use Required Feature Modules for project-owned global systems, and assign board or turn-order assets only for tabletop-style routes.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/game-mode"
@@ -33,7 +33,6 @@ namespace NeonBlack.Gameplay.Data.Definitions
         public string gameplayScene = "Opening";
 
         [Header("Profiles")]
-        public GameSetupProfile setupProfile;
         public PlayfieldProfile playfieldProfile;
         public CameraRigProfile cameraRigProfile;
 
@@ -100,17 +99,6 @@ namespace NeonBlack.Gameplay.Data.Definitions
                     for (int issueIndex = 0; issueIndex < conditionIssues.Count; issueIndex++)
                         issues.Add($"Board terminal condition `{condition.conditionId}`: {conditionIssues[issueIndex]}");
                 }
-            }
-
-            if (setupProfile == null)
-            {
-                issues.Add("Setup profile is not assigned.");
-            }
-            else
-            {
-                List<string> setupIssues = setupProfile.GetValidationIssues();
-                for (int issueIndex = 0; issueIndex < setupIssues.Count; issueIndex++)
-                    issues.Add($"Setup profile `{setupProfile.setupName}`: {setupIssues[issueIndex]}");
             }
 
             HashSet<string> moduleIds = new HashSet<string>();

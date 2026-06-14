@@ -334,31 +334,6 @@ namespace NeonBlack.Gameplay.Editor
             if (route.UsesPawnGameplay()) axioms |= AuthoringWorldAxiom.Realtime;
             if (route.UsesTabletopContract()) axioms |= AuthoringWorldAxiom.TurnBased;
 
-            // Map presentation lanes to mechanical axioms (Dimensions)
-            if (route.Patterns != null)
-            {
-                foreach (var pattern in route.Patterns)
-                {
-                    if (pattern == null) continue;
-
-                    foreach (var lane in pattern.presentationLanes)
-                    {
-                        switch (lane)
-                        {
-                            case RuntimePatternPresentationLane.Sprite2D:
-                                axioms |= AuthoringWorldAxiom.Dimensions2D;
-                                break;
-                            case RuntimePatternPresentationLane.Billboard2_5D:
-                                axioms |= AuthoringWorldAxiom.Dimensions2D;
-                                break;
-                            case RuntimePatternPresentationLane.Rigged3D:
-                                axioms |= AuthoringWorldAxiom.Dimensions3D;
-                                break;
-                        }
-                    }
-                }
-            }
-
             return axioms;
         }
 

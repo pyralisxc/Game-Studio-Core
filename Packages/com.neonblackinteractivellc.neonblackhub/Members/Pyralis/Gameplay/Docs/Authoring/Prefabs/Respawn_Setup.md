@@ -4,15 +4,15 @@ Covers `PlayerSpawner` for the 3D death-and-respawn cycle.
 
 ## Before You Wire This
 
-Start with a `GameSetupProfile` assigned to `GameModeDefinition.setupProfile`.
+Start with a `SessionDefinition` assigned to `GameplaySessionBootstrap.sessionDefinition` and a `GameModeDefinition` assigned to `SessionDefinition.defaultGameMode`.
 
-Recommended runtime patterns:
+Recommended route capabilities:
 
 - Realtime Character when participants use pawns
 - Combat when respawn follows defeat or health depletion
 - Scoring/Objectives when lives, checkpoints, or failure states affect the game mode
 
-Resolve setup-profile validation before placing spawn points, participant spawn services, or respawn objects.
+Resolve route validation before placing spawn points, participant spawn services, or respawn objects.
 
 ## Concepts
 

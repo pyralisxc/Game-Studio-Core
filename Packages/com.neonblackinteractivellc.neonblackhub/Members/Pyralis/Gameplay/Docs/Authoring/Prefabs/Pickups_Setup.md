@@ -6,15 +6,15 @@ Covers `CollectibleSpawner2D`, `Collectible2D`, and `CollectibleFeedback2D`.
 
 ## Before You Wire This
 
-Start with a `GameSetupProfile` assigned to `GameModeDefinition.setupProfile`.
+Start with a `SessionDefinition` assigned to `GameplaySessionBootstrap.sessionDefinition` and a `GameModeDefinition` assigned to `SessionDefinition.defaultGameMode`.
 
-Recommended runtime patterns:
+Recommended route capabilities:
 
 - Realtime Character when pawns collect pickups
 - Scoring/Objectives when pickups award points, time, currency, or progress
 - Procedural Generation if pickups will be placed by generated chunks or spawn budgets
 
-Resolve setup-profile validation before creating pickup prefabs, spawners, score hooks, or feedback objects.
+Resolve route validation before creating pickup prefabs, spawners, score hooks, or feedback objects.
 
 ---
 

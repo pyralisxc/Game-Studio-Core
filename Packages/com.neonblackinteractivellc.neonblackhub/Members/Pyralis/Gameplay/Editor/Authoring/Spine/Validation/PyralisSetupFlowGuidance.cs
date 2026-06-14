@@ -22,8 +22,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             AddSetupFact(facts, PyralisSetupFlowStepId.RuntimeServiceOwnership, "Runtime Service Ownership", "Keep runtime services owned by GameplaySessionBootstrap and PyralisGameplayLifetimeScope instead of hidden singleton lookups.", "Core setup chain");
             AddSetupFact(facts, PyralisSetupFlowStepId.AssignSessionDefinition, "Assign Session Definition", "Create or assign the session asset that owns game mode and default participants.", "Core setup chain");
             AddSetupFact(facts, PyralisSetupFlowStepId.AssignDefaultGameMode, "Assign Default Game Mode", "Create or assign the game-rules asset for the session.", "Core setup chain");
-            AddSetupFact(facts, PyralisSetupFlowStepId.AssignSetupProfile, "Assign Setup Profile", "Create or assign the setup profile that lists selected capability ingredients.", "Core setup chain");
-            AddSetupFact(facts, PyralisSetupFlowStepId.AddRuntimePatterns, "Choose Capabilities", "Select capability families that describe the current route. Optional runtime pattern assets can add advanced metadata later.", "Capability setup");
+            AddSetupFact(facts, PyralisSetupFlowStepId.ResolveRouteCapabilities, "Resolve Route Capabilities", "Reflect capability families from intent, contracts, serialized gameplay references, feature modules, participants, pawns, and scene evidence.", "Capability setup");
             AddSetupFact(facts, PyralisSetupFlowStepId.AssignDefaultParticipants, "Assign Default Participants", "Create or assign participant definitions for players, seats, factions, or command owners.", "Participant setup");
             AddSetupFact(facts, PyralisSetupFlowStepId.AssignParticipantPawn, "Assign Participant Pawn", "Assign a PawnDefinition and prefab only when the selected route is pawn-backed.", "Pawn-backed movement route", new[] { "capability.2d-pawn-movement", "capability.3d-pawn-movement", "proof.1p-pawn-movement" });
             AddSetupFact(facts, PyralisSetupFlowStepId.AssignInputProfile, "Assign Input Profile", "Assign input mapping when participant input drives pawn movement or actions.", "Pawn-backed movement route", new[] { "capability.2d-pawn-movement", "capability.3d-pawn-movement", "proof.1p-pawn-movement" });
@@ -83,7 +82,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 case PyralisSetupFlowStepId.RuntimeServiceOwnership:
                 case PyralisSetupFlowStepId.AssignSessionDefinition:
                 case PyralisSetupFlowStepId.AssignDefaultGameMode:
-                case PyralisSetupFlowStepId.AssignSetupProfile:
+                case PyralisSetupFlowStepId.ResolveRouteCapabilities:
                 case PyralisSetupFlowStepId.AssignDefaultParticipants:
                 case PyralisSetupFlowStepId.AssignParticipantPawn:
                 case PyralisSetupFlowStepId.AssignSpawnPoints:
@@ -111,8 +110,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 case PyralisSetupFlowStepId.RuntimeServiceOwnership: return "setup.runtime-service-ownership";
                 case PyralisSetupFlowStepId.AssignSessionDefinition: return "setup.assign-session-definition";
                 case PyralisSetupFlowStepId.AssignDefaultGameMode: return "setup.assign-default-game-mode";
-                case PyralisSetupFlowStepId.AssignSetupProfile: return "setup.assign-setup-profile";
-                case PyralisSetupFlowStepId.AddRuntimePatterns: return "setup.add-runtime-patterns";
+                case PyralisSetupFlowStepId.ResolveRouteCapabilities: return "setup.resolve-route-capabilities";
                 case PyralisSetupFlowStepId.AssignDefaultParticipants: return "setup.assign-default-participants";
                 case PyralisSetupFlowStepId.AssignParticipantPawn: return "setup.assign-participant-pawn";
                 case PyralisSetupFlowStepId.AssignInputProfile: return "setup.assign-input-profile";
@@ -162,20 +160,13 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                         "the opened setup folder",
                         "choose or create the proof setup folder in the Project content pane first, keep imported art folders separate, then right-click inside it -> Create -> NeonBlack -> Definitions -> Game Mode Definition, then select/open the SessionDefinition asset and assign Default Game Mode by drag/drop or the field's object picker circle",
                         "the Game Rules row is ready");
-                case PyralisSetupFlowStepId.AssignSetupProfile:
+                case PyralisSetupFlowStepId.ResolveRouteCapabilities:
                     return new PyralisAuthoringNativeAction(
-                        "Create",
-                        PyralisAuthoringActionSurface.ProjectWindow,
-                        "the opened setup folder",
-                        "choose or create the proof setup folder in the Project content pane first, keep imported art folders separate, then right-click inside it -> Create -> NeonBlack -> Profiles -> Game Setup Profile, then select/open the GameModeDefinition asset and assign Setup Profile by drag/drop or the field's object picker circle",
-                        "the Setup Profile row is ready");
-                case PyralisSetupFlowStepId.AddRuntimePatterns:
-                    return new PyralisAuthoringNativeAction(
-                        "Choose",
+                        "Choose and wire",
                         PyralisAuthoringActionSurface.AuthoringWindow,
                         "Intent",
-                        "set DNA axioms, choose the presentation lane, and toggle the capability ingredients that describe this route while the GameSetupProfile is active; leave RuntimePatternDefinition empty unless this route needs an advanced reusable contract",
-                        "Capability ingredients are selected");
+                        "set DNA axioms, choose the presentation lane, toggle the capability ingredients that describe the route, then create or wire the matching SessionDefinition, GameModeDefinition, participants, pawns, feature modules, board/turn assets, and scene objects so the graph can reflect them",
+                        "route capabilities are reflected from real setup");
                 case PyralisSetupFlowStepId.AssignDefaultParticipants:
                     return new PyralisAuthoringNativeAction(
                         "Create",

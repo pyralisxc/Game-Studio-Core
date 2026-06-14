@@ -6,15 +6,15 @@ Covers `HazardSpawner`, `DifficultyManager`, `HazardData`, and hazard prefab cre
 
 ## Before You Wire This
 
-Start with a `GameSetupProfile` assigned to `GameModeDefinition.setupProfile`.
+Start with a `SessionDefinition` assigned to `GameplaySessionBootstrap.sessionDefinition` and a `GameModeDefinition` assigned to `SessionDefinition.defaultGameMode`.
 
-Recommended runtime patterns:
+Recommended route capabilities:
 
 - Realtime Character for pawn-dodging hazard loops
 - Scoring/Objectives when hazards affect score, survival time, rewards, or fail states
 - Procedural Generation if hazards will be placed through generated chunks or spawn budgets
 
-Resolve setup-profile validation before creating hazard data, hazard prefabs, difficulty curves, or spawners.
+Resolve route validation before creating hazard data, hazard prefabs, difficulty curves, or spawners.
 
 ---
 
@@ -28,7 +28,7 @@ Resolve setup-profile validation before creating hazard data, hazard prefabs, di
 
 ## Step 1 - Create HazardData assets
 
-1. Right-click in the Project window → **Create → NeonBlack → Gameplay → Hazards → Hazard Data**.
+1. Right-click in the Project window â†’ **Create â†’ NeonBlack â†’ Gameplay â†’ Hazards â†’ Hazard Data**.
 2. Create one asset per unique hazard type (e.g. `HazardData_Falling`, `HazardData_Sliding`).
 3. Fill in the Inspector for each:
    - **Damage** - damage dealt on contact.
@@ -60,7 +60,7 @@ Each hazard prefab needs:
 
 ## Step 3 - Add DifficultyManager to the scene
 
-1. On a dedicated scene systems object, or on your 2D `GameManager` when using that flow, add Component → `DifficultyManager`.
+1. On a dedicated scene systems object, or on your 2D `GameManager` when using that flow, add Component â†’ `DifficultyManager`.
 2. Choose a **Difficulty Mode**:
 
 **Linear** - spawn interval decreases steadily over time.
@@ -90,7 +90,7 @@ Each hazard prefab needs:
 ## Step 4 - Add HazardSpawner to the scene
 
 1. Create an empty child under your scene systems root or existing `Spawners` object. Rename it `HazardSpawner`.
-2. Add Component → `HazardSpawner`.
+2. Add Component â†’ `HazardSpawner`.
 3. Wire the Inspector:
    - **Difficulty Manager** - drag the `DifficultyManager` component from Step 3.
    - **Hazard Entries** - add one entry per hazard type:

@@ -372,7 +372,7 @@ namespace NeonBlack.Gameplay.Editor
                 ScoringObjectives => "A score, objective, timer, resource, result, or win/loss service when the route's capability ingredients claim scoring.",
                 BoardActionSelection => "A selection surface the player can actually use: board grid presenter, card hand, action/menu presenter, UI buttons, cursor bridge, or collider/raycast target.",
                 PickupsHazardsEnemies => "Encounter surfaces such as pickup spawners, hazard zones, enemy spawners, arena zones, or authored encounter anchors.",
-                _ => "A route-owned Unity scene surface that matches the selected setup profile."
+                _ => "A route-owned Unity scene surface that matches the selected intent."
             };
         }
 

@@ -4,15 +4,15 @@ Use `PawnPresentationProfile` plus `ActorShadowDriver` to author shared shadows 
 
 ## Before You Wire This
 
-Start with a `GameSetupProfile` assigned to `GameModeDefinition.setupProfile`.
+Start with a `SessionDefinition` assigned to `GameplaySessionBootstrap.sessionDefinition` and a `GameModeDefinition` assigned to `SessionDefinition.defaultGameMode`.
 
-Recommended runtime patterns:
+Recommended route capabilities:
 
 - Animation/Presentation
 - Realtime Character when shadows belong to pawn-controlled actors
 - Board/Card/Tabletop only when board pieces or tabletop actors need pawn-style visual presentation
 
-Resolve setup-profile validation before adding shadow drivers or presentation profile shadow settings.
+Resolve route validation before adding shadow drivers or presentation profile shadow settings.
 
 ## Core Idea
 

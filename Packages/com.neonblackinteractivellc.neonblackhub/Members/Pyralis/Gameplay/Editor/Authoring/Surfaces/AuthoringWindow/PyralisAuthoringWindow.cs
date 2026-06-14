@@ -58,6 +58,7 @@ namespace NeonBlack.Gameplay.Editor
         private VisualElement _contentRoot;
 
         [MenuItem("NeonBlack/Gameplay/Pyralis Authoring Window")]
+        [MenuItem("Window/Pyralis Authoring")]
         public static void Open()
         {
             GetWindow<PyralisAuthoringWindow>("Pyralis Authoring");
@@ -314,9 +315,8 @@ namespace NeonBlack.Gameplay.Editor
 
         private void DrawOverviewMode(Object activeSetup, Object selection)
         {
-            bool selectedSetupProfile = selection is GameSetupProfile;
-            Object currentStepSelection = selectedSetupProfile ? selection : activeSetup != null ? activeSetup : selection;
-            Object graphSource = activeSetup != null ? activeSetup : selectedSetupProfile ? selection : null;
+            Object currentStepSelection = activeSetup != null ? activeSetup : selection;
+            Object graphSource = activeSetup != null ? activeSetup : null;
             PyralisAuthoringSetupGraph graph = GetCachedSetupGraph(graphSource);
             PyralisAuthoringCurrentStepGraphRow currentStep = PyralisAuthoringSetupGraphProjection.BuildCurrentStepRow(graph);
             PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(activeSetup, graph);
@@ -442,20 +442,6 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringWindowPrimitives.DrawMiniList("Customization", row.Fact.CustomizationMoments, "Creator-owned choices. Authoring guides these choices; it does not pick them.");
                 PyralisAuthoringWindowPrimitives.DrawMiniList("Can Wait", row.Fact.CanWait, "Useful work to defer until the route's first proof is readable.");
             }
-        }
-
-        private static void FillMissingRuntimePatternText(RuntimePatternDefinition pattern)
-        {
-            Undo.RecordObject(pattern, "Fill Runtime Pattern Guidance Text");
-
-            if (string.IsNullOrWhiteSpace(pattern.description))
-                pattern.description = PyralisRuntimePatternVocabulary.GetSuggestedDescription(pattern);
-
-            if (string.IsNullOrWhiteSpace(pattern.setupNotes))
-                pattern.setupNotes = PyralisRuntimePatternVocabulary.GetSuggestedSetupNotes(pattern);
-
-            pattern.Sanitize();
-            EditorUtility.SetDirty(pattern);
         }
 
         private static string GetIntentTierLabel(PyralisAuthoringIntentGuideTier tier)

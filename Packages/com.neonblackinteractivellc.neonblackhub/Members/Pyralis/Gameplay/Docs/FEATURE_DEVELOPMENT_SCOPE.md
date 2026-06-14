@@ -31,7 +31,7 @@ A route is complete when Pyralis provides:
 - prefab and scene setup
 - Authoring Window guidance
 - validation
-- generic setup guidance or optional route contract when needed
+- generic setup guidance or graph vocabulary when needed
 - sample scene
 - first playable proof
 - docs
@@ -47,13 +47,13 @@ Pyralis should answer this question for a developer:
 
 Every new feature should make the canonical authored path easier, faster, or more capable.
 
-## Runtime Pattern Setup Model
+## Route Capability Setup Model
 
-Runtime setup patterns are composable recipes, not exclusive genres.
+Route capabilities are composable recipes, not exclusive genres.
 
-`RuntimePatternDefinition` describes one reusable setup expectation, such as realtime character control, projectile combat, turn/menu actions, board/card/tabletop play, camera/cursor control, scoring, animation mapping, or procedural segments.
+The resolved authoring graph describes reusable setup expectations such as realtime character control, projectile combat, turn/menu actions, board/card/tabletop play, camera/cursor control, scoring, animation mapping, or procedural segments.
 
-`GameSetupProfile` describes an actual game loop by selecting multiple runtime patterns. A game can therefore be:
+`SessionDefinition`/`GameModeDefinition`, participants, pawns, feature modules, scene evidence, contracts/reflection, and grammar vocabulary describe an actual game loop by contributing multiple route capabilities. A game can therefore be:
 
 - realtime character + projectile combat + side-scrolling playfield
 - board/card/tabletop + turn/menu action + camera/cursor control
@@ -295,17 +295,15 @@ See `FEATURE_DEVELOPMENT_ROADMAP.md` for the executable slice order.
 
 ## Active Implementation Slices
 
-The runtime pattern setup slice creates the authored setup spine.
+The route capability setup slice creates the authored setup spine.
 
 Initial available concepts:
 
-- `RuntimeControlSurface`
-- `ParticipantEmbodimentRequirement`
 - `RuntimeCapabilityFamily`
-- `RuntimePatternDefinition`
-- `GameSetupProfile`
+- `SessionDefinition`/`GameModeDefinition` route
+- graph vocabulary for capability family, control shape, pawn/no-pawn route evidence, and proof nodes
 
-This slice lets authored setup assets describe composable game-loop expectations without forcing one exclusive game type. It intentionally stops short of scene generation, board/card rules, procedural generation, turn queues, and full setup wizards.
+This slice lets authored setup assets and graph vocabulary describe composable game-loop expectations without forcing one exclusive game type. It intentionally stops short of scene generation, board/card rules, procedural generation, turn queues, and full setup wizards.
 
 The first implementation slice is Action + Targeting core.
 

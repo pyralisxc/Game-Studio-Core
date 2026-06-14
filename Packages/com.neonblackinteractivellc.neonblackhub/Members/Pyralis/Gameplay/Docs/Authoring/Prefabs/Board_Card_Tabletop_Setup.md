@@ -1,4 +1,4 @@
-﻿# Board, Card, And Tabletop Setup
+# Board, Card, And Tabletop Setup
 
 Use this chapter when the game does not start with a character controller.
 
@@ -16,7 +16,7 @@ The important rule is simple: a player does not require a pawn. In Pyralis, a pl
 
 ## Non-Pawn Tabletop MVP quick path
 
-Create the no-pawn route manually from `Create -> NeonBlack`: `Session Definition`, `Game Mode Definition`, `Game Setup Profile`, one or more `Participant Definition` assets for seats, hands, sides, or factions, `Board Definition`, `Board Piece Definition`, `Board Move Policy`, `Turn Order Definition`, and optional `Board Terminal Condition` assets. Use Intent or the `GameSetupProfile.runtimeCapabilities` Inspector rows to choose board/card/tabletop, action-selection, camera/cursor, UI, and scoring ingredients. Add optional `RuntimePatternDefinition` assets only when the generic capability rows cannot describe reusable route metadata. Keep assets in a project-owned setup folder so the route is visible and editable.
+Create the no-pawn route manually from `Create -> NeonBlack`: `Session Definition`, `Game Mode Definition`, one or more `Participant Definition` assets for seats, hands, sides, or factions, `Board Definition`, `Board Piece Definition`, `Board Move Policy`, `Turn Order Definition`, and optional `Board Terminal Condition` assets. Use Intent to filter the reflected graph toward board/card/tabletop, action-selection, camera/cursor, UI, and scoring concerns. Keep assets in a project-owned setup folder so the route is visible and editable.
 
 First proof loop:
 
@@ -38,8 +38,8 @@ This setup gives you a no-pawn session:
 
 1. `GameplaySessionBootstrap` starts the scene.
 2. `SessionDefinition` says which mode starts and which participants exist.
-3. `GameModeDefinition` points to a `GameSetupProfile`.
-4. `GameSetupProfile` includes board, card, turn, action, camera, cursor, UI, or scoring patterns.
+3. `SessionDefinition.defaultGameMode` points to the `GameModeDefinition`.
+4. `GameModeDefinition`, participants, board/turn definitions, feature modules, scene evidence, or grammar vocabulary and reflected contracts expose board, card, turn, action, camera, cursor, UI, or scoring route evidence.
 5. Scene roots provide the visible board, cards, cursor, UI, scoring, and turn flow.
 
 ## Before You Start
@@ -48,7 +48,7 @@ Read:
 
 - `START_HERE.md`
 - `AUTHORING_MODEL.md`
-- `RUNTIME_PATTERN_COOKBOOK.md`
+- `ROUTE_CAPABILITY_COOKBOOK.md`
 - `Prefabs/Bootstrap_Example_Setup.md`
 
 You do not need:
@@ -66,12 +66,11 @@ Add those later only if the tabletop game grows pieces that need actor bodies, a
 
 Create these assets:
 
-1. `GameSetupProfile`
+1. `SessionDefinition`
 2. `GameModeDefinition`
-3. `SessionDefinition`
-4. one `ParticipantDefinition` per seat, player, hand, faction, or side
-5. `ActionDefinition` assets for legal actions such as move piece, play card, end turn, draw, discard, pass, confirm, or cancel
-6. optional `RuntimePatternDefinition` assets only when the route needs reusable metadata beyond capability rows
+3. one `ParticipantDefinition` per seat, player, hand, faction, or side
+4. `ActionDefinition` assets for legal actions such as move piece, play card, end turn, draw, discard, pass, confirm, or cancel
+5. graph vocabulary, contracts/reflection, and scene evidence for route metadata
 
 In Unity, create these from the `Assets/Create/NeonBlack/...` menus where available. Keep them in a folder such as:
 
@@ -79,22 +78,23 @@ In Unity, create these from the `Assets/Create/NeonBlack/...` menus where availa
 
 ## How To Wire The Assets
 
-On `GameSetupProfile`:
+In the Authoring Window:
 
-- select board/card/tabletop capability rows
-- select action-selection, camera/cursor, UI, and scoring capabilities only if the game uses them
-- assign optional runtime patterns only when reusable advanced metadata is needed
+- use Intent to filter guidance toward board/card/tabletop route evidence
+- include action-selection, camera/cursor, UI, and scoring filters only if the game uses them
+- add optional capabilities only when the current proof needs them
 - use notes and asset names to explain the exact game shape
 
 On `GameModeDefinition`:
 
-- assign the `GameSetupProfile`
 - assign a `PlayfieldProfile` only if you want authored board bounds, lanes, spaces, or zones
 - assign a `CameraRigProfile` only if the mode uses the Pyralis camera flow
 - enable scoring only if this mode uses the shared scoring service
 - leave combat, pickups, hazards, and respawn off unless the tabletop game uses them
 
 On `SessionDefinition`:
+
+- assign the `GameModeDefinition` to `SessionDefinition.defaultGameMode`
 
 - assign the `GameModeDefinition` as the default game mode
 - assign the participant definitions
@@ -189,7 +189,7 @@ After pressing Play, check:
 
 - `GameplaySessionBootstrap` has a `SessionDefinition`.
 - `SessionDefinition` has a default `GameModeDefinition`.
-- `GameModeDefinition` has a `GameSetupProfile`.
+- `SessionDefinition.defaultGameMode` has a `GameModeDefinition`.
 - participant definitions exist even though `Default Pawn` is empty.
 - no spawn points are required.
 - the scene has the UI, camera, board, card, or cursor surface that players use.

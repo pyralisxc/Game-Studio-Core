@@ -22,7 +22,6 @@ For the first proof of an authored route, follow native actions only:
 - Inspector drag-and-drop wiring for:
   - `GameplaySessionBootstrap` -> `SessionDefinition`
   - `SessionDefinition` -> `GameModeDefinition`
-  - `GameModeDefinition` -> `GameSetupProfile`
   - `SessionDefinition` -> one `ParticipantDefinition`
   - Pawn route only: participant `Default Pawn` -> `PawnDefinition`, pawn prefab, and at least one spawn point.
 - Play mode proof checks:
@@ -39,7 +38,7 @@ Use this exact sequence when learning the platform from a clean scene:
 
 1. Create `Gameplay Root` with `Hierarchy > Create Empty`.
 2. Add `GameplaySessionBootstrap` (and optional `PyralisGameplayLifetimeScope`) with Add Component search.
-3. Create in Project and wire: `SessionDefinition` -> `GameModeDefinition` -> `GameSetupProfile` -> `ParticipantDefinition` -> `PawnDefinition`.
+3. Create in Project and wire: `SessionDefinition` -> `GameModeDefinition` -> `ParticipantDefinition` -> `PawnDefinition`.
 4. Add one `InputProfile` to participant and assign one `Motor2DInputAdapter`-based prefab path to pawn.
 5. Create one `SpawnPoint` transform and assign it to `GameplaySessionBootstrap.Spawn Points`.
 6. In Authoring Window: clear `Do Now`, open `Map`, check intent-required blockers in `Validate`, then Play.
@@ -123,7 +122,7 @@ Watch for warnings about:
 - missing default input profile for actor-driven scenes
 - missing `PlayerInputManager`
 - missing `CinemachineCameraRigController`
-- setup-profile validation issues surfaced through `GameModeDefinition.setupProfile`
+- route validation issues surfaced through `SessionDefinition.defaultGameMode`, mode fields, participants, pawns, feature modules, and contracts
 
 ## 2D score-loop scenes
 

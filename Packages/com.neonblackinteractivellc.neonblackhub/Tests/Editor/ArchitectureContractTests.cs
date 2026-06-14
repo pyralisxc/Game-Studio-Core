@@ -1567,7 +1567,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 .ToArray();
 
             Assert.That(featureCopies, Is.Empty,
-                "Pickup cleanup seams should live under Gameplay/Core/Contracts, not inside the Pickups feature. Offenders: " + string.Join(", ", featureCopies));
+                "Pickup cleanup seams should live under Gameplay/Core/ContractInterfaces, not inside the Pickups feature. Offenders: " + string.Join(", ", featureCopies));
         }
 
         [Test]
@@ -1949,24 +1949,36 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void ReflectiveAuthoring_KeyInterfacesAreTagged()
+        public void ReflectiveAuthoring_FeatureInterfacesAreTaggedButCoreContractsStayRuntimeOnly()
         {
-            var keyInterfaces = new[]
+            var featureInterfaces = new[]
             {
                 typeof(IActionResolver),
                 typeof(ITurnOrderService),
-                typeof(IActorAnimationController),
-                typeof(ICameraBoundsProvider),
                 typeof(IFeatureModuleRuntime),
                 typeof(ICharacterMotorState),
                 typeof(IMovementModule),
                 typeof(IPawnCombatModule)
             };
 
-            foreach (var type in keyInterfaces)
+            foreach (var type in featureInterfaces)
             {
                 var attr = type.GetCustomAttributes(typeof(AuthoringContractAttribute), true);
                 Assert.That(attr.Length, Is.GreaterThan(0), $"Expected interface {type.Name} to be tagged with [AuthoringContract] for reflective discovery.");
+            }
+
+            var runtimeOnlyContracts = new[]
+            {
+                typeof(IActorAnimationController),
+                typeof(ICameraBoundsProvider),
+                typeof(IActorHealthState),
+                typeof(IActorGameplayActionReceiver)
+            };
+
+            foreach (var type in runtimeOnlyContracts)
+            {
+                var attr = type.GetCustomAttributes(typeof(AuthoringContractAttribute), true);
+                Assert.That(attr.Length, Is.EqualTo(0), $"Expected runtime contract interface {type.Name} to stay free of authoring metadata.");
             }
         }
     }

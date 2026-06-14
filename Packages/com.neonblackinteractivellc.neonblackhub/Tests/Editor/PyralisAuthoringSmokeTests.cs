@@ -1,6 +1,7 @@
 using System.Linq;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
+using NeonBlack.Gameplay.Data.Definitions.Rules;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Editor.Inspectors;
 using NeonBlack.Gameplay.Editor;
@@ -155,13 +156,15 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void SetupGraph_SmokePawnRouteCreatesMovementProof()
         {
-            GameSetupProfile setupProfile = ScriptableObject.CreateInstance<GameSetupProfile>();
-            setupProfile.runtimeCapabilities = new[]
-            {
-                new RuntimeCapabilitySelection { capabilityFamily = RuntimeCapabilityFamily.CharacterPawnGameplay }
-            };
+            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
+            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
+            ParticipantDefinition participant = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            PawnDefinition pawn = ScriptableObject.CreateInstance<PawnDefinition>();
+            participant.defaultPawn = pawn;
+            session.defaultGameMode = mode;
+            session.defaultParticipants = new[] { participant };
 
-            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(setupProfile);
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(session);
 
             Assert.That(graph.FindNodes(PyralisAuthoringGraphNodeKind.Capability)
                 .Any(node => node.CapabilityFamily == RuntimeCapabilityFamily.CharacterPawnGameplay), Is.True);
@@ -171,19 +174,22 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 edge.ToNodeId == "proof.1p-pawn-movement"
                 && edge.Kind == PyralisAuthoringGraphEdgeKind.SupportsProof), Is.True);
 
-            Object.DestroyImmediate(setupProfile);
+            Object.DestroyImmediate(pawn);
+            Object.DestroyImmediate(participant);
+            Object.DestroyImmediate(mode);
+            Object.DestroyImmediate(session);
         }
 
         [Test]
         public void SetupGraph_SmokeTabletopRouteStaysNoPawn()
         {
-            GameSetupProfile setupProfile = ScriptableObject.CreateInstance<GameSetupProfile>();
-            setupProfile.runtimeCapabilities = new[]
-            {
-                new RuntimeCapabilitySelection { capabilityFamily = RuntimeCapabilityFamily.BoardCardTabletop }
-            };
+            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
+            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
+            BoardDefinition board = ScriptableObject.CreateInstance<BoardDefinition>();
+            mode.boardDefinition = board;
+            session.defaultGameMode = mode;
 
-            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(setupProfile);
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(session);
 
             Assert.That(graph.FindNodes(PyralisAuthoringGraphNodeKind.Capability)
                 .Any(node => node.CapabilityFamily == RuntimeCapabilityFamily.BoardCardTabletop), Is.True);
@@ -193,7 +199,9 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(graph.TryFindNode("proof.board-card-action", out PyralisAuthoringGraphNode proofNode), Is.True);
             Assert.That(proofNode.Kind, Is.EqualTo(PyralisAuthoringGraphNodeKind.Proof));
 
-            Object.DestroyImmediate(setupProfile);
+            Object.DestroyImmediate(board);
+            Object.DestroyImmediate(mode);
+            Object.DestroyImmediate(session);
         }
 
         [Test]
@@ -230,7 +238,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             Assert.That(changed, Is.True, summary);
             Assert.That(profile.FindBinding(GameplayInputActionRole.Move)?.actionName, Is.EqualTo("Move"));
-            Assert.That(profile.FindBinding(GameplayInputActionRole.Move)?.requiredForProof, Is.True);
+            Assert.That(profile.FindBinding(GameplayInputActionRole.Move)?.requiredForGameplay, Is.True);
             Assert.That(profile.FindBinding(GameplayInputActionRole.AttackPrimary)?.actionName, Is.EqualTo("Attack"));
             Assert.That(profile.FindCustomBinding("Emote")?.actionName, Is.EqualTo("Emote"));
 

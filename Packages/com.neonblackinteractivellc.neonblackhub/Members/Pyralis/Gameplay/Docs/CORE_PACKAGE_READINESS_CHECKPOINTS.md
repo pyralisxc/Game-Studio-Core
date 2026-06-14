@@ -78,7 +78,7 @@ Purpose: prove Pyralis supports games where participants are seats, sides, facti
 
 Required before this checkpoint is `Ready`:
 
-- no-pawn setup route through `SessionDefinition`, `GameModeDefinition`, `GameSetupProfile`, and participant definitions
+- no-pawn setup route through `SessionDefinition`, `GameModeDefinition`, `SessionDefinition`/`GameModeDefinition` route, and participant definitions
 - board definition, pieces, move policy, action queue, turn order, selection surface, and terminal condition guidance
 - validation that avoids pawn and spawn-point false positives for no-pawn routes
 - proof that board selection can queue and resolve a legal move, advance or respect turn flow, and reach a terminal condition
@@ -189,11 +189,11 @@ Already present:
 - participant and session services
 - 2D pawn movement stack
 - projectile definitions, fire modes, magazines, 2D launchers, hitscan, prefab projectiles, impact effects, and tests
-- runtime pattern setup assets that can compose realtime character control plus projectile combat
+- route capability setup facts that can compose realtime character control plus projectile combat
 
 Still useful before the Sprite2D pawn action lane reaches `Ready`:
 
-- local two-player setup profile and generic setup guidance
+- local two-player session/mode setup and generic setup guidance
 - a shooter-ready input and participant setup path
 - weapon prefab or launcher setup path that a beginner can assign in Unity
 - scene readiness validation for required pawn, launcher, camera, participant, and scoring pieces
@@ -232,14 +232,14 @@ Out of scope for the MVP:
 Already present:
 
 - guided inspectors for many shared definitions and profiles
-- setup profile, runtime capability, and optional route-contract validation
+- session, mode, participant, pawn, feature-module, and optional route-contract validation
 - generic setup guidance for pawn and projectile assets
 
 Still useful before routes reach `Ready`:
 
 - guided inspectors for every new creator-facing rule, policy, and setup asset
 - Create Asset menu coverage for all intended authoring assets
-- cookbook facts and optional route contracts for tabletop MVP and pawn action lane variants
+- cookbook facts and grammar vocabulary for tabletop MVP and pawn action lane variants
 - scene readiness checks for missing services, participants, pawns, boards, cameras, action queues, and launchers
 - docs that say exactly what a beginner creates first, second, and third
 

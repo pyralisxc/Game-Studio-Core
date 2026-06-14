@@ -6,16 +6,16 @@ Covers `ArenaZone`, `CameraZone`, and `DamageZone` for 3D scenes.
 
 ## Before You Wire This
 
-Start with a `GameSetupProfile` assigned to `GameModeDefinition.setupProfile`.
+Start with a `SessionDefinition` assigned to `GameplaySessionBootstrap.sessionDefinition` and a `GameModeDefinition` assigned to `SessionDefinition.defaultGameMode`.
 
-Recommended runtime patterns:
+Recommended route capabilities:
 
 - Realtime Character
 - Combat
 - Camera/Cursor Control for camera zone transitions
 - Scoring/Objectives if encounters award score or progression
 
-Resolve setup-profile validation before placing arena triggers, camera zones, damage zones, or enemy spawners.
+Resolve route validation before placing arena triggers, camera zones, damage zones, or enemy spawners.
 
 ---
 
@@ -38,7 +38,7 @@ Resolve setup-profile validation before placing arena triggers, camera zones, da
 
 ### Step 2 - Add ArenaZone
 
-1. Add Component → `ArenaZone`.
+1. Add Component â†’ `ArenaZone`.
 
 ### Step 3 - Wire enemy spawners
 
@@ -83,7 +83,7 @@ Exit blockers are GameObjects (wall colliders, gate meshes, invisible walls) tha
 
 ### Step 2 - Add CameraZone
 
-1. Add Component → `CameraZone`.
+1. Add Component â†’ `CameraZone`.
 2. Set the fields:
    - **On Enter Profile** - drag the `CameraRigProfile` asset to activate when the player enters.
    - **On Exit Profile** - drag the `CameraRigProfile` asset to revert to when the player exits. Leave empty for no revert.
@@ -105,7 +105,7 @@ Exit blockers are GameObjects (wall colliders, gate meshes, invisible walls) tha
 
 ### Step 2 - Add DamageZone
 
-1. Add Component → `DamageZone`.
+1. Add Component â†’ `DamageZone`.
 2. Set the fields:
 
 **Damage**

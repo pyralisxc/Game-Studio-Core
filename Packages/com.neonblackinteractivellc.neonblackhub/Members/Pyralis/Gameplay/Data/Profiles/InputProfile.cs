@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Serialization;
 
 namespace NeonBlack.Gameplay.Data.Profiles
 {
@@ -45,8 +46,9 @@ namespace NeonBlack.Gameplay.Data.Profiles
         public string actionName = "Move";
         [Tooltip("Expected value shape for authoring validation and creator guidance.")]
         public GameplayInputValueType valueType = GameplayInputValueType.Vector2;
-        [Tooltip("Whether this action must exist for the selected setup to be considered ready.")]
-        public bool requiredForProof = true;
+        [FormerlySerializedAs("requiredForProof")]
+        [Tooltip("Whether this action must exist for player-owned runtime input to be considered ready.")]
+        public bool requiredForGameplay = true;
         [Tooltip("Optional animation signal key. Built-in roles can map through PawnAnimationProfile; custom keys can drive ActorAnimationSignal.Custom.")]
         public string animationSignalKey = string.Empty;
 
@@ -58,14 +60,14 @@ namespace NeonBlack.Gameplay.Data.Profiles
             GameplayInputActionRole role,
             string actionName,
             GameplayInputValueType valueType,
-            bool requiredForProof)
+            bool requiredForGameplay)
         {
             return new GameplayInputActionBinding
             {
                 role = role,
                 actionName = actionName,
                 valueType = valueType,
-                requiredForProof = requiredForProof
+                requiredForGameplay = requiredForGameplay
             };
         }
 
@@ -119,7 +121,6 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Axioms = AuthoringWorldAxiom.None,
         ProfileType = typeof(InputProfile),
         AssignmentFields = new[] { nameof(actions), nameof(actionBindings), nameof(primaryActionMap) },
-        FirstProofTargetId = "proof.1p-pawn-movement",
         FirstProof = "Verify that input actions mapped in this profile correctly drive character movement and actions.",
         ExpertAdvice = "InputProfile decouples gameplay logic from physical keys. Use the action role to map common verbs (Jump, Dash) across different control schemes.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/input",
@@ -163,7 +164,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
         {
             if (actionBindings == null || actionBindings.Length == 0)
             {
-                issues.Add("Add at least one Gameplay Action row. Player-owned pawn proofs require Move.");
+                issues.Add("Add at least one Gameplay Action row. Player-owned pawn input requires Move.");
                 return;
             }
 
@@ -183,7 +184,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
                 if (!string.IsNullOrWhiteSpace(key) && !keys.Add(key))
                     issues.Add($"Gameplay Actions contains duplicate role/key '{key}'. Remove the duplicate row.");
 
-                if (binding.role == GameplayInputActionRole.Move && binding.requiredForProof)
+                if (binding.role == GameplayInputActionRole.Move && binding.requiredForGameplay)
                     hasRequiredMove = true;
 
                 if (string.IsNullOrWhiteSpace(binding.actionName))
@@ -202,13 +203,13 @@ namespace NeonBlack.Gameplay.Data.Profiles
 
                 if (map.FindAction(binding.actionName, throwIfNotFound: false) == null)
                 {
-                    string severity = binding.requiredForProof ? "Required" : "Optional";
+                    string severity = binding.requiredForGameplay ? "Required" : "Optional";
                     issues.Add($"{severity} action '{binding.actionName}' for {key} was not found in Action Map '{map.name}'. Update the row or add the action to the Input Action Asset.");
                 }
             }
 
             if (!hasRequiredMove)
-                issues.Add("Player-owned pawn proofs need a required Move action row. Add Built-In Action > Move or mark the existing Move row required.");
+                issues.Add("Player-owned pawn input needs a required Move action row. Add Built-In Action > Move or mark the existing Move row required.");
         }
 
         [Tooltip("Primary input action asset used by this participant or pawn definition.")]
@@ -217,7 +218,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
         public string primaryActionMap = "Player";
 
         [Header("Gameplay Actions")]
-        [Tooltip("Add the gameplay actions this setup actually uses. Missing optional actions do not block proofs.")]
+        [Tooltip("Add the gameplay actions this setup actually uses. Missing optional actions do not block runtime input readiness.")]
         public GameplayInputActionBinding[] actionBindings =
         {
             GameplayInputActionBinding.BuiltIn(GameplayInputActionRole.Move, "Move", GameplayInputValueType.Vector2, true),

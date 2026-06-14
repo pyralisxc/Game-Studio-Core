@@ -13,7 +13,7 @@ namespace NeonBlack.Gameplay.Editor
 
             if (activeSetup == null)
             {
-                EditorGUILayout.HelpBox("Select a Bootstrap, Session, Game Mode, Setup Profile, Participant, Pawn, Runtime Pattern, or Feature Module asset to validate it here.", MessageType.Info);
+                EditorGUILayout.HelpBox("Select a Bootstrap, Session, Game Mode, Participant, Pawn, Runtime Pattern, or Feature Module asset to validate it here.", MessageType.Info);
                 return;
             }
 

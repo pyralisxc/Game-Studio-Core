@@ -1,4 +1,4 @@
-﻿# Settings Setup - Step-by-Step
+# Settings Setup - Step-by-Step
 
 Covers `SettingsManager`, `SettingsProfile`, `SettingsScreen` (2D), and `SettingsMenu` (3D).
 
@@ -6,15 +6,15 @@ Covers `SettingsManager`, `SettingsProfile`, `SettingsScreen` (2D), and `Setting
 
 ## Before You Wire This
 
-Start with a `GameSetupProfile` assigned to `GameModeDefinition.setupProfile`.
+Start with a `SessionDefinition` assigned to `GameplaySessionBootstrap.sessionDefinition` and a `GameModeDefinition` assigned to `SessionDefinition.defaultGameMode`.
 
-Recommended runtime patterns:
+Recommended route capabilities:
 
 - Platform Core for shared settings
 - Camera/Cursor Control when settings are menu, cursor, or UI driven
 - Realtime Character if settings affect pawn input, gamepad deadzone, or touch controls
 
-Resolve setup-profile validation before adding settings services, settings profile assets, or settings UI.
+Resolve route validation before adding settings services, settings profile assets, or settings UI.
 
 ---
 

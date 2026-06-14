@@ -13,7 +13,6 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Lane = "Camera",
         Relevance = "Project-window creation path for camera framing, follow, zoom, and 2D orthographic route choices.",
         AssignmentFields = new[] { nameof(presentationMode), nameof(useCinemachine), nameof(followOffset), nameof(orthographic), nameof(minZoom), nameof(maxZoom) },
-        FirstProofTargetId = "proof.camera-cursor-world",
         FirstProof = "Verify the camera follows the focus object at the specified offset.",
         ExpertAdvice = "CameraRigProfile defines how the world is seen. For 2D games, check 'Orthographic'. Use 'Follow Offset' to position the camera relative to the pawn or group focus.",
         NativeSetup = new[] { "Create Asset" },

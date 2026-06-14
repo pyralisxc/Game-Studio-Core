@@ -21,7 +21,7 @@ When a graph projection replaces an older active path, archive the useful migrat
 
 Graph nodes also carry source-origin provenance. Use this to tell whether a visible row came from user-authored setup, reflection, contract metadata, runtime evidence, spine grammar, or grammar fallback. The target is not "no central code at all"; it is that central code only owns spine grammar and fallback wording, while feature-specific setup meaning lives in contracts/reflection.
 
-Current implementation: selected setup assets and optional `RuntimePatternDefinition` assets project as `UserAuthoredSetup` graph nodes. Missing setup concepts remain `SpineGrammar`. Explicit contracts project as `Contract`; inferred or convention-derived contracts project as `Reflection`. This provenance is audit metadata, not a new authoring source.
+Current implementation: selected setup assets project as `UserAuthoredSetup` graph nodes. Missing setup concepts remain `SpineGrammar`. Explicit contracts project as `Contract`; inferred or convention-derived contracts project as `Reflection`. This provenance is audit metadata, not a new authoring source.
 
 ## Why This Exists
 
@@ -29,7 +29,7 @@ The authoring system is organized around one resolved setup graph compiled from 
 
 - `ResolvedAuthoringContractRegistry` resolves feature-owned `[AuthoringContract]` metadata.
 - `PyralisAuthoringGrammarRegistry` aggregates grammar, vocabulary, generated facts, and fallback wording for audit/projection.
-- `PyralisSetupRouteAnalysis` interprets `GameSetupProfile.runtimeCapabilities` and optional runtime patterns.
+- `PyralisSetupRouteAnalysis` interprets reflected route capabilities from authored setup, contracts/reflection, scene evidence, and grammar vocabulary.
 - `PyralisSetupFlowValidator` reports setup-chain readiness.
 - `PyralisSceneReadinessValidator` reports concrete scene and prefab evidence.
 - `PyralisAuthoringSetupGraphBuilder` selects proof nodes from contract/descriptor proof targets first; `PyralisProofFamilyVocabulary` owns generic fallback proof templates; `PyralisAuthoringOverviewModel`, graph projections, and tab renderers project resolved setup graph output.
@@ -74,7 +74,7 @@ It must not:
 - apply presets
 - become a route generator
 
-Intent remains the route declaration surface. It writes explicit creator choices such as world/playfield, control shape, presentation lane, capability toggles, and proof goals. The graph explains the consequences of those choices.
+Intent remains the route-filtering surface. It records explicit creator-facing filters such as world/playfield, control shape, presentation lane, capability toggles, and proof goals for the Authoring Window. The graph explains the consequences of those choices without mutating gameplay assets.
 
 ## Full Migration Scope
 
@@ -84,7 +84,7 @@ Add the graph beside the current spine.
 
 Inputs:
 
-- selected `GameplaySessionBootstrap`, `SessionDefinition`, `GameModeDefinition`, or `GameSetupProfile`
+- selected `GameplaySessionBootstrap`, `SessionDefinition`, `GameModeDefinition`, or `SessionDefinition`/`GameModeDefinition` route
 - `PyralisSetupRouteAnalysis`
 - `ResolvedAuthoringContractRegistry`
 - grammar/vocabulary defaults from `PyralisAuthoringGrammarRegistry`, `PyralisCapabilityVocabulary`, and `PyralisProofFamilyVocabulary`
@@ -111,7 +111,7 @@ Map should render graph topology:
 - bootstrap
 - session
 - mode
-- setup profile
+- setup route
 - selected capabilities
 - participants
 - pawn or no-pawn surface
@@ -170,16 +170,16 @@ Guide should rank:
 
 Selected context should explain the selected graph node or source Unity object instead of hand-writing meaning per object type wherever possible.
 
-Current implementation: selected setup assets, bootstrap roots, pawn roots, reflected contracts, runtime-pattern details, and setup-profile optional route-contract details resolve through `PyralisAuthoringSetupGraphProjection.BuildSelectedContextRow`, and Guide uses that row for role, graph id, evidence, native setup, and first check. Keep specialized selection renderers only where they expose object-specific actions such as selecting scene components, pinging targets, or filling missing RuntimePattern text without choosing route content.
+Current implementation: selected setup assets, bootstrap roots, pawn roots, reflected contracts, and route capability context resolve through `PyralisAuthoringSetupGraphProjection.BuildSelectedContextRow`, and Guide uses that row for role, graph id, evidence, native setup, and first check. Keep specialized selection renderers only where they expose object-specific actions such as selecting scene components or pinging targets.
 Current implementation: Guide selected-context and current-step text are graph-first. `bootstrap.root` is an explicit missing setup-chain node for blank setup contexts, so Overview and Guide can name the native Gameplay Root action without reading archived route reports or recomputing setup-flow reports in the window surface. Native action detail should come from graph nodes/current-step rows; the surface helper only handles the true pre-graph bootstrap hint.
-Current implementation: Guide current-intent rows use `PyralisAuthoringSetupGraphProjection.BuildCurrentIntentGuideRows(...)` only when the graph has a resolved setup context such as a Bootstrap, SessionDefinition, GameModeDefinition, GameSetupProfile, ParticipantDefinition, PawnDefinition, or Gameplay Root. Those rows are generated from first unresolved graph nodes, active proof nodes, proof support/blocker edges, selected capability nodes, and reflected contracts. `PyralisAuthoringIntentAdvisor` remains the pre-setup/fallback planning model; do not use it as the primary setup-backed Guide source.
+Current implementation: Guide current-intent rows use `PyralisAuthoringSetupGraphProjection.BuildCurrentIntentGuideRows(...)` only when the graph has a resolved setup context such as a Bootstrap, SessionDefinition, GameModeDefinition, ParticipantDefinition, PawnDefinition, or Gameplay Root. Those rows are generated from first unresolved graph nodes, active proof nodes, proof support/blocker edges, selected capability nodes, and reflected contracts. `PyralisAuthoringIntentAdvisor` remains the pre-setup/fallback planning model; do not use it as the primary setup-backed Guide source.
 Current implementation: Facts opens with graph coverage, graph contract coverage, and graph proof coverage before the raw cookbook dictionary. The raw fact registry remains a read-only audit/reference surface, not the primary setup guidance path.
 
 ### Phase 5: Contract Enrichment
 
 Only after the graph proves which metadata it repeatedly needs, enrich `[AuthoringContract]`.
 
-Current implementation: `SetupNodeId` is available on `[AuthoringContract]` and normalized onto `ResolvedAuthoringContract`. Use it when a contract enriches a stable graph setup concept such as `bootstrap.root`, `session.definition`, `mode.definition`, `setup.profile`, `participant.default`, or `pawn.definition`. Do not add a `SetupNodeId` just because a component has a native setup action; HUD binders, projectile launchers, board presenters, services, and similar feature pieces should usually remain contract, evidence, requirement, or native-action nodes unless the graph has promoted that concept into the setup spine. The graph links contract nodes to declared setup nodes, selected-context projection prefers the setup node when a selected contract declares one, and cookbook facts include the setup node as a related stable id. This replaces repeated type-to-setup guessing without adding a separate mapping registry.
+Current implementation: `SetupNodeId` is available on `[AuthoringContract]` and normalized onto `ResolvedAuthoringContract`. Use it when a contract enriches a stable graph setup concept such as `bootstrap.root`, `session.definition`, `mode.definition`, `participant.default`, or `pawn.definition`. Do not add a `SetupNodeId` just because a component has a native setup action; HUD binders, projectile launchers, board presenters, services, and similar feature pieces should usually remain contract, evidence, requirement, or native-action nodes unless the graph has promoted that concept into the setup spine. The graph links contract nodes to declared setup nodes, selected-context projection prefers the setup node when a selected contract declares one, and cookbook facts include the setup node as a related stable id. This replaces repeated type-to-setup guessing without adding a separate mapping registry.
 
 Current implementation: `FirstProofTargetId` remains the machine-readable proof route and `FirstProof` remains human developer guidance. Explicit `FirstProofTargetId` values win. When a contract does not declare one, graph proof selection falls back to descriptor capability families and then to generic proof vocabulary. Ambiguous contract routes stay blank instead of guessing. `PyralisProofFamilyVocabulary` owns broad fallback proof templates such as pawn movement, tabletop action, UI/HUD, camera/cursor, generated content, and networking. `PyralisContractProofFactProjector` can enrich proof facts for graph display, but feature-specific setup requirements should still originate in contracts/reflection and graph evidence.
 Current implementation: proof vocabulary templates are fallback grammar only. `PyralisProofFamilyVocabulary.GetDefaultProofTemplates()` declares stable proof ids, broad route meaning, generic Play Mode checks, and what can wait. It does not own feature-specific required profiles, runtime interfaces, scene components, or assignment fields.
@@ -189,7 +189,7 @@ Current implementation: Intent projection asks `PyralisAuthoringCapabilityDescri
 
 Current implementation: `PyralisCapabilityVocabulary` owns broad fallback capability vocabulary. `PyralisAuthoringCapabilityDescriptorRegistry` is the graph-facing capability surface: it prefers contracts/reflection, then fills generic labels and fallback wording from vocabulary. Feature-specific setup truth should live in contracts/reflection rather than hardcoded card copy.
 
-Current implementation: `PyralisSetupDependencyTree` is the reflected setup dependency resolver for the canonical setup chain and its key child references. It reflects `GameplaySessionBootstrap.sessionDefinition`, `SessionDefinition.defaultGameMode`, `GameModeDefinition.setupProfile`, every `SessionDefinition.defaultParticipants` entry, every participant `defaultPawn`, setup profile runtime capability and runtime pattern references, mode board/turn/feature-module references, pawn prefab/profile references, and pawn feature-module references. `PyralisSetupRouteAnalysis` consumes that tree so route analysis preserves current behavior while dependency discovery moves toward serialized-reference reflection. Explicit caller-provided setup objects still win over reflected defaults; reflection fills missing context, it does not override the selected authoring object. Keep the aggregate node ids such as `participant.default` and `pawn.definition` for current tab compatibility while using indexed child nodes such as `participant.default.0` and `pawn.definition.0` for future graph-native validation parity.
+Current implementation: `PyralisSetupDependencyTree` is the reflected setup dependency resolver for the canonical setup chain and its key child references. It reflects `GameplaySessionBootstrap.sessionDefinition`, `SessionDefinition.defaultGameMode`, every `SessionDefinition.defaultParticipants` entry, every participant `defaultPawn`, mode board/turn/feature-module references, pawn prefab/profile references, and pawn feature-module references. `PyralisSetupRouteAnalysis` consumes that tree so route analysis preserves current behavior while dependency discovery moves toward serialized-reference reflection. Explicit caller-provided setup objects still win over reflected defaults; reflection fills missing context, it does not override the selected authoring object. Keep the aggregate node ids such as `participant.default` and `pawn.definition` for current tab compatibility while using indexed child nodes such as `participant.default.0` and `pawn.definition.0` for future graph-native validation parity.
 
 Current implementation: proof readiness includes graph topology for blockers. Missing or blocked setup-chain, Unity-surface, and validation-evidence nodes emit `BlockedBy` edges from the active proof node to the required node. Capability support remains `Capability -> Proof` via `SupportsProof`; missing setup should not be represented as capability support or as an inverted blocker edge.
 
@@ -245,7 +245,7 @@ Evidence states:
 
 Source origins:
 
-- user-authored setup: selected setup assets, profile choices, and route declarations
+- user-authored setup: selected session/mode assets, participant/pawn definitions, feature-module choices, scene objects, and route declarations
 - reflection: meaning derived directly from code shape, fields, interfaces, attributes, and Unity metadata
 - contract: semantic meaning explicitly declared by `[AuthoringContract]`
 - runtime evidence: setup-flow, scene-readiness, and concrete Unity object validation evidence
@@ -261,7 +261,6 @@ Common stable node ids should look like:
 bootstrap.root
 session.definition
 mode.definition
-setup.profile
 capability.character-pawn-gameplay
 capability.combat
 participant.default
@@ -294,11 +293,11 @@ Do not delete real source inputs just because a tab has migrated. Retire only mi
 Phase 1 tests should prove graph shape, not UI polish:
 
 - a blank or null source still builds a graph with reflected contract nodes
-- a `GameSetupProfile` with pawn/combat capabilities builds setup, capability, and proof nodes
+- a `SessionDefinition` and `GameModeDefinition` with pawn/combat participants, feature modules, or contracts build setup, capability, and proof nodes
 - a reflected feature module contract becomes a contract node with proof target, native setup, assignment fields, and customization moments
 - a `GameplaySessionBootstrap` source can attach setup-flow and scene-readiness evidence nodes
 - graph nodes preserve source-origin provenance for spine grammar, legacy facts, fallback proofs, contracts, and runtime evidence
-- optional `RuntimePatternDefinition` assets project as user-authored setup nodes instead of staying hidden in route analysis
+- grammar vocabulary and proof vocabulary project as graph nodes instead of staying hidden in route analysis
 
 Later phases should add tab-specific projection tests before deleting old logic.
 

@@ -21,7 +21,7 @@ namespace NeonBlack.Gameplay.Editor
 
                 EditorGUILayout.Space(10f);
                 EditorGUILayout.LabelField("What This Selection Does", EditorStyles.boldLabel);
-                PyralisSelectedContextRenderer.Draw(selection, contextGraph, currentStep, FillMissingRuntimePatternText);
+                PyralisSelectedContextRenderer.Draw(selection, contextGraph, currentStep);
                 DrawSelectionGuide(selection, contextGraph);
 
                 EditorGUILayout.Space(10f);
@@ -35,7 +35,7 @@ namespace NeonBlack.Gameplay.Editor
 
                 EditorGUILayout.Space(10f);
                 EditorGUILayout.LabelField("What This Selection Does", EditorStyles.boldLabel);
-                PyralisSelectedContextRenderer.Draw(selection, contextGraph, currentStep, FillMissingRuntimePatternText);
+                PyralisSelectedContextRenderer.Draw(selection, contextGraph, currentStep);
                 DrawSelectionGuide(selection, contextGraph);
             }
 
@@ -93,20 +93,20 @@ namespace NeonBlack.Gameplay.Editor
             if (graphRows != null && graphRows.Count > 0)
             {
                 PyralisAuthoringWindowText.DrawSemanticHelpBox(
-                    "Graph-ranked route guidance for the active setup. Intent shapes the setup profile; Guide renders the resulting graph path.",
+                    "Graph-ranked route guidance for the active setup. Intent filters capability focus; Guide renders the resulting graph path.",
                     MessageType.Info);
                 DrawGuideGraphRows(graphRows);
                 return;
             }
 
             PyralisAuthoringWindowText.DrawSemanticHelpBox(
-                "Guide renders the resolved setup graph. Open Intent to choose route capabilities, then create or select a GameSetupProfile so Guide can show the graph-filtered route path.",
+                "Guide renders the resolved setup graph. Open Intent to filter route capabilities, then create or wire gameplay assets so Guide can show the graph-backed route path.",
                 MessageType.Info);
 
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 PyralisAuthoringWindowPrimitives.DrawMiniField("Next Surface", "Intent");
-                PyralisAuthoringWindowPrimitives.DrawMiniField("Route Contract", "Create or select a GameSetupProfile and apply the intended capabilities there.");
+                PyralisAuthoringWindowPrimitives.DrawMiniField("Route Contract", "Use Intent as the graph filter, then express durable setup through SessionDefinition, GameModeDefinition, participants, pawns, feature modules, scene objects, and contracts.");
                 PyralisAuthoringWindowPrimitives.DrawMiniField("After That", "Return to Guide for graph-ranked setup nodes, proof support, and reflective contracts.");
             }
         }

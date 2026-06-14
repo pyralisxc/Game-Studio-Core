@@ -1,24 +1,23 @@
 # Adding a New Game Type to Pyralis
 
-This guide describes the current game-type pattern after the runtime-pattern and setup-profile pass.
+This guide describes the current game-type pattern after the route-capability and graph pass.
 
 ## Core rule
 
 New game types should start from:
 
-- `GameSetupProfile`
-- one or more `RuntimePatternDefinition` assets
-- `GameModeDefinition.setupProfile`
 - `SessionDefinition`
+- `SessionDefinition.defaultGameMode` and `GameModeDefinition` fields
+- participant, pawn, feature-module, scene-evidence, contract, reflection, and grammar-vocabulary signals
 - the prefab and scene setup guides under `Docs/Authoring/`
 
-Use pawns only when the selected runtime patterns need authored actor behavior. Camera-only, board, card, tabletop, puzzle, and turn/menu games can be valid Pyralis games without a character controller.
+Use pawns only when the selected route capabilities need authored actor behavior. Camera-only, board, card, tabletop, puzzle, and turn/menu games can be valid Pyralis games without a character controller.
 
 Do not build new game types by making Animator behavior, scene-specific globals, or a genre folder the primary gameplay owner.
 
-## Choosing runtime patterns first
+## Choosing route capabilities first
 
-Pick the smallest set of patterns that describes how the game is actually played:
+Use the Authoring Window Intent tab to filter the graph toward the smallest set of capabilities that describes how the game is actually played:
 
 - Realtime Character for player-controlled actors, brawlers, platformers, action RPGs, or arcade character loops
 - Combat for melee, brawler, fighter, health, damage, reactions, and defeat rules
@@ -29,9 +28,9 @@ Pick the smallest set of patterns that describes how the game is actually played
 - Scoring/Objectives for points, resources, victory points, timers, end conditions, or round results
 - Procedural Generation when chunks, rooms, pickups, hazards, encounters, or boards are generated rather than placed by hand
 
-Games can overlap patterns. A tactics card battler might use `Board/Card/Tabletop`, `Turn/Menu Action`, `Projectile Combat`, `Scoring/Objectives`, and `Camera/Cursor Control`. A brawler with guns might use `Realtime Character`, `Combat`, `Projectile Combat`, `Animation/Presentation`, and `Scoring/Objectives`.
+Games can overlap capabilities. A tactics card battler might use `Board/Card/Tabletop`, `Turn/Menu Action`, `Projectile Combat`, `Scoring/Objectives`, and `Camera/Cursor Control`. A brawler with guns might use `Realtime Character`, `Combat`, `Projectile Combat`, `Animation/Presentation`, and `Scoring/Objectives`.
 
-Resolve setup-profile validation before wiring scene objects or prefab components.
+Resolve route validation before wiring scene objects or prefab components.
 
 ## Pawn-backed game types
 
@@ -56,9 +55,9 @@ Animation is no longer a separate special-case bridge. The presentation module s
 
 ## How to add a new game type
 
-1. Create or select the `RuntimePatternDefinition` assets that describe the game.
-2. Create a `GameSetupProfile` and assign those patterns.
-3. Assign the setup profile to `GameModeDefinition.setupProfile`.
+1. Use Intent to choose the route DNA, presentation lane, and capability filters.
+2. Create or select the `SessionDefinition`, `GameModeDefinition`, participants, pawns, and feature modules that expose those capabilities.
+3. Assign the `GameModeDefinition` to `SessionDefinition.defaultGameMode` and fill the mode fields the route needs.
 4. Choose whether the game is pawn-backed, camera/cursor-backed, board/card-backed, menu-backed, or a hybrid.
 5. For pawn-backed games, create the runtime controller components you need.
 6. Implement only the pawn interfaces that make sense for that game type.
@@ -69,8 +68,8 @@ Animation is no longer a separate special-case bridge. The presentation module s
 
 For board, card, tabletop, puzzle board, camera-only viewer, or menu-driven games:
 
-1. Keep `GameplaySessionBootstrap`, `SessionDefinition`, `GameModeDefinition`, and `GameSetupProfile`.
-2. Select non-pawn runtime patterns such as `Board/Card/Tabletop`, `Turn/Menu Action`, and `Camera/Cursor Control`.
+1. Keep `GameplaySessionBootstrap`, `SessionDefinition`, `GameModeDefinition`, and participant definitions.
+2. Use Intent and the game-mode fields to expose non-pawn capabilities such as `Board/Card/Tabletop`, `Turn/Menu Action`, and `Camera/Cursor Control`.
 3. Use scene services for UI, scoring/objectives, turn state, scene flow, settings, and camera control.
 4. Add pawn or actor prefabs only when pieces need authored movement, animation, combat, or feature modules.
 5. Keep input routed through the participant/session model rather than assuming one global player object.

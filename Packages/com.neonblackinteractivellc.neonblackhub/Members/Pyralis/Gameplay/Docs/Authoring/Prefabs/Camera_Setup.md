@@ -1,4 +1,4 @@
-﻿# Camera Setup - Step-by-Step
+# Camera Setup - Step-by-Step
 
 Covers the single supported Pyralis camera route: `CinemachineCameraRigController` + `CameraRigProfile`.
 
@@ -6,15 +6,15 @@ Covers the single supported Pyralis camera route: `CinemachineCameraRigControlle
 
 ## Before You Wire This
 
-Start with a `GameSetupProfile` assigned to `GameModeDefinition.setupProfile`.
+Start with a `SessionDefinition` assigned to `GameplaySessionBootstrap.sessionDefinition` and a `GameModeDefinition` assigned to `SessionDefinition.defaultGameMode`.
 
-Recommended runtime patterns:
+Recommended route capabilities:
 
 - Camera/Cursor Control for camera-owned, cursor-owned, strategy, tabletop, or menu-driven games
 - Realtime Character when the camera follows pawns
 - Board/Card/Tabletop when the camera frames non-pawn play
 
-Resolve setup-profile validation before wiring Cinemachine cameras, camera profiles, target groups, or 2D bounds framing.
+Resolve route validation before wiring Cinemachine cameras, camera profiles, target groups, or 2D bounds framing.
 
 ---
 

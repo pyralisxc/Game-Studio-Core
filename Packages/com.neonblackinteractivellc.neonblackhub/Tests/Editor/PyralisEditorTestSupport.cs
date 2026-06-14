@@ -63,24 +63,6 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 || source.Contains("PyralisInspectorHandoff.DrawAuthoringButton");
         }
 
-        protected static RuntimePatternDefinition CreateRuntimePattern(
-            string patternId,
-            string displayName,
-            RuntimeCapabilityFamily family,
-            ParticipantEmbodimentRequirement embodiment,
-            params RuntimeControlSurface[] controlSurfaces)
-        {
-            RuntimePatternDefinition pattern = ScriptableObject.CreateInstance<RuntimePatternDefinition>();
-            pattern.patternId = patternId;
-            pattern.displayName = displayName;
-            pattern.description = displayName + " test description.";
-            pattern.setupNotes = displayName + " test setup notes.";
-            pattern.capabilityFamily = family;
-            pattern.participantEmbodiment = embodiment;
-            pattern.supportedControlSurfaces = controlSurfaces;
-            return pattern;
-        }
-
         protected static AnimatorController CreateTestAnimatorController(string assetName)
         {
             AnimatorController controller = new AnimatorController();

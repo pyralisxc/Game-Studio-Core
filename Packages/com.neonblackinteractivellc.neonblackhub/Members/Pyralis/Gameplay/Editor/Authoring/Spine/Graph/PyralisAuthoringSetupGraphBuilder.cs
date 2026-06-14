@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
-using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Editor.Inspectors;
 
 namespace NeonBlack.Gameplay.Editor
@@ -18,7 +17,6 @@ namespace NeonBlack.Gameplay.Editor
 
             AddSetupChainNodes(source, route, nodes, edges);
             AddCapabilityNodes(route, nodes, edges);
-            AddRuntimePatternNodes(route, nodes, edges);
             AddParticipantNodes(route, nodes, edges);
             AddSceneSurfaceNodes(source, nodes, edges);
             string activeProofNodeId = AddProofNode(route, nodes, edges);
@@ -38,10 +36,7 @@ namespace NeonBlack.Gameplay.Editor
                 return PyralisSetupRouteAnalysis.Build(session);
             if (source is GameModeDefinition mode)
                 return PyralisSetupRouteAnalysis.Build(mode);
-            if (source is GameSetupProfile setupProfile)
-                return PyralisSetupRouteAnalysis.Build(setupProfile);
-
-            return PyralisSetupRouteAnalysis.Build((GameSetupProfile)null);
+            return PyralisSetupRouteAnalysis.Build(source);
         }
 
         private static void AddSetupChainNodes(
@@ -93,20 +88,8 @@ namespace NeonBlack.Gameplay.Editor
                     ? PyralisAuthoringGraphSourceOrigin.UserAuthoredSetup
                     : PyralisAuthoringGraphSourceOrigin.SpineGrammar));
 
-            AddNode(nodes, new PyralisAuthoringGraphNode(
-                "setup.profile",
-                "Game Setup Profile",
-                PyralisAuthoringGraphNodeKind.SetupChain,
-                PyralisAuthoringGraphSourceKind.SetupProfile,
-                route != null && route.SetupProfile != null ? PyralisAuthoringGraphEvidenceState.Ready : PyralisAuthoringGraphEvidenceState.Missing,
-                sourceObject: route?.SetupProfile,
-                sourceOrigin: route != null && route.SetupProfile != null
-                    ? PyralisAuthoringGraphSourceOrigin.UserAuthoredSetup
-                    : PyralisAuthoringGraphSourceOrigin.SpineGrammar));
-
             AddEdge(edges, "bootstrap.root", "session.definition", PyralisAuthoringGraphEdgeKind.DependsOn, "reads");
             AddEdge(edges, "session.definition", "mode.definition", PyralisAuthoringGraphEdgeKind.DependsOn, "default mode");
-            AddEdge(edges, "mode.definition", "setup.profile", PyralisAuthoringGraphEdgeKind.DependsOn, "setup profile");
         }
 
         private static void AddParticipantNodes(
@@ -165,14 +148,14 @@ namespace NeonBlack.Gameplay.Editor
                 "capability.selected",
                 "Capabilities",
                 PyralisAuthoringGraphNodeKind.Capability,
-                route != null && route.SetupProfile != null ? PyralisAuthoringGraphSourceKind.SetupProfile : PyralisAuthoringGraphSourceKind.Unknown,
+                PyralisAuthoringGraphSourceKind.AuthoringContract,
                 hasCapabilities ? PyralisAuthoringGraphEvidenceState.Ready : PyralisAuthoringGraphEvidenceState.Missing,
                 guidance: GetCapabilitySummaryGuidance(route, hasCapabilities),
-                sourceObject: route?.SetupProfile,
-                sourceOrigin: route != null && route.SetupProfile != null
-                    ? PyralisAuthoringGraphSourceOrigin.UserAuthoredSetup
+                sourceObject: route?.Mode != null ? route.Mode : route?.Session,
+                sourceOrigin: hasCapabilities
+                    ? PyralisAuthoringGraphSourceOrigin.Reflection
                     : PyralisAuthoringGraphSourceOrigin.SpineGrammar));
-            AddEdge(edges, "setup.profile", "capability.selected", PyralisAuthoringGraphEdgeKind.Satisfies, "selected capabilities");
+            AddEdge(edges, "mode.definition", "capability.selected", PyralisAuthoringGraphEdgeKind.Satisfies, "reflected capabilities");
 
             for (int i = 0; i < families.Length; i++)
             {
@@ -198,7 +181,7 @@ namespace NeonBlack.Gameplay.Editor
                         ? descriptor.SourceOrigin
                         : PyralisAuthoringGraphSourceOrigin.UserAuthoredSetup));
 
-                AddEdge(edges, "setup.profile", nodeId, PyralisAuthoringGraphEdgeKind.Satisfies, "selected capability");
+                AddEdge(edges, "capability.selected", nodeId, PyralisAuthoringGraphEdgeKind.Satisfies, "reflected capability");
                 AddEdge(edges, "capability.selected", nodeId, PyralisAuthoringGraphEdgeKind.RelatesTo, "includes");
             }
         }
@@ -206,46 +189,12 @@ namespace NeonBlack.Gameplay.Editor
         private static PyralisAuthoringGraphSourceKind GetCapabilitySourceKind(PyralisAuthoringCapabilityDescriptor descriptor)
         {
             if (descriptor == null)
-                return PyralisAuthoringGraphSourceKind.SetupProfile;
+                return PyralisAuthoringGraphSourceKind.Unknown;
 
             return descriptor.SourceOrigin == PyralisAuthoringGraphSourceOrigin.Contract
                 || descriptor.SourceOrigin == PyralisAuthoringGraphSourceOrigin.Reflection
                     ? PyralisAuthoringGraphSourceKind.AuthoringContract
                     : PyralisAuthoringGraphSourceKind.CapabilityVocabulary;
-        }
-
-        private static void AddRuntimePatternNodes(
-            PyralisSetupRouteAnalysis route,
-            List<PyralisAuthoringGraphNode> nodes,
-            List<PyralisAuthoringGraphEdge> edges)
-        {
-            RuntimePatternDefinition[] patterns = route?.Patterns ?? Array.Empty<RuntimePatternDefinition>();
-            for (int i = 0; i < patterns.Length; i++)
-            {
-                RuntimePatternDefinition pattern = patterns[i];
-                if (pattern == null)
-                    continue;
-
-                string nodeId = "runtime-pattern." + NormalizeId(!string.IsNullOrWhiteSpace(pattern.patternId) ? pattern.patternId : pattern.name);
-                string guidance = !string.IsNullOrWhiteSpace(pattern.setupNotes)
-                    ? pattern.setupNotes
-                    : pattern.description;
-                AddNode(nodes, new PyralisAuthoringGraphNode(
-                    nodeId,
-                    !string.IsNullOrWhiteSpace(pattern.displayName) ? pattern.displayName : pattern.name,
-                    PyralisAuthoringGraphNodeKind.Capability,
-                    PyralisAuthoringGraphSourceKind.RuntimePattern,
-                    PyralisAuthoringGraphEvidenceState.Ready,
-                    pattern.capabilityFamily,
-                    guidance: guidance,
-                    nativeSetup: pattern.requiredRuntimeSystems ?? Array.Empty<string>(),
-                    customizationMoments: pattern.optionalRuntimeSystems ?? Array.Empty<string>(),
-                    sourceObject: pattern,
-                    sourceOrigin: PyralisAuthoringGraphSourceOrigin.UserAuthoredSetup));
-
-                AddEdge(edges, "setup.profile", nodeId, PyralisAuthoringGraphEdgeKind.Satisfies, "runtime pattern");
-                AddEdge(edges, "capability.selected", nodeId, PyralisAuthoringGraphEdgeKind.RelatesTo, "advanced route metadata");
-            }
         }
 
         private static void AddSceneSurfaceNodes(
@@ -660,14 +609,8 @@ namespace NeonBlack.Gameplay.Editor
 
         private static string GetCapabilitySummaryGuidance(PyralisSetupRouteAnalysis route, bool hasCapabilities)
         {
-            if (route == null || route.SetupProfile == null)
-                return "Create or assign the setup profile before choosing capabilities.";
-
-            if (!hasCapabilities || !route.HasAssignedPatterns)
-                return "Choose capability ingredients before scene wiring.";
-
-            if (!route.HasValidPatterns)
-                return "Fix setup capability validation before trusting route guidance.";
+            if (!hasCapabilities || route == null || !route.HasSelectedCapabilities)
+                return "Choose Intent capability ingredients or create gameplay assets that expose capabilities through contracts and serialized references.";
 
             return route.RouteName;
         }
