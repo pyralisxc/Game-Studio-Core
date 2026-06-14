@@ -22,14 +22,36 @@ The Authoring Window, Inspector field guides, setup validation, and route facts 
 
 Most game setups use this chain:
 
-1. existing `RuntimePatternDefinition` assets
-2. `GameSetupProfile`
+1. `GameSetupProfile` with selected runtime capability ingredients
+2. optional existing `RuntimePatternDefinition` assets only when generic capabilities need advanced reusable metadata
 3. `GameModeDefinition`
 4. `SessionDefinition`
 5. `ParticipantDefinition`
 6. `PawnDefinition` only when the game needs pawn-backed actor bodies
 
 Create assets through the native Project-window Create menu under `NeonBlack`. Use the Authoring Window and Inspector field guides for route state, field handoff, validation, and first proof guidance.
+
+## Source-Of-Truth Map
+
+The authoring system should have one operating model:
+
+```text
+Gameplay code / authored assets
+  -> contracts + reflection + dependency tree + scene evidence + validators + grammar
+      -> resolved setup graph
+          -> Overview / Intent / Guide / Map / Validate / Facts / Inspector handoffs
+```
+
+Use `AUTHORING_BLUEPRINT.md` as the canonical map for where information comes from and how cleanup closes. In short:
+
+- Contracts own feature meaning.
+- Reflection owns code-proven facts.
+- Dependency tree owns setup/reference structure.
+- Scene evidence owns what exists in the open scene.
+- Validators own readiness and blockers.
+- Grammar/vocabulary owns generic wording and fallback templates.
+- The resolved setup graph synthesizes those inputs.
+- UI tabs project the graph; they should not invent separate setup truth.
 
 ## Setup Maintenance Contract
 

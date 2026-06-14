@@ -2,6 +2,20 @@ using System;
 
 namespace NeonBlack.Gameplay.Core.Contracts
 {
+    public readonly struct AuthoringWorldAxiomGroup
+    {
+        public AuthoringWorldAxiomGroup(string displayName, AuthoringWorldAxiom mask, params AuthoringWorldAxiom[] options)
+        {
+            DisplayName = displayName ?? string.Empty;
+            Mask = mask;
+            Options = options ?? Array.Empty<AuthoringWorldAxiom>();
+        }
+
+        public string DisplayName { get; }
+        public AuthoringWorldAxiom Mask { get; }
+        public AuthoringWorldAxiom[] Options { get; }
+    }
+
     [System.Flags]
     public enum AuthoringWorldAxiom
     {
@@ -31,6 +45,36 @@ namespace NeonBlack.Gameplay.Core.Contracts
 
     public static class AuthoringWorldAxiomRegistry
     {
+        private static readonly AuthoringWorldAxiomGroup[] _intentGroups =
+        {
+            new AuthoringWorldAxiomGroup(
+                "Dimensionality",
+                AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.Dimensions3D,
+                AuthoringWorldAxiom.Dimensions2D,
+                AuthoringWorldAxiom.Dimensions3D),
+            new AuthoringWorldAxiomGroup(
+                "Physics Gravity",
+                AuthoringWorldAxiom.GravityVertical | AuthoringWorldAxiom.GravityRadial | AuthoringWorldAxiom.GravityNone,
+                AuthoringWorldAxiom.GravityVertical,
+                AuthoringWorldAxiom.GravityRadial,
+                AuthoringWorldAxiom.GravityNone),
+            new AuthoringWorldAxiomGroup(
+                "Sequence Timeline",
+                AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.TurnBased,
+                AuthoringWorldAxiom.Realtime,
+                AuthoringWorldAxiom.TurnBased),
+            new AuthoringWorldAxiomGroup(
+                "Spatial Topology",
+                AuthoringWorldAxiom.BoundedSpace | AuthoringWorldAxiom.WrappedSpace | AuthoringWorldAxiom.InfiniteSpace,
+                AuthoringWorldAxiom.BoundedSpace,
+                AuthoringWorldAxiom.WrappedSpace,
+                AuthoringWorldAxiom.InfiniteSpace),
+            new AuthoringWorldAxiomGroup(
+                "Networking",
+                AuthoringWorldAxiom.Networked,
+                AuthoringWorldAxiom.Networked)
+        };
+
         private static readonly System.Collections.Generic.Dictionary<AuthoringWorldAxiom, AxiomMetadata> _metadata = new System.Collections.Generic.Dictionary<AuthoringWorldAxiom, AxiomMetadata>
         {
             { AuthoringWorldAxiom.Dimensions2D, new AxiomMetadata("2D Logic", "The world logic operates in a flat 2D plane (XY or XZ).") },
@@ -45,6 +89,26 @@ namespace NeonBlack.Gameplay.Core.Contracts
             { AuthoringWorldAxiom.InfiniteSpace, new AxiomMetadata("Infinite Topology", "The physical world has no inherent mechanical bounds or limits.") },
             { AuthoringWorldAxiom.Networked, new AxiomMetadata("Networked", "Game state and mechanics are replicated across a network.") }
         };
+
+        public static System.Collections.Generic.IReadOnlyList<AuthoringWorldAxiomGroup> GetIntentGroups()
+        {
+            return _intentGroups;
+        }
+
+        public static bool HasCompleteCoreAxioms(AuthoringWorldAxiom axioms)
+        {
+            for (int i = 0; i < _intentGroups.Length; i++)
+            {
+                AuthoringWorldAxiomGroup group = _intentGroups[i];
+                if (group.Mask == AuthoringWorldAxiom.Networked)
+                    continue;
+
+                if ((axioms & group.Mask) == 0)
+                    return false;
+            }
+
+            return true;
+        }
 
         public static string GetDisplayName(AuthoringWorldAxiom axiom)
         {

@@ -9,14 +9,39 @@ namespace NeonBlack.Gameplay.Editor
             bool hasProjectileLauncher,
             bool hasScoreService,
             bool scoringEnabled)
+            : this(participantPawnIssue, null, hasProjectileLauncher, hasScoreService, scoringEnabled)
+        {
+        }
+
+        public PyralisRuntimeSystemClaimContext(
+            string participantPawnIssue,
+            PyralisAuthoringSceneEvidence sceneEvidence,
+            bool scoringEnabled)
+            : this(
+                participantPawnIssue,
+                sceneEvidence,
+                sceneEvidence != null && sceneEvidence.HasProjectileLauncher,
+                sceneEvidence != null && sceneEvidence.HasScoreService,
+                scoringEnabled)
+        {
+        }
+
+        private PyralisRuntimeSystemClaimContext(
+            string participantPawnIssue,
+            PyralisAuthoringSceneEvidence sceneEvidence,
+            bool hasProjectileLauncher,
+            bool hasScoreService,
+            bool scoringEnabled)
         {
             ParticipantPawnIssue = participantPawnIssue;
+            SceneEvidence = sceneEvidence;
             HasProjectileLauncher = hasProjectileLauncher;
             HasScoreService = hasScoreService;
             ScoringEnabled = scoringEnabled;
         }
 
         public string ParticipantPawnIssue { get; }
+        public PyralisAuthoringSceneEvidence SceneEvidence { get; }
         public bool HasProjectileLauncher { get; }
         public bool HasScoreService { get; }
         public bool ScoringEnabled { get; }

@@ -300,6 +300,21 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
+        public void PyralisAuthoringSpine_SetupFlowUsesSharedSceneEvidence()
+        {
+            string setupFlowPath = FindGameplayEditorFile("PyralisSetupFlowValidator.cs");
+            string sceneSurfaceSnapshotPath = FindGameplayEditorFile("PyralisAuthoringSceneSurfaceSnapshot.cs");
+            string setupFlowSource = File.ReadAllText(setupFlowPath);
+            string sceneSurfaceSnapshotSource = File.ReadAllText(sceneSurfaceSnapshotPath);
+
+            Assert.That(setupFlowSource.Contains("PyralisAuthoringSceneEvidence.Build(bootstrap)"), Is.True);
+            Assert.That(setupFlowSource.Contains("HasSceneService<"), Is.False);
+            Assert.That(setupFlowSource.Contains("HasSceneComponent<"), Is.False);
+            Assert.That(sceneSurfaceSnapshotSource.Contains("PyralisAuthoringSceneEvidence.Build(bootstrap)"), Is.True);
+            Assert.That(sceneSurfaceSnapshotSource.Contains("SceneSurfaceCounts"), Is.False);
+        }
+
+        [Test]
         public void PyralisAuthoringWindow_FactsAndCapabilityCatalogReadThroughGraphProjection()
         {
             string factRendererPath = FindGameplayEditorFile("PyralisAuthoringFactExplorerRenderer.cs");
@@ -333,6 +348,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(projectionSource.Contains("PyralisAuthoringCapabilityDescriptorRegistry.BuildRuntimeFamilies"), Is.True);
             Assert.That(projectionSource.Contains("PyralisRuntimeCapabilityFamilyMap.GetFamilies"), Is.False);
             Assert.That(intentSource.Contains("BuildIntentCapabilityGroups"), Is.True);
+            Assert.That(intentSource.Contains("AuthoringWorldAxiomRegistry.GetIntentGroups"), Is.True);
+            Assert.That(intentSource.Contains("AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.Dimensions3D"), Is.False);
             Assert.That(intentSource.Contains("new Dictionary<string, (AuthoringCapability[] caps"), Is.False);
             Assert.That(descriptorSource.Contains("ResolvedAuthoringContractRegistry.All"), Is.True);
         }

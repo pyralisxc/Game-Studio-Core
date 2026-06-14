@@ -25,7 +25,7 @@ Rigged 3D support is Animator-driven and intended for both `Generic` and `Humano
 
 ## Layout
 
-- `Core/`: runtime services, contracts, and shared config
+- `Core/`: runtime services, shared config, runtime contracts, and runtime-visible authoring metadata
 - `Data/`: ScriptableObject definitions and profiles
 - `Editor/`: authoring helpers and custom inspectors
 - `Features/`: runtime systems and gameplay modules

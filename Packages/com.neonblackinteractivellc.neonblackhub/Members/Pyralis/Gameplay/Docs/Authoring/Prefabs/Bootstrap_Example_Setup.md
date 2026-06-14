@@ -13,7 +13,8 @@ The first place to check progress is the `GameplaySessionBootstrap` Inspector's 
 Start with the setup intent:
 
 - select or create a `GameSetupProfile`
-- assign one or more existing `RuntimePatternDefinition` assets
+- choose runtime capability ingredients in the Authoring Window Intent tab or in `GameSetupProfile.runtimeCapabilities`
+- add existing `RuntimePatternDefinition` assets only when the generic capability ingredients need advanced reusable metadata
 - assign the setup profile to `GameModeDefinition.setupProfile`
 - resolve setup-profile validation before placing scene services
 
@@ -25,9 +26,12 @@ Manually create the always-needed assets:
 
 - `SessionDefinition`
 - `GameSetupProfile`
-- one or more existing `RuntimePatternDefinition` assets
 - `GameModeDefinition`
 - `ParticipantDefinition`
+
+Optional enrichment:
+
+- existing `RuntimePatternDefinition` assets only when a capability needs reusable route detail that the generic family cannot express
 
 For pawn-backed games, also create:
 
@@ -55,7 +59,8 @@ Keep the bootstrap selected after this assignment. The **Setup Flow** monitor wi
 - missing `SessionDefinition`
 - missing default `GameModeDefinition`
 - missing `GameSetupProfile`
-- missing runtime patterns
+- missing or invalid runtime capability ingredients
+- optional runtime pattern metadata only when the selected setup uses it
 - missing participants
 - pawn and spawn-point requirements only when selected capabilities require pawns
 - camera, input, playfield, and scoring recommendations only when selected capabilities imply them

@@ -369,10 +369,16 @@ namespace NeonBlack.Gameplay.Editor
             PyralisAuthoringCapabilityDescriptor current,
             PyralisAuthoringCapabilityDescriptor incoming)
         {
-            bool incomingIsContract = incoming.SourceOrigin == PyralisAuthoringGraphSourceOrigin.Contract
-                || incoming.SourceOrigin == PyralisAuthoringGraphSourceOrigin.Reflection;
-            bool currentIsContract = current.SourceOrigin == PyralisAuthoringGraphSourceOrigin.Contract
-                || current.SourceOrigin == PyralisAuthoringGraphSourceOrigin.Reflection;
+            bool incomingIsContract = IsContractOwned(incoming);
+            bool currentIsContract = IsContractOwned(current);
+
+            if (currentIsContract != incomingIsContract)
+            {
+                PyralisAuthoringCapabilityDescriptor contractDescriptor = currentIsContract ? current : incoming;
+                PyralisAuthoringCapabilityDescriptor fallbackDescriptor = currentIsContract ? incoming : current;
+                return MergeContractWithFallback(contractDescriptor, fallbackDescriptor);
+            }
+
             PyralisAuthoringCapabilityDescriptor labelSource = currentIsContract || !incomingIsContract ? current : incoming;
 
             return new PyralisAuthoringCapabilityDescriptor(
@@ -395,6 +401,41 @@ namespace NeonBlack.Gameplay.Editor
                 MergeDistinct(current.NativeActions, incoming.NativeActions),
                 currentIsContract ? current.SourceOrigin : incoming.SourceOrigin,
                 current.SourceFact ?? incoming.SourceFact);
+        }
+
+        private static PyralisAuthoringCapabilityDescriptor MergeContractWithFallback(
+            PyralisAuthoringCapabilityDescriptor contractDescriptor,
+            PyralisAuthoringCapabilityDescriptor fallbackDescriptor)
+        {
+            return new PyralisAuthoringCapabilityDescriptor(
+                contractDescriptor.StableId,
+                FirstNonEmpty(contractDescriptor.DisplayName, fallbackDescriptor.DisplayName),
+                contractDescriptor.Family,
+                contractDescriptor.Capability,
+                FirstNonEmpty(contractDescriptor.Group, fallbackDescriptor.Group),
+                Math.Min(contractDescriptor.SortOrder, fallbackDescriptor.SortOrder),
+                FirstNonEmpty(contractDescriptor.Summary, fallbackDescriptor.Summary),
+                FirstNonEmpty(contractDescriptor.RouteRelevance, fallbackDescriptor.RouteRelevance),
+                contractDescriptor.ProofTargetId,
+                contractDescriptor.GoalTags,
+                contractDescriptor.LaneTags,
+                contractDescriptor.UnsupportedLaneTags,
+                contractDescriptor.Axioms,
+                contractDescriptor.RequiredSetup,
+                contractDescriptor.AssignmentFields,
+                contractDescriptor.CustomizationMoments,
+                contractDescriptor.NativeActions,
+                contractDescriptor.SourceOrigin,
+                contractDescriptor.SourceFact);
+        }
+
+        private static bool IsContractOwned(PyralisAuthoringCapabilityDescriptor descriptor)
+        {
+            if (descriptor == null)
+                return false;
+
+            return descriptor.SourceOrigin == PyralisAuthoringGraphSourceOrigin.Contract
+                || descriptor.SourceOrigin == PyralisAuthoringGraphSourceOrigin.Reflection;
         }
 
         private static RuntimeCapabilityFamily[] InferFamiliesFromCapability(

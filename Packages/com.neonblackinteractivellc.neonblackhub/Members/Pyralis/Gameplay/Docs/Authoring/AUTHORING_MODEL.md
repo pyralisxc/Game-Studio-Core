@@ -84,6 +84,16 @@ In plain English:
 - `ParticipantDefinition` describes a player, AI, seat, team, or participant slot.
 - `PawnDefinition` is used only when a participant needs an actor body.
 
+The operating model behind those assets is:
+
+```text
+Contracts + reflection + dependency tree + scene evidence + validators + grammar
+  -> resolved setup graph
+      -> Overview / Intent / Guide / Map / Validate / Facts
+```
+
+`AUTHORING_BLUEPRINT.md` owns the detailed information-flow map and cleanup closure criteria. Use this file for the asset/runtime relationship model; use the blueprint when deciding where authoring information should live.
+
 ## Definitions
 
 Definitions are identity and relationship assets.

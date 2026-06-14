@@ -240,13 +240,13 @@ namespace NeonBlack.Gameplay.Data.Definitions
             if (target == null)
                 return false;
 
-            MonoBehaviour[] behaviours = target.GetComponentsInChildren<MonoBehaviour>(true);
-            for (int i = 0; i < behaviours.Length; i++)
+            Component[] components = target.GetComponentsInChildren<Component>(true);
+            for (int i = 0; i < components.Length; i++)
             {
-                if (behaviours[i] == null)
+                if (components[i] == null)
                     continue;
 
-                if (string.Equals(behaviours[i].GetType().FullName, fullTypeName, StringComparison.Ordinal))
+                if (string.Equals(components[i].GetType().FullName, fullTypeName, StringComparison.Ordinal))
                     return true;
             }
 

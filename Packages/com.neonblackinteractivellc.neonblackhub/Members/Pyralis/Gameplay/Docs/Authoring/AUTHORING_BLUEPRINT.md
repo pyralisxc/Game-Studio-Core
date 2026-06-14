@@ -133,6 +133,75 @@ Gameplay code and authored assets
 
 Do not store the same route advice separately in multiple windows, inspectors, validators, or docs. If code structure proves it, reflect it. If humans need meaning, put it in a contract. If readiness changes, project it through graph evidence. If wording is generic, put it in Grammar/Vocabulary and let visible surfaces render from graph projections.
 
+## Authoring Information Flow
+
+The Authoring Window is a graph projection surface. The graph is the single compiled view of setup truth; every tab should read that compiled view or a projection derived from it.
+
+```text
+Gameplay code / feature code
+  -> AuthoringContract metadata
+  -> Unity metadata and reflection
+  -> serialized asset references
+  -> open-scene evidence
+  -> validation evidence
+  -> grammar and fallback wording
+      -> resolved setup graph
+          -> Overview
+          -> Intent
+          -> Guide
+          -> Map
+          -> Validate
+          -> Facts
+          -> Inspector handoffs
+```
+
+| Input | Owns | Should not own |
+|---|---|---|
+| Gameplay code | runtime behavior, interfaces, components, profiles, definitions, feature modules | authoring prose that belongs in contracts |
+| `[AuthoringContract]` | feature meaning, capability, relevance, proof guidance, native setup meaning, customization moments, unsupported lane messages | code-proven requirements that reflection can infer |
+| Reflection | implemented interfaces, `[RequireComponent]`, serialized fields, `CreateAssetMenu`, `AddComponentMenu`, feature/profile links | human meaning, route taste, or proof copy |
+| Dependency tree | setup/reference structure: bootstrap, session, mode, setup profile, participants, pawns, prefabs, profiles, feature modules | UI labels or route guidance text |
+| Scene evidence | bootstrap-scoped scene components and candidate surfaces visible in the open scene | proof results or broad scene-quality policy |
+| Validators | readiness, blockers, missing references, invalid combinations, severity, native action targets | persistent feature meaning or grammar wording |
+| Grammar/vocabulary | labels, summaries, generic proof templates, fallback language, native Unity surface names | feature-specific setup truth or route decisions |
+| Resolved setup graph | compiled readiness, proof targets, nodes, edges, evidence, selected context, source provenance | raw scanning or user-facing drawing details |
+| UI tabs | projection, ranking, filtering, navigation, explanation | route truth, validation truth, or feature truth |
+
+The intended developer workflow is:
+
+1. Add or edit gameplay code.
+2. Add or edit the feature-owned contract when humans need meaning.
+3. Let reflection and dependency-tree discovery pick up code structure.
+4. Let validators emit readiness evidence.
+5. Let the graph synthesize readiness and proof targets.
+6. Let tabs render graph projections.
+
+If adding a feature requires editing an Authoring Window renderer, graph projection, validator, grammar vocabulary, and a contract all at once, stop and classify why. Most feature additions should need only gameplay code plus contract metadata unless they introduce new spine grammar.
+
+### Cleanup Closure Criteria
+
+This refactor is complete when cleanup work stops finding new operating models and only finds missing feature contracts or missing validators.
+
+Lock-in requires:
+
+- Map, Overview, Guide, Validate, Facts, selected context, and Inspector handoffs read graph projections instead of direct legacy route/fact/proof models.
+- Intent behaves as a graph and capability filter, not a recipe or preset system.
+- Feature-specific setup guidance lives in contracts or reflected feature metadata.
+- Grammar/vocabulary contains fallback wording and studio-wide Unity/Pyralis language only.
+- Scene evidence is collected through shared evidence models before reaching setup flow, graph evidence, or scene-surface rows.
+- Validators preserve severity, affected object, affected field/component, native action, and success criteria when they feed graph evidence.
+- Proof nodes are generated from contracts, dependency evidence, and validators first; proof vocabulary supplies generic fallback wording.
+- Legacy or migration-only files are either archived with removal criteria or deleted after graph-backed parity is proven.
+
+Use this test for every cleanup candidate:
+
+```text
+Is this Pyralis grammar, feature-owned meaning, code-proven structure,
+scene evidence, validation evidence, graph synthesis, or UI projection?
+```
+
+If the answer is unclear, the code probably has a boundary problem. If the answer is "UI projection," the file should not be discovering route truth.
+
 ## Core Setup Chain
 
 The Authoring Window should keep this chain visible whenever it can infer it from the current selection:

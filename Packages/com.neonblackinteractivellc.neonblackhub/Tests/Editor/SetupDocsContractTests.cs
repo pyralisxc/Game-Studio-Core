@@ -92,6 +92,37 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
+        public void PyralisAuthoringDocs_DefineResolvedGraphSourceOfTruth()
+        {
+            string authoringRoot = Path.Combine(
+                Application.dataPath,
+                "..",
+                "Packages",
+                "com.neonblackinteractivellc.neonblackhub",
+                "Members",
+                "Pyralis",
+                "Gameplay",
+                "Docs",
+                "Authoring");
+
+            string readme = File.ReadAllText(Path.Combine(authoringRoot, "README.md"));
+            string blueprint = File.ReadAllText(Path.Combine(authoringRoot, "AUTHORING_BLUEPRINT.md"));
+            string model = File.ReadAllText(Path.Combine(authoringRoot, "AUTHORING_MODEL.md"));
+            string bootstrap = File.ReadAllText(Path.Combine(authoringRoot, "Prefabs", "Bootstrap_Example_Setup.md"));
+
+            Assert.That(readme.Contains("Source-Of-Truth Map"), Is.True);
+            Assert.That(readme.Contains("Contracts own feature meaning."), Is.True);
+            Assert.That(readme.Contains("The resolved setup graph synthesizes those inputs."), Is.True);
+            Assert.That(blueprint.Contains("Authoring Information Flow"), Is.True);
+            Assert.That(blueprint.Contains("Cleanup Closure Criteria"), Is.True);
+            Assert.That(blueprint.Contains("If the answer is \"UI projection,\" the file should not be discovering route truth."), Is.True);
+            Assert.That(model.Contains("Contracts + reflection + dependency tree + scene evidence + validators + grammar"), Is.True);
+            Assert.That(bootstrap.Contains("choose runtime capability ingredients"), Is.True);
+            Assert.That(bootstrap.Contains("- one or more existing `RuntimePatternDefinition` assets"), Is.False);
+            Assert.That(bootstrap.Contains("assign one or more existing `RuntimePatternDefinition` assets"), Is.False);
+        }
+
+        [Test]
         public void PackageReadme_PointsToLivePyralisSetupDocs()
         {
             string packageRoot = Path.Combine(

@@ -492,7 +492,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         public void AuthoringContracts_RegistryUsesReflectionDiscovery()
         {
             string registrySource = File.ReadAllText(
-                Path.Combine(GameplayRoot, "Core", "Contracts", "ResolvedAuthoringContractRegistry.cs"));
+                Path.Combine(GameplayRoot, "Core", "Authoring", "ResolvedAuthoringContractRegistry.cs"));
             string factScannerSource = File.ReadAllText(
                 Path.Combine(GameplayRoot, "Editor", "Authoring", "Spine", "Facts", "PyralisReflectiveFactScanner.cs"));
             string factTypesSource = File.ReadAllText(
@@ -1530,7 +1530,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void AuthoringContracts_RawAttributeScanningStaysInsideResolvedRegistry()
         {
-            string registryPath = Path.Combine(GameplayRoot, "Core", "Contracts", "ResolvedAuthoringContractRegistry.cs");
+            string registryPath = Path.Combine(GameplayRoot, "Core", "Authoring", "ResolvedAuthoringContractRegistry.cs");
             string editorRoot = Path.Combine(GameplayRoot, "Editor", "Authoring");
             string[] searchedFiles = Directory.GetFiles(editorRoot, "*.cs", SearchOption.AllDirectories)
                 .Concat(Directory.GetFiles(Path.Combine(GameplayRoot, "Runtime"), "*.cs", SearchOption.AllDirectories))
@@ -1584,6 +1584,22 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 Assert.That(contract.FirstProofTargetId, Is.Not.Empty, contract.StableId);
                 Assert.That(PyralisProofFamilyVocabulary.FindProofFact(contract.FirstProofTargetId), Is.Not.Null, contract.StableId);
             }
+        }
+
+        [Test]
+        public void AuthoringContracts_MetadataLivesOutsideRuntimeContractsFolder()
+        {
+            string authoringRoot = Path.Combine(GameplayRoot, "Core", "Authoring");
+            string contractsRoot = Path.Combine(GameplayRoot, "Core", "Contracts");
+
+            Assert.That(File.Exists(Path.Combine(authoringRoot, "AuthoringContractAttribute.cs")), Is.True);
+            Assert.That(File.Exists(Path.Combine(authoringRoot, "PyralisAuthoringAxioms.cs")), Is.True);
+            Assert.That(File.Exists(Path.Combine(authoringRoot, "PyralisAuthoringSpine.cs")), Is.True);
+            Assert.That(File.Exists(Path.Combine(authoringRoot, "ResolvedAuthoringContract.cs")), Is.True);
+            Assert.That(File.Exists(Path.Combine(authoringRoot, "ResolvedAuthoringContractRegistry.cs")), Is.True);
+
+            Assert.That(Directory.GetFiles(contractsRoot, "*Authoring*.cs", SearchOption.TopDirectoryOnly), Is.Empty);
+            Assert.That(Directory.GetFiles(contractsRoot, "ResolvedAuthoringContract*.cs", SearchOption.TopDirectoryOnly), Is.Empty);
         }
 
         [Test]

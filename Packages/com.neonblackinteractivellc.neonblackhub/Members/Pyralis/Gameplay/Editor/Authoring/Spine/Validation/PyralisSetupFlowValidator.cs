@@ -65,13 +65,21 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             bool needsCameraRigForFirstProof = setupRouteReady && route.UsesPawnGameplay();
             bool needs2DCameraBounds = setupRouteReady && route.Requires2DCameraBounds();
             bool has2DCameraBounds = !needs2DCameraBounds || HasUsable2DCameraBounds(cameraRig, mode);
-            bool hasGameplayStateService = HasSceneService<IGameplayStateReader>(bootstrap, out MonoBehaviour gameplayStateService);
-            bool hasCameraBoundsService = HasSceneService<ICameraBoundsProvider>(bootstrap, out MonoBehaviour cameraBoundsService);
-            bool hasScoreService = HasSceneService<ISessionScoreService>(bootstrap, out MonoBehaviour scoreService);
-            bool hasSettingsManager = HasSceneComponent<SettingsManager>(bootstrap, out SettingsManager settingsManager);
-            bool hasProjectileLauncher = HasSceneComponent<ProjectileLauncherBase>(bootstrap, out ProjectileLauncherBase projectileLauncher);
-            bool hasTabletopGridPresenter = HasSceneComponent<TabletopBoardGridPresenter>(bootstrap, out TabletopBoardGridPresenter tabletopGridPresenter);
-            bool hasTabletopSelectionBridge = HasSceneComponent<TabletopBoardSelectionBridge>(bootstrap, out TabletopBoardSelectionBridge tabletopSelectionBridge);
+            PyralisAuthoringSceneEvidence sceneEvidence = PyralisAuthoringSceneEvidence.Build(bootstrap);
+            bool hasGameplayStateService = sceneEvidence.HasGameplayStateService;
+            MonoBehaviour gameplayStateService = sceneEvidence.GameplayStateService as MonoBehaviour;
+            bool hasCameraBoundsService = sceneEvidence.HasCameraBoundsService;
+            MonoBehaviour cameraBoundsService = sceneEvidence.CameraBoundsService as MonoBehaviour;
+            bool hasScoreService = sceneEvidence.HasScoreService;
+            MonoBehaviour scoreService = sceneEvidence.ScoreService as MonoBehaviour;
+            bool hasSettingsManager = sceneEvidence.HasSettingsManager;
+            SettingsManager settingsManager = sceneEvidence.SettingsManager;
+            bool hasProjectileLauncher = sceneEvidence.HasProjectileLauncher;
+            ProjectileLauncherBase projectileLauncher = sceneEvidence.ProjectileLauncher;
+            bool hasTabletopGridPresenter = sceneEvidence.HasTabletopGridPresenter;
+            TabletopBoardGridPresenter tabletopGridPresenter = sceneEvidence.TabletopGridPresenter;
+            bool hasTabletopSelectionBridge = sceneEvidence.HasTabletopSelectionBridge;
+            TabletopBoardSelectionBridge tabletopSelectionBridge = sceneEvidence.TabletopSelectionBridge;
             bool hasTabletopContract = HasTabletopRuntimeContract(mode, tabletopGridPresenter, out Object tabletopContractReference);
             bool hasTabletopSelectionSurface = hasTabletopGridPresenter || hasTabletopSelectionBridge;
             Object tabletopSelectionReference = tabletopGridPresenter != null
@@ -79,11 +87,12 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 : tabletopSelectionBridge != null
                     ? tabletopSelectionBridge
                     : (Object)setupProfile;
-            bool hasCanvas = HasSceneComponent<Canvas>(bootstrap, out Canvas canvas);
-            bool hasUiManager = HasSceneComponent<UIManager>(bootstrap, out UIManager uiManager);
-            bool hasFeedbackHud = HasSceneComponent<ParticipantFeedbackHudPresenter>(bootstrap, out ParticipantFeedbackHudPresenter feedbackHud);
-            bool hasHealthHud = HasSceneComponent<ParticipantHealthHudBinder>(bootstrap, out ParticipantHealthHudBinder healthHud);
-            bool hasHudSurface = hasUiManager || hasFeedbackHud || hasHealthHud;
+            bool hasCanvas = sceneEvidence.HasCanvas;
+            Canvas canvas = sceneEvidence.Canvas;
+            UIManager uiManager = sceneEvidence.UiManager;
+            ParticipantFeedbackHudPresenter feedbackHud = sceneEvidence.FeedbackHud;
+            ParticipantHealthHudBinder healthHud = sceneEvidence.HealthHud;
+            bool hasHudSurface = sceneEvidence.HasHudSurface;
             Object hudReference = uiManager != null
                 ? uiManager
                 : feedbackHud != null
@@ -97,8 +106,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 route.RequiredRuntimeSystems,
                 new PyralisRuntimeSystemClaimContext(
                     participantPawnIssue,
-                    hasProjectileLauncher,
-                    hasScoreService,
+                    sceneEvidence,
                     mode != null && mode.enableScore));
             PyralisSceneReadinessReport sceneReadinessReport = PyralisSceneReadinessValidator.BuildReport(bootstrap);
 
@@ -1102,46 +1110,5 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             return true;
         }
 
-        private static bool HasSceneService<T>(GameplaySessionBootstrap bootstrap, out MonoBehaviour service) where T : class
-        {
-            service = null;
-            if (bootstrap == null)
-                return false;
-
-            UnityEngine.SceneManagement.Scene scene = bootstrap.gameObject.scene;
-            MonoBehaviour[] behaviours = Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include);
-            for (int i = 0; i < behaviours.Length; i++)
-            {
-                MonoBehaviour behaviour = behaviours[i];
-                if (behaviour != null && behaviour.gameObject.scene == scene && behaviour is T)
-                {
-                    service = behaviour;
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private static bool HasSceneComponent<T>(GameplaySessionBootstrap bootstrap, out T component) where T : Component
-        {
-            component = null;
-            if (bootstrap == null)
-                return false;
-
-            UnityEngine.SceneManagement.Scene scene = bootstrap.gameObject.scene;
-            T[] components = Object.FindObjectsByType<T>(FindObjectsInactive.Include);
-            for (int i = 0; i < components.Length; i++)
-            {
-                T candidate = components[i];
-                if (candidate != null && candidate.gameObject.scene == scene)
-                {
-                    component = candidate;
-                    return true;
-                }
-            }
-
-            return false;
-        }
     }
 }

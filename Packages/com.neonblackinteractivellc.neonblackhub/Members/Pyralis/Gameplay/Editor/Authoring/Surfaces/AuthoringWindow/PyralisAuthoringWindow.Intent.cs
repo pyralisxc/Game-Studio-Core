@@ -106,25 +106,12 @@ namespace NeonBlack.Gameplay.Editor
         {
             if (container == null) return;
 
-            AddAxiomDropdown(container, "Dimensionality",
-                AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.Dimensions3D,
-                AuthoringWorldAxiom.Dimensions2D, AuthoringWorldAxiom.Dimensions3D);
-
-            AddAxiomDropdown(container, "Physics Gravity",
-                AuthoringWorldAxiom.GravityVertical | AuthoringWorldAxiom.GravityRadial | AuthoringWorldAxiom.GravityNone,
-                AuthoringWorldAxiom.GravityVertical, AuthoringWorldAxiom.GravityRadial, AuthoringWorldAxiom.GravityNone);
-
-            AddAxiomDropdown(container, "Sequence Timeline",
-                AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.TurnBased,
-                AuthoringWorldAxiom.Realtime, AuthoringWorldAxiom.TurnBased);
-
-            AddAxiomDropdown(container, "Spatial Topology",
-                AuthoringWorldAxiom.BoundedSpace | AuthoringWorldAxiom.WrappedSpace | AuthoringWorldAxiom.InfiniteSpace,
-                AuthoringWorldAxiom.BoundedSpace, AuthoringWorldAxiom.WrappedSpace, AuthoringWorldAxiom.InfiniteSpace);
-
-            AddAxiomDropdown(container, "Networking",
-                AuthoringWorldAxiom.Networked,
-                AuthoringWorldAxiom.Networked);
+            IReadOnlyList<AuthoringWorldAxiomGroup> groups = AuthoringWorldAxiomRegistry.GetIntentGroups();
+            for (int i = 0; i < groups.Count; i++)
+            {
+                AuthoringWorldAxiomGroup group = groups[i];
+                AddAxiomDropdown(container, group.DisplayName, group.Mask, group.Options);
+            }
         }
 
         private void AddAxiomDropdown(VisualElement container, string label, AuthoringWorldAxiom mask, params AuthoringWorldAxiom[] options)
@@ -394,10 +381,7 @@ namespace NeonBlack.Gameplay.Editor
 
         private bool HasCompleteCoreAxioms()
         {
-            return (_intentAxioms & (AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.Dimensions3D)) != 0
-                && (_intentAxioms & (AuthoringWorldAxiom.GravityVertical | AuthoringWorldAxiom.GravityRadial | AuthoringWorldAxiom.GravityNone)) != 0
-                && (_intentAxioms & (AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.TurnBased)) != 0
-                && (_intentAxioms & (AuthoringWorldAxiom.BoundedSpace | AuthoringWorldAxiom.WrappedSpace | AuthoringWorldAxiom.InfiniteSpace)) != 0;
+            return AuthoringWorldAxiomRegistry.HasCompleteCoreAxioms(_intentAxioms);
         }
 
         private GameSetupProfile GetActiveIntentSetupProfile()

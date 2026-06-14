@@ -317,7 +317,7 @@ namespace NeonBlack.Gameplay.Editor
                 proofNodeId,
                 !string.IsNullOrWhiteSpace(proofFact?.DisplayName) ? proofFact.DisplayName : "Unresolved Route Proof",
                 PyralisAuthoringGraphNodeKind.Proof,
-                proofFact != null ? PyralisAuthoringGraphSourceKind.ProofVocabulary : PyralisAuthoringGraphSourceKind.SetupFlow,
+                GetProofSourceKind(proofFact),
                 PyralisAuthoringGraphEvidenceState.Unknown,
                 proofTargetId: proofNodeId,
                 guidance: GetProofGuidance(proofFact),
@@ -710,16 +710,17 @@ namespace NeonBlack.Gameplay.Editor
             if (string.IsNullOrWhiteSpace(proofTargetId))
                 return null;
 
-            IReadOnlyList<PyralisAuthoringFact> proofFacts =
-                PyralisProofFamilyVocabulary.GetAuthoringFacts();
-            for (int i = 0; i < proofFacts.Count; i++)
-            {
-                PyralisAuthoringFact fact = proofFacts[i];
-                if (fact != null && string.Equals(fact.StableId, proofTargetId, StringComparison.Ordinal))
-                    return fact;
-            }
+            return PyralisProofFamilyVocabulary.FindProofFact(proofTargetId);
+        }
 
-            return null;
+        private static PyralisAuthoringGraphSourceKind GetProofSourceKind(PyralisAuthoringFact proofFact)
+        {
+            if (proofFact == null)
+                return PyralisAuthoringGraphSourceKind.SetupFlow;
+
+            return proofFact.SourceKind == PyralisAuthoringFactSourceKind.FeatureContract
+                ? PyralisAuthoringGraphSourceKind.AuthoringContract
+                : PyralisAuthoringGraphSourceKind.ProofVocabulary;
         }
 
         private static string NormalizeId(string value)

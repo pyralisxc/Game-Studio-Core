@@ -5,7 +5,11 @@ using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Editor.Inspectors;
 using NeonBlack.Gameplay.Editor;
 using NeonBlack.Gameplay.Characters;
+using NeonBlack.Gameplay.Features.Combat;
 using NeonBlack.Gameplay.Features.Characters;
+using NeonBlack.Gameplay.Features.Scoring;
+using NeonBlack.Gameplay.Features.Tabletop;
+using NeonBlack.Gameplay.Presentation.Animation;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -51,6 +55,87 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(model.Summary, Does.Contain("Active focus"));
             Assert.That(model.Recommendations.Select(row => row.Fact.StableId), Does.Contain("intent.2d-top-down-plane"));
             Assert.That(model.Recommendations.Any(row => row.Fact.Kind == PyralisAuthoringFactKind.RuntimeCapability), Is.True);
+        }
+
+        [Test]
+        public void IntentAxioms_SmokeComeFromAuthoringContractVocabulary()
+        {
+            System.Collections.Generic.IReadOnlyList<AuthoringWorldAxiomGroup> groups =
+                AuthoringWorldAxiomRegistry.GetIntentGroups();
+
+            Assert.That(groups.Select(group => group.DisplayName), Does.Contain("Dimensionality"));
+            Assert.That(groups.Select(group => group.DisplayName), Does.Contain("Physics Gravity"));
+            Assert.That(groups.Select(group => group.DisplayName), Does.Contain("Sequence Timeline"));
+            Assert.That(groups.Select(group => group.DisplayName), Does.Contain("Spatial Topology"));
+            Assert.That(AuthoringWorldAxiomRegistry.HasCompleteCoreAxioms(
+                AuthoringWorldAxiom.Dimensions2D
+                | AuthoringWorldAxiom.GravityNone
+                | AuthoringWorldAxiom.Realtime
+                | AuthoringWorldAxiom.BoundedSpace), Is.True);
+        }
+
+        [Test]
+        public void CapabilityDescriptor_SmokeDoesNotMergeFallbackSetupIntoContractDescriptors()
+        {
+            PyralisAuthoringCapabilityDescriptor descriptor =
+                PyralisAuthoringCapabilityDescriptorRegistry.FindPrimaryByFamily(RuntimeCapabilityFamily.CharacterPawnGameplay);
+
+            Assert.That(descriptor, Is.Not.Null);
+            Assert.That(
+                descriptor.SourceOrigin == PyralisAuthoringGraphSourceOrigin.Contract
+                || descriptor.SourceOrigin == PyralisAuthoringGraphSourceOrigin.Reflection,
+                Is.True);
+            Assert.That(descriptor.RequiredSetup, Does.Not.Contain("ParticipantDefinition"));
+            Assert.That(descriptor.RequiredSetup, Does.Not.Contain("PawnDefinition"));
+            Assert.That(
+                descriptor.AssignmentFields.Any(field => field.Contains("ParticipantDefinition.defaultPawn")),
+                Is.False);
+        }
+
+        [Test]
+        public void FeatureModuleDefinition_SmokeValidatesRequiredUnityComponentsBeyondMonoBehaviours()
+        {
+            FeatureModuleDefinition definition = ScriptableObject.CreateInstance<FeatureModuleDefinition>();
+            definition.moduleId = "test.required-box-collider";
+
+            GameObject actor = new GameObject("Actor With Box Collider");
+            actor.AddComponent<BoxCollider>();
+
+            System.Collections.Generic.List<string> issues =
+                definition.GetActorCompatibilityIssues(actor, ActorPresentationMode.Sprite2D);
+
+            Assert.That(issues.Any(issue => issue.Contains("BoxCollider")), Is.False);
+
+            Object.DestroyImmediate(actor);
+            Object.DestroyImmediate(definition);
+        }
+
+        [Test]
+        public void SceneEvidence_SmokeFindsTypedRuntimeAndSurfaceComponents()
+        {
+            GameObject root = new GameObject("Scene Evidence Root");
+            try
+            {
+                root.AddComponent<GameplaySessionBootstrap>();
+                root.AddComponent<ParticipantScoreService>();
+                root.AddComponent<ProjectileLauncher2D>();
+                root.AddComponent<TabletopBoardGridPresenter>();
+                root.AddComponent<Canvas>();
+
+                PyralisAuthoringSceneEvidence evidence =
+                    PyralisAuthoringSceneEvidence.Build(root.GetComponent<GameplaySessionBootstrap>());
+
+                Assert.That(evidence.HasScoreService, Is.True);
+                Assert.That(evidence.ScoreServiceCount, Is.EqualTo(1));
+                Assert.That(evidence.HasProjectileLauncher, Is.True);
+                Assert.That(evidence.HasTabletopGridPresenter, Is.True);
+                Assert.That(evidence.HasCanvas, Is.True);
+                Assert.That(evidence.CanvasCount, Is.EqualTo(1));
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
         }
 
         [Test]
@@ -163,6 +248,15 @@ namespace NeonBlack.Gameplay.Tests.Editor
         Capability = AuthoringCapability.Setup,
         Relevance = "Editor smoke fixture for reflected contract requirements.")]
     internal sealed class ContractReflectionRequirementFixture : MonoBehaviour, IContractReflectionRequirementFixture
+    {
+    }
+
+    [AuthoringContract(
+        ModuleId = "test.required-box-collider",
+        Capability = AuthoringCapability.Setup,
+        Relevance = "Editor smoke fixture for required Unity component validation.",
+        RequiredComponents = new[] { typeof(BoxCollider) })]
+    internal sealed class RequiredBoxColliderContractFixture
     {
     }
 }
