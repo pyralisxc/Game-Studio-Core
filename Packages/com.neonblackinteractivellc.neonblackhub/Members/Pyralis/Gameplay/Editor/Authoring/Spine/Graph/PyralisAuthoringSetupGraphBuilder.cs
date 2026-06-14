@@ -185,7 +185,7 @@ namespace NeonBlack.Gameplay.Editor
                     nodeId,
                     descriptor != null ? descriptor.DisplayName : family.ToString(),
                     PyralisAuthoringGraphNodeKind.Capability,
-                    descriptor != null ? PyralisAuthoringGraphSourceKind.AuthoringContract : PyralisAuthoringGraphSourceKind.SetupProfile,
+                    GetCapabilitySourceKind(descriptor),
                     PyralisAuthoringGraphEvidenceState.Ready,
                     family,
                     descriptor != null ? descriptor.Capability : AuthoringCapability.None,
@@ -201,6 +201,17 @@ namespace NeonBlack.Gameplay.Editor
                 AddEdge(edges, "setup.profile", nodeId, PyralisAuthoringGraphEdgeKind.Satisfies, "selected capability");
                 AddEdge(edges, "capability.selected", nodeId, PyralisAuthoringGraphEdgeKind.RelatesTo, "includes");
             }
+        }
+
+        private static PyralisAuthoringGraphSourceKind GetCapabilitySourceKind(PyralisAuthoringCapabilityDescriptor descriptor)
+        {
+            if (descriptor == null)
+                return PyralisAuthoringGraphSourceKind.SetupProfile;
+
+            return descriptor.SourceOrigin == PyralisAuthoringGraphSourceOrigin.Contract
+                || descriptor.SourceOrigin == PyralisAuthoringGraphSourceOrigin.Reflection
+                    ? PyralisAuthoringGraphSourceKind.AuthoringContract
+                    : PyralisAuthoringGraphSourceKind.CapabilityVocabulary;
         }
 
         private static void AddRuntimePatternNodes(
@@ -306,7 +317,7 @@ namespace NeonBlack.Gameplay.Editor
                 proofNodeId,
                 !string.IsNullOrWhiteSpace(proofFact?.DisplayName) ? proofFact.DisplayName : "Unresolved Route Proof",
                 PyralisAuthoringGraphNodeKind.Proof,
-                proofFact != null ? PyralisAuthoringGraphSourceKind.FactRegistry : PyralisAuthoringGraphSourceKind.SetupFlow,
+                proofFact != null ? PyralisAuthoringGraphSourceKind.ProofVocabulary : PyralisAuthoringGraphSourceKind.SetupFlow,
                 PyralisAuthoringGraphEvidenceState.Unknown,
                 proofTargetId: proofNodeId,
                 guidance: GetProofGuidance(proofFact),
@@ -316,7 +327,7 @@ namespace NeonBlack.Gameplay.Editor
                 blockingReason: proofFact != null ? proofFact.FirstProof : string.Empty,
                 sourceOrigin: proofFact != null && proofFact.SourceKind == PyralisAuthoringFactSourceKind.FeatureContract
                     ? PyralisAuthoringGraphSourceOrigin.Contract
-                    : PyralisAuthoringGraphSourceOrigin.SpineFallback));
+                    : PyralisAuthoringGraphSourceOrigin.GrammarFallback));
 
             RuntimeCapabilityFamily[] families = route?.CapabilityFamilies ?? Array.Empty<RuntimeCapabilityFamily>();
             for (int i = 0; i < families.Length; i++)
@@ -338,27 +349,12 @@ namespace NeonBlack.Gameplay.Editor
                     return descriptor.ProofTargetId;
             }
 
-            if (route != null && route.RequiresPawn)
-                return "proof.1p-pawn-movement";
-
-            if (ContainsFamily(families, RuntimeCapabilityFamily.BoardCardTabletop))
-                return "proof.board-card-action";
-            if (ContainsFamily(families, RuntimeCapabilityFamily.ActionTargeting))
-                return "proof.action-selection";
-            if (ContainsFamily(families, RuntimeCapabilityFamily.GunsProjectiles))
-                return "proof.custom-object-effect";
-            if (ContainsFamily(families, RuntimeCapabilityFamily.Combat))
-                return "proof.npc-enemy-behavior";
-            if (ContainsFamily(families, RuntimeCapabilityFamily.ScoringObjectives))
-                return "proof.ui-hud-menu";
-            if (ContainsFamily(families, RuntimeCapabilityFamily.CameraInput))
-                return "proof.camera-cursor-world";
-            if (ContainsFamily(families, RuntimeCapabilityFamily.ProceduralGeneration))
-                return "proof.generated-content";
-            if (ContainsFamily(families, RuntimeCapabilityFamily.Networking))
-                return "proof.network-ownership";
-
-            return "proof.custom-object-effect";
+            string fallbackProofTargetId = PyralisProofFamilyVocabulary.GetFallbackProofTargetId(
+                families,
+                route != null && route.RequiresPawn);
+            return string.IsNullOrWhiteSpace(fallbackProofTargetId)
+                ? "proof.custom-object-effect"
+                : fallbackProofTargetId;
         }
 
         private static string GetProofGuidance(PyralisAuthoringFact proofFact)

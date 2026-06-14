@@ -31,9 +31,6 @@ namespace NeonBlack.Gameplay.Editor
         /// <summary> 3D rigged models with trailing or isometric target cameras. </summary>
         ThirdPerson3D,
         
-        /// <summary> 3D rigged models with cameras pinned inside character eyes. </summary>
-        FirstPerson3D,
-        
         /// <summary> Overhead board layout, grid spaces, or card playing fields. </summary>
         TabletopBoard,
         
@@ -43,7 +40,7 @@ namespace NeonBlack.Gameplay.Editor
         /// <summary> Camera control surface focusing on cursor selection or raycasting. </summary>
         CameraCursor,
 
-        /// <summary> Dynamically switches between multiple camera profiles or visual styles. </summary>
+        /// <summary> Cross-lane or network-aware setup that is not tied to one presentation mode. </summary>
         Mixed
     }
 
@@ -54,11 +51,10 @@ namespace NeonBlack.Gameplay.Editor
             { RuntimeCapabilityLaneTag.Sprite2D, "Side-scroller, flat top-down sprite rendering." },
             { RuntimeCapabilityLaneTag.Billboard2_5D, "Classic retro 2.5D (2D sprites in 3D depth lanes)." },
             { RuntimeCapabilityLaneTag.ThirdPerson3D, "3D rigged models, trailing or isometric target camera." },
-            { RuntimeCapabilityLaneTag.FirstPerson3D, "3D rigged models, camera pinned inside character eyes." },
             { RuntimeCapabilityLaneTag.TabletopBoard, "Overhead board layout, grid spaces, or card playing fields." },
             { RuntimeCapabilityLaneTag.UiMenuOnly, "Screen space overlay Canvas, menu/text-driven (no world camera)." },
             { RuntimeCapabilityLaneTag.CameraCursor, "Camera control surface focusing on cursor selection or raycasting." },
-            { RuntimeCapabilityLaneTag.Mixed, "Set up multiple camera profiles in game that can be switched between." }
+            { RuntimeCapabilityLaneTag.Mixed, "Cross-lane or network-aware setup that is not tied to one presentation mode." }
         };
 
         public static string GetTooltip(RuntimeCapabilityLaneTag lane) => _tooltips.TryGetValue(lane, out var t) ? t : "A presentation lane perspective.";
@@ -297,7 +293,7 @@ namespace NeonBlack.Gameplay.Editor
                 new[] { "combat", "HUD", "scoring", "pickups", "hazards", "networking", "local join" },
                 "Enter Play Mode and confirm one pawn spawns at the assigned spawn point, receives input, and visibly moves.",
                 "The 2D Pawn is the most fundamental proof. Ensure your SpriteRenderer pivot is at the 'Feet' for consistent ground snapping.",
-                "https://docs.neonblack.com/pyralis/movement",
+                string.Empty,
                 new[]
                 {
                     "proof.1p-pawn-movement",
@@ -352,7 +348,7 @@ namespace NeonBlack.Gameplay.Editor
                 new[] { "full combo trees", "split screen", "networking", "HUD polish", "export/build menus" },
                 "Enter Play Mode and confirm each authored or joined pawn spawns at a unique spawn point, receives its input owner, faces correctly, and moves through the 3D lane.",
                 "CharacterController movement is highly sensitive to step offset and slope limit. Ensure these match your environment's geometry.",
-                "https://docs.neonblack.com/pyralis/movement",
+                string.Empty,
                 new[]
                 {
                     "intent.2_5d-lane-arena",
@@ -396,7 +392,7 @@ namespace NeonBlack.Gameplay.Editor
                 new[] { "camera shake polish", "split screen", "cinematic transitions", "multi-target framing" },
                 "Enter Play Mode and confirm the camera shows the proof surface and respects assigned follow or bounds behavior.",
                 "The Cinemachine Rig is the most flexible camera solution. Use 'Camera Bounds' to prevent the player from seeing 'off-map' areas.",
-                "https://docs.neonblack.com/pyralis/camera"),
+                string.Empty),
 
             new PyralisCapabilityVocabularyCard(
                 "capability.interaction-action-selection",
@@ -428,7 +424,7 @@ namespace NeonBlack.Gameplay.Editor
                 new[] { "large menus", "AI turns", "full card UX", "animation polish", "campaign flow" },
                 "Enter Play Mode and confirm one selected command reaches a resolver and reports accepted, rejected, completed, or failed.",
                 "Interaction is the bridge between input and logic. Always provide a clear visual prompt when the player is in range of an interactable object.",
-                "https://docs.neonblack.com/pyralis/interaction"),
+                string.Empty),
 
             new PyralisCapabilityVocabularyCard(
                 "capability.combat-projectile-proof",
@@ -471,7 +467,7 @@ namespace NeonBlack.Gameplay.Editor
                 new[] { "combo trees", "enemy waves", "ammo economy", "score rewards", "network replication", "VFX polish" },
                 "Enter Play Mode and confirm one attack or shot produces one visible hit, miss, impact, damage, block, or reaction outcome.",
                 "Melee combat relies on 'HitBox' zones. Ensure your attack sequences trigger these zones during the active frames of the animation.",
-                "https://docs.neonblack.com/pyralis/combat"),
+                string.Empty),
 
             new PyralisCapabilityVocabularyCard(
                 "capability.npc-enemy-setup",
@@ -513,7 +509,7 @@ namespace NeonBlack.Gameplay.Editor
                 new[] { "boss AI", "dialogue/vendor/quest content", "advanced navigation", "loot tables", "network replication" },
                 "Enter Play Mode and confirm one enemy spawns or activates, finds a player target, attacks through a named hitbox, and can take damage.",
                 "Enemy AI uses a simple range-based detection system. Adjust 'Aggro Range' and 'Leash Range' to fit the size of your combat arenas.",
-                "https://docs.neonblack.com/pyralis/enemies",
+                string.Empty,
                 new[]
                 {
                     "route.npc-enemy-actor",
@@ -553,7 +549,7 @@ namespace NeonBlack.Gameplay.Editor
                 new[] { "leaderboards", "results screens", "save persistence", "achievements", "full menu navigation" },
                 "Enter Play Mode and confirm one gameplay event changes a visible label, panel, score value, prompt, health display, or feedback message.",
                 "UI feedback should be responsive. Use the 'Feedback Hud Presenter' to queue messages so they don't overlap when many events happen at once.",
-                "https://docs.neonblack.com/pyralis/ui")
+                string.Empty)
 };
 
         public static IReadOnlyList<PyralisCapabilityVocabularyCard> All => Cards;

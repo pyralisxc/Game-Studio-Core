@@ -7,33 +7,33 @@ namespace NeonBlack.Gameplay.Editor
 {
     public static class PyralisContractProofFactProjector
     {
-        public static IReadOnlyList<PyralisAuthoringFact> EnrichRouteProofFacts(IReadOnlyList<PyralisAuthoringFact> routeProofFacts)
+        public static IReadOnlyList<PyralisAuthoringFact> EnrichProofTemplateFacts(IReadOnlyList<PyralisAuthoringFact> proofTemplateFacts)
         {
-            if (routeProofFacts == null || routeProofFacts.Count == 0)
+            if (proofTemplateFacts == null || proofTemplateFacts.Count == 0)
                 return Array.Empty<PyralisAuthoringFact>();
 
             Dictionary<string, List<ResolvedAuthoringContract>> contractsByProofId =
                 BuildContractsByProofTargetId();
-            List<PyralisAuthoringFact> enriched = new List<PyralisAuthoringFact>(routeProofFacts.Count);
+            List<PyralisAuthoringFact> enriched = new List<PyralisAuthoringFact>(proofTemplateFacts.Count);
 
-            for (int i = 0; i < routeProofFacts.Count; i++)
+            for (int i = 0; i < proofTemplateFacts.Count; i++)
             {
-                PyralisAuthoringFact routeProof = routeProofFacts[i];
-                if (routeProof == null || string.IsNullOrWhiteSpace(routeProof.StableId))
+                PyralisAuthoringFact proofTemplate = proofTemplateFacts[i];
+                if (proofTemplate == null || string.IsNullOrWhiteSpace(proofTemplate.StableId))
                 {
-                    enriched.Add(routeProof);
+                    enriched.Add(proofTemplate);
                     continue;
                 }
 
-                if (!contractsByProofId.TryGetValue(routeProof.StableId, out List<ResolvedAuthoringContract> contracts)
+                if (!contractsByProofId.TryGetValue(proofTemplate.StableId, out List<ResolvedAuthoringContract> contracts)
                     || contracts == null
                     || contracts.Count == 0)
                 {
-                    enriched.Add(routeProof);
+                    enriched.Add(proofTemplate);
                     continue;
                 }
 
-                enriched.Add(EnrichRouteProofFact(routeProof, contracts));
+                enriched.Add(EnrichProofTemplateFact(proofTemplate, contracts));
             }
 
             return enriched;
@@ -92,7 +92,7 @@ namespace NeonBlack.Gameplay.Editor
             return contractsByProofId;
         }
 
-        private static PyralisAuthoringFact EnrichRouteProofFact(PyralisAuthoringFact routeProof, List<ResolvedAuthoringContract> contracts)
+        private static PyralisAuthoringFact EnrichProofTemplateFact(PyralisAuthoringFact proofTemplate, List<ResolvedAuthoringContract> contracts)
         {
             List<string> contractStableIds = new List<string>();
             List<string> generatedGoalTags = new List<string>();
@@ -104,8 +104,8 @@ namespace NeonBlack.Gameplay.Editor
             List<string> generatedCustomizationMoments = new List<string>();
             List<string> generatedRelatedStableIds = new List<string>();
             List<PyralisAuthoringNativeAction> generatedNativeActions = new List<PyralisAuthoringNativeAction>();
-            AuthoringWorldAxiom axioms = routeProof.Axioms;
-            AuthoringCapability capability = routeProof.Capability;
+            AuthoringWorldAxiom axioms = proofTemplate.Axioms;
+            AuthoringCapability capability = proofTemplate.Capability;
 
             for (int i = 0; i < contracts.Count; i++)
             {
@@ -127,7 +127,7 @@ namespace NeonBlack.Gameplay.Editor
                 capability |= contract.Capability;
             }
 
-            string routeRelevance = routeProof.RouteRelevance;
+            string routeRelevance = proofTemplate.RouteRelevance;
             if (contractStableIds.Count > 0)
             {
                 routeRelevance = string.IsNullOrWhiteSpace(routeRelevance)
@@ -136,35 +136,35 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             return new PyralisAuthoringFact(
-                routeProof.StableId,
-                routeProof.DisplayName,
-                routeProof.Kind,
-                routeProof.SourceKind,
-                routeProof.Confidence,
-                routeProof.Summary,
+                proofTemplate.StableId,
+                proofTemplate.DisplayName,
+                proofTemplate.Kind,
+                proofTemplate.SourceKind,
+                proofTemplate.Confidence,
+                proofTemplate.Summary,
                 routeRelevance,
-                routeProof.FirstProof,
-                goalTags: MergeDistinct(routeProof.GoalTags, generatedGoalTags),
-                laneTags: MergeDistinct(routeProof.LaneTags, generatedLaneTags),
-                unsupportedLaneTags: MergeDistinct(routeProof.UnsupportedLaneTags, generatedUnsupportedLaneTags),
-                requiredDefinitions: routeProof.RequiredDefinitions,
-                requiredProfiles: MergeDistinct(routeProof.RequiredProfiles, generatedRequiredProfiles),
-                requiredSceneComponents: routeProof.RequiredSceneComponents,
-                requiredUnitySurfaces: MergeDistinct(routeProof.RequiredUnitySurfaces, generatedRequiredUnitySurfaces),
-                assignmentFields: MergeDistinct(routeProof.AssignmentFields, generatedAssignmentFields),
-                customizationMoments: MergeDistinct(routeProof.CustomizationMoments, generatedCustomizationMoments),
-                canWait: routeProof.CanWait,
-                nativeActions: MergeDistinct(routeProof.NativeActions, generatedNativeActions),
-                workIntent: routeProof.WorkIntent,
-                relatedStableIds: MergeDistinct(routeProof.RelatedStableIds, generatedRelatedStableIds),
+                proofTemplate.FirstProof,
+                goalTags: MergeDistinct(proofTemplate.GoalTags, generatedGoalTags),
+                laneTags: MergeDistinct(proofTemplate.LaneTags, generatedLaneTags),
+                unsupportedLaneTags: MergeDistinct(proofTemplate.UnsupportedLaneTags, generatedUnsupportedLaneTags),
+                requiredDefinitions: proofTemplate.RequiredDefinitions,
+                requiredProfiles: MergeDistinct(proofTemplate.RequiredProfiles, generatedRequiredProfiles),
+                requiredSceneComponents: proofTemplate.RequiredSceneComponents,
+                requiredUnitySurfaces: MergeDistinct(proofTemplate.RequiredUnitySurfaces, generatedRequiredUnitySurfaces),
+                assignmentFields: MergeDistinct(proofTemplate.AssignmentFields, generatedAssignmentFields),
+                customizationMoments: MergeDistinct(proofTemplate.CustomizationMoments, generatedCustomizationMoments),
+                canWait: proofTemplate.CanWait,
+                nativeActions: MergeDistinct(proofTemplate.NativeActions, generatedNativeActions),
+                workIntent: proofTemplate.WorkIntent,
+                relatedStableIds: MergeDistinct(proofTemplate.RelatedStableIds, generatedRelatedStableIds),
                 axioms: axioms,
                 capability: capability,
-                priority: (AuthoringPriority)routeProof.Priority,
-                priorityValueOverride: routeProof.PriorityValueOverride,
-                deprecatedInVersion: routeProof.DeprecatedInVersion,
-                removableInVersion: routeProof.RemovableInVersion,
-                documentationURL: routeProof.DocumentationURL,
-                expertAdvice: routeProof.ExpertAdvice);
+                priority: (AuthoringPriority)proofTemplate.Priority,
+                priorityValueOverride: proofTemplate.PriorityValueOverride,
+                deprecatedInVersion: proofTemplate.DeprecatedInVersion,
+                removableInVersion: proofTemplate.RemovableInVersion,
+                documentationURL: proofTemplate.DocumentationURL,
+                expertAdvice: proofTemplate.ExpertAdvice);
         }
 
         public static PyralisAuthoringFact FindProofFact(string stableId, IReadOnlyCollection<string> existingProofIds = null)

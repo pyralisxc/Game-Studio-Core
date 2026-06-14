@@ -38,7 +38,7 @@ namespace NeonBlack.Gameplay.Editor
         }
 
         public UnityEngine.Object Source { get; }
-        public PyralisSetupRouteAnalysis RouteAnalysis { get; }
+        internal PyralisSetupRouteAnalysis RouteAnalysis { get; }
         public string RouteName { get; }
         public IReadOnlyList<PyralisAuthoringGraphNode> Nodes => _nodes;
         public IReadOnlyList<PyralisAuthoringGraphEdge> Edges => _edges;

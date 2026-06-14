@@ -15,7 +15,7 @@ namespace NeonBlack.Gameplay.Editor
                     "World, board, arena, backdrop, collider, bounds, zone, spawn, or selectable playfield evidence.",
                     new[] { "Movement", "Tabletop", "Interaction" },
                     new[] { RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Billboard2_5D, RuntimeCapabilityLaneTag.ThirdPerson3D, RuntimeCapabilityLaneTag.TabletopBoard },
-                    new[] { "Environment Root, Playfield Root, Tilemap, Collider, Board Root, Zone, Spawn Point, or generated output root" },
+                    new[] { "environment root", "playfield root", "collision surface", "board root", "zone", "spawn point", "generated output root" },
                     new[] { "route.pawn-actor", "route.tabletop-card", "route.world-camera", "proof.1p-pawn-movement", "proof.board-card-action", "proof.generated-content" }),
 
                 CreateSceneSurfaceFact(
@@ -24,7 +24,7 @@ namespace NeonBlack.Gameplay.Editor
                     "Camera root, Cinemachine controller, physical target camera, camera profile, or bounds evidence.",
                     new[] { "Camera", "Movement", "Interaction" },
                     new[] { RuntimeCapabilityLaneTag.CameraCursor, RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Billboard2_5D, RuntimeCapabilityLaneTag.ThirdPerson3D, RuntimeCapabilityLaneTag.TabletopBoard },
-                    new[] { "Camera Root", "CinemachineCameraRigController", "CameraRigProfile", "PlayfieldProfile", "physical Camera", "camera bounds source" },
+                    new[] { "camera root", "camera controller", "camera profile", "playfield profile", "physical camera", "camera bounds source" },
                     new[] { "route.world-camera", "capability.camera-follow-bounds", "proof.camera-cursor-world", "inspector.cinemachine-camera-rig-controller.camera-fields" }),
 
                 CreateSceneSurfaceFact(
@@ -33,7 +33,7 @@ namespace NeonBlack.Gameplay.Editor
                     "Canvas, EventSystem, HUD presenter, menu presenter, prompt, card hand, action buttons, or score/feedback panel evidence.",
                     new[] { "UiHud", "Scoring", "Interaction" },
                     new[] { RuntimeCapabilityLaneTag.UiMenuOnly, RuntimeCapabilityLaneTag.TabletopBoard, RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.ThirdPerson3D },
-                    new[] { "Canvas", "EventSystem", "HUD presenter", "menu presenter", "board UI", "action buttons", "feedback panel" },
+                    new[] { "canvas", "event system", "HUD presenter", "menu presenter", "board UI", "action buttons", "feedback panel" },
                     new[] { "route.ui-hud-menu", "proof.ui-hud-menu", "capability.ui-scoring-feedback", "reflection.add-component-menu.participant-feedback-hud-presenter" }),
 
                 CreateSceneSurfaceFact(
@@ -42,7 +42,7 @@ namespace NeonBlack.Gameplay.Editor
                     "Score, objective, timer, resource, result, win/loss service, or visible output evidence.",
                     new[] { "Scoring", "UiHud" },
                     new[] { RuntimeCapabilityLaneTag.UiMenuOnly, RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.ThirdPerson3D, RuntimeCapabilityLaneTag.TabletopBoard },
-                    new[] { "ParticipantScoreService", "objective service", "timer/resource/result service", "score HUD label" },
+                    new[] { "score service", "objective service", "timer/resource/result service", "score HUD label" },
                     new[] { "route.ui-hud-menu", "proof.ui-hud-menu", "capability.ui-scoring-feedback" }),
 
                 CreateSceneSurfaceFact(
@@ -51,7 +51,7 @@ namespace NeonBlack.Gameplay.Editor
                     "Board grid presenter, selection bridge, card hand, action/menu presenter, UI button, cursor bridge, or collider/raycast target evidence.",
                     new[] { "Tabletop", "Interaction" },
                     new[] { RuntimeCapabilityLaneTag.TabletopBoard, RuntimeCapabilityLaneTag.UiMenuOnly, RuntimeCapabilityLaneTag.CameraCursor, RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.ThirdPerson3D },
-                    new[] { "TabletopBoardGridPresenter", "TabletopBoardSelectionBridge", "UI button", "cursor bridge", "card hand", "collider/raycast target" },
+                    new[] { "board presenter", "selection bridge", "UI button", "cursor bridge", "card hand", "collider or raycast target" },
                     new[] { "route.tabletop-card", "route.custom-object-feature", "proof.board-card-action", "proof.action-selection", "capability.interaction-action-selection" }),
 
                 CreateSceneSurfaceFact(
@@ -60,7 +60,7 @@ namespace NeonBlack.Gameplay.Editor
                     "Pickup, hazard, enemy, encounter, arena, spawner, or custom feature object evidence.",
                     new[] { "NpcsEnemies", "Combat", "Interaction" },
                     new[] { RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Billboard2_5D, RuntimeCapabilityLaneTag.ThirdPerson3D, RuntimeCapabilityLaneTag.TabletopBoard },
-                    new[] { "CollectibleSpawner2D", "DamageZone2D", "EnemyAI", "EnemySpawner", "ArenaZone", "encounter anchor", "custom feature object" },
+                    new[] { "pickup spawner", "hazard zone", "enemy actor", "enemy spawner", "arena zone", "encounter anchor", "custom feature object" },
                     new[] { "route.npc-enemy-actor", "route.custom-object-feature", "proof.npc-enemy-behavior", "proof.custom-object-effect", "reflection.add-component-menu.enemy-spawner", "reflection.add-component-menu.damage-zone-2d" })
             };
         }

@@ -308,11 +308,11 @@ namespace NeonBlack.Gameplay.Tests.Editor
             string graphProjectionSource = File.ReadAllText(graphProjectionPath);
 
             Assert.That(factRendererSource.Contains("PyralisAuthoringGrammarRegistry.AllFacts"), Is.False);
-            Assert.That(factRendererSource.Contains("PyralisAuthoringSetupGraphProjection.BuildFactExplorerFacts"), Is.True);
+            Assert.That(factRendererSource.Contains("PyralisAuthoringSetupGraphProjection.BuildCookbookFacts"), Is.True);
             Assert.That(catalogRendererSource.Contains("PyralisAuthoringGrammarRegistry.AllFacts"), Is.False);
             Assert.That(catalogRendererSource.Contains("PyralisAuthoringSetupGraphProjection.BuildRuntimeCapabilityFactsForCapability"), Is.True);
             Assert.That(catalogRendererSource.Contains("PyralisAuthoringSetupGraphProjection.BuildRuntimeCapabilityFactsForLane"), Is.True);
-            Assert.That(graphProjectionSource.Contains("BuildFactExplorerFacts"), Is.True);
+            Assert.That(graphProjectionSource.Contains("BuildCookbookFacts"), Is.True);
             Assert.That(graphProjectionSource.Contains("BuildRuntimeCapabilityFactsForCapability"), Is.True);
             Assert.That(graphProjectionSource.Contains("BuildRuntimeCapabilityFactsForLane"), Is.True);
         }
@@ -718,7 +718,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(catalogSource.Contains("ProofStepLabel"), Is.False);
             Assert.That(catalogSource.Contains("ProofStepSuccessCriteria"), Is.False);
             Assert.That(
-                Directory.GetFiles(GameplayRoot, "PyralisAuthoringRouteProof.cs", SearchOption.AllDirectories)
+                Directory.GetFiles(GameplayRoot, "PyralisAuthoring" + "Route" + "Proof.cs", SearchOption.AllDirectories)
                     .Where(path => path.Contains(Path.DirectorySeparatorChar + "Editor" + Path.DirectorySeparatorChar))
                     .ToArray(),
                 Is.Empty);
@@ -838,7 +838,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(factScannerSource.Contains("CreateAssetMenuAttribute"), Is.True);
             Assert.That(factScannerSource.Contains("AddComponentMenu"), Is.True);
             Assert.That(factScannerSource.Contains("SerializedField"), Is.True);
-            Assert.That(graphProjectionSource.Contains("PyralisAuthoringRouteProof"), Is.False);
+            Assert.That(graphProjectionSource.Contains("PyralisAuthoring" + "Route" + "Proof"), Is.False);
             Assert.That(graphProjectionSource.Contains("BuildCurrentStepRow"), Is.True);
             Assert.That(currentStepGuidanceSource.Contains("Inspector -> Add Component"), Is.True);
             Assert.That(currentStepGuidanceSource.Contains("GameplaySessionBootstrap"), Is.True);

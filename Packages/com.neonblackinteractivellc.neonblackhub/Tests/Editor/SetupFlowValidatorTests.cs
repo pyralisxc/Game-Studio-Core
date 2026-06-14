@@ -1059,7 +1059,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             Assert.That(proofNode.ProofTargetId, Is.EqualTo("proof.1p-pawn-movement"));
             Assert.That(proofNode.Guidance, Does.Contain("before adding combat"));
-            Assert.That(pawnNode.SourceOrigin, Is.Not.EqualTo(PyralisAuthoringGraphSourceOrigin.LegacyFact));
+            Assert.That(pawnNode.SourceOrigin, Is.Not.EqualTo(PyralisAuthoringGraphSourceOrigin.GrammarFallback));
             Assert.That(pawnNode.Guidance, Does.Contain("actor"));
             Assert.That(pawnNode.CustomizationMoments.Any(value => value.Contains("speed")), Is.True);
             Assert.That(combatNode.Guidance, Does.Contain("attack").Or.Contain("combat"));
@@ -1091,8 +1091,10 @@ namespace NeonBlack.Gameplay.Tests.Editor
             PyralisAuthoringGraphNode tabletopNode = graph.FindNodes(PyralisAuthoringGraphNodeKind.Capability)
                 .First(node => node.CapabilityFamily == RuntimeCapabilityFamily.BoardCardTabletop);
 
-            Assert.That(graph.RouteAnalysis.RequiresPawn, Is.False);
             Assert.That(proofNode.ProofTargetId, Is.EqualTo("proof.board-card-action"));
+            Assert.That(graph.TryFindNode("pawn.definition", out PyralisAuthoringGraphNode pawnRequirementNode), Is.True);
+            Assert.That(pawnRequirementNode.EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.Ready));
+            Assert.That(pawnRequirementNode.Guidance, Does.Contain("No-pawn route"));
             Assert.That(proofNode.Guidance, Does.Contain("rules-backed selection"));
             Assert.That(proofNode.NativeSetup.Any(value => value.Contains("Keep pawn fields empty")), Is.True);
             Assert.That(tabletopNode.Guidance, Does.Contain("participants").Or.Contain("seats").Or.Contain("board"));
@@ -1121,7 +1123,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(descriptor, Is.Not.Null);
             Assert.That(descriptor.DisplayName, Does.Contain("Core").Or.Contain("Platform"));
             Assert.That(descriptor.RequiredSetup.Any(value => value.Contains("GameplaySessionBootstrap") || value.Contains("SessionDefinition")), Is.True);
-            Assert.That(descriptor.SourceOrigin, Is.Not.EqualTo(PyralisAuthoringGraphSourceOrigin.LegacyFact));
+            Assert.That(descriptor.SourceOrigin, Is.Not.EqualTo(PyralisAuthoringGraphSourceOrigin.GrammarFallback));
 
             Object.DestroyImmediate(setupProfile);
             Object.DestroyImmediate(platform);
@@ -1945,7 +1947,7 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
         }
 
         [Test]
-        public void PyralisAuthoringGrammarRegistry_RouteProofFacts_NameBroadFirstProofs()
+        public void PyralisAuthoringGrammarRegistry_ProofVocabularyFacts_NameBroadFirstProofs()
         {
             Assert.That(PyralisAuthoringGrammarRegistry.HasDuplicateStableIds(out string duplicateStableId), Is.False, duplicateStableId);
 
@@ -1995,7 +1997,7 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
         }
 
         [Test]
-        public void PyralisAuthoringGrammarRegistry_SceneEvidenceFacts_LinkSurfaceGuidanceToRouteProofs()
+        public void PyralisAuthoringGrammarRegistry_SceneEvidenceFacts_LinkSurfaceGuidanceToProofTargets()
         {
             Assert.That(PyralisAuthoringGrammarRegistry.HasDuplicateStableIds(out string duplicateStableId), Is.False, duplicateStableId);
 

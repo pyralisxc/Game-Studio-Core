@@ -2,7 +2,9 @@ using System.Linq;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Profiles;
+using NeonBlack.Gameplay.Editor.Inspectors;
 using NeonBlack.Gameplay.Editor;
+using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Features.Characters;
 using NUnit.Framework;
 using UnityEngine;
@@ -36,7 +38,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             Assert.That(model.Summary, Does.Contain("Active focus"));
             Assert.That(model.Recommendations.Select(row => row.Fact.StableId), Does.Contain("intent.2d-top-down-plane"));
-            Assert.That(model.Recommendations.Any(row => row.Fact.SourceKind == PyralisAuthoringFactSourceKind.RuntimeCapability), Is.True);
+            Assert.That(model.Recommendations.Any(row => row.Fact.Kind == PyralisAuthoringFactKind.RuntimeCapability), Is.True);
         }
 
         [Test]
@@ -86,9 +88,11 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(setupProfile);
 
-            Assert.That(graph.RouteAnalysis.RequiresPawn, Is.False);
             Assert.That(graph.FindNodes(PyralisAuthoringGraphNodeKind.Capability)
                 .Any(node => node.CapabilityFamily == RuntimeCapabilityFamily.BoardCardTabletop), Is.True);
+            Assert.That(graph.TryFindNode("pawn.definition", out PyralisAuthoringGraphNode pawnNode), Is.True);
+            Assert.That(pawnNode.EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.Ready));
+            Assert.That(pawnNode.Guidance, Does.Contain("No-pawn route"));
             Assert.That(graph.TryFindNode("proof.board-card-action", out PyralisAuthoringGraphNode proofNode), Is.True);
             Assert.That(proofNode.Kind, Is.EqualTo(PyralisAuthoringGraphNodeKind.Proof));
 

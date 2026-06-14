@@ -564,7 +564,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void AuthoringContracts_PreserveDeveloperFirstProofGuidanceSeparatelyFromRouteProofTarget()
+        public void AuthoringContracts_PreserveDeveloperFirstProofGuidanceSeparatelyFromProofTarget()
         {
             ResolvedAuthoringContract contract = ResolvedAuthoringContractRegistry.FindByModuleId("actor.traversal.topdown-hop");
 
@@ -575,7 +575,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void AuthoringContracts_FirstProofGuidanceNeverStoresRouteProofIds()
+        public void AuthoringContracts_FirstProofGuidanceNeverStoresProofTargetIds()
         {
             IReadOnlyList<ResolvedAuthoringContract> contracts = ResolvedAuthoringContractRegistry.All;
             for (int i = 0; i < contracts.Count; i++)
@@ -656,7 +656,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(pawnNode.AssignmentFields, Does.Contain("InputProfile.gameplayActionName"));
             Assert.That(graph.TryFindNode("proof.1p-pawn-movement", out PyralisAuthoringGraphNode proofNode), Is.True);
             Assert.That(proofNode.Kind, Is.EqualTo(PyralisAuthoringGraphNodeKind.Proof));
-            Assert.That(proofNode.SourceOrigin, Is.EqualTo(PyralisAuthoringGraphSourceOrigin.SpineFallback));
+            Assert.That(proofNode.SourceOrigin, Is.EqualTo(PyralisAuthoringGraphSourceOrigin.GrammarFallback));
             Assert.That(
                 graph.Edges.Any(edge =>
                     edge.FromNodeId == "capability.2d-pawn-movement"
@@ -713,7 +713,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             Assert.That(graph.TryFindNode("proof.custom-object-effect", out PyralisAuthoringGraphNode proofNode), Is.True);
             Assert.That(proofNode.Kind, Is.EqualTo(PyralisAuthoringGraphNodeKind.Proof));
-            Assert.That(proofNode.SourceKind, Is.EqualTo(PyralisAuthoringGraphSourceKind.FactRegistry));
+            Assert.That(proofNode.SourceKind, Is.EqualTo(PyralisAuthoringGraphSourceKind.ProofVocabulary));
             Assert.That(proofNode.AssignmentFields, Does.Contain(nameof(ProjectileFireRequest.Projectile)));
             Assert.That(proofNode.AssignmentFields, Does.Contain(nameof(ProjectileFireRequest.FireMode)));
             Assert.That(proofNode.NativeSetup.Any(step => step.Contains("FireModeDefinition")), Is.True);
@@ -854,7 +854,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 PyralisAuthoringCapabilityDescriptorRegistry.FindPrimaryByFamily(RuntimeCapabilityFamily.CharacterPawnGameplay);
 
             Assert.That(descriptor, Is.Not.Null);
-            Assert.That(descriptor.SourceOrigin, Is.Not.EqualTo(PyralisAuthoringGraphSourceOrigin.LegacyFact));
+            Assert.That(descriptor.SourceOrigin, Is.Not.EqualTo(PyralisAuthoringGraphSourceOrigin.GrammarFallback));
             Assert.That(descriptor.RequiredSetup, Does.Contain(nameof(TopDownHopProfile)));
             Assert.That(descriptor.RequiredSetup, Does.Contain("IFeatureModuleRuntime"));
             Assert.That(descriptor.AssignmentFields, Does.Contain("InputProfile.gameplayActionName"));
@@ -911,12 +911,12 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void AuthoringOverviewModel_DoesNotRebuildVisibleProofGuidanceFromRouteProof()
+        public void AuthoringOverviewModel_DoesNotRebuildVisibleProofGuidanceFromProofVocabulary()
         {
             string overviewSource = File.ReadAllText(
                 Path.Combine(GameplayRoot, "Editor", "Authoring", "Spine", "Graph", "PyralisAuthoringOverviewModel.cs"));
 
-            Assert.That(overviewSource.Contains("PyralisAuthoringRouteProof.Build"), Is.False);
+            Assert.That(overviewSource.Contains("PyralisProofFamilyVocabulary.GetDefaultProofTemplates"), Is.False);
         }
 
         [Test]
@@ -1029,7 +1029,6 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(setupProfile);
 
-            Assert.That(graph.RouteAnalysis.RequiresPawn, Is.False);
             Assert.That(graph.TryFindNode("pawn.definition", out PyralisAuthoringGraphNode pawnNode), Is.True);
             Assert.That(pawnNode.Kind, Is.EqualTo(PyralisAuthoringGraphNodeKind.UnitySurfaceRequirement));
             Assert.That(pawnNode.EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.Ready));
@@ -1115,7 +1114,6 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
 
-            Assert.That(graph.RouteAnalysis.RequiresPawn, Is.True);
             AssertReadyGraphNode(graph, "bootstrap.root", bootstrap);
             AssertReadyGraphNode(graph, "session.definition", session);
             AssertReadyGraphNode(graph, "mode.definition", mode);
@@ -1160,7 +1158,6 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
 
-            Assert.That(graph.RouteAnalysis.RequiresPawn, Is.False);
             AssertReadyGraphNode(graph, "bootstrap.root", bootstrap);
             AssertReadyGraphNode(graph, "session.definition", session);
             AssertReadyGraphNode(graph, "mode.definition", mode);
@@ -1303,7 +1300,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(profileGraph.Nodes.Any(node => node.SourceOrigin == PyralisAuthoringGraphSourceOrigin.UserAuthoredSetup), Is.True);
             Assert.That(profileGraph.Nodes.Any(node => node.SourceOrigin == PyralisAuthoringGraphSourceOrigin.Contract), Is.True);
             Assert.That(profileGraph.Nodes.Any(node => node.SourceOrigin == PyralisAuthoringGraphSourceOrigin.SpineGrammar), Is.True);
-            Assert.That(profileGraph.Nodes.Any(node => node.SourceOrigin == PyralisAuthoringGraphSourceOrigin.SpineFallback), Is.True);
+            Assert.That(profileGraph.Nodes.Any(node => node.SourceOrigin == PyralisAuthoringGraphSourceOrigin.GrammarFallback), Is.True);
             Assert.That(profileGraph.Nodes.Any(node => node.Kind == PyralisAuthoringGraphNodeKind.Proof), Is.True);
 
             GameObject root = new GameObject("Runtime Evidence Graph");
@@ -1570,7 +1567,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void AuthoringContracts_RoutedFeatureModulesDeclareProofTargetsThatMapToRouteProofCards()
+        public void AuthoringContracts_RoutedFeatureModulesDeclareProofTargetsThatMapToProofVocabulary()
         {
             IReadOnlyList<ResolvedAuthoringContract> contracts = ResolvedAuthoringContractRegistry.All;
 
@@ -1609,7 +1606,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void RouteProofFallbackFacts_DoNotOwnFeatureSpecificSetupRequirements()
+        public void ProofVocabularyFallbackFacts_DoNotOwnFeatureSpecificSetupRequirements()
         {
             PyralisAuthoringFact fallback = PyralisProofFamilyVocabulary.GetDefaultProofTemplates()
                 .FirstOrDefault(fact => fact.StableId == "proof.1p-pawn-movement");
@@ -1622,7 +1619,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void ContractProofFactProjector_EnrichesBroadRouteProofsFromContractMetadata()
+        public void ContractProofFactProjector_EnrichesProofTemplatesFromContractMetadata()
         {
             PyralisAuthoringFact proof = PyralisAuthoringGrammarRegistry.Find("proof.1p-pawn-movement");
 

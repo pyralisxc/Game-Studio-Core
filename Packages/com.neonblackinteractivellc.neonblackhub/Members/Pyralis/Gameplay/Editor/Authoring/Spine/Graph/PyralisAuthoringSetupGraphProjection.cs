@@ -61,13 +61,13 @@ namespace NeonBlack.Gameplay.Editor
             return sourceKind switch
             {
                 PyralisAuthoringGraphSourceKind.SetupProfile => "Setup Profile",
-                PyralisAuthoringGraphSourceKind.RuntimeCapabilityCatalog => "Capability Catalog",
+                PyralisAuthoringGraphSourceKind.CapabilityVocabulary => "Capability Vocabulary",
                 PyralisAuthoringGraphSourceKind.RuntimePattern => "Runtime Pattern",
                 PyralisAuthoringGraphSourceKind.AuthoringContract => "Authoring Contract",
-                PyralisAuthoringGraphSourceKind.FactRegistry => "Fact Registry",
+                PyralisAuthoringGraphSourceKind.GrammarRegistry => "Grammar Registry",
                 PyralisAuthoringGraphSourceKind.SetupFlow => "Setup Flow",
                 PyralisAuthoringGraphSourceKind.SceneReadiness => "Scene Readiness",
-                PyralisAuthoringGraphSourceKind.RouteProof => "Route Proof",
+                PyralisAuthoringGraphSourceKind.ProofVocabulary => "Proof Vocabulary",
                 _ => "Graph"
             };
         }
@@ -81,8 +81,7 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringGraphSourceOrigin.Contract => "Contract",
                 PyralisAuthoringGraphSourceOrigin.RuntimeEvidence => "Runtime Evidence",
                 PyralisAuthoringGraphSourceOrigin.SpineGrammar => "Spine Grammar",
-                PyralisAuthoringGraphSourceOrigin.SpineFallback => "Spine Fallback",
-                PyralisAuthoringGraphSourceOrigin.LegacyFact => "Legacy Fact",
+                PyralisAuthoringGraphSourceOrigin.GrammarFallback => "Grammar Fallback",
                 _ => "Unknown"
             };
         }
@@ -277,7 +276,7 @@ namespace NeonBlack.Gameplay.Editor
                 Row(graph, "Setup Profile", "setup.profile", "Editable capability contract for this route."),
                 BuildCapabilitiesRow(graph),
                 Row(graph, "Participants", "participant.default", "Assign at least one default participant."),
-                Row(graph, "Pawn / No Pawn", "pawn.definition", "Pawn-backed routes need a ParticipantDefinition.defaultPawn.", isOptional: graph.RouteAnalysis == null || !graph.RouteAnalysis.RequiresPawn),
+                Row(graph, "Pawn / No Pawn", "pawn.definition", "Pawn-backed routes need a ParticipantDefinition.defaultPawn.", isOptional: IsNodeOptional(graph, "pawn.definition")),
                 Row(graph, "Scene Surfaces", "scene.surfaces", "Route-recommended scene surface evidence is present or not needed yet.")
             };
 
@@ -297,9 +296,18 @@ namespace NeonBlack.Gameplay.Editor
                 Row(graph, "Setup Profile", "setup.profile"),
                 BuildCapabilitiesRow(graph),
                 Row(graph, "Players / Seats", "participant.default"),
-                Row(graph, "Pawn / No Pawn", "pawn.definition", isOptional: graph.RouteAnalysis == null || !graph.RouteAnalysis.RequiresPawn),
+                Row(graph, "Pawn / No Pawn", "pawn.definition", isOptional: IsNodeOptional(graph, "pawn.definition")),
                 Row(graph, "Scene Roots", "scene.surfaces", isOptional: true)
             };
+        }
+
+        private static bool IsNodeOptional(PyralisAuthoringSetupGraph graph, string nodeId)
+        {
+            return graph == null
+                || !graph.TryFindNode(nodeId, out PyralisAuthoringGraphNode node)
+                || node == null
+                || node.EvidenceState == PyralisAuthoringGraphEvidenceState.Optional
+                || node.WorkIntent == PyralisAuthoringGraphWorkIntent.Optional;
         }
 
         public static IReadOnlyList<PyralisAuthoringGraphNode> FindSceneSurfaceNodes(PyralisAuthoringSetupGraph graph)
@@ -365,7 +373,7 @@ namespace NeonBlack.Gameplay.Editor
             return rows.ToArray();
         }
 
-        public static IReadOnlyList<PyralisAuthoringFact> BuildFactExplorerFacts(PyralisAuthoringSetupGraph graph)
+        public static IReadOnlyList<PyralisAuthoringFact> BuildCookbookFacts(PyralisAuthoringSetupGraph graph)
         {
             return PyralisAuthoringGrammarRegistry.AllFacts;
         }
@@ -913,8 +921,8 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringGraphSourceKind.SetupFlow => "Setup Flow",
                 PyralisAuthoringGraphSourceKind.SceneReadiness => "Scene Readiness",
                 PyralisAuthoringGraphSourceKind.SetupProfile => "GameSetupProfile",
-                PyralisAuthoringGraphSourceKind.RuntimeCapabilityCatalog => "Runtime Capability",
-                PyralisAuthoringGraphSourceKind.RouteProof => "Route Proof",
+                PyralisAuthoringGraphSourceKind.CapabilityVocabulary => "Runtime Capability",
+                PyralisAuthoringGraphSourceKind.ProofVocabulary => "Route Proof",
                 _ => "Resolved Setup Graph"
             };
         }
@@ -1380,10 +1388,8 @@ namespace NeonBlack.Gameplay.Editor
                     "Open Intent to choose or revise setup profile capability ingredients. Guide keeps this selected-profile view read-only so route shaping stays in one place.")
             };
 
-            RuntimePatternDefinition[] patterns = graph != null && graph.RouteAnalysis != null
-                ? graph.RouteAnalysis.Patterns
-                : setupProfile.runtimePatterns;
-            if (patterns == null || patterns.Length == 0)
+            IReadOnlyList<PyralisAuthoringGraphNode> patternNodes = FindRuntimePatternNodes(graph);
+            if (patternNodes.Count == 0 && (setupProfile.runtimePatterns == null || setupProfile.runtimePatterns.Length == 0))
             {
                 details.Add(new PyralisAuthoringSelectedContextDetail(
                     "Optional Route Contracts",
@@ -1391,9 +1397,23 @@ namespace NeonBlack.Gameplay.Editor
                 return details;
             }
 
-            for (int i = 0; i < patterns.Length; i++)
+            if (patternNodes.Count > 0)
             {
-                RuntimePatternDefinition pattern = patterns[i];
+                for (int i = 0; i < patternNodes.Count; i++)
+                {
+                    PyralisAuthoringGraphNode node = patternNodes[i];
+                    details.Add(new PyralisAuthoringSelectedContextDetail(
+                        "Runtime Pattern " + i,
+                        node.Label + " - " + node.Guidance,
+                        node.SourceObject));
+                }
+
+                return details.ToArray();
+            }
+
+            for (int i = 0; i < setupProfile.runtimePatterns.Length; i++)
+            {
+                RuntimePatternDefinition pattern = setupProfile.runtimePatterns[i];
                 details.Add(new PyralisAuthoringSelectedContextDetail(
                     "Runtime Pattern " + i,
                     pattern == null
@@ -1403,6 +1423,16 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             return details.ToArray();
+        }
+
+        private static IReadOnlyList<PyralisAuthoringGraphNode> FindRuntimePatternNodes(PyralisAuthoringSetupGraph graph)
+        {
+            if (graph == null)
+                return Array.Empty<PyralisAuthoringGraphNode>();
+
+            return graph.Nodes
+                .Where(node => node != null && node.SourceKind == PyralisAuthoringGraphSourceKind.RuntimePattern)
+                .ToArray();
         }
 
         private static string GetSelectedContextCopyGuidance(Object selection)

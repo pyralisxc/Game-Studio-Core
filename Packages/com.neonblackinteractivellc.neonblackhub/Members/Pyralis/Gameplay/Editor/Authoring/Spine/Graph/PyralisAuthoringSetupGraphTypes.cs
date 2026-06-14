@@ -22,13 +22,13 @@ namespace NeonBlack.Gameplay.Editor
     {
         Unknown,
         SetupProfile,
-        RuntimeCapabilityCatalog,
+        CapabilityVocabulary,
         RuntimePattern,
         AuthoringContract,
-        FactRegistry,
+        GrammarRegistry,
         SetupFlow,
         SceneReadiness,
-        RouteProof
+        ProofVocabulary
     }
 
     public enum PyralisAuthoringGraphSourceOrigin
@@ -39,8 +39,7 @@ namespace NeonBlack.Gameplay.Editor
         Contract,
         RuntimeEvidence,
         SpineGrammar,
-        SpineFallback,
-        LegacyFact
+        GrammarFallback
     }
 
     public enum PyralisAuthoringGraphEvidenceState
@@ -152,9 +151,9 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringGraphSourceKind.AuthoringContract => PyralisAuthoringGraphSourceOrigin.Contract,
                 PyralisAuthoringGraphSourceKind.SetupFlow => PyralisAuthoringGraphSourceOrigin.RuntimeEvidence,
                 PyralisAuthoringGraphSourceKind.SceneReadiness => PyralisAuthoringGraphSourceOrigin.RuntimeEvidence,
-                PyralisAuthoringGraphSourceKind.RuntimeCapabilityCatalog => PyralisAuthoringGraphSourceOrigin.LegacyFact,
-                PyralisAuthoringGraphSourceKind.FactRegistry => PyralisAuthoringGraphSourceOrigin.LegacyFact,
-                PyralisAuthoringGraphSourceKind.RouteProof => PyralisAuthoringGraphSourceOrigin.SpineFallback,
+                PyralisAuthoringGraphSourceKind.CapabilityVocabulary => PyralisAuthoringGraphSourceOrigin.SpineGrammar,
+                PyralisAuthoringGraphSourceKind.GrammarRegistry => PyralisAuthoringGraphSourceOrigin.SpineGrammar,
+                PyralisAuthoringGraphSourceKind.ProofVocabulary => PyralisAuthoringGraphSourceOrigin.GrammarFallback,
                 _ => PyralisAuthoringGraphSourceOrigin.Unknown
             };
         }

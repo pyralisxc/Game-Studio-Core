@@ -84,10 +84,9 @@ namespace NeonBlack.Gameplay.Editor
 
             AddRange(PyralisReflectiveFactScanner.ScanProject());
             AddRange(Inspectors.PyralisSetupFlowGuidance.GetAuthoringFacts());
-            IReadOnlyList<PyralisAuthoringFact> routeProofFacts = PyralisProofFamilyVocabulary.GetAuthoringFacts();
-            AddRange(routeProofFacts);
-            AddRange(PyralisContractProofFactProjector.GetAuthoringFacts(GetStableIds(routeProofFacts)));
-            AddRange(PyralisRouteCoverageFacts.GetAuthoringFacts());
+            IReadOnlyList<PyralisAuthoringFact> proofTemplateFacts = PyralisProofFamilyVocabulary.GetAuthoringFacts();
+            AddRange(proofTemplateFacts);
+            AddRange(PyralisContractProofFactProjector.GetAuthoringFacts(GetStableIds(proofTemplateFacts)));
             AddRange(PyralisInspectorHandoffFacts.GetAuthoringFacts());
             AddRange(PyralisConventionAuthoringFacts.GetAuthoringFacts());
             AddRange(PyralisIntentVocabulary.GetAuthoringFacts());

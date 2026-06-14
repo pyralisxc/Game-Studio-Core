@@ -26,14 +26,14 @@ namespace NeonBlack.Gameplay.Editor
             EditorGUILayout.LabelField("Capability Vocabulary", EditorStyles.boldLabel);
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                PyralisAuthoringWindowText.DrawSemanticMiniLabel("Browse Pyralis-supported runtime setup by game goal or runtime lane. No asset or component creation happens here; each card points back to native Project, Hierarchy, Inspector, Add Component, assignment, customization, and Play Mode proof steps.");
+                PyralisAuthoringWindowText.DrawSemanticMiniLabel("Browse fallback capability language by game goal or runtime lane. Readiness and setup status come from the graph-backed Overview, Guide, Map, and Validate tabs.");
 
-                DrawRuntimeCapabilityCatalogByGoal(setupProfile);
-                DrawRuntimeCapabilityCatalogByLane(setupProfile);
+                DrawRuntimeCapabilityVocabularyByGoal(setupProfile);
+                DrawRuntimeCapabilityVocabularyByLane(setupProfile);
             }
         }
 
-        private static void DrawRuntimeCapabilityCatalogByGoal(GameSetupProfile setupProfile)
+        private static void DrawRuntimeCapabilityVocabularyByGoal(GameSetupProfile setupProfile)
         {
             EditorGUILayout.Space(4f);
             EditorGUILayout.LabelField("Browse By Engine Spine Capability", EditorStyles.miniBoldLabel);
@@ -56,7 +56,7 @@ namespace NeonBlack.Gameplay.Editor
             }
         }
 
-        private static void DrawRuntimeCapabilityCatalogByLane(GameSetupProfile setupProfile)
+        private static void DrawRuntimeCapabilityVocabularyByLane(GameSetupProfile setupProfile)
         {
             EditorGUILayout.Space(4f);
             EditorGUILayout.LabelField("Browse By Runtime Lane", EditorStyles.miniBoldLabel);
@@ -78,7 +78,7 @@ namespace NeonBlack.Gameplay.Editor
             string keySuffix,
             RuntimeCapabilityLaneTag? laneTag = null)
         {
-            string key = "Pyralis.AuthoringWindow.RuntimeCapabilityCatalog." + groupKind + "." + keySuffix;
+            string key = "Pyralis.AuthoringWindow.RuntimeCapabilityVocabulary." + groupKind + "." + keySuffix;
             bool isOpen = Foldouts.TryGetValue(key, out bool value) && value;
             int count = facts != null ? facts.Count : 0;
             isOpen = EditorGUILayout.Foldout(isOpen, $"{title} ({count})", true);
@@ -146,17 +146,20 @@ namespace NeonBlack.Gameplay.Editor
                     return "Available in Pyralis, but not explicitly relevant to this lane";
             }
 
-            if (PyralisReflectiveContractSolver.IsSatisfied(fact, out string message, out _))
+            if (setupProfile != null && setupProfile.runtimeCapabilities != null)
             {
-                return "[Ready] " + message;
+                RuntimeCapabilityFamily[] families = BuildRuntimeFamilies(fact);
+                for (int i = 0; i < setupProfile.runtimeCapabilities.Length; i++)
+                {
+                    RuntimeCapabilitySelection selection = setupProfile.runtimeCapabilities[i];
+                    if (selection != null && ContainsFamily(families, selection.capabilityFamily))
+                        return selection.requiredForFirstProof
+                            ? "Selected in setup profile"
+                            : "Selected as optional setup capability";
+                }
             }
 
-            if (fact.RequiredSceneComponents != null && fact.RequiredSceneComponents.Length > 0)
-            {
-                return "[Needs Scene Setup] " + message;
-            }
-
-            return "Guide-only option";
+            return "Vocabulary";
         }
 
         public static bool HasAnyRuntimeCapability(GameSetupProfile setupProfile)
@@ -179,6 +182,44 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             return null;
+        }
+
+        private static bool ContainsFamily(RuntimeCapabilityFamily[] families, RuntimeCapabilityFamily family)
+        {
+            if (families == null)
+                return false;
+
+            for (int i = 0; i < families.Length; i++)
+            {
+                if (families[i] == family)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static RuntimeCapabilityFamily[] BuildRuntimeFamilies(PyralisAuthoringFact fact)
+        {
+            if (fact == null)
+                return System.Array.Empty<RuntimeCapabilityFamily>();
+
+            List<RuntimeCapabilityFamily> families = new List<RuntimeCapabilityFamily>();
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors = PyralisAuthoringCapabilityDescriptorRegistry.All;
+            for (int i = 0; i < descriptors.Count; i++)
+            {
+                PyralisAuthoringCapabilityDescriptor descriptor = descriptors[i];
+                if (descriptor == null)
+                    continue;
+
+                bool sameStableId = string.Equals(descriptor.StableId, fact.StableId, System.StringComparison.Ordinal);
+                bool sameCapability = fact.Capability != AuthoringCapability.None
+                    && (descriptor.Capability & fact.Capability) != 0;
+
+                if ((sameStableId || sameCapability) && !families.Contains(descriptor.Family))
+                    families.Add(descriptor.Family);
+            }
+
+            return families.ToArray();
         }
 
         private static string GetLaneTagLabel(RuntimeCapabilityLaneTag tag)

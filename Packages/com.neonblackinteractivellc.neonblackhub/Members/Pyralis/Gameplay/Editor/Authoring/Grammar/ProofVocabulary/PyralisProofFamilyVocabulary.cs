@@ -1,4 +1,5 @@
 using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Data.Definitions;
 
 namespace NeonBlack.Gameplay.Editor
 {
@@ -6,7 +7,7 @@ namespace NeonBlack.Gameplay.Editor
     {
         public static System.Collections.Generic.IReadOnlyList<PyralisAuthoringFact> GetAuthoringFacts()
         {
-            return PyralisContractProofFactProjector.EnrichRouteProofFacts(GetDefaultProofTemplates());
+            return PyralisContractProofFactProjector.EnrichProofTemplateFacts(GetDefaultProofTemplates());
         }
 
         public static System.Collections.Generic.IReadOnlyList<PyralisAuthoringFact> GetDefaultProofTemplates()
@@ -26,7 +27,7 @@ namespace NeonBlack.Gameplay.Editor
                 "press Play after the selected intent's Do Now setup is clear; move the pawn through the mapped input path and watch the Game view",
                 "one pawn spawns at the assigned spawn point, visibly moves, and the Game view follows the runtime GameplaySharedCameraFocus driven by that pawn",
                 "The 1P pawn proof is the foundation of the player experience. Ensure movement feels responsive before adding more complexity.",
-                "https://docs.neonblack.com/pyralis/movement",
+                string.Empty,
                 new[]
                 {
                     "route.pawn-actor",
@@ -58,7 +59,7 @@ namespace NeonBlack.Gameplay.Editor
                 "press Play after one board/card/seat command surface is wired; choose one legal or illegal action",
                 "one selection reaches rules and visibly or inspectably changes board, card, turn, score, or UI state",
                 "Tabletop proofs verify that your rules engine is correctly processing player choices. Use deterministic board state for testing.",
-                "https://docs.neonblack.com/pyralis/tabletop",
+                string.Empty,
                 new[] { "route.tabletop-card", "capability.interaction-action-selection", "capability.ui-scoring-feedback" }));
 
             facts.Add(CreateFallbackProofFact(
@@ -75,7 +76,7 @@ namespace NeonBlack.Gameplay.Editor
                 "press Play and select one command from its authored surface",
                 "the resolver receives the command and reports a clear accepted, rejected, completed, or failed result",
                 "Action selection is the core of player agency. Ensure that the player always knows why an action was accepted or rejected.",
-                "https://docs.neonblack.com/pyralis/interaction",
+                string.Empty,
                 new[] { "route.custom-object-feature", "route.ui-hud-menu", "route.tabletop-card", "capability.interaction-action-selection" }));
 
             facts.Add(CreateFallbackProofFact(
@@ -92,7 +93,7 @@ namespace NeonBlack.Gameplay.Editor
                 "press Play after one NPC/enemy surface is wired; trigger one interaction, detection, or attack",
                 "one authored NPC/enemy behavior is visible or inspectable without requiring a complete encounter loop",
                 "NPC behavior proofs should focus on the individual actor's logic. Group behaviors like wave spawning should be tested later.",
-                "https://docs.neonblack.com/pyralis/enemies",
+                string.Empty,
                 new[] { "route.npc-enemy-actor", "capability.combat-projectile-proof", "capability.interaction-action-selection" }));
 
             facts.Add(CreateFallbackProofFact(
@@ -109,7 +110,7 @@ namespace NeonBlack.Gameplay.Editor
                 "press Play and trigger one authored object or feature",
                 "one object produces a visible or inspectable gameplay effect",
                 "Custom objects are often specific to one level or mechanic. Use Proof scenes to iterate on their visual and logical feel.",
-                "https://docs.neonblack.com/pyralis/features",
+                string.Empty,
                 new[] { "route.custom-object-feature", "capability.interaction-action-selection", "capability.combat-projectile-proof", "capability.ui-scoring-feedback" }));
 
             facts.Add(CreateFallbackProofFact(
@@ -126,7 +127,7 @@ namespace NeonBlack.Gameplay.Editor
                 "press Play and trigger one UI, HUD, prompt, score, health, feedback, or menu event",
                 "one visible label, panel, score value, prompt, health display, feedback message, or command result changes",
                 "UI proofs ensure that the data-flow between the engine and the Canvas is healthy. Use Placeholder art during this stage.",
-                "https://docs.neonblack.com/pyralis/ui",
+                string.Empty,
                 new[] { "route.ui-hud-menu", "capability.ui-scoring-feedback", "capability.interaction-action-selection" }));
 
             facts.Add(CreateFallbackProofFact(
@@ -143,7 +144,7 @@ namespace NeonBlack.Gameplay.Editor
                 "press Play and move/select the authored camera, cursor, target, bounds, or world surface",
                 "visibility, framing, bounds, cursor, highlight, or scene response changes as authored",
                 "Camera and cursor proofs are vital for navigation-heavy routes. Ensure your raycast masks are correctly configured.",
-                "https://docs.neonblack.com/pyralis/camera",
+                string.Empty,
                 new[] { "route.world-camera", "capability.camera-follow-bounds", "setup.assign-camera-rig", "setup.assign-camera-bounds-service" }));
 
             facts.Add(CreateFallbackProofFact(
@@ -160,7 +161,7 @@ namespace NeonBlack.Gameplay.Editor
                 "press Play or run the route-owned generation action and inspect the output root or log",
                 "one generated result is visible, deterministic enough to inspect, or logged clearly",
                 "Generated content should always be 'debuggable'. Ensure you can manually set a Seed to reproduce specific issues.",
-                "https://docs.neonblack.com/pyralis/generation",
+                string.Empty,
                 new[] { "route.custom-object-feature", "route.world-camera" }));
 
             facts.Add(CreateFallbackProofFact(
@@ -177,10 +178,49 @@ namespace NeonBlack.Gameplay.Editor
                 "after the local proof passes, start host/client and exercise the owned participant surface",
                 "ownership, spawn, input authority, and one replicated state change behave as authored",
                 "Networking is easiest to debug when local-first. Always ensure the local proof is rock-solid before testing over transport.",
-                "https://docs.neonblack.com/pyralis/networking",
+                string.Empty,
                 new[] { "route.networking", "capability.2d-pawn-movement", "capability.combat-projectile-proof" }));
 
             return facts;
+        }
+
+        public static string GetFallbackProofTargetId(RuntimeCapabilityFamily[] families, bool requiresPawn)
+        {
+            if (requiresPawn)
+                return "proof.1p-pawn-movement";
+
+            if (ContainsFamily(families, RuntimeCapabilityFamily.BoardCardTabletop))
+                return "proof.board-card-action";
+            if (ContainsFamily(families, RuntimeCapabilityFamily.ActionTargeting))
+                return "proof.action-selection";
+            if (ContainsFamily(families, RuntimeCapabilityFamily.GunsProjectiles))
+                return "proof.custom-object-effect";
+            if (ContainsFamily(families, RuntimeCapabilityFamily.Combat))
+                return "proof.npc-enemy-behavior";
+            if (ContainsFamily(families, RuntimeCapabilityFamily.ScoringObjectives))
+                return "proof.ui-hud-menu";
+            if (ContainsFamily(families, RuntimeCapabilityFamily.CameraInput))
+                return "proof.camera-cursor-world";
+            if (ContainsFamily(families, RuntimeCapabilityFamily.ProceduralGeneration))
+                return "proof.generated-content";
+            if (ContainsFamily(families, RuntimeCapabilityFamily.Networking))
+                return "proof.network-ownership";
+
+            return string.Empty;
+        }
+
+        private static bool ContainsFamily(RuntimeCapabilityFamily[] families, RuntimeCapabilityFamily family)
+        {
+            if (families == null)
+                return false;
+
+            for (int i = 0; i < families.Length; i++)
+            {
+                if (families[i] == family)
+                    return true;
+            }
+
+            return false;
         }
 
         public static PyralisAuthoringFact FindProofFact(string stableId)

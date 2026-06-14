@@ -48,7 +48,6 @@ namespace NeonBlack.Gameplay.Editor
                     axioms: AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityVertical,
                     capability: AuthoringCapability.Movement | AuthoringCapability.Combat | AuthoringCapability.Input | AuthoringCapability.Animation | AuthoringCapability.Camera,
                     priority: AuthoringPriority.Primary,
-                    documentationURL: "https://docs.neonblack.com/pyralis/intent-2d-side-view",
                     expertAdvice: "Ensure your level geometry uses layers defined in the PawnMovementProfile's Ground Layer mask."),
                 new PyralisAuthoringFact(
                     "intent.2d-top-down-plane",
@@ -95,7 +94,6 @@ namespace NeonBlack.Gameplay.Editor
                     axioms: AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone,
                     capability: AuthoringCapability.Movement | AuthoringCapability.Input | AuthoringCapability.Combat | AuthoringCapability.Camera,
                     priority: AuthoringPriority.Primary,
-                    documentationURL: "https://docs.neonblack.com/pyralis/intent-2d-top-down",
                     expertAdvice: "Use CameraRigProfile to define the play area and prevent the actor from leaving the screen."),
                 new PyralisAuthoringFact(
                     "intent.pawn-brawler",
@@ -131,7 +129,7 @@ namespace NeonBlack.Gameplay.Editor
                     customizationMoments: new[]
                     {
                         "Tune movement speed, jump/air control where the lane supports it, attack timing, hit windows, and animation signals.",
-                        "Cameron validates movement feel, route taste, animation fit, and attack readability."
+                        "Creator validates movement feel, route taste, animation fit, and attack readability."
                     },
                     canWait: new[] { "full combo list", "enemy waves", "HUD polish", "score loop", "networking" },
                     relatedStableIds: new[]
@@ -145,7 +143,6 @@ namespace NeonBlack.Gameplay.Editor
                     axioms: AuthoringWorldAxiom.None,
                     capability: AuthoringCapability.Movement | AuthoringCapability.Combat | AuthoringCapability.Input | AuthoringCapability.Animation,
                     priority: AuthoringPriority.Primary,
-                    documentationURL: "https://docs.neonblack.com/pyralis/intent-pawn-brawler",
                     expertAdvice: "Leverage PawnCombatProfile to define hitboxes and attack sequences efficiently."),
                 new PyralisAuthoringFact(
                     "intent.2_5d-lane-arena",
@@ -174,7 +171,7 @@ namespace NeonBlack.Gameplay.Editor
                     customizationMoments: new[]
                     {
                         "Choose lane depth, camera angle, actor scale, enemy spacing, and whether combat uses melee, projectiles, or both.",
-                        "Cameron validates route taste, readable depth, and movement/combat feel."
+                        "Creator validates route taste, readable depth, and movement/combat feel."
                     },
                     canWait: new[] { "full encounter gates", "boss phases", "networking", "shipping export gate" },
                     relatedStableIds: new[]
@@ -186,7 +183,6 @@ namespace NeonBlack.Gameplay.Editor
                         "feature.enemy.reaction",
                         "capability.camera-follow-bounds"
                     },
-                    documentationURL: "https://docs.neonblack.com/pyralis/intent-25d-lane",
                     expertAdvice: "Use BillboardFacing3D for actors and ensure Sorting Group or depth-based Z-offsetting is used for correct visual layering."),
                 new PyralisAuthoringFact(
                     "intent.3d-space-action",
@@ -215,7 +211,7 @@ namespace NeonBlack.Gameplay.Editor
                     customizationMoments: new[]
                     {
                         "Choose controller feel, camera behavior, navigation space, animation rig fit, and interaction targeting.",
-                        "Cameron validates movement feel, route taste, and asset/design fit before promotion."
+                        "Creator validates movement feel, route taste, and asset/design fit before promotion."
                     },
                     canWait: new[] { "network authority", "full AI behavior", "save/progression", "shipping export gate" },
                     relatedStableIds: new[]
@@ -227,7 +223,6 @@ namespace NeonBlack.Gameplay.Editor
                         "feature.actor.interaction",
                         "feature.enemy.reaction"
                     },
-                    documentationURL: "https://docs.neonblack.com/pyralis/intent-3d-space",
                     expertAdvice: "Choose between CharacterController or Rigidbody for actors; ensure ProBuilder or level meshes have correct collision layers."),
                 new PyralisAuthoringFact(
                     "intent.camera-cursor-command",
@@ -250,7 +245,6 @@ namespace NeonBlack.Gameplay.Editor
                         "capability.camera-follow-bounds",
                         "capability.interaction-action-selection"
                     },
-                    documentationURL: "https://docs.neonblack.com/pyralis/intent-camera-cursor",
                     expertAdvice: "Ensure the CameraRigProfile defines the playable bounds and interaction layers for cursor hit-testing."),
                 new PyralisAuthoringFact(
                     "intent.tabletop-board-card",
@@ -298,7 +292,6 @@ namespace NeonBlack.Gameplay.Editor
                     axioms: AuthoringWorldAxiom.TurnBased,
                     capability: AuthoringCapability.Tabletop | AuthoringCapability.Camera | AuthoringCapability.Input | AuthoringCapability.TurnBased,
                     priority: AuthoringPriority.Primary,
-                    documentationURL: "https://docs.neonblack.com/pyralis/intent-tabletop",
                     expertAdvice: "Use LevelRegistry to manage different board/level configurations and SessionDefinition for rule overrides."),
                 new PyralisAuthoringFact(
                     "intent.ui-menu-first",
@@ -335,7 +328,6 @@ namespace NeonBlack.Gameplay.Editor
                         "proof.action-selection",
                         "capability.ui-scoring-feedback"
                     },
-                    documentationURL: "https://docs.neonblack.com/pyralis/intent-ui-menu",
                     expertAdvice: "Map UI events to session state changes via Presenter patterns to decouple layout from logic."),
                 new PyralisAuthoringFact(
                     "intent.hybrid-custom-project",
@@ -383,7 +375,6 @@ namespace NeonBlack.Gameplay.Editor
                         "proof.generated-content",
                         "proof.camera-cursor-world"
                     },
-                    documentationURL: "https://docs.neonblack.com/pyralis/intent-hybrid",
                     expertAdvice: "Start by proving one unique interaction loop before expanding into complex systems.")
 
             };

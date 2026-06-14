@@ -530,56 +530,56 @@ namespace NeonBlack.Gameplay.Editor
         private static void AddFact(List<PyralisAuthoringRouteFact> facts, RuntimeCapabilityFamily family)
         {
             PyralisAuthoringCapabilityDescriptor descriptor = PyralisAuthoringCapabilityDescriptorRegistry.FindPrimaryByFamily(family);
-            if (descriptor != null
-                && TryGetFallbackRouteFact(family, out PyralisAuthoringRouteCapability descriptorCapability, out string _, out bool descriptorPrimaryProofCandidate))
+            if (TryGetRouteCapability(family, out PyralisAuthoringRouteCapability capability))
             {
-                facts.Add(new PyralisAuthoringRouteFact(descriptorCapability, descriptor.DisplayName, descriptor.Family, descriptorPrimaryProofCandidate));
-                return;
-            }
-
-            if (TryGetFallbackRouteFact(family, out PyralisAuthoringRouteCapability capability, out string label, out bool primaryProofCandidate))
+                string label = descriptor != null && !string.IsNullOrWhiteSpace(descriptor.DisplayName)
+                    ? descriptor.DisplayName
+                    : family.ToString();
+                bool primaryProofCandidate = descriptor != null && !string.IsNullOrWhiteSpace(descriptor.ProofTargetId);
                 facts.Add(new PyralisAuthoringRouteFact(capability, label, family, primaryProofCandidate));
+            }
         }
 
-        private static bool TryGetFallbackRouteFact(
+        private static bool TryGetRouteCapability(
             RuntimeCapabilityFamily family,
-            out PyralisAuthoringRouteCapability capability,
-            out string label,
-            out bool primaryProofCandidate)
+            out PyralisAuthoringRouteCapability capability)
         {
             capability = PyralisAuthoringRouteCapability.PlatformCore;
-            label = string.Empty;
-            primaryProofCandidate = false;
 
             switch (family)
             {
+                case RuntimeCapabilityFamily.CharacterPawnGameplay:
+                    capability = PyralisAuthoringRouteCapability.PawnAction;
+                    return true;
+                case RuntimeCapabilityFamily.Combat:
+                    capability = PyralisAuthoringRouteCapability.Combat;
+                    return true;
+                case RuntimeCapabilityFamily.ActionTargeting:
+                    capability = PyralisAuthoringRouteCapability.ActionSelection;
+                    return true;
+                case RuntimeCapabilityFamily.CameraInput:
+                    capability = PyralisAuthoringRouteCapability.CameraCursor;
+                    return true;
+                case RuntimeCapabilityFamily.ScoringObjectives:
+                    capability = PyralisAuthoringRouteCapability.Scoring;
+                    return true;
                 case RuntimeCapabilityFamily.BoardCardTabletop:
                     capability = PyralisAuthoringRouteCapability.Tabletop;
-                    label = "Tabletop";
-                    primaryProofCandidate = true;
                     return true;
                 case RuntimeCapabilityFamily.GunsProjectiles:
                     capability = PyralisAuthoringRouteCapability.Projectile;
-                    label = "Projectile";
-                    primaryProofCandidate = true;
                     return true;
                 case RuntimeCapabilityFamily.ProceduralGeneration:
                     capability = PyralisAuthoringRouteCapability.Procedural;
-                    label = "Procedural";
-                    primaryProofCandidate = true;
                     return true;
                 case RuntimeCapabilityFamily.Networking:
                     capability = PyralisAuthoringRouteCapability.Networking;
-                    label = "Networking";
-                    primaryProofCandidate = true;
                     return true;
                 case RuntimeCapabilityFamily.AnimationPresentation:
                     capability = PyralisAuthoringRouteCapability.AnimationPresentation;
-                    label = "Animation / Presentation";
                     return true;
                 case RuntimeCapabilityFamily.PlatformCore:
                     capability = PyralisAuthoringRouteCapability.PlatformCore;
-                    label = "Platform Core";
                     return true;
                 default:
                     return false;

@@ -17,7 +17,7 @@ namespace NeonBlack.Gameplay.Editor
             EditorGUILayout.LabelField("Fact Explorer", EditorStyles.boldLabel);
             PyralisAuthoringWindowText.DrawSemanticHelpBox("Read-only coverage view. Facts explain what Pyralis knows about capabilities, setup nodes, proof paths, Inspector handoffs, validation vocabulary, and future convention-derived guidance. Use native Unity surfaces for creation, assignment, customization, and Play Mode proof.", MessageType.Info);
 
-            IReadOnlyList<PyralisAuthoringFact> facts = PyralisAuthoringSetupGraphProjection.BuildFactExplorerFacts(graph);
+            IReadOnlyList<PyralisAuthoringFact> facts = PyralisAuthoringSetupGraphProjection.BuildCookbookFacts(graph);
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 EditorGUILayout.LabelField("Active Setup", activeSetup != null ? $"{activeSetup.name} ({activeSetup.GetType().Name})" : "No active setup selected");
