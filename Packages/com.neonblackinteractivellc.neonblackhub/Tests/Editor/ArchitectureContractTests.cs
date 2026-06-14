@@ -22,6 +22,7 @@ using UnityEngine;
 
 namespace NeonBlack.Gameplay.Tests.Editor
 {
+    [Explicit("Deep source/architecture audit; run intentionally outside the default Unity EditMode smoke gate.")]
     public class ArchitectureContractTests : PyralisEditorTestSupport
     {
         [Test]

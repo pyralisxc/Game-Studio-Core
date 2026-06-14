@@ -374,36 +374,14 @@ namespace NeonBlack.Gameplay.Editor
             PyralisAuthoringSetupGraph graph,
             AuthoringCapability capability)
         {
-            if (capability == AuthoringCapability.None)
-                return Array.Empty<PyralisAuthoringFact>();
-
-            return PyralisAuthoringGrammarRegistry.AllFacts
-                .Where(fact => fact != null
-                    && (fact.Kind == PyralisAuthoringFactKind.RuntimeCapability
-                        || fact.Kind == PyralisAuthoringFactKind.FeatureContract)
-                    && (fact.Capability & capability) != 0)
-                .ToArray();
+            return PyralisAuthoringCapabilityDescriptorRegistry.BuildFactsForCapability(capability);
         }
 
         public static IReadOnlyList<PyralisAuthoringFact> BuildRuntimeCapabilityFactsForLane(
             PyralisAuthoringSetupGraph graph,
             RuntimeCapabilityLaneTag laneTag)
         {
-            string laneName = laneTag.ToString();
-            return PyralisAuthoringGrammarRegistry.AllFacts
-                .Where(fact => fact != null
-                    && IsRuntimeCapabilityCatalogFactKind(fact.Kind)
-                    && (fact.HasLane(laneName) || fact.IsExplicitlyUnsupported(laneName)))
-                .ToArray();
-        }
-
-        private static bool IsRuntimeCapabilityCatalogFactKind(PyralisAuthoringFactKind kind)
-        {
-            return kind == PyralisAuthoringFactKind.RuntimeCapability
-                || kind == PyralisAuthoringFactKind.FeatureContract
-                || kind == PyralisAuthoringFactKind.UnitySurface
-                || kind == PyralisAuthoringFactKind.Profile
-                || kind == PyralisAuthoringFactKind.Definition;
+            return PyralisAuthoringCapabilityDescriptorRegistry.BuildFactsForLane(laneTag);
         }
 
         public static PyralisAuthoringIntentModel BuildIntentModel(PyralisAuthoringIntentSelection selection)

@@ -48,10 +48,6 @@ namespace NeonBlack.Gameplay.Editor
         [SerializeField] private Vector2 _validateScroll;
         [SerializeField] private Vector2 _guideScroll;
         [SerializeField] private Vector2 _factsScroll;
-        [SerializeField] private bool _coreFoldout = true;
-        [SerializeField] private bool _actorFoldout = true;
-        [SerializeField] private bool _strategyFoldout = true;
-        [SerializeField] private bool _worldFoldout = true;
         private double _lastInspectorRepaintTime;
         private int _authoringCacheVersion;
         private string _cachedIntentModelKey;

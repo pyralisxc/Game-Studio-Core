@@ -543,15 +543,15 @@ namespace NeonBlack.Gameplay.Editor
             if (contract == null || contract.Capability == AuthoringCapability.None)
                 return;
 
-            RuntimeCapabilityFamily[] families = PyralisRuntimeCapabilityFamilyMap.GetFamilies(
+            RuntimeCapabilityFamily[] families = PyralisAuthoringCapabilityDescriptorRegistry.BuildRuntimeFamilies(
                 contract.Capability,
                 RuntimeCapabilityLaneTag.Mixed,
                 contract.Axioms);
             for (int i = 0; i < families.Length; i++)
             {
-                PyralisCapabilityVocabularyCard card = PyralisCapabilityVocabulary.FindPrimaryByFamily(families[i]);
-                if (card != null && card.Fact != null)
-                    AddRelatedStableId(related, card.Fact.StableId);
+                PyralisAuthoringCapabilityDescriptor descriptor = PyralisAuthoringCapabilityDescriptorRegistry.FindPrimaryByFamily(families[i]);
+                if (descriptor != null)
+                    AddRelatedStableId(related, descriptor.StableId);
             }
         }
 

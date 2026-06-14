@@ -108,15 +108,14 @@ Keep the implementation split by responsibility:
 |---|---|
 | `PyralisAuthoringWindow` | UI shell, active setup state, selection, and mode coordination |
 | `PyralisAuthoringRouteDescriptor` | route facts inferred from setup patterns and selected context |
-| `PyralisAuthoringRouteProof` | route-derived proof identity and proof-chain composition |
 | `PyralisAuthoringOverviewModel` | Overview read model for graph-projected lanes, first proof text, and Play Mode checklist |
 | `PyralisAuthoringCapabilitySelection` | Capability-row helpers used by Intent-to-`GameSetupProfile` sync and optional `RuntimePatternDefinition` metadata |
-| `PyralisCapabilityVocabulary` | fallback capability labels, summaries, and native setup vocabulary indexed by capability and runtime lane |
-| `PyralisProofFamilyVocabulary` | fallback proof family templates enriched by feature-owned contracts |
-| `PyralisAuthoringIntentAdvisor` | Cookbook-to-intent read model that ranks route-intent, capability, contract, and proof facts from selected world/playfield, control shape, lane, and goals for pre-setup planning and fallback guidance |
+| `PyralisAuthoringCapabilityDescriptorRegistry` | reflected capability descriptors built from contracts first and fallback vocabulary second |
+| `PyralisCapabilityVocabulary` | fallback capability labels, summaries, and native setup wording indexed by capability and runtime lane |
+| `PyralisProofFamilyVocabulary` | generic fallback proof family templates |
+| `PyralisAuthoringIntentAdvisor` | pre-setup/fallback read model that ranks route-intent and graph-compatible vocabulary from selected world/playfield, control shape, lane, and goals |
 | `PyralisAuthoringSetupGraph` | read-only resolved graph of setup nodes, edges, evidence, proof targets, selected context, and source contracts |
 | `PyralisAuthoringSetupGraphProjection` | Map, Overview, Guide, Validate, reflective-contract, and selected-context projection rows derived from the resolved setup graph |
-| `PyralisAuthoringCapabilityGuidance` | selected capability, recommended next, environment, and route-intent guidance rows |
 | `PyralisAuthoringSceneSurfaceGuidance` | scene-surface labels, route relevance, next-fix text, expected evidence, and success text |
 | `PyralisSetupFlowMonitor` | bootstrap/setup-flow readiness checks that should stay aligned with the window |
 | `PyralisSceneReadinessValidator` | scene and prefab evidence checks |
@@ -253,11 +252,11 @@ Each card should answer:
 - first proof
 - common next capabilities
 
-Capability vocabulary cards are fallback wording. The graph-facing `PyralisAuthoringFact` can be enriched by contracts and reflection, but feature-specific setup truth should move into feature contracts and reflected dependency evidence rather than new hardcoded card prose.
+Capability vocabulary cards are fallback wording. The graph-facing capability surface is `PyralisAuthoringCapabilityDescriptorRegistry`, which prefers contracts and reflection before filling generic labels and summaries from vocabulary. Feature-specific setup truth should move into feature contracts and reflected dependency evidence rather than new hardcoded card prose.
 
 The vocabulary must stay guide-only. It may select, ping, explain, or copy checklist text, but it must not create or assign assets, add components, or treat generated scaffolding as validation evidence. Users should still use native Unity surfaces: Project window asset creation, Hierarchy object creation, Inspector Add Component, Inspector field assignment, object picker, customization through serialized fields, and Play Mode proof.
 
-The same guide-card model should later expand beyond runtime patterns into the whole setup path: session setup, participants, pawns, NPCs/enemies, custom interactables, pickups, hazards, camera/world bounds, UI/HUD/menus, scoring/objectives, tabletop/control surfaces, and networking.
+The same contract/dependency-tree/graph model should expand beyond runtime patterns into the whole setup path: session setup, participants, pawns, NPCs/enemies, custom interactables, pickups, hazards, camera/world bounds, UI/HUD/menus, scoring/objectives, tabletop/control surfaces, and networking.
 
 ## Mode Responsibilities
 
@@ -393,7 +392,7 @@ Overview should show a first playable proof card rendered from graph proof nodes
 - proof chain for hybrid routes
 - work to defer until after the proof
 
-Route identity comes from `PyralisSetupRouteAnalysis` and the reflected dependency tree. `PyralisAuthoringRouteProof` composes route-derived proof identity and later proof-chain steps, while `PyralisProofFamilyVocabulary` supplies fallback proof wording and contracts enrich feature-specific proof requirements. A pawn + projectile + networking setup still starts with local movement while showing that projectile resolution and network ownership are intentionally next.
+Route identity comes from `PyralisSetupRouteAnalysis` and the reflected dependency tree. Proof nodes are selected by `PyralisAuthoringSetupGraphBuilder` from contract/descriptor proof targets first, then `PyralisProofFamilyVocabulary` supplies generic fallback wording. A pawn + projectile + networking setup still starts with local movement while graph edges show that projectile resolution and network ownership are intentionally next.
 
 Examples:
 

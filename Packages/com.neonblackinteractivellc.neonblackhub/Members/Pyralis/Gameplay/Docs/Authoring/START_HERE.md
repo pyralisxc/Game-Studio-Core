@@ -88,7 +88,7 @@ When a `GameSetupProfile` is active, the Authoring Window projects the same reso
 The Authoring Window guidance is route-aware:
 
 - `GameSetupProfile` stores the runtime capability ingredients you selected. Optional `RuntimePatternDefinition` assets can enrich advanced route metadata, but they are not required for the generic setup path.
-- Intent is the visible route-shaping surface. When a setup profile is active, Intent writes matching runtime capability rows from reflected, contract-enriched capability facts first so Overview, Guide, Map, and Validate read one shared contract.
+- Intent is the visible route-shaping surface. When a setup profile is active, Intent writes matching runtime capability rows from reflected capability descriptors so Overview, Guide, Map, and Validate read one shared graph.
 - `GameModeDefinition` uses its setup profile to explain the active route.
 - `SessionDefinition` explains whether participants need pawns, input, seats, hands, factions, camera, cursor, or menu surfaces.
 - `GameplaySessionBootstrap` checks the assigned session chain and shows the consolidated Setup Flow checklist.

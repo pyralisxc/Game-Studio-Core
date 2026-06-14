@@ -177,28 +177,26 @@ namespace NeonBlack.Gameplay.Editor
             for (int i = 0; i < families.Length; i++)
             {
                 RuntimeCapabilityFamily family = families[i];
-                PyralisCapabilityVocabularyCard card = PyralisCapabilityVocabulary.FindPrimaryByFamily(family);
-                PyralisAuthoringFact fact = PyralisCapabilityVocabulary.FindPrimaryFactByFamily(family);
-                string nodeId = GetCapabilityNodeId(family, card);
-                string proofTarget = GetCapabilityProofTargetId(card);
-                bool hasContractCoverage = PyralisCapabilityVocabulary.HasContractCoverage(family);
+                PyralisAuthoringCapabilityDescriptor descriptor = PyralisAuthoringCapabilityDescriptorRegistry.FindPrimaryByFamily(family);
+                string nodeId = GetCapabilityNodeId(family, descriptor);
+                string proofTarget = descriptor?.ProofTargetId ?? string.Empty;
 
                 AddNode(nodes, new PyralisAuthoringGraphNode(
                     nodeId,
-                    fact != null ? fact.DisplayName : card != null ? card.DisplayName : family.ToString(),
+                    descriptor != null ? descriptor.DisplayName : family.ToString(),
                     PyralisAuthoringGraphNodeKind.Capability,
-                    card != null ? PyralisAuthoringGraphSourceKind.RuntimeCapabilityCatalog : PyralisAuthoringGraphSourceKind.SetupProfile,
+                    descriptor != null ? PyralisAuthoringGraphSourceKind.AuthoringContract : PyralisAuthoringGraphSourceKind.SetupProfile,
                     PyralisAuthoringGraphEvidenceState.Ready,
                     family,
-                    fact != null ? fact.Capability : AuthoringCapability.None,
+                    descriptor != null ? descriptor.Capability : AuthoringCapability.None,
                     proofTarget,
-                    fact != null ? fact.Summary : card != null ? card.WhatItAdds : string.Empty,
-                    fact != null ? Combine(fact.RequiredDefinitions, fact.RequiredProfiles, fact.RequiredSceneComponents, fact.RequiredUnitySurfaces) : Array.Empty<string>(),
-                    fact != null ? fact.AssignmentFields : Array.Empty<string>(),
-                    fact != null ? fact.CustomizationMoments : Array.Empty<string>(),
-                    sourceOrigin: hasContractCoverage
-                        ? PyralisAuthoringGraphSourceOrigin.Contract
-                        : card != null ? PyralisAuthoringGraphSourceOrigin.LegacyFact : PyralisAuthoringGraphSourceOrigin.UserAuthoredSetup));
+                    descriptor != null ? descriptor.Summary : string.Empty,
+                    descriptor != null ? descriptor.RequiredSetup : Array.Empty<string>(),
+                    descriptor != null ? descriptor.AssignmentFields : Array.Empty<string>(),
+                    descriptor != null ? descriptor.CustomizationMoments : Array.Empty<string>(),
+                    sourceOrigin: descriptor != null
+                        ? descriptor.SourceOrigin
+                        : PyralisAuthoringGraphSourceOrigin.UserAuthoredSetup));
 
                 AddEdge(edges, "setup.profile", nodeId, PyralisAuthoringGraphEdgeKind.Satisfies, "selected capability");
                 AddEdge(edges, "capability.selected", nodeId, PyralisAuthoringGraphEdgeKind.RelatesTo, "includes");
@@ -297,26 +295,25 @@ namespace NeonBlack.Gameplay.Editor
             List<PyralisAuthoringGraphNode> nodes,
             List<PyralisAuthoringGraphEdge> edges)
         {
-            PyralisAuthoringRouteDescriptor descriptor = PyralisAuthoringRouteDescriptor.Build(route);
-            PyralisAuthoringRouteProof proof = PyralisAuthoringRouteProof.Build(descriptor);
-            PyralisAuthoringFact proofFact = ResolveProofFact(proof);
+            string selectedProofTargetId = ResolveProofTargetId(route);
+            PyralisAuthoringFact proofFact = ResolveProofFact(selectedProofTargetId);
             string proofNodeId = proofFact != null && !string.IsNullOrWhiteSpace(proofFact.StableId)
                 ? proofFact.StableId
-                : proof.StableId;
+                : selectedProofTargetId;
             if (string.IsNullOrWhiteSpace(proofNodeId))
                 proofNodeId = "proof.unresolved-route";
             AddNode(nodes, new PyralisAuthoringGraphNode(
                 proofNodeId,
-                !string.IsNullOrWhiteSpace(proofFact?.DisplayName) ? proofFact.DisplayName : proof.Label,
+                !string.IsNullOrWhiteSpace(proofFact?.DisplayName) ? proofFact.DisplayName : "Unresolved Route Proof",
                 PyralisAuthoringGraphNodeKind.Proof,
-                proofFact != null ? PyralisAuthoringGraphSourceKind.FactRegistry : PyralisAuthoringGraphSourceKind.RouteProof,
+                proofFact != null ? PyralisAuthoringGraphSourceKind.FactRegistry : PyralisAuthoringGraphSourceKind.SetupFlow,
                 PyralisAuthoringGraphEvidenceState.Unknown,
                 proofTargetId: proofNodeId,
-                guidance: GetProofGuidance(proof, proofFact),
-                nativeSetup: GetProofNativeSetup(proof, proofFact),
+                guidance: GetProofGuidance(proofFact),
+                nativeSetup: GetProofNativeSetup(proofFact),
                 assignmentFields: proofFact != null ? proofFact.AssignmentFields : Array.Empty<string>(),
                 customizationMoments: proofFact != null ? proofFact.CustomizationMoments : Array.Empty<string>(),
-                blockingReason: proof.SuccessCriteria,
+                blockingReason: proofFact != null ? proofFact.FirstProof : string.Empty,
                 sourceOrigin: proofFact != null && proofFact.SourceKind == PyralisAuthoringFactSourceKind.FeatureContract
                     ? PyralisAuthoringGraphSourceOrigin.Contract
                     : PyralisAuthoringGraphSourceOrigin.SpineFallback));
@@ -324,26 +321,58 @@ namespace NeonBlack.Gameplay.Editor
             RuntimeCapabilityFamily[] families = route?.CapabilityFamilies ?? Array.Empty<RuntimeCapabilityFamily>();
             for (int i = 0; i < families.Length; i++)
             {
-                PyralisCapabilityVocabularyCard card = PyralisCapabilityVocabulary.FindPrimaryByFamily(families[i]);
-                AddEdge(edges, GetCapabilityNodeId(families[i], card), proofNodeId, PyralisAuthoringGraphEdgeKind.SupportsProof, "supports proof");
+                PyralisAuthoringCapabilityDescriptor descriptor = PyralisAuthoringCapabilityDescriptorRegistry.FindPrimaryByFamily(families[i]);
+                AddEdge(edges, GetCapabilityNodeId(families[i], descriptor), proofNodeId, PyralisAuthoringGraphEdgeKind.SupportsProof, "supports proof");
             }
 
             return proofNodeId;
         }
 
-        private static string GetProofGuidance(PyralisAuthoringRouteProof proof, PyralisAuthoringFact proofFact)
+        private static string ResolveProofTargetId(PyralisSetupRouteAnalysis route)
+        {
+            RuntimeCapabilityFamily[] families = route?.CapabilityFamilies ?? Array.Empty<RuntimeCapabilityFamily>();
+            for (int i = 0; i < families.Length; i++)
+            {
+                PyralisAuthoringCapabilityDescriptor descriptor = PyralisAuthoringCapabilityDescriptorRegistry.FindPrimaryByFamily(families[i]);
+                if (descriptor != null && !string.IsNullOrWhiteSpace(descriptor.ProofTargetId))
+                    return descriptor.ProofTargetId;
+            }
+
+            if (route != null && route.RequiresPawn)
+                return "proof.1p-pawn-movement";
+
+            if (ContainsFamily(families, RuntimeCapabilityFamily.BoardCardTabletop))
+                return "proof.board-card-action";
+            if (ContainsFamily(families, RuntimeCapabilityFamily.ActionTargeting))
+                return "proof.action-selection";
+            if (ContainsFamily(families, RuntimeCapabilityFamily.GunsProjectiles))
+                return "proof.custom-object-effect";
+            if (ContainsFamily(families, RuntimeCapabilityFamily.Combat))
+                return "proof.npc-enemy-behavior";
+            if (ContainsFamily(families, RuntimeCapabilityFamily.ScoringObjectives))
+                return "proof.ui-hud-menu";
+            if (ContainsFamily(families, RuntimeCapabilityFamily.CameraInput))
+                return "proof.camera-cursor-world";
+            if (ContainsFamily(families, RuntimeCapabilityFamily.ProceduralGeneration))
+                return "proof.generated-content";
+            if (ContainsFamily(families, RuntimeCapabilityFamily.Networking))
+                return "proof.network-ownership";
+
+            return "proof.custom-object-effect";
+        }
+
+        private static string GetProofGuidance(PyralisAuthoringFact proofFact)
         {
             if (proofFact == null)
-                return proof.Guidance;
+                return "Use the selected graph route to produce one small observable Play Mode result.";
 
             return FirstNonEmpty(
                 proofFact.FirstProof,
                 proofFact.RouteRelevance,
-                proofFact.Summary,
-                proof.Guidance);
+                proofFact.Summary);
         }
 
-        private static string[] GetProofNativeSetup(PyralisAuthoringRouteProof proof, PyralisAuthoringFact proofFact)
+        private static string[] GetProofNativeSetup(PyralisAuthoringFact proofFact)
         {
             if (proofFact != null && proofFact.NativeActions.Length > 0)
             {
@@ -354,9 +383,7 @@ namespace NeonBlack.Gameplay.Editor
                 return actions;
             }
 
-            return string.IsNullOrWhiteSpace(proof.SetupSurface)
-                ? Array.Empty<string>()
-                : new[] { proof.SetupSurface };
+            return Array.Empty<string>();
         }
 
         private static void AddContractNodes(
@@ -649,30 +676,12 @@ namespace NeonBlack.Gameplay.Editor
             return route.RouteName;
         }
 
-        private static string GetCapabilityNodeId(RuntimeCapabilityFamily family, PyralisCapabilityVocabularyCard card)
+        private static string GetCapabilityNodeId(RuntimeCapabilityFamily family, PyralisAuthoringCapabilityDescriptor descriptor)
         {
-            if (card != null && card.Fact != null && !string.IsNullOrWhiteSpace(card.Fact.StableId))
-                return card.Fact.StableId;
+            if (descriptor != null && !string.IsNullOrWhiteSpace(descriptor.StableId))
+                return descriptor.StableId;
 
             return "capability." + NormalizeId(family.ToString());
-        }
-
-        private static string GetCapabilityProofTargetId(PyralisCapabilityVocabularyCard card)
-        {
-            if (card == null || card.Fact == null || card.Fact.RelatedStableIds == null)
-                return string.Empty;
-
-            for (int i = 0; i < card.Fact.RelatedStableIds.Length; i++)
-            {
-                string relatedStableId = card.Fact.RelatedStableIds[i];
-                if (!string.IsNullOrWhiteSpace(relatedStableId)
-                    && relatedStableId.StartsWith("proof.", StringComparison.Ordinal))
-                {
-                    return relatedStableId;
-                }
-            }
-
-            return string.Empty;
         }
 
         private static PyralisAuthoringGraphSourceOrigin GetContractSourceOrigin(ResolvedAuthoringContract contract)
@@ -686,9 +695,23 @@ namespace NeonBlack.Gameplay.Editor
                     : PyralisAuthoringGraphSourceOrigin.Contract;
         }
 
-        private static PyralisAuthoringFact ResolveProofFact(PyralisAuthoringRouteProof proof)
+        private static bool ContainsFamily(RuntimeCapabilityFamily[] families, RuntimeCapabilityFamily family)
         {
-            if (proof == null || string.IsNullOrWhiteSpace(proof.StableId))
+            if (families == null)
+                return false;
+
+            for (int i = 0; i < families.Length; i++)
+            {
+                if (families[i] == family)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static PyralisAuthoringFact ResolveProofFact(string proofTargetId)
+        {
+            if (string.IsNullOrWhiteSpace(proofTargetId))
                 return null;
 
             IReadOnlyList<PyralisAuthoringFact> proofFacts =
@@ -696,7 +719,7 @@ namespace NeonBlack.Gameplay.Editor
             for (int i = 0; i < proofFacts.Count; i++)
             {
                 PyralisAuthoringFact fact = proofFacts[i];
-                if (fact != null && string.Equals(fact.StableId, proof.StableId, StringComparison.Ordinal))
+                if (fact != null && string.Equals(fact.StableId, proofTargetId, StringComparison.Ordinal))
                     return fact;
             }
 

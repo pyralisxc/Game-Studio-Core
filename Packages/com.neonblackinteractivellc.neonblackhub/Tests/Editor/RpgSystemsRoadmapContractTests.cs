@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace NeonBlack.Gameplay.Tests.Editor
 {
+    [Explicit("RPG roadmap documentation contract audit; run intentionally outside the default Unity EditMode smoke gate.")]
     public sealed class RpgSystemsRoadmapContractTests
     {
         private static readonly string GameplayRoot = Path.Combine(

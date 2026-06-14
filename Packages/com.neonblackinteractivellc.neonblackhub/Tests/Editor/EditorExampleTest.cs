@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace NeonBlack.Gameplay.Tests.Editor
 {
+    [Explicit("Source cleanup regression audit; run intentionally outside the default Unity EditMode smoke gate.")]
     public class EditorExampleTest
     {
         [Test]

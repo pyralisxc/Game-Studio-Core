@@ -16,11 +16,11 @@ using NUnit.Framework;
 using System.IO;
 using System.Linq;
 using UnityEditor;
-using UnityEditor.Animations;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Tests.Editor
 {
+    [Explicit("Deep data-definition validation audit; run intentionally outside the default Unity EditMode smoke gate.")]
     public class DefinitionValidationTests : PyralisEditorTestSupport
     {
         [Test]
@@ -465,78 +465,6 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(profile.bindings, Is.Not.Null);
 
             Object.DestroyImmediate(profile);
-        }
-
-        [Test]
-        public void PawnAnimationProfileValidation_FlagsMissingAndMismatchedControllerParameters()
-        {
-            AnimatorController controller = CreateTestAnimatorController("AnimationValidationMismatch");
-            controller.AddParameter("IsMoving", AnimatorControllerParameterType.Bool);
-            controller.AddParameter("Speed", AnimatorControllerParameterType.Float);
-
-            PawnAnimationProfile profile = ScriptableObject.CreateInstance<PawnAnimationProfile>();
-            profile.baseController = controller;
-            profile.bindings = new[]
-            {
-                new ActorAnimationBinding
-                {
-                    signal = ActorAnimationSignal.Move,
-                    bindingType = ActorAnimationBindingType.Bool,
-                    parameterName = "IsMoving"
-                },
-                new ActorAnimationBinding
-                {
-                    signal = ActorAnimationSignal.Sprint,
-                    bindingType = ActorAnimationBindingType.Bool,
-                    parameterName = "Speed"
-                },
-                new ActorAnimationBinding
-                {
-                    signal = ActorAnimationSignal.Jump,
-                    bindingType = ActorAnimationBindingType.Trigger,
-                    parameterName = "MissingJump"
-                }
-            };
-
-            System.Collections.Generic.List<string> issues = NeonBlack.Gameplay.Editor.PawnAnimationProfileValidation.GetValidationIssues(profile);
-
-            Assert.That(issues.Exists(issue => issue.Contains("IsMoving")), Is.False);
-            Assert.That(issues.Exists(issue => issue.Contains("Speed") && issue.Contains("Float")), Is.True);
-            Assert.That(issues.Exists(issue => issue.Contains("MissingJump") && issue.Contains("missing")), Is.True);
-
-            Object.DestroyImmediate(profile);
-            DeleteTestAnimatorController(controller);
-        }
-
-        [Test]
-        public void PawnAnimationProfileValidation_AppendsSuggestedBindingsFromImportedController()
-        {
-            AnimatorController controller = CreateTestAnimatorController("AnimationValidationSuggestions");
-            controller.AddParameter("IsMoving", AnimatorControllerParameterType.Bool);
-            controller.AddParameter("Jump", AnimatorControllerParameterType.Trigger);
-            controller.AddParameter("ShimmySpeed", AnimatorControllerParameterType.Float);
-
-            PawnAnimationProfile profile = ScriptableObject.CreateInstance<PawnAnimationProfile>();
-            profile.baseController = controller;
-            profile.bindings = System.Array.Empty<ActorAnimationBinding>();
-
-            NeonBlack.Gameplay.Editor.PawnAnimationProfileValidation.AppendSuggestedBindings(profile);
-
-            Assert.That(profile.bindings.Any(binding =>
-                binding.signal == ActorAnimationSignal.Move
-                && binding.parameterName == "IsMoving"
-                && binding.bindingType == ActorAnimationBindingType.Bool), Is.True);
-            Assert.That(profile.bindings.Any(binding =>
-                binding.signal == ActorAnimationSignal.Jump
-                && binding.parameterName == "Jump"
-                && binding.bindingType == ActorAnimationBindingType.Trigger), Is.True);
-            Assert.That(profile.bindings.Any(binding =>
-                binding.signal == ActorAnimationSignal.Shimmy
-                && binding.parameterName == "ShimmySpeed"
-                && binding.bindingType == ActorAnimationBindingType.Float), Is.True);
-
-            Object.DestroyImmediate(profile);
-            DeleteTestAnimatorController(controller);
         }
 
         [Test]

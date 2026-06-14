@@ -306,7 +306,10 @@ namespace NeonBlack.Gameplay.Editor
 
         private static bool CapabilityMatchesRouteFamilies(AuthoringCapability capability, PyralisSetupRouteAnalysis route)
         {
-            RuntimeCapabilityFamily[] matchingFamilies = PyralisRuntimeCapabilityFamilyMap.GetFamilies(capability);
+            RuntimeCapabilityFamily[] matchingFamilies = PyralisAuthoringCapabilityDescriptorRegistry.BuildRuntimeFamilies(
+                capability,
+                RuntimeCapabilityLaneTag.Mixed,
+                AuthoringWorldAxiom.None);
             if (matchingFamilies.Length == 0)
                 return false;
 

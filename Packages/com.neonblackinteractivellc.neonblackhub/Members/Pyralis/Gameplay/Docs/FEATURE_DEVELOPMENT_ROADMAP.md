@@ -61,7 +61,7 @@ Target capabilities:
 
 The Capability Vocabulary is a guide-only grammar slice. It should remain guide-only while the native Unity setup path is being proven: cards explain what a broad capability adds, when to use it, native setup surfaces, customization moments, deferrable work, and first proof vocabulary. Feature-specific requirements should move into contracts/reflection and graph evidence, not into new hardcoded vocabulary cards.
 
-After the runtime capability slice is stable, expand the same guide-card model to the whole setup surface: pawns, NPCs/enemies, custom objects, UI, world, and networking. The goal is one maintainable card vocabulary rendered in multiple views, not separate manuals for runtime patterns, prefab setup, scene setup, and validation.
+After the runtime capability slice is stable, expand the same contract/dependency-tree/graph model to the whole setup surface: pawns, NPCs/enemies, custom objects, UI, world, and networking. Vocabulary should supply fallback wording only; feature-specific setup truth should come from contracts, reflection, validators, and graph evidence.
 
 Authoring 2.0 now runs through the contract/dependency-tree/graph pipeline:
 

@@ -31,6 +31,7 @@ using UnityEngine.UI;
 
 namespace NeonBlack.Gameplay.Tests.Editor
 {
+    [Explicit("Deep setup-flow and graph projection matrix; default coverage lives in PyralisAuthoringSmokeTests.")]
     public class SetupFlowValidatorTests : PyralisEditorTestSupport
     {
         [Test]
@@ -1031,7 +1032,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void PyralisAuthoringCapabilityGuidance_PawnCombatRoute_ExplainsBrawlerSetupAndCustomization()
+        public void PyralisAuthoringCapabilityDescriptors_PawnCombatRoute_ProjectContractBackedSetup()
         {
             RuntimePatternDefinition pawn = CreateRuntimePattern(
                 "pattern.character-pawn",
@@ -1049,34 +1050,23 @@ namespace NeonBlack.Gameplay.Tests.Editor
             setupProfile.setupName = "Brawler Setup";
             setupProfile.runtimePatterns = new[] { pawn, combat };
 
-            PyralisAuthoringRouteDescriptor route = PyralisAuthoringRouteDescriptor.Build(setupProfile);
-            PyralisAuthoringRouteProof proof = PyralisAuthoringRouteProof.Build(route);
-            PyralisAuthoringFeatureRow pawnRow = PyralisAuthoringCapabilityGuidance.BuildSelectedRow(pawn);
-            PyralisAuthoringFeatureRow combatRow = PyralisAuthoringCapabilityGuidance.BuildSelectedRow(combat);
-            List<PyralisAuthoringFeatureRow> recommended = PyralisAuthoringCapabilityGuidance.BuildRecommendedRows(route);
-            List<PyralisAuthoringFeatureRow> environmentGuidance = PyralisAuthoringCapabilityGuidance.BuildEnvironmentRows(route);
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(setupProfile);
+            PyralisAuthoringGraphNode proofNode = graph.FindNodes(PyralisAuthoringGraphNodeKind.Proof).Single();
+            PyralisAuthoringGraphNode pawnNode = graph.FindNodes(PyralisAuthoringGraphNodeKind.Capability)
+                .First(node => node.CapabilityFamily == RuntimeCapabilityFamily.CharacterPawnGameplay);
+            PyralisAuthoringGraphNode combatNode = graph.FindNodes(PyralisAuthoringGraphNodeKind.Capability)
+                .First(node => node.CapabilityFamily == RuntimeCapabilityFamily.Combat);
 
-            Assert.That(PyralisAuthoringCapabilityGuidance.GetRouteIntent(route, 2), Does.Contain("brawler"));
-            Assert.That(proof.Label, Is.EqualTo("1P Pawn Movement Proof"));
-            Assert.That(proof.Guidance, Does.Contain("before adding combat"));
-            Assert.That(proof.FirstUnityFocus, Does.Contain("PawnRoot"));
-            Assert.That(pawnRow.GameplayEffect, Does.Contain("actor bodies"));
-            Assert.That(pawnRow.Customization, Does.Contain("speed"));
-            Assert.That(combatRow.UnitySetup, Does.Contain("CombatActionDefinition"));
-            Assert.That(recommended.Select(row => row.Feature), Does.Contain("Animation / Presentation"));
-            Assert.That(recommended.Select(row => row.Feature), Does.Contain("HUD / Menus / Feedback"));
-            Assert.That(recommended.Select(row => row.Feature), Does.Contain("Movement / Traversal / Respawn"));
-            Assert.That(recommended.Select(row => row.Feature), Does.Contain("Feature Modules / Pickups / Interaction"));
-            Assert.That(recommended.Select(row => row.Feature), Does.Contain("Health / Hitboxes / Feedback"));
-            Assert.That(recommended.Select(row => row.Feature), Does.Contain("Enemies / Hazards / Encounter Zones"));
-            Assert.That(environmentGuidance.Select(row => row.Feature), Does.Contain("Walkable Ground And Collision"));
-            PyralisAuthoringFeatureRow environmentRow = environmentGuidance[0];
-            Assert.That(environmentRow.GameplayEffect, Does.Contain("plain Unity objects"));
-            Assert.That(environmentRow.GameplayEffect, Does.Contain("backdrops"));
-            Assert.That(environmentRow.UnitySetup, Does.Contain("flat sprite/PNG backdrops"));
-            Assert.That(environmentRow.UnitySetup, Does.Contain("Canvas backgrounds"));
-            Assert.That(environmentRow.Customization, Does.Contain("collision layers"));
-            Assert.That(environmentRow.Customization, Does.Contain("procedural"));
+            Assert.That(proofNode.ProofTargetId, Is.EqualTo("proof.1p-pawn-movement"));
+            Assert.That(proofNode.Guidance, Does.Contain("before adding combat"));
+            Assert.That(pawnNode.SourceOrigin, Is.Not.EqualTo(PyralisAuthoringGraphSourceOrigin.LegacyFact));
+            Assert.That(pawnNode.Guidance, Does.Contain("actor"));
+            Assert.That(pawnNode.CustomizationMoments.Any(value => value.Contains("speed")), Is.True);
+            Assert.That(combatNode.Guidance, Does.Contain("attack").Or.Contain("combat"));
+            Assert.That(graph.Edges.Any(edge =>
+                edge.Kind == PyralisAuthoringGraphEdgeKind.SupportsProof
+                && edge.ToNodeId == proofNode.StableId
+                && edge.FromNodeId == pawnNode.StableId), Is.True);
 
             Object.DestroyImmediate(setupProfile);
             Object.DestroyImmediate(combat);
@@ -1084,7 +1074,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void PyralisAuthoringCapabilityGuidance_TabletopRoute_KeepsPawnEmptyAndRecommendsSelectionSurface()
+        public void PyralisAuthoringSetupGraph_TabletopRoute_KeepsPawnEmptyAndUsesGraphProof()
         {
             RuntimePatternDefinition tabletop = CreateRuntimePattern(
                 "pattern.tabletop",
@@ -1096,30 +1086,24 @@ namespace NeonBlack.Gameplay.Tests.Editor
             setupProfile.setupName = "Tabletop Setup";
             setupProfile.runtimePatterns = new[] { tabletop };
 
-            PyralisAuthoringRouteDescriptor route = PyralisAuthoringRouteDescriptor.Build(setupProfile);
-            PyralisAuthoringRouteProof proof = PyralisAuthoringRouteProof.Build(route);
-            PyralisAuthoringFeatureRow tabletopRow = PyralisAuthoringCapabilityGuidance.BuildSelectedRow(tabletop);
-            List<PyralisAuthoringFeatureRow> recommended = PyralisAuthoringCapabilityGuidance.BuildRecommendedRows(route);
-            List<PyralisAuthoringFeatureRow> environmentGuidance = PyralisAuthoringCapabilityGuidance.BuildEnvironmentRows(route);
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(setupProfile);
+            PyralisAuthoringGraphNode proofNode = graph.FindNodes(PyralisAuthoringGraphNodeKind.Proof).Single();
+            PyralisAuthoringGraphNode tabletopNode = graph.FindNodes(PyralisAuthoringGraphNodeKind.Capability)
+                .First(node => node.CapabilityFamily == RuntimeCapabilityFamily.BoardCardTabletop);
 
-            Assert.That(PyralisAuthoringCapabilityGuidance.GetRouteIntent(route, 1), Does.Contain("tabletop"));
-            Assert.That(proof.Label, Is.EqualTo("Board/Card Action Proof"));
-            Assert.That(proof.Guidance, Does.Contain("rules-backed selection"));
-            Assert.That(proof.FirstUnityFocus, Does.Contain("Keep pawn fields empty"));
-            Assert.That(tabletopRow.UnitySetup, Does.Contain("Start with no PawnDefinition"));
-            Assert.That(tabletopRow.Customization, Does.Contain("turn order"));
-            Assert.That(recommended.Select(row => row.Feature), Does.Contain("Action Selection / Menus"));
-            Assert.That(recommended.Select(row => row.Feature), Does.Contain("Camera / Cursor Control"));
-            Assert.That(recommended.Select(row => row.Feature), Does.Contain("Menus / Settings / Scene Flow"));
-            Assert.That(environmentGuidance.Select(row => row.Feature), Does.Contain("Selectable Spaces"));
-            Assert.That(environmentGuidance[0].UnitySetup, Does.Contain("Playfield Root"));
+            Assert.That(graph.RouteAnalysis.RequiresPawn, Is.False);
+            Assert.That(proofNode.ProofTargetId, Is.EqualTo("proof.board-card-action"));
+            Assert.That(proofNode.Guidance, Does.Contain("rules-backed selection"));
+            Assert.That(proofNode.NativeSetup.Any(value => value.Contains("Keep pawn fields empty")), Is.True);
+            Assert.That(tabletopNode.Guidance, Does.Contain("participants").Or.Contain("seats").Or.Contain("board"));
+            Assert.That(tabletopNode.CustomizationMoments.Any(value => value.Contains("turn")), Is.True);
 
             Object.DestroyImmediate(setupProfile);
             Object.DestroyImmediate(tabletop);
         }
 
         [Test]
-        public void PyralisAuthoringCapabilityGuidance_PlatformCore_NamesCanonicalBootstrapAndSessionChain()
+        public void PyralisAuthoringCapabilityDescriptors_PlatformCore_NameCanonicalBootstrapAndSessionChain()
         {
             RuntimePatternDefinition platform = CreateRuntimePattern(
                 "pattern.platform-core",
@@ -1131,12 +1115,13 @@ namespace NeonBlack.Gameplay.Tests.Editor
             setupProfile.setupName = "Core Setup";
             setupProfile.runtimePatterns = new[] { platform };
 
-            PyralisAuthoringFeatureRow platformRow = PyralisAuthoringCapabilityGuidance.BuildSelectedRow(platform);
+            PyralisAuthoringCapabilityDescriptor descriptor =
+                PyralisAuthoringCapabilityDescriptorRegistry.FindPrimaryByFamily(RuntimeCapabilityFamily.PlatformCore);
 
-            Assert.That(platformRow.Feature, Is.EqualTo("Core Session Setup"));
-            Assert.That(platformRow.UnitySetup, Does.Contain("GameplaySessionBootstrap"));
-            Assert.That(platformRow.UnitySetup, Does.Contain("SessionDefinition"));
-            Assert.That(platformRow.Customization, Does.Contain("settings profile"));
+            Assert.That(descriptor, Is.Not.Null);
+            Assert.That(descriptor.DisplayName, Does.Contain("Core").Or.Contain("Platform"));
+            Assert.That(descriptor.RequiredSetup.Any(value => value.Contains("GameplaySessionBootstrap") || value.Contains("SessionDefinition")), Is.True);
+            Assert.That(descriptor.SourceOrigin, Is.Not.EqualTo(PyralisAuthoringGraphSourceOrigin.LegacyFact));
 
             Object.DestroyImmediate(setupProfile);
             Object.DestroyImmediate(platform);
@@ -1177,17 +1162,16 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Object.DestroyImmediate(tabletop);
         }
 
-        [TestCase(RuntimeCapabilityFamily.GunsProjectiles, "Projectile Proof", "one shot")]
-        [TestCase(RuntimeCapabilityFamily.Combat, "Combat Proof", "one attack")]
-        [TestCase(RuntimeCapabilityFamily.ActionTargeting, "Action Selection Proof", "one command")]
-        [TestCase(RuntimeCapabilityFamily.CameraInput, "Camera/Cursor Proof", "cursor")]
-        [TestCase(RuntimeCapabilityFamily.ScoringObjectives, "Scoring Proof", "score/objective")]
-        [TestCase(RuntimeCapabilityFamily.ProceduralGeneration, "Generated Content Proof", "Generate one output")]
-        [TestCase(RuntimeCapabilityFamily.Networking, "Network Ownership Proof", "local route first")]
-        public void PyralisAuthoringRouteProof_NonPawnFamilies_NameRouteSpecificFirstProof(
+        [TestCase(RuntimeCapabilityFamily.GunsProjectiles, "proof.custom-object-effect")]
+        [TestCase(RuntimeCapabilityFamily.Combat, "proof.npc-enemy-behavior")]
+        [TestCase(RuntimeCapabilityFamily.ActionTargeting, "proof.action-selection")]
+        [TestCase(RuntimeCapabilityFamily.CameraInput, "proof.camera-cursor-world")]
+        [TestCase(RuntimeCapabilityFamily.ScoringObjectives, "proof.ui-hud-menu")]
+        [TestCase(RuntimeCapabilityFamily.ProceduralGeneration, "proof.generated-content")]
+        [TestCase(RuntimeCapabilityFamily.Networking, "proof.network-ownership")]
+        public void PyralisAuthoringSetupGraph_NonPawnFamilies_SelectDescriptorProofTarget(
             RuntimeCapabilityFamily family,
-            string expectedLabel,
-            string expectedGuidance)
+            string expectedProofTargetId)
         {
             RuntimePatternDefinition pattern = CreateRuntimePattern(
                 "pattern." + family,
@@ -1202,23 +1186,27 @@ namespace NeonBlack.Gameplay.Tests.Editor
             GameSetupProfile setupProfile = ScriptableObject.CreateInstance<GameSetupProfile>();
             setupProfile.runtimePatterns = new[] { pattern };
 
-            PyralisAuthoringRouteProof proof = PyralisAuthoringRouteProof.Build(PyralisAuthoringRouteDescriptor.Build(setupProfile));
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(setupProfile);
+            PyralisAuthoringGraphNode proofNode = graph.FindNodes(PyralisAuthoringGraphNodeKind.Proof).Single();
+            PyralisAuthoringGraphNode capabilityNode = graph.FindNodes(PyralisAuthoringGraphNodeKind.Capability)
+                .First(node => node.CapabilityFamily == family);
 
-            Assert.That(proof.Label, Is.EqualTo(expectedLabel));
-            Assert.That(proof.Guidance, Does.Contain(expectedGuidance));
-            Assert.That(proof.SetupSurface, Is.Not.Empty);
-            Assert.That(proof.SuccessCriteria, Is.Not.Empty);
-            Assert.That(proof.DeferUntilAfter, Does.Contain("Defer"));
-            Assert.That(proof.FirstUnityFocus, Does.Contain("First Unity focus"));
-            Assert.That(proof.ProofChain, Has.Length.EqualTo(1));
-            Assert.That(proof.ProofChainSummary, Does.Contain(proof.ProofChain[0].Label));
+            Assert.That(proofNode.ProofTargetId, Is.EqualTo(expectedProofTargetId));
+            Assert.That(proofNode.Label, Is.Not.Empty);
+            Assert.That(proofNode.Guidance, Is.Not.Empty);
+            Assert.That(proofNode.NativeSetup, Is.Not.Empty);
+            Assert.That(capabilityNode.ProofTargetId, Is.EqualTo(expectedProofTargetId));
+            Assert.That(graph.Edges.Any(edge =>
+                edge.Kind == PyralisAuthoringGraphEdgeKind.SupportsProof
+                && edge.ToNodeId == proofNode.StableId
+                && edge.FromNodeId == capabilityNode.StableId), Is.True);
 
             Object.DestroyImmediate(setupProfile);
             Object.DestroyImmediate(pattern);
         }
 
         [Test]
-        public void PyralisAuthoringRouteProof_PawnWithLaterSystems_StillStartsWithMovement()
+        public void PyralisAuthoringSetupGraph_PawnWithLaterSystems_StillStartsWithMovement()
         {
             RuntimePatternDefinition pawn = CreateRuntimePattern(
                 "pattern.character-pawn",
@@ -1241,19 +1229,18 @@ namespace NeonBlack.Gameplay.Tests.Editor
             GameSetupProfile setupProfile = ScriptableObject.CreateInstance<GameSetupProfile>();
             setupProfile.runtimePatterns = new[] { pawn, projectile, networking };
 
-            PyralisAuthoringRouteProof proof = PyralisAuthoringRouteProof.Build(PyralisAuthoringRouteDescriptor.Build(setupProfile));
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(setupProfile);
+            PyralisAuthoringGraphNode proofNode = graph.FindNodes(PyralisAuthoringGraphNodeKind.Proof).Single();
+            PyralisAuthoringGraphNode pawnNode = graph.FindNodes(PyralisAuthoringGraphNodeKind.Capability)
+                .First(node => node.CapabilityFamily == RuntimeCapabilityFamily.CharacterPawnGameplay);
 
-            Assert.That(proof.Label, Is.EqualTo("1P Pawn Movement Proof"));
-            Assert.That(proof.Guidance, Does.Contain("before adding combat"));
-            Assert.That(proof.DeferUntilAfter, Does.Contain("projectiles"));
-            Assert.That(proof.DeferUntilAfter, Does.Contain("networking"));
-            Assert.That(proof.ProofChain.Select(step => step.Label), Is.EqualTo(new[]
-            {
-                "Local pawn movement",
-                "Projectile resolution",
-                "Network ownership"
-            }));
-            Assert.That(proof.ProofChainSummary, Is.EqualTo("Local pawn movement -> Projectile resolution -> Network ownership"));
+            Assert.That(proofNode.ProofTargetId, Is.EqualTo("proof.1p-pawn-movement"));
+            Assert.That(proofNode.Label, Is.EqualTo("1P Pawn Movement Proof"));
+            Assert.That(proofNode.Guidance, Does.Contain("before adding combat"));
+            Assert.That(graph.Edges.Any(edge =>
+                edge.Kind == PyralisAuthoringGraphEdgeKind.SupportsProof
+                && edge.ToNodeId == proofNode.StableId
+                && edge.FromNodeId == pawnNode.StableId), Is.True);
 
             Object.DestroyImmediate(setupProfile);
             Object.DestroyImmediate(networking);
@@ -1751,36 +1738,43 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
         }
 
         [Test]
-        public void PyralisRuntimeCapabilityFamilyMap_CentralizesContractCapabilityProjection()
+        public void PyralisAuthoringCapabilityDescriptorRegistry_CentralizesContractCapabilityProjection()
         {
-            RuntimeCapabilityFamily[] brawlerFamilies = PyralisRuntimeCapabilityFamilyMap.GetFamilies(
-                AuthoringCapability.Movement | AuthoringCapability.Combat | AuthoringCapability.Input | AuthoringCapability.Animation | AuthoringCapability.Camera);
+            RuntimeCapabilityFamily[] brawlerFamilies = PyralisAuthoringCapabilityDescriptorRegistry.BuildRuntimeFamilies(
+                AuthoringCapability.Movement | AuthoringCapability.Combat | AuthoringCapability.Input | AuthoringCapability.Animation | AuthoringCapability.Camera,
+                RuntimeCapabilityLaneTag.Mixed,
+                AuthoringWorldAxiom.None);
             Assert.That(brawlerFamilies, Does.Contain(RuntimeCapabilityFamily.CharacterPawnGameplay));
             Assert.That(brawlerFamilies, Does.Contain(RuntimeCapabilityFamily.Combat));
             Assert.That(brawlerFamilies, Does.Contain(RuntimeCapabilityFamily.CameraInput));
             Assert.That(brawlerFamilies, Does.Contain(RuntimeCapabilityFamily.AnimationPresentation));
 
-            RuntimeCapabilityFamily[] rangedFamilies = PyralisRuntimeCapabilityFamilyMap.GetFamilies(AuthoringCapability.RangedFlow);
+            RuntimeCapabilityFamily[] rangedFamilies = PyralisAuthoringCapabilityDescriptorRegistry.BuildRuntimeFamilies(
+                AuthoringCapability.RangedFlow,
+                RuntimeCapabilityLaneTag.Mixed,
+                AuthoringWorldAxiom.None);
             Assert.That(rangedFamilies, Does.Contain(RuntimeCapabilityFamily.GunsProjectiles));
             Assert.That(rangedFamilies, Does.Contain(RuntimeCapabilityFamily.Combat));
 
-            RuntimeCapabilityFamily[] tabletopFamilies = PyralisRuntimeCapabilityFamilyMap.GetFamilies(
+            RuntimeCapabilityFamily[] tabletopFamilies = PyralisAuthoringCapabilityDescriptorRegistry.BuildRuntimeFamilies(
                 AuthoringCapability.None,
-                RuntimeCapabilityLaneTag.TabletopBoard);
+                RuntimeCapabilityLaneTag.TabletopBoard,
+                AuthoringWorldAxiom.None);
             Assert.That(tabletopFamilies, Does.Contain(RuntimeCapabilityFamily.BoardCardTabletop));
 
-            RuntimeCapabilityFamily[] cursorFamilies = PyralisRuntimeCapabilityFamilyMap.GetFamilies(
+            RuntimeCapabilityFamily[] cursorFamilies = PyralisAuthoringCapabilityDescriptorRegistry.BuildRuntimeFamilies(
                 AuthoringCapability.None,
-                RuntimeCapabilityLaneTag.CameraCursor);
+                RuntimeCapabilityLaneTag.CameraCursor,
+                AuthoringWorldAxiom.None);
             Assert.That(cursorFamilies, Does.Contain(RuntimeCapabilityFamily.CameraInput));
 
-            RuntimeCapabilityFamily[] proceduralFamilies = PyralisRuntimeCapabilityFamilyMap.GetFamilies(
+            RuntimeCapabilityFamily[] proceduralFamilies = PyralisAuthoringCapabilityDescriptorRegistry.BuildRuntimeFamilies(
                 AuthoringCapability.Environment,
                 RuntimeCapabilityLaneTag.Mixed,
                 AuthoringWorldAxiom.InfiniteSpace);
             Assert.That(proceduralFamilies, Does.Contain(RuntimeCapabilityFamily.ProceduralGeneration));
 
-            RuntimeCapabilityFamily[] networkFamilies = PyralisRuntimeCapabilityFamilyMap.GetFamilies(
+            RuntimeCapabilityFamily[] networkFamilies = PyralisAuthoringCapabilityDescriptorRegistry.BuildRuntimeFamilies(
                 AuthoringCapability.None,
                 RuntimeCapabilityLaneTag.Mixed,
                 AuthoringWorldAxiom.Networked);

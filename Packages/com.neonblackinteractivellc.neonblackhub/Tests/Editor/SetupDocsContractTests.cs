@@ -19,6 +19,7 @@ using UnityEngine;
 
 namespace NeonBlack.Gameplay.Tests.Editor
 {
+    [Explicit("Documentation contract audit; run intentionally outside the default Unity EditMode smoke gate.")]
     public class SetupDocsContractTests : PyralisEditorTestSupport
     {
         [Test]

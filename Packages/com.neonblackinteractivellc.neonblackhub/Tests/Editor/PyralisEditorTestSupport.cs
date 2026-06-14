@@ -12,7 +12,6 @@ using NeonBlack.Gameplay.Editor;
 using NeonBlack.Gameplay.Editor.Inspectors;
 using NeonBlack.Gameplay.Core.Runtime;
 using NUnit.Framework;
-using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Animations;
@@ -84,16 +83,9 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
         protected static AnimatorController CreateTestAnimatorController(string assetName)
         {
-            const string generatedRoot = "Packages/com.neonblackinteractivellc.neonblackhub/Tests/Editor/_Generated";
-            string folderPath = $"{generatedRoot}/PyralisEditorTests";
-            if (!AssetDatabase.IsValidFolder(generatedRoot))
-                AssetDatabase.CreateFolder("Packages/com.neonblackinteractivellc.neonblackhub/Tests/Editor", "_Generated");
-
-            if (!AssetDatabase.IsValidFolder(folderPath))
-                AssetDatabase.CreateFolder(generatedRoot, "PyralisEditorTests");
-
-            string assetPath = AssetDatabase.GenerateUniqueAssetPath($"{folderPath}/{assetName}.controller");
-            return AnimatorController.CreateAnimatorControllerAtPath(assetPath);
+            AnimatorController controller = new AnimatorController();
+            controller.name = assetName;
+            return controller;
         }
 
         protected static void DeleteTestAnimatorController(AnimatorController controller)
@@ -101,28 +93,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             if (controller == null)
                 return;
 
-            string assetPath = AssetDatabase.GetAssetPath(controller);
-            if (!string.IsNullOrWhiteSpace(assetPath))
-                AssetDatabase.DeleteAsset(assetPath);
-            else
-                Object.DestroyImmediate(controller);
-
-            DeleteFolderIfEmpty("Packages/com.neonblackinteractivellc.neonblackhub/Tests/Editor/_Generated/PyralisEditorTests");
-            DeleteFolderIfEmpty("Packages/com.neonblackinteractivellc.neonblackhub/Tests/Editor/_Generated");
-        }
-
-        protected static void DeleteFolderIfEmpty(string folderPath)
-        {
-            if (!AssetDatabase.IsValidFolder(folderPath))
-                return;
-
-            string fullPath = Path.Combine(Application.dataPath, "..", folderPath);
-            string[] entries = Directory.Exists(fullPath)
-                ? Directory.GetFileSystemEntries(fullPath)
-                : System.Array.Empty<string>();
-
-            if (entries.Length == 0)
-                AssetDatabase.DeleteAsset(folderPath);
+            Object.DestroyImmediate(controller);
         }
 
         protected sealed class TestFeatureRuntime : MonoBehaviour, IFeatureModuleRuntime

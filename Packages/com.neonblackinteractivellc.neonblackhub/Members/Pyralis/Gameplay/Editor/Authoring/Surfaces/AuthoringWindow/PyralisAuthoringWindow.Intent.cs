@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
@@ -13,6 +14,7 @@ namespace NeonBlack.Gameplay.Editor
     public partial class PyralisAuthoringWindow
     {
         private bool _intentHasUnappliedSetupChanges;
+        private readonly Dictionary<string, bool> _capabilityGroupFoldouts = new Dictionary<string, bool>(StringComparer.Ordinal);
 
         private void RefreshIntentTab()
         {
@@ -207,38 +209,28 @@ namespace NeonBlack.Gameplay.Editor
             grid.AddToClassList("capability-grid");
             container.Add(grid);
 
-            var groups = new Dictionary<string, (AuthoringCapability[] caps, bool foldout)>
-            {
-                { "Core & Shell", (new[] { AuthoringCapability.Setup, AuthoringCapability.Session, AuthoringCapability.Rules, AuthoringCapability.Participants, AuthoringCapability.Scoring, AuthoringCapability.Input, AuthoringCapability.UI, AuthoringCapability.Audio }, _coreFoldout) },
-                { "Actor & Action", (new[] { AuthoringCapability.Movement, AuthoringCapability.KineticMotor2D, AuthoringCapability.KineticMotor3D, AuthoringCapability.Steering2D, AuthoringCapability.Steering3D, AuthoringCapability.Traversal, AuthoringCapability.Combat, AuthoringCapability.CombatState, AuthoringCapability.CombatSensors, AuthoringCapability.MeleeFlow, AuthoringCapability.RangedFlow, AuthoringCapability.TacticsAggressive, AuthoringCapability.TacticsDefensive, AuthoringCapability.Animation, AuthoringCapability.VFX }, _actorFoldout) },
-                { "Strategy & Progression", (new[] { AuthoringCapability.Stats, AuthoringCapability.Inventory, AuthoringCapability.Dialogue, AuthoringCapability.Quests, AuthoringCapability.Vendors, AuthoringCapability.SkillTree, AuthoringCapability.Progression, AuthoringCapability.Tabletop, AuthoringCapability.Grid }, _strategyFoldout) },
-                { "World & Meta", (new[] { AuthoringCapability.Camera, AuthoringCapability.Environment, AuthoringCapability.Networking, AuthoringCapability.TurnBased, AuthoringCapability.Puzzle }, _worldFoldout) }
-            };
-
+            Dictionary<string, List<AuthoringCapability>> groups = BuildIntentCapabilityGroups();
             foreach (var group in groups)
             {
                 var foldout = new Foldout
                 {
                     text = group.Key,
-                    value = group.Value.foldout
+                    value = GetCapabilityGroupFoldout(group.Key)
                 };
                 foldout.AddToClassList("capability-group-foldout");
 
                 string key = group.Key;
                 foldout.RegisterValueChangedCallback(evt =>
                 {
-                    if (key == "Core & Shell") _coreFoldout = evt.newValue;
-                    else if (key == "Actor & Action") _actorFoldout = evt.newValue;
-                    else if (key == "Strategy & Progression") _strategyFoldout = evt.newValue;
-                    else if (key == "World & Meta") _worldFoldout = evt.newValue;
+                    SetCapabilityGroupFoldout(key, evt.newValue);
                 });
 
-                foreach (AuthoringCapability cap in group.Value.caps)
+                foreach (AuthoringCapability cap in group.Value)
                 {
                     var toggle = new Toggle(AuthoringCapabilityRegistry.GetDisplayName(cap));
                     toggle.name = "cap_" + cap.ToString();
                     toggle.value = (_intentCapabilities & cap) != 0;
-                    toggle.tooltip = AuthoringCapabilityRegistry.GetTooltip(cap);
+                    toggle.tooltip = GetIntentCapabilityTooltip(cap);
                     toggle.RegisterValueChangedCallback(evt =>
                     {
                         if (evt.newValue) _intentCapabilities |= cap;
@@ -251,6 +243,82 @@ namespace NeonBlack.Gameplay.Editor
                 }
                 grid.Add(foldout);
             }
+        }
+
+        private Dictionary<string, List<AuthoringCapability>> BuildIntentCapabilityGroups()
+        {
+            Dictionary<string, List<AuthoringCapability>> groups = new Dictionary<string, List<AuthoringCapability>>();
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors = PyralisAuthoringCapabilityDescriptorRegistry.All;
+            for (int i = 0; i < descriptors.Count; i++)
+            {
+                PyralisAuthoringCapabilityDescriptor descriptor = descriptors[i];
+                if (descriptor == null || descriptor.Capability == AuthoringCapability.None)
+                    continue;
+
+                foreach (AuthoringCapability capability in AuthoringCapabilityRegistry.GetAllIndividualCapabilities())
+                {
+                    if ((descriptor.Capability & capability) == 0)
+                        continue;
+
+                    if (!groups.TryGetValue(descriptor.Group, out List<AuthoringCapability> capabilities))
+                    {
+                        capabilities = new List<AuthoringCapability>();
+                        groups.Add(descriptor.Group, capabilities);
+                    }
+
+                    if (!capabilities.Contains(capability))
+                        capabilities.Add(capability);
+                }
+            }
+
+            foreach (List<AuthoringCapability> capabilities in groups.Values)
+                capabilities.Sort((left, right) => GetCapabilitySortIndex(left).CompareTo(GetCapabilitySortIndex(right)));
+
+            return groups;
+        }
+
+        private int GetCapabilitySortIndex(AuthoringCapability capability)
+        {
+            int index = 0;
+            foreach (AuthoringCapability candidate in AuthoringCapabilityRegistry.GetAllIndividualCapabilities())
+            {
+                if (candidate == capability)
+                    return index;
+
+                index++;
+            }
+
+            return int.MaxValue;
+        }
+
+        private bool GetCapabilityGroupFoldout(string group)
+        {
+            return string.IsNullOrWhiteSpace(group)
+                || !_capabilityGroupFoldouts.TryGetValue(group, out bool expanded)
+                || expanded;
+        }
+
+        private void SetCapabilityGroupFoldout(string group, bool value)
+        {
+            if (!string.IsNullOrWhiteSpace(group))
+                _capabilityGroupFoldouts[group] = value;
+        }
+
+        private string GetIntentCapabilityTooltip(AuthoringCapability capability)
+        {
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors = PyralisAuthoringCapabilityDescriptorRegistry.All;
+            for (int i = 0; i < descriptors.Count; i++)
+            {
+                PyralisAuthoringCapabilityDescriptor descriptor = descriptors[i];
+                if (descriptor != null
+                    && (descriptor.Capability & capability) != 0
+                    && !string.IsNullOrWhiteSpace(descriptor.Summary))
+                {
+                    return descriptor.Summary;
+                }
+            }
+
+            return AuthoringCapabilityRegistry.GetTooltip(capability);
         }
 
         private void FilterCapabilities(VisualElement container, string filter)

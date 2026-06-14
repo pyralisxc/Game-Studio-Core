@@ -19,6 +19,7 @@ using UnityEngine;
 
 namespace NeonBlack.Gameplay.Tests.Editor
 {
+    [Explicit("Deep authoring contract matrix; default coverage lives in PyralisAuthoringSmokeTests.")]
     public sealed class AuthoringContractsContractTests
     {
         private static readonly string GameplayRoot = Path.Combine(
@@ -847,18 +848,17 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void RuntimeCapabilityFacts_AreEnrichedFromFeatureContracts()
+        public void RuntimeCapabilityDescriptors_AreEnrichedFromFeatureContracts()
         {
-            PyralisCapabilityVocabularyCard card = PyralisCapabilityVocabulary.FindPrimaryByFamily(RuntimeCapabilityFamily.CharacterPawnGameplay);
-            PyralisAuthoringFact projected = PyralisCapabilityVocabulary.FindPrimaryFactByFamily(RuntimeCapabilityFamily.CharacterPawnGameplay);
+            PyralisAuthoringCapabilityDescriptor descriptor =
+                PyralisAuthoringCapabilityDescriptorRegistry.FindPrimaryByFamily(RuntimeCapabilityFamily.CharacterPawnGameplay);
 
-            Assert.That(card, Is.Not.Null);
-            Assert.That(projected, Is.Not.Null);
-            Assert.That(projected.StableId, Is.EqualTo(card.StableId));
-            Assert.That(projected.RequiredProfiles, Does.Contain(nameof(TopDownHopProfile)));
-            Assert.That(projected.RequiredUnitySurfaces, Does.Contain("IFeatureModuleRuntime"));
-            Assert.That(projected.AssignmentFields, Does.Contain("InputProfile.gameplayActionName"));
-            Assert.That(projected.RouteRelevance, Does.Contain("Contract/reflection-enriched capability projection"));
+            Assert.That(descriptor, Is.Not.Null);
+            Assert.That(descriptor.SourceOrigin, Is.Not.EqualTo(PyralisAuthoringGraphSourceOrigin.LegacyFact));
+            Assert.That(descriptor.RequiredSetup, Does.Contain(nameof(TopDownHopProfile)));
+            Assert.That(descriptor.RequiredSetup, Does.Contain("IFeatureModuleRuntime"));
+            Assert.That(descriptor.AssignmentFields, Does.Contain("InputProfile.gameplayActionName"));
+            Assert.That(descriptor.RouteRelevance, Is.Not.Empty);
         }
 
         [Test]

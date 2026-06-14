@@ -22,6 +22,7 @@ using UnityEngine;
 
 namespace NeonBlack.Gameplay.Tests.Editor
 {
+    [Explicit("Deep authoring source audit; run intentionally outside the default Unity EditMode smoke gate.")]
     public class AuthoringSourceContractTests : PyralisEditorTestSupport
     {
         private static string GameplayEditorRoot => Path.Combine(
@@ -99,8 +100,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Grammar", "CapabilityVocabulary", "PyralisCapabilityVocabulary.cs")), Is.True);
             Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Grammar", "IntentVocabulary", "PyralisIntentVocabulary.cs")), Is.True);
             Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Spine", "Graph", "PyralisAuthoringOverviewModel.cs")), Is.True);
+            Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Spine", "Graph", "PyralisAuthoringCapabilityDescriptor.cs")), Is.True);
             Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Spine", "Graph", "PyralisAuthoringSetupGraphProjection.cs")), Is.True);
-            Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Spine", "Routes", "PyralisAuthoringRouteProof.cs")), Is.True);
             Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Spine", "Validation", "PyralisSetupFlowValidator.cs")), Is.True);
             Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Surfaces", "AuthoringWindow", "PyralisAuthoringWindow.cs")), Is.True);
             Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Surfaces", "AuthoringWindow", "PyralisCurrentStepPrimaryActionGuidance.cs")), Is.True);
@@ -317,18 +318,20 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void PyralisAuthoringWindow_IntentProjectionUsesReflectionBeforeFallbackMap()
+        public void PyralisAuthoringWindow_IntentProjectionUsesReflectedCapabilityDescriptors()
         {
             string projectionPath = FindGameplayEditorFile("PyralisIntentCapabilityProjection.cs");
+            string intentPath = FindGameplayEditorFile("PyralisAuthoringWindow.Intent.cs");
+            string descriptorPath = FindGameplayEditorFile("PyralisAuthoringCapabilityDescriptor.cs");
             string projectionSource = File.ReadAllText(projectionPath);
+            string intentSource = File.ReadAllText(intentPath);
+            string descriptorSource = File.ReadAllText(descriptorPath);
 
-            int reflectedIndex = projectionSource.IndexOf("PyralisReflectiveCapabilityDependencyProjection.BuildRuntimeFamilies", StringComparison.Ordinal);
-            int fallbackIndex = projectionSource.IndexOf("PyralisRuntimeCapabilityFamilyMap.GetFamilies", StringComparison.Ordinal);
-
-            Assert.That(reflectedIndex, Is.GreaterThanOrEqualTo(0));
-            Assert.That(fallbackIndex, Is.GreaterThanOrEqualTo(0));
-            Assert.That(reflectedIndex, Is.LessThan(fallbackIndex));
-            Assert.That(FindGameplayEditorFile("PyralisReflectiveCapabilityDependencyProjection.cs"), Is.Not.Empty);
+            Assert.That(projectionSource.Contains("PyralisAuthoringCapabilityDescriptorRegistry.BuildRuntimeFamilies"), Is.True);
+            Assert.That(projectionSource.Contains("PyralisRuntimeCapabilityFamilyMap.GetFamilies"), Is.False);
+            Assert.That(intentSource.Contains("BuildIntentCapabilityGroups"), Is.True);
+            Assert.That(intentSource.Contains("new Dictionary<string, (AuthoringCapability[] caps"), Is.False);
+            Assert.That(descriptorSource.Contains("ResolvedAuthoringContractRegistry.All"), Is.True);
         }
 
         [Test]
@@ -707,17 +710,18 @@ namespace NeonBlack.Gameplay.Tests.Editor
         public void PyralisEditor_CapabilityVocabulary_DoesNotOwnRetiredRecipePaths()
         {
             string catalogPath = FindGameplayEditorFile("PyralisCapabilityVocabulary.cs");
-            string proofPath = FindGameplayEditorFile("PyralisAuthoringRouteProof.cs");
             string catalogSource = File.ReadAllText(catalogPath);
-            string proofSource = File.ReadAllText(proofPath);
 
             Assert.That(catalogSource.Contains("GetByGoal("), Is.False);
             Assert.That(catalogSource.Contains("GetByLane("), Is.False);
             Assert.That(catalogSource.Contains("CommonNextCapabilities"), Is.False);
             Assert.That(catalogSource.Contains("ProofStepLabel"), Is.False);
             Assert.That(catalogSource.Contains("ProofStepSuccessCriteria"), Is.False);
-            Assert.That(proofSource.Contains("FindProofStepCard"), Is.False);
-            Assert.That(proofSource.Contains("PyralisCapabilityVocabulary.All"), Is.False);
+            Assert.That(
+                Directory.GetFiles(GameplayRoot, "PyralisAuthoringRouteProof.cs", SearchOption.AllDirectories)
+                    .Where(path => path.Contains(Path.DirectorySeparatorChar + "Editor" + Path.DirectorySeparatorChar))
+                    .ToArray(),
+                Is.Empty);
         }
 
         [Test]

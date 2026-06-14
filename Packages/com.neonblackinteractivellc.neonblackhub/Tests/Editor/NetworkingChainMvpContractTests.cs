@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace NeonBlack.Gameplay.Tests.Editor
 {
+    [Explicit("MVP documentation contract audit; run intentionally outside the default Unity EditMode smoke gate.")]
     public sealed class NetworkingChainMvpContractTests
     {
         private static readonly string GameplayRoot = Path.Combine(
