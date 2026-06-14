@@ -224,7 +224,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(overviewSource.Contains("BuildProofSupportRows"), Is.False);
             Assert.That(factSource.Contains("BuildProofSupportRows"), Is.True);
             Assert.That(factSource.Contains("BuildReflectiveContractRows"), Is.True);
-            Assert.That(guideSource.Contains("BuildCurrentIntentGuideRows"), Is.True);
+            Assert.That(guideSource.Contains("BuildRouteStepRows"), Is.True);
             Assert.That(guideSource.Contains("BuildReflectiveContractRows"), Is.True);
         }
 
@@ -234,8 +234,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
             string guidePath = FindGameplayEditorFile("PyralisAuthoringWindow.Guide.cs");
             string guideSource = File.ReadAllText(guidePath);
 
-            Assert.That(guideSource.Contains("PyralisAuthoringSetupGraphProjection.BuildCurrentIntentGuideRows"), Is.True);
-            Assert.That(guideSource.Contains("DrawGuideGraphRows(graphRows)"), Is.True);
+            Assert.That(guideSource.Contains("PyralisAuthoringSetupGraphProjection.BuildRouteStepRows"), Is.True);
+            Assert.That(guideSource.Contains("DrawRouteStepRows(routeSteps)"), Is.True);
             Assert.That(guideSource.Contains("Guide renders the resolved setup graph"), Is.True);
             Assert.That(guideSource.Contains("Pre-setup intent guidance"), Is.False);
             Assert.That(guideSource.Contains("GetCachedIntentModel"), Is.False);

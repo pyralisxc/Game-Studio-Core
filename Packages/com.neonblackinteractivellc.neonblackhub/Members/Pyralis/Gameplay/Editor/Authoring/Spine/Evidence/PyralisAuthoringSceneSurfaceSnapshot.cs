@@ -52,8 +52,15 @@ namespace NeonBlack.Gameplay.Editor
 
         public static PyralisAuthoringSceneSurfaceSnapshot Build(Object activeSetup)
         {
+            return Build(activeSetup, null);
+        }
+
+        public static PyralisAuthoringSceneSurfaceSnapshot Build(Object activeSetup, PyralisSetupRouteAnalysis routeAnalysis)
+        {
             GameplaySessionBootstrap bootstrap = PyralisAuthoringSetupContextResolver.GetSelectedBootstrap(activeSetup);
-            PyralisAuthoringRouteDescriptor route = PyralisAuthoringRouteDescriptor.Build(activeSetup);
+            PyralisAuthoringRouteDescriptor route = routeAnalysis != null
+                ? PyralisAuthoringRouteDescriptor.Build(routeAnalysis)
+                : PyralisAuthoringRouteDescriptor.Build(activeSetup);
             PyralisAuthoringSceneEvidence evidence = PyralisAuthoringSceneEvidence.Build(bootstrap);
             List<PyralisAuthoringSceneSurfaceRow> rows = new List<PyralisAuthoringSceneSurfaceRow>();
 

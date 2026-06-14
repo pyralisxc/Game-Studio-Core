@@ -10,6 +10,7 @@ namespace NeonBlack.Gameplay.Editor
         public static void Draw(Object activeSetup, PyralisAuthoringSetupGraph graph)
         {
             EditorGUILayout.LabelField("Validate Active Setup", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox("Use Validate as the deeper evidence console. Overview names the next move; Validate explains every blocker, recommended edit, and proof enhancer behind it.", MessageType.Info);
 
             if (activeSetup == null)
             {
@@ -33,7 +34,7 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             EditorGUILayout.Space(8f);
-            EditorGUILayout.LabelField("Graph Evidence Details", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Evidence Details", EditorStyles.boldLabel);
             DrawGraphEvidenceDetails(graph);
         }
 
@@ -47,7 +48,7 @@ namespace NeonBlack.Gameplay.Editor
                 return false;
 
             EditorGUILayout.Space(8f);
-            EditorGUILayout.LabelField("Resolved Graph Readiness", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Readiness Buckets", EditorStyles.boldLabel);
             for (int i = 0; i < sections.Count; i++)
             {
                 PyralisAuthoringValidationGraphSection section = sections[i];
@@ -128,8 +129,8 @@ namespace NeonBlack.Gameplay.Editor
                     continue;
 
                 string text = string.IsNullOrWhiteSpace(issue.NativeAction)
-                    ? $"{issue.Label}: {issue.Message}\nGraph node: {issue.NodeId}\nSource: {issue.SourceLabel}\nOrigin: {issue.OriginLabel}"
-                    : $"{issue.Label}: {issue.Message}\nGraph node: {issue.NodeId}\nSource: {issue.SourceLabel}\nOrigin: {issue.OriginLabel}\nNext native action: {issue.NativeAction}";
+                    ? $"{issue.Label}: {issue.Message}\nEvidence source: {issue.SourceLabel}\nOrigin: {issue.OriginLabel}\nReference id: {issue.NodeId}"
+                    : $"{issue.Label}: {issue.Message}\nNext native action: {issue.NativeAction}\nEvidence source: {issue.SourceLabel}\nOrigin: {issue.OriginLabel}\nReference id: {issue.NodeId}";
                 EditorGUILayout.HelpBox(text, messageType);
                 if (issue.CanInspectTarget && GUILayout.Button("Inspect " + issue.Label))
                     PyralisAuthoringWindowPrimitives.SelectAndPing(issue.Target);

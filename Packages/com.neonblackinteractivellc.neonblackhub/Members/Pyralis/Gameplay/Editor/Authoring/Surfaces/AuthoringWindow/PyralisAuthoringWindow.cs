@@ -362,8 +362,13 @@ namespace NeonBlack.Gameplay.Editor
 
             _cachedIntentModelKey = key;
             _cachedIntentModel = PyralisAuthoringSetupGraphProjection.BuildIntentModel(
-                new PyralisAuthoringIntentSelection(_intentLane, _intentCapabilities, _intentAxioms));
+                GetCurrentIntentSelection());
             return _cachedIntentModel;
+        }
+
+        private PyralisAuthoringIntentSelection GetCurrentIntentSelection()
+        {
+            return new PyralisAuthoringIntentSelection(_intentLane, _intentCapabilities, _intentAxioms);
         }
 
         private PyralisAuthoringSetupGraph GetCachedSetupGraph(Object graphSource)
@@ -373,7 +378,7 @@ namespace NeonBlack.Gameplay.Editor
                 return _cachedSetupGraph;
 
             _cachedSetupGraphKey = key;
-            _cachedSetupGraph = PyralisAuthoringSetupGraphBuilder.Build(graphSource);
+            _cachedSetupGraph = PyralisAuthoringSetupGraphBuilder.Build(graphSource, GetCurrentIntentSelection());
             return _cachedSetupGraph;
         }
 
@@ -382,7 +387,11 @@ namespace NeonBlack.Gameplay.Editor
             string sourceKey = graphSource != null
                 ? GlobalObjectId.GetGlobalObjectIdSlow(graphSource).ToString()
                 : "null";
-            return sourceKey + ":" + _authoringCacheVersion;
+            return sourceKey
+                + ":" + _intentLane
+                + ":" + _intentAxioms
+                + ":" + _intentCapabilities
+                + ":" + _authoringCacheVersion;
         }
 
         private static void DrawIntentRows(string title, string description, IReadOnlyList<PyralisAuthoringIntentRow> rows, string tooltip, int collapsedLimit = 0)

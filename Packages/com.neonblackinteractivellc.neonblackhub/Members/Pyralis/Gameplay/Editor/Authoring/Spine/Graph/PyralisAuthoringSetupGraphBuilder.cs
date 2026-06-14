@@ -11,32 +11,58 @@ namespace NeonBlack.Gameplay.Editor
     {
         public static PyralisAuthoringSetupGraph Build(UnityEngine.Object source)
         {
-            PyralisSetupRouteAnalysis route = BuildRoute(source);
+            return Build(source, default);
+        }
+
+        public static PyralisAuthoringSetupGraph Build(
+            UnityEngine.Object source,
+            PyralisAuthoringIntentSelection intentSelection)
+        {
+            PyralisSetupRouteAnalysis route = BuildRoute(source, intentSelection);
             List<PyralisAuthoringGraphNode> nodes = new List<PyralisAuthoringGraphNode>();
             List<PyralisAuthoringGraphEdge> edges = new List<PyralisAuthoringGraphEdge>();
 
             AddSetupChainNodes(source, route, nodes, edges);
             AddCapabilityNodes(route, nodes, edges);
             AddParticipantNodes(route, nodes, edges);
-            AddSceneSurfaceNodes(source, nodes, edges);
+            AddSceneSurfaceNodes(source, route, nodes, edges);
             string activeProofNodeId = AddProofNode(route, nodes, edges);
             AddContractNodes(nodes, edges, activeProofNodeId);
             AddSetupFlowEvidence(source, nodes, edges);
             AddSceneReadinessEvidence(source, nodes, edges);
             AddProofBlockerEdges(nodes, edges, activeProofNodeId);
+            ResolveProofReadiness(nodes, edges, activeProofNodeId);
 
             return new PyralisAuthoringSetupGraph(source, route, nodes, edges);
         }
 
-        private static PyralisSetupRouteAnalysis BuildRoute(UnityEngine.Object source)
+        private static PyralisSetupRouteAnalysis BuildRoute(
+            UnityEngine.Object source,
+            PyralisAuthoringIntentSelection intentSelection)
         {
+            RuntimeCapabilityFamily[] focusedFamilies = BuildIntentFocusedFamilies(intentSelection);
+            PyralisSetupRouteAnalysis route;
             if (source is GameplaySessionBootstrap bootstrap)
-                return PyralisSetupRouteAnalysis.Build(bootstrap);
-            if (source is SessionDefinition session)
-                return PyralisSetupRouteAnalysis.Build(session);
-            if (source is GameModeDefinition mode)
-                return PyralisSetupRouteAnalysis.Build(mode);
-            return PyralisSetupRouteAnalysis.Build(source);
+                route = PyralisSetupRouteAnalysis.Build(bootstrap);
+            else if (source is SessionDefinition session)
+                route = PyralisSetupRouteAnalysis.Build(session);
+            else if (source is GameModeDefinition mode)
+                route = PyralisSetupRouteAnalysis.Build(mode);
+            else
+                route = PyralisSetupRouteAnalysis.Build(source);
+
+            return PyralisSetupRouteAnalysis.WithAdditionalCapabilityFamilies(route, focusedFamilies);
+        }
+
+        private static RuntimeCapabilityFamily[] BuildIntentFocusedFamilies(PyralisAuthoringIntentSelection intentSelection)
+        {
+            if (intentSelection == null || intentSelection.Capabilities == AuthoringCapability.None)
+                return Array.Empty<RuntimeCapabilityFamily>();
+
+            return PyralisIntentCapabilityProjection.BuildRuntimeFamilies(
+                intentSelection.Capabilities,
+                intentSelection.Lane,
+                intentSelection.Axioms);
         }
 
         private static void AddSetupChainNodes(
@@ -199,10 +225,11 @@ namespace NeonBlack.Gameplay.Editor
 
         private static void AddSceneSurfaceNodes(
             UnityEngine.Object source,
+            PyralisSetupRouteAnalysis route,
             List<PyralisAuthoringGraphNode> nodes,
             List<PyralisAuthoringGraphEdge> edges)
         {
-            PyralisAuthoringSceneSurfaceSnapshot snapshot = PyralisAuthoringSceneSurfaceSnapshot.Build(source);
+            PyralisAuthoringSceneSurfaceSnapshot snapshot = PyralisAuthoringSceneSurfaceSnapshot.Build(source, route);
             if (snapshot == null || snapshot.Rows.Count == 0)
                 return;
 
@@ -481,6 +508,136 @@ namespace NeonBlack.Gameplay.Editor
             return node.Kind == PyralisAuthoringGraphNodeKind.SetupChain
                 || node.Kind == PyralisAuthoringGraphNodeKind.UnitySurfaceRequirement
                 || node.Kind == PyralisAuthoringGraphNodeKind.ValidationEvidence;
+        }
+
+        private static void ResolveProofReadiness(
+            List<PyralisAuthoringGraphNode> nodes,
+            List<PyralisAuthoringGraphEdge> edges,
+            string activeProofNodeId)
+        {
+            if (string.IsNullOrWhiteSpace(activeProofNodeId))
+                return;
+
+            int proofIndex = -1;
+            PyralisAuthoringGraphNode proofNode = null;
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                PyralisAuthoringGraphNode node = nodes[i];
+                if (node != null && string.Equals(node.StableId, activeProofNodeId, StringComparison.Ordinal))
+                {
+                    proofIndex = i;
+                    proofNode = node;
+                    break;
+                }
+            }
+
+            if (proofNode == null || proofIndex < 0)
+                return;
+
+            PyralisAuthoringGraphEvidenceState readiness = ResolveProofEvidenceState(nodes, edges, activeProofNodeId);
+            nodes[proofIndex] = new PyralisAuthoringGraphNode(
+                proofNode.StableId,
+                proofNode.Label,
+                proofNode.Kind,
+                proofNode.SourceKind,
+                readiness,
+                proofNode.CapabilityFamily,
+                proofNode.AuthoringCapability,
+                proofNode.ProofTargetId,
+                proofNode.Guidance,
+                proofNode.NativeSetup,
+                proofNode.AssignmentFields,
+                proofNode.CustomizationMoments,
+                proofNode.BlockingReason,
+                proofNode.NativeAction,
+                proofNode.SourceContract,
+                proofNode.SourceObject,
+                proofNode.SourceOrigin,
+                ResolveProofWorkIntent(readiness),
+                ResolveProofIssueSeverity(readiness));
+        }
+
+        private static PyralisAuthoringGraphEvidenceState ResolveProofEvidenceState(
+            List<PyralisAuthoringGraphNode> nodes,
+            List<PyralisAuthoringGraphEdge> edges,
+            string activeProofNodeId)
+        {
+            bool hasSupport = false;
+            bool hasMissingBlocker = false;
+            bool hasBlockedBlocker = false;
+
+            for (int i = 0; i < edges.Count; i++)
+            {
+                PyralisAuthoringGraphEdge edge = edges[i];
+                if (edge == null)
+                    continue;
+
+                if (edge.Kind == PyralisAuthoringGraphEdgeKind.SupportsProof
+                    && string.Equals(edge.ToNodeId, activeProofNodeId, StringComparison.Ordinal))
+                {
+                    hasSupport = true;
+                    continue;
+                }
+
+                if (edge.Kind != PyralisAuthoringGraphEdgeKind.BlockedBy
+                    || !string.Equals(edge.FromNodeId, activeProofNodeId, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                PyralisAuthoringGraphNode blocker = FindNode(nodes, edge.ToNodeId);
+                if (blocker == null)
+                    continue;
+
+                if (blocker.EvidenceState == PyralisAuthoringGraphEvidenceState.Blocked)
+                    hasBlockedBlocker = true;
+                else if (blocker.EvidenceState == PyralisAuthoringGraphEvidenceState.Missing)
+                    hasMissingBlocker = true;
+            }
+
+            if (hasBlockedBlocker)
+                return PyralisAuthoringGraphEvidenceState.Blocked;
+            if (hasMissingBlocker)
+                return PyralisAuthoringGraphEvidenceState.Missing;
+            if (hasSupport)
+                return PyralisAuthoringGraphEvidenceState.CandidateDetected;
+
+            return PyralisAuthoringGraphEvidenceState.Unknown;
+        }
+
+        private static PyralisAuthoringGraphNode FindNode(List<PyralisAuthoringGraphNode> nodes, string stableId)
+        {
+            if (string.IsNullOrWhiteSpace(stableId))
+                return null;
+
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                PyralisAuthoringGraphNode node = nodes[i];
+                if (node != null && string.Equals(node.StableId, stableId, StringComparison.Ordinal))
+                    return node;
+            }
+
+            return null;
+        }
+
+        private static PyralisAuthoringGraphWorkIntent ResolveProofWorkIntent(PyralisAuthoringGraphEvidenceState readiness)
+        {
+            return readiness == PyralisAuthoringGraphEvidenceState.Missing
+                || readiness == PyralisAuthoringGraphEvidenceState.Blocked
+                    ? PyralisAuthoringGraphWorkIntent.RequiredSetup
+                    : PyralisAuthoringGraphWorkIntent.ProofEnhancer;
+        }
+
+        private static PyralisAuthoringIssueSeverity ResolveProofIssueSeverity(PyralisAuthoringGraphEvidenceState readiness)
+        {
+            return readiness switch
+            {
+                PyralisAuthoringGraphEvidenceState.Blocked => PyralisAuthoringIssueSeverity.Blocked,
+                PyralisAuthoringGraphEvidenceState.Missing => PyralisAuthoringIssueSeverity.Required,
+                PyralisAuthoringGraphEvidenceState.CandidateDetected => PyralisAuthoringIssueSeverity.Recommended,
+                PyralisAuthoringGraphEvidenceState.Optional => PyralisAuthoringIssueSeverity.Optional,
+                _ => PyralisAuthoringIssueSeverity.Info
+            };
         }
 
         private static void AddNode(List<PyralisAuthoringGraphNode> nodes, PyralisAuthoringGraphNode node)

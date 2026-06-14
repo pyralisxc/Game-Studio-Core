@@ -87,15 +87,15 @@ namespace NeonBlack.Gameplay.Editor
 
         private void DrawCurrentIntentGuide(PyralisAuthoringSetupGraph graph)
         {
-            EditorGUILayout.LabelField("Current Intent Guide", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Route Guide", EditorStyles.boldLabel);
 
-            IReadOnlyList<PyralisAuthoringGuideGraphRow> graphRows = PyralisAuthoringSetupGraphProjection.BuildCurrentIntentGuideRows(graph);
-            if (graphRows != null && graphRows.Count > 0)
+            IReadOnlyList<PyralisAuthoringRouteStepRow> routeSteps = PyralisAuthoringSetupGraphProjection.BuildRouteStepRows(graph);
+            if (routeSteps != null && routeSteps.Count > 0)
             {
                 PyralisAuthoringWindowText.DrawSemanticHelpBox(
-                    "Graph-ranked route guidance for the active setup. Intent filters capability focus; Guide renders the resulting graph path.",
+                    "Follow this graph-derived path from the next required Unity action toward the first playable proof. Intent filters the route; the graph decides what is missing or supporting the proof.",
                     MessageType.Info);
-                DrawGuideGraphRows(graphRows);
+                DrawRouteStepRows(routeSteps);
                 return;
             }
 
@@ -111,37 +111,37 @@ namespace NeonBlack.Gameplay.Editor
             }
         }
 
-        private static void DrawGuideGraphRows(IReadOnlyList<PyralisAuthoringGuideGraphRow> rows)
+        private static void DrawRouteStepRows(IReadOnlyList<PyralisAuthoringRouteStepRow> rows)
         {
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 for (int i = 0; i < rows.Count; i++)
-                    DrawGuideGraphRow(rows[i]);
+                    DrawRouteStepRow(rows[i]);
             }
         }
 
-        private static void DrawGuideGraphRow(PyralisAuthoringGuideGraphRow row)
+        private static void DrawRouteStepRow(PyralisAuthoringRouteStepRow row)
         {
             if (row == null || row.Node == null)
                 return;
 
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                string foldoutKey = "Pyralis.AuthoringWindow.Guide.Graph." + row.StableId;
-                bool expanded = GetFoldout(IntentRowFoldouts, foldoutKey, row.EvidenceState == PyralisAuthoringGraphEvidenceState.Missing || row.EvidenceState == PyralisAuthoringGraphEvidenceState.Blocked);
+                string foldoutKey = "Pyralis.AuthoringWindow.Guide.RouteStep." + row.StableId;
+                bool expanded = GetFoldout(IntentRowFoldouts, foldoutKey, row.IsCurrentAction);
                 using (new EditorGUILayout.HorizontalScope())
                 {
-                    expanded = EditorGUILayout.Foldout(expanded, new GUIContent(row.Label, row.Message), true);
+                    expanded = EditorGUILayout.Foldout(expanded, new GUIContent($"{row.Sequence}. {row.Label}", row.Message), true);
                     GUILayout.FlexibleSpace();
-                    EditorGUILayout.LabelField(GetIntentTierLabel(row.Tier), GUILayout.Width(96f));
-                    EditorGUILayout.LabelField(row.State.ToString(), GUILayout.Width(84f));
+                    EditorGUILayout.LabelField(row.RoleLabel, GUILayout.Width(104f));
+                    EditorGUILayout.LabelField(GetRouteStepStatus(row), GUILayout.Width(92f));
                 }
 
                 SetFoldout(IntentRowFoldouts, foldoutKey, expanded);
-                PyralisAuthoringWindowPrimitives.DrawMiniField("Why", row.Reason, "Why this graph node is visible for the active setup route.");
-                PyralisAuthoringWindowPrimitives.DrawMiniField("Evidence", row.EvidenceState.ToString(), "Readiness state from the resolved setup graph.");
-                PyralisAuthoringWindowPrimitives.DrawMiniField("Source", row.SourceOrigin.ToString(), "Where this graph node's setup meaning came from.");
-                PyralisAuthoringWindowPrimitives.DrawMiniField("First Proof", row.FirstProof, "The smallest proof or success criterion this graph row supports.");
+                PyralisAuthoringWindowPrimitives.DrawMiniField("Path", $"{row.PhaseLabel} / {row.RoleLabel}", "Route phase and role are derived from graph nodes and edges.");
+                PyralisAuthoringWindowPrimitives.DrawMiniField("Why", row.Reason, "Why this graph step appears in the route path.");
+                if (!string.IsNullOrWhiteSpace(row.UnityActionLabel))
+                    PyralisAuthoringWindowPrimitives.DrawMiniField("Unity Action", row.UnityActionLabel, "Where to do this in Unity.");
 
                 if (!expanded)
                 {
@@ -150,10 +150,26 @@ namespace NeonBlack.Gameplay.Editor
                 }
 
                 PyralisAuthoringWindowPrimitives.DrawMiniField("What It Means", row.Message, "Guidance from the resolved setup graph node.");
-                PyralisAuthoringWindowPrimitives.DrawMiniList("Native Setup", row.NativeSetup, "Unity Project, Hierarchy, Inspector, or Play Mode actions named by the graph.");
                 PyralisAuthoringWindowPrimitives.DrawMiniList("Assignment Fields", row.AssignmentFields, "Unity fields or objects the creator may need to inspect or assign.");
                 PyralisAuthoringWindowPrimitives.DrawMiniList("Customization", row.CustomizationMoments, "Creator-owned choices. Authoring guides these choices; it does not pick them.");
+                PyralisAuthoringWindowPrimitives.DrawMiniField("Source", row.SourceOrigin.ToString(), "Where this setup meaning came from.");
             }
+        }
+
+        private static string GetRouteStepStatus(PyralisAuthoringRouteStepRow row)
+        {
+            if (row == null)
+                return "Unknown";
+
+            return row.EvidenceState switch
+            {
+                PyralisAuthoringGraphEvidenceState.Ready => "Ready",
+                PyralisAuthoringGraphEvidenceState.Optional => "Can wait",
+                PyralisAuthoringGraphEvidenceState.Missing => "Missing",
+                PyralisAuthoringGraphEvidenceState.CandidateDetected => "Suggested",
+                PyralisAuthoringGraphEvidenceState.Blocked => "Blocked",
+                _ => "Unknown"
+            };
         }
 
         private static void DrawReflectiveContracts(PyralisAuthoringSetupGraph graph)

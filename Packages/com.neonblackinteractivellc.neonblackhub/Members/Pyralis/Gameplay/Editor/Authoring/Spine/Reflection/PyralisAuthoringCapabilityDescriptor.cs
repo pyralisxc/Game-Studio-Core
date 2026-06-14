@@ -460,7 +460,7 @@ namespace NeonBlack.Gameplay.Editor
                 AddDistinct(families, RuntimeCapabilityFamily.ActionTargeting);
             if (HasAnyCapability(capability, AuthoringCapability.Tabletop, AuthoringCapability.Grid))
                 AddDistinct(families, RuntimeCapabilityFamily.BoardCardTabletop);
-            if (HasAnyCapability(capability, AuthoringCapability.Camera, AuthoringCapability.Input))
+            if (HasAnyCapability(capability, AuthoringCapability.Camera))
                 AddDistinct(families, RuntimeCapabilityFamily.CameraInput);
             if (HasAnyCapability(capability, AuthoringCapability.Animation, AuthoringCapability.VFX))
                 AddDistinct(families, RuntimeCapabilityFamily.AnimationPresentation);
@@ -486,8 +486,7 @@ namespace NeonBlack.Gameplay.Editor
             if (string.Equals(lane, "Animation", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(lane, "Presentation", StringComparison.OrdinalIgnoreCase))
                 AddDistinct(families, RuntimeCapabilityFamily.AnimationPresentation);
-            if (string.Equals(lane, "Camera", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(lane, "Input", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(lane, "Camera", StringComparison.OrdinalIgnoreCase))
                 AddDistinct(families, RuntimeCapabilityFamily.CameraInput);
             if (string.Equals(lane, "Setup", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(lane, "Session", StringComparison.OrdinalIgnoreCase))

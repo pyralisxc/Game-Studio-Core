@@ -136,6 +136,41 @@ namespace NeonBlack.Gameplay.Editor
             return BuildResolved(null, null);
         }
 
+        public static PyralisSetupRouteAnalysis Build(
+            UnityEngine.Object source,
+            RuntimeCapabilityFamily[] focusedCapabilityFamilies)
+        {
+            return WithAdditionalCapabilityFamilies(Build(source), focusedCapabilityFamilies);
+        }
+
+        public static PyralisSetupRouteAnalysis WithAdditionalCapabilityFamilies(
+            PyralisSetupRouteAnalysis route,
+            RuntimeCapabilityFamily[] additionalFamilies)
+        {
+            if (route == null)
+                route = BuildResolved(null, null);
+            if (additionalFamilies == null || additionalFamilies.Length == 0)
+                return route;
+
+            List<RuntimeCapabilityFamily> families = new List<RuntimeCapabilityFamily>();
+            for (int i = 0; i < route.CapabilityFamilies.Length; i++)
+                AddFamily(families, route.CapabilityFamilies[i]);
+            for (int i = 0; i < additionalFamilies.Length; i++)
+                AddFamily(families, additionalFamilies[i]);
+
+            RuntimeCapabilityFamily[] mergedFamilies = families.ToArray();
+            return new PyralisSetupRouteAnalysis(
+                route.Session,
+                route.Mode,
+                mergedFamilies,
+                ContainsFamily(mergedFamilies, RuntimeCapabilityFamily.CharacterPawnGameplay),
+                route.HasParticipants,
+                route.HasAnyDefaultPawn,
+                route.ParticipantPawnIssue,
+                route.ParticipantPawnIssueKind,
+                BuildRouteFacts(mergedFamilies));
+        }
+
         private static PyralisSetupRouteAnalysis BuildResolved(SessionDefinition session, GameModeDefinition mode)
         {
             RuntimeCapabilityFamily[] capabilityFamilies = CollectCapabilityFamilies(session, mode);
@@ -210,13 +245,6 @@ namespace NeonBlack.Gameplay.Editor
         private bool HasFamily(RuntimeCapabilityFamily family)
         {
             return ContainsFamily(CapabilityFamilies, family);
-        }
-
-        private static bool ContainsIgnoreCase(string value, string token)
-        {
-            return !string.IsNullOrWhiteSpace(value)
-                && !string.IsNullOrWhiteSpace(token)
-                && value.IndexOf(token, System.StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
         private static RuntimeCapabilityFamily[] CollectCapabilityFamilies(SessionDefinition session, GameModeDefinition mode)
@@ -302,27 +330,15 @@ namespace NeonBlack.Gameplay.Editor
                 return;
 
             ResolvedAuthoringContract contract = ResolvedAuthoringContractRegistry.FindByModuleId(module.moduleId);
-            if (contract != null)
-            {
-                RuntimeCapabilityFamily[] reflectedFamilies = PyralisAuthoringCapabilityDescriptorRegistry.BuildRuntimeFamilies(
-                    contract.Capability,
-                    RuntimeCapabilityLaneTag.Mixed,
-                    contract.Axioms);
-                for (int i = 0; i < reflectedFamilies.Length; i++)
-                    AddFamily(families, reflectedFamilies[i]);
-            }
+            if (contract == null)
+                return;
 
-            string haystack = $"{module.moduleId} {module.displayName} {module.authoringCategory}";
-            if (ContainsIgnoreCase(haystack, "combat") || ContainsIgnoreCase(haystack, "damage"))
-                AddFamily(families, RuntimeCapabilityFamily.Combat);
-            if (ContainsIgnoreCase(haystack, "projectile") || ContainsIgnoreCase(haystack, "gun"))
-                AddFamily(families, RuntimeCapabilityFamily.GunsProjectiles);
-            if (ContainsIgnoreCase(haystack, "score") || ContainsIgnoreCase(haystack, "objective"))
-                AddFamily(families, RuntimeCapabilityFamily.ScoringObjectives);
-            if (ContainsIgnoreCase(haystack, "input") || ContainsIgnoreCase(haystack, "camera"))
-                AddFamily(families, RuntimeCapabilityFamily.CameraInput);
-            if (ContainsIgnoreCase(haystack, "animation") || ContainsIgnoreCase(haystack, "presentation") || ContainsIgnoreCase(haystack, "feedback"))
-                AddFamily(families, RuntimeCapabilityFamily.AnimationPresentation);
+            RuntimeCapabilityFamily[] reflectedFamilies = PyralisAuthoringCapabilityDescriptorRegistry.BuildRuntimeFamilies(
+                contract.Capability,
+                RuntimeCapabilityLaneTag.Mixed,
+                contract.Axioms);
+            for (int i = 0; i < reflectedFamilies.Length; i++)
+                AddFamily(families, reflectedFamilies[i]);
         }
 
         private static void AddFamily(List<RuntimeCapabilityFamily> families, RuntimeCapabilityFamily family)

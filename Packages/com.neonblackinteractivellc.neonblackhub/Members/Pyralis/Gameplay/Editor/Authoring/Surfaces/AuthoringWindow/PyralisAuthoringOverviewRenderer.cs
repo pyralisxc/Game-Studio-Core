@@ -14,16 +14,18 @@ namespace NeonBlack.Gameplay.Editor
             if (model == null)
                 return;
 
-            EditorGUILayout.LabelField("Next Setup Guidance", EditorStyles.miniBoldLabel);
+            EditorGUILayout.LabelField("Next Unity Action", EditorStyles.miniBoldLabel);
             PyralisAuthoringCurrentStepGraphRow currentStep = PyralisAuthoringSetupGraphProjection.BuildCurrentStepRow(graph);
             string guidance = currentStep != null && !string.IsNullOrWhiteSpace(currentStep.Message)
                 ? currentStep.Message
                 : model.FirstProofGuidance;
             PyralisAuthoringWindowText.DrawSemanticHelpBox(guidance, MessageType.Info);
-            PyralisAuthoringWindowPrimitives.DrawMiniField("Intent vs Setup", "Intent chooses capability ingredients for graph focus; Project, Hierarchy, and Inspector create and wire the user's actual setup.");
             PyralisAuthoringWindowPrimitives.DrawMiniField("Next", currentStep != null && !string.IsNullOrWhiteSpace(currentStep.Label) ? currentStep.Label : model.BestNextAction);
             if (currentStep != null && currentStep.NativeAction.HasValue)
                 PyralisAuthoringSurfaceBeacon.DrawNativeAction(currentStep.NativeAction.Value, currentStep.NativeAction.Value.ToGuidanceSentence());
+            PyralisAuthoringWindowPrimitives.DrawMiniField("Intent Focus", PyralisAuthoringSetupGraphProjection.BuildIntentFocusSummary(graph));
+            PyralisAuthoringWindowPrimitives.DrawMiniField("First Proof", PyralisAuthoringSetupGraphProjection.BuildFirstProofPrioritySummary(graph));
+            PyralisAuthoringWindowPrimitives.DrawMiniField("Intent vs Setup", "Intent filters what the graph should explain first; Project, Hierarchy, and Inspector still create and wire the user's actual setup.");
             DrawGraphPriority(graph);
             PyralisAuthoringWindowPrimitives.DrawMiniField("Proof Status", GetFlowTestStatus(model));
         }
@@ -109,9 +111,9 @@ namespace NeonBlack.Gameplay.Editor
             PyralisAuthoringGraphNode next = PyralisAuthoringSetupGraphProjection.FindFirstUnresolvedNode(graph);
             int blocked = PyralisAuthoringSetupGraphProjection.CountNodes(graph, PyralisAuthoringGraphEvidenceState.Blocked);
             int missing = PyralisAuthoringSetupGraphProjection.CountNodes(graph, PyralisAuthoringGraphEvidenceState.Missing);
-            PyralisAuthoringWindowPrimitives.DrawMiniField("Resolved Graph", $"{blocked} blocked, {missing} missing");
+            PyralisAuthoringWindowPrimitives.DrawMiniField("Setup Health", $"{blocked} fix-before-play, {missing} recommended edit(s)");
             if (next != null)
-                PyralisAuthoringWindowPrimitives.DrawMiniField("Graph Next", !string.IsNullOrWhiteSpace(next.Guidance) ? $"{next.Label}: {next.Guidance}" : next.Label);
+                PyralisAuthoringWindowPrimitives.DrawMiniField("Next Missing Link", !string.IsNullOrWhiteSpace(next.Guidance) ? $"{next.Label}: {next.Guidance}" : next.Label);
         }
 
         public static void DrawFirstProofCard(PyralisAuthoringOverviewModel model, PyralisAuthoringSetupGraph graph)
@@ -126,7 +128,7 @@ namespace NeonBlack.Gameplay.Editor
                 EditorGUILayout.LabelField("First Playable Proof", proofNode != null ? proofNode.Label : model.FirstProofLabel, EditorStyles.miniBoldLabel);
                 PyralisAuthoringWindowPrimitives.DrawMiniField("Setup Surface", GetFirstValue(proofNode?.NativeSetup, model.FirstProofSetupSurface));
                 PyralisAuthoringWindowPrimitives.DrawMiniField("Success Looks Like", !string.IsNullOrWhiteSpace(proofNode?.BlockingReason) ? proofNode.BlockingReason : model.FirstProofSuccessCriteria);
-                PyralisAuthoringWindowPrimitives.DrawMiniField("Proof Chain", model.FirstProofChainSummary);
+                PyralisAuthoringWindowPrimitives.DrawMiniField("Route Chain", model.FirstProofChainSummary);
                 PyralisAuthoringWindowPrimitives.DrawMiniField("Defer Until After Proof", model.FirstProofDeferUntilAfter);
             }
         }
@@ -191,7 +193,7 @@ namespace NeonBlack.Gameplay.Editor
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 EditorGUILayout.LabelField(issue.Label, GetEvidenceLabel(issue.EvidenceState), EditorStyles.boldLabel);
-                PyralisAuthoringWindowPrimitives.DrawMiniField("Setup Role", issue.WorkIntentLabel);
+                PyralisAuthoringWindowPrimitives.DrawMiniField("Why It Matters", issue.WorkIntentLabel);
                 PyralisAuthoringWindowText.DrawSemanticMiniLabel(issue.Message);
                 if (!string.IsNullOrWhiteSpace(issue.NativeActionGuidance))
                 {

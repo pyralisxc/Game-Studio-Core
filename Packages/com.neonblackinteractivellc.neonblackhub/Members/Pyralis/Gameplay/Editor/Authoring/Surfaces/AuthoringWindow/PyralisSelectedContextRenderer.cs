@@ -61,9 +61,9 @@ namespace NeonBlack.Gameplay.Editor
                 return;
 
             EditorGUILayout.Space(2f);
-            EditorGUILayout.LabelField("Resolved Graph Context", EditorStyles.miniBoldLabel);
+            EditorGUILayout.LabelField("Authoring Context", EditorStyles.miniBoldLabel);
             EditorGUI.indentLevel++;
-            EditorGUILayout.LabelField("Node", string.IsNullOrWhiteSpace(row.NodeId) ? "No matching graph node yet" : row.NodeId, EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.LabelField("Reference", string.IsNullOrWhiteSpace(row.NodeId) ? "No matching setup reference yet" : row.NodeId, EditorStyles.wordWrappedMiniLabel);
             EditorGUILayout.LabelField("Evidence", GetEvidenceLabel(row.EvidenceState), EditorStyles.wordWrappedMiniLabel);
             if (!string.IsNullOrWhiteSpace(row.Role))
                 EditorGUILayout.LabelField("Role", row.Role, EditorStyles.wordWrappedMiniLabel);

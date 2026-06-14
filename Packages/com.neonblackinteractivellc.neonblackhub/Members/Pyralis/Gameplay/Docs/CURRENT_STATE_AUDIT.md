@@ -21,6 +21,7 @@ The platform architecture is stable enough for guided proof work. The highest-va
 - continuing to reduce remaining single-primary-player assumptions in older compatibility surfaces without reintroducing protected singleton reads
 - collapsing the remaining split between runtime registry support and the `VContainer` composition root
 - fixing identified hot-path allocation risks before they become gameplay-scale performance problems
+- hardening authoring proof authority so proof readiness is generated from contracts, dependency-tree structure, validators, and graph evidence instead of being driven by vocabulary cards
 
 ## Stable Platform Foundations
 
@@ -241,6 +242,8 @@ Current focus:
 - keep setup docs, inspectors, and validation aligned with canonical types
 - make preferred authored paths the only runtime path where clean-break setup is viable
 - remove compatibility fields instead of documenting them as long-term migration surfaces
+- keep Intent as a toggleable graph filter, not a preset route recipe
+- demote proof and capability vocabulary to fallback wording while graph evidence owns proof readiness
 
 ## Medium-Priority Issues
 

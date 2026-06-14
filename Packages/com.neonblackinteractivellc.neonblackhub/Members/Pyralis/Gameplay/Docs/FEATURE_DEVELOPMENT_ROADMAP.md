@@ -74,6 +74,8 @@ gameplay code and authored setup
 
 The active foundation is the resolved setup graph. `PyralisAuthoringGrammarRegistry`, `PyralisCapabilityVocabulary`, and `PyralisProofFamilyVocabulary` provide stable ids, fallback wording, native action vocabulary, and audit facts. Contracts own feature-specific setup meaning, `PyralisSetupDependencyTree` owns serialized reference discovery, and validators own runtime/scene readiness. The Authoring Window has a read-only `Facts` tab for grammar and provenance coverage, but visible setup guidance should project from graph output instead of rebuilding route, proof, or validation meaning locally.
 
+Current hardening checkpoint: generated proof authority. The next authoring slice should make the first pawn-backed proof route derive proof readiness from reflected contracts, dependency-tree structure, setup-flow evidence, and scene-readiness evidence. `PyralisProofFamilyVocabulary` and `PyralisCapabilityVocabulary` may supply fallback labels and beginner wording, but they must not act as required setup authority. Intent remains a toggleable driver/filter for desired capabilities; it should focus the graph, not become a preset recipe or second setup system.
+
 Authoring rollout order:
 
 1. normalize existing runtime capability cards, setup-flow rows, and common guide language into typed facts - active foundation started
