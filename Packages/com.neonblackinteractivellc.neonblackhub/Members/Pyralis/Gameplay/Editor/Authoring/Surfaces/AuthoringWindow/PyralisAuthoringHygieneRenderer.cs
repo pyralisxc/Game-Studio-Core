@@ -14,6 +14,7 @@ namespace NeonBlack.Gameplay.Editor
         {
             EditorGUILayout.LabelField("Hygiene", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox("Use Hygiene as the developer audit surface: graph integrity, proof blockers, dependency pressure, source origins, and stable node ids. Map owns concrete scene and Inspector setup issues.", MessageType.Info);
+            PyralisAuthoringGraphJsonExportControl.Draw("Hygiene", graph);
 
             if (activeSetup == null)
             {

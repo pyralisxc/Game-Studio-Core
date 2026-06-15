@@ -169,6 +169,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(mapSource.Contains("PyralisAuthoringSetupGraphProjection.BuildSetupMapRows"), Is.True);
             Assert.That(mapSource.Contains("PyralisAuthoringSetupGraphProjection.BuildMapConnectionRows"), Is.True);
             Assert.That(mapSource.Contains("PyralisAuthoringSetupGraphProjection.BuildReadinessAuditDetailRows"), Is.True);
+            Assert.That(mapSource.Contains("PyralisAuthoringGraphJsonExportControl.Draw(\"Map\", graph)"), Is.True);
             Assert.That(mapSource.Contains("Scene Setup Issues"), Is.True);
             Assert.That(mapSource.Contains("Map for scene and setup reality"), Is.True);
             Assert.That(mapSource.Contains("PyralisAuthoringRouteReport"), Is.False);
@@ -180,6 +181,14 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(hygieneSource.Contains("PyralisAuthoringSetupGraphProjection.BuildHygieneSections"), Is.True);
             Assert.That(hygieneSource.Contains("PyralisAuthoringSetupGraphProjection.BuildHygieneDetailRows"), Is.True);
             Assert.That(hygieneSource.Contains("PyralisAuthoringSetupGraphProjection.BuildReadinessAuditRows"), Is.False);
+            Assert.That(hygieneSource.Contains("PyralisAuthoringGraphJsonExportControl.Draw(\"Hygiene\", graph)"), Is.True);
+
+            string exportControlPath = FindGameplayEditorFile("PyralisAuthoringGraphJsonExportControl.cs");
+            string exportControlSource = File.ReadAllText(exportControlPath);
+            Assert.That(exportControlSource.Contains("Editor/Authoring/TempGraphs"), Is.True);
+            Assert.That(exportControlSource.Contains("Export(viewName, graph)"), Is.True);
+            Assert.That(exportControlSource.Contains("WriteSnapshot(graph, viewName)"), Is.True);
+            Assert.That(exportControlSource.Contains("GUILayout.Button(content, GUILayout.Width(105f))"), Is.True);
             Assert.That(hygieneSource.Contains("Hygiene"), Is.True);
             Assert.That(hygieneSource.Contains("Graph Size"), Is.True);
             Assert.That(hygieneSource.Contains("Map owns concrete scene and Inspector setup issues"), Is.True);

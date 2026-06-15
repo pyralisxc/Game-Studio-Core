@@ -206,6 +206,40 @@ namespace NeonBlack.Gameplay.Features.Platform.Session
         }
 
         [Test]
+        public void SetupGraphJsonExport_SmokeSerializesGraphAndTabProjections()
+        {
+            PyralisAuthoringGraphNode missingSetup = new PyralisAuthoringGraphNode(
+                "setup.session",
+                "Session",
+                PyralisAuthoringGraphNodeKind.SetupChain,
+                PyralisAuthoringGraphSourceKind.SetupFlow,
+                PyralisAuthoringGraphEvidenceState.Missing,
+                guidance: "Assign a SessionDefinition.");
+            PyralisAuthoringGraphNode proof = new PyralisAuthoringGraphNode(
+                "proof.1p",
+                "1P Proof",
+                PyralisAuthoringGraphNodeKind.Proof,
+                PyralisAuthoringGraphSourceKind.ProofVocabulary,
+                PyralisAuthoringGraphEvidenceState.Missing);
+
+            PyralisAuthoringSetupGraph graph = new PyralisAuthoringSetupGraph(
+                null,
+                null,
+                new[] { missingSetup, proof },
+                new[] { new PyralisAuthoringGraphEdge("proof.1p", "setup.session", PyralisAuthoringGraphEdgeKind.BlockedBy, "missing setup") });
+
+            string json = PyralisAuthoringSetupGraphJsonExporter.ToJson(graph, "Hygiene");
+
+            Assert.That(json, Does.Contain("pyralis.authoring.setupGraph.snapshot.v1"));
+            Assert.That(json, Does.Contain("\"view\": \"Hygiene\""));
+            Assert.That(json, Does.Contain("\"id\": \"setup.session\""));
+            Assert.That(json, Does.Contain("\"kind\": \"BlockedBy\""));
+            Assert.That(json, Does.Contain("\"mapRows\""));
+            Assert.That(json, Does.Contain("\"hygieneSections\""));
+            Assert.That(json, Does.Contain("Read-only authoring graph diagnostic snapshot"));
+        }
+
+        [Test]
         public void ContractNativeSetup_SmokeDoesNotDuplicateReflectedUnityMetadata()
         {
             string gameplayRoot = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Packages", "com.neonblackinteractivellc.neonblackhub", "Members", "Pyralis", "Gameplay"));

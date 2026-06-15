@@ -399,6 +399,8 @@ Map is the current scene/setup reality map. Each row should show:
 
 Map should teach what currently exists and what concrete Unity setup is missing. It can read graph evidence, but it presents scene and setup issues rather than graph integrity.
 
+Map may offer a compact read-only Graph JSON Snapshot button for human and agent diagnostics. That snapshot must serialize the current resolved graph and graph projections; it must not create assets, apply fixes, or become a second setup model. The export action writes the current tab view into `Editor/Authoring/TempGraphs` so issue reports and agent handoffs have one predictable diagnostic folder while generated JSON remains ignored.
+
 ### Hygiene
 
 Hygiene should be graph integrity, not a second scene checklist. Evidence cards should include:
@@ -411,6 +413,8 @@ Hygiene should be graph integrity, not a second scene checklist. Evidence cards 
 - graph finding and source detail
 
 Hygiene can mention source detail, but concrete Unity repair and inspection actions belong in Map or the Inspector. This keeps Hygiene useful for developers auditing the resolved graph without making it compete with the beginner setup flow.
+
+Hygiene may offer the same compact read-only Graph JSON Snapshot button as Map, with the view marked as `Hygiene`, so developers and agents can inspect source origins, blocker edges, stable ids, and graph evidence outside the Unity UI without scraping visible text. The shared export action should keep Map and Hygiene on one implementation while writing the current tab's graph view separately.
 
 ### Native Creation Workflow
 
