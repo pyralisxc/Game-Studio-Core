@@ -10,18 +10,22 @@ namespace NeonBlack.Gameplay.Features.Characters
 {
     [AuthoringContract(
         Capability = AuthoringCapability.Animation | AuthoringCapability.VFX, 
-        Relevance = "Maps movement and dash/death state to sprite tinting, facing, squash/stretch, and animation signals.",
+        Relevance = "2D pawn presentation facade; maps movement state into sprite facing/tint, animation signals, squash/stretch, tilt, and dash/death feedback.",
         Axioms = AuthoringWorldAxiom.Dimensions2D,
         NativeSetup = new[] { "Add on the same root as Motor2D.", "Assign SpriteRenderer." },
         AssignmentFields = new[] { nameof(spriteRenderer), nameof(movingTint), nameof(tiltEnabled), nameof(stretchAmount), nameof(squashSnapSpeed), nameof(tiltSpeed) },
         FirstProof = "Move the pawn and verify the sprite tilts and tints according to velocity.",
-        ExpertAdvice = "Do not leave both moving and idle tint invisible. Do not enable tilt or squash/stretch until the visual pivot is correct."
+        ExpertAdvice = "Keep this as the single 2D presentation facade for beginner prefabs. Sprite facing/tint, animation parameters, deformation, and feedback audio are separate internal lanes and can later become dedicated presenter scripts when a route needs deeper specialization."
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Characters/2D/Pawn 2D Presentation Component")]
     [RequireComponent(typeof(Pawn2DMovementComponent))]
     [RequireComponent(typeof(ActorAnimationDriver))]
     public sealed class Pawn2DPresentationComponent : MonoBehaviour, IPawnPresentationModule, IRuntimeValidationProvider
     {
+        private const float MovementInputThresholdSqr = 0.01f;
+        private const float PresentationVelocityThreshold = 0.1f;
+        private const float DeformationVelocityThreshold = 0.2f;
+
         public IEnumerable<string> GetRuntimeValidationIssues()
         {
             if (spriteRenderer == null && GetComponentInChildren<SpriteRenderer>(true) == null)
@@ -67,6 +71,11 @@ namespace NeonBlack.Gameplay.Features.Characters
             baseScale = transform.localScale;
             animator ??= GetComponent<Animator>();
             spriteRenderer ??= GetComponent<SpriteRenderer>() ?? GetComponentInChildren<SpriteRenderer>(true);
+            EnsureAudioSource();
+        }
+
+        private void EnsureAudioSource()
+        {
             audioSource = GetComponent<AudioSource>();
             if (audioSource == null)
                 audioSource = gameObject.AddComponent<AudioSource>();
@@ -79,16 +88,9 @@ namespace NeonBlack.Gameplay.Features.Characters
             if (movement == null)
                 return;
 
-            UpdateAnimationSignals();
-            UpdateSprite();
-
-            if (!movement.IsDead && squashStretchEnabled)
-                UpdateSquashStretch();
-            else if (movement.IsDead)
-                transform.localScale = Vector3.Lerp(transform.localScale, baseScale, squashSnapSpeed * Time.deltaTime);
-
-            if (!movement.IsDead && tiltEnabled)
-                UpdateTilt();
+            TickAnimationSignalLane();
+            TickSpriteFacingAndTintLane();
+            TickDeformationLane();
         }
 
         public void ApplyPresentationProfile(PawnProfileApplicationContext context, PawnPresentationProfile presentationProfile)
@@ -122,10 +124,7 @@ namespace NeonBlack.Gameplay.Features.Characters
 
         public void ResetForRound()
         {
-            movingHoldTimer = 0f;
-            currentTiltAngle = 0f;
-            transform.rotation = Quaternion.identity;
-            transform.localScale = baseScale;
+            ResetTransientVisualState();
 
             if (animator != null)
             {
@@ -150,10 +149,7 @@ namespace NeonBlack.Gameplay.Features.Characters
 
         public void PlayDeathFeedback()
         {
-            movingHoldTimer = 0f;
-            currentTiltAngle = 0f;
-            transform.rotation = Quaternion.identity;
-            transform.localScale = baseScale;
+            ResetTransientVisualState();
             animationDriver?.TriggerSignal(ActorAnimationSignal.Death);
             if (deathClip != null)
                 audioSource.PlayOneShot(deathClip);
@@ -169,12 +165,20 @@ namespace NeonBlack.Gameplay.Features.Characters
             animationDriver?.SetBoolSignal(ActorAnimationSignal.Idle, true);
         }
 
-        private void UpdateAnimationSignals()
+        private void ResetTransientVisualState()
+        {
+            movingHoldTimer = 0f;
+            currentTiltAngle = 0f;
+            transform.rotation = Quaternion.identity;
+            transform.localScale = baseScale;
+        }
+
+        private void TickAnimationSignalLane()
         {
             if (animationDriver == null || movement == null)
                 return;
 
-            bool moving = movement.MoveDirection.sqrMagnitude > 0.01f || movement.CurrentVelocity.sqrMagnitude > 0.01f;
+            bool moving = IsMovingForPresentation();
             animationDriver.SetBoolSignal(ActorAnimationSignal.Move, moving);
             animationDriver.SetBoolSignal(ActorAnimationSignal.Idle, !moving);
             animationDriver.SetBoolSignal(ActorAnimationSignal.Dash, movement.IsDashing);
@@ -195,15 +199,14 @@ namespace NeonBlack.Gameplay.Features.Characters
             animationDriver.SetFloatCustom("VelocityY", velocity.y);
         }
 
-        private void UpdateSprite()
+        private void TickSpriteFacingAndTintLane()
         {
             if (spriteRenderer == null || movement == null)
                 return;
             if (movement.IsDead)
                 return;
 
-            bool inputActive = movement.MoveDirection.sqrMagnitude > 0.01f || movement.CurrentVelocity.sqrMagnitude > 0.01f;
-            if (inputActive)
+            if (IsMovingForPresentation())
                 movingHoldTimer = idleDelay;
             else
                 movingHoldTimer -= Time.deltaTime;
@@ -225,12 +228,27 @@ namespace NeonBlack.Gameplay.Features.Characters
             }
         }
 
-        private void UpdateTilt()
+        private void TickDeformationLane()
+        {
+            if (movement.IsDead)
+            {
+                transform.localScale = Vector3.Lerp(transform.localScale, baseScale, squashSnapSpeed * Time.deltaTime);
+                return;
+            }
+
+            if (squashStretchEnabled)
+                TickSquashStretchLane();
+
+            if (tiltEnabled)
+                TickTiltLane();
+        }
+
+        private void TickTiltLane()
         {
             Vector2 velocity = movement.CurrentVelocity;
             float targetAngle = 0f;
             float speed = velocity.magnitude;
-            if (speed > 0.1f)
+            if (speed > PresentationVelocityThreshold)
             {
                 float velAngle = Mathf.Atan2(velocity.y, velocity.x) * Mathf.Rad2Deg;
                 float lean = -Mathf.Sin(velAngle * Mathf.Deg2Rad);
@@ -245,12 +263,12 @@ namespace NeonBlack.Gameplay.Features.Characters
             transform.rotation = Quaternion.Euler(0f, 0f, currentTiltAngle);
         }
 
-        private void UpdateSquashStretch()
+        private void TickSquashStretchLane()
         {
             Vector3 targetScale = baseScale;
             Vector2 velocity = movement.CurrentVelocity;
             float speed = velocity.magnitude;
-            if (speed > 0.2f)
+            if (speed > DeformationVelocityThreshold)
             {
                 float t = Mathf.Clamp01(speed / Mathf.Max(0.01f, movement.MoveSpeed));
                 float stretch = Mathf.Lerp(1f, stretchAmount, t);
@@ -261,6 +279,13 @@ namespace NeonBlack.Gameplay.Features.Characters
             }
 
             transform.localScale = Vector3.Lerp(transform.localScale, targetScale, squashSnapSpeed * Time.deltaTime);
+        }
+
+        private bool IsMovingForPresentation()
+        {
+            return movement != null
+                && (movement.MoveDirection.sqrMagnitude > MovementInputThresholdSqr
+                    || movement.CurrentVelocity.sqrMagnitude > MovementInputThresholdSqr);
         }
     }
 }

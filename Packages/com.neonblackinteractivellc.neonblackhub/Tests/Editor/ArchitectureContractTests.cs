@@ -1931,6 +1931,32 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
+        public void Pawn2DPresentation_Source_KeepsInternalPresentationLanesNamed()
+        {
+            string presentationPath = Path.Combine(
+                Application.dataPath,
+                "..",
+                "Packages",
+                "com.neonblackinteractivellc.neonblackhub",
+                "Members",
+                "Pyralis",
+                "Gameplay",
+                "Features",
+                "Characters",
+                "2D",
+                "Pawn2DPresentationComponent.cs");
+
+            string source = File.ReadAllText(presentationPath);
+
+            Assert.That(source.Contains("TickAnimationSignalLane"), Is.True);
+            Assert.That(source.Contains("TickSpriteFacingAndTintLane"), Is.True);
+            Assert.That(source.Contains("TickDeformationLane"), Is.True);
+            Assert.That(source.Contains("TickSquashStretchLane"), Is.True);
+            Assert.That(source.Contains("TickTiltLane"), Is.True);
+            Assert.That(source.Contains("ResetTransientVisualState"), Is.True);
+        }
+
+        [Test]
         public void SceneAndInputFlow_Source_UsesExplicitServicesInsteadOfRuntimeSingletons()
         {
             string gameplayRoot = Path.Combine(

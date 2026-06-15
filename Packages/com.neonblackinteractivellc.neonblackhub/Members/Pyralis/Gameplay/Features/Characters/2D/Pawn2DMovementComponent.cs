@@ -26,7 +26,7 @@ namespace NeonBlack.Gameplay.Features.Characters
         AssignmentFields = new[] { nameof(moveSpeed), nameof(dashEnabled), nameof(dashSpeed), nameof(dashCooldown), nameof(jumpEnabled), nameof(jumpVelocity), nameof(groundLayer), nameof(inputZones) },
         FirstProofTargetId = "proof.1p-pawn-movement",
         FirstProof = "Pawn responds to input in the scene. Use the Scene View to verify the Ground Check raycast (if side-view) is hitting the correct layer.",
-        ExpertAdvice = "Top-down route: leave Jump Enabled off and set Gravity Scale to 0. Side-view route: enable Jump, set Ground Layer, and ensure Rigidbody2D 'Collision Detection' is set to Continuous for high-speed dashes. Leave camera-visible movement bounds off unless the camera view itself is the legal play area."
+        ExpertAdvice = "Top-down/no-gravity route: leave Jump Enabled off; this component configures Rigidbody2D as Kinematic and Move drives X/Y. Side-view/gravity route: enable Jump; this component configures Rigidbody2D as Dynamic and lets gravity own vertical motion. Leave camera-visible movement bounds off unless the camera view itself is the legal play area."
     )]
 [AddComponentMenu("NeonBlack/Gameplay/Characters/2D/Pawn 2D Movement Component")]
     [RequireComponent(typeof(Rigidbody2D))]
@@ -74,7 +74,7 @@ namespace NeonBlack.Gameplay.Features.Characters
         [SerializeField, Range(0.1f, 3f)] private float dashCooldown = 0.8f;
 
         [Header("Side View Jump")]
-        [SerializeField, Tooltip("Enable for side-view/platformer 2D pawns. Leave off for top-down 2D movement.")]
+        [SerializeField, Tooltip("Enable for side-view/platformer 2D pawns. Off means top-down/no-gravity movement with a Kinematic Rigidbody2D; on means side-view gravity with a Dynamic Rigidbody2D.")]
         private bool jumpEnabled = false;
         [SerializeField, Tooltip("Initial upward velocity applied when Jump is requested while grounded.")]
         private float jumpVelocity = 8f;
@@ -129,6 +129,8 @@ namespace NeonBlack.Gameplay.Features.Characters
         public bool IsGrounded => !jumpEnabled || isGrounded;
         public bool MovementEnabled => movementEnabled;
         public bool JumpEnabled => jumpEnabled;
+        public Pawn2DMovementStyle EffectiveMovementStyle =>
+            jumpEnabled ? Pawn2DMovementStyle.SideViewGravity : Pawn2DMovementStyle.TopDownNoGravity;
         public bool RuntimeGrounded => isGrounded;
         public bool RuntimeJumpQueued => jumpQueued;
         public Object RuntimeGameplayStateSource => gameplayStateReader as Object;
@@ -194,53 +196,24 @@ namespace NeonBlack.Gameplay.Features.Characters
             if (!movementEnabled || model.State.IsDead)
                 return;
 
-            if (jumpEnabled)
+            if (EffectiveMovementStyle == Pawn2DMovementStyle.SideViewGravity)
             {
-                TickSideViewMovement();
+                TickSideViewGravityMovement();
                 return;
             }
 
+            TickTopDownNoGravityMovement();
+        }
+
+        private void TickTopDownNoGravityMovement()
+        {
             Vector2 velocity = model.Tick(BuildMotorInput(), Time.fixedDeltaTime);
             Vector2 newPos = rb2d.position + velocity * Time.fixedDeltaTime;
 
             if (TryGetMovementBounds(out MovementBounds2D bounds))
-            {
-                Vector2 centrePos = newPos + spriteRadiusOffset;
-                Vector2 boundsCenter = bounds.Center;
+                newPos = ApplyTopDownBounds(newPos, bounds);
 
-                if (screenWrap || bounds.AllowScreenWrap)
-                {
-                    if (centrePos.x > boundsCenter.x + bounds.HalfWidth) centrePos.x = boundsCenter.x - bounds.HalfWidth;
-                    if (centrePos.x < boundsCenter.x - bounds.HalfWidth) centrePos.x = boundsCenter.x + bounds.HalfWidth;
-                    if (centrePos.y > boundsCenter.y + bounds.HalfHeight) centrePos.y = boundsCenter.y - bounds.HalfHeight;
-                    if (centrePos.y < boundsCenter.y - bounds.HalfHeight) centrePos.y = boundsCenter.y + bounds.HalfHeight;
-                }
-                else
-                {
-                    centrePos.x = Mathf.Clamp(centrePos.x, boundsCenter.x - bounds.HalfWidth, boundsCenter.x + bounds.HalfWidth);
-                    centrePos.y = Mathf.Clamp(centrePos.y, boundsCenter.y - bounds.HalfHeight, boundsCenter.y + bounds.HalfHeight);
-                }
-
-                newPos = centrePos - spriteRadiusOffset;
-            }
-
-            if (inputZones != null && inputZones.IsInAnyDeadZone(newPos))
-            {
-                Vector2 currentPos = rb2d.position;
-                Vector2 slideX = new Vector2(newPos.x, currentPos.y);
-                if (!inputZones.IsInAnyDeadZone(slideX))
-                {
-                    newPos = slideX;
-                }
-                else
-                {
-                    Vector2 slideY = new Vector2(currentPos.x, newPos.y);
-                    newPos = !inputZones.IsInAnyDeadZone(slideY) ? slideY : currentPos;
-                }
-
-                if (model.State.IsDashing)
-                    model.CancelDash();
-            }
+            newPos = ApplyInputDeadZones(newPos);
 
             rb2d.MovePosition(newPos);
         }
@@ -430,7 +403,7 @@ namespace NeonBlack.Gameplay.Features.Characters
             return false;
         }
 
-        private void TickSideViewMovement()
+        private void TickSideViewGravityMovement()
         {
             UpdateGroundedState();
 
@@ -506,11 +479,57 @@ namespace NeonBlack.Gameplay.Features.Characters
             if (rb2d == null)
                 return;
 
-            rb2d.bodyType = jumpEnabled ? RigidbodyType2D.Dynamic : RigidbodyType2D.Kinematic;
-            rb2d.gravityScale = jumpEnabled ? gravityScale : 0f;
+            rb2d.bodyType = EffectiveMovementStyle == Pawn2DMovementStyle.SideViewGravity
+                ? RigidbodyType2D.Dynamic
+                : RigidbodyType2D.Kinematic;
+            rb2d.gravityScale = EffectiveMovementStyle == Pawn2DMovementStyle.SideViewGravity ? gravityScale : 0f;
             rb2d.freezeRotation = true;
-            if (!jumpEnabled)
+            if (EffectiveMovementStyle == Pawn2DMovementStyle.TopDownNoGravity)
                 rb2d.linearVelocity = Vector2.zero;
+        }
+
+        private Vector2 ApplyTopDownBounds(Vector2 newPos, MovementBounds2D bounds)
+        {
+            Vector2 centrePos = newPos + spriteRadiusOffset;
+            Vector2 boundsCenter = bounds.Center;
+
+            if (screenWrap || bounds.AllowScreenWrap)
+            {
+                if (centrePos.x > boundsCenter.x + bounds.HalfWidth) centrePos.x = boundsCenter.x - bounds.HalfWidth;
+                if (centrePos.x < boundsCenter.x - bounds.HalfWidth) centrePos.x = boundsCenter.x + bounds.HalfWidth;
+                if (centrePos.y > boundsCenter.y + bounds.HalfHeight) centrePos.y = boundsCenter.y - bounds.HalfHeight;
+                if (centrePos.y < boundsCenter.y - bounds.HalfHeight) centrePos.y = boundsCenter.y + bounds.HalfHeight;
+            }
+            else
+            {
+                centrePos.x = Mathf.Clamp(centrePos.x, boundsCenter.x - bounds.HalfWidth, boundsCenter.x + bounds.HalfWidth);
+                centrePos.y = Mathf.Clamp(centrePos.y, boundsCenter.y - bounds.HalfHeight, boundsCenter.y + bounds.HalfHeight);
+            }
+
+            return centrePos - spriteRadiusOffset;
+        }
+
+        private Vector2 ApplyInputDeadZones(Vector2 newPos)
+        {
+            if (inputZones == null || !inputZones.IsInAnyDeadZone(newPos))
+                return newPos;
+
+            Vector2 currentPos = rb2d.position;
+            Vector2 slideX = new Vector2(newPos.x, currentPos.y);
+            if (!inputZones.IsInAnyDeadZone(slideX))
+            {
+                newPos = slideX;
+            }
+            else
+            {
+                Vector2 slideY = new Vector2(currentPos.x, newPos.y);
+                newPos = !inputZones.IsInAnyDeadZone(slideY) ? slideY : currentPos;
+            }
+
+            if (model.State.IsDashing)
+                model.CancelDash();
+
+            return newPos;
         }
 
         private void ClampPositionToBounds()

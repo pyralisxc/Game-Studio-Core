@@ -122,7 +122,7 @@ Put ScriptableObject definitions and profiles here: `GameModeDefinition`, `Parti
 
 ### Editor
 
-Put all editor-only tools here. No `Inspectors/` subfolder - keep it flat.
+Put editor-only tools here. The Pyralis authoring system lives under `Editor/Authoring`; keep the word "authoring" scoped to that system and to shared metadata that directly feeds it. Feature-local editor code can live under a feature's `Editor` folder when it is clearly an inspector or validation surface for that feature, but runtime gameplay folders should not carry authoring naming.
 
 ### Features
 
@@ -141,7 +141,7 @@ Use this structure to make each branch easy to inspect:
 - do not create one-folder-per-interface or pass-through folders; group by runtime responsibility.
 - feature-local `Editor/Inspectors` can explain or validate that feature, but setup truth should still come from contracts, dependency structure, and graph evidence.
 
-The supported 2D controller surface for new work is the `Motor2D` stack: `Motor2D`, `Pawn2DMovementComponent`, `Pawn2DPresentationComponent`, and `Motor2DInputAdapter` (`Features/Characters/2D/`).
+The supported 2D controller surface for new work is the `Motor2D` stack: `Motor2D`, `Pawn2DMovementComponent`, `Pawn2DPresentationComponent`, and `Motor2DInputAdapter` (`Features/Characters/2D/`). Keep this as one beginner-facing pawn stack while the internals stay explicit: top-down/no-gravity movement uses a Kinematic Rigidbody2D, side-view/gravity movement uses a Dynamic Rigidbody2D, and presentation keeps sprite, animation, deformation, and feedback lanes named separately.
 The supported 3D controller surface for new work is `Motor3D` (`Features/Characters/3D/`).
 
 ## Practical rules

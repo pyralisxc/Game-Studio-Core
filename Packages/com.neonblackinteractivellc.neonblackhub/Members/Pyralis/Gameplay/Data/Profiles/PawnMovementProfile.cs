@@ -5,6 +5,12 @@ using UnityEngine;
 
 namespace NeonBlack.Gameplay.Data.Profiles
 {
+    public enum Pawn2DMovementStyle
+    {
+        TopDownNoGravity,
+        SideViewGravity
+    }
+
     /// <summary>
     /// Shared movement authoring profile for pawn composition.
     /// </summary>
@@ -48,12 +54,15 @@ namespace NeonBlack.Gameplay.Data.Profiles
         [Range(0.1f, 3f)] public float dashCooldown = 0.8f;
 
         [Header("2D Side View Jump")]
-        [Tooltip("Enable for side-view/platformer 2D pawns that should move horizontally and jump with Rigidbody2D gravity. Leave off for top-down 2D pawns.")]
+        [Tooltip("Enable for side-view/platformer 2D pawns that should use a Dynamic Rigidbody2D with gravity. Leave off for top-down/no-gravity 2D pawns that use a Kinematic Rigidbody2D moved by script.")]
         public bool allow2DJump = false;
         [Tooltip("Initial upward velocity applied when a grounded 2D side-view pawn jumps.")]
         public float jumpVelocity2D = 8f;
         [Tooltip("Gravity scale applied to Rigidbody2D while 2D side-view jump is enabled.")]
         public float gravityScale2D = 3f;
+
+        public Pawn2DMovementStyle Effective2DMovementStyle =>
+            allow2DJump ? Pawn2DMovementStyle.SideViewGravity : Pawn2DMovementStyle.TopDownNoGravity;
 
         public void Sanitize()
         {

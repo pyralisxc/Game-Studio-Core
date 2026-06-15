@@ -41,8 +41,8 @@ Available:
 2D arcade pawn (direct module composition with a shared motor surface):
 
 - `Motor2D` (`Features/Characters/2D/`) - shared 2D pawn motor surface over the focused 2D pawn stack
-- `Pawn2DMovementComponent` - movement, dash, bounds, and reaction-lock ownership
-- `Pawn2DPresentationComponent` - sprite, animator, tilt, squash, and death presentation
+- `Pawn2DMovementComponent` - movement, dash, bounds, and reaction-lock ownership; names top-down/no-gravity and side-view/gravity lanes while preserving one beginner-facing 2D movement component
+- `Pawn2DPresentationComponent` - 2D presentation facade with named sprite facing/tint, animation signal, deformation, and dash/death feedback lanes
 - `PawnCombatBehaviour2D` - combo and hitbox combat ownership
 - `Motor2DInputAdapter` / `PlayerInputHandler` - input binding and action routing
 

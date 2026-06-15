@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Data.Definitions;
+using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Features.Characters;
 using NeonBlack.Gameplay.Features.Input;
 using UnityEditor;
@@ -28,8 +29,14 @@ namespace NeonBlack.Gameplay.Editor
             if (!TryGet2DPawnPrefabParts(pawn, out _, out _, out Rigidbody2D body, out _))
                 return null;
 
+            Pawn2DMovementStyle movementStyle = pawn.movementProfile != null
+                ? pawn.movementProfile.Effective2DMovementStyle
+                : Pawn2DMovementStyle.TopDownNoGravity;
+            if (movementStyle == Pawn2DMovementStyle.SideViewGravity)
+                return null;
+
             return body != null && Mathf.Abs(body.gravityScale) > 0.001f
-                ? "Rigidbody2D gravity is non-zero on a Pawn2DMovementComponent prefab. Set Rigidbody2D > Gravity Scale to 0 for this native 2D pawn movement stack."
+                ? "Rigidbody2D gravity is non-zero on a top-down/no-gravity Pawn2DMovementComponent prefab. This lane uses a Kinematic Rigidbody2D moved by script, so set Rigidbody2D > Gravity Scale to 0, or enable 2D side-view jump on the PawnMovementProfile when this pawn should use a Dynamic Rigidbody2D with gravity."
                 : null;
         }
 

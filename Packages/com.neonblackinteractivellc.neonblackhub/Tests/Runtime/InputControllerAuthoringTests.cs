@@ -62,5 +62,23 @@ namespace NeonBlack.Gameplay.Tests.Runtime
                 Object.DestroyImmediate(actor);
             }
         }
+
+        [Test]
+        public void PawnMovementProfile_ReportsEffective2DMovementStyle()
+        {
+            PawnMovementProfile profile = ScriptableObject.CreateInstance<PawnMovementProfile>();
+            try
+            {
+                profile.allow2DJump = false;
+                Assert.That(profile.Effective2DMovementStyle, Is.EqualTo(Pawn2DMovementStyle.TopDownNoGravity));
+
+                profile.allow2DJump = true;
+                Assert.That(profile.Effective2DMovementStyle, Is.EqualTo(Pawn2DMovementStyle.SideViewGravity));
+            }
+            finally
+            {
+                Object.DestroyImmediate(profile);
+            }
+        }
     }
 }

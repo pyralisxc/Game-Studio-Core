@@ -894,7 +894,7 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
 
                 List<string> issues = PyralisPawnPrefabReadinessAnalysis.BuildIssues(pawn);
 
-                Assert.That(issues.Any(issue => issue.Contains("Gravity Scale to 0")), Is.True);
+                Assert.That(issues.Any(issue => issue.Contains("top-down/no-gravity")), Is.True);
                 Assert.That(issues.Any(issue => issue.Contains("Freeze Rotation")), Is.True);
                 Assert.That(issues.Any(issue => issue.Contains("environment-sized sprite")), Is.True);
             }
@@ -903,6 +903,37 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
                 Object.DestroyImmediate(sprite);
                 Object.DestroyImmediate(texture);
                 Object.DestroyImmediate(root);
+                Object.DestroyImmediate(pawn);
+            }
+        }
+
+        [Test]
+        public void PyralisPawnPrefabReadinessAnalysis_SideViewPawn_AllowsGravityScale()
+        {
+            PawnDefinition pawn = ScriptableObject.CreateInstance<PawnDefinition>();
+            PawnMovementProfile movementProfile = ScriptableObject.CreateInstance<PawnMovementProfile>();
+            GameObject root = new GameObject("Side View Pawn");
+
+            try
+            {
+                movementProfile.allow2DJump = true;
+                Rigidbody2D body = root.AddComponent<Rigidbody2D>();
+                body.gravityScale = 3f;
+                body.constraints = RigidbodyConstraints2D.FreezeRotation;
+                root.AddComponent<PolygonCollider2D>();
+                root.AddComponent<Pawn2DMovementComponent>();
+                pawn.pawnPrefab = root;
+                pawn.movementProfile = movementProfile;
+
+                List<string> issues = PyralisPawnPrefabReadinessAnalysis.BuildIssues(pawn);
+
+                Assert.That(issues.Any(issue => issue.Contains("top-down/no-gravity")), Is.False);
+                Assert.That(issues.Any(issue => issue.Contains("Gravity Scale to 0")), Is.False);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+                Object.DestroyImmediate(movementProfile);
                 Object.DestroyImmediate(pawn);
             }
         }

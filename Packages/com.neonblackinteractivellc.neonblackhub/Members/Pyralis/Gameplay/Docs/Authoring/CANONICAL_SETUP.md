@@ -160,6 +160,8 @@ For a beginner 2D movement proof, the clean prefab route is:
 
 `Motor2D` is the shared 2D pawn motor surface. Movement, presentation, and input live in focused sibling components so the stack stays inspectable and profile-driven.
 
+`PawnMovementProfile.Effective2DMovementStyle` decides the Rigidbody2D controller mode for this stack. Top-down/no-gravity movement uses a Kinematic Rigidbody2D moved by script on X/Y. Side-view/gravity movement uses a Dynamic Rigidbody2D for gravity, vertical jump, and ground checks. Keep both routes on the same beginner-facing pawn stack until a game route needs specialized presenter or movement-driver scripts.
+
 The 2D input stack reads movement, dash/jump, attack, secondary attack, interact, and block action names from the effective `InputProfile`. This lets project Input Actions keep custom names while Pyralis still knows which gameplay role each action fills.
 
 ### 3D / 2.5D
