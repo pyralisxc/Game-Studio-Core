@@ -145,12 +145,36 @@ namespace NeonBlack.Gameplay.Editor
                 sourceOriginCounts = CountBy(graph?.Nodes, node => node.SourceOrigin.ToString()),
                 sourceKindCounts = CountBy(graph?.Nodes, node => node.SourceKind.ToString()),
                 evidenceStateCounts = CountBy(graph?.Nodes, node => node.EvidenceState.ToString()),
+                dependencyPressureSummary = BuildDependencyPressureSummary(safeDependencyRecords),
                 dependencyPressure = safeDependencyRecords
                     .Where(record => record != null && record.Risk != PyralisSourceDependencyRisk.Low)
+                    .OrderByDescending(record => record.RiskScore)
                     .Take(32)
                     .Select(BuildDependencyPressure)
                     .ToArray(),
                 contractSourcePressure = BuildContractSourcePressure(graph)
+            };
+        }
+
+        private static DependencyPressureSummarySnapshot BuildDependencyPressureSummary(
+            IReadOnlyList<PyralisSourceDependencyHygieneRecord> dependencyRecords)
+        {
+            PyralisSourceDependencyHygieneRecord[] pressureRecords = dependencyRecords == null
+                ? Array.Empty<PyralisSourceDependencyHygieneRecord>()
+                : dependencyRecords
+                    .Where(record => record != null && record.Risk != PyralisSourceDependencyRisk.Low)
+                    .OrderByDescending(record => record.RiskScore)
+                    .ToArray();
+
+            return new DependencyPressureSummarySnapshot
+            {
+                totalPressureRecordCount = pressureRecords.Length,
+                exportedTopRecordCount = Math.Min(32, pressureRecords.Length),
+                omittedRecordCount = Math.Max(0, pressureRecords.Length - 32),
+                highestRiskScore = pressureRecords.Length > 0 ? pressureRecords[0].RiskScore : 0,
+                riskCounts = CountBy(pressureRecords, record => record.Risk.ToString()),
+                ownerDomainCounts = CountBy(pressureRecords, record => record.OwnerDomain),
+                touchedDomainCounts = CountDomains(pressureRecords)
             };
         }
 
@@ -348,6 +372,42 @@ namespace NeonBlack.Gameplay.Editor
                 .ToArray();
         }
 
+        private static CountSnapshot[] CountBy(
+            IEnumerable<PyralisSourceDependencyHygieneRecord> records,
+            Func<PyralisSourceDependencyHygieneRecord, string> selector)
+        {
+            if (records == null)
+                return Array.Empty<CountSnapshot>();
+
+            return records
+                .Where(record => record != null)
+                .GroupBy(record => NormalizeCountLabel(selector(record)))
+                .OrderByDescending(group => group.Count())
+                .ThenBy(group => group.Key, StringComparer.Ordinal)
+                .Select(group => new CountSnapshot { label = group.Key, count = group.Count() })
+                .ToArray();
+        }
+
+        private static CountSnapshot[] CountDomains(IEnumerable<PyralisSourceDependencyHygieneRecord> records)
+        {
+            if (records == null)
+                return Array.Empty<CountSnapshot>();
+
+            return records
+                .Where(record => record?.Domains != null)
+                .SelectMany(record => record.Domains)
+                .GroupBy(NormalizeCountLabel)
+                .OrderByDescending(group => group.Count())
+                .ThenBy(group => group.Key, StringComparer.Ordinal)
+                .Select(group => new CountSnapshot { label = group.Key, count = group.Count() })
+                .ToArray();
+        }
+
+        private static string NormalizeCountLabel(string value)
+        {
+            return string.IsNullOrWhiteSpace(value) ? "Unknown" : value;
+        }
+
         private static NativeActionSnapshot BuildNativeAction(PyralisAuthoringNativeAction? nativeAction)
         {
             if (!nativeAction.HasValue)
@@ -454,6 +514,7 @@ namespace NeonBlack.Gameplay.Editor
             public CountSnapshot[] sourceOriginCounts;
             public CountSnapshot[] sourceKindCounts;
             public CountSnapshot[] evidenceStateCounts;
+            public DependencyPressureSummarySnapshot dependencyPressureSummary;
             public DependencyPressureSnapshot[] dependencyPressure;
             public ContractPressureSnapshot[] contractSourcePressure;
         }
@@ -579,6 +640,18 @@ namespace NeonBlack.Gameplay.Editor
             public int riskScore;
             public string risk;
             public string[] reasons;
+        }
+
+        [Serializable]
+        private sealed class DependencyPressureSummarySnapshot
+        {
+            public int totalPressureRecordCount;
+            public int exportedTopRecordCount;
+            public int omittedRecordCount;
+            public int highestRiskScore;
+            public CountSnapshot[] riskCounts;
+            public CountSnapshot[] ownerDomainCounts;
+            public CountSnapshot[] touchedDomainCounts;
         }
 
         [Serializable]

@@ -435,18 +435,23 @@ namespace NeonBlack.Gameplay.Editor
                 : selectedProofTargetId;
             if (string.IsNullOrWhiteSpace(proofNodeId))
                 proofNodeId = "proof.unresolved-route";
+            bool unresolvedProof = string.Equals(proofNodeId, "proof.unresolved-route", StringComparison.Ordinal);
             AddNode(nodes, new PyralisAuthoringGraphNode(
                 proofNodeId,
-                !string.IsNullOrWhiteSpace(proofFact?.DisplayName) ? proofFact.DisplayName : "Unresolved Route Proof",
+                unresolvedProof
+                    ? "No Active Proof Target"
+                    : !string.IsNullOrWhiteSpace(proofFact?.DisplayName) ? proofFact.DisplayName : "Unresolved Route Proof",
                 PyralisAuthoringGraphNodeKind.Proof,
                 GetProofSourceKind(proofFact),
-                PyralisAuthoringGraphEvidenceState.Unknown,
+                unresolvedProof ? PyralisAuthoringGraphEvidenceState.Optional : PyralisAuthoringGraphEvidenceState.Unknown,
                 proofTargetId: proofNodeId,
-                guidance: GetProofGuidance(proofFact),
+                guidance: unresolvedProof
+                    ? "No first proof is selected yet. Assign a meaningful authored route or use Intent to choose the smallest capability to prove."
+                    : GetProofGuidance(proofFact),
                 nativeSetup: GetProofNativeSetup(proofFact),
                 assignmentFields: proofFact != null ? proofFact.AssignmentFields : Array.Empty<string>(),
                 customizationMoments: proofFact != null ? proofFact.CustomizationMoments : Array.Empty<string>(),
-                blockingReason: proofFact != null ? proofFact.FirstProof : string.Empty,
+                blockingReason: unresolvedProof ? string.Empty : proofFact != null ? proofFact.FirstProof : string.Empty,
                 sourceOrigin: proofFact != null && proofFact.SourceKind == PyralisAuthoringFactSourceKind.FeatureContract
                     ? PyralisAuthoringGraphSourceOrigin.Contract
                     : PyralisAuthoringGraphSourceOrigin.GrammarFallback));
@@ -464,6 +469,9 @@ namespace NeonBlack.Gameplay.Editor
         private static string ResolveProofTargetId(PyralisSetupRouteAnalysis route)
         {
             RuntimeCapabilityFamily[] families = route?.CapabilityFamilies ?? Array.Empty<RuntimeCapabilityFamily>();
+            if (families.Length == 0 || route == null || !route.HasSelectedCapabilities)
+                return "proof.unresolved-route";
+
             string fallbackProofTargetId = PyralisProofFamilyVocabulary.GetFallbackProofTargetId(
                 families,
                 route != null && route.RequiresPawn);
@@ -742,6 +750,8 @@ namespace NeonBlack.Gameplay.Editor
             string activeProofNodeId)
         {
             if (string.IsNullOrWhiteSpace(activeProofNodeId))
+                return;
+            if (string.Equals(activeProofNodeId, "proof.unresolved-route", StringComparison.Ordinal))
                 return;
 
             for (int i = 0; i < nodes.Count; i++)

@@ -497,7 +497,7 @@ namespace NeonBlack.Gameplay.Editor
 
                 if (row.Edge.Kind == PyralisAuthoringGraphEdgeKind.BlockedBy
                     && row.From != null
-                    && row.From.Kind == PyralisAuthoringGraphNodeKind.Proof)
+                    && IsResolvedProofNode(row.From))
                 {
                     rows.Add(row);
                 }
@@ -566,6 +566,8 @@ namespace NeonBlack.Gameplay.Editor
             PyralisAuthoringGraphNode proof = FindCurrentProofNode(graph);
             if (proof == null)
                 return "No first proof yet. Choose one small Intent ingredient so Pyralis can name the first playable test.";
+            if (!IsResolvedProofNode(proof))
+                return "No first proof target yet. Assign an authored gameplay route or choose one small Intent ingredient so Pyralis can name the first playable test.";
 
             IReadOnlyList<PyralisAuthoringGraphConnectionRow> blockers = BuildProofBlockerRows(graph);
             if (blockers.Count > 0)
@@ -888,6 +890,10 @@ namespace NeonBlack.Gameplay.Editor
                     PyralisAuthoringGraphEvidenceState.Unknown,
                     BuildHygieneUnknownRows(graph)),
                 new PyralisAuthoringGraphAuditSection(
+                    "Contract Inventory / Not Route-Evaluated",
+                    PyralisAuthoringGraphEvidenceState.Unknown,
+                    BuildHygieneContractInventoryRows(graph)),
+                new PyralisAuthoringGraphAuditSection(
                     "Explicit Runtime / Scene Findings",
                     PyralisAuthoringGraphEvidenceState.Missing,
                     BuildHygieneEvidenceRows(graph)),
@@ -922,8 +928,19 @@ namespace NeonBlack.Gameplay.Editor
             return graph.Nodes
                 .Where(node => node != null
                     && node.EvidenceState == PyralisAuthoringGraphEvidenceState.Unknown
+                    && node.Kind != PyralisAuthoringGraphNodeKind.Contract
                     && node.Kind != PyralisAuthoringGraphNodeKind.Proof
                     && node.Kind != PyralisAuthoringGraphNodeKind.Capability)
+                .Select(node => new PyralisAuthoringGraphAuditRow(node))
+                .ToArray();
+        }
+
+        private static IReadOnlyList<PyralisAuthoringGraphAuditRow> BuildHygieneContractInventoryRows(PyralisAuthoringSetupGraph graph)
+        {
+            return graph.Nodes
+                .Where(node => node != null
+                    && node.Kind == PyralisAuthoringGraphNodeKind.Contract
+                    && node.EvidenceState == PyralisAuthoringGraphEvidenceState.Unknown)
                 .Select(node => new PyralisAuthoringGraphAuditRow(node))
                 .ToArray();
         }
@@ -950,6 +967,13 @@ namespace NeonBlack.Gameplay.Editor
                 if (edge == null || edge.Kind != PyralisAuthoringGraphEdgeKind.BlockedBy)
                     continue;
 
+                if (!graph.TryFindNode(edge.FromNodeId, out PyralisAuthoringGraphNode proof)
+                    || proof == null
+                    || !IsResolvedProofNode(proof))
+                {
+                    continue;
+                }
+
                 if (!graph.TryFindNode(edge.ToNodeId, out PyralisAuthoringGraphNode blocker)
                     || blocker == null
                     || blocker.EvidenceState == PyralisAuthoringGraphEvidenceState.Ready
@@ -963,6 +987,13 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             return rows.ToArray();
+        }
+
+        private static bool IsResolvedProofNode(PyralisAuthoringGraphNode node)
+        {
+            return node != null
+                && node.Kind == PyralisAuthoringGraphNodeKind.Proof
+                && !string.Equals(node.StableId, "proof.unresolved-route", StringComparison.Ordinal);
         }
 
         public static IReadOnlyList<PyralisAuthoringGraphAuditRow> BuildReadinessAuditDetailRows(PyralisAuthoringSetupGraph graph)

@@ -197,12 +197,32 @@ namespace NeonBlack.Gameplay.Features.Platform.Session
                 PyralisAuthoringSetupGraphProjection.BuildHygieneSections(graph);
 
             Assert.That(sections.Select(section => section.Label), Does.Contain("Unvalidated Graph Nodes"));
+            Assert.That(sections.Select(section => section.Label), Does.Contain("Contract Inventory / Not Route-Evaluated"));
             Assert.That(sections.Select(section => section.Label), Does.Contain("Explicit Runtime / Scene Findings"));
             Assert.That(sections.Select(section => section.Label), Does.Contain("Proof Blocker Links"));
             Assert.That(sections.Select(section => section.Label), Does.Not.Contain("Required Before Play"));
-            Assert.That(sections.SelectMany(section => section.Rows).Select(row => row.NodeId), Does.Contain("contract.custom"));
+            PyralisAuthoringGraphAuditSection inventorySection =
+                sections.First(section => section.Label == "Contract Inventory / Not Route-Evaluated");
+            Assert.That(inventorySection.Rows.Select(row => row.NodeId), Does.Contain("contract.custom"));
+            PyralisAuthoringGraphAuditSection unvalidatedSection =
+                sections.First(section => section.Label == "Unvalidated Graph Nodes");
+            Assert.That(unvalidatedSection.Rows.Select(row => row.NodeId), Does.Not.Contain("contract.custom"));
             Assert.That(sections.SelectMany(section => section.Rows).Select(row => row.NodeId), Does.Contain("validation.input"));
             Assert.That(sections.SelectMany(section => section.Rows).Select(row => row.NodeId), Does.Contain("setup.session"));
+        }
+
+        [Test]
+        public void SetupGraph_SmokeNoRouteDoesNotSelectCustomObjectProof()
+        {
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build((UnityEngine.Object)null);
+
+            PyralisAuthoringGraphNode proof = PyralisAuthoringSetupGraphProjection.FindCurrentProofNode(graph);
+            Assert.That(proof, Is.Not.Null);
+            Assert.That(proof.StableId, Is.EqualTo("proof.unresolved-route"));
+            Assert.That(proof.Label, Is.EqualTo("No Active Proof Target"));
+            Assert.That(proof.EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.Optional));
+            Assert.That(PyralisAuthoringSetupGraphProjection.BuildProofBlockerRows(graph), Is.Empty);
+            Assert.That(PyralisAuthoringSetupGraphProjection.BuildFirstProofPrioritySummary(graph), Does.Contain("No first proof target yet"));
         }
 
         [Test]
@@ -263,12 +283,14 @@ namespace NeonBlack.Gameplay.Features.Platform.Session
             Assert.That(hygieneJson, Does.Contain("\"hygieneRows\""));
             Assert.That(hygieneJson, Does.Contain("\"proofBlockers\""));
             Assert.That(hygieneJson, Does.Contain("\"sourceOriginCounts\""));
+            Assert.That(hygieneJson, Does.Contain("\"dependencyPressureSummary\""));
             Assert.That(hygieneJson, Does.Contain("\"dependencyPressure\""));
             Assert.That(hygieneJson, Does.Contain("\"contractSourcePressure\""));
             Assert.That(hygieneJson, Does.Not.Contain("\"mapRows\""));
 
             Assert.That(noRouteHygieneJson, Does.Contain("pyralis.authoring.hygieneSnapshot.v1"));
             Assert.That(noRouteHygieneJson, Does.Contain("\"routeName\": \"No setup route selected\""));
+            Assert.That(noRouteHygieneJson, Does.Contain("\"dependencyPressureSummary\""));
             Assert.That(noRouteHygieneJson, Does.Contain("\"dependencyPressure\""));
             Assert.That(noRouteHygieneJson, Does.Contain("\"nodeCount\": 0"));
             Assert.That(noRouteHygieneJson, Does.Not.Contain("\"mapRows\""));

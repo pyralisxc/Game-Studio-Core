@@ -125,36 +125,12 @@ public class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver, IPawnIn
 
     private void OnEnable()
     {
-        _moveAction?.Enable();
-        _jumpAction?.Enable();
-        _dashAction?.Enable();
-        _attackAction?.Enable();
-        _kickAction?.Enable();
-        _interactAction?.Enable();
-        _blockAction?.Enable();
-        if (_jumpAction != null) _jumpAction.performed += OnJumpPerformed;
-        if (_dashAction != null) _dashAction.performed += OnDashPerformed;
-        if (_attackAction != null) _attackAction.performed += OnAttackPerformed;
-        if (_kickAction != null) _kickAction.performed += OnKickPerformed;
-        if (_interactAction != null) _interactAction.performed += OnInteractPerformed;
-        if (_blockAction != null) { _blockAction.performed += OnBlockPerformed; _blockAction.canceled += OnBlockCanceled; }
+        EnableAndSubscribeActions();
     }
 
     private void OnDisable()
     {
-        if (_jumpAction != null) _jumpAction.performed -= OnJumpPerformed;
-        if (_dashAction != null) _dashAction.performed -= OnDashPerformed;
-        if (_attackAction != null) _attackAction.performed -= OnAttackPerformed;
-        if (_kickAction != null) _kickAction.performed -= OnKickPerformed;
-        if (_interactAction != null) _interactAction.performed -= OnInteractPerformed;
-        if (_blockAction != null) { _blockAction.performed -= OnBlockPerformed; _blockAction.canceled -= OnBlockCanceled; }
-        _moveAction?.Disable();
-        _jumpAction?.Disable();
-        _dashAction?.Disable();
-        _attackAction?.Disable();
-        _kickAction?.Disable();
-        _interactAction?.Disable();
-        _blockAction?.Disable();
+        DisableAndUnsubscribeActions();
     }
 
     private void Start()
@@ -223,24 +199,7 @@ public class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver, IPawnIn
 
         if (rebindActions)
         {
-            _moveAction?.Disable();
-            if (_jumpAction != null)
-                _jumpAction.performed -= OnJumpPerformed;
-            if (_dashAction != null)
-                _dashAction.performed -= OnDashPerformed;
-            if (_attackAction != null)
-                _attackAction.performed -= OnAttackPerformed;
-            if (_kickAction != null)
-                _kickAction.performed -= OnKickPerformed;
-            if (_interactAction != null)
-                _interactAction.performed -= OnInteractPerformed;
-            if (_blockAction != null) { _blockAction.performed -= OnBlockPerformed; _blockAction.canceled -= OnBlockCanceled; }
-            _jumpAction?.Disable();
-            _dashAction?.Disable();
-            _attackAction?.Disable();
-            _kickAction?.Disable();
-            _interactAction?.Disable();
-            _blockAction?.Disable();
+            DisableAndUnsubscribeActions();
         }
 
         _inputActions = inputActions;
@@ -253,25 +212,62 @@ public class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver, IPawnIn
 
         if (isActiveAndEnabled && rebindActions)
         {
-            _moveAction?.Enable();
-            _jumpAction?.Enable();
-            _dashAction?.Enable();
-            _attackAction?.Enable();
-            _kickAction?.Enable();
-            _interactAction?.Enable();
-            _blockAction?.Enable();
-            if (_jumpAction != null)
-                _jumpAction.performed += OnJumpPerformed;
-            if (_dashAction != null)
-                _dashAction.performed += OnDashPerformed;
-            if (_attackAction != null)
-                _attackAction.performed += OnAttackPerformed;
-            if (_kickAction != null)
-                _kickAction.performed += OnKickPerformed;
-            if (_interactAction != null)
-                _interactAction.performed += OnInteractPerformed;
-            if (_blockAction != null) { _blockAction.performed += OnBlockPerformed; _blockAction.canceled += OnBlockCanceled; }
+            EnableAndSubscribeActions();
         }
+    }
+
+    private void EnableAndSubscribeActions()
+    {
+        _moveAction?.Enable();
+        _jumpAction?.Enable();
+        _dashAction?.Enable();
+        _attackAction?.Enable();
+        _kickAction?.Enable();
+        _interactAction?.Enable();
+        _blockAction?.Enable();
+
+        if (_jumpAction != null)
+            _jumpAction.performed += OnJumpPerformed;
+        if (_dashAction != null)
+            _dashAction.performed += OnDashPerformed;
+        if (_attackAction != null)
+            _attackAction.performed += OnAttackPerformed;
+        if (_kickAction != null)
+            _kickAction.performed += OnKickPerformed;
+        if (_interactAction != null)
+            _interactAction.performed += OnInteractPerformed;
+        if (_blockAction != null)
+        {
+            _blockAction.performed += OnBlockPerformed;
+            _blockAction.canceled += OnBlockCanceled;
+        }
+    }
+
+    private void DisableAndUnsubscribeActions()
+    {
+        if (_jumpAction != null)
+            _jumpAction.performed -= OnJumpPerformed;
+        if (_dashAction != null)
+            _dashAction.performed -= OnDashPerformed;
+        if (_attackAction != null)
+            _attackAction.performed -= OnAttackPerformed;
+        if (_kickAction != null)
+            _kickAction.performed -= OnKickPerformed;
+        if (_interactAction != null)
+            _interactAction.performed -= OnInteractPerformed;
+        if (_blockAction != null)
+        {
+            _blockAction.performed -= OnBlockPerformed;
+            _blockAction.canceled -= OnBlockCanceled;
+        }
+
+        _moveAction?.Disable();
+        _jumpAction?.Disable();
+        _dashAction?.Disable();
+        _attackAction?.Disable();
+        _kickAction?.Disable();
+        _interactAction?.Disable();
+        _blockAction?.Disable();
     }
 
     public void ApplyInputProfile(PawnProfileApplicationContext context, InputProfile inputProfile)

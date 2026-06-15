@@ -38,7 +38,6 @@ public interface IGameplaySessionFlow
     RequiredComponents = new[] { typeof(GameManager) },
     NativeSetup = new[] 
     { 
-        "Add GameManager to the scene.",
         "Wire system references (Score, Hazards, Pickups, etc.).",
         "For participant-spawned pawns, let the roster provide active controllers. Use Player Controllers only for standalone compatibility scenes."
     },
@@ -370,14 +369,16 @@ public class GameManager : MonoBehaviour,
         if (!_playerStartPositions.ContainsKey(controller))
             _playerStartPositions[controller] = controller.transform.position;
 
+        IGameplayStateReader stateReader = ResolveGameplayStateReader();
+
         Pawn2DMovementComponent movement = controller.GetComponent<Pawn2DMovementComponent>();
-        movement?.ConfigureRuntime(ResolveGameplayStateReader(), _cameraBoundsProvider);
+        movement?.ConfigureRuntime(stateReader, _cameraBoundsProvider);
 
         PlayerInputHandler inputHandler = controller.GetComponent<PlayerInputHandler>();
-        inputHandler?.ConfigureRuntime(ResolveGameplayStateReader());
+        inputHandler?.ConfigureRuntime(stateReader);
 
         StillnessBonus2D stillnessBonus = controller.GetComponent<StillnessBonus2D>();
-        stillnessBonus?.ConfigureRuntime(ResolveGameplayStateReader(), scoreManager);
+        stillnessBonus?.ConfigureRuntime(stateReader, scoreManager);
     }
 
     private void ConfigureRuntimeDependencies()
