@@ -1072,6 +1072,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             string pawnCombatSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Characters", "PawnCombatBehaviour.cs"));
             string pawnCombat2DSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Characters", "2D", "PawnCombatBehaviour2D.cs"));
             string pawnProjectileModuleSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Characters", "PawnProjectileModule.cs"));
+            string enemyCombatModuleSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Enemies", "3D", "EnemyCombatModule.cs"));
             string damageZone2DSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Zones", "2D", "DamageZone2D.cs"));
             string damageZone3DSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Zones", "3D", "DamageZone.cs"));
 
@@ -1108,6 +1109,10 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(pawnCombat2DSource.Contains("knockbackMultiplier: _outgoingKnockbackMultiplier"), Is.True);
             Assert.That(pawnCombat2DSource.Contains("launcher.Fire(request)"), Is.True);
             Assert.That(pawnCombat2DSource.Contains("Instantiate(weapon.projectilePrefab"), Is.False);
+            Assert.That(enemyCombatModuleSource.Contains("public void DisableAllHitBoxes()"), Is.True);
+            Assert.That(enemyCombatModuleSource.Contains("StopAllCoroutines();"), Is.True);
+            Assert.That(enemyCombatModuleSource.Contains("hitBox.ClearHitSet();"), Is.True);
+            Assert.That(enemyCombatModuleSource.Contains("hitBox.transform.localScale = originalScale;"), Is.True);
 
             Assert.That(damageZone2DSource.Contains("_targetLookup"), Is.True);
             Assert.That(damageZone2DSource.Contains("_targets.Count - 1"), Is.True);

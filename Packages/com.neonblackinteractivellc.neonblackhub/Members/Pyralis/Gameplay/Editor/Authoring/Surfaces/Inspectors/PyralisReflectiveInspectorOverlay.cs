@@ -50,24 +50,12 @@ namespace NeonBlack.Gameplay.Editor
     {
         public static void DrawHeader(ResolvedAuthoringContract contract)
         {
-            List<PyralisGuideSection> sections = new List<PyralisGuideSection>();
-            
-            if (!string.IsNullOrEmpty(contract.Relevance))
-                sections.Add(new PyralisGuideSection("Relevance", contract.Relevance));
-            
-            if (!string.IsNullOrEmpty(contract.ExpertAdvice))
-                sections.Add(new PyralisGuideSection("Expert Advice", contract.ExpertAdvice));
-
-            if (contract.NativeSetup != null && contract.NativeSetup.Length > 0)
-                sections.Add(new PyralisGuideSection("Setup Steps", null, contract.NativeSetup));
-
-            if (!string.IsNullOrEmpty(contract.FirstProofTargetId))
-                sections.Add(new PyralisGuideSection("First Proof", contract.FirstProofTargetId));
-
-            PyralisInspectorGuide.DrawFieldGuide(
-                contract.DisplayName + " (Pyralis Guide)",
-                false, 
-                sections.ToArray());
+            string context = string.IsNullOrWhiteSpace(contract.DisplayName)
+                ? "Pyralis Authoring"
+                : contract.DisplayName;
+            PyralisInspectorHandoff.DrawAuthoringButton(
+                context,
+                "This object has a Pyralis authoring contract. Use the Authoring Window for route guidance and first proof readiness.");
         }
 
         public static void DrawValidationFooter(ResolvedAuthoringContract contract, Object target, SerializedObject serializedObject)
@@ -103,7 +91,7 @@ namespace NeonBlack.Gameplay.Editor
 
             if (errors.Count == 0 && warnings.Count == 0)
             {
-                EditorGUILayout.HelpBox(contract.DisplayName + " is ready for runtime.", MessageType.Info);
+                EditorGUILayout.HelpBox("No field-local contract issues found.", MessageType.Info);
             }
         }
 
@@ -123,13 +111,32 @@ namespace NeonBlack.Gameplay.Editor
         }
     }
 
-    internal static class PyralisInspectorHandoff
+    public static class PyralisInspectorHandoff
     {
         public static void DrawAuthoringButton()
         {
+            DrawAuthoringButton(null, null);
+        }
+
+        public static void DrawAuthoringButton(string context, string summary)
+        {
             EditorGUILayout.Space(8f);
-            if (GUILayout.Button("Open Pyralis Authoring"))
-                NeonBlack.Gameplay.Editor.PyralisAuthoringWindow.Open();
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                string label = string.IsNullOrWhiteSpace(context)
+                    ? "Pyralis Authoring"
+                    : context;
+                EditorGUILayout.LabelField(label, EditorStyles.miniBoldLabel);
+                EditorGUILayout.LabelField(
+                    string.IsNullOrWhiteSpace(summary) ? PyralisInspectorGuide.InspectorHandoffSummary : summary,
+                    EditorStyles.wordWrappedMiniLabel);
+
+                GUIContent button = new GUIContent(
+                    "Open Pyralis Authoring",
+                    "Open the graph-backed Pyralis Authoring Window for route setup, next steps, and first proof readiness.");
+                if (GUILayout.Button(button))
+                    NeonBlack.Gameplay.Editor.PyralisAuthoringWindow.Open();
+            }
         }
     }
 }

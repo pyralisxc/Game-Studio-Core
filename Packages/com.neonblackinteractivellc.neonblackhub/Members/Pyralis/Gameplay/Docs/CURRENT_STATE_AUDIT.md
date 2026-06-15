@@ -245,12 +245,13 @@ The runtime seams are cleaner than the authoring experience in a few places.
 
 Why it matters:
 
-- a correct platform is still harder to use if the Inspector path does not strongly guide the preferred setup
+- a correct platform is still harder to use if inspectors compete with the Authoring Window for setup guidance
 - stale editor guidance can recreate old architectural habits
 
 Current focus:
 
-- keep setup docs, inspectors, and validation aligned with canonical types
+- keep setup docs, inspector handoffs, and validation aligned with canonical types
+- keep route walkthroughs, first-proof sequencing, and beginner next steps in the Authoring Window instead of inspector guide blocks
 - make preferred authored paths the only runtime path where clean-break setup is viable
 - remove compatibility fields instead of documenting them as long-term migration surfaces
 - keep Intent as a toggleable graph filter, not a preset route recipe

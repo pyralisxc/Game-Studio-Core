@@ -1,4 +1,5 @@
 using NeonBlack.Gameplay.Features.Hazards;
+using NeonBlack.Gameplay.Editor;
 using NeonBlack.Gameplay.Editor.Inspectors;
 using UnityEngine;
 using UnityEditor;
@@ -126,40 +127,9 @@ public class HazardDataEditor : Editor
     {
         serializedObject.Update();
 
-        PyralisInspectorGuide.DrawGuide(new PyralisGuideContent(
-            "Guided Authoring: Hazard Data",
-            "Hazard Data is the main authored shape for one hazard type: movement pattern, sprites, timing, targeting, explosion, collectibles, audio, shake, impact, and feedback.",
-            whenToUse: new[]
-            {
-                "Use this for slam, crossing, bouncy, targeted, exploding, collectible-spawning, or split hazards.",
-                "Create separate HazardData assets for each tuned hazard behavior."
-            },
-            createBefore: new[]
-            {
-                "Hazard prefab with the Hazard component and trigger colliders.",
-                "HazardImpactProfile if contact damage/knockback/status should be shared.",
-                "HazardFeedbackProfile if flashes or popups should be shared."
-            },
-            assignFirst: new[]
-            {
-                "Set Hazard Name and Hazard Type.",
-                "Assign shadow/active sprites and any impact/feedback profiles.",
-                "Configure the movement section for the selected type.",
-                "Configure explosion, targeting, collectibles, audio, and shake only if needed."
-            },
-            safeToCustomize: new[]
-            {
-                "Colliders are configured on the prefab, not on this asset.",
-                "Many modifier sections can stay disabled for simple hazards.",
-                "DifficultyManager may override some warning/timing values depending on scene setup."
-            },
-            validation: new[]
-            {
-                "Prefab has Hazard runtime and trigger colliders wired.",
-                "Selected hazard type has sensible movement values.",
-                "Impossible modifier combinations are resolved."
-            },
-            manualPath: PyralisInspectorGuide.AuthoringDocPath("SCENE_SETUP_GUIDE.md")));
+        PyralisInspectorHandoff.DrawAuthoringButton(
+            "Hazard Data",
+            "Edit this hazard asset's behavior, timing, sprites, audio, feedback, and modifiers here. Use Pyralis Authoring for route setup and first proof guidance.");
 
         var type    = (HazardData.HazardType)_pType.enumValueIndex;
         var variant = (HazardData.CrossingVariant)_pVariant.enumValueIndex;

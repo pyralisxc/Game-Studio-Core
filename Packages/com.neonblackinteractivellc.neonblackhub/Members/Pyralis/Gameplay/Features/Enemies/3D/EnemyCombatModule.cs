@@ -43,6 +43,7 @@ namespace NeonBlack.Gameplay.Features.Enemies
         private float _outgoingDamageMultiplier = 1f;
         private float _outgoingKnockbackMultiplier = 1f;
         private readonly Dictionary<EnemyAttack, int> _attackTriggerHashes = new Dictionary<EnemyAttack, int>();
+        private readonly Dictionary<HitBox, Vector3> _hitBoxOriginalScales = new Dictionary<HitBox, Vector3>();
 
         public float MinAttackRange => _minAttackRangeFromAttacks;
         public HitBoxSlot[] HitBoxZones => hitBoxZones;
@@ -123,13 +124,18 @@ namespace NeonBlack.Gameplay.Features.Enemies
                 box = hitBoxZones[0].hitBox;
                 
             if (box != null)
+            {
+                if (!_hitBoxOriginalScales.ContainsKey(box))
+                    _hitBoxOriginalScales[box] = box.transform.localScale;
+
                 StartCoroutine(_combatProcessor.EnemyHitBoxRoutine(
-                box,
-                atk.damage * _outgoingDamageMultiplier,
-                atk.knockbackForce * _outgoingKnockbackMultiplier,
-                atk.hitDelay,
-                atk.hitDuration,
-                atk.attackRadius));
+                    box,
+                    atk.damage * _outgoingDamageMultiplier,
+                    atk.knockbackForce * _outgoingKnockbackMultiplier,
+                    atk.hitDelay,
+                    atk.hitDuration,
+                    atk.attackRadius));
+            }
         }
 
         public void ApplyCombatProfile(EnemyCombatProfile profile)
@@ -191,9 +197,24 @@ namespace NeonBlack.Gameplay.Features.Enemies
 
         public void SetOutgoingDamageMultiplier(float multiplier) => _outgoingDamageMultiplier = Mathf.Max(multiplier, 0f);
         public void SetOutgoingKnockbackMultiplier(float multiplier) => _outgoingKnockbackMultiplier = Mathf.Max(multiplier, 0f);
-        
+
         public void DisableAllHitBoxes()
         {
+            StopAllCoroutines();
+
+            if (hitBoxZones == null)
+                return;
+
+            for (int i = 0; i < hitBoxZones.Length; i++)
+            {
+                HitBox hitBox = hitBoxZones[i].hitBox;
+                if (hitBox == null)
+                    continue;
+
+                hitBox.ClearHitSet();
+                if (_hitBoxOriginalScales.TryGetValue(hitBox, out Vector3 originalScale))
+                    hitBox.transform.localScale = originalScale;
+            }
         }
     }
 }

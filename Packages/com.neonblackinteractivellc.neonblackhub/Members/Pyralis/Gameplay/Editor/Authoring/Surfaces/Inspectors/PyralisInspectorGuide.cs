@@ -93,12 +93,12 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
     public static class PyralisInspectorGuide
     {
         private const string AuthoringDocsRoot = "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/Authoring/";
-        private const string InspectorHandoffText = "Use this Inspector for field assignment, local customization, and field-local validation. Use the Pyralis Authoring Window for route setup, native workflow steps, first playable proof, required/recommended/later guidance, and whole-game validation.";
+        private const string InspectorHandoffText = "Inspector edits this object. Pyralis Authoring owns route setup, next steps, and first proof guidance.";
 
         public static void DrawGuide(PyralisGuideContent content)
         {
-            DrawGuideContent(content, true);
-            PyralisInspectorHandoff.DrawAuthoringButton();
+            string title = string.IsNullOrWhiteSpace(content.Title) ? "Pyralis Authoring" : content.Title;
+            PyralisInspectorHandoff.DrawAuthoringButton(title, content.Summary);
         }
 
         public static void DrawFieldGuide(string title, params PyralisGuideSection[] sections)
@@ -108,8 +108,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
 
         public static void DrawFieldGuide(string title, bool defaultOpen = false, params PyralisGuideSection[] sections)
         {
-            DrawFieldGuideContent(title, defaultOpen, sections);
-            PyralisInspectorHandoff.DrawAuthoringButton();
+            PyralisInspectorHandoff.DrawAuthoringButton(title, null);
         }
 
         public static void DrawValidationIssues(IReadOnlyList<string> issues, string readyMessage = "No setup issues found.")
@@ -188,101 +187,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             return string.IsNullOrWhiteSpace(relativePath) ? AuthoringDocsRoot + "START_HERE.md" : AuthoringDocsRoot + relativePath;
         }
 
-        private static void DrawGuideContent(PyralisGuideContent content, bool defaultOpen)
-        {
-            string title = string.IsNullOrWhiteSpace(content.Title) ? "Guided Authoring" : content.Title;
-            if (!SessionFoldout(title, defaultOpen))
-                return;
-
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            DrawHandoffReminder();
-            DrawWrappedLabel(content.Summary);
-            DrawList("When To Use", content.WhenToUse);
-            DrawList("Create Before", content.CreateBefore);
-            DrawList("Assign First", content.AssignFirst);
-            DrawList("Safe To Customize", content.SafeToCustomize);
-            DrawList("Validation", content.Validation);
-            DrawManualPath(content.ManualPath);
-            EditorGUILayout.EndVertical();
-        }
-
-        private static void DrawFieldGuideContent(string title, bool defaultOpen, IReadOnlyList<PyralisGuideSection> sections)
-        {
-            title = string.IsNullOrWhiteSpace(title) ? "Inspector Field Guide" : title;
-            if (!SessionFoldout(title, defaultOpen))
-                return;
-
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            DrawHandoffReminder();
-            if (sections != null)
-            {
-                for (int i = 0; i < sections.Count; i++)
-                {
-                    PyralisGuideSection section = sections[i];
-                    if (!string.IsNullOrWhiteSpace(section.Title))
-                        EditorGUILayout.LabelField(section.Title, EditorStyles.boldLabel);
-                    DrawWrappedLabel(section.Summary);
-                    DrawList(null, section.Items);
-                    DrawManualPath(section.ManualPath);
-                    if (i < sections.Count - 1)
-                        EditorGUILayout.Space(4f);
-                }
-            }
-            EditorGUILayout.EndVertical();
-        }
-
-        private static bool SessionFoldout(string title, bool defaultOpen)
-        {
-            string key = "PyralisInspectorGuide." + title;
-            bool open = SessionState.GetBool(key, defaultOpen);
-            open = EditorGUILayout.Foldout(open, title, true);
-            SessionState.SetBool(key, open);
-            return open;
-        }
-
-        private static void DrawList(string title, IReadOnlyList<string> items)
-        {
-            if (items == null || items.Count == 0)
-                return;
-
-            if (!string.IsNullOrWhiteSpace(title))
-                EditorGUILayout.LabelField(title, EditorStyles.boldLabel);
-
-            for (int i = 0; i < items.Count; i++)
-            {
-                if (string.IsNullOrWhiteSpace(items[i]))
-                    continue;
-
-                DrawWrappedLabel("- " + items[i]);
-            }
-        }
-
-        private static void DrawWrappedLabel(string value)
-        {
-            if (string.IsNullOrWhiteSpace(value))
-                return;
-
-            EditorGUILayout.LabelField(value, EditorStyles.wordWrappedLabel);
-        }
-
-        private static void DrawHandoffReminder()
-        {
-            EditorGUILayout.LabelField("Inspector = local fields. Authoring Window = route map and next step.", EditorStyles.wordWrappedMiniLabel);
-            PyralisAuthoringSurfaceBeacon.DrawBeaconRow(
-                PyralisAuthoringActionSurface.Inspector,
-                PyralisAuthoringActionSurface.AuthoringWindow,
-                PyralisAuthoringActionSurface.ProjectWindow,
-                PyralisAuthoringActionSurface.Hierarchy);
-            EditorGUILayout.Space(3f);
-        }
-
-        private static void DrawManualPath(string manualPath)
-        {
-            if (string.IsNullOrWhiteSpace(manualPath))
-                return;
-
-            EditorGUILayout.LabelField("Manual", manualPath, EditorStyles.miniLabel);
-        }
+        public static string InspectorHandoffSummary => InspectorHandoffText;
     }
 
     public static class ResolvedAuthoringContractGuideText

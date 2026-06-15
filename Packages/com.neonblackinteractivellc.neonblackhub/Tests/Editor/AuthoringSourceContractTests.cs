@@ -916,7 +916,9 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 overlaySource.Contains("CustomEditor(typeof(Object), true)"),
                 Is.True);
             Assert.That(overlaySource.Contains("PyralisInspectorGuide"), Is.True);
-            Assert.That(guideSource.Contains("Use this Inspector for field assignment, local customization, and field-local validation"), Is.True);
+            Assert.That(guideSource.Contains("Inspector edits this object. Pyralis Authoring owns route setup"), Is.True);
+            Assert.That(guideSource.Contains("DrawList(\"Create Before\""), Is.False);
+            Assert.That(guideSource.Contains("DrawList(\"Assign First\""), Is.False);
             Assert.That(factRegistrySource.Contains("PyralisReflectiveFactScanner.ScanProject()"), Is.True);
             Assert.That(factScannerSource.Contains("CreateAssetMenuAttribute"), Is.True);
             Assert.That(factScannerSource.Contains("AddComponentMenu"), Is.True);

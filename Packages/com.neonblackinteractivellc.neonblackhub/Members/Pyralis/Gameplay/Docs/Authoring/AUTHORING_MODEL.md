@@ -173,7 +173,7 @@ When guidance says to assign an asset to an Inspector field, drag-and-drop and t
 
 The Authoring Window is the guided mode. Do not add a separate beginner/advanced toggle. Power users can bypass the window and work directly in the Inspector, scenes, prefabs, code, or native Project-window asset creation paths. Inside the window, use progressive disclosure: compact route rows first, evidence and explanations in foldouts or issue cards, and route-specific next steps that point back to native Unity actions.
 
-For the core setup chain, the **Pyralis Authoring Window** is the central guided workspace and the Inspector remains the direct Unity field editor. Inspectors should still explain the selected asset or component, but the Authoring Window should behave like an authoring service: it reads the selected context, diagnoses what setup is ready or missing, recommends the next move, and names the native Unity action and Inspector field the user should use next.
+For the core setup chain, the **Pyralis Authoring Window** is the central guided workspace and the Inspector remains the direct Unity field editor. Inspectors should not carry route walkthroughs, first-proof sequencing, or beginner setup checklists. They should edit the selected object, show field-local validation, and provide a compact **Open Pyralis Authoring** handoff when broader setup context is needed.
 
 Use the Inspector when you need to edit a specific serialized field. Use the Authoring Window when you need to understand what the selected thing means in the setup route, which Project/Hierarchy/Create or Add Component action belongs next, and what to do after the field is assigned.
 
@@ -256,7 +256,7 @@ Field explanations should name the actual selected field whenever possible. Exam
 - `Camera Rig Controller`: connects the bootstrap to the Pyralis Cinemachine camera flow. It owns view framing and visible camera bounds. `PlayfieldProfile` owns legal movement bounds, clamp, wrap, and arena depth. Sprite2D movement uses camera-visible bounds only when the pawn explicitly enables that screen-edge behavior; Billboard2_5D and Rigged3D pawn patterns still need a camera rig for framing, but should not be blocked on orthographic 2D bounds.
 - HUD/menu presenters: connect Unity Canvas objects to Pyralis services such as score, feedback, health, settings, scene flow, action selection, board selection, or turn prompts.
 
-The shared `PyralisInspectorGuide` block is a compact field-local companion. It may show validation, short purpose text, field tooltips, and an **Open Authoring Window** action, but it should not grow into a parallel setup walkthrough. If guidance explains the whole route, chooses the next setup step, or creates/connects assets, it belongs in the Authoring Window.
+The shared `PyralisInspectorGuide` block is a compact handoff companion. It may show a short object context, field-local validation, and an **Open Pyralis Authoring** action, but it should not render route setup sections. If guidance explains the whole route, chooses the next setup step, names a first proof, or creates/connects assets, it belongs in the Authoring Window.
 
 The Authoring Window should keep the core setup chain understandable whenever it can infer it from the current selection, but it should not duplicate the Inspector with editable object fields:
 
@@ -280,16 +280,14 @@ The core chain uses route-aware shared guidance:
 - `GameplaySessionBootstrap` inspects the assigned session graph and reports scene-level next steps.
 - `PyralisProofFamilyVocabulary`, `PyralisCapabilityVocabulary`, and `PyralisAuthoringSceneSurfaceGuidance` own reusable fallback proof, capability, and scene-surface wording. Feature-specific setup meaning belongs in contracts/reflection and should reach UI through graph evidence.
 
-Each guided Inspector should answer compactly:
+Each inspector should answer compactly:
 
-- what the asset is for
-- when to use it
-- what to create before it
-- what to assign first
-- what can safely stay empty or be customized
-- what to check before pressing Play
+- what this selected object edits
+- which local fields are invalid
+- which local component requirements are missing
+- where to open the Authoring Window for route context
 
-Use the Authoring Window as the setup service and context surface. Use the Inspector guidance for field-local help, use `AUTHORING_BLUEPRINT.md` for Authoring Window product and implementation direction, and use this model when you need the longer asset-chain explanation.
+Use the Authoring Window as the setup service and context surface. Use inspector guidance for field-local help only, use `AUTHORING_BLUEPRINT.md` for Authoring Window product and implementation direction, and use this model when you need the longer asset-chain explanation.
 
 ## Authoring Maintainability
 
@@ -335,7 +333,7 @@ Common costs:
 - MonoBehaviours with many unrelated serialized fields
 - ScriptableObjects whose names do not explain whether they are definitions or tuning profiles
 - static managers that make tests and scene reloads depend on hidden global state
-- custom inspectors that show fields but do not teach the setup order
+- custom inspectors that try to teach the setup order instead of handing off to the Authoring Window
 - docs that duplicate live route advice instead of pointing to shared guidance owners
 
 For Pyralis, the highest-value authoring improvements are:

@@ -3,6 +3,7 @@ using NeonBlack.Gameplay.Core.Enums;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Features.Combat;
 using NeonBlack.Gameplay.Data.Profiles;
+using NeonBlack.Gameplay.Editor;
 using NeonBlack.Gameplay.Editor.Inspectors;
 using NeonBlack.Gameplay.Features.Enemies;
 using NeonBlack.Gameplay.Presentation.Animation;
@@ -10,8 +11,8 @@ using UnityEditor;
 using UnityEngine;
 
 /// <summary>
-/// Custom inspector for EnemyAI. Keeps the runtime fields grouped by setup step
-/// and adds beginner-facing path guidance without replacing normal Unity authoring.
+/// Custom inspector for EnemyAI. Keeps runtime fields grouped while the
+/// Pyralis Authoring Window owns route setup and first-proof guidance.
 /// </summary>
 [CustomEditor(typeof(EnemyAI))]
 public class EnemyAIEditor : Editor
@@ -103,7 +104,9 @@ public class EnemyAIEditor : Editor
         _combatSerialized?.Update();
 
         bool is3D = _movementMode.enumValueIndex == (int)MovementMode.ThreeD;
-        DrawGuidance(is3D);
+        PyralisInspectorHandoff.DrawAuthoringButton(
+            "Enemy AI",
+            "Edit detection, movement, combat, and feature fields here. Use Pyralis Authoring for route setup and first proof guidance.");
 
         if (_detectionSerialized != null)
         {
@@ -148,67 +151,6 @@ public class EnemyAIEditor : Editor
         serializedObject.ApplyModifiedProperties();
         _detectionSerialized?.ApplyModifiedProperties();
         _combatSerialized?.ApplyModifiedProperties();
-    }
-
-    private void DrawGuidance(bool is3D)
-    {
-        PyralisInspectorGuide.DrawFieldGuide(
-            "Inspector Field Guide: Enemy AI",
-            new PyralisGuideSection(
-                "What this component does",
-                "EnemyAI is for enemies that can detect a target, move, patrol, and optionally choose attacks.",
-                new[]
-                {
-                    "Use it for side-scroller enemies, brawler enemies, arena enemies, and simple NPC attackers.",
-                    "Skip it for board/card/tabletop pieces unless a piece needs autonomous movement.",
-                    "Keep player input, health, hitboxes, score, and UI as separate components so the enemy stays modular."
-                },
-                PyralisInspectorGuide.AuthoringDocPath("Prefabs/Enemy_Setup.md")),
-            new PyralisGuideSection(
-                "Path choices",
-                is3D ? "Current path: 3D/brawler enemy." : "Current path: 2D side-scroller enemy.",
-                new[]
-                {
-                    "TwoD path: set Movement Mode to TwoD, tune X-axis chase speed, and use a simple ground collider.",
-                    "ThreeD path: set Movement Mode to ThreeD, assign a Visual Root and Presentation Camera when the rendered object is offset from the root.",
-                    "Board/card path: keep this component off the piece and drive turns through session, participant, scoring, or custom rules."
-                },
-                PyralisInspectorGuide.AuthoringDocPath("RUNTIME_PATTERN_COOKBOOK.md")),
-            new PyralisGuideSection(
-                "Beginner wiring",
-                "Start with the few fields that decide whether the enemy can find, move to, and attack the player.",
-                new[]
-                {
-                    "For one-off scenes, assign Target Override to the player pawn or target object.",
-                    "For session scenes, leave Target Override empty and provide the player through participant infrastructure.",
-                    "For 3D/billboard enemies, assign Presentation Camera so facing math follows the intended camera rig.",
-                    "Set Ground Layer and Ground Check Radius when this enemy relies on grounded movement.",
-                    "Assign Hit Box Zones and an Attack Sequence only when this enemy should deal contact or melee damage.",
-                    "Assign Enemy Feature Profile when you want inspector validation for presentation, animation, or required child objects."
-                },
-                PyralisInspectorGuide.AuthoringDocPath("SCENE_SETUP_GUIDE.md")),
-            new PyralisGuideSection(
-                "Combat choices",
-                "The attack fields support several genres without forcing one combat model.",
-                new[]
-                {
-                    "Simple brawler/fighter: use Attack Sequence order and per-attack cooldowns.",
-                    "Smarter AI: enable Priority Selection and tune range, damage, knockback, and asset priority weights.",
-                    "Projectile enemy: call a ProjectileLauncher from the attack event or animation event instead of putting projectile logic here.",
-                    "Turn-based/menu combat: use definitions and session rules to select actions, then invoke health/combat services from that action."
-                },
-                PyralisInspectorGuide.AuthoringDocPath("SCENE_SETUP_GUIDE.md")),
-            new PyralisGuideSection(
-                "Common mistakes",
-                "If the enemy does nothing, the issue is usually wiring rather than AI logic.",
-                new[]
-                {
-                    "Target Override must be assigned for simple scenes without participant infrastructure.",
-                    "Session scenes need a player provider registered by GameplaySessionBootstrap or the gameplay lifetime scope.",
-                    "Ground layer must include the collider the enemy stands on.",
-                    "Aggro Range must be larger than the distance to the intended target during testing.",
-                    "Attack Range Override of 0 means range is measured from hitbox bounds at runtime."
-                }));
     }
 
     private void DrawCombat()
