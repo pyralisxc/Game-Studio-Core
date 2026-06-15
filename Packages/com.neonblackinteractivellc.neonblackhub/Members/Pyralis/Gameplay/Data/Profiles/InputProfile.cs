@@ -128,7 +128,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
         { 
             "Create an InputProfile asset.",
             "Assign a Unity Input Action Asset.",
-            "Define action names for Move, Jump, Interact, etc."
+            "Use Input Actions Sync in the inspector to populate gameplay action rows from the assigned asset, then customize required/optional roles."
         }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Input Profile", fileName = "InputProfile", order = -90)]
@@ -164,7 +164,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
         {
             if (actionBindings == null || actionBindings.Length == 0)
             {
-                issues.Add("Add at least one Gameplay Action row. Player-owned pawn input requires Move.");
+                issues.Add("Sync or add at least one Gameplay Action row. Player-owned pawn input requires Move.");
                 return;
             }
 

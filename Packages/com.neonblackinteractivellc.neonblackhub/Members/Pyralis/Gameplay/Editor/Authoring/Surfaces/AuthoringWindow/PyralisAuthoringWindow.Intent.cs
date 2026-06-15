@@ -241,33 +241,88 @@ namespace NeonBlack.Gameplay.Editor
         private Dictionary<string, List<AuthoringCapability>> BuildIntentCapabilityGroups()
         {
             Dictionary<string, List<AuthoringCapability>> groups = new Dictionary<string, List<AuthoringCapability>>();
-            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors = PyralisAuthoringCapabilityDescriptorRegistry.All;
-            for (int i = 0; i < descriptors.Count; i++)
+            foreach (AuthoringCapability capability in AuthoringCapabilityRegistry.GetAllIndividualCapabilities())
             {
-                PyralisAuthoringCapabilityDescriptor descriptor = descriptors[i];
-                if (descriptor == null || descriptor.Capability == AuthoringCapability.None)
+                if (!ShouldShowIntentCapability(capability))
                     continue;
 
-                foreach (AuthoringCapability capability in AuthoringCapabilityRegistry.GetAllIndividualCapabilities())
+                string group = GetIntentCapabilityGroup(capability);
+
+                if (!groups.TryGetValue(group, out List<AuthoringCapability> capabilities))
                 {
-                    if ((descriptor.Capability & capability) == 0)
-                        continue;
-
-                    if (!groups.TryGetValue(descriptor.Group, out List<AuthoringCapability> capabilities))
-                    {
-                        capabilities = new List<AuthoringCapability>();
-                        groups.Add(descriptor.Group, capabilities);
-                    }
-
-                    if (!capabilities.Contains(capability))
-                        capabilities.Add(capability);
+                    capabilities = new List<AuthoringCapability>();
+                    groups.Add(group, capabilities);
                 }
+
+                capabilities.Add(capability);
             }
 
             foreach (List<AuthoringCapability> capabilities in groups.Values)
                 capabilities.Sort((left, right) => GetCapabilitySortIndex(left).CompareTo(GetCapabilitySortIndex(right)));
 
             return groups;
+        }
+
+        private bool ShouldShowIntentCapability(AuthoringCapability capability)
+        {
+            return capability != AuthoringCapability.None;
+        }
+
+        private static string GetIntentCapabilityGroup(AuthoringCapability capability)
+        {
+            switch (capability)
+            {
+                case AuthoringCapability.Setup:
+                case AuthoringCapability.Session:
+                case AuthoringCapability.Rules:
+                case AuthoringCapability.Participants:
+                case AuthoringCapability.Scoring:
+                case AuthoringCapability.Input:
+                case AuthoringCapability.UI:
+                    return "Core Setup";
+
+                case AuthoringCapability.Movement:
+                case AuthoringCapability.KineticMotor2D:
+                case AuthoringCapability.KineticMotor3D:
+                case AuthoringCapability.Steering2D:
+                case AuthoringCapability.Steering3D:
+                case AuthoringCapability.Traversal:
+                case AuthoringCapability.Combat:
+                case AuthoringCapability.CombatState:
+                case AuthoringCapability.CombatSensors:
+                case AuthoringCapability.MeleeFlow:
+                case AuthoringCapability.RangedFlow:
+                case AuthoringCapability.TacticsAggressive:
+                case AuthoringCapability.TacticsDefensive:
+                case AuthoringCapability.Animation:
+                case AuthoringCapability.VFX:
+                    return "Actor & Action";
+
+                case AuthoringCapability.Tabletop:
+                case AuthoringCapability.Grid:
+                case AuthoringCapability.TurnBased:
+                    return "Strategy & Board";
+
+                case AuthoringCapability.Stats:
+                case AuthoringCapability.Inventory:
+                case AuthoringCapability.Dialogue:
+                case AuthoringCapability.Puzzle:
+                case AuthoringCapability.Rpg:
+                case AuthoringCapability.Quests:
+                case AuthoringCapability.Vendors:
+                case AuthoringCapability.SkillTree:
+                case AuthoringCapability.Progression:
+                    return "RPG & Narrative";
+
+                case AuthoringCapability.Camera:
+                case AuthoringCapability.Environment:
+                case AuthoringCapability.Audio:
+                case AuthoringCapability.Networking:
+                    return "World & Meta";
+
+                default:
+                    return "Shared Ingredients";
+            }
         }
 
         private int GetCapabilitySortIndex(AuthoringCapability capability)
@@ -299,12 +354,21 @@ namespace NeonBlack.Gameplay.Editor
 
         private string GetIntentCapabilityTooltip(AuthoringCapability capability)
         {
+            string baseTooltip = AuthoringCapabilityRegistry.GetTooltip(capability);
             PyralisAuthoringCapabilityDescriptor descriptor =
                 PyralisAuthoringCapabilityDescriptorRegistry.FindBestForCapability(capability, _intentLane, _intentAxioms);
-            if (descriptor != null && !string.IsNullOrWhiteSpace(descriptor.Summary))
-                return descriptor.Summary;
+            if (descriptor != null)
+            {
+                string matched = string.IsNullOrWhiteSpace(descriptor.DisplayName)
+                    ? descriptor.Family.ToString()
+                    : descriptor.DisplayName;
+                if (!string.IsNullOrWhiteSpace(descriptor.Summary))
+                    return baseTooltip + "\n\nBest graph match: " + matched + "\n" + descriptor.Summary;
 
-            return AuthoringCapabilityRegistry.GetTooltip(capability);
+                return baseTooltip + "\n\nBest graph match: " + matched + ".";
+            }
+
+            return baseTooltip;
         }
 
         private void FilterCapabilities(VisualElement container, string filter)

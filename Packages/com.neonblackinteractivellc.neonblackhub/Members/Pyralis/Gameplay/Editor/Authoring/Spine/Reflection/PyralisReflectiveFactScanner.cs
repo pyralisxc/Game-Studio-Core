@@ -722,22 +722,18 @@ namespace NeonBlack.Gameplay.Editor
                     ? AuthoringCapabilityRegistry.PrettifyTypeName(type.Name) 
                     : createAssetAttr.menuName;
                 
-                actions.Add(new PyralisAuthoringNativeAction(
-                    "Create", 
-                    PyralisAuthoringActionSurface.ProjectWindow, 
-                    AuthoringCapabilityRegistry.PrettifyTypeName(type.Name), 
-                    menuName, 
+                actions.Add(PyralisAuthoringNativeActionFactory.CreateAssetAction(
+                    AuthoringCapabilityRegistry.PrettifyTypeName(type.Name),
+                    menuName,
                     "the asset exists in the project"));
             }
 
             var addComponentAttr = type.GetCustomAttribute<AddComponentMenu>();
             if (addComponentAttr != null && !string.IsNullOrWhiteSpace(addComponentAttr.componentMenu))
             {
-                actions.Add(new PyralisAuthoringNativeAction(
-                    "Add Component", 
-                    PyralisAuthoringActionSurface.Inspector, 
-                    "selected GameObject", 
-                    addComponentAttr.componentMenu, 
+                actions.Add(PyralisAuthoringNativeActionFactory.AddComponentAction(
+                    "selected GameObject",
+                    addComponentAttr.componentMenu,
                     "the component is added to the Inspector"));
             }
 
@@ -751,7 +747,7 @@ namespace NeonBlack.Gameplay.Editor
 
             string verb = "Inspect";
             PyralisAuthoringActionSurface surface = PyralisAuthoringActionSurface.Inspector;
-            string target = "feature setup";
+            string target = "contract NativeSetup fallback";
             string field = action;
             string success = "the setup step is captured and verified in the editor";
 

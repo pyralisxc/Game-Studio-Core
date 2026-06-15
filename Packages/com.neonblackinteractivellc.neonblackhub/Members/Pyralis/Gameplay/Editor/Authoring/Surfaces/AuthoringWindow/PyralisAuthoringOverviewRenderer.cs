@@ -20,18 +20,15 @@ namespace NeonBlack.Gameplay.Editor
                 ? currentStep.Message
                 : model.FirstProofGuidance;
             PyralisAuthoringWindowText.DrawSemanticHelpBox(guidance, MessageType.Info);
+            if (currentStep != null && !string.IsNullOrWhiteSpace(currentStep.RouteName))
+                PyralisAuthoringWindowPrimitives.DrawMiniField("Route", currentStep.RouteName);
             PyralisAuthoringWindowPrimitives.DrawMiniField("Next", currentStep != null && !string.IsNullOrWhiteSpace(currentStep.Label) ? currentStep.Label : model.BestNextAction);
             if (currentStep != null && currentStep.NativeAction.HasValue)
                 PyralisAuthoringSurfaceBeacon.DrawNativeAction(currentStep.NativeAction.Value, currentStep.NativeAction.Value.ToGuidanceSentence());
-            PyralisAuthoringWindowPrimitives.DrawMiniField("Intent Focus", PyralisAuthoringSetupGraphProjection.BuildIntentFocusSummary(graph));
-            PyralisAuthoringWindowPrimitives.DrawMiniField("Route Shape", PyralisAuthoringSetupGraphProjection.BuildRouteShapeSummary(graph));
-            PyralisAuthoringWindowPrimitives.DrawMiniField("First Proof", PyralisAuthoringSetupGraphProjection.BuildFirstProofPrioritySummary(graph));
-            PyralisAuthoringWindowPrimitives.DrawMiniField("Intent vs Setup", "Intent filters what the graph should explain first; Project, Hierarchy, and Inspector still create and wire the user's actual setup.");
-            DrawGraphPriority(graph);
             PyralisAuthoringWindowPrimitives.DrawMiniField("Proof Status", GetFlowTestStatus(model));
         }
 
-        public static void DrawActionButtons(PyralisAuthoringOverviewModel model, Action openIntent, Action openMap, Action openValidate)
+        public static void DrawActionButtons(PyralisAuthoringOverviewModel model, Action openIntent, Action openGuide, Action openMap)
         {
             EditorGUILayout.Space(4f);
             using (new EditorGUILayout.HorizontalScope())
@@ -41,14 +38,14 @@ namespace NeonBlack.Gameplay.Editor
                     openIntent?.Invoke();
                 }
 
+                if (GUILayout.Button("Open Guide"))
+                {
+                    openGuide?.Invoke();
+                }
+
                 if (GUILayout.Button("Open Map"))
                 {
                     openMap?.Invoke();
-                }
-
-                if (GUILayout.Button("Open Validate"))
-                {
-                    openValidate?.Invoke();
                 }
 
                 Object bestTarget = GetBestOverviewTarget(model);
@@ -102,19 +99,6 @@ namespace NeonBlack.Gameplay.Editor
                 return "Ready for a narrow Play Mode proof. Proof Enhancers can make the first test clearer, but setup edits still belong in Edit Mode.";
 
             return "Ready for first proof. Run the smallest route pass named below, verify one interaction in Play Mode, stop Play Mode, then add one feature at a time.";
-        }
-
-        private static void DrawGraphPriority(PyralisAuthoringSetupGraph graph)
-        {
-            if (graph == null)
-                return;
-
-            PyralisAuthoringGraphNode next = PyralisAuthoringSetupGraphProjection.FindFirstUnresolvedNode(graph);
-            int blocked = PyralisAuthoringSetupGraphProjection.CountNodes(graph, PyralisAuthoringGraphEvidenceState.Blocked);
-            int missing = PyralisAuthoringSetupGraphProjection.CountNodes(graph, PyralisAuthoringGraphEvidenceState.Missing);
-            PyralisAuthoringWindowPrimitives.DrawMiniField("Setup Health", $"{blocked} fix-before-play, {missing} recommended edit(s)");
-            if (next != null)
-                PyralisAuthoringWindowPrimitives.DrawMiniField("Next Missing Link", !string.IsNullOrWhiteSpace(next.Guidance) ? $"{next.Label}: {next.Guidance}" : next.Label);
         }
 
         public static void DrawFirstProofCard(PyralisAuthoringOverviewModel model, PyralisAuthoringSetupGraph graph)
@@ -180,9 +164,13 @@ namespace NeonBlack.Gameplay.Editor
             else
             {
                 EditorGUI.indentLevel++;
-                for (int i = 0; i < issueCount; i++)
+                int visibleCount = Mathf.Min(issueCount, 3);
+                for (int i = 0; i < visibleCount; i++)
                     DrawOverviewIssueCard(issues[i]);
                 EditorGUI.indentLevel--;
+
+                if (issueCount > visibleCount)
+                    EditorGUILayout.LabelField($"{issueCount - visibleCount} more item(s) are in Guide.", EditorStyles.wordWrappedMiniLabel);
             }
         }
 

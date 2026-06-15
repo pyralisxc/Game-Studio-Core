@@ -266,7 +266,7 @@ Those objects affect Pyralis through the parts Unity and gameplay systems can ob
 - board/card/action coordinates or selectable surfaces
 - sorting, depth, and presentation rules
 
-Use `PlayfieldProfile` when the mode needs authored legal movement bounds, screen wrap, arena depth, or placed gameplay space. Use the assigned `CinemachineCameraRigController` when camera-aware spawners, hazards, pickups, generated content, or framing need visible camera bounds; reserve `Camera Bounds Source` for specialized custom `ICameraBoundsProvider` services. Use helpers such as `TilemapGround`, `DepthSorting`, `ArenaZone`, and future procedural-generation surfaces only when they match the scene; otherwise plain Unity art and geometry with correct layers/colliders is enough.
+Use `PlayfieldProfile` when the mode needs authored legal movement bounds, screen wrap, arena depth, or placed gameplay space. Use the assigned `CinemachineCameraRigController` when camera-aware spawners, hazards, pickups, generated content, or framing need visible camera bounds. A camera rig frames the proof; it should not become the pawn's movement boundary unless the pawn or spawner explicitly opts into camera-visible bounds. Reserve `Camera Bounds Source` for specialized custom `ICameraBoundsProvider` services. Use helpers such as `TilemapGround`, `DepthSorting`, `ArenaZone`, and future procedural-generation surfaces only when they match the scene; otherwise plain Unity art and geometry with correct layers/colliders is enough.
 
 When you do add one, keep the feedback loop small:
 
@@ -320,7 +320,7 @@ Before adding more features, run this proof pass first:
   - core services are present (session/state/roster/spawn/input) and no blocking service readiness issues remain.
 - Required bounds proof (only if you added bounds objects):
   - `PlayfieldProfile` clamp/wrap controls where the pawn may move.
-  - camera bounds source frames the route and exposes visible bounds for camera-aware systems.
+  - camera bounds source frames the route and exposes visible bounds for camera-aware systems, but only constrains pawn movement when the pawn explicitly opts into camera-visible bounds.
 - Recommended next checks before moving on:
   - no missing scripts or duplicate assemblies in Console
   - only then add one optional lane feature (scoring, combat, HUD) and re-run this proof pass.

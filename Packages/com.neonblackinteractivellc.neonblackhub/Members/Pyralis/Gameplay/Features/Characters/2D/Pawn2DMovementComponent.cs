@@ -23,7 +23,7 @@ namespace NeonBlack.Gameplay.Features.Characters
             "Keep on the same root as Motor2D.",
             "Configure LayerMasks for ground check if Jump is enabled."
         },
-        AssignmentFields = new[] { nameof(moveSpeed), nameof(dashEnabled), nameof(dashSpeed), nameof(dashCooldown), nameof(jumpEnabled), nameof(jumpVelocity), nameof(groundLayer), nameof(cameraBoundsSource), nameof(targetCamera), nameof(gameplayStateSource) },
+        AssignmentFields = new[] { nameof(moveSpeed), nameof(dashEnabled), nameof(dashSpeed), nameof(dashCooldown), nameof(jumpEnabled), nameof(jumpVelocity), nameof(groundLayer), nameof(useCameraVisibleBoundsForMovement), nameof(cameraBoundsSource), nameof(targetCamera), nameof(gameplayStateSource) },
         FirstProofTargetId = "proof.1p-pawn-movement",
         FirstProof = "Pawn responds to input in the scene. Use the Scene View to verify the Ground Check raycast (if side-view) is hitting the correct layer.",
         ExpertAdvice = "Top-down route: leave Jump Enabled off and set Gravity Scale to 0. Side-view route: enable Jump, set Ground Layer, and ensure Rigidbody2D 'Collision Detection' is set to Continuous for high-speed dashes."
@@ -47,8 +47,8 @@ namespace NeonBlack.Gameplay.Features.Characters
                 if (jumpVelocity <= 0f) yield return "Jump Velocity must be greater than zero when side-view jump is enabled.";
                 if (gravityScale <= 0f) yield return "Gravity Scale must be greater than zero when side-view jump is enabled.";
             }
-            if (cameraBoundsSource == null && targetCamera == null)
-                yield return "Camera Bounds Source and Target Camera are empty. Movement will still work; assign a PlayfieldProfile or camera rig only when this pawn should be clamped or wrapped.";
+            if (useCameraVisibleBoundsForMovement && cameraBoundsSource == null && targetCamera == null)
+                yield return "Use Camera Visible Bounds For Movement is enabled, but Camera Bounds Source and Target Camera are empty. Prefer PlayfieldProfile for legal movement bounds; use camera bounds only for screen-edge arcade behavior.";
         }
         [Header("Movement - Speed")]
         [SerializeField] private float moveSpeed = 4f;
@@ -62,9 +62,11 @@ namespace NeonBlack.Gameplay.Features.Characters
         [SerializeField] private Vector2 spriteRadiusOffset = Vector2.zero;
         [SerializeField] private bool showBoundsGizmo = true;
         [SerializeField] private bool screenWrap = false;
-        [SerializeField, Tooltip("Optional camera used for clamping or wrapping when no camera bounds provider is configured.")]
+        [SerializeField, Tooltip("Use visible camera bounds as movement bounds when no PlayfieldProfile bounds are active. Leave off for normal authored movement; PlayfieldProfile owns legal movement space.")]
+        private bool useCameraVisibleBoundsForMovement = false;
+        [SerializeField, Tooltip("Optional camera used for explicit camera-visible movement bounds when Use Camera Visible Bounds For Movement is enabled.")]
         private Camera targetCamera;
-        [SerializeField, Tooltip("Optional camera bounds provider, usually CinemachineCameraRigController. Leave empty for unbounded movement.")]
+        [SerializeField, Tooltip("Optional camera bounds provider for explicit camera-visible movement bounds. Usually leave empty; PlayfieldProfile owns normal movement bounds.")]
         private MonoBehaviour cameraBoundsSource;
         [SerializeField, Tooltip("Optional gameplay state reader. When empty, the scene orchestrator should configure this component before play.")]
         private MonoBehaviour gameplayStateSource;
@@ -412,7 +414,7 @@ namespace NeonBlack.Gameplay.Features.Characters
                 return true;
             }
 
-            if (TryGetCameraBounds(out CameraBounds2D cameraBounds) && cameraBounds.IsValid)
+            if (useCameraVisibleBoundsForMovement && TryGetCameraBounds(out CameraBounds2D cameraBounds) && cameraBounds.IsValid)
             {
                 bounds = new MovementBounds2D(
                     cameraBounds.Center,

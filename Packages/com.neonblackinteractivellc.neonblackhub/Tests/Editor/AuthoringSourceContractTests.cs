@@ -361,10 +361,36 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(projectionSource.Contains("PyralisAuthoringCapabilityDescriptorRegistry.BuildRuntimeFamilies"), Is.True);
             Assert.That(projectionSource.Contains("PyralisRuntimeCapabilityFamilyMap.GetFamilies"), Is.False);
             Assert.That(intentSource.Contains("BuildIntentCapabilityGroups"), Is.True);
+            Assert.That(intentSource.Contains("ShouldShowIntentCapability"), Is.True);
+            Assert.That(intentSource.Contains("foreach (AuthoringCapability capability in AuthoringCapabilityRegistry.GetAllIndividualCapabilities())"), Is.True);
+            Assert.That(intentSource.Contains("foreach (PyralisAuthoringCapabilityDescriptor descriptor"), Is.False);
             Assert.That(intentSource.Contains("AuthoringWorldAxiomRegistry.GetIntentGroups"), Is.True);
             Assert.That(intentSource.Contains("AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.Dimensions3D"), Is.False);
             Assert.That(intentSource.Contains("new Dictionary<string, (AuthoringCapability[] caps"), Is.False);
             Assert.That(descriptorSource.Contains("ResolvedAuthoringContractRegistry.All"), Is.True);
+        }
+
+        [Test]
+        public void PyralisAuthoringSpine_NativeActionsPreferStructuredHelpersOverGraphProse()
+        {
+            string graphBuilderPath = FindGameplayEditorFile("PyralisAuthoringSetupGraphBuilder.cs");
+            string setupGuidancePath = FindGameplayEditorFile("PyralisSetupFlowGuidance.cs");
+            string reflectiveScannerPath = FindGameplayEditorFile("PyralisReflectiveFactScanner.cs");
+            string descriptorPath = FindGameplayEditorFile("PyralisAuthoringCapabilityDescriptor.cs");
+
+            string graphBuilderSource = File.ReadAllText(graphBuilderPath);
+            string setupGuidanceSource = File.ReadAllText(setupGuidancePath);
+            string reflectiveScannerSource = File.ReadAllText(reflectiveScannerPath);
+            string descriptorSource = File.ReadAllText(descriptorPath);
+
+            Assert.That(graphBuilderSource.Contains("GetRouteShapeNativeSetup"), Is.False);
+            Assert.That(graphBuilderSource.Contains("Project -> Create -> NeonBlack -> Definitions -> Participant Definition"), Is.False);
+            Assert.That(graphBuilderSource.Contains("Project -> Create -> NeonBlack -> Definitions -> Pawn Definition"), Is.False);
+            Assert.That(setupGuidanceSource.Contains("PyralisAuthoringNativeActionFactory.CreateAssetAction"), Is.True);
+            Assert.That(setupGuidanceSource.Contains("PyralisAuthoringNativeActionFactory.AddComponentAction"), Is.True);
+            Assert.That(setupGuidanceSource.Contains("PyralisAuthoringNativeActionFactory.CreateAssignmentAction"), Is.True);
+            Assert.That(reflectiveScannerSource.Contains("contract NativeSetup fallback"), Is.True);
+            Assert.That(descriptorSource.Contains("contract NativeSetup fallback"), Is.True);
         }
 
         [Test]
@@ -685,7 +711,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 "Pyralis",
                 "Gameplay");
 
-            string bootstrapSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Characters", "GameplaySessionBootstrap.cs"));
+            string bootstrapSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Platform", "Session", "GameplaySessionBootstrap.cs"));
             string gameManagerSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "GameFlow", "2D", "GameManager.cs"));
             string healthSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Combat", "HealthComponent.cs"));
             string hazardSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Hazards", "2D", "Hazard.cs"));

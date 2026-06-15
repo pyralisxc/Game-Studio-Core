@@ -57,6 +57,8 @@ namespace NeonBlack.Gameplay.Editor
         private PyralisSetupRouteAnalysis(
             SessionDefinition session,
             GameModeDefinition mode,
+            ParticipantDefinition participant,
+            PawnDefinition pawn,
             RuntimeCapabilityFamily[] capabilityFamilies,
             bool requiresPawn,
             bool hasParticipants,
@@ -67,6 +69,8 @@ namespace NeonBlack.Gameplay.Editor
         {
             Session = session;
             Mode = mode;
+            Participant = participant;
+            Pawn = pawn;
             CapabilityFamilies = capabilityFamilies ?? System.Array.Empty<RuntimeCapabilityFamily>();
             HasSelectedCapabilities = CapabilityFamilies.Length > 0;
             RequiresPawn = requiresPawn;
@@ -79,6 +83,8 @@ namespace NeonBlack.Gameplay.Editor
 
         public SessionDefinition Session { get; }
         public GameModeDefinition Mode { get; }
+        public ParticipantDefinition Participant { get; }
+        public PawnDefinition Pawn { get; }
         public RuntimeCapabilityFamily[] CapabilityFamilies { get; }
         public bool HasSelectedCapabilities { get; }
         public bool RequiresPawn { get; }
@@ -108,20 +114,19 @@ namespace NeonBlack.Gameplay.Editor
         public static PyralisSetupRouteAnalysis Build(GameplaySessionBootstrap bootstrap)
         {
             PyralisSetupDependencyTree dependencyTree = PyralisSetupDependencyTree.Build(bootstrap);
-            return BuildResolved(dependencyTree.Session, dependencyTree.Mode);
+            return BuildResolved(dependencyTree);
         }
 
         public static PyralisSetupRouteAnalysis Build(SessionDefinition session)
         {
             PyralisSetupDependencyTree dependencyTree = PyralisSetupDependencyTree.Build(session);
-            return BuildResolved(dependencyTree.Session, dependencyTree.Mode);
+            return BuildResolved(dependencyTree);
         }
 
         public static PyralisSetupRouteAnalysis Build(GameModeDefinition mode, SessionDefinition session = null)
         {
             PyralisSetupDependencyTree dependencyTree = PyralisSetupDependencyTree.Build(session != null ? session : mode);
-            GameModeDefinition resolvedMode = mode != null ? mode : dependencyTree.Mode;
-            return BuildResolved(session != null ? session : dependencyTree.Session, resolvedMode);
+            return BuildResolved(dependencyTree, mode);
         }
 
         public static PyralisSetupRouteAnalysis Build(UnityEngine.Object source)
@@ -133,7 +138,8 @@ namespace NeonBlack.Gameplay.Editor
             if (source is GameModeDefinition mode)
                 return Build(mode);
 
-            return BuildResolved(null, null);
+            PyralisSetupDependencyTree dependencyTree = PyralisSetupDependencyTree.Build(source);
+            return BuildResolved(dependencyTree);
         }
 
         public static PyralisSetupRouteAnalysis Build(
@@ -162,6 +168,8 @@ namespace NeonBlack.Gameplay.Editor
             return new PyralisSetupRouteAnalysis(
                 route.Session,
                 route.Mode,
+                route.Participant,
+                route.Pawn,
                 mergedFamilies,
                 ContainsFamily(mergedFamilies, RuntimeCapabilityFamily.CharacterPawnGameplay),
                 route.HasParticipants,
@@ -171,18 +179,35 @@ namespace NeonBlack.Gameplay.Editor
                 BuildRouteFacts(mergedFamilies));
         }
 
-        private static PyralisSetupRouteAnalysis BuildResolved(SessionDefinition session, GameModeDefinition mode)
+        private static PyralisSetupRouteAnalysis BuildResolved(
+            PyralisSetupDependencyTree dependencyTree,
+            GameModeDefinition modeOverride = null)
         {
-            RuntimeCapabilityFamily[] capabilityFamilies = CollectCapabilityFamilies(session, mode);
+            SessionDefinition session = dependencyTree?.Session;
+            GameModeDefinition mode = modeOverride != null ? modeOverride : dependencyTree?.Mode;
+            ParticipantDefinition participant = dependencyTree?.FirstParticipant;
+            PawnDefinition pawn = dependencyTree?.FirstPawn;
+            RuntimeCapabilityFamily[] capabilityFamilies = CollectCapabilityFamilies(
+                session,
+                mode,
+                dependencyTree?.Participants,
+                pawn);
             bool requiresPawn = ContainsFamily(capabilityFamilies, RuntimeCapabilityFamily.CharacterPawnGameplay);
-            bool hasParticipants = CheckHasParticipants(session);
-            bool hasAnyDefaultPawn = CheckHasAnyDefaultPawn(session);
-            string participantPawnIssue = GetParticipantPawnIssue(session, out PyralisParticipantPawnIssueKind participantPawnIssueKind);
+            bool hasParticipants = CheckHasParticipants(session, dependencyTree?.Participants, participant);
+            bool hasAnyDefaultPawn = CheckHasAnyDefaultPawn(session, dependencyTree?.Participants, pawn);
+            string participantPawnIssue = GetParticipantPawnIssue(
+                session,
+                dependencyTree?.Participants,
+                participant,
+                pawn,
+                out PyralisParticipantPawnIssueKind participantPawnIssueKind);
             PyralisAuthoringRouteFact[] routeFacts = BuildRouteFacts(capabilityFamilies);
 
             return new PyralisSetupRouteAnalysis(
                 session,
                 mode,
+                participant,
+                pawn,
                 capabilityFamilies,
                 requiresPawn,
                 hasParticipants,
@@ -247,11 +272,17 @@ namespace NeonBlack.Gameplay.Editor
             return ContainsFamily(CapabilityFamilies, family);
         }
 
-        private static RuntimeCapabilityFamily[] CollectCapabilityFamilies(SessionDefinition session, GameModeDefinition mode)
+        private static RuntimeCapabilityFamily[] CollectCapabilityFamilies(
+            SessionDefinition session,
+            GameModeDefinition mode,
+            IReadOnlyList<ParticipantDefinition> reflectedParticipants,
+            PawnDefinition standalonePawn)
         {
             List<RuntimeCapabilityFamily> families = new List<RuntimeCapabilityFamily>();
             AddFamiliesFromMode(families, mode);
             AddFamiliesFromParticipants(families, session);
+            AddFamiliesFromReflectedParticipants(families, reflectedParticipants);
+            AddFamiliesFromPawn(families, standalonePawn);
 
             return families.ToArray();
         }
@@ -298,21 +329,42 @@ namespace NeonBlack.Gameplay.Editor
                 if (participant == null)
                     continue;
 
-                PawnDefinition pawn = participant.defaultPawn;
-                if (pawn == null)
+                AddFamiliesFromPawn(families, participant.defaultPawn);
+            }
+        }
+
+        private static void AddFamiliesFromReflectedParticipants(
+            List<RuntimeCapabilityFamily> families,
+            IReadOnlyList<ParticipantDefinition> participants)
+        {
+            if (participants == null)
+                return;
+
+            for (int i = 0; i < participants.Count; i++)
+            {
+                ParticipantDefinition participant = participants[i];
+                if (participant == null)
                     continue;
 
-                AddFamily(families, RuntimeCapabilityFamily.CharacterPawnGameplay);
+                AddFamiliesFromPawn(families, participant.defaultPawn);
+            }
+        }
 
-                if (pawn.combatProfile != null)
-                    AddFamily(families, RuntimeCapabilityFamily.Combat);
-                if (pawn.presentationProfile != null || pawn.animationProfile != null)
-                    AddFamily(families, RuntimeCapabilityFamily.AnimationPresentation);
-                if (pawn.featureModules != null)
-                {
-                    for (int moduleIndex = 0; moduleIndex < pawn.featureModules.Length; moduleIndex++)
-                        AddFamiliesFromFeatureModule(families, pawn.featureModules[moduleIndex]);
-                }
+        private static void AddFamiliesFromPawn(List<RuntimeCapabilityFamily> families, PawnDefinition pawn)
+        {
+            if (pawn == null)
+                return;
+
+            AddFamily(families, RuntimeCapabilityFamily.CharacterPawnGameplay);
+
+            if (pawn.combatProfile != null)
+                AddFamily(families, RuntimeCapabilityFamily.Combat);
+            if (pawn.presentationProfile != null || pawn.animationProfile != null)
+                AddFamily(families, RuntimeCapabilityFamily.AnimationPresentation);
+            if (pawn.featureModules != null)
+            {
+                for (int moduleIndex = 0; moduleIndex < pawn.featureModules.Length; moduleIndex++)
+                    AddFamiliesFromFeatureModule(families, pawn.featureModules[moduleIndex]);
             }
         }
 
@@ -435,10 +487,13 @@ namespace NeonBlack.Gameplay.Editor
             }
         }
 
-        private static bool CheckHasParticipants(SessionDefinition session)
+        private static bool CheckHasParticipants(
+            SessionDefinition session,
+            IReadOnlyList<ParticipantDefinition> reflectedParticipants,
+            ParticipantDefinition standaloneParticipant)
         {
             if (session == null || session.defaultParticipants == null || session.defaultParticipants.Length == 0)
-                return false;
+                return standaloneParticipant != null || HasAnyParticipant(reflectedParticipants);
 
             for (int i = 0; i < session.defaultParticipants.Length; i++)
             {
@@ -449,10 +504,16 @@ namespace NeonBlack.Gameplay.Editor
             return true;
         }
 
-        private static bool CheckHasAnyDefaultPawn(SessionDefinition session)
+        private static bool CheckHasAnyDefaultPawn(
+            SessionDefinition session,
+            IReadOnlyList<ParticipantDefinition> reflectedParticipants,
+            PawnDefinition standalonePawn)
         {
+            if (standalonePawn != null)
+                return true;
+
             if (session == null || session.defaultParticipants == null)
-                return false;
+                return HasAnyReflectedDefaultPawn(reflectedParticipants);
 
             for (int i = 0; i < session.defaultParticipants.Length; i++)
             {
@@ -464,17 +525,49 @@ namespace NeonBlack.Gameplay.Editor
             return false;
         }
 
-        private static string GetParticipantPawnIssue(SessionDefinition session, out PyralisParticipantPawnIssueKind issueKind)
+        private static string GetParticipantPawnIssue(
+            SessionDefinition session,
+            IReadOnlyList<ParticipantDefinition> reflectedParticipants,
+            ParticipantDefinition standaloneParticipant,
+            PawnDefinition standalonePawn,
+            out PyralisParticipantPawnIssueKind issueKind)
         {
             if (session == null || session.defaultParticipants == null || session.defaultParticipants.Length == 0)
+            {
+                if (standaloneParticipant != null)
+                    return GetParticipantPawnIssue(new[] { standaloneParticipant }, out issueKind);
+
+                if (HasAnyParticipant(reflectedParticipants))
+                    return GetParticipantPawnIssue(reflectedParticipants, out issueKind);
+
+                if (standalonePawn != null)
+                {
+                    string pawnIssue = GetPawnIssue(standalonePawn, out issueKind);
+                    return string.IsNullOrWhiteSpace(pawnIssue)
+                        ? "Assign this PawnDefinition to ParticipantDefinition.defaultPawn so a participant can spawn it."
+                        : pawnIssue;
+                }
+
+                issueKind = PyralisParticipantPawnIssueKind.MissingParticipants;
+                return "Assign default participants before checking pawn readiness.";
+            }
+
+            return GetParticipantPawnIssue(session.defaultParticipants, out issueKind);
+        }
+
+        private static string GetParticipantPawnIssue(
+            IReadOnlyList<ParticipantDefinition> participants,
+            out PyralisParticipantPawnIssueKind issueKind)
+        {
+            if (participants == null || participants.Count == 0)
             {
                 issueKind = PyralisParticipantPawnIssueKind.MissingParticipants;
                 return "Assign default participants before checking pawn readiness.";
             }
 
-            for (int i = 0; i < session.defaultParticipants.Length; i++)
+            for (int i = 0; i < participants.Count; i++)
             {
-                ParticipantDefinition participant = session.defaultParticipants[i];
+                ParticipantDefinition participant = participants[i];
                 if (participant == null)
                 {
                     issueKind = PyralisParticipantPawnIssueKind.EmptyParticipantSlot;
@@ -484,50 +577,94 @@ namespace NeonBlack.Gameplay.Editor
                 if (participant.defaultPawn == null)
                 {
                     issueKind = PyralisParticipantPawnIssueKind.MissingPawnDefinition;
-                    return $"Selected pawn-backed intent asks participant `{participant.displayName}` to use a PawnDefinition before participants can spawn.";
+                    return $"Selected pawn-backed intent asks participant `{participant.displayName}` to use a PawnDefinition. Assign it in ParticipantDefinition.defaultPawn before participants can spawn.";
                 }
 
-                PawnDefinition pawn = participant.defaultPawn;
-                if (pawn.pawnPrefab == null)
-                {
-                    issueKind = PyralisParticipantPawnIssueKind.MissingPawnPrefab;
-                    return $"Selected pawn-backed intent asks PawnDefinition `{pawn.name}` to point at a pawn prefab before participants can spawn.";
-                }
-
-                if (pawn.pawnPrefab.GetComponent<PawnRoot>() == null)
-                {
-                    issueKind = PyralisParticipantPawnIssueKind.MissingPawnRoot;
-                    return $"Pawn prefab `{pawn.pawnPrefab.name}` is missing PawnRoot on its root GameObject.";
-                }
-
-                if (!PrefabHasComponent<IPawnMotor>(pawn.pawnPrefab))
-                {
-                    issueKind = PyralisParticipantPawnIssueKind.MissingMotor;
-                    return $"Pawn prefab `{pawn.pawnPrefab.name}` is missing a lane motor component that implements IPawnMotor.";
-                }
-
-                if (!PrefabHasComponent<IPawnPresentationModule>(pawn.pawnPrefab))
-                {
-                    issueKind = PyralisParticipantPawnIssueKind.MissingPresentation;
-                    return $"Pawn prefab `{pawn.pawnPrefab.name}` is missing a presentation component that implements IPawnPresentationModule.";
-                }
-
-                if (!PrefabHasComponent<IPawnInputModule>(pawn.pawnPrefab))
-                {
-                    issueKind = PyralisParticipantPawnIssueKind.MissingInputModule;
-                    return $"Pawn prefab `{pawn.pawnPrefab.name}` is missing an input adapter that implements IPawnInputModule so the selected InputProfile can reach movement.";
-                }
-
-                List<string> pawnIssues = PyralisPawnPrefabReadinessAnalysis.BuildIssues(pawn);
-                if (pawnIssues.Count > 0)
-                {
-                    issueKind = PyralisParticipantPawnIssueKind.PawnValidation;
-                    return $"PawnDefinition `{pawn.name}`: {pawnIssues[0]}";
-                }
+                string pawnIssue = GetPawnIssue(participant.defaultPawn, out issueKind);
+                if (!string.IsNullOrWhiteSpace(pawnIssue))
+                    return pawnIssue;
             }
 
             issueKind = PyralisParticipantPawnIssueKind.None;
             return null;
+        }
+
+        private static string GetPawnIssue(PawnDefinition pawn, out PyralisParticipantPawnIssueKind issueKind)
+        {
+            if (pawn == null)
+            {
+                issueKind = PyralisParticipantPawnIssueKind.MissingPawnDefinition;
+                return "Selected pawn-backed intent needs a PawnDefinition before participants can spawn.";
+            }
+
+            if (pawn.pawnPrefab == null)
+            {
+                issueKind = PyralisParticipantPawnIssueKind.MissingPawnPrefab;
+                return $"Selected pawn-backed intent asks PawnDefinition `{pawn.name}` to point at a pawn prefab before participants can spawn.";
+            }
+
+            if (pawn.pawnPrefab.GetComponent<PawnRoot>() == null)
+            {
+                issueKind = PyralisParticipantPawnIssueKind.MissingPawnRoot;
+                return $"Pawn prefab `{pawn.pawnPrefab.name}` is missing PawnRoot on its root GameObject.";
+            }
+
+            if (!PrefabHasComponent<IPawnMotor>(pawn.pawnPrefab))
+            {
+                issueKind = PyralisParticipantPawnIssueKind.MissingMotor;
+                return $"Pawn prefab `{pawn.pawnPrefab.name}` is missing a lane motor component that implements IPawnMotor.";
+            }
+
+            if (!PrefabHasComponent<IPawnPresentationModule>(pawn.pawnPrefab))
+            {
+                issueKind = PyralisParticipantPawnIssueKind.MissingPresentation;
+                return $"Pawn prefab `{pawn.pawnPrefab.name}` is missing a presentation component that implements IPawnPresentationModule.";
+            }
+
+            if (!PrefabHasComponent<IPawnInputModule>(pawn.pawnPrefab))
+            {
+                issueKind = PyralisParticipantPawnIssueKind.MissingInputModule;
+                return $"Pawn prefab `{pawn.pawnPrefab.name}` is missing an input adapter that implements IPawnInputModule so the selected InputProfile can reach movement.";
+            }
+
+            List<string> pawnIssues = PyralisPawnPrefabReadinessAnalysis.BuildIssues(pawn);
+            if (pawnIssues.Count > 0)
+            {
+                issueKind = PyralisParticipantPawnIssueKind.PawnValidation;
+                return $"PawnDefinition `{pawn.name}`: {pawnIssues[0]}";
+            }
+
+            issueKind = PyralisParticipantPawnIssueKind.None;
+            return null;
+        }
+
+        private static bool HasAnyParticipant(IReadOnlyList<ParticipantDefinition> participants)
+        {
+            if (participants == null)
+                return false;
+
+            for (int i = 0; i < participants.Count; i++)
+            {
+                if (participants[i] != null)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static bool HasAnyReflectedDefaultPawn(IReadOnlyList<ParticipantDefinition> participants)
+        {
+            if (participants == null)
+                return false;
+
+            for (int i = 0; i < participants.Count; i++)
+            {
+                ParticipantDefinition participant = participants[i];
+                if (participant != null && participant.defaultPawn != null)
+                    return true;
+            }
+
+            return false;
         }
 
         private static bool PrefabHasComponent<T>(GameObject prefab) where T : class

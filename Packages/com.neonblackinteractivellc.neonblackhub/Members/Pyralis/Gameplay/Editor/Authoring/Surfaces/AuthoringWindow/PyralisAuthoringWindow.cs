@@ -327,7 +327,7 @@ namespace NeonBlack.Gameplay.Editor
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 PyralisAuthoringOverviewRenderer.DrawGuidanceCard(model, graph);
-                PyralisAuthoringOverviewRenderer.DrawActionButtons(model, OpenIntentFromOverview, OpenMapFromOverview, OpenValidateFromOverview);
+                PyralisAuthoringOverviewRenderer.DrawActionButtons(model, OpenIntentFromOverview, OpenGuideFromOverview, OpenMapFromOverview);
             }
 
             EditorGUILayout.Space(12f);
@@ -342,16 +342,16 @@ namespace NeonBlack.Gameplay.Editor
             SwitchMode(AuthoringWindowMode.Intent);
         }
 
+        private void OpenGuideFromOverview()
+        {
+            _guideScroll = Vector2.zero;
+            SwitchMode(AuthoringWindowMode.Guide);
+        }
+
         private void OpenMapFromOverview()
         {
             _mapScroll = Vector2.zero;
             SwitchMode(AuthoringWindowMode.Map);
-        }
-
-        private void OpenValidateFromOverview()
-        {
-            _validateScroll = Vector2.zero;
-            SwitchMode(AuthoringWindowMode.Validate);
         }
 
         private PyralisAuthoringIntentModel GetCachedIntentModel()

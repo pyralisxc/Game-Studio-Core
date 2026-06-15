@@ -78,6 +78,173 @@ namespace NeonBlack.Gameplay.Editor
         }
     }
 
+    public static class PyralisAuthoringNativeActionFactory
+    {
+        public static PyralisAuthoringNativeAction CreateAssetAction(
+            string assetLabel,
+            string createMenuPath,
+            string successCheck,
+            string extraInstructions = "")
+        {
+            string label = FirstNonEmpty(assetLabel, "asset");
+            string fieldInstruction = string.IsNullOrWhiteSpace(createMenuPath)
+                ? "create the asset from the Project Create menu"
+                : "Create -> " + createMenuPath;
+            if (!string.IsNullOrWhiteSpace(extraInstructions))
+                fieldInstruction += "; " + extraInstructions.Trim();
+
+            return new PyralisAuthoringNativeAction(
+                "Create",
+                PyralisAuthoringActionSurface.ProjectWindow,
+                label,
+                fieldInstruction,
+                successCheck);
+        }
+
+        public static PyralisAuthoringNativeAction CreateSceneObjectAction(
+            string objectLabel,
+            string componentLabel,
+            string successCheck,
+            string extraInstructions = "")
+        {
+            string fieldInstruction = "create or select a scene object";
+            if (!string.IsNullOrWhiteSpace(componentLabel))
+                fieldInstruction += " and add " + componentLabel;
+            if (!string.IsNullOrWhiteSpace(extraInstructions))
+                fieldInstruction += "; " + extraInstructions.Trim();
+
+            return new PyralisAuthoringNativeAction(
+                "Create or select",
+                PyralisAuthoringActionSurface.Hierarchy,
+                FirstNonEmpty(objectLabel, "scene object"),
+                fieldInstruction,
+                successCheck);
+        }
+
+        public static PyralisAuthoringNativeAction AddComponentAction(
+            string targetLabel,
+            string componentLabel,
+            string successCheck,
+            string extraInstructions = "")
+        {
+            string fieldInstruction = string.IsNullOrWhiteSpace(componentLabel)
+                ? "Add Component"
+                : "Add Component -> " + componentLabel;
+            if (!string.IsNullOrWhiteSpace(extraInstructions))
+                fieldInstruction += "; " + extraInstructions.Trim();
+
+            return new PyralisAuthoringNativeAction(
+                "Add",
+                PyralisAuthoringActionSurface.Inspector,
+                FirstNonEmpty(targetLabel, "selected GameObject"),
+                fieldInstruction,
+                successCheck);
+        }
+
+        public static PyralisAuthoringNativeAction CreateAssignmentAction(
+            string verb,
+            string assignmentField,
+            string assignedObjectLabel,
+            string extraInstructions,
+            string successCheck,
+            PyralisAuthoringActionSurface surface = PyralisAuthoringActionSurface.Inspector)
+        {
+            string normalizedField = assignmentField ?? string.Empty;
+            string ownerLabel = GetAssignmentOwner(normalizedField);
+            string fieldLabel = GetAssignmentFieldName(normalizedField);
+            string assignedLabel = string.IsNullOrWhiteSpace(assignedObjectLabel)
+                ? "the required asset or object"
+                : assignedObjectLabel;
+
+            string fieldTarget = FirstNonEmpty(fieldLabel, normalizedField, "the reflected field");
+            string fieldInstruction = $"assign or create {assignedLabel} in {fieldTarget}";
+
+            if (!string.IsNullOrWhiteSpace(extraInstructions))
+                fieldInstruction += "; " + extraInstructions.Trim();
+
+            return new PyralisAuthoringNativeAction(
+                verb,
+                surface,
+                FirstNonEmpty(ownerLabel, normalizedField, assignedLabel),
+                fieldInstruction,
+                successCheck);
+        }
+
+        public static PyralisAuthoringNativeAction ConfigureInspectorAction(
+            string targetLabel,
+            string fieldOrToolLabel,
+            string extraInstructions,
+            string successCheck)
+        {
+            string fieldInstruction = FirstNonEmpty(fieldOrToolLabel, "the reflected Inspector fields");
+            if (!string.IsNullOrWhiteSpace(extraInstructions))
+                fieldInstruction += "; " + extraInstructions.Trim();
+
+            return new PyralisAuthoringNativeAction(
+                "Configure",
+                PyralisAuthoringActionSurface.Inspector,
+                FirstNonEmpty(targetLabel, "selected setup object"),
+                fieldInstruction,
+                successCheck);
+        }
+
+        public static PyralisAuthoringNativeAction UseInspectorToolAction(
+            string targetLabel,
+            string toolLabel,
+            string extraInstructions,
+            string successCheck)
+        {
+            string fieldInstruction = FirstNonEmpty(toolLabel, "the Inspector tool");
+            if (!string.IsNullOrWhiteSpace(extraInstructions))
+                fieldInstruction += "; " + extraInstructions.Trim();
+
+            return new PyralisAuthoringNativeAction(
+                "Use",
+                PyralisAuthoringActionSurface.Inspector,
+                FirstNonEmpty(targetLabel, "selected setup object"),
+                fieldInstruction,
+                successCheck);
+        }
+
+        private static string GetAssignmentOwner(string assignmentField)
+        {
+            int separator = GetLastSeparator(assignmentField);
+            return separator > 0 ? assignmentField.Substring(0, separator) : string.Empty;
+        }
+
+        private static string GetAssignmentFieldName(string assignmentField)
+        {
+            int separator = GetLastSeparator(assignmentField);
+            return separator >= 0 && separator < assignmentField.Length - 1
+                ? assignmentField.Substring(separator + 1)
+                : assignmentField;
+        }
+
+        private static int GetLastSeparator(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return -1;
+
+            int dot = value.LastIndexOf('.');
+            int slash = value.LastIndexOf('/');
+            return dot > slash ? dot : slash;
+        }
+
+        private static string FirstNonEmpty(params string[] values)
+        {
+            if (values == null)
+                return string.Empty;
+
+            for (int i = 0; i < values.Length; i++)
+            {
+                if (!string.IsNullOrWhiteSpace(values[i]))
+                    return values[i];
+            }
+
+            return string.Empty;
+        }
+    }
+
     public static class PyralisAuthoringLabelUtility
     {
         public static readonly PyralisAuthoringSemanticTag[] BeginnerLegendTags =

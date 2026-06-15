@@ -16,6 +16,7 @@ Active docs should describe the current product truth. Dated audits, superseded 
 ## Current State And Readiness
 
 - `CURRENT_STATE_AUDIT.md` - current platform architecture status and top risks.
+- `CORE_CRITICAL_AUDIT_2026-06-14.md` - deep critical audit of runtime ownership, route parity, authoring evidence, scene flow, prefab variants, and next cleanup phases.
 - `CORE_PACKAGE_READINESS_CHECKPOINTS.md` - near-term route gates and validation workflow.
 - `RUNTIME_PARITY_MATRIX.md` - lane and route status matrix.
 - `FEATURE_DEVELOPMENT_ROADMAP.md` - executable route-completeness roadmap.

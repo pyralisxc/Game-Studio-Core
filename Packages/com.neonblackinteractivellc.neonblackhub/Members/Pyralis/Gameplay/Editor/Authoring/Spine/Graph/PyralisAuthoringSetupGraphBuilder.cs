@@ -32,6 +32,7 @@ namespace NeonBlack.Gameplay.Editor
             AddRuntimeValidationEvidence(source, route, nodes, edges);
             AddSetupFlowEvidence(source, nodes, edges);
             AddSceneReadinessEvidence(source, nodes, edges);
+            AddRouteInputEvidence(route, nodes, edges);
             AddProofBlockerEdges(nodes, edges, activeProofNodeId);
             ResolveProofReadiness(nodes, edges, activeProofNodeId);
 
@@ -126,8 +127,8 @@ namespace NeonBlack.Gameplay.Editor
             List<PyralisAuthoringGraphEdge> edges)
         {
             SessionDefinition session = route?.Session;
-            ParticipantDefinition participant = GetFirstParticipant(session);
-            PawnDefinition pawn = participant != null ? participant.defaultPawn : null;
+            ParticipantDefinition participant = route?.Participant != null ? route.Participant : GetFirstParticipant(session);
+            PawnDefinition pawn = route?.Pawn != null ? route.Pawn : participant != null ? participant.defaultPawn : null;
             bool hasParticipants = route != null && route.HasParticipants;
             bool requiresPawn = route != null && route.RequiresPawn;
             bool pawnReady = !requiresPawn || (hasParticipants && string.IsNullOrWhiteSpace(route.ParticipantPawnIssue));
@@ -163,6 +164,47 @@ namespace NeonBlack.Gameplay.Editor
 
             AddEdge(edges, "session.definition", "participant.default", PyralisAuthoringGraphEdgeKind.DependsOn, "default participants");
             AddEdge(edges, "participant.default", "pawn.definition", PyralisAuthoringGraphEdgeKind.DependsOn, "pawn route");
+        }
+
+        private static void AddRouteInputEvidence(
+            PyralisSetupRouteAnalysis route,
+            List<PyralisAuthoringGraphNode> nodes,
+            List<PyralisAuthoringGraphEdge> edges)
+        {
+            if (route == null || !route.RequiresPawn)
+                return;
+
+            ParticipantDefinition participant = route.Participant;
+            if (participant == null)
+                return;
+
+            if (participant.inputProfile != null)
+                return;
+
+            const string inputProfileField = "ParticipantDefinition.inputProfile";
+            PyralisAuthoringNativeAction? nativeAction = PyralisSetupFlowGuidance.GetNativeAction(
+                PyralisSetupFlowStepId.AssignInputProfile,
+                string.Empty);
+            string[] nativeSetup = nativeAction.HasValue
+                ? new[] { FormatNativeAction(nativeAction.Value) }
+                : Array.Empty<string>();
+            AddNode(nodes, new PyralisAuthoringGraphNode(
+                "route.participant-input-profile",
+                "Assign Input Profile",
+                PyralisAuthoringGraphNodeKind.ValidationEvidence,
+                PyralisAuthoringGraphSourceKind.SetupFlow,
+                PyralisAuthoringGraphEvidenceState.Missing,
+                guidance: "Assign InputProfile on " + inputProfileField + " so the participant controlling this pawn can route movement input.",
+                nativeSetup: nativeSetup,
+                assignmentFields: new[] { inputProfileField },
+                blockingReason: "Pawn-backed movement needs participant-owned input before the first movement proof is meaningful.",
+                nativeAction: nativeAction,
+                sourceObject: participant,
+                sourceOrigin: PyralisAuthoringGraphSourceOrigin.RuntimeEvidence,
+                workIntent: PyralisAuthoringGraphWorkIntent.RequiredSetup,
+                issueSeverity: PyralisAuthoringIssueSeverity.Required));
+            AddEdge(edges, "participant.default", "route.participant-input-profile", PyralisAuthoringGraphEdgeKind.RelatesTo, "participant input");
+            AddEdge(edges, "route.shape", "route.participant-input-profile", PyralisAuthoringGraphEdgeKind.DependsOn, "pawn control input");
         }
 
         private static void AddCapabilityNodes(
@@ -239,7 +281,7 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringGraphSourceKind.SetupFlow,
                 state,
                 guidance: guidance,
-                nativeSetup: GetRouteShapeNativeSetup(requiresPawn, hasGameplayFocus),
+                nativeSetup: Array.Empty<string>(),
                 assignmentFields: GetRouteShapeAssignmentFields(requiresPawn, hasGameplayFocus),
                 blockingReason: hasOwnershipIssue
                     ? FirstNonEmpty(route?.ParticipantPawnIssue, "Assign at least one ParticipantDefinition so the route has a player, AI, seat, hand, faction, or control owner.")
@@ -295,29 +337,6 @@ namespace NeonBlack.Gameplay.Editor
                     "This intent is pawn-backed. The participant owns a PawnDefinition, the PawnDefinition owns the prefab, and participant input is the preferred control profile.");
 
             return "This intent does not require a pawn. Participants still own control, but the control surface can be a board seat, hand, cursor, camera, UI, or action resolver.";
-        }
-
-        private static string[] GetRouteShapeNativeSetup(bool requiresPawn, bool hasGameplayFocus)
-        {
-            if (!hasGameplayFocus)
-                return new[] { "Intent -> choose one small capability ingredient before expanding setup." };
-
-            if (requiresPawn)
-            {
-                return new[]
-                {
-                    "Project -> Create -> NeonBlack -> Definitions -> Participant Definition; assign it to SessionDefinition.defaultParticipants.",
-                    "Project -> Create -> NeonBlack -> Definitions -> Pawn Definition; assign it to ParticipantDefinition.defaultPawn.",
-                    "Create a pawn prefab, add the lane stack, then assign it to PawnDefinition.pawnPrefab.",
-                    "Assign InputProfile on ParticipantDefinition.inputProfile for the participant controlling this pawn."
-                };
-            }
-
-            return new[]
-            {
-                "Project -> Create -> NeonBlack -> Definitions -> Participant Definition; assign it to SessionDefinition.defaultParticipants.",
-                "Create the route control surface the intent needs: board presenter, cursor, UI, camera, hand, faction, or action resolver."
-            };
         }
 
         private static string[] GetRouteShapeAssignmentFields(bool requiresPawn, bool hasGameplayFocus)
@@ -445,6 +464,12 @@ namespace NeonBlack.Gameplay.Editor
         private static string ResolveProofTargetId(PyralisSetupRouteAnalysis route)
         {
             RuntimeCapabilityFamily[] families = route?.CapabilityFamilies ?? Array.Empty<RuntimeCapabilityFamily>();
+            string fallbackProofTargetId = PyralisProofFamilyVocabulary.GetFallbackProofTargetId(
+                families,
+                route != null && route.RequiresPawn);
+            if (!string.IsNullOrWhiteSpace(fallbackProofTargetId))
+                return fallbackProofTargetId;
+
             for (int i = 0; i < families.Length; i++)
             {
                 PyralisAuthoringCapabilityDescriptor descriptor = PyralisAuthoringCapabilityDescriptorRegistry.FindPrimaryByFamily(families[i]);
@@ -452,12 +477,7 @@ namespace NeonBlack.Gameplay.Editor
                     return descriptor.ProofTargetId;
             }
 
-            string fallbackProofTargetId = PyralisProofFamilyVocabulary.GetFallbackProofTargetId(
-                families,
-                route != null && route.RequiresPawn);
-            return string.IsNullOrWhiteSpace(fallbackProofTargetId)
-                ? "proof.custom-object-effect"
-                : fallbackProofTargetId;
+            return "proof.custom-object-effect";
         }
 
         private static string GetProofGuidance(PyralisAuthoringFact proofFact)

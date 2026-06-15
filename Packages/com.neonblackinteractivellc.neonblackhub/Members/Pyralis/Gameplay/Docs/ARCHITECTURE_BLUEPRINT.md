@@ -433,8 +433,9 @@ Preferred split:
 
 - `PlayfieldProfile` owns playable-space rules,
 - `CameraRigProfile` owns framing and follow,
-- the camera may read playfield data when useful,
-- movement modules may read the same playfield data directly.
+- the camera may read playfield data when useful to keep the view inside the authored world,
+- movement modules read playfield data directly for legal movement bounds,
+- camera-visible bounds constrain pawn movement only when a pawn explicitly opts into screen-edge behavior.
 
 This avoids forcing "aspect-bound movement" to mean "camera profile."
 

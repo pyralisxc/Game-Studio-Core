@@ -133,6 +133,26 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
+        public void PyralisAuthoringNativeActionFactory_UsesAssignmentFieldAsOwnershipSource()
+        {
+            PyralisAuthoringNativeAction action = PyralisAuthoringNativeActionFactory.CreateAssignmentAction(
+                "Create or assign",
+                "ParticipantDefinition.inputProfile",
+                "InputProfile",
+                "keep Primary Action Map as Player",
+                "InputProfile actions can reach the pawn input module");
+
+            string guidance = action.ToGuidanceSentence();
+
+            Assert.That(action.Target, Is.EqualTo("ParticipantDefinition"));
+            Assert.That(action.FieldOrComponent, Does.Contain("InputProfile"));
+            Assert.That(guidance, Does.Contain("inputProfile"));
+            Assert.That(guidance, Does.Contain("ParticipantDefinition"));
+            Assert.That(guidance, Does.Not.Contain("SessionDefinition or ParticipantDefinition"));
+            Assert.That(guidance, Does.Not.Contain("on ParticipantDefinition.inputProfile"));
+        }
+
+        [Test]
         public void PyralisAuthoringGrammarRegistry_SetupFlowFacts_CoverStableStepIds()
         {
             Assert.That(PyralisAuthoringGrammarRegistry.HasDuplicateStableIds(out string duplicateStableId), Is.False, duplicateStableId);

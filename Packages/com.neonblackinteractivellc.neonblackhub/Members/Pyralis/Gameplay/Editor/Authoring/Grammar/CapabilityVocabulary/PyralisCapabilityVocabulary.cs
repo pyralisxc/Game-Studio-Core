@@ -391,7 +391,7 @@ namespace NeonBlack.Gameplay.Editor
                 },
                 new[] { "camera shake polish", "split screen", "cinematic transitions", "multi-target framing" },
                 "Enter Play Mode and confirm the camera shows the proof surface and respects assigned follow or visible-bounds behavior.",
-                "The Cinemachine rig frames the playfield. Use PlayfieldProfile for legal movement bounds; use camera visible bounds to prevent the player from seeing off-map areas.",
+                "The Cinemachine rig frames the playfield. PlayfieldProfile owns legal movement bounds; camera visible bounds should constrain movement only when a pawn or spawner explicitly asks for screen-edge behavior.",
                 string.Empty),
 
             new PyralisCapabilityVocabularyCard(

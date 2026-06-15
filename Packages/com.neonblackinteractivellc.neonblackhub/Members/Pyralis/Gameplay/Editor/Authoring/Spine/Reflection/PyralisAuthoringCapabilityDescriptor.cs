@@ -148,9 +148,17 @@ namespace NeonBlack.Gameplay.Editor
             for (int i = 0; i < descriptors.Count; i++)
             {
                 PyralisAuthoringCapabilityDescriptor descriptor = descriptors[i];
-                if (descriptor != null && descriptor.Matches(capabilities, lane, axioms))
+                if (descriptor != null
+                    && IsCapabilitySatisfiedBySelection(descriptor.Capability, capabilities)
+                    && descriptor.Matches(capabilities, lane, axioms))
+                {
                     AddDistinct(families, descriptor.Family);
+                }
             }
+
+            RuntimeCapabilityFamily[] inferredFamilies = InferFamiliesFromCapability(capabilities, lane.ToString(), axioms);
+            for (int i = 0; i < inferredFamilies.Length; i++)
+                AddDistinct(families, inferredFamilies[i]);
 
             return families.ToArray();
         }
@@ -265,6 +273,14 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             return count;
+        }
+
+        private static bool IsCapabilitySatisfiedBySelection(AuthoringCapability descriptorCapability, AuthoringCapability selectedCapabilities)
+        {
+            if (descriptorCapability == AuthoringCapability.None)
+                return false;
+
+            return (descriptorCapability & selectedCapabilities) == descriptorCapability;
         }
 
         private static string ToRegistryPresentationLaneName(RuntimeCapabilityLaneTag lane)
@@ -708,11 +724,10 @@ namespace NeonBlack.Gameplay.Editor
             List<PyralisAuthoringNativeAction> actions = new List<PyralisAuthoringNativeAction>();
             for (int i = 0; i < contract.NativeSetup.Length; i++)
             {
-                actions.Add(new PyralisAuthoringNativeAction(
-                    "Configure",
-                    PyralisAuthoringActionSurface.Inspector,
+                actions.Add(PyralisAuthoringNativeActionFactory.ConfigureInspectorAction(
                     contract.DisplayName,
                     contract.NativeSetup[i],
+                    "contract NativeSetup fallback",
                     "the contract setup is visible in graph evidence"));
             }
 

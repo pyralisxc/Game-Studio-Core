@@ -62,6 +62,43 @@ namespace NeonBlack.Gameplay.Editor
             if (selection is GameModeDefinition && rememberedSession != null)
                 return rememberedSession.defaultGameMode == null;
 
+            if (selection is ParticipantDefinition participant && rememberedSession != null)
+                return !SessionReferencesSelection(rememberedSession, participant)
+                    && SessionNeedsParticipant(rememberedSession);
+
+            if (selection is PawnDefinition pawn && rememberedSession != null)
+                return !SessionReferencesSelection(rememberedSession, pawn)
+                    && SessionNeedsPawn(rememberedSession);
+
+            return false;
+        }
+
+        private static bool SessionNeedsParticipant(SessionDefinition session)
+        {
+            if (session == null || session.defaultParticipants == null || session.defaultParticipants.Length == 0)
+                return true;
+
+            for (int i = 0; i < session.defaultParticipants.Length; i++)
+            {
+                if (session.defaultParticipants[i] == null)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static bool SessionNeedsPawn(SessionDefinition session)
+        {
+            if (session == null || session.defaultParticipants == null || session.defaultParticipants.Length == 0)
+                return false;
+
+            for (int i = 0; i < session.defaultParticipants.Length; i++)
+            {
+                ParticipantDefinition participant = session.defaultParticipants[i];
+                if (participant != null && participant.defaultPawn == null)
+                    return true;
+            }
+
             return false;
         }
 
@@ -91,7 +128,9 @@ namespace NeonBlack.Gameplay.Editor
                 return linkedBootstrap;
 
             if (selection is SessionDefinition
-                || selection is GameModeDefinition)
+                || selection is GameModeDefinition
+                || selection is ParticipantDefinition
+                || selection is PawnDefinition)
                 return selection;
 
             GameplaySessionBootstrap bootstrap = GetSelectedBootstrap(selection);

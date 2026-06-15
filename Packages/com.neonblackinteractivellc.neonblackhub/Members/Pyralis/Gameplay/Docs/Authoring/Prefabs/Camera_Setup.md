@@ -85,12 +85,12 @@ If your session uses a `GameModeDefinition` asset, assign your `CameraRigProfile
 
 ### Step 6 - Connect Bounds-Aware Systems
 
-`PlayfieldProfile` owns legal gameplay bounds for movement clamp and screen wrap. `CinemachineCameraRigController` owns visible camera bounds for framing and camera-aware placement. In the standard bootstrap route, `GameModeDefinition.playfieldProfile` is passed to spawned pawns automatically, and the assigned camera rig is passed as the camera bounds provider.
+`PlayfieldProfile` owns legal gameplay bounds for movement clamp and screen wrap. `CinemachineCameraRigController` owns visible camera bounds for framing and camera-aware placement. In the standard bootstrap route, `GameModeDefinition.playfieldProfile` is passed to spawned pawns automatically, and the assigned camera rig is passed as the camera bounds provider for systems that explicitly ask for visible bounds.
 
 1. Drag the `Camera Root` object from the Hierarchy into `GameplaySessionBootstrap > Camera Rig Controller`. Unity assigns the `CinemachineCameraRigController` component from that object.
 2. Leave `Camera Bounds Source` empty unless you are intentionally using a custom `ICameraBoundsProvider`.
-3. If a direct component asks for Camera Bounds Source, assign the same `CinemachineCameraRigController`.
-4. If 2D movement should stop at arena edges, assign a `PlayfieldProfile` to `GameModeDefinition.playfieldProfile` and enable `Clamp To Bounds`.
+3. If a direct spawner or camera-aware system asks for Camera Bounds Source, assign the same `CinemachineCameraRigController`.
+4. If 2D movement should stop at arena edges, assign a `PlayfieldProfile` to `GameModeDefinition.playfieldProfile` and enable `Clamp To Bounds`. Enable camera-visible movement bounds on the pawn only for deliberate screen-edge arcade behavior.
 
 ### Step 7 - Enable orientations in Player Settings for 2D
 

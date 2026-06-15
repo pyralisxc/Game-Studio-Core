@@ -140,26 +140,23 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             switch (stepId)
             {
                 case PyralisSetupFlowStepId.SelectGameplaySessionBootstrap:
-                    return new PyralisAuthoringNativeAction(
-                        "Create or select",
-                        PyralisAuthoringActionSurface.Hierarchy,
+                    return PyralisAuthoringNativeActionFactory.CreateSceneObjectAction(
                         "Gameplay Root",
-                        "right-click -> Create Empty, name it Gameplay Root, then use Inspector -> Add Component -> GameplaySessionBootstrap",
-                        "Overview shows Gameplay Root as the active setup");
+                        "GameplaySessionBootstrap",
+                        "Overview shows Gameplay Root as the active setup",
+                        "name it Gameplay Root");
                 case PyralisSetupFlowStepId.AssignSessionDefinition:
-                    return new PyralisAuthoringNativeAction(
-                        "Create",
-                        PyralisAuthoringActionSurface.ProjectWindow,
-                        "the opened setup folder",
-                        "choose or create a project-owned setup folder for this proof, keep imported art folders separate, then right-click inside it -> Create -> NeonBlack -> Definitions -> Session Definition, then drag it into GameplaySessionBootstrap > Session Definition or use the field's object picker circle",
-                        "the Session row is ready");
+                    return PyralisAuthoringNativeActionFactory.CreateAssetAction(
+                        "SessionDefinition",
+                        "NeonBlack -> Definitions -> Session Definition",
+                        "the Session row is ready",
+                        "assign it to GameplaySessionBootstrap.sessionDefinition");
                 case PyralisSetupFlowStepId.AssignDefaultGameMode:
-                    return new PyralisAuthoringNativeAction(
-                        "Create",
-                        PyralisAuthoringActionSurface.ProjectWindow,
-                        "the opened setup folder",
-                        "choose or create the proof setup folder in the Project content pane first, keep imported art folders separate, then right-click inside it -> Create -> NeonBlack -> Definitions -> Game Mode Definition, then select/open the SessionDefinition asset and assign Default Game Mode by drag/drop or the field's object picker circle",
-                        "the Game Rules row is ready");
+                    return PyralisAuthoringNativeActionFactory.CreateAssetAction(
+                        "GameModeDefinition",
+                        "NeonBlack -> Definitions -> Game Mode Definition",
+                        "the Game Rules row is ready",
+                        "assign it to SessionDefinition.defaultGameMode");
                 case PyralisSetupFlowStepId.ResolveRouteCapabilities:
                     return new PyralisAuthoringNativeAction(
                         "Choose and wire",
@@ -168,28 +165,26 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                         "set DNA axioms, choose the presentation lane, toggle the capability ingredients that describe the route, then create or wire the matching SessionDefinition, GameModeDefinition, participants, pawns, feature modules, board/turn assets, and scene objects so the graph can reflect them",
                         "route capabilities are reflected from real setup");
                 case PyralisSetupFlowStepId.AssignDefaultParticipants:
-                    return new PyralisAuthoringNativeAction(
-                        "Create",
-                        PyralisAuthoringActionSurface.ProjectWindow,
-                        "the opened setup folder",
-                        "choose or create the proof setup folder in the Project content pane first, keep imported art folders separate, then right-click inside it -> Create -> NeonBlack -> Definitions -> Participant Definition, configure player/seat/input intent, then select/open the SessionDefinition asset, add a Default Participants slot, and assign it by drag/drop or the slot's object picker circle",
-                        "Players / Seats is ready");
+                    return PyralisAuthoringNativeActionFactory.CreateAssetAction(
+                        "ParticipantDefinition",
+                        "NeonBlack -> Definitions -> Participant Definition",
+                        "Players / Seats is ready",
+                        "configure seat/player meaning, then assign it to SessionDefinition.defaultParticipants");
                 case PyralisSetupFlowStepId.AssignParticipantPawn:
                     return GetPawnNativeAction(message);
                 case PyralisSetupFlowStepId.AssignInputProfile:
-                    return new PyralisAuthoringNativeAction(
+                    return PyralisAuthoringNativeActionFactory.CreateAssignmentAction(
                         "Create or assign",
-                        PyralisAuthoringActionSurface.Inspector,
-                        "SessionDefinition or ParticipantDefinition",
-                        "InputProfile; for the beginner path set Actions to Assets/InputSystem_Actions.inputactions, keep Primary Action Map as Player, then add/remove Gameplay Action rows for the features this pawn uses",
+                        "ParticipantDefinition.inputProfile",
+                        "InputProfile",
+                        "assign Actions, keep or confirm Primary Action Map as Player, then scroll to Input Actions Sync and click Sync Action Names From Asset before customizing gameplay action rows",
                         "InputProfile actions can reach the pawn input module");
                 case PyralisSetupFlowStepId.AssignSpawnPoints:
-                    return new PyralisAuthoringNativeAction(
-                        "Create",
-                        PyralisAuthoringActionSurface.Hierarchy,
+                    return PyralisAuthoringNativeActionFactory.CreateSceneObjectAction(
                         "Gameplay Root or a Playfield Root",
-                        "right-click -> Create Empty, name it SpawnPoint_1, position it, select Gameplay Root, expand GameplaySessionBootstrap > Spawn Points, click + to create Element 0, then drag SpawnPoint_1 from the Hierarchy into that Transform slot",
-                        "the pawn route has one spawn point per default participant");
+                        string.Empty,
+                        "the pawn route has one spawn point per default participant",
+                        "create and position SpawnPoint_1, then assign it to GameplaySessionBootstrap.spawnPoints");
                 case PyralisSetupFlowStepId.AssignCameraRig:
                     return new PyralisAuthoringNativeAction(
                         "Create or assign",
@@ -203,13 +198,13 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                         PyralisAuthoringActionSurface.Inspector,
                         "GameplaySessionBootstrap",
                         "the same CinemachineCameraRigController in Camera Rig Controller; only use Camera Bounds Source for a specialized custom ICameraBoundsProvider",
-                        "2D movement, spawners, hazards, pickups, and framing share Cinemachine-backed visible bounds");
+                        "camera-aware spawners, hazards, pickups, and framing can read visible bounds; pawn movement uses PlayfieldProfile unless camera-visible bounds are explicitly enabled on the pawn");
                 case PyralisSetupFlowStepId.AssignPlayfieldProfile:
-                    return new PyralisAuthoringNativeAction(
+                    return PyralisAuthoringNativeActionFactory.CreateAssignmentAction(
                         "Create or assign",
-                        PyralisAuthoringActionSurface.ProjectWindow,
-                        "the opened setup folder and GameModeDefinition",
-                        "Create -> NeonBlack -> Profiles -> Playfield Profile, tune bounds/lane rules, then select/open the GameModeDefinition asset and assign Playfield Profile",
+                        "GameModeDefinition.playfieldProfile",
+                        "PlayfieldProfile",
+                        "create one from NeonBlack -> Profiles -> Playfield Profile when needed; tune bounds and lane rules after assignment",
                         "the route has authored world bounds instead of relying on scene defaults");
                 case PyralisSetupFlowStepId.EnableScoringRoute:
                     return new PyralisAuthoringNativeAction(
@@ -233,12 +228,11 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                         "right-click -> UI -> Canvas or Create Empty named UI Root with Canvas and EventSystem, then add the HUD/menu presenter that matches the route such as ParticipantHealthHudBinder, ParticipantFeedbackHudPresenter, UIManager, or an RPG/board/action presenter",
                         "the scene has visible prompts, health, score, action buttons, or route-specific panels in Play Mode");
                 case PyralisSetupFlowStepId.AddProjectileLauncher:
-                    return new PyralisAuthoringNativeAction(
-                        "Create or assign",
-                        PyralisAuthoringActionSurface.Hierarchy,
+                    return PyralisAuthoringNativeActionFactory.AddComponentAction(
                         "the pawn, weapon mount, trap, turret, or encounter object that fires",
-                        "Add Component -> ProjectileLauncher2D or ProjectileLauncher3D, then assign a ProjectileDefinition created from the Project window and tune launcher origin/range/layers in the Inspector",
-                        "one authored shot can be fired from a user-owned object");
+                        "ProjectileLauncher2D or ProjectileLauncher3D",
+                        "one authored shot can be fired from a user-owned object",
+                        "assign a ProjectileDefinition and tune launcher origin, range, and layers");
                 case PyralisSetupFlowStepId.TabletopRuntimeContract:
                     return new PyralisAuthoringNativeAction(
                         "Create and assign",
@@ -254,12 +248,11 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                         "Add Component -> TabletopBoardGridPresenter for a generic board proof, assign Board Definition, Move Policy Definition, and Turn Order Definition, then optionally add TabletopTurnStatusPresenter to a TextMeshPro label so the first Play Mode pass shows the active seat",
                         "one selectable tabletop surface can resolve a proof action in Play Mode");
                 case PyralisSetupFlowStepId.AssignSettingsManager:
-                    return new PyralisAuthoringNativeAction(
-                        "Create or assign",
-                        PyralisAuthoringActionSurface.Hierarchy,
+                    return PyralisAuthoringNativeActionFactory.CreateSceneObjectAction(
                         "Gameplay Root or a persistent Shell object",
-                        "right-click -> Create Empty, name it Settings Manager, add SettingsManager, and assign a SettingsProfile asset",
-                        "global volume and control settings are persistent and accessible");
+                        "SettingsManager",
+                        "global volume and control settings are persistent and accessible",
+                        "name it Settings Manager and assign a SettingsProfile asset");
                 case PyralisSetupFlowStepId.TuneCameraFraming:
                     return new PyralisAuthoringNativeAction(
                         "Customize",
@@ -282,18 +275,15 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                         "movement speed, acceleration, jump/dash feel, gameplay action names, action map, and device assumptions",
                         "input and movement feel intentional instead of starter-default");
                 case PyralisSetupFlowStepId.VisibleLifetimeScope:
-                    return new PyralisAuthoringNativeAction(
-                        "Add",
-                        PyralisAuthoringActionSurface.Inspector,
+                    return PyralisAuthoringNativeActionFactory.AddComponentAction(
                         "Gameplay Root",
-                        "Add Component -> PyralisGameplayLifetimeScope",
+                        "PyralisGameplayLifetimeScope",
                         "the composition root is visible before Play Mode");
                 case PyralisSetupFlowStepId.FirstSceneDefaults:
-                    return new PyralisAuthoringNativeAction(
-                        "Enable",
-                        PyralisAuthoringActionSurface.Inspector,
+                    return PyralisAuthoringNativeActionFactory.ConfigureInspectorAction(
                         "GameplaySessionBootstrap",
                         "bootstrap startup ownership and Inject Loaded Scenes On Build",
+                        string.Empty,
                         "first-scene runtime services are owned predictably");
                 case PyralisSetupFlowStepId.SceneAndPrefabReadiness:
                     return new PyralisAuthoringNativeAction(
@@ -312,12 +302,11 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             switch (issueKind)
             {
                 case PyralisParticipantPawnIssueKind.MissingPawnDefinition:
-                    return new PyralisAuthoringNativeAction(
-                        "Create",
-                        PyralisAuthoringActionSurface.ProjectWindow,
-                        "the opened setup folder",
-                        "choose or create the proof setup folder in the Project content pane first, keep imported art folders separate, then right-click inside it -> Create -> NeonBlack -> Definitions -> Pawn Definition, then assign it into ParticipantDefinition > Default Pawn by drag/drop or the field's object picker circle",
-                        "the participant points at a PawnDefinition");
+                    return PyralisAuthoringNativeActionFactory.CreateAssetAction(
+                        "PawnDefinition",
+                        "NeonBlack -> Definitions -> Pawn Definition",
+                        "the participant points at a PawnDefinition",
+                        "assign it to ParticipantDefinition.defaultPawn");
                 case PyralisParticipantPawnIssueKind.MissingPawnPrefab:
                     return new PyralisAuthoringNativeAction(
                         "Create or select",
@@ -326,32 +315,25 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                         "name the GameObject, add the lane stack, save it as a prefab, then drag the prefab into PawnDefinition > Pawn Prefab. For a 2D proof, add PawnRoot, Motor2D, Motor2DInputAdapter, SpriteRenderer, and Animator; Motor2D adds the required movement and presentation siblings. Add Unity PlayerInput only when you want explicit local keyboard/gamepad ownership, and assign the same Input Actions asset used by the InputProfile",
                         "the PawnDefinition has a prefab");
                 case PyralisParticipantPawnIssueKind.MissingPawnRoot:
-                    return new PyralisAuthoringNativeAction(
-                        "Add",
-                        PyralisAuthoringActionSurface.Inspector,
+                    return PyralisAuthoringNativeActionFactory.AddComponentAction(
                         "the pawn prefab root",
-                        "Add Component -> PawnRoot",
+                        "PawnRoot",
                         "Pyralis recognizes the prefab as a pawn actor");
                 case PyralisParticipantPawnIssueKind.MissingMotor:
-                    return new PyralisAuthoringNativeAction(
-                        "Add",
-                        PyralisAuthoringActionSurface.Inspector,
+                    return PyralisAuthoringNativeActionFactory.AddComponentAction(
                         "the pawn prefab root",
-                        "Add Component -> Motor2D for a 2D pawn, or the lane motor that implements IPawnMotor",
+                        "Motor2D or the lane motor that implements IPawnMotor",
                         "movement profiles have a runtime motor to drive");
                 case PyralisParticipantPawnIssueKind.MissingPresentation:
-                    return new PyralisAuthoringNativeAction(
-                        "Add",
-                        PyralisAuthoringActionSurface.Inspector,
+                    return PyralisAuthoringNativeActionFactory.AddComponentAction(
                         "the pawn prefab root or visual child",
-                        "Add Component -> Pawn2DPresentationComponent or the lane presentation module, then assign a project-owned sprite, prefab visual, or renderer in the presentation fields",
-                        "the pawn has visible presentation");
+                        "Pawn2DPresentationComponent or the lane presentation module",
+                        "the pawn has visible presentation",
+                        "assign a project-owned sprite, prefab visual, or renderer in the presentation fields");
                 case PyralisParticipantPawnIssueKind.MissingInputModule:
-                    return new PyralisAuthoringNativeAction(
-                        "Add",
-                        PyralisAuthoringActionSurface.Inspector,
+                    return PyralisAuthoringNativeActionFactory.AddComponentAction(
                         "the pawn prefab root",
-                        "Add Component -> Motor2DInputAdapter for a 2D pawn, or the lane input module that implements IPawnInputModule",
+                        "Motor2DInputAdapter or the lane input module that implements IPawnInputModule",
                         "InputProfile actions can reach movement");
                 default:
                     return new PyralisAuthoringNativeAction(

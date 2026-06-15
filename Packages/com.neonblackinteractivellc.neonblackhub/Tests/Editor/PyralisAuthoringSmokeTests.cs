@@ -61,6 +61,44 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
+        public void IntentProjection_SmokeCapabilityIngredientTogglesAreUnique()
+        {
+            PyralisAuthoringWindow window = ScriptableObject.CreateInstance<PyralisAuthoringWindow>();
+            try
+            {
+                System.Reflection.MethodInfo method = typeof(PyralisAuthoringWindow).GetMethod(
+                    "BuildIntentCapabilityGroups",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                Assert.That(method, Is.Not.Null);
+
+                Dictionary<string, List<AuthoringCapability>> groups =
+                    (Dictionary<string, List<AuthoringCapability>>)method.Invoke(window, null);
+                AuthoringCapability[] capabilities = groups.Values.SelectMany(group => group).ToArray();
+
+                Assert.That(capabilities.Count(capability => capability == AuthoringCapability.Movement), Is.EqualTo(1));
+                Assert.That(capabilities.Count(capability => capability == AuthoringCapability.Input), Is.EqualTo(1));
+                Assert.That(capabilities.Count(capability => capability == AuthoringCapability.Camera), Is.EqualTo(1));
+                Assert.That(capabilities.Count(capability => capability == AuthoringCapability.Rpg), Is.EqualTo(1));
+                Assert.That(capabilities.Distinct().Count(), Is.EqualTo(capabilities.Length));
+                Assert.That(groups.TryGetValue("Core Setup", out List<AuthoringCapability> coreGroup), Is.True);
+                Assert.That(coreGroup, Does.Contain(AuthoringCapability.Input));
+                Assert.That(coreGroup, Does.Contain(AuthoringCapability.Participants));
+                Assert.That(groups.TryGetValue("Actor & Action", out List<AuthoringCapability> actorGroup), Is.True);
+                Assert.That(actorGroup, Does.Contain(AuthoringCapability.Combat));
+                Assert.That(actorGroup, Does.Contain(AuthoringCapability.CombatSensors));
+                Assert.That(actorGroup, Does.Contain(AuthoringCapability.Movement));
+                Assert.That(groups.TryGetValue("RPG & Narrative", out List<AuthoringCapability> rpgGroup), Is.True);
+                Assert.That(rpgGroup, Does.Contain(AuthoringCapability.Rpg));
+                Assert.That(rpgGroup, Does.Contain(AuthoringCapability.Puzzle));
+                Assert.That(groups.ContainsKey("Combat Sensors"), Is.False);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(window);
+            }
+        }
+
+        [Test]
         public void IntentAxioms_SmokeComeFromAuthoringContractVocabulary()
         {
             System.Collections.Generic.IReadOnlyList<AuthoringWorldAxiomGroup> groups =
@@ -86,7 +124,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             string runtimeContextSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Platform", "Composition", "GameplayRuntimeContext.cs"));
             string spawnSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Characters", "Runtime", "Shared", "Services", "ParticipantSpawnService.cs"));
             string spawnerSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Spawning", "3D", "PlayerSpawner.cs"));
-            string bootstrapSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Characters", "GameplaySessionBootstrap.cs"));
+            string bootstrapSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Platform", "Session", "GameplaySessionBootstrap.cs"));
             string playfieldSource = File.ReadAllText(Path.Combine(gameplayRoot, "Data", "Profiles", "PlayfieldProfile.cs"));
             string pawn2DMovementSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Characters", "2D", "Pawn2DMovementComponent.cs"));
             string cameraRigSource = File.ReadAllText(Path.Combine(gameplayRoot, "Presentation", "Camera", "CinemachineCameraRigController.cs"));
@@ -349,6 +387,100 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
+        public void SetupGraph_SmokePawnIntentBlocksWhenParticipantInputProfileIsMissing()
+        {
+            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
+            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
+            ParticipantDefinition participant = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            PawnDefinition pawn = ScriptableObject.CreateInstance<PawnDefinition>();
+            GameObject prefab = new GameObject("Pawn Prefab");
+            prefab.AddComponent<PawnRoot>();
+            prefab.AddComponent<SmokePawnMotor>();
+            prefab.AddComponent<SmokePawnPresentation>();
+            prefab.AddComponent<SmokePawnInput>();
+            pawn.pawnPrefab = prefab;
+            participant.defaultPawn = pawn;
+            session.defaultGameMode = mode;
+            session.defaultParticipants = new[] { participant };
+
+            PyralisAuthoringIntentSelection intent = new PyralisAuthoringIntentSelection(
+                RuntimeCapabilityLaneTag.Sprite2D,
+                AuthoringCapability.Movement | AuthoringCapability.Input,
+                AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone | AuthoringWorldAxiom.Realtime);
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(session, intent);
+
+            Assert.That(graph.TryFindNode("route.participant-input-profile", out PyralisAuthoringGraphNode inputNode), Is.True);
+            Assert.That(inputNode.EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.Missing));
+            Assert.That(inputNode.Guidance, Does.Contain("ParticipantDefinition.inputProfile"));
+            Assert.That(inputNode.AssignmentFields, Does.Contain("ParticipantDefinition.inputProfile"));
+            Assert.That(string.Join(" ", inputNode.NativeSetup), Does.Contain("Sync Action Names From Asset"));
+            Assert.That(string.Join(" ", inputNode.NativeSetup), Does.Not.Contain("add/remove Gameplay Action rows"));
+            Assert.That(string.Join(" ", inputNode.NativeSetup), Does.Not.Contain("SessionDefinition or ParticipantDefinition"));
+            Assert.That(PyralisAuthoringSetupGraphProjection.BuildOverviewIssues(graph, session)
+                .Any(issue => issue.Label == "Assign Input Profile" && issue.Lane == PyralisAuthoringOverviewLane.DoNow), Is.True);
+            Assert.That(PyralisAuthoringSetupGraphProjection.BuildProofBlockerRows(graph)
+                .Any(row => row.To != null && row.To.StableId == "route.participant-input-profile"), Is.True);
+
+            Object.DestroyImmediate(prefab);
+            Object.DestroyImmediate(pawn);
+            Object.DestroyImmediate(participant);
+            Object.DestroyImmediate(mode);
+            Object.DestroyImmediate(session);
+        }
+
+        [Test]
+        public void SetupGraph_SmokeStandalonePawnDefinitionCompilesPawnPrefabGuidance()
+        {
+            PawnDefinition pawn = ScriptableObject.CreateInstance<PawnDefinition>();
+
+            PyralisAuthoringIntentSelection intent = new PyralisAuthoringIntentSelection(
+                RuntimeCapabilityLaneTag.Sprite2D,
+                AuthoringCapability.Movement | AuthoringCapability.Input,
+                AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone | AuthoringWorldAxiom.Realtime);
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(pawn, intent);
+
+            Assert.That(graph.TryFindNode("pawn.definition", out PyralisAuthoringGraphNode pawnNode), Is.True);
+            Assert.That(pawnNode.EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.Missing));
+            Assert.That(pawnNode.BlockingReason, Does.Contain("pawn prefab"));
+            Assert.That(PyralisAuthoringSetupGraphProjection.BuildProofBlockerRows(graph)
+                .Any(row => row.To != null && row.To.StableId == "pawn.definition"), Is.True);
+
+            Object.DestroyImmediate(pawn);
+        }
+
+        [Test]
+        public void SetupGraph_SmokeBeginnerMovementIntentUsesPawnMovementProof()
+        {
+            PyralisAuthoringIntentSelection intent = new PyralisAuthoringIntentSelection(
+                RuntimeCapabilityLaneTag.Sprite2D,
+                AuthoringCapability.Session
+                | AuthoringCapability.Input
+                | AuthoringCapability.Movement
+                | AuthoringCapability.Participants
+                | AuthoringCapability.KineticMotor2D,
+                AuthoringWorldAxiom.Dimensions2D
+                | AuthoringWorldAxiom.GravityNone
+                | AuthoringWorldAxiom.Realtime
+                | AuthoringWorldAxiom.BoundedSpace);
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(null, intent);
+
+            PyralisAuthoringGraphNode proof = PyralisAuthoringSetupGraphProjection.FindCurrentProofNode(graph);
+            Assert.That(proof, Is.Not.Null);
+            Assert.That(proof.StableId, Is.EqualTo("proof.1p-pawn-movement"));
+            Assert.That(proof.Label, Does.Contain("Pawn Movement"));
+            Assert.That(proof.Label, Does.Not.Contain("Custom Object"));
+            Assert.That(graph.FindNodes(PyralisAuthoringGraphNodeKind.Capability)
+                .Any(node => node.CapabilityFamily == RuntimeCapabilityFamily.Combat), Is.False);
+            Assert.That(graph.FindNodes(PyralisAuthoringGraphNodeKind.Capability)
+                .Any(node => node.CapabilityFamily == RuntimeCapabilityFamily.GunsProjectiles), Is.False);
+            Assert.That(graph.FindNodes(PyralisAuthoringGraphNodeKind.Capability)
+                .Any(node => node.CapabilityFamily == RuntimeCapabilityFamily.CharacterPawnGameplay), Is.True);
+        }
+
+        [Test]
         public void IntentProjection_SmokeInputAloneDoesNotInferCameraRoute()
         {
             RuntimeCapabilityFamily[] families = PyralisAuthoringCapabilityDescriptorRegistry.BuildRuntimeFamilies(
@@ -366,6 +498,19 @@ namespace NeonBlack.Gameplay.Tests.Editor
                     AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone | AuthoringWorldAxiom.Realtime);
             Assert.That(descriptor, Is.Not.Null);
             Assert.That(descriptor.Family, Is.Not.EqualTo(RuntimeCapabilityFamily.CameraInput));
+        }
+
+        [Test]
+        public void IntentProjection_SmokeMovementInputDoesNotInferCombatRoute()
+        {
+            RuntimeCapabilityFamily[] families = PyralisAuthoringCapabilityDescriptorRegistry.BuildRuntimeFamilies(
+                AuthoringCapability.Movement | AuthoringCapability.Input | AuthoringCapability.Participants | AuthoringCapability.KineticMotor2D,
+                RuntimeCapabilityLaneTag.Sprite2D,
+                AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone | AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.BoundedSpace);
+
+            Assert.That(families.Any(family => family == RuntimeCapabilityFamily.CharacterPawnGameplay), Is.True);
+            Assert.That(families.Any(family => family == RuntimeCapabilityFamily.Combat), Is.False);
+            Assert.That(families.Any(family => family == RuntimeCapabilityFamily.GunsProjectiles), Is.False);
         }
 
         [Test]
@@ -503,6 +648,27 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             Object.DestroyImmediate(profile);
             Object.DestroyImmediate(actions);
+        }
+
+        private sealed class SmokePawnMotor : MonoBehaviour, IPawnMotor
+        {
+            public void ApplyMovementProfile(PawnProfileApplicationContext context, PawnMovementProfile movementProfile)
+            {
+            }
+        }
+
+        private sealed class SmokePawnPresentation : MonoBehaviour, IPawnPresentationModule
+        {
+            public void ApplyPresentationProfile(PawnProfileApplicationContext context, PawnPresentationProfile presentationProfile)
+            {
+            }
+        }
+
+        private sealed class SmokePawnInput : MonoBehaviour, IPawnInputModule
+        {
+            public void ApplyInputProfile(PawnProfileApplicationContext context, InputProfile inputProfile)
+            {
+            }
         }
     }
 
