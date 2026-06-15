@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Data.Definitions;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -9,22 +11,38 @@ namespace NeonBlack.Gameplay.Editor
 {
     public static class PyralisAuthoringSetupGraphJsonExporter
     {
-        public static string ToJson(PyralisAuthoringSetupGraph graph, string view)
+        public static string ToMapJson(PyralisAuthoringSetupGraph graph)
         {
-            GraphSnapshot snapshot = BuildSnapshot(graph, view);
+            MapSnapshot snapshot = BuildMapSnapshot(graph);
             return JsonUtility.ToJson(snapshot, true);
         }
 
-        private static GraphSnapshot BuildSnapshot(PyralisAuthoringSetupGraph graph, string view)
+        public static string ToHygieneJson(
+            PyralisAuthoringSetupGraph graph,
+            IReadOnlyList<PyralisSourceDependencyHygieneRecord> dependencyRecords)
         {
-            return new GraphSnapshot
+            HygieneSnapshot snapshot = BuildHygieneSnapshot(graph, dependencyRecords);
+            return JsonUtility.ToJson(snapshot, true);
+        }
+
+        public static string ToJson(PyralisAuthoringSetupGraph graph, string view)
+        {
+            return string.Equals(view, "Hygiene", StringComparison.OrdinalIgnoreCase)
+                ? ToHygieneJson(graph, Array.Empty<PyralisSourceDependencyHygieneRecord>())
+                : ToMapJson(graph);
+        }
+
+        private static MapSnapshot BuildMapSnapshot(PyralisAuthoringSetupGraph graph)
+        {
+            return new MapSnapshot
             {
-                schema = "pyralis.authoring.setupGraph.snapshot.v1",
-                purpose = "Read-only authoring graph diagnostic snapshot. Do not treat this JSON as setup truth or generated content.",
-                view = string.IsNullOrWhiteSpace(view) ? "Graph" : view,
+                schema = "pyralis.authoring.mapSnapshot.v1",
+                purpose = "Read-only Map tab snapshot. Describes current setup topology, scene surfaces, map rows, connections, and concrete scene/setup issues.",
+                view = "Map",
                 routeName = graph != null ? graph.RouteName : "No setup route selected",
                 exportedAtUtc = DateTime.UtcNow.ToString("o"),
                 source = BuildSourceInfo(graph?.Source),
+                currentRoute = BuildCurrentRoute(graph?.RouteAnalysis),
                 nodeCount = graph?.Nodes.Count ?? 0,
                 edgeCount = graph?.Edges.Count ?? 0,
                 nodes = graph?.Nodes.Select(BuildNode).ToArray() ?? Array.Empty<NodeSnapshot>(),
@@ -35,12 +53,122 @@ namespace NeonBlack.Gameplay.Editor
                 mapConnections = PyralisAuthoringSetupGraphProjection.BuildMapConnectionRows(graph)
                     .Select(BuildConnection)
                     .ToArray(),
+                sceneSurfaces = PyralisAuthoringSetupGraphProjection.FindSceneSurfaceNodes(graph)
+                    .Select(BuildNode)
+                    .ToArray(),
+                sceneSetupIssues = PyralisAuthoringSetupGraphProjection.BuildMapSceneSetupIssueRows(graph)
+                    .Select(BuildMapIssue)
+                    .ToArray()
+            };
+        }
+
+        private static CurrentRouteSnapshot BuildCurrentRoute(PyralisSetupRouteAnalysis route)
+        {
+            if (route == null)
+            {
+                return new CurrentRouteSnapshot
+                {
+                    routeName = "No setup route selected",
+                    hasSelectedCapabilities = false,
+                    requiresPawn = false,
+                    hasParticipants = false,
+                    hasAnyDefaultPawn = false,
+                    participantPawnIssue = string.Empty,
+                    participantPawnIssueKind = PyralisParticipantPawnIssueKind.None.ToString(),
+                    capabilityFamilies = Array.Empty<string>(),
+                    routeFacts = Array.Empty<RouteFactSnapshot>(),
+                    session = null,
+                    mode = null,
+                    participant = null,
+                    pawn = null
+                };
+            }
+
+            return new CurrentRouteSnapshot
+            {
+                routeName = route.RouteName,
+                hasSelectedCapabilities = route.HasSelectedCapabilities,
+                requiresPawn = route.RequiresPawn,
+                hasParticipants = route.HasParticipants,
+                hasAnyDefaultPawn = route.HasAnyDefaultPawn,
+                participantPawnIssue = route.ParticipantPawnIssue ?? string.Empty,
+                participantPawnIssueKind = route.ParticipantPawnIssueKind.ToString(),
+                capabilityFamilies = (route.CapabilityFamilies ?? Array.Empty<RuntimeCapabilityFamily>())
+                    .Select(family => family.ToString())
+                    .ToArray(),
+                routeFacts = (route.RouteFacts ?? Array.Empty<PyralisAuthoringRouteFact>())
+                    .Select(BuildRouteFact)
+                    .ToArray(),
+                session = BuildSourceInfo(route.Session),
+                mode = BuildSourceInfo(route.Mode),
+                participant = BuildSourceInfo(route.Participant),
+                pawn = BuildSourceInfo(route.Pawn)
+            };
+        }
+
+        private static RouteFactSnapshot BuildRouteFact(PyralisAuthoringRouteFact fact)
+        {
+            return new RouteFactSnapshot
+            {
+                capability = fact.Capability.ToString(),
+                label = fact.Label,
+                family = fact.Family.ToString(),
+                primaryProofCandidate = fact.PrimaryProofCandidate
+            };
+        }
+
+        private static HygieneSnapshot BuildHygieneSnapshot(
+            PyralisAuthoringSetupGraph graph,
+            IReadOnlyList<PyralisSourceDependencyHygieneRecord> dependencyRecords)
+        {
+            IReadOnlyList<PyralisSourceDependencyHygieneRecord> safeDependencyRecords =
+                dependencyRecords ?? Array.Empty<PyralisSourceDependencyHygieneRecord>();
+            PyralisAuthoringGraphConnectionRow[] proofBlockers =
+                PyralisAuthoringSetupGraphProjection.BuildProofBlockerRows(graph).ToArray();
+
+            return new HygieneSnapshot
+            {
+                schema = "pyralis.authoring.hygieneSnapshot.v1",
+                purpose = "Read-only Hygiene tab snapshot. Describes graph integrity, blocker evidence, source origins, dependency pressure, and contract source pressure.",
+                view = "Hygiene",
+                routeName = graph != null ? graph.RouteName : "No setup route selected",
+                exportedAtUtc = DateTime.UtcNow.ToString("o"),
+                source = BuildSourceInfo(graph?.Source),
+                graphSummary = BuildGraphSummary(graph, safeDependencyRecords, proofBlockers),
                 hygieneSections = PyralisAuthoringSetupGraphProjection.BuildHygieneSections(graph)
                     .Select(BuildHygieneSection)
                     .ToArray(),
                 hygieneRows = PyralisAuthoringSetupGraphProjection.BuildHygieneDetailRows(graph)
                     .Select(BuildHygieneRow)
-                    .ToArray()
+                    .ToArray(),
+                proofBlockers = proofBlockers.Select(BuildConnection).ToArray(),
+                sourceOriginCounts = CountBy(graph?.Nodes, node => node.SourceOrigin.ToString()),
+                sourceKindCounts = CountBy(graph?.Nodes, node => node.SourceKind.ToString()),
+                evidenceStateCounts = CountBy(graph?.Nodes, node => node.EvidenceState.ToString()),
+                dependencyPressure = safeDependencyRecords
+                    .Where(record => record != null && record.Risk != PyralisSourceDependencyRisk.Low)
+                    .Take(32)
+                    .Select(BuildDependencyPressure)
+                    .ToArray(),
+                contractSourcePressure = BuildContractSourcePressure(graph)
+            };
+        }
+
+        private static GraphSummarySnapshot BuildGraphSummary(
+            PyralisAuthoringSetupGraph graph,
+            IReadOnlyList<PyralisSourceDependencyHygieneRecord> dependencyRecords,
+            IReadOnlyList<PyralisAuthoringGraphConnectionRow> proofBlockers)
+        {
+            return new GraphSummarySnapshot
+            {
+                nodeCount = graph?.Nodes.Count ?? 0,
+                edgeCount = graph?.Edges.Count ?? 0,
+                unknownNodeCount = graph?.Nodes.Count(node => node.EvidenceState == PyralisAuthoringGraphEvidenceState.Unknown) ?? 0,
+                missingNodeCount = graph?.Nodes.Count(node => node.EvidenceState == PyralisAuthoringGraphEvidenceState.Missing) ?? 0,
+                blockedNodeCount = graph?.Nodes.Count(node => node.EvidenceState == PyralisAuthoringGraphEvidenceState.Blocked) ?? 0,
+                proofBlockerCount = proofBlockers?.Count ?? 0,
+                dependencyPressureCount = dependencyRecords?.Count(record => record != null && record.Risk != PyralisSourceDependencyRisk.Low) ?? 0,
+                contractNodeCount = graph?.Nodes.Count(node => node.Kind == PyralisAuthoringGraphNodeKind.Contract || node.SourceContract != null) ?? 0
             };
         }
 
@@ -65,8 +193,7 @@ namespace NeonBlack.Gameplay.Editor
                 assignmentFields = node.AssignmentFields,
                 customizationMoments = node.CustomizationMoments,
                 nativeAction = BuildNativeAction(node.NativeAction),
-                sourceObject = BuildSourceInfo(node.SourceObject),
-                sourceContract = BuildContract(node.SourceContract)
+                sourceObject = BuildSourceInfo(node.SourceObject)
             };
         }
 
@@ -100,10 +227,29 @@ namespace NeonBlack.Gameplay.Editor
         {
             return new ConnectionSnapshot
             {
+                fromNodeId = row.From != null ? row.From.StableId : string.Empty,
+                toNodeId = row.To != null ? row.To.StableId : string.Empty,
                 from = row.FromLabel,
                 to = row.ToLabel,
                 relationship = row.Relationship,
                 detail = row.Detail
+            };
+        }
+
+        private static MapIssueSnapshot BuildMapIssue(PyralisAuthoringGraphAuditRow row)
+        {
+            PyralisAuthoringGraphNode node = row.Node;
+            return new MapIssueSnapshot
+            {
+                nodeId = row.NodeId,
+                label = row.Label,
+                evidenceState = row.EvidenceState.ToString(),
+                message = row.Message,
+                nativeAction = row.NativeAction,
+                assignmentFields = node != null ? node.AssignmentFields : Array.Empty<string>(),
+                nativeSetup = node != null ? node.NativeSetup : Array.Empty<string>(),
+                blockingReason = node != null ? node.BlockingReason : string.Empty,
+                target = BuildSourceInfo(row.Target)
             };
         }
 
@@ -133,6 +279,75 @@ namespace NeonBlack.Gameplay.Editor
             };
         }
 
+        private static DependencyPressureSnapshot BuildDependencyPressure(PyralisSourceDependencyHygieneRecord record)
+        {
+            return new DependencyPressureSnapshot
+            {
+                assetPath = record.AssetPath,
+                fileName = record.FileName,
+                ownerDomain = record.OwnerDomain,
+                domains = record.Domains.ToArray(),
+                dependencyCount = record.DependencyCount,
+                concreteCrossDomainCount = record.ConcreteCrossDomainCount,
+                serializedFieldCount = record.SerializedFieldCount,
+                unityLookupCount = record.UnityLookupCount,
+                staticAccessCount = record.StaticAccessCount,
+                reflectionOrStringLookupCount = record.ReflectionOrStringLookupCount,
+                riskScore = record.RiskScore,
+                risk = record.Risk.ToString(),
+                reasons = record.Reasons.ToArray()
+            };
+        }
+
+        private static ContractPressureSnapshot[] BuildContractSourcePressure(PyralisAuthoringSetupGraph graph)
+        {
+            if (graph == null)
+                return Array.Empty<ContractPressureSnapshot>();
+
+            return graph.Nodes
+                .Where(node => node != null && (node.Kind == PyralisAuthoringGraphNodeKind.Contract || node.SourceContract != null))
+                .Select(BuildContractPressure)
+                .ToArray();
+        }
+
+        private static ContractPressureSnapshot BuildContractPressure(PyralisAuthoringGraphNode node)
+        {
+            ResolvedAuthoringContract contract = node.SourceContract;
+            return new ContractPressureSnapshot
+            {
+                nodeId = node.StableId,
+                label = node.Label,
+                sourceOrigin = node.SourceOrigin.ToString(),
+                evidenceState = node.EvidenceState.ToString(),
+                stableId = contract != null ? contract.StableId : string.Empty,
+                displayName = contract != null ? contract.DisplayName : string.Empty,
+                category = contract != null ? contract.AuthoringCategory : string.Empty,
+                moduleId = contract != null ? contract.ModuleId : string.Empty,
+                setupNodeId = contract != null ? contract.SetupNodeId : string.Empty,
+                capability = contract != null ? contract.Capability.ToString() : node.AuthoringCapability.ToString(),
+                confidence = contract != null ? contract.Confidence.ToString() : string.Empty,
+                sourceType = contract?.SourceType != null ? contract.SourceType.FullName : string.Empty,
+                assignmentFieldCount = node.AssignmentFields.Length,
+                customizationMomentCount = node.CustomizationMoments.Length,
+                nativeSetupCount = node.NativeSetup.Length
+            };
+        }
+
+        private static CountSnapshot[] CountBy(
+            IEnumerable<PyralisAuthoringGraphNode> nodes,
+            Func<PyralisAuthoringGraphNode, string> selector)
+        {
+            if (nodes == null)
+                return Array.Empty<CountSnapshot>();
+
+            return nodes
+                .Where(node => node != null)
+                .GroupBy(selector)
+                .OrderBy(group => group.Key, StringComparer.Ordinal)
+                .Select(group => new CountSnapshot { label = group.Key, count = group.Count() })
+                .ToArray();
+        }
+
         private static NativeActionSnapshot BuildNativeAction(PyralisAuthoringNativeAction? nativeAction)
         {
             if (!nativeAction.HasValue)
@@ -147,24 +362,6 @@ namespace NeonBlack.Gameplay.Editor
                 fieldOrComponent = action.FieldOrComponent,
                 successCheck = action.SuccessCheck,
                 guidance = action.ToGuidanceSentence()
-            };
-        }
-
-        private static ContractSnapshot BuildContract(ResolvedAuthoringContract contract)
-        {
-            if (contract == null)
-                return null;
-
-            return new ContractSnapshot
-            {
-                stableId = contract.StableId,
-                displayName = contract.DisplayName,
-                category = contract.AuthoringCategory,
-                moduleId = contract.ModuleId,
-                setupNodeId = contract.SetupNodeId,
-                capability = contract.Capability.ToString(),
-                confidence = contract.Confidence.ToString(),
-                sourceType = contract.SourceType != null ? contract.SourceType.FullName : string.Empty
             };
         }
 
@@ -195,7 +392,7 @@ namespace NeonBlack.Gameplay.Editor
         }
 
         [Serializable]
-        private sealed class GraphSnapshot
+        private sealed class MapSnapshot
         {
             public string schema;
             public string purpose;
@@ -203,14 +400,75 @@ namespace NeonBlack.Gameplay.Editor
             public string routeName;
             public string exportedAtUtc;
             public SourceSnapshot source;
+            public CurrentRouteSnapshot currentRoute;
             public int nodeCount;
             public int edgeCount;
             public NodeSnapshot[] nodes;
             public EdgeSnapshot[] edges;
             public MapRowSnapshot[] mapRows;
             public ConnectionSnapshot[] mapConnections;
+            public NodeSnapshot[] sceneSurfaces;
+            public MapIssueSnapshot[] sceneSetupIssues;
+        }
+
+        [Serializable]
+        private sealed class CurrentRouteSnapshot
+        {
+            public string routeName;
+            public bool hasSelectedCapabilities;
+            public bool requiresPawn;
+            public bool hasParticipants;
+            public bool hasAnyDefaultPawn;
+            public string participantPawnIssue;
+            public string participantPawnIssueKind;
+            public string[] capabilityFamilies;
+            public RouteFactSnapshot[] routeFacts;
+            public SourceSnapshot session;
+            public SourceSnapshot mode;
+            public SourceSnapshot participant;
+            public SourceSnapshot pawn;
+        }
+
+        [Serializable]
+        private sealed class RouteFactSnapshot
+        {
+            public string capability;
+            public string label;
+            public string family;
+            public bool primaryProofCandidate;
+        }
+
+        [Serializable]
+        private sealed class HygieneSnapshot
+        {
+            public string schema;
+            public string purpose;
+            public string view;
+            public string routeName;
+            public string exportedAtUtc;
+            public SourceSnapshot source;
+            public GraphSummarySnapshot graphSummary;
             public HygieneSectionSnapshot[] hygieneSections;
             public HygieneRowSnapshot[] hygieneRows;
+            public ConnectionSnapshot[] proofBlockers;
+            public CountSnapshot[] sourceOriginCounts;
+            public CountSnapshot[] sourceKindCounts;
+            public CountSnapshot[] evidenceStateCounts;
+            public DependencyPressureSnapshot[] dependencyPressure;
+            public ContractPressureSnapshot[] contractSourcePressure;
+        }
+
+        [Serializable]
+        private sealed class GraphSummarySnapshot
+        {
+            public int nodeCount;
+            public int edgeCount;
+            public int unknownNodeCount;
+            public int missingNodeCount;
+            public int blockedNodeCount;
+            public int proofBlockerCount;
+            public int dependencyPressureCount;
+            public int contractNodeCount;
         }
 
         [Serializable]
@@ -234,7 +492,6 @@ namespace NeonBlack.Gameplay.Editor
             public string[] customizationMoments;
             public NativeActionSnapshot nativeAction;
             public SourceSnapshot sourceObject;
-            public ContractSnapshot sourceContract;
         }
 
         [Serializable]
@@ -260,8 +517,24 @@ namespace NeonBlack.Gameplay.Editor
         }
 
         [Serializable]
+        private sealed class MapIssueSnapshot
+        {
+            public string nodeId;
+            public string label;
+            public string evidenceState;
+            public string message;
+            public string nativeAction;
+            public string[] assignmentFields;
+            public string[] nativeSetup;
+            public string blockingReason;
+            public SourceSnapshot target;
+        }
+
+        [Serializable]
         private sealed class ConnectionSnapshot
         {
+            public string fromNodeId;
+            public string toNodeId;
             public string from;
             public string to;
             public string relationship;
@@ -291,6 +564,51 @@ namespace NeonBlack.Gameplay.Editor
         }
 
         [Serializable]
+        private sealed class DependencyPressureSnapshot
+        {
+            public string assetPath;
+            public string fileName;
+            public string ownerDomain;
+            public string[] domains;
+            public int dependencyCount;
+            public int concreteCrossDomainCount;
+            public int serializedFieldCount;
+            public int unityLookupCount;
+            public int staticAccessCount;
+            public int reflectionOrStringLookupCount;
+            public int riskScore;
+            public string risk;
+            public string[] reasons;
+        }
+
+        [Serializable]
+        private sealed class ContractPressureSnapshot
+        {
+            public string nodeId;
+            public string label;
+            public string sourceOrigin;
+            public string evidenceState;
+            public string stableId;
+            public string displayName;
+            public string category;
+            public string moduleId;
+            public string setupNodeId;
+            public string capability;
+            public string confidence;
+            public string sourceType;
+            public int assignmentFieldCount;
+            public int customizationMomentCount;
+            public int nativeSetupCount;
+        }
+
+        [Serializable]
+        private sealed class CountSnapshot
+        {
+            public string label;
+            public int count;
+        }
+
+        [Serializable]
         private sealed class NativeActionSnapshot
         {
             public string verb;
@@ -308,19 +626,6 @@ namespace NeonBlack.Gameplay.Editor
             public string type;
             public string assetPath;
             public string globalObjectId;
-        }
-
-        [Serializable]
-        private sealed class ContractSnapshot
-        {
-            public string stableId;
-            public string displayName;
-            public string category;
-            public string moduleId;
-            public string setupNodeId;
-            public string capability;
-            public string confidence;
-            public string sourceType;
         }
     }
 }

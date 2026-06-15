@@ -228,15 +228,80 @@ namespace NeonBlack.Gameplay.Features.Platform.Session
                 new[] { missingSetup, proof },
                 new[] { new PyralisAuthoringGraphEdge("proof.1p", "setup.session", PyralisAuthoringGraphEdgeKind.BlockedBy, "missing setup") });
 
-            string json = PyralisAuthoringSetupGraphJsonExporter.ToJson(graph, "Hygiene");
+            string mapJson = PyralisAuthoringSetupGraphJsonExporter.ToMapJson(graph);
+            string hygieneJson = PyralisAuthoringSetupGraphJsonExporter.ToHygieneJson(
+                graph,
+                new[]
+                {
+                    PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                        "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Platform/Session/HeavyRuntime.cs",
+                        "using NeonBlack.Gameplay.Features.Input; using NeonBlack.Gameplay.Features.Combat; class HeavyRuntime { void Tick() { UnityEngine.Object.FindAnyObjectByType<UnityEngine.Transform>(); } }")
+                });
+            string noRouteHygieneJson = PyralisAuthoringSetupGraphJsonExporter.ToHygieneJson(
+                null,
+                new[]
+                {
+                    PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                        "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Platform/Session/NoRoutePressure.cs",
+                        "using NeonBlack.Gameplay.Features.Input; using NeonBlack.Gameplay.Features.Combat; class NoRoutePressure { }")
+                });
 
-            Assert.That(json, Does.Contain("pyralis.authoring.setupGraph.snapshot.v1"));
-            Assert.That(json, Does.Contain("\"view\": \"Hygiene\""));
-            Assert.That(json, Does.Contain("\"id\": \"setup.session\""));
-            Assert.That(json, Does.Contain("\"kind\": \"BlockedBy\""));
-            Assert.That(json, Does.Contain("\"mapRows\""));
-            Assert.That(json, Does.Contain("\"hygieneSections\""));
-            Assert.That(json, Does.Contain("Read-only authoring graph diagnostic snapshot"));
+            Assert.That(mapJson, Does.Contain("pyralis.authoring.mapSnapshot.v1"));
+            Assert.That(mapJson, Does.Contain("\"view\": \"Map\""));
+            Assert.That(mapJson, Does.Contain("\"nodes\""));
+            Assert.That(mapJson, Does.Contain("\"edges\""));
+            Assert.That(mapJson, Does.Contain("\"currentRoute\""));
+            Assert.That(mapJson, Does.Contain("\"mapRows\""));
+            Assert.That(mapJson, Does.Contain("\"mapConnections\""));
+            Assert.That(mapJson, Does.Contain("\"sceneSetupIssues\""));
+            Assert.That(mapJson, Does.Not.Contain("\"hygieneSections\""));
+
+            Assert.That(hygieneJson, Does.Contain("pyralis.authoring.hygieneSnapshot.v1"));
+            Assert.That(hygieneJson, Does.Contain("\"view\": \"Hygiene\""));
+            Assert.That(hygieneJson, Does.Contain("\"graphSummary\""));
+            Assert.That(hygieneJson, Does.Contain("\"hygieneSections\""));
+            Assert.That(hygieneJson, Does.Contain("\"hygieneRows\""));
+            Assert.That(hygieneJson, Does.Contain("\"proofBlockers\""));
+            Assert.That(hygieneJson, Does.Contain("\"sourceOriginCounts\""));
+            Assert.That(hygieneJson, Does.Contain("\"dependencyPressure\""));
+            Assert.That(hygieneJson, Does.Contain("\"contractSourcePressure\""));
+            Assert.That(hygieneJson, Does.Not.Contain("\"mapRows\""));
+
+            Assert.That(noRouteHygieneJson, Does.Contain("pyralis.authoring.hygieneSnapshot.v1"));
+            Assert.That(noRouteHygieneJson, Does.Contain("\"routeName\": \"No setup route selected\""));
+            Assert.That(noRouteHygieneJson, Does.Contain("\"dependencyPressure\""));
+            Assert.That(noRouteHygieneJson, Does.Contain("\"nodeCount\": 0"));
+            Assert.That(noRouteHygieneJson, Does.Not.Contain("\"mapRows\""));
+        }
+
+        [Test]
+        public void SetupGraphJsonExport_SmokeMapExportsAuthoredRouteWithoutIntent()
+        {
+            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
+            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
+            ParticipantDefinition participant = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            PawnDefinition pawn = ScriptableObject.CreateInstance<PawnDefinition>();
+            session.defaultGameMode = mode;
+            session.defaultParticipants = new[] { participant };
+            participant.defaultPawn = pawn;
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(session);
+            string mapJson = PyralisAuthoringSetupGraphJsonExporter.ToMapJson(graph);
+
+            Assert.That(mapJson, Does.Contain("\"currentRoute\""));
+            Assert.That(mapJson, Does.Contain("\"hasSelectedCapabilities\": true"));
+            Assert.That(mapJson, Does.Contain("\"requiresPawn\": true"));
+            Assert.That(mapJson, Does.Contain("\"hasParticipants\": true"));
+            Assert.That(mapJson, Does.Contain("\"capabilityFamilies\""));
+            Assert.That(mapJson, Does.Contain("CharacterPawnGameplay"));
+            Assert.That(mapJson, Does.Contain("\"routeFacts\""));
+            Assert.That(mapJson, Does.Contain("\"participantPawnIssueKind\": \"MissingPawnPrefab\""));
+            Assert.That(mapJson, Does.Not.Contain("\"hygieneSections\""));
+
+            Object.DestroyImmediate(pawn);
+            Object.DestroyImmediate(participant);
+            Object.DestroyImmediate(mode);
+            Object.DestroyImmediate(session);
         }
 
         [Test]

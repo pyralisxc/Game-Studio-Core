@@ -161,14 +161,11 @@ namespace NeonBlack.Gameplay.Editor
 
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                IReadOnlyList<PyralisAuthoringGraphAuditRow> rows = PyralisAuthoringSetupGraphProjection.BuildReadinessAuditDetailRows(graph);
+                IReadOnlyList<PyralisAuthoringGraphAuditRow> rows = PyralisAuthoringSetupGraphProjection.BuildMapSceneSetupIssueRows(graph);
                 int visibleCount = 0;
                 for (int i = 0; i < rows.Count; i++)
                 {
                     PyralisAuthoringGraphAuditRow row = rows[i];
-                    if (!IsSceneSetupIssue(row))
-                        continue;
-
                     DrawSceneSetupIssueRow(row);
                     visibleCount++;
                 }
@@ -176,36 +173,6 @@ namespace NeonBlack.Gameplay.Editor
                 if (visibleCount == 0)
                     EditorGUILayout.LabelField("No current scene/setup issues are exposed by the graph.", EditorStyles.wordWrappedMiniLabel);
             }
-        }
-
-        private static bool IsSceneSetupIssue(PyralisAuthoringGraphAuditRow row)
-        {
-            PyralisAuthoringGraphNode node = row?.Node;
-            if (node == null)
-                return false;
-
-            if (node.EvidenceState == PyralisAuthoringGraphEvidenceState.Ready
-                || node.EvidenceState == PyralisAuthoringGraphEvidenceState.Optional
-                || node.EvidenceState == PyralisAuthoringGraphEvidenceState.Unknown)
-            {
-                return false;
-            }
-
-            if (node.Kind == PyralisAuthoringGraphNodeKind.SceneSurface
-                || node.Kind == PyralisAuthoringGraphNodeKind.SetupChain
-                || node.Kind == PyralisAuthoringGraphNodeKind.UnitySurfaceRequirement)
-            {
-                return true;
-            }
-
-            if (node.SourceKind == PyralisAuthoringGraphSourceKind.SceneReadiness
-                || node.SourceKind == PyralisAuthoringGraphSourceKind.RuntimeValidation
-                || node.SourceKind == PyralisAuthoringGraphSourceKind.SetupFlow)
-            {
-                return true;
-            }
-
-            return false;
         }
 
         private static void DrawSceneSetupIssueRow(PyralisAuthoringGraphAuditRow row)

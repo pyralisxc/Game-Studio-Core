@@ -413,6 +413,46 @@ namespace NeonBlack.Gameplay.Editor
             return rows.ToArray();
         }
 
+        public static IReadOnlyList<PyralisAuthoringGraphAuditRow> BuildMapSceneSetupIssueRows(PyralisAuthoringSetupGraph graph)
+        {
+            if (graph == null)
+                return Array.Empty<PyralisAuthoringGraphAuditRow>();
+
+            return BuildReadinessAuditDetailRows(graph)
+                .Where(IsMapSceneSetupIssue)
+                .ToArray();
+        }
+
+        private static bool IsMapSceneSetupIssue(PyralisAuthoringGraphAuditRow row)
+        {
+            PyralisAuthoringGraphNode node = row?.Node;
+            if (node == null)
+                return false;
+
+            if (node.EvidenceState == PyralisAuthoringGraphEvidenceState.Ready
+                || node.EvidenceState == PyralisAuthoringGraphEvidenceState.Optional
+                || node.EvidenceState == PyralisAuthoringGraphEvidenceState.Unknown)
+            {
+                return false;
+            }
+
+            if (node.Kind == PyralisAuthoringGraphNodeKind.SceneSurface
+                || node.Kind == PyralisAuthoringGraphNodeKind.SetupChain
+                || node.Kind == PyralisAuthoringGraphNodeKind.UnitySurfaceRequirement)
+            {
+                return true;
+            }
+
+            if (node.SourceKind == PyralisAuthoringGraphSourceKind.SceneReadiness
+                || node.SourceKind == PyralisAuthoringGraphSourceKind.RuntimeValidation
+                || node.SourceKind == PyralisAuthoringGraphSourceKind.SetupFlow)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         public static IReadOnlyList<PyralisAuthoringGraphConnectionRow> BuildProofSupportRows(PyralisAuthoringSetupGraph graph)
         {
             if (graph == null)

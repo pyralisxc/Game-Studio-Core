@@ -399,7 +399,7 @@ Map is the current scene/setup reality map. Each row should show:
 
 Map should teach what currently exists and what concrete Unity setup is missing. It can read graph evidence, but it presents scene and setup issues rather than graph integrity.
 
-Map may offer a compact read-only Graph JSON Snapshot button for human and agent diagnostics. That snapshot must serialize the current resolved graph and graph projections; it must not create assets, apply fixes, or become a second setup model. The export action writes the current tab view into `Editor/Authoring/TempGraphs` so issue reports and agent handoffs have one predictable diagnostic folder while generated JSON remains ignored.
+Map may offer a compact read-only Graph JSON Snapshot button for human and agent diagnostics. That snapshot must serialize the current setup lens only: current authored route analysis, graph nodes, graph edges, setup map rows, map connections, scene surfaces, and concrete scene/setup issues. It must not include Hygiene-only sections, must not become a second setup model, and must not pretend Intent-selected desired work already exists in the scene. Intent-projected route snapshots belong to Overview/Guide if they are needed later. The export action writes the current tab view into `Editor/Authoring/TempGraphs` so issue reports and agent handoffs have one predictable diagnostic folder while generated JSON remains ignored.
 
 ### Hygiene
 
@@ -414,7 +414,7 @@ Hygiene should be graph integrity, not a second scene checklist. Evidence cards 
 
 Hygiene can mention source detail, but concrete Unity repair and inspection actions belong in Map or the Inspector. This keeps Hygiene useful for developers auditing the resolved graph without making it compete with the beginner setup flow.
 
-Hygiene may offer the same compact read-only Graph JSON Snapshot button as Map, with the view marked as `Hygiene`, so developers and agents can inspect source origins, blocker edges, stable ids, and graph evidence outside the Unity UI without scraping visible text. The shared export action should keep Map and Hygiene on one implementation while writing the current tab's graph view separately.
+Hygiene may offer the same compact read-only Graph JSON Snapshot button as Map, with the view marked as `Hygiene`, so developers and agents can inspect graph summary, Hygiene sections/rows, proof blockers, source-origin counts, dependency pressure, and contract source pressure outside the Unity UI without scraping visible text. It should not include Map-only setup rows. Hygiene remains useful before a setup route exists: graph-specific sections may be empty, but dependency pressure and source audit data should still export. The shared export action should keep Map and Hygiene on one implementation while writing the current tab's graph view separately.
 
 ### Native Creation Workflow
 
