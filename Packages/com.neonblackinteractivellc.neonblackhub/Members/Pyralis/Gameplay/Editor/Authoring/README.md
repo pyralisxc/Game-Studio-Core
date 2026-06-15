@@ -39,7 +39,7 @@ Surfaces should consume a cached resolved setup graph and grammar projections. T
 
 Feature-specific authoring contracts should stay beside the owning feature when practical and be discovered reflectively. Central authoring code should aggregate those contracts through the dependency tree, validators, grammar, and resolved setup graph rather than maintaining parallel feature-id switch statements.
 
-Feature-owned editor scripts that teach setup, draw field guides, or validate a feature's Inspector path should live under that feature's `Editor/Authoring/` folder. Keep the feature editor asmdef at the feature `Editor/` root when that preserves the existing assembly boundary. Generic feature editor utilities that are not authoring guidance should be rare and should have a clear owner-specific reason to stay outside `Authoring/`.
+Feature-owned editor scripts that teach setup, draw field guides, or validate a feature's Inspector path should live under that feature's `Editor/Inspectors/` folder. Keep the feature editor asmdef at the feature `Editor/` root when that preserves the existing assembly boundary. Generic feature editor utilities that are not feature inspectors should be rare and should have a clear owner-specific reason to stay outside `Inspectors/`.
 
 ## Rule Of Thumb
 

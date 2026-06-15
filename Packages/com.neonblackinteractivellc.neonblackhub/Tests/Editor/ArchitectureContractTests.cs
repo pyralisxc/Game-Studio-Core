@@ -710,7 +710,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(File.Exists(Path.Combine(traversalRoot, "3D", "GrabDetector.cs")), Is.True);
             Assert.That(File.Exists(Path.Combine(traversalRoot, "3D", "ClimbZone.cs")), Is.True);
             Assert.That(File.Exists(Path.Combine(traversalRoot, "3D", "Pawn3DTraversalComponent.cs")), Is.True);
-            Assert.That(File.Exists(Path.Combine(Path.GetDirectoryName(traversalRoot)!, "Editor", "Authoring", "ClimbZoneEditor.cs")), Is.True);
+            Assert.That(File.Exists(Path.Combine(Path.GetDirectoryName(traversalRoot)!, "Editor", "Inspectors", "ClimbZoneEditor.cs")), Is.True);
 
             string ledgeProbeSource = File.ReadAllText(Path.Combine(traversalRoot, "3D", "LedgeProbe3D.cs"));
             string traversalComponentSource = File.ReadAllText(Path.Combine(traversalRoot, "3D", "Pawn3DTraversalComponent.cs"));
@@ -1940,7 +1940,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             string mainMenuSource = File.ReadAllText(Path.Combine(gameplayRoot, "Core", "Navigation", "UI", "MainMenuManager.cs"));
             string gameManagerSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "GameFlow", "2D", "GameManager.cs"));
             string inputHandlerSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Input", "2D", "PlayerInputHandler.cs"));
-            string inputZoneEditorSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Input", "2D", "Editor", "Authoring", "InputZoneSetEditor.cs"));
+            string inputZoneEditorSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Input", "2D", "Editor", "Inspectors", "InputZoneSetEditor.cs"));
             string hazardSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Hazards", "2D", "Hazard.cs"));
             string hazardSlamSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Hazards", "2D", "Hazard.SlamSequence.cs"));
 

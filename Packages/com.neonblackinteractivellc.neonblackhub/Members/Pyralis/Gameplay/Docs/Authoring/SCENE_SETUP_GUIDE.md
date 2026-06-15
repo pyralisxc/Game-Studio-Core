@@ -6,7 +6,7 @@ This guide reflects the current `Members/Pyralis/Gameplay` codebase and is the m
 Start with `Docs/Authoring/START_HERE.md` and run the
 `authoring-native-1p-proof-checklist.md` pass from the repository `docs/` root first.
 Read `Docs/Authoring/AUTHORING_MODEL.md` if definitions and profiles are unclear,
-then use `Docs/Authoring/Prefabs/Bootstrap_Example_Setup.md` for click-by-click Editor wiring.
+then use this file plus the selected Inspector field guides for Editor wiring.
 Use `Docs/Authoring/README.md` when you need the authoring-doc index.
 
 This file is the developer reference for what belongs in each scene type after the first playable proof makes sense.

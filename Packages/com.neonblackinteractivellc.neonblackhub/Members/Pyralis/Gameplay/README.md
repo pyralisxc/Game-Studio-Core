@@ -51,6 +51,5 @@ Pawn animation is data-driven and Unity-authored:
 - `Docs/Authoring/AUTHORING_MODEL.md`
 - `Docs/Authoring/README.md`
 - `Docs/Authoring/CANONICAL_SETUP.md`
-- `Docs/Authoring/Prefabs/Bootstrap_Example_Setup.md`
-- `Docs/Authoring/Prefabs/Pawn_Setup.md`
+- `Docs/Authoring/SCENE_SETUP_GUIDE.md`
 - `Docs/NewGameTypeGuide.md`

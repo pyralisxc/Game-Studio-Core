@@ -331,17 +331,9 @@ Read only the guide that matches your immediate task:
 
 - Full setup manual: `MANUAL.md`
 - Asset relationship map: `AUTHORING_MODEL.md`
-- First scene root: `Prefabs/Bootstrap_Example_Setup.md`
-- Pawn prefab: `Prefabs/Pawn_Setup.md`
-- Camera: `Prefabs/Camera_Setup.md`
-- Combat and projectiles: `Prefabs/Combat_Definitions_Setup.md`
-- Health and hitboxes: `Prefabs/Health_Combat_Setup.md`
-- Hazards and difficulty: `Prefabs/Hazard_Difficulty_Setup.md`
-- Pickups: `Prefabs/Pickups_Setup.md`
-- Scoring: `Prefabs/Scoring_Setup.md`
-- UI/HUD: `Prefabs/UI_HUD_Setup.md`
-- Board, card, seat, hand, faction, or tabletop: `Prefabs/Board_Card_Tabletop_Setup.md`
-- Scene flow: `Prefabs/Scene_Flow_Setup.md`
+- First scene root and route chain: `SCENE_SETUP_GUIDE.md`
+- Pawn prefab, camera, combat, health, hazards, pickups, and scoring: follow the Authoring Window, selected Inspector field guides, and `AUTHORING_MODEL.md`
+- UI/HUD, board/card/tabletop, and scene flow: follow the Authoring Window, selected Inspector field guides, `SCENE_SETUP_GUIDE.md`, and `AUTHORING_MODEL.md`
 - Deeper architecture: `CANONICAL_SETUP.md`
 
 ## Mental Model

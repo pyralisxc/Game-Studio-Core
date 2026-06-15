@@ -42,7 +42,7 @@ namespace NeonBlack.Gameplay.Editor
                     "Resolve a legal board move and confirm the label advances to the next seat.",
                     "If the label says board turn order is not ready, assign a TurnOrderDefinition on the board presenter."
                 },
-                manualPath: PyralisInspectorGuide.AuthoringDocPath("Prefabs/Board_Card_Tabletop_Setup.md")));
+                manualPath: PyralisInspectorGuide.AuthoringDocPath("SCENE_SETUP_GUIDE.md")));
 
             DrawDefaultInspector();
             serializedObject.ApplyModifiedProperties();

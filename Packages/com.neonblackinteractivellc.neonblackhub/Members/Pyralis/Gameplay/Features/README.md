@@ -6,7 +6,7 @@ Feature folders are organized by gameplay responsibility first, then by runtime 
 
 - `Runtime/Shared` owns reusable contracts, services, contexts, and feature logic.
 - `Runtime/2D`, `Runtime/2_5D`, and `Runtime/3D` own lane-specific adapters.
-- Feature-local `Editor/Authoring` may explain or validate a feature, but setup truth should come from contracts, dependency structure, and graph evidence.
+- Feature-local `Editor/Inspectors` may explain or validate a feature, but setup truth should come from contracts, dependency structure, and graph evidence.
 - Avoid one-file forwarding folders. Add a folder only when it makes ownership easier to see.
 - Do not put authored scene state in feature code. Definitions, profiles, participants, pawns, and Unity components remain the setup surfaces.
 

@@ -335,7 +335,7 @@ Current source-of-truth path:
 
 - `Docs/Authoring/CANONICAL_SETUP.md`
 - `Docs/Authoring/SCENE_SETUP_GUIDE.md`
-- feature-specific setup docs beneath `Docs/Authoring/Prefabs/`
+- selected Inspector field guides and graph-backed Authoring Window tabs
 
 ### 13. Source Encoding Hygiene Is Now Guarded
 

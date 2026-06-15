@@ -38,13 +38,11 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             string startHerePath = Path.Combine(authoringRoot, "START_HERE.md");
             string canonicalPath = Path.Combine(authoringRoot, "CANONICAL_SETUP.md");
-            string prefabReadmePath = Path.Combine(authoringRoot, "Prefabs", "README.md");
-            string bootstrapPath = Path.Combine(authoringRoot, "Prefabs", "Bootstrap_Example_Setup.md");
+            string sceneGuidePath = Path.Combine(authoringRoot, "SCENE_SETUP_GUIDE.md");
 
             string startHere = File.ReadAllText(startHerePath);
             string canonical = File.ReadAllText(canonicalPath);
-            string prefabReadme = File.ReadAllText(prefabReadmePath);
-            string bootstrap = File.ReadAllText(bootstrapPath);
+            string sceneGuide = File.ReadAllText(sceneGuidePath);
 
             Assert.That(startHere.Contains("Setup Flow"), Is.True);
             Assert.That(startHere.Contains("route capability"), Is.True);
@@ -53,9 +51,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(canonical.Contains("map Pyralis gameplay roles to your project's action names"), Is.True);
             Assert.That(canonical.Contains("The 2D input stack reads movement, dash/jump, attack"), Is.True);
             Assert.That(canonical.Contains("The 3D input stack also reads action names from the effective `InputProfile`"), Is.True);
-            Assert.That(prefabReadme.Contains("MANUAL.md"), Is.False);
-            Assert.That(bootstrap.Contains("Use manual native authoring for validation passes"), Is.True);
-            Assert.That(bootstrap.Contains("Future scaffold tooling can capture a proven route later"), Is.True);
+            Assert.That(sceneGuide.Contains("Use native Unity creation and assignment while Authoring explains the route."), Is.True);
+            Assert.That(sceneGuide.Contains("Future scaffold tooling should be treated as route scaffolding only"), Is.True);
             Assert.That(startHere.Contains("Template or scaffold tooling is not the current first-test path"), Is.True);
             Assert.That(canonical.Contains("Future scaffolds must be downstream of a manually proven route"), Is.True);
         }
@@ -77,18 +74,19 @@ namespace NeonBlack.Gameplay.Tests.Editor
             string readme = File.ReadAllText(Path.Combine(authoringRoot, "README.md"));
             string migration = File.ReadAllText(Path.Combine(authoringRoot, "Systems", "Migration_and_Readability_Standard.md"));
             string architecture = File.ReadAllText(Path.Combine(authoringRoot, "Systems", "Architecture_Overview.md"));
-            string brawlerMenu = File.ReadAllText(Path.Combine(authoringRoot, "Prefabs", "Brawler_Menu_Example_Setup.md"));
+            string sceneGuide = File.ReadAllText(Path.Combine(authoringRoot, "SCENE_SETUP_GUIDE.md"));
 
             Assert.That(readme.Contains("Setup Maintenance Contract"), Is.True);
             Assert.That(readme.Contains("PyralisSetupRouteAnalysis"), Is.True);
+            Assert.That(readme.Contains("Prefabs/"), Is.False);
             Assert.That(migration.Contains("setup guidance is product code"), Is.True);
             Assert.That(migration.Contains("shared route analysis"), Is.True);
             Assert.That(architecture.Contains("Unity-facing entry point"), Is.True);
             Assert.That(architecture.Contains("PyralisGameplayLifetimeScope as the singular source of truth"), Is.True);
             Assert.That(architecture.Contains("Static `Instance` properties"), Is.True);
             AssertNoMojibake(architecture, "Architecture_Overview.md");
-            Assert.That(brawlerMenu.Contains("SceneLoader.Instance.LoadScene"), Is.False);
-            Assert.That(brawlerMenu.Contains("ISceneNavigator"), Is.True);
+            Assert.That(sceneGuide.Contains("MainMenuManager"), Is.True);
+            Assert.That(sceneGuide.Contains("ISceneNavigator"), Is.False);
         }
 
         [Test]
@@ -108,7 +106,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             string readme = File.ReadAllText(Path.Combine(authoringRoot, "README.md"));
             string blueprint = File.ReadAllText(Path.Combine(authoringRoot, "AUTHORING_BLUEPRINT.md"));
             string model = File.ReadAllText(Path.Combine(authoringRoot, "AUTHORING_MODEL.md"));
-            string bootstrap = File.ReadAllText(Path.Combine(authoringRoot, "Prefabs", "Bootstrap_Example_Setup.md"));
+            string sceneGuide = File.ReadAllText(Path.Combine(authoringRoot, "SCENE_SETUP_GUIDE.md"));
 
             Assert.That(readme.Contains("Source-Of-Truth Map"), Is.True);
             Assert.That(readme.Contains("Contracts own feature meaning."), Is.True);
@@ -117,8 +115,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(blueprint.Contains("Cleanup Closure Criteria"), Is.True);
             Assert.That(blueprint.Contains("If the answer is \"UI projection,\" the file should not be discovering route truth."), Is.True);
             Assert.That(model.Contains("Contracts + reflection + dependency tree + scene evidence + validators + grammar"), Is.True);
-            Assert.That(bootstrap.Contains("choose runtime capability ingredients"), Is.True);
-            Assert.That(bootstrap.Contains("choose runtime capability ingredients"), Is.True);
+            Assert.That(sceneGuide.Contains("In Authoring Window: clear `Do Now`, open `Map`, check intent-required blockers in `Validate`, then Play."), Is.True);
         }
 
         [Test]
@@ -214,26 +211,24 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 "Authoring");
 
             string canonicalPath = Path.Combine(authoringRoot, "CANONICAL_SETUP.md");
-            string tabletopPath = Path.Combine(authoringRoot, "Prefabs", "Board_Card_Tabletop_Setup.md");
+            string sceneGuidePath = Path.Combine(authoringRoot, "SCENE_SETUP_GUIDE.md");
 
             Assert.That(File.Exists(canonicalPath), Is.True);
-            Assert.That(File.Exists(tabletopPath), Is.True);
+            Assert.That(File.Exists(sceneGuidePath), Is.True);
 
             string canonical = File.ReadAllText(canonicalPath);
-            string tabletop = File.ReadAllText(tabletopPath);
+            string sceneGuide = File.ReadAllText(sceneGuidePath);
 
             Assert.That(canonical.Contains("at least one `PawnDefinition`"), Is.False);
             Assert.That(canonical.Contains("Create pawn assets only when a participant needs an actor body"), Is.True);
-            Assert.That(tabletop.Contains("a player does not require a pawn"), Is.True);
-            Assert.That(tabletop.Contains("leave `Default Pawn` empty"), Is.True);
-            Assert.That(tabletop.Contains("TabletopBoardSelectionBridge"), Is.True);
-            Assert.That(tabletop.Contains("ActionQueueService"), Is.True);
+            Assert.That(sceneGuide.Contains("Pawn route only"), Is.True);
+            Assert.That(sceneGuide.Contains("pawn route"), Is.True);
         }
 
         [Test]
-        public void PawnSetupDocs_ExplainBringYourOwnAnimatorControllerFlow()
+        public void AuthoringModel_ExplainsBringYourOwnAnimatorControllerFlow()
         {
-            string pawnSetupPath = Path.Combine(
+            string modelPath = Path.Combine(
                 Application.dataPath,
                 "..",
                 "Packages",
@@ -243,20 +238,14 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 "Gameplay",
                 "Docs",
                 "Authoring",
-                "Prefabs",
-                "Pawn_Setup.md");
+                "AUTHORING_MODEL.md");
 
-            string pawnSetup = File.ReadAllText(pawnSetupPath);
+            string model = File.ReadAllText(modelPath);
 
-            Assert.That(pawnSetup.Contains("Bring Your Own Animator Controller"), Is.True);
-            Assert.That(pawnSetup.Contains("Controller Mapping Wizard"), Is.True);
-            Assert.That(pawnSetup.Contains("Append Suggestions"), Is.True);
-            Assert.That(pawnSetup.Contains("Replace With Suggestions"), Is.True);
-            Assert.That(pawnSetup.Contains("Parameter pickers are filtered by binding type"), Is.True);
-            Assert.That(pawnSetup.Contains("Partial mappings are valid"), Is.True);
-            Assert.That(pawnSetup.Contains("Current support is Animator parameter mapping"), Is.True);
-            Assert.That(pawnSetup.Contains("Blend trees are supported through float parameters"), Is.True);
-            Assert.That(pawnSetup.Contains("NormalizedSpeed"), Is.True);
+            Assert.That(model.Contains("Bring your own Animator Controller is the normal path."), Is.True);
+            Assert.That(model.Contains("map Pyralis signals such as move, jump, dash, attack, hurt, and interact"), Is.True);
+            Assert.That(model.Contains("The animation definition maps gameplay signals to Animator parameters."), Is.True);
+            Assert.That(model.Contains("Animator Controller"), Is.True);
         }
 
         [Test]

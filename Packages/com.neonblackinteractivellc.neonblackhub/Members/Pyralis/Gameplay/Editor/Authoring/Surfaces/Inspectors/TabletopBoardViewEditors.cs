@@ -27,7 +27,7 @@ namespace NeonBlack.Gameplay.Editor
                     "Selecting the object should call back into TabletopBoardGridPresenter.",
                     "Invalid selections should report LastIssue without moving board state."
                 },
-                manualPath: PyralisInspectorGuide.AuthoringDocPath("Prefabs/Board_Card_Tabletop_Setup.md")));
+                manualPath: PyralisInspectorGuide.AuthoringDocPath("SCENE_SETUP_GUIDE.md")));
 
             DrawDefaultInspector();
         }
@@ -57,7 +57,7 @@ namespace NeonBlack.Gameplay.Editor
                     "After a legal move, this view should follow the piece coordinate reported by BoardRuntimeState.",
                     "Captured or missing logical pieces should hide their view."
                 },
-                manualPath: PyralisInspectorGuide.AuthoringDocPath("Prefabs/Board_Card_Tabletop_Setup.md")));
+                manualPath: PyralisInspectorGuide.AuthoringDocPath("SCENE_SETUP_GUIDE.md")));
 
             DrawDefaultInspector();
         }

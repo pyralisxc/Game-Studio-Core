@@ -34,7 +34,6 @@ Active docs should describe the current product truth. Dated audits, superseded 
 
 ## Archive
 
-- `_Archive/Plans/` - superseded planning notes.
-- `_Archive/History/` - dated audits, specs, and historical records.
+- `_Archive/Migration/` - migration notes that still explain active cleanup boundaries.
 
 When active docs and archive files disagree, follow the active docs.

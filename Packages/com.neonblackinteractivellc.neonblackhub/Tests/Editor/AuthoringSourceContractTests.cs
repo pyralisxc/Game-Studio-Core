@@ -110,7 +110,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void PyralisFeatureEditor_Source_KeepsGuidedAuthoringInsideEditorAuthoringFolders()
+        public void PyralisFeatureEditor_Source_KeepsGuidedInspectorsInsideEditorInspectorsFolders()
         {
             string featuresRoot = Path.Combine(GameplayRoot, "Features");
             string[] editorScripts = Directory.GetFiles(featuresRoot, "*.cs", SearchOption.AllDirectories)
@@ -123,9 +123,9 @@ namespace NeonBlack.Gameplay.Tests.Editor
             {
                 string relative = editorScript.Replace(GameplayRoot + Path.DirectorySeparatorChar, string.Empty);
                 Assert.That(
-                    relative.Split(Path.DirectorySeparatorChar).Contains("Authoring"),
+                    relative.Split(Path.DirectorySeparatorChar).Contains("Inspectors"),
                     Is.True,
-                    $"Feature editor script should live under an Editor/Authoring folder: {relative}");
+                    $"Feature editor script should live under an Editor/Inspectors folder: {relative}");
             }
         }
 
@@ -437,7 +437,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 "Gameplay");
             string presenterPath = Path.Combine(gameplayRoot, "Features", "Tabletop", "TabletopBoardGridPresenter.cs");
             string editorPath = FindGameplayEditorFile("TabletopBoardGridPresenterEditor.cs");
-            string setupDocPath = AuthoringDoc("Prefabs", "Board_Card_Tabletop_Setup.md");
+            string setupDocPath = AuthoringDoc("SCENE_SETUP_GUIDE.md");
 
             Assert.That(File.Exists(presenterPath), Is.True);
             Assert.That(File.Exists(editorPath), Is.True);
@@ -454,7 +454,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(presenterSource.Contains("BoardMovePolicyDefinition"), Is.True);
             Assert.That(editorSource.Contains("CustomEditor(typeof(TabletopBoardGridPresenter))"), Is.True);
             Assert.That(editorSource.Contains("Guided Authoring: Tabletop Board Grid Presenter"), Is.True);
-            Assert.That(setupDoc.Contains("TabletopBoardGridPresenter"), Is.True);
+            Assert.That(setupDoc.Contains("Pawn route only"), Is.True);
         }
 
         [Test]
@@ -554,9 +554,9 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 "Pyralis",
                 "Gameplay");
 
-            string enemyEditorPath = Path.Combine(gameplayRoot, "Features", "Enemies", "3D", "Editor", "Authoring", "EnemyFeatureRuntimeGuidedEditors.cs");
-            string hazardEditorPath = Path.Combine(gameplayRoot, "Features", "Hazards", "Editor", "Authoring", "HazardRuntimeGuidedEditors.cs");
-            string traversalEditorPath = Path.Combine(gameplayRoot, "Features", "Traversal", "Editor", "Authoring", "PawnTraversalFeatureRuntime3DEditor.cs");
+            string enemyEditorPath = Path.Combine(gameplayRoot, "Features", "Enemies", "3D", "Editor", "Inspectors", "EnemyFeatureRuntimeGuidedEditors.cs");
+            string hazardEditorPath = Path.Combine(gameplayRoot, "Features", "Hazards", "Editor", "Inspectors", "HazardRuntimeGuidedEditors.cs");
+            string traversalEditorPath = Path.Combine(gameplayRoot, "Features", "Traversal", "Editor", "Inspectors", "PawnTraversalFeatureRuntime3DEditor.cs");
             string ambientRuntimePath = Path.Combine(gameplayRoot, "Features", "Enemies", "EnemyAmbientFeatureRuntime.cs");
             string reactionRuntimePath = Path.Combine(gameplayRoot, "Features", "Enemies", "EnemyReactionFeatureRuntime.cs");
             string hazardFeedbackRuntimePath = Path.Combine(gameplayRoot, "Features", "Hazards", "HazardFeedbackRuntime.cs");
@@ -608,7 +608,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 "Pyralis",
                 "Gameplay");
 
-            string editorPath = Path.Combine(gameplayRoot, "Features", "Combat", "Editor", "Authoring", "CombatDamageGuidedEditors.cs");
+            string editorPath = Path.Combine(gameplayRoot, "Features", "Combat", "Editor", "Inspectors", "CombatDamageGuidedEditors.cs");
             string hitBox2DPath = Path.Combine(gameplayRoot, "Features", "Combat", "2D", "HitBox2D.cs");
             string projectilePath = Path.Combine(gameplayRoot, "Features", "Combat", "Projectile.cs");
             string projectile2DPath = Path.Combine(gameplayRoot, "Features", "Combat", "2D", "Projectile2D.cs");
@@ -673,9 +673,9 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             string sceneViewToolsPath = FindGameplayEditorFile("SceneViewTools.cs");
             string inputZoneSetPath = Path.Combine(gameplayRoot, "Features", "Input", "2D", "InputZoneSet.cs");
-            string inputZoneEditorPath = Path.Combine(gameplayRoot, "Features", "Input", "2D", "Editor", "Authoring", "InputZoneSetEditor.cs");
+            string inputZoneEditorPath = Path.Combine(gameplayRoot, "Features", "Input", "2D", "Editor", "Inspectors", "InputZoneSetEditor.cs");
             string orientationHandlerPath = Path.Combine(gameplayRoot, "Features", "UI", "UIOrientationHandler.cs");
-            string orientationEditorPath = Path.Combine(gameplayRoot, "Features", "UI", "Editor", "Authoring", "UIOrientationHandlerEditor.cs");
+            string orientationEditorPath = Path.Combine(gameplayRoot, "Features", "UI", "Editor", "Inspectors", "UIOrientationHandlerEditor.cs");
 
             string sceneViewTools = File.ReadAllText(sceneViewToolsPath);
             string inputZoneSet = File.ReadAllText(inputZoneSetPath);
@@ -913,7 +913,9 @@ namespace NeonBlack.Gameplay.Tests.Editor
             foreach (string editorFile in Directory.GetFiles(gameplayRoot, "*.cs", SearchOption.AllDirectories).Where(path => path.Contains(editorDirectorySegment)))
             {
                 string normalized = editorFile.Replace('\\', '/');
-                Assert.That(normalized.Contains("/Editor/Authoring/"), Is.True, editorFile);
+                bool isCentralAuthoring = normalized.Contains("/Gameplay/Editor/Authoring/");
+                bool isFeatureInspector = normalized.Contains("/Features/") && normalized.Contains("/Editor/Inspectors/");
+                Assert.That(isCentralAuthoring || isFeatureInspector, Is.True, editorFile);
             }
         }
         private static bool SourceContainsAuthoringExportSpine(string source)

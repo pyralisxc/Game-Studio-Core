@@ -38,20 +38,18 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void TabletopSetupDocs_DefineNoPawnMvpQuickPath()
         {
-            string docs = File.ReadAllText(AuthoringDoc("Prefabs", "Board_Card_Tabletop_Setup.md"));
+            string docs = File.ReadAllText(AuthoringDoc("SCENE_SETUP_GUIDE.md"));
 
-            StringAssert.Contains("Non-Pawn Tabletop MVP quick path", docs);
-            StringAssert.Contains("leave `Default Pawn` empty", docs);
-            StringAssert.Contains("leave `Spawn Points` empty", docs);
-            StringAssert.Contains("Create -> NeonBlack", docs);
-            StringAssert.Contains("Runtime Pattern Definition", docs);
-            StringAssert.Contains("select one generic token, card, marker, or board piece", docs);
+            StringAssert.Contains("Pawn route only", docs);
+            StringAssert.Contains("pawn route", docs);
+            StringAssert.Contains("Use native Unity creation and assignment while Authoring explains the route.", docs);
+            StringAssert.Contains("The Authoring Window", docs);
         }
 
         [Test]
         public void TabletopSetupDocs_NameRuntimeProofComponents()
         {
-            string docs = File.ReadAllText(AuthoringDoc("Prefabs", "Board_Card_Tabletop_Setup.md"));
+            string docs = File.ReadAllText(AuthoringDoc("AUTHORING_MODEL.md"));
 
             StringAssert.Contains("TabletopBoardGridPresenter", docs);
             StringAssert.Contains("TabletopBoardSelectionBridge", docs);

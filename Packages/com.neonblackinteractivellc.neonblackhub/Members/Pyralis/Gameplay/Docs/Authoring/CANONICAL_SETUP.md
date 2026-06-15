@@ -279,10 +279,10 @@ HUD is now split into:
 
 1. `Docs/Authoring/START_HERE.md`
 2. `Docs/Authoring/AUTHORING_MODEL.md`
-3. `Docs/Authoring/Prefabs/Bootstrap_Example_Setup.md`
+3. `Docs/Authoring/SCENE_SETUP_GUIDE.md`
 4. `Docs/Authoring/ROUTE_CAPABILITY_COOKBOOK.md` when choosing capability filters
-5. `Docs/Authoring/Prefabs/Pawn_Setup.md` only for pawn-backed games
-6. feature-specific setup docs as needed
+5. selected Inspector field guides only when a route asks for that object
+6. `Docs/Authoring/AUTHORING_MODEL.md` when asset/profile relationships are unclear
 7. `Docs/Authoring/Systems/Architecture_Overview.md` when changing architecture
 
 ## 9. Rules For New Docs

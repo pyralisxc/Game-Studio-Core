@@ -15,7 +15,7 @@ The Authoring Window, Inspector field guides, setup validation, and route facts 
 | I need the technical contract | `CANONICAL_SETUP.md` |
 | I need to choose route capabilities | `ROUTE_CAPABILITY_COOKBOOK.md` |
 | I need scene-level route requirements | `SCENE_SETUP_GUIDE.md` |
-| I need feature or prefab wiring | the matching guide in `Prefabs/` |
+| I need feature or prefab wiring | `START_HERE.md`, `SCENE_SETUP_GUIDE.md`, then the selected Inspector field guide |
 | I am changing architecture or folder rules | `Systems/Architecture_Overview.md`, `Systems/Migration_and_Readability_Standard.md` |
 
 ## Core Authoring Flow
