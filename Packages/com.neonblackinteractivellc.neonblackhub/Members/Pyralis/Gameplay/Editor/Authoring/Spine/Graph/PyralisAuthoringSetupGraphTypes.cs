@@ -12,6 +12,7 @@ namespace NeonBlack.Gameplay.Editor
         Capability,
         Contract,
         Proof,
+        RouteShape,
         SceneSurface,
         UnitySurfaceRequirement,
         AssignmentField,
@@ -25,6 +26,7 @@ namespace NeonBlack.Gameplay.Editor
         AuthoringContract,
         GrammarRegistry,
         SetupFlow,
+        RuntimeValidation,
         SceneReadiness,
         ProofVocabulary
     }
@@ -146,6 +148,7 @@ namespace NeonBlack.Gameplay.Editor
             {
                 PyralisAuthoringGraphSourceKind.AuthoringContract => PyralisAuthoringGraphSourceOrigin.Contract,
                 PyralisAuthoringGraphSourceKind.SetupFlow => PyralisAuthoringGraphSourceOrigin.RuntimeEvidence,
+                PyralisAuthoringGraphSourceKind.RuntimeValidation => PyralisAuthoringGraphSourceOrigin.RuntimeEvidence,
                 PyralisAuthoringGraphSourceKind.SceneReadiness => PyralisAuthoringGraphSourceOrigin.RuntimeEvidence,
                 PyralisAuthoringGraphSourceKind.CapabilityVocabulary => PyralisAuthoringGraphSourceOrigin.SpineGrammar,
                 PyralisAuthoringGraphSourceKind.GrammarRegistry => PyralisAuthoringGraphSourceOrigin.SpineGrammar,
@@ -162,6 +165,7 @@ namespace NeonBlack.Gameplay.Editor
                 || evidenceState == PyralisAuthoringGraphEvidenceState.Missing)
             {
                 return kind == PyralisAuthoringGraphNodeKind.SetupChain
+                    || kind == PyralisAuthoringGraphNodeKind.RouteShape
                     || kind == PyralisAuthoringGraphNodeKind.UnitySurfaceRequirement
                     || kind == PyralisAuthoringGraphNodeKind.ValidationEvidence
                         ? PyralisAuthoringGraphWorkIntent.RequiredSetup
@@ -187,6 +191,7 @@ namespace NeonBlack.Gameplay.Editor
             if (evidenceState == PyralisAuthoringGraphEvidenceState.Missing)
             {
                 return kind == PyralisAuthoringGraphNodeKind.SetupChain
+                    || kind == PyralisAuthoringGraphNodeKind.RouteShape
                     || kind == PyralisAuthoringGraphNodeKind.UnitySurfaceRequirement
                     || kind == PyralisAuthoringGraphNodeKind.ValidationEvidence
                         ? PyralisAuthoringIssueSeverity.Required

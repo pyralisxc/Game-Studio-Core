@@ -547,14 +547,11 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 if (participant == null || participant.defaultPawn == null)
                     continue;
 
-                InputProfile profile = ParticipantInputProfileUtility.ResolveEffectiveInputProfile(
-                    participant,
-                    participant.defaultPawn,
-                    session.defaultInputProfile);
+                InputProfile profile = ParticipantInputProfileUtility.ResolveEffectiveInputProfile(participant);
 
                 if (profile == null)
                 {
-                    requiredIssues.Add($"Participant slot {i} pawn input needs an InputProfile on the participant, PawnDefinition, or SessionDefinition default.");
+                    requiredIssues.Add($"Participant slot {i} pawn input needs an InputProfile on the controlling ParticipantDefinition.");
                     continue;
                 }
 

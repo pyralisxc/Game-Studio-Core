@@ -9,7 +9,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
     /// Defines gameplay-space rules independent from camera framing.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Camera | AuthoringCapability.Setup, 
+        Capability = AuthoringCapability.Movement | AuthoringCapability.Setup,
         Relevance = "Project-window creation path for movement space, bounds, wrap, and arena-depth rules.",
         AssignmentFields = new[] { nameof(movementMode), nameof(minBounds), nameof(maxBounds) },
         FirstProof = "Verify that actors are clamped to the defined bounds in-game.",
@@ -18,7 +18,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
         DocumentationURL = "https://docs.neonblack.com/pyralis/core"
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Playfield Profile", fileName = "PlayfieldProfile", order = -80)]
-    public class PlayfieldProfile : ScriptableObject, IRuntimeValidationProvider
+    public class PlayfieldProfile : ScriptableObject, IRuntimeValidationProvider, IPlayfieldBoundsProvider
     {
         public IEnumerable<string> GetRuntimeValidationIssues()
         {
@@ -60,6 +60,36 @@ namespace NeonBlack.Gameplay.Data.Profiles
                 minDepth = maxDepth;
                 maxDepth = swap;
             }
+        }
+
+        public bool TryGetPlayfieldBounds2D(float margin, out PlayfieldBounds2D bounds)
+        {
+            if (!clampToBounds && !allowScreenWrap)
+            {
+                bounds = default;
+                return false;
+            }
+
+            Sanitize();
+
+            Vector2 min = minBounds + Vector2.one * Mathf.Max(0f, margin);
+            Vector2 max = maxBounds - Vector2.one * Mathf.Max(0f, margin);
+            if (min.x >= max.x)
+            {
+                float centerX = (minBounds.x + maxBounds.x) * 0.5f;
+                min.x = centerX;
+                max.x = centerX;
+            }
+
+            if (min.y >= max.y)
+            {
+                float centerY = (minBounds.y + maxBounds.y) * 0.5f;
+                min.y = centerY;
+                max.y = centerY;
+            }
+
+            bounds = new PlayfieldBounds2D(min, max, allowScreenWrap);
+            return bounds.IsValid;
         }
 
         private void OnValidate()

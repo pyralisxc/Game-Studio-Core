@@ -546,26 +546,20 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             if (!hasInputProfile)
             {
                 return requiresPawn
-                    ? "Assign InputProfile on `SessionDefinition.defaultParticipants[0]` (or set `SessionDefinition.defaultInputProfile`) in Inspector before routing movement."
+                    ? "Assign InputProfile on the controlling `ParticipantDefinition.inputProfile` before routing movement."
                     : "Input profile is optional for this route unless a built-in player/input surface is used.";
             }
 
             if (!string.IsNullOrWhiteSpace(inputProfileIssue))
                 return inputProfileIssue;
 
-            if (session == null || session.defaultInputProfile == null)
-                return "A participant InputProfile is assigned. Pawn/input readers can now bind control signals.";
-
-            return "InputProfile is assigned. Participant values are used before SessionDefinition.defaultInputProfile fallback.";
+            return "A participant InputProfile is assigned. Pawn/input readers can now bind control signals.";
         }
 
         private static Object GetInputProfileReference(SessionDefinition session)
         {
             if (session == null)
                 return null;
-
-            if (session.defaultInputProfile != null)
-                return session.defaultInputProfile;
 
             if (session.defaultParticipants == null)
                 return session;
@@ -630,14 +624,10 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 if (participant == null)
                     continue;
 
-                PawnDefinition pawn = participant.defaultPawn;
-                InputProfile effectiveProfile = ParticipantInputProfileUtility.ResolveEffectiveInputProfile(
-                    participant,
-                    pawn,
-                    session.defaultInputProfile);
+                InputProfile effectiveProfile = ParticipantInputProfileUtility.ResolveEffectiveInputProfile(participant);
 
                 if (effectiveProfile == null)
-                    return "Add InputProfile to one participant, its PawnDefinition, or SessionDefinition.defaultInputProfile before trying movement in Play Mode.";
+                    return "Add InputProfile to the controlling ParticipantDefinition before trying movement in Play Mode.";
 
                 string bindingIssue = GetInputProfileBindingIssue(effectiveProfile);
                 if (!string.IsNullOrWhiteSpace(bindingIssue))
@@ -998,9 +988,6 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             if (session == null)
                 return false;
 
-            if (session.defaultInputProfile != null)
-                return true;
-
             if (session.defaultParticipants == null)
                 return false;
 
@@ -1011,9 +998,6 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                     continue;
 
                 if (participant.inputProfile != null)
-                    return true;
-
-                if (participant.defaultPawn != null && participant.defaultPawn.defaultInputProfile != null)
                     return true;
             }
 

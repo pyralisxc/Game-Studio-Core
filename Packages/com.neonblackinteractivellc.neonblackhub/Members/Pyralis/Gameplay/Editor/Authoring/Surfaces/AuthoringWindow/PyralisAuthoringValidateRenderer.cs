@@ -9,21 +9,21 @@ namespace NeonBlack.Gameplay.Editor
     {
         public static void Draw(Object activeSetup, PyralisAuthoringSetupGraph graph)
         {
-            EditorGUILayout.LabelField("Validate Active Setup", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox("Use Validate as the deeper evidence console. Overview names the next move; Validate explains every blocker, recommended edit, and proof enhancer behind it.", MessageType.Info);
+            EditorGUILayout.LabelField("Validate Graph", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox("Use Validate for graph integrity: blockers, unresolved evidence, proof reachability, source origins, and stable node ids. Map owns concrete scene and Inspector setup issues.", MessageType.Info);
 
             if (activeSetup == null)
             {
-                EditorGUILayout.HelpBox("Select a Bootstrap, Session, Game Mode, Participant, Pawn, Runtime Pattern, or Feature Module asset to validate it here.", MessageType.Info);
+                EditorGUILayout.HelpBox("Select a Bootstrap, Session, Game Mode, Participant, Pawn, Runtime Pattern, or Feature Module asset so Validate can inspect its resolved setup graph.", MessageType.Info);
                 return;
             }
 
-            PyralisAuthoringCurrentStepGraphRow currentStep = PyralisAuthoringSetupGraphProjection.BuildCurrentStepRow(graph);
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 EditorGUILayout.LabelField("Active Setup", activeSetup.name);
-                EditorGUILayout.LabelField("Route", currentStep.RouteName);
-                EditorGUILayout.LabelField("Next Step", currentStep.Message, EditorStyles.wordWrappedLabel);
+                EditorGUILayout.LabelField("Route", graph != null ? graph.RouteName : "No graph");
+                EditorGUILayout.LabelField("Graph Size", graph != null ? $"{graph.Nodes.Count} nodes, {graph.Edges.Count} edges" : "No graph", EditorStyles.wordWrappedLabel);
+                PyralisAuthoringWindowText.DrawSemanticMiniLabel("Scene-specific repair actions are shown in Map. Validate keeps the diagnostic view graph-first.");
             }
 
             bool hasGraphReadiness = DrawValidateReadinessBuckets(graph);
@@ -34,7 +34,7 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             EditorGUILayout.Space(8f);
-            EditorGUILayout.LabelField("Evidence Details", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Graph Evidence Details", EditorStyles.boldLabel);
             DrawGraphEvidenceDetails(graph);
         }
 
@@ -130,10 +130,8 @@ namespace NeonBlack.Gameplay.Editor
 
                 string text = string.IsNullOrWhiteSpace(issue.NativeAction)
                     ? $"{issue.Label}: {issue.Message}\nEvidence source: {issue.SourceLabel}\nOrigin: {issue.OriginLabel}\nReference id: {issue.NodeId}"
-                    : $"{issue.Label}: {issue.Message}\nNext native action: {issue.NativeAction}\nEvidence source: {issue.SourceLabel}\nOrigin: {issue.OriginLabel}\nReference id: {issue.NodeId}";
+                    : $"{issue.Label}: {issue.Message}\nGraph source detail: {issue.NativeAction}\nEvidence source: {issue.SourceLabel}\nOrigin: {issue.OriginLabel}\nReference id: {issue.NodeId}";
                 EditorGUILayout.HelpBox(text, messageType);
-                if (issue.CanInspectTarget && GUILayout.Button("Inspect " + issue.Label))
-                    PyralisAuthoringWindowPrimitives.SelectAndPing(issue.Target);
             }
 
             if (issues.Count > visible)
@@ -150,19 +148,17 @@ namespace NeonBlack.Gameplay.Editor
                 EditorGUILayout.LabelField(issue.Label, issue.NodeId, EditorStyles.boldLabel);
                 EditorGUILayout.LabelField("Evidence", issue.EvidenceState.ToString(), EditorStyles.wordWrappedMiniLabel);
                 EditorGUILayout.LabelField("Origin", issue.OriginLabel, EditorStyles.wordWrappedMiniLabel);
+                EditorGUILayout.LabelField("Source", issue.SourceLabel, EditorStyles.wordWrappedMiniLabel);
                 if (!string.IsNullOrWhiteSpace(issue.Message))
-                    EditorGUILayout.LabelField("Problem", issue.Message, EditorStyles.wordWrappedLabel);
+                    EditorGUILayout.LabelField("Graph Finding", issue.Message, EditorStyles.wordWrappedLabel);
                 if (!string.IsNullOrWhiteSpace(issue.NativeAction))
-                    EditorGUILayout.LabelField("Native Unity Action", issue.NativeAction, EditorStyles.wordWrappedMiniLabel);
+                    EditorGUILayout.LabelField("Source Detail", issue.NativeAction, EditorStyles.wordWrappedMiniLabel);
                 if (issue.Node != null && issue.Node.AssignmentFields.Length > 0)
-                    PyralisAuthoringWindowPrimitives.DrawMiniList("Fields", issue.Node.AssignmentFields);
+                    PyralisAuthoringWindowPrimitives.DrawMiniList("Graph Fields", issue.Node.AssignmentFields);
                 if (issue.Node != null && issue.Node.CustomizationMoments.Length > 0)
                     PyralisAuthoringWindowPrimitives.DrawMiniList("Customization", issue.Node.CustomizationMoments);
                 if (!string.IsNullOrWhiteSpace(issue.Node?.BlockingReason))
                     EditorGUILayout.LabelField("Blocking Reason", issue.Node.BlockingReason, EditorStyles.wordWrappedMiniLabel);
-
-                if (issue.CanInspectTarget && GUILayout.Button("Inspect Target"))
-                    PyralisAuthoringWindowPrimitives.SelectAndPing(issue.Target);
             }
         }
     }

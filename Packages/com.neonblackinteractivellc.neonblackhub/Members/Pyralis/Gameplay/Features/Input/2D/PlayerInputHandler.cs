@@ -1,5 +1,4 @@
 using NeonBlack.Gameplay.Features.Characters;
-using NeonBlack.Gameplay.Core.Config;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Features.Input;
 using NeonBlack.Gameplay.Characters;
@@ -32,7 +31,7 @@ namespace NeonBlack.Gameplay.Features.Input
 [AddComponentMenu("NeonBlack/Gameplay/Input/2D Player Input Handler")]
 [RequireComponent(typeof(Motor2D))]
 [DefaultExecutionOrder(-10)] // Register before settings services push input values during Start().
-public class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver, IPawnInputModule
+public class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver, IPawnInputModule, IPawnRuntimeServicesReceiver
 {
     [Header("Input Actions")]
     [SerializeField, Tooltip("Assign InputSystem_Actions.inputactions from the Assets root.\n" +
@@ -117,13 +116,6 @@ public class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver, IPawnIn
         if (_playerInput != null && _playerInput.actions != null)
         {
             _inputActions = _playerInput.actions;
-            if (GameplayRuntimeContext.DefaultInputProfile != null && GameplayRuntimeContext.DefaultInputProfile.actions == _inputActions)
-                _inputProfile = GameplayRuntimeContext.DefaultInputProfile;
-        }
-        else if (GameplayRuntimeContext.DefaultInputActions != null)
-        {
-            _inputProfile = GameplayRuntimeContext.DefaultInputProfile;
-            _inputActions ??= GameplayRuntimeContext.DefaultInputActions;
         }
 
         if (_inputActions != null)
@@ -199,6 +191,11 @@ public class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver, IPawnIn
     {
         if (gameplayStateReader != null)
             _gameplayStateReader = gameplayStateReader;
+    }
+
+    public void ApplyRuntimeServices(PawnRuntimeServicesContext context)
+    {
+        ConfigureRuntime(context.GameplayStateReader);
     }
 
     public void ConfigureRuntime(IGameplayStateReader gameplayStateReader, IInputSettingsRegistrar inputSettingsRegistrar)

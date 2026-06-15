@@ -31,7 +31,7 @@ namespace NeonBlack.Gameplay.Features.Characters
 [AddComponentMenu("NeonBlack/Gameplay/Characters/2D/Pawn 2D Movement Component")]
     [RequireComponent(typeof(Rigidbody2D))]
     [RequireComponent(typeof(PolygonCollider2D))]
-    public sealed class Pawn2DMovementComponent : MonoBehaviour, IPawnMotor, IMovementModule, IActorReactionResponder, IActorMovementModifierReceiver, IRuntimeValidationProvider
+    public sealed class Pawn2DMovementComponent : MonoBehaviour, IPawnMotor, IMovementModule, IActorReactionResponder, IActorMovementModifierReceiver, IPawnRuntimeServicesReceiver, IRuntimeValidationProvider
     {
         public IEnumerable<string> GetRuntimeValidationIssues()
         {
@@ -48,7 +48,7 @@ namespace NeonBlack.Gameplay.Features.Characters
                 if (gravityScale <= 0f) yield return "Gravity Scale must be greater than zero when side-view jump is enabled.";
             }
             if (cameraBoundsSource == null && targetCamera == null)
-                yield return "Camera Bounds Source and Target Camera are empty. This is okay if the session injects them.";
+                yield return "Camera Bounds Source and Target Camera are empty. This is okay when the session injects a PlayfieldProfile or camera rig at runtime.";
         }
         [Header("Movement - Speed")]
         [SerializeField] private float moveSpeed = 4f;
@@ -100,6 +100,7 @@ namespace NeonBlack.Gameplay.Features.Characters
         private Rigidbody2D rb2d;
         private Camera runtimeCamera;
         private ICameraBoundsProvider cameraBoundsProvider;
+        private IPlayfieldBoundsProvider playfieldBoundsProvider;
         private IGameplayStateReader gameplayStateReader;
         private Vector2 moveDirection;
         private bool facingRight = true;
@@ -135,6 +136,7 @@ namespace NeonBlack.Gameplay.Features.Characters
         public bool RuntimeJumpQueued => jumpQueued;
         public Object RuntimeGameplayStateSource => gameplayStateReader as Object;
         public Object RuntimeCameraBoundsSource => cameraBoundsProvider as Object ?? runtimeCamera;
+        public Object RuntimePlayfieldBoundsSource => playfieldBoundsProvider as Object;
 
         public bool TryGetRuntimeGameplayActive(out bool isGameplayActive)
         {
@@ -144,7 +146,7 @@ namespace NeonBlack.Gameplay.Features.Characters
 
         public bool TryGetRuntimeCameraBounds(out CameraBounds2D bounds)
         {
-            return TryGetBounds(out bounds) && bounds.IsValid;
+            return TryGetCameraBounds(out bounds) && bounds.IsValid;
         }
 
         private void Awake()
@@ -165,12 +167,22 @@ namespace NeonBlack.Gameplay.Features.Characters
             gameplayStateReader ??= stateReader;
         }
 
-        public void ConfigureRuntime(IGameplayStateReader stateReader, ICameraBoundsProvider boundsProvider)
+        public void ConfigureRuntime(
+            IGameplayStateReader stateReader,
+            ICameraBoundsProvider boundsProvider,
+            IPlayfieldBoundsProvider playfieldProvider = null)
         {
             if (stateReader != null)
                 gameplayStateReader = stateReader;
             if (boundsProvider != null)
                 cameraBoundsProvider = boundsProvider;
+            if (playfieldProvider != null)
+                playfieldBoundsProvider = playfieldProvider;
+        }
+
+        public void ApplyRuntimeServices(PawnRuntimeServicesContext context)
+        {
+            ConfigureRuntime(context.GameplayStateReader, context.CameraBoundsProvider, context.PlayfieldBoundsProvider);
         }
 
         private void Start()
@@ -193,26 +205,26 @@ namespace NeonBlack.Gameplay.Features.Characters
                 return;
             }
 
-            if (!TryGetBounds(out CameraBounds2D bounds))
+            if (!TryGetMovementBounds(out MovementBounds2D bounds))
                 return;
 
             Vector2 velocity = model.Tick(BuildMotorInput(), Time.fixedDeltaTime);
             Vector2 newPos = rb2d.position + velocity * Time.fixedDeltaTime;
 
             Vector2 centrePos = newPos + spriteRadiusOffset;
-            Vector3 camPos = bounds.Center;
+            Vector2 boundsCenter = bounds.Center;
 
-            if (screenWrap)
+            if (screenWrap || bounds.AllowScreenWrap)
             {
-                if (centrePos.x > camPos.x + bounds.HalfWidth) centrePos.x = camPos.x - bounds.HalfWidth;
-                if (centrePos.x < camPos.x - bounds.HalfWidth) centrePos.x = camPos.x + bounds.HalfWidth;
-                if (centrePos.y > camPos.y + bounds.HalfHeight) centrePos.y = camPos.y - bounds.HalfHeight;
-                if (centrePos.y < camPos.y - bounds.HalfHeight) centrePos.y = camPos.y + bounds.HalfHeight;
+                if (centrePos.x > boundsCenter.x + bounds.HalfWidth) centrePos.x = boundsCenter.x - bounds.HalfWidth;
+                if (centrePos.x < boundsCenter.x - bounds.HalfWidth) centrePos.x = boundsCenter.x + bounds.HalfWidth;
+                if (centrePos.y > boundsCenter.y + bounds.HalfHeight) centrePos.y = boundsCenter.y - bounds.HalfHeight;
+                if (centrePos.y < boundsCenter.y - bounds.HalfHeight) centrePos.y = boundsCenter.y + bounds.HalfHeight;
             }
             else
             {
-                centrePos.x = Mathf.Clamp(centrePos.x, camPos.x - bounds.HalfWidth, camPos.x + bounds.HalfWidth);
-                centrePos.y = Mathf.Clamp(centrePos.y, camPos.y - bounds.HalfHeight, camPos.y + bounds.HalfHeight);
+                centrePos.x = Mathf.Clamp(centrePos.x, boundsCenter.x - bounds.HalfWidth, boundsCenter.x + bounds.HalfWidth);
+                centrePos.y = Mathf.Clamp(centrePos.y, boundsCenter.y - bounds.HalfHeight, boundsCenter.y + bounds.HalfHeight);
             }
 
             newPos = centrePos - spriteRadiusOffset;
@@ -369,7 +381,52 @@ namespace NeonBlack.Gameplay.Features.Characters
             ApplyPresentationProfile(presentationProfile);
         }
 
-        private bool TryGetBounds(out CameraBounds2D bounds)
+        private readonly struct MovementBounds2D
+        {
+            public MovementBounds2D(Vector2 center, float halfWidth, float halfHeight, bool allowScreenWrap)
+            {
+                Center = center;
+                HalfWidth = Mathf.Max(0f, halfWidth);
+                HalfHeight = Mathf.Max(0f, halfHeight);
+                AllowScreenWrap = allowScreenWrap;
+            }
+
+            public Vector2 Center { get; }
+            public float HalfWidth { get; }
+            public float HalfHeight { get; }
+            public bool AllowScreenWrap { get; }
+            public bool IsValid => HalfWidth > 0f && HalfHeight > 0f;
+        }
+
+        private bool TryGetMovementBounds(out MovementBounds2D bounds)
+        {
+            if (playfieldBoundsProvider != null
+                && playfieldBoundsProvider.TryGetPlayfieldBounds2D(TotalMargin, out PlayfieldBounds2D playfieldBounds)
+                && playfieldBounds.IsValid)
+            {
+                bounds = new MovementBounds2D(
+                    playfieldBounds.Center,
+                    playfieldBounds.HalfWidth,
+                    playfieldBounds.HalfHeight,
+                    playfieldBounds.AllowScreenWrap);
+                return true;
+            }
+
+            if (TryGetCameraBounds(out CameraBounds2D cameraBounds) && cameraBounds.IsValid)
+            {
+                bounds = new MovementBounds2D(
+                    cameraBounds.Center,
+                    cameraBounds.HalfWidth,
+                    cameraBounds.HalfHeight,
+                    screenWrap);
+                return true;
+            }
+
+            bounds = default;
+            return false;
+        }
+
+        private bool TryGetCameraBounds(out CameraBounds2D bounds)
         {
             ICameraBoundsProvider provider = cameraBoundsProvider ?? cameraBoundsSource as ICameraBoundsProvider;
             if (provider != null && provider.TryGetCameraBounds2D(TotalMargin, out bounds))
@@ -413,7 +470,7 @@ namespace NeonBlack.Gameplay.Features.Characters
 
             rb2d.linearVelocity = velocity;
 
-            if (TryGetBounds(out CameraBounds2D bounds))
+            if (TryGetMovementBounds(out MovementBounds2D bounds))
                 ClampSideViewPositionToHorizontalBounds(bounds);
         }
 
@@ -445,12 +502,12 @@ namespace NeonBlack.Gameplay.Features.Characters
             }
         }
 
-        private void ClampSideViewPositionToHorizontalBounds(CameraBounds2D bounds)
+        private void ClampSideViewPositionToHorizontalBounds(MovementBounds2D bounds)
         {
-            Vector3 camPos = bounds.Center;
+            Vector2 boundsCenter = bounds.Center;
             Vector2 pivotPos = rb2d.position;
             Vector2 centrePos = pivotPos + spriteRadiusOffset;
-            float clampedX = Mathf.Clamp(centrePos.x, camPos.x - bounds.HalfWidth, camPos.x + bounds.HalfWidth);
+            float clampedX = Mathf.Clamp(centrePos.x, boundsCenter.x - bounds.HalfWidth, boundsCenter.x + bounds.HalfWidth);
             if (Mathf.Approximately(clampedX, centrePos.x))
                 return;
 
@@ -474,27 +531,27 @@ namespace NeonBlack.Gameplay.Features.Characters
 
         private void ClampPositionToBounds()
         {
-            if (rb2d == null || !TryGetBounds(out CameraBounds2D bounds))
+            if (rb2d == null || !TryGetMovementBounds(out MovementBounds2D bounds))
                 return;
 
-            Vector3 camPos = bounds.Center;
+            Vector2 boundsCenter = bounds.Center;
             Vector2 pivotPos = rb2d.position;
             Vector2 centrePos = pivotPos + spriteRadiusOffset;
             Vector2 clampedCentre;
-            clampedCentre.x = Mathf.Clamp(centrePos.x, camPos.x - bounds.HalfWidth, camPos.x + bounds.HalfWidth);
-            clampedCentre.y = Mathf.Clamp(centrePos.y, camPos.y - bounds.HalfHeight, camPos.y + bounds.HalfHeight);
+            clampedCentre.x = Mathf.Clamp(centrePos.x, boundsCenter.x - bounds.HalfWidth, boundsCenter.x + bounds.HalfWidth);
+            clampedCentre.y = Mathf.Clamp(centrePos.y, boundsCenter.y - bounds.HalfHeight, boundsCenter.y + bounds.HalfHeight);
             rb2d.MovePosition(clampedCentre - spriteRadiusOffset);
         }
 
         private bool HasRequiredRuntimeServices()
         {
-            if (gameplayStateReader != null && (cameraBoundsProvider != null || runtimeCamera != null))
+            if (gameplayStateReader != null && (playfieldBoundsProvider != null || cameraBoundsProvider != null || runtimeCamera != null))
                 return true;
 
             if (!missingRuntimeServicesLogged)
             {
                 missingRuntimeServicesLogged = true;
-                Debug.LogError("[Pawn2DMovementComponent] Missing runtime services. Configure a gameplay state reader and a camera bounds provider or target camera.", this);
+                Debug.LogError("[Pawn2DMovementComponent] Missing runtime services. Configure a gameplay state reader and a PlayfieldProfile, camera bounds provider, or target camera.", this);
             }
 
             return false;

@@ -24,10 +24,12 @@ namespace NeonBlack.Gameplay.Editor
 
             AddSetupChainNodes(source, route, nodes, edges);
             AddCapabilityNodes(route, nodes, edges);
+            AddRouteShapeNode(route, nodes, edges);
             AddParticipantNodes(route, nodes, edges);
             AddSceneSurfaceNodes(source, route, nodes, edges);
             string activeProofNodeId = AddProofNode(route, nodes, edges);
             AddContractNodes(nodes, edges, activeProofNodeId);
+            AddRuntimeValidationEvidence(source, route, nodes, edges);
             AddSetupFlowEvidence(source, nodes, edges);
             AddSceneReadinessEvidence(source, nodes, edges);
             AddProofBlockerEdges(nodes, edges, activeProofNodeId);
@@ -210,6 +212,131 @@ namespace NeonBlack.Gameplay.Editor
                 AddEdge(edges, "capability.selected", nodeId, PyralisAuthoringGraphEdgeKind.Satisfies, "reflected capability");
                 AddEdge(edges, "capability.selected", nodeId, PyralisAuthoringGraphEdgeKind.RelatesTo, "includes");
             }
+        }
+
+        private static void AddRouteShapeNode(
+            PyralisSetupRouteAnalysis route,
+            List<PyralisAuthoringGraphNode> nodes,
+            List<PyralisAuthoringGraphEdge> edges)
+        {
+            RuntimeCapabilityFamily[] families = route?.CapabilityFamilies ?? Array.Empty<RuntimeCapabilityFamily>();
+            bool hasGameplayFocus = HasGameplayFocus(families);
+            bool requiresPawn = route != null && route.RequiresPawn;
+            bool hasParticipants = route != null && route.HasParticipants;
+            bool hasOwnershipIssue = hasGameplayFocus && (!hasParticipants || requiresPawn && !string.IsNullOrWhiteSpace(route?.ParticipantPawnIssue));
+            PyralisAuthoringGraphEvidenceState state = !hasGameplayFocus
+                ? PyralisAuthoringGraphEvidenceState.Optional
+                : hasOwnershipIssue
+                    ? PyralisAuthoringGraphEvidenceState.Missing
+                    : PyralisAuthoringGraphEvidenceState.Ready;
+            string label = GetRouteShapeLabel(route, hasGameplayFocus, requiresPawn);
+            string guidance = GetRouteShapeGuidance(route, hasGameplayFocus, requiresPawn, hasParticipants);
+
+            AddNode(nodes, new PyralisAuthoringGraphNode(
+                "route.shape",
+                label,
+                PyralisAuthoringGraphNodeKind.RouteShape,
+                PyralisAuthoringGraphSourceKind.SetupFlow,
+                state,
+                guidance: guidance,
+                nativeSetup: GetRouteShapeNativeSetup(requiresPawn, hasGameplayFocus),
+                assignmentFields: GetRouteShapeAssignmentFields(requiresPawn, hasGameplayFocus),
+                blockingReason: hasOwnershipIssue
+                    ? FirstNonEmpty(route?.ParticipantPawnIssue, "Assign at least one ParticipantDefinition so the route has a player, AI, seat, hand, faction, or control owner.")
+                    : string.Empty,
+                sourceObject: route?.Session != null ? route.Session : route?.Mode,
+                sourceOrigin: PyralisAuthoringGraphSourceOrigin.SpineGrammar));
+
+            AddEdge(edges, "capability.selected", "route.shape", PyralisAuthoringGraphEdgeKind.Satisfies, "compiles ownership shape");
+            AddEdge(edges, "route.shape", "participant.default", PyralisAuthoringGraphEdgeKind.DependsOn, "participants own control");
+            if (requiresPawn)
+                AddEdge(edges, "route.shape", "pawn.definition", PyralisAuthoringGraphEdgeKind.DependsOn, "pawn-backed control surface");
+        }
+
+        private static bool HasGameplayFocus(RuntimeCapabilityFamily[] families)
+        {
+            if (families == null)
+                return false;
+
+            for (int i = 0; i < families.Length; i++)
+            {
+                if (families[i] != RuntimeCapabilityFamily.PlatformCore)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static string GetRouteShapeLabel(PyralisSetupRouteAnalysis route, bool hasGameplayFocus, bool requiresPawn)
+        {
+            if (!hasGameplayFocus)
+                return "Setup Foundation";
+            if (requiresPawn)
+                return "Participant With Pawn";
+            if (route != null && ContainsFamily(route.CapabilityFamilies, RuntimeCapabilityFamily.BoardCardTabletop))
+                return "Participant Without Pawn";
+            if (route != null && ContainsFamily(route.CapabilityFamilies, RuntimeCapabilityFamily.ActionTargeting))
+                return "Participant Action Surface";
+
+            return "Participant Control Surface";
+        }
+
+        private static string GetRouteShapeGuidance(PyralisSetupRouteAnalysis route, bool hasGameplayFocus, bool requiresPawn, bool hasParticipants)
+        {
+            if (!hasGameplayFocus)
+                return "Core setup only. Choose one small Intent capability so Pyralis can explain whether the participant controls a pawn, cursor, board seat, hand, faction, or menu/action surface.";
+
+            if (!hasParticipants)
+                return "Every route starts with at least one ParticipantDefinition: player, AI, seat, hand, faction, or command owner.";
+
+            if (requiresPawn)
+                return FirstNonEmpty(
+                    route?.ParticipantPawnIssue,
+                    "This intent is pawn-backed. The participant owns a PawnDefinition, the PawnDefinition owns the prefab, and participant input is the preferred control profile.");
+
+            return "This intent does not require a pawn. Participants still own control, but the control surface can be a board seat, hand, cursor, camera, UI, or action resolver.";
+        }
+
+        private static string[] GetRouteShapeNativeSetup(bool requiresPawn, bool hasGameplayFocus)
+        {
+            if (!hasGameplayFocus)
+                return new[] { "Intent -> choose one small capability ingredient before expanding setup." };
+
+            if (requiresPawn)
+            {
+                return new[]
+                {
+                    "Project -> Create -> NeonBlack -> Definitions -> Participant Definition; assign it to SessionDefinition.defaultParticipants.",
+                    "Project -> Create -> NeonBlack -> Definitions -> Pawn Definition; assign it to ParticipantDefinition.defaultPawn.",
+                    "Create a pawn prefab, add the lane stack, then assign it to PawnDefinition.pawnPrefab.",
+                    "Assign InputProfile on ParticipantDefinition.inputProfile for the participant controlling this pawn."
+                };
+            }
+
+            return new[]
+            {
+                "Project -> Create -> NeonBlack -> Definitions -> Participant Definition; assign it to SessionDefinition.defaultParticipants.",
+                "Create the route control surface the intent needs: board presenter, cursor, UI, camera, hand, faction, or action resolver."
+            };
+        }
+
+        private static string[] GetRouteShapeAssignmentFields(bool requiresPawn, bool hasGameplayFocus)
+        {
+            if (!hasGameplayFocus)
+                return Array.Empty<string>();
+
+            if (requiresPawn)
+            {
+                return new[]
+                {
+                    "SessionDefinition.defaultParticipants",
+                    "ParticipantDefinition.defaultPawn",
+                    "ParticipantDefinition.inputProfile",
+                    "PawnDefinition.pawnPrefab"
+                };
+            }
+
+            return new[] { "SessionDefinition.defaultParticipants" };
         }
 
         private static PyralisAuthoringGraphSourceKind GetCapabilitySourceKind(PyralisAuthoringCapabilityDescriptor descriptor)
@@ -430,6 +557,118 @@ namespace NeonBlack.Gameplay.Editor
             }
         }
 
+        private static void AddRuntimeValidationEvidence(
+            UnityEngine.Object source,
+            PyralisSetupRouteAnalysis route,
+            List<PyralisAuthoringGraphNode> nodes,
+            List<PyralisAuthoringGraphEdge> edges)
+        {
+            PyralisSetupDependencyTree tree = BuildDependencyTree(source, route);
+            if (tree == null)
+                return;
+
+            HashSet<UnityEngine.Object> visited = new HashSet<UnityEngine.Object>();
+            for (int i = 0; i < tree.Nodes.Count; i++)
+            {
+                PyralisSetupDependencyNode dependencyNode = tree.Nodes[i];
+                if (dependencyNode == null || dependencyNode.SourceObject == null)
+                    continue;
+
+                if (!visited.Add(dependencyNode.SourceObject))
+                    continue;
+
+                if (dependencyNode.SourceObject is not IRuntimeValidationProvider provider)
+                    continue;
+
+                IEnumerable<string> issues = provider.GetRuntimeValidationIssues();
+                if (issues == null)
+                    continue;
+
+                foreach (string issue in issues)
+                {
+                    if (string.IsNullOrWhiteSpace(issue))
+                        continue;
+
+                    string nodeId = BuildRuntimeValidationNodeId(dependencyNode, issue);
+                    AddNode(nodes, new PyralisAuthoringGraphNode(
+                        nodeId,
+                        dependencyNode.Label + " Setup",
+                        PyralisAuthoringGraphNodeKind.ValidationEvidence,
+                        PyralisAuthoringGraphSourceKind.RuntimeValidation,
+                        PyralisAuthoringGraphEvidenceState.Missing,
+                        guidance: issue,
+                        nativeSetup: new[] { BuildRuntimeValidationNativeSetup(dependencyNode, issue) },
+                        assignmentFields: !string.IsNullOrWhiteSpace(dependencyNode.SourceFieldPath) ? new[] { dependencyNode.SourceFieldPath } : Array.Empty<string>(),
+                        blockingReason: issue,
+                        nativeAction: BuildRuntimeValidationNativeAction(dependencyNode, issue),
+                        sourceObject: dependencyNode.SourceObject,
+                        sourceOrigin: PyralisAuthoringGraphSourceOrigin.RuntimeEvidence,
+                        workIntent: PyralisAuthoringGraphWorkIntent.RequiredSetup,
+                        issueSeverity: PyralisAuthoringIssueSeverity.Required));
+
+                    string anchorNodeId = ResolveDependencyAnchorNodeId(dependencyNode);
+                    AddEdge(edges, anchorNodeId, nodeId, PyralisAuthoringGraphEdgeKind.RelatesTo, "runtime validation");
+                }
+            }
+        }
+
+        private static PyralisSetupDependencyTree BuildDependencyTree(UnityEngine.Object source, PyralisSetupRouteAnalysis route)
+        {
+            UnityEngine.Object treeSource = source;
+            if (treeSource == null && route != null)
+                treeSource = route.Session != null ? route.Session : route.Mode;
+
+            return treeSource != null ? PyralisSetupDependencyTree.Build(treeSource) : null;
+        }
+
+        private static string BuildRuntimeValidationNodeId(PyralisSetupDependencyNode dependencyNode, string issue)
+        {
+            string anchor = dependencyNode != null && !string.IsNullOrWhiteSpace(dependencyNode.StableId)
+                ? dependencyNode.StableId
+                : "unknown";
+            return "runtimevalidation." + NormalizeId(anchor) + "." + ComputeStableHash(issue);
+        }
+
+        private static string BuildRuntimeValidationNativeSetup(PyralisSetupDependencyNode dependencyNode, string issue)
+        {
+            string target = dependencyNode != null && dependencyNode.SourceObject != null
+                ? dependencyNode.SourceObject.GetType().Name
+                : "the selected setup asset";
+            return "Open " + target + " in the Inspector and resolve this validation issue: " + issue;
+        }
+
+        private static PyralisAuthoringNativeAction BuildRuntimeValidationNativeAction(PyralisSetupDependencyNode dependencyNode, string issue)
+        {
+            string target = dependencyNode != null && dependencyNode.SourceObject != null
+                ? dependencyNode.SourceObject.GetType().Name
+                : "selected setup asset";
+            string field = !string.IsNullOrWhiteSpace(dependencyNode?.SourceFieldPath)
+                ? dependencyNode.SourceFieldPath
+                : "the field named by the validation issue";
+            return new PyralisAuthoringNativeAction(
+                "Inspect",
+                PyralisAuthoringActionSurface.Inspector,
+                target,
+                field,
+                "the validation issue is gone from Validate and Guide");
+        }
+
+        private static string ResolveDependencyAnchorNodeId(PyralisSetupDependencyNode dependencyNode)
+        {
+            if (dependencyNode == null || string.IsNullOrWhiteSpace(dependencyNode.StableId))
+                return string.Empty;
+
+            string stableId = dependencyNode.StableId;
+            if (stableId.StartsWith("pawn.definition.", StringComparison.Ordinal))
+                return "pawn.definition";
+            if (stableId.StartsWith("participant.default.", StringComparison.Ordinal))
+                return "participant.default";
+            if (stableId.StartsWith("mode.", StringComparison.Ordinal))
+                return "mode.definition";
+
+            return stableId;
+        }
+
         private static void AddSceneReadinessEvidence(UnityEngine.Object source, List<PyralisAuthoringGraphNode> nodes, List<PyralisAuthoringGraphEdge> edges)
         {
             if (source is not GameplaySessionBootstrap bootstrap)
@@ -506,6 +745,7 @@ namespace NeonBlack.Gameplay.Editor
                 return false;
 
             return node.Kind == PyralisAuthoringGraphNodeKind.SetupChain
+                || node.Kind == PyralisAuthoringGraphNodeKind.RouteShape
                 || node.Kind == PyralisAuthoringGraphNodeKind.UnitySurfaceRequirement
                 || node.Kind == PyralisAuthoringGraphNodeKind.ValidationEvidence;
         }

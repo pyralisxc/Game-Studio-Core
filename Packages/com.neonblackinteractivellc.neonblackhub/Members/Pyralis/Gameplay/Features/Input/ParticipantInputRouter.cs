@@ -251,10 +251,7 @@ public class ParticipantInputRouter : MonoBehaviour, IRuntimeValidationProvider
             if (playerInput == null || participant == null)
                 return;
 
-            InputProfile inputProfile = ParticipantInputProfileUtility.ResolveEffectiveInputProfile(
-                participant.Definition,
-                participant.PawnDefinition,
-                sessionDefinition != null ? sessionDefinition.defaultInputProfile : null);
+            InputProfile inputProfile = ParticipantInputProfileUtility.ResolveEffectiveInputProfile(participant.Definition);
 
             if (inputProfile == null)
                 return;

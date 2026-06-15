@@ -61,6 +61,12 @@ namespace NeonBlack.Gameplay.Editor
             intentSummary.AddToClassList("intent-card-summary");
             advisorContainer.Add(intentSummary);
 
+            var routeShape = new Label(string.Empty) { name = "intentRouteShape" };
+            routeShape.style.whiteSpace = WhiteSpace.Normal;
+            routeShape.style.marginTop = 6f;
+            routeShape.style.marginBottom = 2f;
+            advisorContainer.Add(routeShape);
+
             var intentNext = new Label(string.Empty) { name = "intentNext" };
             intentNext.style.whiteSpace = WhiteSpace.Normal;
             intentNext.style.marginTop = 6f;
@@ -293,17 +299,10 @@ namespace NeonBlack.Gameplay.Editor
 
         private string GetIntentCapabilityTooltip(AuthoringCapability capability)
         {
-            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors = PyralisAuthoringCapabilityDescriptorRegistry.All;
-            for (int i = 0; i < descriptors.Count; i++)
-            {
-                PyralisAuthoringCapabilityDescriptor descriptor = descriptors[i];
-                if (descriptor != null
-                    && (descriptor.Capability & capability) != 0
-                    && !string.IsNullOrWhiteSpace(descriptor.Summary))
-                {
-                    return descriptor.Summary;
-                }
-            }
+            PyralisAuthoringCapabilityDescriptor descriptor =
+                PyralisAuthoringCapabilityDescriptorRegistry.FindBestForCapability(capability, _intentLane, _intentAxioms);
+            if (descriptor != null && !string.IsNullOrWhiteSpace(descriptor.Summary))
+                return descriptor.Summary;
 
             return AuthoringCapabilityRegistry.GetTooltip(capability);
         }
@@ -347,6 +346,10 @@ namespace NeonBlack.Gameplay.Editor
             PyralisAuthoringIntentModel model = GetCachedIntentModel();
 
             summaryLabel.text = model.Summary;
+            Label routeShapeLabel = root.Q<Label>("intentRouteShape");
+            if (routeShapeLabel != null)
+                routeShapeLabel.text = PyralisAuthoringSetupGraphProjection.BuildRouteShapeSummary(GetCurrentIntentSelection());
+
             Label nextLabel = root.Q<Label>("intentNext");
             if (nextLabel != null)
                 nextLabel.text = GetIntentReadinessMessage();

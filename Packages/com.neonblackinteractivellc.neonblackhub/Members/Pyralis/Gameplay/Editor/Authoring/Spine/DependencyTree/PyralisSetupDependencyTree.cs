@@ -265,7 +265,6 @@ namespace NeonBlack.Gameplay.Editor
                 AddEdge("pawn.definition", pawnNodeId, $"PawnDefinition[{i}]", "pawn asset");
 
                 AddSingleObjectNode("pawn.prefab." + i, "Pawn Prefab", PyralisSetupDependencyNodeKind.Prefab, GetObjectReference<UnityEngine.Object>(pawn, "pawnPrefab"), pawnNodeId, "pawnPrefab", "pawn prefab");
-                AddPawnProfileNode(pawn, pawnNodeId, i, "defaultInputProfile");
                 AddPawnProfileNode(pawn, pawnNodeId, i, "movementProfile");
                 AddPawnProfileNode(pawn, pawnNodeId, i, "combatProfile");
                 AddPawnProfileNode(pawn, pawnNodeId, i, "traversalProfile");

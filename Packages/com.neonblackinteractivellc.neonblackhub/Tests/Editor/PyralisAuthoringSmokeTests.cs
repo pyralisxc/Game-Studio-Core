@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
@@ -74,6 +75,54 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 | AuthoringWorldAxiom.GravityNone
                 | AuthoringWorldAxiom.Realtime
                 | AuthoringWorldAxiom.BoundedSpace), Is.True);
+        }
+
+        [Test]
+        public void GameplaySeams_SmokeKeepSingleRuntimeOwners()
+        {
+            string gameplayRoot = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Packages", "com.neonblackinteractivellc.neonblackhub", "Members", "Pyralis", "Gameplay"));
+            string sessionSource = File.ReadAllText(Path.Combine(gameplayRoot, "Data", "Definitions", "SessionDefinition.cs"));
+            string pawnSource = File.ReadAllText(Path.Combine(gameplayRoot, "Data", "Definitions", "PawnDefinition.cs"));
+            string runtimeContextSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Platform", "Composition", "GameplayRuntimeContext.cs"));
+            string spawnSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Characters", "Runtime", "Shared", "Services", "ParticipantSpawnService.cs"));
+            string spawnerSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Respawn", "3D", "PlayerSpawner.cs"));
+            string bootstrapSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Characters", "GameplaySessionBootstrap.cs"));
+            string playfieldSource = File.ReadAllText(Path.Combine(gameplayRoot, "Data", "Profiles", "PlayfieldProfile.cs"));
+            string pawn2DMovementSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Characters", "2D", "Pawn2DMovementComponent.cs"));
+            string cameraRigSource = File.ReadAllText(Path.Combine(gameplayRoot, "Presentation", "Camera", "CinemachineCameraRigController.cs"));
+
+            Assert.That(sessionSource, Does.Not.Contain("defaultInputProfile"));
+            Assert.That(pawnSource, Does.Not.Contain("defaultInputProfile"));
+            Assert.That(runtimeContextSource, Does.Not.Contain("DefaultInputProfile"));
+            Assert.That(runtimeContextSource, Does.Not.Contain("DefaultInputActions"));
+            Assert.That(spawnSource, Does.Not.Contain("GetMethod("));
+            Assert.That(spawnSource, Does.Contain("IPawnRuntimeServicesReceiver"));
+            Assert.That(spawnerSource, Does.Not.Contain("playerPrefab"));
+            Assert.That(spawnerSource, Does.Not.Contain("currentPlayer"));
+            Assert.That(spawnerSource, Does.Contain("ParticipantSpawnService"));
+            Assert.That(bootstrapSource, Does.Not.Contain("TrySetMember"));
+            Assert.That(bootstrapSource, Does.Not.Contain("System.Reflection"));
+            Assert.That(playfieldSource, Does.Contain("IPlayfieldBoundsProvider"));
+            Assert.That(playfieldSource, Does.Contain("AuthoringCapability.Movement"));
+            Assert.That(pawn2DMovementSource.IndexOf("TryGetPlayfieldBounds2D", System.StringComparison.Ordinal), Is.LessThan(pawn2DMovementSource.IndexOf("TryGetCameraBounds", System.StringComparison.Ordinal)));
+            Assert.That(cameraRigSource, Does.Contain("ICameraBoundsProvider"));
+        }
+
+        [Test]
+        public void PlayfieldProfile_SmokeProvidesLegalMovementBounds()
+        {
+            PlayfieldProfile playfield = ScriptableObject.CreateInstance<PlayfieldProfile>();
+            playfield.clampToBounds = true;
+            playfield.allowScreenWrap = true;
+            playfield.minBounds = new Vector2(-5f, -3f);
+            playfield.maxBounds = new Vector2(5f, 3f);
+
+            Assert.That(playfield.TryGetPlayfieldBounds2D(0.5f, out PlayfieldBounds2D bounds), Is.True);
+            Assert.That(bounds.Min, Is.EqualTo(new Vector2(-4.5f, -2.5f)));
+            Assert.That(bounds.Max, Is.EqualTo(new Vector2(4.5f, 2.5f)));
+            Assert.That(bounds.AllowScreenWrap, Is.True);
+
+            Object.DestroyImmediate(playfield);
         }
 
         [Test]
@@ -155,7 +204,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void SetupGraph_SmokePawnRouteCreatesMovementProof()
+        public void SetupGraph_SmokePawnRouteCreatesMovementProofAndBlocksOnPawnValidation()
         {
             SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
             GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
@@ -171,11 +220,20 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 .Any(node => node.CapabilityFamily == RuntimeCapabilityFamily.CharacterPawnGameplay), Is.True);
             Assert.That(graph.TryFindNode("proof.1p-pawn-movement", out PyralisAuthoringGraphNode proofNode), Is.True);
             Assert.That(proofNode.Kind, Is.EqualTo(PyralisAuthoringGraphNodeKind.Proof));
-            Assert.That(proofNode.EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.CandidateDetected));
+            Assert.That(proofNode.EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.Missing));
             Assert.That(proofNode.SourceOrigin, Is.EqualTo(PyralisAuthoringGraphSourceOrigin.GrammarFallback));
             Assert.That(graph.Edges.Any(edge =>
                 edge.ToNodeId == "proof.1p-pawn-movement"
                 && edge.Kind == PyralisAuthoringGraphEdgeKind.SupportsProof), Is.True);
+            Assert.That(graph.Nodes.Any(node =>
+                node.SourceKind == PyralisAuthoringGraphSourceKind.RuntimeValidation
+                && node.Guidance.Contains("pawn prefab")), Is.True);
+            Assert.That(graph.Edges.Any(edge =>
+                edge.FromNodeId == "proof.1p-pawn-movement"
+                && edge.Kind == PyralisAuthoringGraphEdgeKind.BlockedBy
+                && edge.ToNodeId.StartsWith("runtimevalidation.", System.StringComparison.Ordinal)), Is.True);
+            Assert.That(PyralisAuthoringSetupGraphProjection.BuildSetupMapRows(graph)
+                .Any(row => row.Label == "Pawn / No Pawn" && row.IsMissing && row.Message.Contains("pawn prefab")), Is.True);
 
             Object.DestroyImmediate(pawn);
             Object.DestroyImmediate(participant);
@@ -220,6 +278,11 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             Assert.That(graph.FindNodes(PyralisAuthoringGraphNodeKind.Capability)
                 .Any(node => node.CapabilityFamily == RuntimeCapabilityFamily.CharacterPawnGameplay), Is.True);
+            Assert.That(graph.TryFindNode("route.shape", out PyralisAuthoringGraphNode routeShape), Is.True);
+            Assert.That(routeShape.Kind, Is.EqualTo(PyralisAuthoringGraphNodeKind.RouteShape));
+            Assert.That(routeShape.Label, Is.EqualTo("Participant With Pawn"));
+            Assert.That(routeShape.EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.Missing));
+            Assert.That(routeShape.Guidance, Does.Contain("PawnDefinition"));
             Assert.That(graph.TryFindNode("pawn.definition", out PyralisAuthoringGraphNode pawnNode), Is.True);
             Assert.That(pawnNode.EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.Missing));
             Assert.That(pawnNode.BlockingReason, Does.Contain("ParticipantDefinition.defaultPawn"));
@@ -236,10 +299,49 @@ namespace NeonBlack.Gameplay.Tests.Editor
             IReadOnlyList<PyralisAuthoringRouteStepRow> routeSteps = PyralisAuthoringSetupGraphProjection.BuildRouteStepRows(graph);
             Assert.That(routeSteps.Count, Is.GreaterThanOrEqualTo(2));
             Assert.That(routeSteps[0].Role, Is.EqualTo(PyralisAuthoringRouteStepRole.DoThisFirst));
+            Assert.That(routeSteps.Any(row => row.StableId == "route.shape"
+                && (row.Role == PyralisAuthoringRouteStepRole.BlocksProof || row.Role == PyralisAuthoringRouteStepRole.RouteContext)), Is.True);
             Assert.That(routeSteps.Any(row => row.StableId == "pawn.definition"
                 && (row.Role == PyralisAuthoringRouteStepRole.DoThisFirst || row.Role == PyralisAuthoringRouteStepRole.BlocksProof)), Is.True);
             Assert.That(routeSteps.Any(row => row.StableId == "proof.1p-pawn-movement"
                 && row.Role == PyralisAuthoringRouteStepRole.ProofTarget), Is.True);
+            Assert.That(PyralisAuthoringSetupGraphProjection.BuildRouteShapeSummary(graph), Does.Contain("Participant With Pawn"));
+
+            Object.DestroyImmediate(participant);
+            Object.DestroyImmediate(mode);
+            Object.DestroyImmediate(session);
+        }
+
+        [Test]
+        public void SetupGraph_SmokeCurrentSetupGraphDoesNotTreatIntentAsAuthoredTruth()
+        {
+            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
+            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
+            ParticipantDefinition participant = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            session.defaultGameMode = mode;
+            session.defaultParticipants = new[] { participant };
+
+            PyralisAuthoringIntentSelection intent = new PyralisAuthoringIntentSelection(
+                RuntimeCapabilityLaneTag.Sprite2D,
+                AuthoringCapability.Movement | AuthoringCapability.Input,
+                AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone | AuthoringWorldAxiom.Realtime);
+
+            PyralisAuthoringSetupGraph currentGraph = PyralisAuthoringSetupGraphBuilder.Build(session);
+            PyralisAuthoringSetupGraph intentGraph = PyralisAuthoringSetupGraphBuilder.Build(session, intent);
+
+            Assert.That(currentGraph.FindNodes(PyralisAuthoringGraphNodeKind.Capability)
+                .Any(node => node.CapabilityFamily == RuntimeCapabilityFamily.CharacterPawnGameplay), Is.False);
+            Assert.That(currentGraph.TryFindNode("pawn.definition", out PyralisAuthoringGraphNode currentPawn), Is.True);
+            Assert.That(currentPawn.EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.Ready));
+            Assert.That(PyralisAuthoringSetupGraphProjection.BuildProofBlockerRows(currentGraph)
+                .Any(row => row.To != null && row.To.StableId == "pawn.definition"), Is.False);
+
+            Assert.That(intentGraph.FindNodes(PyralisAuthoringGraphNodeKind.Capability)
+                .Any(node => node.CapabilityFamily == RuntimeCapabilityFamily.CharacterPawnGameplay), Is.True);
+            Assert.That(intentGraph.TryFindNode("pawn.definition", out PyralisAuthoringGraphNode intentPawn), Is.True);
+            Assert.That(intentPawn.EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.Missing));
+            Assert.That(PyralisAuthoringSetupGraphProjection.BuildProofBlockerRows(intentGraph)
+                .Any(row => row.To != null && row.To.StableId == "pawn.definition"), Is.True);
 
             Object.DestroyImmediate(participant);
             Object.DestroyImmediate(mode);
@@ -256,6 +358,37 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             Assert.That(families.Any(family => family == RuntimeCapabilityFamily.ActionTargeting), Is.True);
             Assert.That(families.Any(family => family == RuntimeCapabilityFamily.CameraInput), Is.False);
+
+            PyralisAuthoringCapabilityDescriptor descriptor =
+                PyralisAuthoringCapabilityDescriptorRegistry.FindBestForCapability(
+                    AuthoringCapability.Input,
+                    RuntimeCapabilityLaneTag.Sprite2D,
+                    AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone | AuthoringWorldAxiom.Realtime);
+            Assert.That(descriptor, Is.Not.Null);
+            Assert.That(descriptor.Family, Is.Not.EqualTo(RuntimeCapabilityFamily.CameraInput));
+        }
+
+        [Test]
+        public void SetupRouteAnalysis_SmokeInputProfileDoesNotDefineCameraRoute()
+        {
+            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
+            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
+            ParticipantDefinition participant = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            InputProfile inputProfile = ScriptableObject.CreateInstance<InputProfile>();
+            session.defaultGameMode = mode;
+            participant.inputProfile = inputProfile;
+            session.defaultParticipants = new[] { participant };
+            participant.inputProfile = inputProfile;
+
+            PyralisSetupRouteAnalysis route = PyralisSetupRouteAnalysis.Build(session);
+
+            Assert.That(route.CapabilityFamilies.Any(family => family == RuntimeCapabilityFamily.CameraInput), Is.False);
+            Assert.That(route.CapabilityFamilies.Any(family => family == RuntimeCapabilityFamily.PlatformCore), Is.True);
+
+            Object.DestroyImmediate(inputProfile);
+            Object.DestroyImmediate(participant);
+            Object.DestroyImmediate(mode);
+            Object.DestroyImmediate(session);
         }
 
         [Test]
@@ -270,6 +403,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(graph.FindNodes(PyralisAuthoringGraphNodeKind.Capability)
                 .Any(node => node.CapabilityFamily != RuntimeCapabilityFamily.PlatformCore), Is.False);
             Assert.That(PyralisAuthoringSetupGraphProjection.BuildIntentFocusSummary(graph), Does.Contain("setup foundation only"));
+            Assert.That(PyralisAuthoringSetupGraphProjection.BuildRouteShapeSummary(graph), Does.Contain("Setup Foundation"));
 
             Object.DestroyImmediate(mode);
             Object.DestroyImmediate(session);
@@ -302,14 +436,20 @@ namespace NeonBlack.Gameplay.Tests.Editor
         {
             SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
             GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
+            ParticipantDefinition participant = ScriptableObject.CreateInstance<ParticipantDefinition>();
             BoardDefinition board = ScriptableObject.CreateInstance<BoardDefinition>();
             mode.boardDefinition = board;
             session.defaultGameMode = mode;
+            session.defaultParticipants = new[] { participant };
 
             PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(session);
 
             Assert.That(graph.FindNodes(PyralisAuthoringGraphNodeKind.Capability)
                 .Any(node => node.CapabilityFamily == RuntimeCapabilityFamily.BoardCardTabletop), Is.True);
+            Assert.That(graph.TryFindNode("route.shape", out PyralisAuthoringGraphNode routeShape), Is.True);
+            Assert.That(routeShape.Label, Is.EqualTo("Participant Without Pawn"));
+            Assert.That(routeShape.EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.Ready));
+            Assert.That(PyralisAuthoringSetupGraphProjection.BuildRouteShapeSummary(graph), Does.Contain("Participant Without Pawn"));
             Assert.That(graph.TryFindNode("pawn.definition", out PyralisAuthoringGraphNode pawnNode), Is.True);
             Assert.That(pawnNode.EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.Ready));
             Assert.That(pawnNode.Guidance, Does.Contain("No-pawn route"));
@@ -317,6 +457,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(proofNode.Kind, Is.EqualTo(PyralisAuthoringGraphNodeKind.Proof));
 
             Object.DestroyImmediate(board);
+            Object.DestroyImmediate(participant);
             Object.DestroyImmediate(mode);
             Object.DestroyImmediate(session);
         }
@@ -332,6 +473,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             Assert.That(model, Is.Not.Null);
             Assert.That(model.DoNow.Count, Is.GreaterThan(0));
+            Assert.That(model.DoNow.Count, Is.LessThanOrEqualTo(3));
             Assert.That(model.BestNextAction, Is.Not.Empty);
 
             Object.DestroyImmediate(root);

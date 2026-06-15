@@ -186,13 +186,6 @@ namespace NeonBlack.Gameplay.Features.Characters
             if (inputConfig?.actions != null) 
                 return inputConfig.actions;
 
-            // Priority 4: Global session default (Compatibility fallback).
-            if (GameplayRuntimeContext.DefaultInputActions != null)
-            {
-                _inputProfile ??= GameplayRuntimeContext.DefaultInputProfile;
-                return GameplayRuntimeContext.DefaultInputActions;
-            }
-
             return null;
         }
 

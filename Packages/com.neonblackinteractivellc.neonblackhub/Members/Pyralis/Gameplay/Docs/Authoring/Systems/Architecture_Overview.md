@@ -134,12 +134,23 @@ Put all gameplay capability here. Each feature lives in `Features/[Name]/` and i
 - `Runtime/3D`
 - feature-local `Data`, `Editor`, `Tests`, and `Docs` where applicable
 
+Use this structure to make each branch easy to inspect:
+
+- `Runtime/Shared` owns contracts, services, contexts, and reusable feature logic.
+- `Runtime/2D`, `Runtime/2_5D`, and `Runtime/3D` own lane adapters only.
+- top-level feature files are acceptable for established legacy code, but new or touched code should move toward the governed runtime shape when it reduces ambiguity.
+- do not create one-folder-per-interface or pass-through folders; group by runtime responsibility.
+- feature-local `Editor/Authoring` can explain or validate that feature, but setup truth should still come from contracts, dependency structure, and graph evidence.
+
 The supported 2D controller surface for new work is the `Motor2D` stack: `Motor2D`, `Pawn2DMovementComponent`, `Pawn2DPresentationComponent`, and `Motor2DInputAdapter` (`Features/Characters/2D/`).
 The supported 3D controller surface for new work is `Motor3D` (`Features/Characters/3D/`).
 
 ## Practical rules
 
 - prefer `GameplaySessionBootstrap` for new scenes
+- put participant input on `ParticipantDefinition.inputProfile`; pawn and session definitions do not own input
+- keep pawn instantiation and respawn identity behind `ParticipantSpawnService`
+- use explicit runtime service receiver interfaces for spawned pawn components instead of runtime method-name reflection
 - prefer neutral runtime surfaces and feature-first naming over themed controller identities
 - prefer shared definitions, profiles, and feature composition over genre-coded folder ownership
 - keep direct `SceneManager.LoadScene(...)` and scene-transition singleton usage out of user-visible runtime components

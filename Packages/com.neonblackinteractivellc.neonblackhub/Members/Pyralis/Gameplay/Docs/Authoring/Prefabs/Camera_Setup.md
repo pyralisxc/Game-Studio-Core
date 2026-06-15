@@ -20,7 +20,7 @@ Resolve route validation before wiring Cinemachine cameras, camera profiles, tar
 
 ## Concepts
 
-- **CinemachineCameraRigController** - manages one shared or split-screen Cinemachine Camera per session and provides visible 2D bounds through `ICameraBoundsProvider`.
+- **CinemachineCameraRigController** - manages one shared or split-screen Cinemachine Camera per session and provides visible 2D camera bounds through `ICameraBoundsProvider`.
 - **CameraRigProfile** - a ScriptableObject that defines presentation mode (shared vs split-screen), follow parameters, profile-driven camera offset, pitch/yaw/roll, and zoom limits.
 - **Physical Target Camera** - the Unity `Camera` that renders the Game view. This is usually the scene `Main Camera`, keeps the `MainCamera` tag, and has `Cinemachine Brain`.
 - **Cinemachine Camera** - the Cinemachine component that composes/follows the view. Assign it to `Shared Camera Behaviour`; do not treat it as the physical render camera.
@@ -48,7 +48,7 @@ If Cinemachine is not yet installed in your project:
    - **Presentation Mode** - `Shared` for single or 2-player shared screen, `SplitScreen` for side-by-side views.
    - **Use Cinemachine** - enable (required for 3D).
    - **Orthographic** - enable for 2D movement, 2D camera bounds, board/top-down views, or any route where bounded framing should be measured in world units. Leave it off for 3D perspective cameras.
-   - **Lock To Playfield** - enable to clamp the camera within `PlayfieldProfile` bounds.
+   - **Lock To Playfield** - enable to clamp the camera focus within `PlayfieldProfile` bounds. Movement legality still comes from `PlayfieldProfile`, not from the camera.
    - **Use Profile Transform** - enable when the profile should place and rotate the shared Cinemachine Camera at runtime. Disable it when you want to hand-place and hand-rotate the Cinemachine Camera in the scene.
    - **Follow Offset** - world offset from the runtime shared follow focus to the Cinemachine Camera. For a clean 2D proof use `0, 0, -10`. For angled 3D/2.5D, raise Y and move back on Z.
    - **View Euler Angles** - pitch, yaw, and roll in Unity degrees. For a normal 2D orthographic proof use `0, 0, 0`; for angled follow, tune pitch/yaw here.
@@ -83,13 +83,14 @@ If Cinemachine is not yet installed in your project:
 
 If your session uses a `GameModeDefinition` asset, assign your `CameraRigProfile` and `PlayfieldProfile` inside it. The Bootstrap will call `SetGameMode()` on the controller at session start.
 
-### Step 6 - Connect bounds-aware systems
+### Step 6 - Connect Bounds-Aware Systems
 
-`CinemachineCameraRigController` implements the shared camera bounds service used by 2D movement, pickup spawning, and hazard spawning.
+`PlayfieldProfile` owns legal gameplay bounds for movement clamp and screen wrap. `CinemachineCameraRigController` owns visible camera bounds for framing and camera-aware placement. In the standard bootstrap route, `GameModeDefinition.playfieldProfile` is passed to spawned pawns automatically, and the assigned camera rig is passed as the camera bounds provider.
 
 1. Drag the `Camera Root` object from the Hierarchy into `GameplaySessionBootstrap > Camera Rig Controller`. Unity assigns the `CinemachineCameraRigController` component from that object.
 2. Leave `Camera Bounds Source` empty unless you are intentionally using a custom `ICameraBoundsProvider`.
 3. If a direct component asks for Camera Bounds Source, assign the same `CinemachineCameraRigController`.
+4. If 2D movement should stop at arena edges, assign a `PlayfieldProfile` to `GameModeDefinition.playfieldProfile` and enable `Clamp To Bounds`.
 
 ### Step 7 - Enable orientations in Player Settings for 2D
 
@@ -112,5 +113,6 @@ If your session uses a `GameModeDefinition` asset, assign your `CameraRigProfile
 | Scene has three cameras after setup | You likely have one Cinemachine Camera plus two physical `Camera` components. Keep one enabled physical render camera for the shared proof, usually `Main Camera` with `Cinemachine Brain`, and disable or remove accidental extra physical cameras |
 | Camera clips or shakes too aggressively | `Shake Amplitude` on `CameraRigProfile` too high - start at `1` |
 | 2D sprites spawn off screen | `CinemachineCameraRigController` is not assigned as the camera rig/bounds provider, or 2D Bounds Framing world sizes do not match your design size |
+| Pawn cannot move past an edge | Check `GameModeDefinition.playfieldProfile`. `Clamp To Bounds` limits legal movement; CameraRigProfile only changes framing |
 | Letterbox bars appearing unexpectedly | `Letterbox 2D` is enabled on `CinemachineCameraRigController` |
 | Split-screen cameras not active | `Presentation Mode` is `Shared` - switch to `SplitScreen` and assign cameras to `Split Screen Camera Behaviours` |

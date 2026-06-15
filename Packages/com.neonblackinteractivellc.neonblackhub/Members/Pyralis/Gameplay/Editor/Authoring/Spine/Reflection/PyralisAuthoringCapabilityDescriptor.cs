@@ -177,6 +177,107 @@ namespace NeonBlack.Gameplay.Editor
             return fallback;
         }
 
+        public static PyralisAuthoringCapabilityDescriptor FindBestForCapability(
+            AuthoringCapability capability,
+            RuntimeCapabilityLaneTag lane,
+            AuthoringWorldAxiom axioms)
+        {
+            if (capability == AuthoringCapability.None)
+                return null;
+
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors = All;
+            PyralisAuthoringCapabilityDescriptor best = null;
+            int bestScore = int.MinValue;
+            for (int i = 0; i < descriptors.Count; i++)
+            {
+                PyralisAuthoringCapabilityDescriptor descriptor = descriptors[i];
+                if (descriptor == null || (descriptor.Capability & capability) == 0)
+                    continue;
+
+                if (!descriptor.Matches(capability, lane, axioms))
+                    continue;
+
+                int score = GetCapabilityDescriptorScore(descriptor, capability, lane, axioms);
+                if (score > bestScore)
+                {
+                    best = descriptor;
+                    bestScore = score;
+                }
+            }
+
+            return best;
+        }
+
+        private static int GetCapabilityDescriptorScore(
+            PyralisAuthoringCapabilityDescriptor descriptor,
+            AuthoringCapability capability,
+            RuntimeCapabilityLaneTag lane,
+            AuthoringWorldAxiom axioms)
+        {
+            int score = 0;
+            if (descriptor.Capability == capability)
+                score += 1000;
+            else
+                score += Math.Max(0, 200 - CountIndividualCapabilities(descriptor.Capability));
+
+            if (IsContractOwned(descriptor))
+                score += 200;
+
+            if (lane != RuntimeCapabilityLaneTag.Mixed
+                && (Contains(descriptor.LaneTags, lane.ToString())
+                    || Contains(descriptor.LaneTags, ToRegistryPresentationLaneName(lane))))
+            {
+                score += 50;
+            }
+
+            if (axioms != AuthoringWorldAxiom.None && descriptor.Axioms != AuthoringWorldAxiom.None)
+                score += CountMatchingAxioms(descriptor.Axioms, axioms);
+
+            score -= descriptor.SortOrder;
+            return score;
+        }
+
+        private static int CountIndividualCapabilities(AuthoringCapability capabilities)
+        {
+            int count = 0;
+            foreach (AuthoringCapability capability in AuthoringCapabilityRegistry.GetAllIndividualCapabilities())
+            {
+                if ((capabilities & capability) != 0)
+                    count++;
+            }
+
+            return count;
+        }
+
+        private static int CountMatchingAxioms(AuthoringWorldAxiom descriptorAxioms, AuthoringWorldAxiom selectedAxioms)
+        {
+            int count = 0;
+            AuthoringWorldAxiom overlap = descriptorAxioms & selectedAxioms;
+            IReadOnlyList<AuthoringWorldAxiomGroup> groups = AuthoringWorldAxiomRegistry.GetIntentGroups();
+            for (int groupIndex = 0; groupIndex < groups.Count; groupIndex++)
+            {
+                AuthoringWorldAxiom[] options = groups[groupIndex].Options;
+                for (int optionIndex = 0; optionIndex < options.Length; optionIndex++)
+                {
+                    if ((overlap & options[optionIndex]) != 0)
+                        count++;
+                }
+            }
+
+            return count;
+        }
+
+        private static string ToRegistryPresentationLaneName(RuntimeCapabilityLaneTag lane)
+        {
+            return lane switch
+            {
+                RuntimeCapabilityLaneTag.Sprite2D => "Sprite2D",
+                RuntimeCapabilityLaneTag.Billboard2_5D => "Billboard2_5D",
+                RuntimeCapabilityLaneTag.ThirdPerson3D => "Rigged3D",
+                _ => lane.ToString()
+            };
+        }
+
         public static bool CapabilityMatchesFamily(AuthoringCapability capability, RuntimeCapabilityFamily family)
         {
             if (capability == AuthoringCapability.None)
@@ -508,7 +609,7 @@ namespace NeonBlack.Gameplay.Editor
                 RuntimeCapabilityFamily.BoardCardTabletop => "Board / Card / Tabletop",
                 RuntimeCapabilityFamily.AnimationPresentation => "Animation / Presentation",
                 RuntimeCapabilityFamily.ScoringObjectives => "Scoring / Objectives",
-                RuntimeCapabilityFamily.CameraInput => "Camera / Input",
+                RuntimeCapabilityFamily.CameraInput => "Camera / Cursor",
                 RuntimeCapabilityFamily.Networking => "Networking",
                 _ => "Custom Capability"
             };

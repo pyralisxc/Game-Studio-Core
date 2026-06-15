@@ -7,39 +7,17 @@ namespace NeonBlack.Gameplay.Editor
 {
     internal static class PyralisAuthoringMapRenderer
     {
+        private static readonly Dictionary<string, bool> Foldouts = new Dictionary<string, bool>();
+
         public static void Draw(Object activeSetup, Object selection, PyralisAuthoringSetupGraph graph)
         {
             EditorGUILayout.LabelField("Setup Map", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox("Use this page to see the route Pyralis inferred from your Intent, assets, scene objects, and contracts. Edit actual fields in the Inspector when a row names a missing link.", MessageType.Info);
+            EditorGUILayout.HelpBox("Use Map for scene and setup reality: selected context, authored links, scene surfaces, missing fields, and object wiring. Intent does not change this view; Validate owns graph integrity.", MessageType.Info);
             DrawActiveAndSelectedContext(activeSetup, selection);
-            DrawIntentFocus(graph);
             DrawYouAreHereChain(graph);
-            DrawFirstProofBlockers(graph);
-            DrawGraphConnections(graph);
             DrawSceneSurfaceSnapshot(graph);
-            DrawReadinessSummary(graph);
-        }
-
-        private static void DrawActiveAndSelectedContext(Object activeSetup, Object selection)
-        {
-            EditorGUILayout.Space(12f);
-            EditorGUILayout.LabelField("Selected Authoring Context", EditorStyles.boldLabel);
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
-            {
-                EditorGUILayout.LabelField("Active Setup", activeSetup != null ? $"{activeSetup.name} ({activeSetup.GetType().Name})" : "No setup context", EditorStyles.wordWrappedLabel);
-                EditorGUILayout.LabelField("Current Selection", selection != null ? $"{selection.name} ({selection.GetType().Name})" : "Nothing selected", EditorStyles.wordWrappedLabel);
-            }
-        }
-
-        private static void DrawIntentFocus(PyralisAuthoringSetupGraph graph)
-        {
-            EditorGUILayout.Space(12f);
-            EditorGUILayout.LabelField("Intent Focus", EditorStyles.boldLabel);
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
-            {
-                PyralisAuthoringWindowPrimitives.DrawMiniField("Route Focus", PyralisAuthoringSetupGraphProjection.BuildIntentFocusSummary(graph));
-                PyralisAuthoringWindowPrimitives.DrawMiniField("First Proof", PyralisAuthoringSetupGraphProjection.BuildFirstProofPrioritySummary(graph));
-            }
+            DrawSceneSetupIssues(graph);
+            DrawGraphConnections(graph);
         }
 
         private static void DrawYouAreHereChain(PyralisAuthoringSetupGraph graph)
@@ -83,23 +61,14 @@ namespace NeonBlack.Gameplay.Editor
             }
         }
 
-        private static void DrawFirstProofBlockers(PyralisAuthoringSetupGraph graph)
+        private static void DrawActiveAndSelectedContext(Object activeSetup, Object selection)
         {
-            IReadOnlyList<PyralisAuthoringGraphConnectionRow> rows = PyralisAuthoringSetupGraphProjection.BuildProofBlockerRows(graph);
-            if (rows.Count == 0)
-                return;
-
             EditorGUILayout.Space(12f);
-            EditorGUILayout.LabelField("Fix Before First Proof", EditorStyles.boldLabel);
-            PyralisAuthoringWindowText.DrawSemanticHelpBox("These rows explain why an assigned definition asset is not enough yet. Fill the named field, prefab, component, or scene surface before treating the proof as playable.", MessageType.Warning);
+            EditorGUILayout.LabelField("Selected Authoring Context", EditorStyles.boldLabel);
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                int visibleCount = Mathf.Min(rows.Count, 8);
-                for (int i = 0; i < visibleCount; i++)
-                    DrawGraphConnectionRow(rows[i]);
-
-                if (visibleCount < rows.Count)
-                    EditorGUILayout.LabelField($"{rows.Count - visibleCount} more proof blocker(s) are visible in Validate.", EditorStyles.wordWrappedMiniLabel);
+                EditorGUILayout.LabelField("Active Setup", activeSetup != null ? $"{activeSetup.name} ({activeSetup.GetType().Name})" : "No setup context", EditorStyles.wordWrappedLabel);
+                EditorGUILayout.LabelField("Current Selection", selection != null ? $"{selection.name} ({selection.GetType().Name})" : "Nothing selected", EditorStyles.wordWrappedLabel);
             }
         }
 
@@ -120,10 +89,20 @@ namespace NeonBlack.Gameplay.Editor
         private static void DrawGraphConnections(PyralisAuthoringSetupGraph graph)
         {
             EditorGUILayout.Space(12f);
-            EditorGUILayout.LabelField("Route Connections", EditorStyles.boldLabel);
-            PyralisAuthoringWindowText.DrawSemanticHelpBox("These rows show how setup, capabilities, contracts, proof targets, and scene evidence connect. Use them when the route feels unclear.", MessageType.Info);
+            EditorGUILayout.LabelField("Developer Route Connections", EditorStyles.boldLabel);
+            PyralisAuthoringWindowText.DrawSemanticHelpBox("Collapsed reference view for how current scene/setup nodes connect. Open Validate when graph blockers need deeper evidence.", MessageType.Info);
 
             IReadOnlyList<PyralisAuthoringGraphConnectionRow> rows = PyralisAuthoringSetupGraphProjection.BuildMapConnectionRows(graph);
+            const string key = "Pyralis.AuthoringWindow.Map.RouteConnections";
+            bool expanded = Foldouts.TryGetValue(key, out bool value) && value;
+            expanded = EditorGUILayout.Foldout(expanded, $"Connections ({rows.Count})", true);
+            Foldouts[key] = expanded;
+            if (!expanded)
+            {
+                EditorGUILayout.LabelField("Collapsed by default so Map stays focused on the current scene and setup objects.", EditorStyles.wordWrappedMiniLabel);
+                return;
+            }
+
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 if (rows.Count == 0)
@@ -173,32 +152,83 @@ namespace NeonBlack.Gameplay.Editor
             }
         }
 
-        private static void DrawReadinessSummary(PyralisAuthoringSetupGraph graph)
+        private static void DrawSceneSetupIssues(PyralisAuthoringSetupGraph graph)
         {
             EditorGUILayout.Space(12f);
-            EditorGUILayout.LabelField("Readiness Summary", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Scene Setup Issues", EditorStyles.boldLabel);
+            PyralisAuthoringWindowText.DrawSemanticHelpBox("These are concrete Unity setup items: missing scene surfaces, empty fields, component requirements, or selected-route wiring that should be fixed in Project, Hierarchy, or Inspector.", MessageType.Info);
 
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                IReadOnlyList<PyralisAuthoringSetupGraphRow> rows = PyralisAuthoringSetupGraphProjection.BuildReadinessRows(graph);
+                IReadOnlyList<PyralisAuthoringValidationGraphRow> rows = PyralisAuthoringSetupGraphProjection.BuildValidationDetailRows(graph);
+                int visibleCount = 0;
                 for (int i = 0; i < rows.Count; i++)
-                    DrawCompactReadinessRow(rows[i]);
+                {
+                    PyralisAuthoringValidationGraphRow row = rows[i];
+                    if (!IsSceneSetupIssue(row))
+                        continue;
+
+                    DrawSceneSetupIssueRow(row);
+                    visibleCount++;
+                }
+
+                if (visibleCount == 0)
+                    EditorGUILayout.LabelField("No current scene/setup issues are exposed by the graph.", EditorStyles.wordWrappedMiniLabel);
             }
         }
 
-        private static void DrawCompactReadinessRow(PyralisAuthoringSetupGraphRow row)
+        private static bool IsSceneSetupIssue(PyralisAuthoringValidationGraphRow row)
         {
-            if (row == null)
-                return;
+            PyralisAuthoringGraphNode node = row?.Node;
+            if (node == null)
+                return false;
 
-            Object target = row.Target;
-            string targetName = target != null ? $" ({target.name})" : string.Empty;
-            EditorGUILayout.LabelField(row.Label, PyralisAuthoringWindowPrimitives.GetReadinessBadge(row.IsReady, target, row.IsOptional) + targetName);
-            if (!string.IsNullOrWhiteSpace(row.Message))
+            if (node.EvidenceState == PyralisAuthoringGraphEvidenceState.Ready
+                || node.EvidenceState == PyralisAuthoringGraphEvidenceState.Optional
+                || node.EvidenceState == PyralisAuthoringGraphEvidenceState.Unknown)
             {
-                EditorGUI.indentLevel++;
-                PyralisAuthoringWindowText.DrawSemanticMiniLabel(row.Message);
-                EditorGUI.indentLevel--;
+                return false;
+            }
+
+            if (node.Kind == PyralisAuthoringGraphNodeKind.SceneSurface
+                || node.Kind == PyralisAuthoringGraphNodeKind.SetupChain
+                || node.Kind == PyralisAuthoringGraphNodeKind.UnitySurfaceRequirement)
+            {
+                return true;
+            }
+
+            if (node.SourceKind == PyralisAuthoringGraphSourceKind.SceneReadiness
+                || node.SourceKind == PyralisAuthoringGraphSourceKind.RuntimeValidation
+                || node.SourceKind == PyralisAuthoringGraphSourceKind.SetupFlow)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private static void DrawSceneSetupIssueRow(PyralisAuthoringValidationGraphRow row)
+        {
+            PyralisAuthoringGraphNode node = row.Node;
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.LabelField(row.Label, GetEvidenceLabel(row.EvidenceState), EditorStyles.boldLabel);
+                if (!string.IsNullOrWhiteSpace(row.Message))
+                    PyralisAuthoringWindowText.DrawSemanticMiniLabel(row.Message);
+                if (node.NativeAction.HasValue)
+                    PyralisAuthoringSurfaceBeacon.DrawNativeAction(node.NativeAction.Value, node.NativeAction.Value.ToGuidanceSentence());
+                if (node.AssignmentFields.Length > 0)
+                    PyralisAuthoringWindowPrimitives.DrawMiniList("Field or component", node.AssignmentFields);
+                if (node.NativeSetup.Length > 0)
+                    PyralisAuthoringWindowPrimitives.DrawMiniList("Unity setup", node.NativeSetup);
+                if (!string.IsNullOrWhiteSpace(node.BlockingReason))
+                    PyralisAuthoringWindowPrimitives.DrawMiniField("Why", node.BlockingReason);
+
+                using (new EditorGUI.DisabledScope(!row.CanInspectTarget))
+                {
+                    if (GUILayout.Button("Inspect Target"))
+                        PyralisAuthoringWindowPrimitives.SelectAndPing(row.Target);
+                }
             }
         }
 

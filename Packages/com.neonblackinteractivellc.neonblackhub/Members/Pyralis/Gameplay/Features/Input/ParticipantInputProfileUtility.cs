@@ -11,16 +11,12 @@ namespace NeonBlack.Gameplay.Features.Input
     public static class ParticipantInputProfileUtility
     {
         public static InputProfile ResolveEffectiveInputProfile(
-            ParticipantDefinition participantDefinition,
-            PawnDefinition pawnDefinition,
-            InputProfile sessionDefaultInputProfile)
+            ParticipantDefinition participantDefinition)
         {
             if (participantDefinition != null && participantDefinition.inputProfile != null)
                 return participantDefinition.inputProfile;
-            if (pawnDefinition != null && pawnDefinition.defaultInputProfile != null)
-                return pawnDefinition.defaultInputProfile;
 
-            return sessionDefaultInputProfile;
+            return null;
         }
 
         public static void ApplyToPlayerInput(PlayerInput playerInput, InputProfile profile)

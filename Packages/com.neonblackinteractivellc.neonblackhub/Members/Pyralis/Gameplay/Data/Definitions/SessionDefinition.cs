@@ -21,10 +21,10 @@ namespace NeonBlack.Gameplay.Data.Definitions
         Priority = AuthoringPriority.Primary,
         SetupNodeId = "session.definition",
         Relevance = "Root configuration for a gameplay session. Defines the boundary of your game world and network authority.",
-        AssignmentFields = new[] { nameof(sessionName), nameof(defaultGameMode), nameof(defaultParticipants), nameof(defaultInputProfile), nameof(networkMode), nameof(maxParticipants) },
+        AssignmentFields = new[] { nameof(sessionName), nameof(defaultGameMode), nameof(defaultParticipants), nameof(networkMode), nameof(maxParticipants) },
         NativeSetup = new[] { "GameplaySessionBootstrap" },
         FirstProof = "Assign this to a GameplaySessionBootstrap in a new scene. It should be the first asset you create.",
-        ExpertAdvice = "SessionDefinition is your session's 'Law'. For local-only prototypes, keep 'Local First' checked to bypass networking overhead. Assign a Default Input Profile here to save time on per-pawn setup.",
+        ExpertAdvice = "SessionDefinition is your session boundary. For local-only prototypes, keep Local First checked to bypass networking overhead. ParticipantDefinition.inputProfile owns who controls each route.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/session"
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Definitions/Session Definition", fileName = "SessionDefinition", order = 0)]
@@ -44,7 +44,6 @@ namespace NeonBlack.Gameplay.Data.Definitions
         public bool allowSplitScreen = false;
         public int maxParticipants = 4;
         public GameModeDefinition defaultGameMode;
-        public InputProfile defaultInputProfile;
         public SettingsProfile settingsProfile;
         public ParticipantDefinition[] defaultParticipants;
 

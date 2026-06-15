@@ -57,9 +57,9 @@ namespace NeonBlack.Gameplay.Editor
                 }
 
                 return new PyralisPrimaryActionGuidance(
-                    $"Native path: keep `{selectedGameObject.name}` selected, then use Inspector -> Add Component search for GameplaySessionBootstrap. Add PyralisGameplayLifetimeScope next if you want the composition root visible before Play Mode.",
+                    $"Native path: keep `{selectedGameObject.name}` as its current scene or prefab object. If no setup root exists yet, right-click in Hierarchy -> Create Empty, name it Gameplay Root, then add GameplaySessionBootstrap there.",
                     MessageType.Info,
-                    "This is still before asset wiring. Once GameplaySessionBootstrap is on the object, Overview will promote it to the active setup and guide SessionDefinition, participants, pawn prefab, spawn points, input, and camera bounds.");
+                    "Gameplay Root is the canonical session root. Ordinary art, camera, prefab, playfield, and support objects should stay separate unless they intentionally are the session root.");
             }
 
             string fallback = currentStep != null

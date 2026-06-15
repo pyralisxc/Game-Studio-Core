@@ -88,7 +88,6 @@ Each pawn prefab that will be spawned by `ParticipantSpawnService` should includ
 ### What `GameplaySessionBootstrap` configures
 
 - `GameplayRuntimeContext.ActiveSessionDefinition`
-- `GameplayRuntimeContext.DefaultInputActions`
 - `SessionStateService`
 - `ParticipantRosterService`
 - `ParticipantSpawnService`

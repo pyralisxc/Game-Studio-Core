@@ -133,7 +133,7 @@ Each pawn-backed participant needs its own spawn point so players do not overlap
    - **Split Screen**: the Bootstrap configures this from `SessionDefinition.allowSplitScreen`.
 4. On your `GameplaySessionBootstrap`, drag this `PlayerInputManager` component into the **Player Input Manager** field.
 
-The Bootstrap configures `maxPlayerCount` and `splitScreen` on `PlayerInputManager` at `Awake`, so do not duplicate those values manually unless you are overriding the bootstrap path.
+Set `PlayerInputManager.maxPlayerCount` in the Inspector to match the number of local join seats you support. The Bootstrap applies the session split-screen preference at `Awake`; participant count stays authored on the Unity component because Unity exposes that value as Inspector-owned setup.
 
 `ParticipantInputRouter` subscribes to this manager's player joined/left events. Multi-participant local join scenes should assign the manager on `GameplaySessionBootstrap`; single-player, board, card, menu, or custom-input scenes can leave it empty unless they intentionally use Unity local join.
 

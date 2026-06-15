@@ -47,7 +47,7 @@ namespace NeonBlack.Gameplay.Editor
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 EditorGUILayout.LabelField("Active Setup", $"{activeSetup.name} ({activeSetup.GetType().Name})", EditorStyles.wordWrappedLabel);
-                PyralisAuthoringSetupGraph activeGraph = GetCachedSetupGraph(activeSetup);
+                PyralisAuthoringSetupGraph activeGraph = GetCachedCurrentSetupGraph(activeSetup);
                 PyralisAuthoringCurrentStepGraphRow activeCurrentStep = PyralisAuthoringSetupGraphProjection.BuildCurrentStepRow(activeGraph);
                 EditorGUILayout.LabelField("Route", activeCurrentStep.RouteName, EditorStyles.wordWrappedLabel);
                 EditorGUILayout.LabelField("Next Required Step", activeCurrentStep.Message, EditorStyles.wordWrappedLabel);
@@ -261,21 +261,6 @@ namespace NeonBlack.Gameplay.Editor
                 default:
                     return MessageType.Info;
             }
-        }
-
-        private static string JoinFactDisplayNames(IReadOnlyList<PyralisAuthoringFact> facts)
-        {
-            if (facts == null || facts.Count == 0)
-                return string.Empty;
-
-            List<string> names = new List<string>();
-            for (int i = 0; i < facts.Count; i++)
-            {
-                if (facts[i] != null && !string.IsNullOrWhiteSpace(facts[i].DisplayName))
-                    names.Add(facts[i].DisplayName);
-            }
-
-            return names.Count > 0 ? string.Join(", ", names) : string.Empty;
         }
 
         private static void DrawSelectionGuide(Object selection, PyralisAuthoringSetupGraph graph)

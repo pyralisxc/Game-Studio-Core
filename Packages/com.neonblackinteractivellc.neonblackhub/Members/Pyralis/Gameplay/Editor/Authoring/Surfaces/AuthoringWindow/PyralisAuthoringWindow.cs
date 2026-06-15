@@ -52,8 +52,10 @@ namespace NeonBlack.Gameplay.Editor
         private int _authoringCacheVersion;
         private string _cachedIntentModelKey;
         private PyralisAuthoringIntentModel _cachedIntentModel;
-        private string _cachedSetupGraphKey;
-        private PyralisAuthoringSetupGraph _cachedSetupGraph;
+        private string _cachedCurrentSetupGraphKey;
+        private PyralisAuthoringSetupGraph _cachedCurrentSetupGraph;
+        private string _cachedIntentProjectedSetupGraphKey;
+        private PyralisAuthoringSetupGraph _cachedIntentProjectedSetupGraph;
 
         private VisualElement _contentRoot;
 
@@ -223,16 +225,16 @@ namespace NeonBlack.Gameplay.Editor
                     DrawGuideMode(
                         selection,
                         activeSetup,
-                        GetCachedSetupGraph(activeSetup != null ? activeSetup : selection));
+                        GetCachedIntentProjectedSetupGraph(activeSetup != null ? activeSetup : selection));
                     break;
                 case AuthoringWindowMode.Map:
-                    PyralisAuthoringMapRenderer.Draw(activeSetup, selection, GetCachedSetupGraph(activeSetup));
+                    PyralisAuthoringMapRenderer.Draw(activeSetup, selection, GetCachedCurrentSetupGraph(activeSetup));
                     break;
                 case AuthoringWindowMode.Validate:
-                    PyralisAuthoringValidateRenderer.Draw(activeSetup, GetCachedSetupGraph(activeSetup));
+                    PyralisAuthoringValidateRenderer.Draw(activeSetup, GetCachedCurrentSetupGraph(activeSetup));
                     break;
                 case AuthoringWindowMode.Facts:
-                    PyralisAuthoringFactExplorerRenderer.Draw(activeSetup, GetCachedSetupGraph(activeSetup));
+                    PyralisAuthoringFactExplorerRenderer.Draw(activeSetup, GetCachedCurrentSetupGraph(activeSetup));
                     break;
             }
         }
@@ -296,8 +298,10 @@ namespace NeonBlack.Gameplay.Editor
             _authoringCacheVersion++;
             _cachedIntentModelKey = null;
             _cachedIntentModel = null;
-            _cachedSetupGraphKey = null;
-            _cachedSetupGraph = null;
+            _cachedCurrentSetupGraphKey = null;
+            _cachedCurrentSetupGraph = null;
+            _cachedIntentProjectedSetupGraphKey = null;
+            _cachedIntentProjectedSetupGraph = null;
         }
 
         private static bool ShouldStartInIntent(Object activeSetup, Object selectionSetup, Object sceneFallbackSetup, AuthoringWindowMode mode)
@@ -315,10 +319,8 @@ namespace NeonBlack.Gameplay.Editor
 
         private void DrawOverviewMode(Object activeSetup, Object selection)
         {
-            Object currentStepSelection = activeSetup != null ? activeSetup : selection;
             Object graphSource = activeSetup != null ? activeSetup : null;
-            PyralisAuthoringSetupGraph graph = GetCachedSetupGraph(graphSource);
-            PyralisAuthoringCurrentStepGraphRow currentStep = PyralisAuthoringSetupGraphProjection.BuildCurrentStepRow(graph);
+            PyralisAuthoringSetupGraph graph = GetCachedIntentProjectedSetupGraph(graphSource);
             PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(activeSetup, graph);
 
             EditorGUILayout.LabelField("Overview", EditorStyles.boldLabel);
@@ -330,10 +332,8 @@ namespace NeonBlack.Gameplay.Editor
 
             EditorGUILayout.Space(12f);
             PyralisAuthoringOverviewRenderer.DrawFirstProofCard(model, graph);
-            PyralisAuthoringOverviewRenderer.DrawPlayModeChecklist(model);
             PyralisAuthoringOverviewRenderer.DrawLane("Do Now", "Only intent-required missing or blocked work appears here.", model.DoNow);
             PyralisAuthoringOverviewRenderer.DrawLane("Proof Enhancers", "Useful before Play Mode when they make the first proof clearer.", model.DoSoon);
-            DrawCurrentStepPanel(currentStepSelection, currentStep);
         }
 
         private void OpenIntentFromOverview()
@@ -371,98 +371,42 @@ namespace NeonBlack.Gameplay.Editor
             return new PyralisAuthoringIntentSelection(_intentLane, _intentCapabilities, _intentAxioms);
         }
 
-        private PyralisAuthoringSetupGraph GetCachedSetupGraph(Object graphSource)
+        private PyralisAuthoringSetupGraph GetCachedCurrentSetupGraph(Object graphSource)
         {
-            string key = GetSetupGraphCacheKey(graphSource);
-            if (string.Equals(_cachedSetupGraphKey, key, StringComparison.Ordinal) && _cachedSetupGraph != null)
-                return _cachedSetupGraph;
+            string key = GetSetupGraphCacheKey(graphSource, includeIntent: false);
+            if (string.Equals(_cachedCurrentSetupGraphKey, key, StringComparison.Ordinal) && _cachedCurrentSetupGraph != null)
+                return _cachedCurrentSetupGraph;
 
-            _cachedSetupGraphKey = key;
-            _cachedSetupGraph = PyralisAuthoringSetupGraphBuilder.Build(graphSource, GetCurrentIntentSelection());
-            return _cachedSetupGraph;
+            _cachedCurrentSetupGraphKey = key;
+            _cachedCurrentSetupGraph = PyralisAuthoringSetupGraphBuilder.Build(graphSource);
+            return _cachedCurrentSetupGraph;
         }
 
-        private string GetSetupGraphCacheKey(Object graphSource)
+        private PyralisAuthoringSetupGraph GetCachedIntentProjectedSetupGraph(Object graphSource)
+        {
+            string key = GetSetupGraphCacheKey(graphSource, includeIntent: true);
+            if (string.Equals(_cachedIntentProjectedSetupGraphKey, key, StringComparison.Ordinal) && _cachedIntentProjectedSetupGraph != null)
+                return _cachedIntentProjectedSetupGraph;
+
+            _cachedIntentProjectedSetupGraphKey = key;
+            _cachedIntentProjectedSetupGraph = PyralisAuthoringSetupGraphBuilder.Build(graphSource, GetCurrentIntentSelection());
+            return _cachedIntentProjectedSetupGraph;
+        }
+
+        private string GetSetupGraphCacheKey(Object graphSource, bool includeIntent)
         {
             string sourceKey = graphSource != null
                 ? GlobalObjectId.GetGlobalObjectIdSlow(graphSource).ToString()
                 : "null";
+            if (!includeIntent)
+                return sourceKey + ":current:" + _authoringCacheVersion;
+
             return sourceKey
-                + ":" + _intentLane
+                + ":intent:"
+                + _intentLane
                 + ":" + _intentAxioms
                 + ":" + _intentCapabilities
                 + ":" + _authoringCacheVersion;
-        }
-
-        private static void DrawIntentRows(string title, string description, IReadOnlyList<PyralisAuthoringIntentRow> rows, string tooltip, int collapsedLimit = 0)
-{
-            EditorGUILayout.Space(6f);
-            EditorGUILayout.LabelField(new GUIContent(title, tooltip), new GUIContent(rows != null ? $"{rows.Count} items" : "0 items", description), EditorStyles.miniBoldLabel);
-            EditorGUILayout.LabelField(description, EditorStyles.wordWrappedMiniLabel);
-            if (rows == null || rows.Count == 0)
-            {
-                EditorGUILayout.LabelField("No matching facts yet. Add route intent facts or capability contracts when the studio spine learns a new path.", EditorStyles.wordWrappedMiniLabel);
-                return;
-            }
-
-            int count = collapsedLimit > 0 && rows.Count > collapsedLimit ? collapsedLimit : rows.Count;
-            for (int i = 0; i < count; i++)
-                DrawIntentRow(rows[i]);
-
-            if (count < rows.Count)
-                EditorGUILayout.LabelField($"{rows.Count - count} more reflected rows are available in Facts.", EditorStyles.wordWrappedMiniLabel);
-        }
-
-        private static void DrawIntentRow(PyralisAuthoringIntentRow row)
-        {
-            if (row == null || row.Fact == null)
-                return;
-
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
-            {
-                string state = row.State == PyralisAuthoringIntentRowState.Caution ? "Caution" : row.State.ToString();
-                string foldoutKey = "Pyralis.AuthoringWindow.Intent." + row.Fact.StableId;
-                bool expanded = GetFoldout(IntentRowFoldouts, foldoutKey, row.State == PyralisAuthoringIntentRowState.Caution);
-                using (new EditorGUILayout.HorizontalScope())
-                {
-                    expanded = EditorGUILayout.Foldout(expanded, new GUIContent(row.Fact.DisplayName, row.Fact.Summary), true);
-                    GUILayout.FlexibleSpace();
-                    EditorGUILayout.LabelField(new GUIContent(GetIntentTierLabel(row.Tier), "Guide priority from lane, goals, related intent ids, and cautions. Score " + row.Score + "."), GUILayout.Width(96f));
-                    EditorGUILayout.LabelField(new GUIContent(state, row.Reason), GUILayout.Width(84f));
-                }
-
-                SetFoldout(IntentRowFoldouts, foldoutKey, expanded);
-                PyralisAuthoringFactExplorerRenderer.DrawFactSemanticTags(row.Fact);
-                PyralisAuthoringWindowPrimitives.DrawMiniField("Why", row.Reason, "Why this row is currently visible for the selected project intent.");
-                PyralisAuthoringWindowPrimitives.DrawMiniField("Priority", GetIntentTierLabel(row.Tier), "Guide priority. Numeric score is intentionally hidden by default so the user reads guidance, not a leaderboard.");
-                PyralisAuthoringWindowPrimitives.DrawMiniField("First Proof", row.Fact.FirstProof, "The smallest native Unity proof this row is trying to help you reach.");
-
-                if (!expanded)
-                {
-                    PyralisAuthoringWindowPrimitives.DrawMiniList("Customization", row.Fact.CustomizationMoments, "Creator-owned choices to make after the route skeleton is understood.", 2);
-                    return;
-                }
-
-                PyralisAuthoringWindowPrimitives.DrawMiniField("What It Means", row.Fact.Summary, "The short descriptor provided by the reflective fact.");
-                PyralisAuthoringWindowPrimitives.DrawMiniField("Route Relevance", row.Fact.RouteRelevance, "Why this fact matters to the route shape.");
-                PyralisAuthoringWindowPrimitives.DrawMiniList("Supported Lanes", row.Fact.LaneTags, "Lanes where this fact is expected to fit cleanly.");
-                PyralisAuthoringWindowPrimitives.DrawMiniList("Unsupported / Caution Lanes", row.Fact.UnsupportedLaneTags, "Lanes where this fact is usually not the clean fit.");
-                PyralisAuthoringWindowPrimitives.DrawMiniList("Assignment Fields", row.Fact.AssignmentFields, "Unity fields or objects the creator may need to inspect or assign.");
-                PyralisAuthoringWindowPrimitives.DrawMiniList("Customization", row.Fact.CustomizationMoments, "Creator-owned choices. Authoring guides these choices; it does not pick them.");
-                PyralisAuthoringWindowPrimitives.DrawMiniList("Can Wait", row.Fact.CanWait, "Useful work to defer until the route's first proof is readable.");
-            }
-        }
-
-        private static string GetIntentTierLabel(PyralisAuthoringIntentGuideTier tier)
-{
-            return tier switch
-            {
-                PyralisAuthoringIntentGuideTier.Primary => "Strong match",
-                PyralisAuthoringIntentGuideTier.SuggestedNext => "Suggested",
-                PyralisAuthoringIntentGuideTier.OptionalEnhancer => "Can wait",
-                PyralisAuthoringIntentGuideTier.Caution => "Caution",
-                _ => tier.ToString()
-            };
         }
 
         private static bool GetFoldout(Dictionary<string, bool> foldouts, string key, bool defaultValue)

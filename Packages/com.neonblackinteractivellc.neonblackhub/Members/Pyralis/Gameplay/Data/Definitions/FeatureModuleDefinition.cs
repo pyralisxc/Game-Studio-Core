@@ -43,7 +43,6 @@ namespace NeonBlack.Gameplay.Data.Definitions
         }
 
         private const string FeatureRuntimeInterfaceName = "NeonBlack.Gameplay.Features.Composition.IFeatureModuleRuntime";
-        private static readonly string RuntimeValidationProviderInterfaceName = typeof(IRuntimeValidationProvider).FullName;
 
         public string moduleId = "feature.module";
         public string displayName = "Feature Module";
@@ -287,13 +286,10 @@ namespace NeonBlack.Gameplay.Data.Definitions
             MonoBehaviour[] behaviours = prefab.GetComponentsInChildren<MonoBehaviour>(true);
             for (int i = 0; i < behaviours.Length; i++)
             {
-                if (behaviours[i] == null || !ImplementsTypeName(behaviours[i], RuntimeValidationProviderInterfaceName))
+                if (behaviours[i] is not IRuntimeValidationProvider provider)
                     continue;
 
-                if (!TryGetRuntimeValidationIssues(behaviours[i], out IEnumerable<string> providerIssues))
-                    continue;
-
-                foreach (string issue in providerIssues)
+                foreach (string issue in provider.GetRuntimeValidationIssues())
                 {
                     if (!string.IsNullOrWhiteSpace(issue))
                         issues.Add(issue);
@@ -306,32 +302,15 @@ namespace NeonBlack.Gameplay.Data.Definitions
             MonoBehaviour[] behaviours = actorRoot.GetComponentsInChildren<MonoBehaviour>(true);
             for (int i = 0; i < behaviours.Length; i++)
             {
-                if (behaviours[i] == null || !ImplementsTypeName(behaviours[i], RuntimeValidationProviderInterfaceName))
+                if (behaviours[i] is not IRuntimeValidationProvider provider)
                     continue;
 
-                if (!TryGetRuntimeValidationIssues(behaviours[i], out IEnumerable<string> providerIssues))
-                    continue;
-
-                foreach (string issue in providerIssues)
+                foreach (string issue in provider.GetRuntimeValidationIssues())
                 {
                     if (!string.IsNullOrWhiteSpace(issue))
                         issues.Add(issue);
                 }
             }
-        }
-
-        private static bool TryGetRuntimeValidationIssues(MonoBehaviour behaviour, out IEnumerable<string> issues)
-        {
-            issues = null;
-            if (behaviour == null)
-                return false;
-
-            var method = behaviour.GetType().GetMethod("GetRuntimeValidationIssues", Type.EmptyTypes);
-            if (method == null)
-                return false;
-
-            issues = method.Invoke(behaviour, null) as IEnumerable<string>;
-            return issues != null;
         }
 
         private void OnValidate()

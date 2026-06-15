@@ -150,13 +150,22 @@ namespace NeonBlack.Gameplay.Tests.Editor
             string factSource = File.ReadAllText(factRendererPath);
             string guideSource = File.ReadAllText(guidePath);
 
-            Assert.That(windowSource.Contains("_cachedSetupGraph"), Is.True);
-            Assert.That(windowSource.Contains("GetCachedSetupGraph"), Is.True);
+            Assert.That(windowSource.Contains("_cachedCurrentSetupGraph"), Is.True);
+            Assert.That(windowSource.Contains("_cachedIntentProjectedSetupGraph"), Is.True);
+            Assert.That(windowSource.Contains("GetCachedCurrentSetupGraph"), Is.True);
+            Assert.That(windowSource.Contains("GetCachedIntentProjectedSetupGraph"), Is.True);
             Assert.That(windowSource.Contains("PyralisAuthoringSetupGraphBuilder.Build(graphSource)"), Is.True);
+            Assert.That(windowSource.Contains("PyralisAuthoringSetupGraphBuilder.Build(graphSource, GetCurrentIntentSelection())"), Is.True);
+            Assert.That(windowSource.Contains("PyralisAuthoringMapRenderer.Draw(activeSetup, selection, GetCachedCurrentSetupGraph(activeSetup))"), Is.True);
+            Assert.That(windowSource.Contains("PyralisAuthoringValidateRenderer.Draw(activeSetup, GetCachedCurrentSetupGraph(activeSetup))"), Is.True);
+            Assert.That(windowSource.Contains("PyralisAuthoringFactExplorerRenderer.Draw(activeSetup, GetCachedCurrentSetupGraph(activeSetup))"), Is.True);
             Assert.That(mapSource.Contains("PyralisAuthoringSetupGraphBuilder.Build"), Is.False);
             Assert.That(mapSource.Contains("PyralisAuthoringSetupGraph graph"), Is.True);
             Assert.That(mapSource.Contains("PyralisAuthoringSetupGraphProjection.BuildSetupMapRows"), Is.True);
             Assert.That(mapSource.Contains("PyralisAuthoringSetupGraphProjection.BuildMapConnectionRows"), Is.True);
+            Assert.That(mapSource.Contains("PyralisAuthoringSetupGraphProjection.BuildValidationDetailRows"), Is.True);
+            Assert.That(mapSource.Contains("Scene Setup Issues"), Is.True);
+            Assert.That(mapSource.Contains("Map for scene and setup reality"), Is.True);
             Assert.That(mapSource.Contains("PyralisAuthoringRouteReport"), Is.False);
             Assert.That(mapSource.Contains("PyralisAuthoringValidationModel"), Is.False);
             Assert.That(mapSource.Contains("PyralisSetupRouteAnalysis.Build"), Is.False);
@@ -166,6 +175,11 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(validateSource.Contains("PyralisAuthoringSetupGraphProjection.BuildValidationSections"), Is.True);
             Assert.That(validateSource.Contains("PyralisAuthoringSetupGraphProjection.BuildValidationDetailRows"), Is.True);
             Assert.That(validateSource.Contains("PyralisAuthoringSetupGraphProjection.BuildValidationRows"), Is.False);
+            Assert.That(validateSource.Contains("Validate Graph"), Is.True);
+            Assert.That(validateSource.Contains("Graph Size"), Is.True);
+            Assert.That(validateSource.Contains("Map owns concrete scene and Inspector setup issues"), Is.True);
+            Assert.That(validateSource.Contains("Inspect Target"), Is.False);
+            Assert.That(validateSource.Contains("Native Unity Action"), Is.False);
             Assert.That(validateSource.Contains("PyralisAuthoringRouteReport"), Is.False);
             Assert.That(validateSource.Contains("PyralisAuthoringValidationModel"), Is.False);
             Assert.That(validateSource.Contains("PyralisSetupFlowValidator.BuildReport"), Is.False);

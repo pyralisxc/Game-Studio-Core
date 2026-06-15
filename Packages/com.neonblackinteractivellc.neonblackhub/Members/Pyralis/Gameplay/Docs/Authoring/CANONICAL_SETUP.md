@@ -22,8 +22,8 @@ For the movement-first proof pass, stop after these links:
 - `GameplaySessionBootstrap` with `Session Definition`
 - at least one pawn-backed participant path (`ParticipantDefinition` + `PawnDefinition` + prefab)
 - `Spawn Points` with at least one transform
-- a known input route for that participant (`InputProfile` or local join flow)
-- a Cinemachine-backed `Camera Root` assigned to `GameplaySessionBootstrap > Camera Rig Controller` for 2D pawn movement bounds and framing
+- a known input route for that participant (`ParticipantDefinition.inputProfile` or local join flow)
+- a Cinemachine-backed `Camera Root` assigned to `GameplaySessionBootstrap > Camera Rig Controller` for camera framing and visible camera bounds
 - auto-created core services (left enabled)
 
 Delay scoring, HUD, combat, scene-flow, pickup/hazard, and network extras until movement proof is confirmed in Play mode.
@@ -36,7 +36,7 @@ On `GameplaySessionBootstrap`, assign:
 - `Inject Loaded Scenes On Build` - on unless you have a custom injection flow
 - `Spawn Points` - optional Transforms where pawn-backed participants should appear
 - `Player Input Manager` - optional, only when using local join or Unity Input System player joining
-- `Camera Rig Controller` - optional, assign the `Camera Root` when using Pyralis camera control or camera-aware 2D bounds
+- `Camera Rig Controller` - optional, assign the `Camera Root` when using Pyralis camera control or camera-aware visible bounds
 - `Camera Bounds Source` - optional, use only for specialized custom `ICameraBoundsProvider` services; the `CinemachineCameraRigController` provides bounds when assigned as the camera rig
 
 With the standard bootstrap-owned service path enabled, the bootstrap creates these child objects at runtime when they are not assigned:
@@ -55,13 +55,13 @@ Create additional root objects only when the selected route capabilities need th
 
 | Root object | Attach | Use when |
 |---|---|---|
-| `Camera Root` | `CinemachineCameraRigController` plus your Cinemachine camera component, `CameraRigProfile`, Target Camera assignment, and Cinemachine Brain verified on the physical Target Camera. The normal route keeps or creates one physical Unity Camera, usually the default Main Camera, and adds separate Cinemachine Camera GameObjects that control it. Unity usually adds the Brain when you create a Cinemachine Camera; add it manually only if missing. For 2D movement or bounded views, the physical Target Camera or assigned CameraRigProfile must be orthographic. | The setup uses shared camera, split screen, camera/cursor control, board view, camera profiles, or 2D visible bounds |
+| `Camera Root` | `CinemachineCameraRigController` plus your Cinemachine camera component, `CameraRigProfile`, Target Camera assignment, and Cinemachine Brain verified on the physical Target Camera. The normal route keeps or creates one physical Unity Camera, usually the default Main Camera, and adds separate Cinemachine Camera GameObjects that control it. Unity usually adds the Brain when you create a Cinemachine Camera; add it manually only if missing. For 2D movement or bounded views, the physical Target Camera or assigned CameraRigProfile must be orthographic. | The setup uses shared camera, split screen, camera/cursor control, board view, camera profiles, or 2D visible camera bounds |
 | `Input Root` | Unity `PlayerInputManager` | The setup supports multiple local players joining during play |
 | `UI Root` | Canvas, EventSystem, UI presenters such as `UIManager`, HUD binders, board/card/action presenters, or menu screens | The setup has HUD, menus, cards, board UI, turn UI, action selection, prompts, or settings UI |
 | `Settings Root` | `SettingsManager` | The setup needs reusable volume, deadzone, fullscreen, or settings persistence |
 | `Scene Flow Root` | `SceneFader` | The setup uses fade transitions or central scene loading from menus |
 | `Scoring Root` | `ParticipantScoreService` | The setup tracks points, timers, victory points, resources, or round results |
-| `Playfield Root` | authored bounds, spawn zones, board anchors, card zones, encounter zones, pickup/hazard spawners | The setup needs placed gameplay surfaces |
+| `Playfield Root` | authored bounds, spawn zones, board anchors, card zones, encounter zones, pickup/hazard spawners | The setup needs placed gameplay surfaces or legal movement bounds |
 
 `GameplaySessionBootstrap` is the supported composition root. New scenes should not build their own global service wiring.
 
@@ -82,7 +82,7 @@ Create pawn assets only when a participant needs an actor body in the scene:
 - `PawnDefinition`
 - `PawnPresentationProfile`
 - `PawnMovementProfile` when movement is data-authored
-- `InputProfile` when participant input drives the pawn directly. Assign your Unity Input Action Asset, set the primary action map, then map Pyralis gameplay roles to your project's action names.
+- `InputProfile` on `ParticipantDefinition.inputProfile` when participant input drives the pawn directly. Assign your Unity Input Action Asset, set the primary action map, then map Pyralis gameplay roles to your project's action names.
 - `PawnAnimationProfile` and `ActorAnimationDefinition` when the pawn has Animator-driven visuals
 - supporting pawn profiles as needed: combat, traversal, pickups, feedback, interaction, status
 

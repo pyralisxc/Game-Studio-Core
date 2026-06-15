@@ -17,13 +17,17 @@ namespace NeonBlack.Gameplay.Editor
             PyralisAuthoringGraphNode node,
             bool isOptional = false,
             string fallbackMessage = null,
-            Object fallbackTarget = null)
+            Object fallbackTarget = null,
+            PyralisAuthoringGraphEvidenceState? effectiveEvidenceState = null,
+            string effectiveMessage = null)
         {
             Label = label ?? string.Empty;
             Node = node;
             IsOptional = isOptional;
             FallbackMessage = fallbackMessage ?? string.Empty;
             FallbackTarget = fallbackTarget;
+            EffectiveEvidenceState = effectiveEvidenceState ?? (node != null ? node.EvidenceState : PyralisAuthoringGraphEvidenceState.Unknown);
+            EffectiveMessage = effectiveMessage ?? string.Empty;
         }
 
         public string Label { get; }
@@ -31,10 +35,16 @@ namespace NeonBlack.Gameplay.Editor
         public bool IsOptional { get; }
         public string FallbackMessage { get; }
         public Object FallbackTarget { get; }
+        public PyralisAuthoringGraphEvidenceState EffectiveEvidenceState { get; }
+        public string EffectiveMessage { get; }
         public Object Target => Node != null && Node.SourceObject != null ? Node.SourceObject : FallbackTarget;
-        public string Message => Node != null && !string.IsNullOrWhiteSpace(Node.Guidance) ? Node.Guidance : FallbackMessage;
-        public bool IsReady => Node != null && (Node.EvidenceState == PyralisAuthoringGraphEvidenceState.Ready || Node.EvidenceState == PyralisAuthoringGraphEvidenceState.Optional);
-        public bool IsMissing => Node != null && (Node.EvidenceState == PyralisAuthoringGraphEvidenceState.Missing || Node.EvidenceState == PyralisAuthoringGraphEvidenceState.Blocked);
+        public string Message => !string.IsNullOrWhiteSpace(EffectiveMessage)
+            ? EffectiveMessage
+            : Node != null && !string.IsNullOrWhiteSpace(Node.Guidance)
+                ? Node.Guidance
+                : FallbackMessage;
+        public bool IsReady => Node != null && (EffectiveEvidenceState == PyralisAuthoringGraphEvidenceState.Ready || EffectiveEvidenceState == PyralisAuthoringGraphEvidenceState.Optional);
+        public bool IsMissing => Node != null && (EffectiveEvidenceState == PyralisAuthoringGraphEvidenceState.Missing || EffectiveEvidenceState == PyralisAuthoringGraphEvidenceState.Blocked);
     }
 
     public sealed class PyralisAuthoringValidationGraphRow
@@ -63,6 +73,7 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringGraphSourceKind.AuthoringContract => "Authoring Contract",
                 PyralisAuthoringGraphSourceKind.GrammarRegistry => "Grammar Registry",
                 PyralisAuthoringGraphSourceKind.SetupFlow => "Setup Flow",
+                PyralisAuthoringGraphSourceKind.RuntimeValidation => "Runtime Validation",
                 PyralisAuthoringGraphSourceKind.SceneReadiness => "Scene Readiness",
                 PyralisAuthoringGraphSourceKind.ProofVocabulary => "Proof Vocabulary",
                 _ => "Graph"
@@ -332,6 +343,7 @@ namespace NeonBlack.Gameplay.Editor
                 Row(graph, "Session", "session.definition", "Asset that names game rules and participants."),
                 Row(graph, "Game Rules", "mode.definition", "Ruleset that owns rule-level defaults and feature modules."),
                 BuildCapabilitiesRow(graph),
+                Row(graph, "Route Shape", "route.shape", "Participant ownership shape compiled from route evidence."),
                 Row(graph, "Participants", "participant.default", "Assign at least one default participant."),
                 Row(graph, "Pawn / No Pawn", "pawn.definition", "Pawn-backed routes need a ParticipantDefinition.defaultPawn.", isOptional: IsNodeOptional(graph, "pawn.definition")),
                 Row(graph, "Scene Surfaces", "scene.surfaces", "Route-recommended scene surface evidence is present or not needed yet.")
@@ -351,6 +363,7 @@ namespace NeonBlack.Gameplay.Editor
                 Row(graph, "Session", "session.definition"),
                 Row(graph, "Game Rules", "mode.definition"),
                 BuildCapabilitiesRow(graph),
+                Row(graph, "Route Shape", "route.shape", isOptional: IsNodeOptional(graph, "route.shape")),
                 Row(graph, "Players / Seats", "participant.default"),
                 Row(graph, "Pawn / No Pawn", "pawn.definition", isOptional: IsNodeOptional(graph, "pawn.definition")),
                 Row(graph, "Scene Roots", "scene.surfaces", isOptional: true)
@@ -467,6 +480,45 @@ namespace NeonBlack.Gameplay.Editor
 
             string families = string.Join(", ", gameplayFamilies.Select(GetRuntimeFamilyLabel));
             return $"{graph.RouteName}: {families}";
+        }
+
+        public static string BuildRouteShapeSummary(PyralisAuthoringSetupGraph graph)
+        {
+            PyralisAuthoringGraphNode routeShape = FindRouteShapeNode(graph);
+            if (routeShape == null)
+                return "Route shape has not been compiled yet.";
+
+            string guidance = FirstNonEmpty(routeShape.BlockingReason, routeShape.Guidance);
+            return string.IsNullOrWhiteSpace(guidance)
+                ? routeShape.Label
+                : $"{routeShape.Label}: {guidance}";
+        }
+
+        public static string BuildRouteShapeSummary(PyralisAuthoringIntentSelection selection)
+        {
+            if (selection == null || selection.Capabilities == AuthoringCapability.None)
+                return "Route shape: choose one capability ingredient so the graph can decide pawn, no-pawn, or action-surface ownership.";
+
+            RuntimeCapabilityFamily[] families = PyralisIntentCapabilityProjection.BuildRuntimeFamilies(
+                selection.Capabilities,
+                selection.Lane,
+                selection.Axioms);
+            if (families.Any(family => family == RuntimeCapabilityFamily.CharacterPawnGameplay))
+                return "Route shape: participant with pawn. Expect ParticipantDefinition -> PawnDefinition -> pawn prefab, with InputProfile on the participant controlling it.";
+            if (families.Any(family => family == RuntimeCapabilityFamily.BoardCardTabletop))
+                return "Route shape: participant without pawn. Expect seats, hands, board/card surfaces, cursor, UI, or action resolvers instead of a pawn prefab.";
+            if (families.Any(family => family == RuntimeCapabilityFamily.ActionTargeting))
+                return "Route shape: participant action surface. Expect an input or UI command surface that sends actions to a resolver.";
+
+            return "Route shape: participant control surface. Wire at least one ParticipantDefinition, then add only the surfaces this intent actually needs.";
+        }
+
+        public static PyralisAuthoringGraphNode FindRouteShapeNode(PyralisAuthoringSetupGraph graph)
+        {
+            if (graph == null)
+                return null;
+
+            return graph.TryFindNode("route.shape", out PyralisAuthoringGraphNode node) ? node : null;
         }
 
         public static string BuildFirstProofPrioritySummary(PyralisAuthoringSetupGraph graph)
@@ -590,6 +642,15 @@ namespace NeonBlack.Gameplay.Editor
             if (graph == null)
                 return;
 
+            AddRouteStep(
+                rows,
+                added,
+                FindRouteShapeNode(graph),
+                ref sequence,
+                PyralisAuthoringRouteStepPhase.SetupChain,
+                PyralisAuthoringRouteStepRole.RouteContext,
+                "This is the participant ownership shape compiled from intent, reflected setup, and route evidence.");
+
             IReadOnlyList<PyralisAuthoringGraphNode> capabilityNodes = graph.FindNodes(PyralisAuthoringGraphNodeKind.Capability);
             for (int i = 0; i < capabilityNodes.Count; i++)
             {
@@ -664,6 +725,7 @@ namespace NeonBlack.Gameplay.Editor
             {
                 PyralisAuthoringGraphNodeKind.SetupChain when string.Equals(node.StableId, "bootstrap.root", StringComparison.Ordinal) => PyralisAuthoringRouteStepPhase.Foundation,
                 PyralisAuthoringGraphNodeKind.SetupChain => PyralisAuthoringRouteStepPhase.SetupChain,
+                PyralisAuthoringGraphNodeKind.RouteShape => PyralisAuthoringRouteStepPhase.SetupChain,
                 PyralisAuthoringGraphNodeKind.Capability => PyralisAuthoringRouteStepPhase.Capability,
                 PyralisAuthoringGraphNodeKind.Contract => PyralisAuthoringRouteStepPhase.Capability,
                 PyralisAuthoringGraphNodeKind.Proof => PyralisAuthoringRouteStepPhase.FirstProof,
@@ -693,6 +755,10 @@ namespace NeonBlack.Gameplay.Editor
                 return node;
 
             node = FindFirstUnresolvedNode(graph, PyralisAuthoringGraphNodeKind.UnitySurfaceRequirement);
+            if (node != null)
+                return node;
+
+            node = FindFirstUnresolvedNode(graph, PyralisAuthoringGraphNodeKind.RouteShape);
             if (node != null)
                 return node;
 
@@ -1025,6 +1091,7 @@ namespace NeonBlack.Gameplay.Editor
 
             if (node.Kind == PyralisAuthoringGraphNodeKind.ValidationEvidence
                 || node.Kind == PyralisAuthoringGraphNodeKind.SetupChain
+                || node.Kind == PyralisAuthoringGraphNodeKind.RouteShape
                 || node.Kind == PyralisAuthoringGraphNodeKind.UnitySurfaceRequirement
                 || node.Kind == PyralisAuthoringGraphNodeKind.SceneSurface)
             {
@@ -1403,12 +1470,80 @@ namespace NeonBlack.Gameplay.Editor
             bool isOptional = false)
         {
             PyralisAuthoringGraphNode node = FindNode(graph, nodeId);
-            return new PyralisAuthoringSetupGraphRow(label, node, isOptional, fallbackMessage);
+            PyralisAuthoringGraphNode linkedIssue = FindFirstLinkedReadinessIssue(graph, nodeId);
+            PyralisAuthoringGraphEvidenceState effectiveState = ResolveEffectiveEvidenceState(node, linkedIssue);
+            string effectiveMessage = linkedIssue != null
+                && node != null
+                && (node.EvidenceState == PyralisAuthoringGraphEvidenceState.Ready || node.EvidenceState == PyralisAuthoringGraphEvidenceState.Optional)
+                    ? linkedIssue.Guidance
+                    : string.Empty;
+            return new PyralisAuthoringSetupGraphRow(label, node, isOptional, fallbackMessage, effectiveEvidenceState: effectiveState, effectiveMessage: effectiveMessage);
         }
 
         private static PyralisAuthoringGraphNode FindNode(PyralisAuthoringSetupGraph graph, string nodeId)
         {
             return graph != null && graph.TryFindNode(nodeId, out PyralisAuthoringGraphNode node) ? node : null;
+        }
+
+        private static PyralisAuthoringGraphNode FindFirstLinkedReadinessIssue(PyralisAuthoringSetupGraph graph, string nodeId)
+        {
+            if (graph == null || string.IsNullOrWhiteSpace(nodeId))
+                return null;
+
+            IReadOnlyList<PyralisAuthoringGraphEdge> outgoing = graph.FindOutgoing(nodeId);
+            for (int i = 0; i < outgoing.Count; i++)
+            {
+                PyralisAuthoringGraphEdge edge = outgoing[i];
+                if (edge == null || edge.Kind != PyralisAuthoringGraphEdgeKind.RelatesTo)
+                    continue;
+
+                if (!graph.TryFindNode(edge.ToNodeId, out PyralisAuthoringGraphNode linkedNode)
+                    || linkedNode == null
+                    || !IsReadinessNode(linkedNode))
+                {
+                    continue;
+                }
+
+                if (linkedNode.EvidenceState == PyralisAuthoringGraphEvidenceState.Blocked
+                    || linkedNode.EvidenceState == PyralisAuthoringGraphEvidenceState.Missing)
+                    return linkedNode;
+            }
+
+            return null;
+        }
+
+        private static PyralisAuthoringGraphEvidenceState ResolveEffectiveEvidenceState(
+            PyralisAuthoringGraphNode node,
+            PyralisAuthoringGraphNode linkedIssue)
+        {
+            PyralisAuthoringGraphEvidenceState state = node != null
+                ? node.EvidenceState
+                : PyralisAuthoringGraphEvidenceState.Unknown;
+            if (linkedIssue == null)
+                return state;
+
+            return IsMoreBlocking(linkedIssue.EvidenceState, state)
+                ? linkedIssue.EvidenceState
+                : state;
+        }
+
+        private static bool IsMoreBlocking(PyralisAuthoringGraphEvidenceState candidate, PyralisAuthoringGraphEvidenceState current)
+        {
+            return GetEvidenceRank(candidate) > GetEvidenceRank(current);
+        }
+
+        private static int GetEvidenceRank(PyralisAuthoringGraphEvidenceState state)
+        {
+            return state switch
+            {
+                PyralisAuthoringGraphEvidenceState.Blocked => 5,
+                PyralisAuthoringGraphEvidenceState.Missing => 4,
+                PyralisAuthoringGraphEvidenceState.CandidateDetected => 3,
+                PyralisAuthoringGraphEvidenceState.Unknown => 2,
+                PyralisAuthoringGraphEvidenceState.Ready => 1,
+                PyralisAuthoringGraphEvidenceState.Optional => 0,
+                _ => 0
+            };
         }
 
         private static PyralisAuthoringGraphNode FindSelectedNode(PyralisAuthoringSetupGraph graph, Object selection)

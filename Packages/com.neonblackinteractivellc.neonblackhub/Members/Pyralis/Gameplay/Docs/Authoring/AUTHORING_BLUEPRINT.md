@@ -248,7 +248,7 @@ Core concepts:
 - `Evidence`: why the tool believes something is ready, missing, optional, or not needed for this route.
 - `Work Intent`: whether the row is foundation setup, required setup, a proof enhancer, or an optional capability.
 
-The active authoring foundation is the contract/dependency-tree/graph pipeline. `PyralisAuthoringGrammarRegistry` aggregates vocabulary, reflected facts, setup-flow facts, proof templates, inspector handoffs, route intents, scene evidence, and convention facts so projections have stable ids and wording. It is an audit and grammar source, not the primary operating model. Feature-owned `[AuthoringContract]` metadata owns semantic setup meaning; `PyralisSetupDependencyTree` owns serialized setup/reference discovery; validators own scene/runtime readiness; `PyralisAuthoringSetupGraph` compiles those inputs into the single readiness/proof model consumed by tabs. `PyralisAuthoringIntentAdvisor` projects grammar facts into compact pre-setup planning. Intent chooses the route shape; Guide owns the graph-filtered route guide when setup exists; Facts remains the full cookbook and dictionary.
+The active authoring foundation is the contract/dependency-tree/graph pipeline. `PyralisAuthoringGrammarRegistry` aggregates vocabulary, reflected facts, setup-flow facts, proof templates, inspector handoffs, route intents, scene evidence, and convention facts so projections have stable ids and wording. It is an audit and grammar source, not the primary operating model. Feature-owned `[AuthoringContract]` metadata owns semantic setup meaning; `PyralisSetupDependencyTree` owns serialized setup/reference discovery; validators own scene/runtime readiness; `PyralisAuthoringSetupGraph` compiles those inputs into the single readiness/proof model consumed by tabs. `PyralisAuthoringIntentAdvisor` projects grammar facts into compact pre-setup planning. Intent filters the desired route shape, the graph compiles the actual participant/pawn/no-pawn ownership shape, Guide owns the graph-filtered route guide when setup exists, and Facts remains the full cookbook and dictionary.
 
 The grammar and graph inputs should grow in this order:
 
@@ -340,7 +340,7 @@ Intent should stay studio-wide:
 - explain what the toggles imply without creating assets or choosing design taste
 - hand off to Project, Hierarchy, Inspector, Prefab, Input, Animation, UI, and Play Mode surfaces only when the route has enough declared intent
 
-Intent is not the whole setup flow and not the proof itself. It names the project-wide world/control/capability shape so Overview, Map, Validate, Facts, and native Unity Inspectors can focus the next route proof with clearer context.
+Intent is not the whole setup flow and not the proof itself. It names the project-wide world/control/capability shape so Overview and Guide can focus the next route proof with clearer context. Map, Validate, Facts, and native Unity Inspectors still read what the current setup actually proves.
 
 ### Overview
 
@@ -350,8 +350,6 @@ Overview is the daily home base. It should show:
 - blocking status
 - one best next action
 - Active Setup state
-- You Are Here chain
-- selected context
 - concise readiness summary
 - first playable proof target
 
@@ -391,30 +389,28 @@ Guide should not repeat the whole setup manual. If it starts explaining the enti
 
 ### Map
 
-Map is the dependency map. Each row should show:
+Map is the current scene/setup reality map. Each row should show:
 
 - ready, missing, blocked, recommended, optional, or not needed
 - current object or missing field
-- why the route needs it
-- where to inspect it
 - the native Unity Create/Add Component/Inspector step when the link is missing
+- detected scene surfaces and selected-object wiring
+- concrete field, component, prefab, scene root, or asset issues
 
-Map should teach the mental model. It should not become a second Inspector.
+Map should teach what currently exists and what concrete Unity setup is missing. It can read graph evidence, but it presents scene and setup issues rather than graph integrity.
 
 ### Validate
 
-Validate should be triage, not a wall of warnings. Issue cards should include:
+Validate should be graph integrity, not a second scene checklist. Evidence cards should include:
 
 - severity
-- affected object
-- affected field or component when known
-- plain-English problem
-- why it matters
-- exact next inspection target
-- expected surface, found evidence, and success criteria for scene/prefab audits
-- safe fix button when possible
+- stable graph node id
+- evidence state
+- source kind and source origin
+- blocker/proof relationship when known
+- graph finding and source detail
 
-Validation should point to real Unity objects whenever possible. Current target jumps should prefer the pawn prefab, feature runtime prefab, projectile prefab, projectile definition, scene root, or affected asset over the bootstrap when the issue evidence names a more precise target.
+Validation can mention source detail, but concrete Unity repair and inspection actions belong in Map or the Inspector. This keeps Validate useful for developers auditing the resolved graph without making it compete with the beginner setup flow.
 
 ### Native Creation Workflow
 

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Reflection;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
@@ -44,6 +43,7 @@ public class ParticipantSpawnService : MonoBehaviour, IGameService, IRuntimeVali
 
         private IObjectResolver _resolver;
         private ICameraBoundsProvider _cameraBoundsProvider;
+        private IPlayfieldBoundsProvider _playfieldBoundsProvider;
 
         [Inject]
         private void Construct(IObjectResolver resolver, ParticipantRosterService injectedRosterService = null, SessionStateService injectedSessionStateService = null)
@@ -111,6 +111,11 @@ public class ParticipantSpawnService : MonoBehaviour, IGameService, IRuntimeVali
         public void SetCameraBoundsProvider(ICameraBoundsProvider provider)
         {
             _cameraBoundsProvider = provider;
+        }
+
+        public void SetPlayfieldBoundsProvider(IPlayfieldBoundsProvider provider)
+        {
+            _playfieldBoundsProvider = provider;
         }
 
         public virtual GameObject SpawnParticipantPawn(ParticipantHandle participant)
@@ -182,34 +187,16 @@ public class ParticipantSpawnService : MonoBehaviour, IGameService, IRuntimeVali
             MonoBehaviour[] behaviours = instance.GetComponentsInChildren<MonoBehaviour>(true);
             for (int i = 0; i < behaviours.Length; i++)
             {
-                ConfigureOptionalPawnRuntime(behaviours[i]);
+                ApplyPawnRuntimeServices(behaviours[i]);
             }
         }
 
-        private void ConfigureOptionalPawnRuntime(MonoBehaviour behaviour)
+        private void ApplyPawnRuntimeServices(MonoBehaviour behaviour)
         {
-            if (behaviour == null)
+            if (behaviour is not IPawnRuntimeServicesReceiver receiver)
                 return;
 
-            MethodInfo configureRuntime = behaviour.GetType().GetMethod(
-                "ConfigureRuntime",
-                BindingFlags.Instance | BindingFlags.Public,
-                null,
-                new[] { typeof(IGameplayStateReader), typeof(ICameraBoundsProvider) },
-                null);
-            if (configureRuntime != null)
-            {
-                configureRuntime.Invoke(behaviour, new object[] { sessionStateService, _cameraBoundsProvider });
-                return;
-            }
-
-            configureRuntime = behaviour.GetType().GetMethod(
-                "ConfigureRuntime",
-                BindingFlags.Instance | BindingFlags.Public,
-                null,
-                new[] { typeof(IGameplayStateReader) },
-                null);
-            configureRuntime?.Invoke(behaviour, new object[] { sessionStateService });
+            receiver.ApplyRuntimeServices(new PawnRuntimeServicesContext(sessionStateService, _cameraBoundsProvider, _playfieldBoundsProvider));
         }
 
         private void HandleParticipantRegistered(ParticipantHandle participant)

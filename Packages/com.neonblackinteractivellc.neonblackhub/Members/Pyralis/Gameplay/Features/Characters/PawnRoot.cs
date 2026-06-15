@@ -1,6 +1,5 @@
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Profiles;
-using NeonBlack.Gameplay.Core.Config;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Features.Combat;
@@ -60,10 +59,7 @@ namespace NeonBlack.Gameplay.Characters
                 return;
 
             PawnProfileApplicationContext profileContext = new PawnProfileApplicationContext(gameObject, pawnDefinition, Participant);
-            InputProfile inputProfile = ParticipantInputProfileUtility.ResolveEffectiveInputProfile(
-                Participant != null ? Participant.Definition : null,
-                pawnDefinition,
-                GameplayRuntimeContext.DefaultInputProfile);
+            InputProfile inputProfile = ParticipantInputProfileUtility.ResolveEffectiveInputProfile(Participant != null ? Participant.Definition : null);
 
             MonoBehaviour[] behaviours = GetComponentsInChildren<MonoBehaviour>(true);
             foreach (MonoBehaviour behaviour in behaviours)
@@ -107,7 +103,6 @@ namespace NeonBlack.Gameplay.Characters
                     : ActorPresentationMode.Sprite2D,
                 authoredProfiles: new ScriptableObject[]
                 {
-                    pawnDefinition != null ? pawnDefinition.defaultInputProfile : null,
                     pawnDefinition != null ? pawnDefinition.movementProfile : null,
                     pawnDefinition != null ? pawnDefinition.combatProfile : null,
                     pawnDefinition != null ? pawnDefinition.traversalProfile : null,

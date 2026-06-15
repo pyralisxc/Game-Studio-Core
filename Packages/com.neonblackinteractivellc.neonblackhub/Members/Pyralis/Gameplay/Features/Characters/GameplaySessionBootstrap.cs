@@ -99,6 +99,7 @@ namespace NeonBlack.Gameplay.Characters
             spawnService.SetSessionStateService(sessionStateService);
             spawnService.SetSpawnPoints(spawnPoints);
             spawnService.SetCameraBoundsProvider(cameraRigController as ICameraBoundsProvider ?? cameraBoundsSource as ICameraBoundsProvider);
+            spawnService.SetPlayfieldBoundsProvider(sessionDefinition?.defaultGameMode?.playfieldProfile);
 
             ParticipantInputRouter inputRouter = participantInputRouter ??= GetOrCreatePersistentService<ParticipantInputRouter>("ParticipantInputRouter");
             inputRouter.SetSessionDefinition(sessionDefinition);
@@ -210,8 +211,7 @@ namespace NeonBlack.Gameplay.Characters
             if (playerInputManager == null || sessionDefinition == null)
                 return;
 
-            TrySetMember(playerInputManager, "maxPlayerCount", sessionDefinition.GetEffectiveMaxParticipants());
-            TrySetMember(playerInputManager, "splitScreen", sessionDefinition.allowSplitScreen && !sessionDefinition.sharedCameraByDefault);
+            playerInputManager.splitScreen = sessionDefinition.allowSplitScreen && !sessionDefinition.sharedCameraByDefault;
         }
 
         private T GetOrCreatePersistentService<T>(string serviceName) where T : Component
@@ -251,17 +251,5 @@ namespace NeonBlack.Gameplay.Characters
             return service != null;
         }
 
-        private static void TrySetMember(object target, string memberName, object value)
-{
-            System.Reflection.PropertyInfo property = target.GetType().GetProperty(memberName, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
-            if (property != null && property.CanWrite)
-            {
-                property.SetValue(target, value);
-                return;
-            }
-
-            System.Reflection.FieldInfo field = target.GetType().GetField(memberName, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
-            field?.SetValue(target, value);
-        }
     }
 }

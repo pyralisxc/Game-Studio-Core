@@ -289,9 +289,6 @@ namespace NeonBlack.Gameplay.Editor
             if (session.networkMode != GameplayNetworkMode.LocalOnly)
                 AddFamily(families, RuntimeCapabilityFamily.Networking);
 
-            if (session.defaultInputProfile != null)
-                AddFamily(families, RuntimeCapabilityFamily.CameraInput);
-
             if (session.defaultParticipants == null)
                 return;
 
@@ -300,9 +297,6 @@ namespace NeonBlack.Gameplay.Editor
                 ParticipantDefinition participant = session.defaultParticipants[i];
                 if (participant == null)
                     continue;
-
-                if (participant.inputProfile != null)
-                    AddFamily(families, RuntimeCapabilityFamily.CameraInput);
 
                 PawnDefinition pawn = participant.defaultPawn;
                 if (pawn == null)
@@ -314,8 +308,6 @@ namespace NeonBlack.Gameplay.Editor
                     AddFamily(families, RuntimeCapabilityFamily.Combat);
                 if (pawn.presentationProfile != null || pawn.animationProfile != null)
                     AddFamily(families, RuntimeCapabilityFamily.AnimationPresentation);
-                if (pawn.defaultInputProfile != null)
-                    AddFamily(families, RuntimeCapabilityFamily.CameraInput);
                 if (pawn.featureModules != null)
                 {
                     for (int moduleIndex = 0; moduleIndex < pawn.featureModules.Length; moduleIndex++)

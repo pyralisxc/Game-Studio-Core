@@ -24,6 +24,7 @@ namespace NeonBlack.Gameplay.Editor
             if (currentStep != null && currentStep.NativeAction.HasValue)
                 PyralisAuthoringSurfaceBeacon.DrawNativeAction(currentStep.NativeAction.Value, currentStep.NativeAction.Value.ToGuidanceSentence());
             PyralisAuthoringWindowPrimitives.DrawMiniField("Intent Focus", PyralisAuthoringSetupGraphProjection.BuildIntentFocusSummary(graph));
+            PyralisAuthoringWindowPrimitives.DrawMiniField("Route Shape", PyralisAuthoringSetupGraphProjection.BuildRouteShapeSummary(graph));
             PyralisAuthoringWindowPrimitives.DrawMiniField("First Proof", PyralisAuthoringSetupGraphProjection.BuildFirstProofPrioritySummary(graph));
             PyralisAuthoringWindowPrimitives.DrawMiniField("Intent vs Setup", "Intent filters what the graph should explain first; Project, Hierarchy, and Inspector still create and wire the user's actual setup.");
             DrawGraphPriority(graph);

@@ -21,12 +21,9 @@ There are two spawn layers in NeonBlack Gameplay:
 | Layer | What it does | Where to set it up |
 |---|---|---|
 | `GameplaySessionBootstrap` spawn points | Places pawns in the world when a session starts or a participant joins | assign spawn point `Transform`s on `GameplaySessionBootstrap` |
-| `PlayerSpawner` | Watches for death, waits a delay, then moves or recreates the tracked pawn | add `PlayerSpawner` to the scene |
+| `PlayerSpawner` | Watches for death, waits a delay, then asks `ParticipantSpawnService` to respawn the tracked participant pawn | add `PlayerSpawner` to the scene |
 
-`PlayerSpawner` now supports two runtime styles:
-
-- direct scene-object or prefab respawn
-- participant-aware respawn through `ParticipantRosterService` and `ParticipantSpawnService`
+`PlayerSpawner` is participant-aware. It does not own a player prefab; pawn identity stays on `ParticipantDefinition.defaultPawn` and `PawnDefinition.pawnPrefab`.
 
 ## Step 1
 
@@ -34,20 +31,11 @@ Create an empty scene object named `PlayerSpawner` and add the `PlayerSpawner` c
 
 ## Step 2
 
-Choose how the tracked pawn should be resolved.
-
-Direct object path:
-
-- assign **Current Player** to reuse an existing scene object
-- or leave **Current Player** empty and assign **Player Prefab**
-
-Participant-aware path:
-
 - assign **Participant Spawn Service**
 - assign **Participant Roster Service**
 - set **Target Seat Index** to the participant seat this spawner should track
 
-When participant services are present, `PlayerSpawner` resolves the targeted participant first instead of assuming one global player.
+Use `-1` for **Target Seat Index** when this respawn coordinator should follow the primary registered participant.
 
 ## Step 3
 
@@ -113,6 +101,6 @@ Verify in Play Mode:
 |---|---|
 | Spawner does nothing on death | the tracked pawn has no `HealthComponent`, so `PlayerSpawner` cannot subscribe to `OnDeath` |
 | Wrong participant respawns | `Target Seat Index` does not match the intended roster seat |
-| Respawn creates the wrong pawn | participant services are missing, so the spawner falls back to `Player Prefab` |
+| Respawn creates the wrong pawn | `ParticipantDefinition.defaultPawn` or `PawnDefinition.pawnPrefab` points at the wrong pawn |
 | Player respawns in the wrong place | spawn points are missing or attached to moving scene objects |
 | Countdown is invisible | countdown is disabled or its color blends into the background |

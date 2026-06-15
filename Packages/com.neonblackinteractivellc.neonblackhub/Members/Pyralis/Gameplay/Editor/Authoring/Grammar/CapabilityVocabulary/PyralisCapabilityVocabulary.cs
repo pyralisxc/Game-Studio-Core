@@ -372,7 +372,7 @@ namespace NeonBlack.Gameplay.Editor
                 new[] { RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Billboard2_5D, RuntimeCapabilityLaneTag.ThirdPerson3D, RuntimeCapabilityLaneTag.CameraCursor },
                 System.Array.Empty<RuntimeCapabilityLaneTag>(),
                 "A camera or cursor control surface that makes the current route visible and keeps 2D proofs framed.",
-                "Use this when a pawn, board, cursor, projectile, or UI route needs visible framing, bounds, or selection.",
+                "Use this when a pawn, board, cursor, projectile, or UI route needs visible framing, visible bounds, or selection.",
                 System.Array.Empty<string>(),
                 new[] { "CameraRigProfile", "PlayfieldProfile when authored bounds matter" },
                 new[] { "Camera Root with CinemachineCameraRigController", "physical Target Camera with Cinemachine Brain" },
@@ -386,12 +386,12 @@ namespace NeonBlack.Gameplay.Editor
                 new[]
                 {
                     "Choose orthographic framing for 2D routes.",
-                    "Tune camera size, follow target, margins, and bounds.",
+                    "Tune camera size, follow target, margins, and visible bounds.",
                     "Decide whether camera input is player-controlled, pawn-follow, board-view, or cursor-driven."
                 },
                 new[] { "camera shake polish", "split screen", "cinematic transitions", "multi-target framing" },
-                "Enter Play Mode and confirm the camera shows the proof surface and respects assigned follow or bounds behavior.",
-                "The Cinemachine Rig is the most flexible camera solution. Use 'Camera Bounds' to prevent the player from seeing 'off-map' areas.",
+                "Enter Play Mode and confirm the camera shows the proof surface and respects assigned follow or visible-bounds behavior.",
+                "The Cinemachine rig frames the playfield. Use PlayfieldProfile for legal movement bounds; use camera visible bounds to prevent the player from seeing off-map areas.",
                 string.Empty),
 
             new PyralisCapabilityVocabularyCard(

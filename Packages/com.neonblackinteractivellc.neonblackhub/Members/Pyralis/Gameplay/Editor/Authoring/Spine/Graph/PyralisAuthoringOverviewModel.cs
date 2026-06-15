@@ -60,6 +60,7 @@ namespace NeonBlack.Gameplay.Editor
 
     public sealed class PyralisAuthoringOverviewModel
     {
+        private const int MaxVisibleDoNowItems = 3;
         private readonly List<PyralisAuthoringOverviewIssue> _doNow;
         private readonly List<PyralisAuthoringOverviewIssue> _doSoon;
         private readonly List<PyralisAuthoringOverviewIssue> _later;
@@ -130,7 +131,8 @@ namespace NeonBlack.Gameplay.Editor
                 switch (issue.Lane)
                 {
                     case PyralisAuthoringOverviewLane.DoNow:
-                        doNow.Add(issue);
+                        if (doNow.Count < MaxVisibleDoNowItems)
+                            doNow.Add(issue);
                         break;
                     case PyralisAuthoringOverviewLane.DoSoon:
                         doSoon.Add(issue);

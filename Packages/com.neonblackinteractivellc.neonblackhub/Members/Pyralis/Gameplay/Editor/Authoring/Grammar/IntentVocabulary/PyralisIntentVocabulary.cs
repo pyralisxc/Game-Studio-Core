@@ -73,12 +73,13 @@ namespace NeonBlack.Gameplay.Editor
                     {
                         "PawnMovementProfile -> top-down/free movement feel",
                         "InputProfile -> Move, Aim, Attack, Interact, or Custom rows",
-                        "CameraRigProfile -> top-down framing and bounds"
+                        "PlayfieldProfile -> legal movement bounds",
+                        "CameraRigProfile -> top-down framing"
                     },
                     customizationMoments: new[]
                     {
                         "Choose whether Jump means nothing, dash, top-down hop, or a custom ability.",
-                        "Tune free-movement speed, collider fit, targeting direction, camera bounds, and obstacle surfaces."
+                        "Tune free-movement speed, collider fit, targeting direction, playfield bounds, camera framing, and obstacle surfaces."
                     },
                     canWait: new[] { "side-view gravity ground", "platform jump tuning", "full enemy waves", "networking", "leaderboards", "full HUD polish" },
                     relatedStableIds: new[]
@@ -94,7 +95,7 @@ namespace NeonBlack.Gameplay.Editor
                     axioms: AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone,
                     capability: AuthoringCapability.Movement | AuthoringCapability.Input | AuthoringCapability.Combat | AuthoringCapability.Camera,
                     priority: AuthoringPriority.Primary,
-                    expertAdvice: "Use CameraRigProfile to define the play area and prevent the actor from leaving the screen."),
+                    expertAdvice: "Use PlayfieldProfile to define legal movement bounds. Use CameraRigProfile to decide how that playfield is framed on screen."),
                 new PyralisAuthoringFact(
                     "intent.pawn-brawler",
                     "Pawn Brawler",
@@ -166,6 +167,7 @@ namespace NeonBlack.Gameplay.Editor
                     {
                         "PawnPresentationProfile -> Billboard2_5D",
                         "PawnMovementProfile -> lane/depth movement feel",
+                        "PlayfieldProfile -> arena or lane movement bounds",
                         "CameraRigProfile -> arena or lane framing"
                     },
                     customizationMoments: new[]
@@ -245,7 +247,7 @@ namespace NeonBlack.Gameplay.Editor
                         "capability.camera-follow-bounds",
                         "capability.interaction-action-selection"
                     },
-                    expertAdvice: "Ensure the CameraRigProfile defines the playable bounds and interaction layers for cursor hit-testing."),
+                    expertAdvice: "Use PlayfieldProfile for playable bounds and CameraRigProfile for the view. Cursor hit-testing should use explicit interaction layers or surfaces."),
                 new PyralisAuthoringFact(
                     "intent.tabletop-board-card",
                     "Tabletop, Board, Or Card Project",

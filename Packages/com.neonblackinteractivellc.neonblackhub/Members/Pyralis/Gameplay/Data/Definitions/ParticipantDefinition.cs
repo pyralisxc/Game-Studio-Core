@@ -10,11 +10,11 @@ namespace NeonBlack.Gameplay.Data.Definitions
     [AuthoringContract(
         Capability = AuthoringCapability.Participants, 
         SetupNodeId = "participant.default",
-        Relevance = "Defines a player or NPC seat within a session, including their default pawn and input configuration.",
+        Relevance = "Defines a player, AI, seat, hand, faction, or command owner within a session, including the preferred input profile and optional default pawn.",
         AssignmentFields = new[] { nameof(displayName), nameof(defaultPawn), nameof(inputProfile), nameof(teamIndex) },
         FirstProof = "Add this Participant Definition to the 'Default Participants' array in a Session Definition.",
-        ExpertAdvice = "ParticipantDefinitions represent 'Seats' at the table. For AI, leave 'Auto Join' on and set an AI-compatible Input Profile. For local multiplayer, ensure unique Input Profiles or shared schemes are configured.",
-        NativeSetup = new[] { "Create asset in Project window.", "Assign a PawnDefinition.", "Assign an InputProfile." },
+        ExpertAdvice = "ParticipantDefinitions represent seats or control owners. Put the InputProfile here when this participant is who controls the route. Assign a PawnDefinition only for pawn-backed actors; no-pawn routes can control boards, hands, cursors, cameras, factions, menus, or action surfaces.",
+        NativeSetup = new[] { "Create asset in Project window.", "Assign an InputProfile when this participant receives player input.", "Assign a PawnDefinition only for pawn-backed routes." },
         DocumentationURL = "https://docs.neonblack.com/pyralis/session"
     )]
 [CreateAssetMenu(menuName = "NeonBlack/Definitions/Participant Definition", fileName = "ParticipantDefinition", order = 20)]

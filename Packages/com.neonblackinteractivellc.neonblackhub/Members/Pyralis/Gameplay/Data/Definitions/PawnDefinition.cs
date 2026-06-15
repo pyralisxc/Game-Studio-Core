@@ -16,10 +16,10 @@ namespace NeonBlack.Gameplay.Data.Definitions
         SetupNodeId = "pawn.definition",
         Lane = "Entity",
         Relevance = "Core definition for a controllable entity, linking its prefab to movement, combat, and animation profiles.",
-        AssignmentFields = new[] { nameof(pawnPrefab), nameof(movementProfile), nameof(combatProfile), nameof(animationProfile), nameof(featureModules), nameof(defaultInputProfile) },
+        AssignmentFields = new[] { nameof(pawnPrefab), nameof(movementProfile), nameof(combatProfile), nameof(animationProfile), nameof(featureModules) },
         NativeSetup = new[] { "PawnRoot" },
         FirstProof = "Assign this Pawn Definition to a Participant Definition or a Spawner in the scene.",
-        ExpertAdvice = "PawnDefinition is the glue for your characters. Ensure you assign a PawnPrefab and appropriate profiles for Movement and Combat. Check 'First Proof' by spawning it in a test scene.",
+        ExpertAdvice = "PawnDefinition describes the actor body and prefab composition. ParticipantDefinition.inputProfile owns who controls this pawn; keep input off pawn definitions so seats, AI, hands, cursors, and pawn routes share one ownership rule.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/pawn"
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Definitions/Pawn Definition", fileName = "PawnDefinition", order = 30)]
@@ -31,7 +31,6 @@ namespace NeonBlack.Gameplay.Data.Definitions
         }
 
         public GameObject pawnPrefab;
-        public InputProfile defaultInputProfile;
         public PawnMovementProfile movementProfile;
         public PawnCombatProfile combatProfile;
         public PawnTraversalProfile traversalProfile;

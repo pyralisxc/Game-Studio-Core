@@ -130,7 +130,6 @@ namespace NeonBlack.Gameplay.Editor
 
             if (selection == session
                 || selection == session.defaultGameMode
-                || selection == session.defaultInputProfile
                 || selection == session.settingsProfile)
                 return true;
 
@@ -196,7 +195,6 @@ namespace NeonBlack.Gameplay.Editor
             PawnDefinition pawn = participant.defaultPawn;
             return pawn != null
                 && (selection == pawn.pawnPrefab
-                    || selection == pawn.defaultInputProfile
                     || selection == pawn.movementProfile
                     || selection == pawn.combatProfile
                     || selection == pawn.traversalProfile
