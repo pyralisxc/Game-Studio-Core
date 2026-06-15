@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e8b5945ff5429fb48bf2ed0589e1b429, type: 3}
   m_Name: InputProfile
   m_EditorClassIdentifier: NeonBlack.Gameplay.Data::NeonBlack.Gameplay.Data.Profiles.InputProfile
-  actions: {fileID: -944628639613478452, guid: a4cb356bdd48bde46b3ef55a6843253c, type: 3}
+  actions: {fileID: 0}
   primaryActionMap: Player
   actionBindings:
   - role: 0
@@ -20,28 +20,28 @@ MonoBehaviour:
     actionMap: 
     actionName: Move
     valueType: 1
-    requiredForProof: 1
+    requiredForGameplay: 1
     animationSignalKey: 
   - role: 2
     customKey: 
     actionMap: 
     actionName: Jump
     valueType: 0
-    requiredForProof: 0
+    requiredForGameplay: 0
     animationSignalKey: 
   - role: 4
     customKey: 
     actionMap: 
     actionName: Attack
     valueType: 0
-    requiredForProof: 0
+    requiredForGameplay: 0
     animationSignalKey: 
   - role: 6
     customKey: 
     actionMap: 
     actionName: Interact
     valueType: 0
-    requiredForProof: 0
+    requiredForGameplay: 0
     animationSignalKey: 
   preferredControlSchemes: []
   touchFriendly: 0

@@ -17,5 +17,5 @@ MonoBehaviour:
   teamIndex: 0
   preferredSeatIndex: -1
   tint: {r: 1, g: 1, b: 1, a: 1}
-  defaultPawn: {fileID: 11400000, guid: 60879907599e3134fbc6260671c04453, type: 2}
+  defaultPawn: {fileID: 0}
   inputProfile: {fileID: 0}

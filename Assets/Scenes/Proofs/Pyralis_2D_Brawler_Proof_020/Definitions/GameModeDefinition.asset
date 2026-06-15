@@ -14,15 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: NeonBlack.Gameplay.Data::NeonBlack.Gameplay.Data.Definitions.GameModeDefinition
   mainMenuScene: MainMenu
   gameplayScene: Opening
-  setupProfile: {fileID: 11400000, guid: 2bbb89892f44378468c208ebcc63cd19, type: 2}
   playfieldProfile: {fileID: 0}
   cameraRigProfile: {fileID: 0}
   requiredFeatureModules: []
-  enableCombat: 1
+  enableCombat: 0
   enablePickups: 0
   enableHazards: 0
   enableScore: 0
-  enableRespawn: 1
+  enableRespawn: 0
   turnOrderDefinition: {fileID: 0}
   boardDefinition: {fileID: 0}
   boardTerminalConditions: []
