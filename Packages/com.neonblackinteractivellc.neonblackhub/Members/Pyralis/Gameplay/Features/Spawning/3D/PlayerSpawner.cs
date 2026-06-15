@@ -316,20 +316,14 @@ namespace NeonBlack.Gameplay.Features.Spawning
             if (rosterService == null)
                 return null;
 
-            IReadOnlyList<ParticipantHandle> participants = rosterService.Participants;
             if (targetSeatIndex >= 0)
-            {
-                for (int i = 0; i < participants.Count; i++)
-                {
-                    ParticipantHandle participant = participants[i];
-                    if (participant != null && participant.SeatIndex == targetSeatIndex)
-                        return participant;
-                }
+                return rosterService.TryGetParticipantBySeat(targetSeatIndex, out ParticipantHandle participant)
+                    ? participant
+                    : null;
 
-                return null;
-            }
-
-            return participants.Count > 0 ? participants[0] : null;
+            return rosterService.TryGetPrimaryParticipant(out ParticipantHandle primary)
+                ? primary
+                : null;
         }
 
         private GameObject ResolveTrackedPawn()

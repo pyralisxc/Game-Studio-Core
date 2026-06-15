@@ -10,10 +10,14 @@ using NeonBlack.Gameplay.Editor;
 using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Features.Combat;
 using NeonBlack.Gameplay.Features.Characters;
+using NeonBlack.Gameplay.Features.GameFlow;
+using NeonBlack.Gameplay.Features.Hazards;
 using NeonBlack.Gameplay.Features.Input;
+using NeonBlack.Gameplay.Features.Pickups;
 using NeonBlack.Gameplay.Features.Scoring;
 using NeonBlack.Gameplay.Features.Tabletop;
 using NeonBlack.Gameplay.Presentation.Animation;
+using NeonBlack.Gameplay.Presentation.Camera;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -117,6 +121,91 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
+        public void SourceDependencyHygiene_SmokeScoresCrossDomainPressure()
+        {
+            const string source = @"
+using NeonBlack.Gameplay.Features.Input;
+using NeonBlack.Gameplay.Features.Combat;
+using NeonBlack.Gameplay.Presentation.Camera;
+using UnityEngine;
+
+namespace NeonBlack.Gameplay.Features.Platform.Session
+{
+    public sealed class HygieneFixture : MonoBehaviour
+    {
+        [SerializeField] private InputProfile inputProfile;
+        [SerializeField] private CameraRigProfile cameraRigProfile;
+
+        private void Awake()
+        {
+            GetComponent<PlayerInputHandler>();
+            Type.GetType(""NeonBlack.Gameplay.Features.Combat.CombatService"");
+        }
+    }
+}";
+
+            PyralisSourceDependencyHygieneRecord record =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Platform/Session/HygieneFixture.cs",
+                    source);
+
+            Assert.That(record.OwnerDomain, Is.EqualTo("Platform"));
+            Assert.That(record.Domains, Does.Contain("Input"));
+            Assert.That(record.Domains, Does.Contain("Combat"));
+            Assert.That(record.ConcreteCrossDomainCount, Is.GreaterThanOrEqualTo(2));
+            Assert.That(record.UnityLookupCount, Is.GreaterThanOrEqualTo(1));
+            Assert.That(record.ReflectionOrStringLookupCount, Is.GreaterThanOrEqualTo(1));
+            Assert.That(record.Risk, Is.Not.EqualTo(PyralisSourceDependencyRisk.Low));
+            Assert.That(record.Reasons, Is.Not.Empty);
+        }
+
+        [Test]
+        public void HygieneProjection_SmokeAuditsGraphEvidenceWithoutPlayReadinessBuckets()
+        {
+            PyralisAuthoringGraphNode missingSetup = new PyralisAuthoringGraphNode(
+                "setup.session",
+                "Session",
+                PyralisAuthoringGraphNodeKind.SetupChain,
+                PyralisAuthoringGraphSourceKind.SetupFlow,
+                PyralisAuthoringGraphEvidenceState.Missing);
+            PyralisAuthoringGraphNode unknownContract = new PyralisAuthoringGraphNode(
+                "contract.custom",
+                "Custom Contract",
+                PyralisAuthoringGraphNodeKind.Contract,
+                PyralisAuthoringGraphSourceKind.AuthoringContract,
+                PyralisAuthoringGraphEvidenceState.Unknown);
+            PyralisAuthoringGraphNode runtimeEvidence = new PyralisAuthoringGraphNode(
+                "validation.input",
+                "Input Validation",
+                PyralisAuthoringGraphNodeKind.ValidationEvidence,
+                PyralisAuthoringGraphSourceKind.RuntimeValidation,
+                PyralisAuthoringGraphEvidenceState.Missing);
+            PyralisAuthoringGraphNode proof = new PyralisAuthoringGraphNode(
+                "proof.1p",
+                "1P Proof",
+                PyralisAuthoringGraphNodeKind.Proof,
+                PyralisAuthoringGraphSourceKind.ProofVocabulary,
+                PyralisAuthoringGraphEvidenceState.Missing);
+
+            PyralisAuthoringSetupGraph graph = new PyralisAuthoringSetupGraph(
+                null,
+                null,
+                new[] { missingSetup, unknownContract, runtimeEvidence, proof },
+                new[] { new PyralisAuthoringGraphEdge("proof.1p", "setup.session", PyralisAuthoringGraphEdgeKind.BlockedBy, "missing setup") });
+
+            IReadOnlyList<PyralisAuthoringValidationGraphSection> sections =
+                PyralisAuthoringSetupGraphProjection.BuildHygieneSections(graph);
+
+            Assert.That(sections.Select(section => section.Label), Does.Contain("Unvalidated Graph Nodes"));
+            Assert.That(sections.Select(section => section.Label), Does.Contain("Explicit Runtime / Scene Findings"));
+            Assert.That(sections.Select(section => section.Label), Does.Contain("Proof Blocker Links"));
+            Assert.That(sections.Select(section => section.Label), Does.Not.Contain("Required Before Play"));
+            Assert.That(sections.SelectMany(section => section.Rows).Select(row => row.NodeId), Does.Contain("contract.custom"));
+            Assert.That(sections.SelectMany(section => section.Rows).Select(row => row.NodeId), Does.Contain("validation.input"));
+            Assert.That(sections.SelectMany(section => section.Rows).Select(row => row.NodeId), Does.Contain("setup.session"));
+        }
+
+        [Test]
         public void ContractNativeSetup_SmokeDoesNotDuplicateReflectedUnityMetadata()
         {
             string gameplayRoot = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Packages", "com.neonblackinteractivellc.neonblackhub", "Members", "Pyralis", "Gameplay"));
@@ -212,29 +301,102 @@ namespace NeonBlack.Gameplay.Tests.Editor
             string gameplayRoot = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Packages", "com.neonblackinteractivellc.neonblackhub", "Members", "Pyralis", "Gameplay"));
             string sessionSource = File.ReadAllText(Path.Combine(gameplayRoot, "Data", "Definitions", "SessionDefinition.cs"));
             string pawnSource = File.ReadAllText(Path.Combine(gameplayRoot, "Data", "Definitions", "PawnDefinition.cs"));
+            string inputProfileSource = File.ReadAllText(Path.Combine(gameplayRoot, "Data", "Profiles", "InputProfile.cs"));
+            string participantInputUtilitySource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Input", "ParticipantInputProfileUtility.cs"));
+            string participantRosterInterfaceSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Characters", "Runtime", "Shared", "Participants", "IParticipantRoster.cs"));
+            string participantRosterSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Characters", "Runtime", "Shared", "Participants", "ParticipantRosterService.cs"));
             string runtimeContextSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Platform", "Composition", "GameplayRuntimeContext.cs"));
+            string bootstrapSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Platform", "Session", "GameplaySessionBootstrap.cs"));
             string spawnSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Characters", "Runtime", "Shared", "Services", "ParticipantSpawnService.cs"));
             string spawnerSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Spawning", "3D", "PlayerSpawner.cs"));
-            string bootstrapSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Platform", "Session", "GameplaySessionBootstrap.cs"));
+            string hudTargetBindingSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Feedback", "UI", "ParticipantHudTargetBinding.cs"));
+            string movementSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Characters", "2D", "Pawn2DMovementComponent.cs"));
+            string hazardSpawnerSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Hazards", "2D", "HazardSpawner.cs"));
+            string collectibleSpawnerSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Pickups", "2D", "CollectibleSpawner2D.cs"));
             string playfieldSource = File.ReadAllText(Path.Combine(gameplayRoot, "Data", "Profiles", "PlayfieldProfile.cs"));
             string pawn2DMovementSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Characters", "2D", "Pawn2DMovementComponent.cs"));
             string cameraRigSource = File.ReadAllText(Path.Combine(gameplayRoot, "Presentation", "Camera", "CinemachineCameraRigController.cs"));
+            string featureServicePolicySource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Platform", "Composition", "PyralisRuntimeFeatureServicePolicy.cs"));
 
             Assert.That(sessionSource, Does.Not.Contain("defaultInputProfile"));
             Assert.That(pawnSource, Does.Not.Contain("defaultInputProfile"));
+            Assert.That(sessionSource, Does.Not.Contain("InputProfile inputProfile"));
+            Assert.That(pawnSource, Does.Not.Contain("InputProfile inputProfile"));
+            Assert.That(inputProfileSource, Does.Not.Contain("participant or pawn definition"));
+            Assert.That(participantInputUtilitySource, Does.Not.Contain("SessionDefinition"));
+            Assert.That(participantInputUtilitySource, Does.Not.Contain("PawnDefinition"));
+            Assert.That(participantRosterInterfaceSource, Does.Contain("TryGetParticipantBySeat"));
+            Assert.That(participantRosterSource, Does.Contain("TryGetParticipantBySeat"));
             Assert.That(runtimeContextSource, Does.Not.Contain("DefaultInputProfile"));
             Assert.That(runtimeContextSource, Does.Not.Contain("DefaultInputActions"));
+            Assert.That(bootstrapSource, Does.Not.Contain("GetOrCreatePersistentService"));
+            Assert.That(bootstrapSource, Does.Contain("ConfigureRuntime("));
+            Assert.That(bootstrapSource, Does.Contain("sceneNavigatorSource"));
+            Assert.That(bootstrapSource, Does.Not.Contain("SceneLoader sceneLoader"));
             Assert.That(spawnSource, Does.Not.Contain("GetMethod("));
             Assert.That(spawnSource, Does.Contain("IPawnRuntimeServicesReceiver"));
             Assert.That(spawnerSource, Does.Not.Contain("playerPrefab"));
             Assert.That(spawnerSource, Does.Not.Contain("currentPlayer"));
             Assert.That(spawnerSource, Does.Contain("ParticipantSpawnService"));
+            Assert.That(spawnerSource, Does.Contain("TryGetParticipantBySeat"));
+            Assert.That(hudTargetBindingSource, Does.Contain("TryGetParticipantBySeat"));
             Assert.That(bootstrapSource, Does.Not.Contain("TrySetMember"));
             Assert.That(bootstrapSource, Does.Not.Contain("System.Reflection"));
+            Assert.That(bootstrapSource, Does.Not.Contain("cameraBoundsSource"));
+            Assert.That(movementSource, Does.Not.Contain("cameraBoundsSource"));
+            Assert.That(movementSource, Does.Not.Contain("private Camera targetCamera"));
+            Assert.That(hazardSpawnerSource, Does.Not.Contain("_cameraBoundsSource"));
+            Assert.That(hazardSpawnerSource, Does.Not.Contain("_targetCamera"));
+            Assert.That(collectibleSpawnerSource, Does.Not.Contain("_cameraBoundsSource"));
+            Assert.That(collectibleSpawnerSource, Does.Not.Contain("_targetCamera"));
             Assert.That(playfieldSource, Does.Contain("IPlayfieldBoundsProvider"));
             Assert.That(playfieldSource, Does.Contain("AuthoringCapability.Movement"));
             Assert.That(pawn2DMovementSource.IndexOf("TryGetPlayfieldBounds2D", System.StringComparison.Ordinal), Is.LessThan(pawn2DMovementSource.IndexOf("TryGetCameraBounds", System.StringComparison.Ordinal)));
             Assert.That(cameraRigSource, Does.Contain("ICameraBoundsProvider"));
+            Assert.That(featureServicePolicySource, Does.Contain("AppendContractSignals"));
+            Assert.That(featureServicePolicySource, Does.Not.Contain("AppendUncontractedModuleSignals"));
+            Assert.That(featureServicePolicySource, Does.Not.Contain("JoinSignals"));
+            Assert.That(featureServicePolicySource, Does.Not.Contain("IndexOf(token"));
+
+            string inputRouterSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Input", "ParticipantInputRouter.cs"));
+            string gameManagerSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "GameFlow", "2D", "GameManager.cs"));
+            Assert.That(inputRouterSource, Does.Not.Contain("PlayerInputManager.instance"));
+            Assert.That(gameManagerSource, Does.Not.Contain("private GameObject player"));
+            Assert.That(gameManagerSource, Does.Not.Contain("private Motor2D primaryPlayerController"));
+            Assert.That(gameManagerSource, Does.Contain("Standalone Compatibility"));
+        }
+
+        [Test]
+        public void ReflectiveContracts_SmokeDoNotPromoteRuntimeServiceFallbackFields()
+        {
+            AssertContractFactDoesNotExposeRuntimeServiceFields(typeof(Pawn2DMovementComponent));
+            AssertContractFactDoesNotExposeRuntimeServiceFields(typeof(HazardSpawner));
+            AssertContractFactDoesNotExposeRuntimeServiceFields(typeof(CollectibleSpawner2D));
+
+            ResolvedAuthoringContract gameManagerContract = ResolvedAuthoringContractRegistry.FindByType(typeof(GameManager));
+            Assert.That(gameManagerContract, Is.Not.Null);
+            Assert.That(gameManagerContract.AssignmentFields, Does.Contain("scoreManager"));
+            Assert.That(gameManagerContract.AssignmentFields, Does.Contain("hazardSpawner"));
+            Assert.That(gameManagerContract.AssignmentFields, Does.Not.Contain("playerRoot"));
+            Assert.That(gameManagerContract.AssignmentFields, Does.Not.Contain("scoreService"));
+
+            ResolvedAuthoringContract cameraRigContract = ResolvedAuthoringContractRegistry.FindByType(typeof(CinemachineCameraRigController));
+            PyralisAuthoringFact cameraRigFact = PyralisReflectiveFactScanner.CreateFactFromContract(cameraRigContract);
+            Assert.That(cameraRigFact.AssignmentFields, Has.Some.Contains("targetCamera"));
+        }
+
+        private static void AssertContractFactDoesNotExposeRuntimeServiceFields(System.Type sourceType)
+        {
+            ResolvedAuthoringContract contract = ResolvedAuthoringContractRegistry.FindByType(sourceType);
+            Assert.That(contract, Is.Not.Null);
+
+            PyralisAuthoringFact fact = PyralisReflectiveFactScanner.CreateFactFromContract(contract);
+            Assert.That(fact.AssignmentFields, Has.None.Contains("gameplayStateSource"));
+            Assert.That(fact.AssignmentFields, Has.None.Contains("cameraBoundsSource"));
+            Assert.That(fact.AssignmentFields, Has.None.Contains("hazardOutcomeSource"));
+            Assert.That(fact.AssignmentFields, Has.None.Contains("pickupBurstSurfaceSource"));
+            Assert.That(fact.AssignmentFields, Has.None.Contains("scoreAwardSource"));
+            Assert.That(fact.AssignmentFields, Has.None.Contains("targetCamera"));
         }
 
         [Test]

@@ -35,7 +35,7 @@ namespace NeonBlack.Gameplay.Editor
                     MessageType.None,
                     !string.IsNullOrWhiteSpace(currentStep.Detail)
                         ? currentStep.Detail
-                        : "Use Map for topology, Validate for the full issue list, and the Inspector for field-level edits.");
+                        : "Use Map for topology, Hygiene for the full graph issue list, and the Inspector for field-level edits.");
             }
 
             if (selection == null)

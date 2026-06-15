@@ -410,7 +410,6 @@ Remaining folderbase concerns:
 
 - `Features/Characters` still owns participant/session services by assembly, even as platform/session concepts move out.
 - `Features/GameFlow/2D` and `Core/Navigation/UI` overlap in scene/menu flow responsibilities.
-- `Features/Respawn` is empty and should be removed if still empty after the current cleanup branch.
 - Some `Runtime/Shared` folders are legitimate, but they need discipline so "shared" does not become a new junk drawer.
 - Feature-local editor authoring is okay for field-local guidance, but route truth must remain contracts/dependency tree/graph/validators.
 
@@ -616,4 +615,3 @@ Recommended status:
 `Checkpoint reached`, not `Phase complete`.
 
 The next cleanup should not be another architecture redesign. It should be a lock-in pass that makes ownership, scene flow, prefab variants, and lane evidence boring enough that the authoring graph can explain them without tab-specific rescue logic.
-

@@ -124,10 +124,20 @@ public class ParticipantRosterService : MonoBehaviour, IParticipantRoster, IPlay
 
         public bool TryGetPrimaryParticipant(out ParticipantHandle participant)
         {
-            if (_participants.Count > 0)
+            participant = _participants.Count > 0 ? _participants[0] : null;
+            return participant != null;
+        }
+
+        public bool TryGetParticipantBySeat(int seatIndex, out ParticipantHandle participant)
+        {
+            for (int i = 0; i < _participants.Count; i++)
             {
-                participant = _participants[0];
-                return true;
+                ParticipantHandle candidate = _participants[i];
+                if (candidate != null && candidate.SeatIndex == seatIndex)
+                {
+                    participant = candidate;
+                    return true;
+                }
             }
 
             participant = null;

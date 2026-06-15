@@ -10,10 +10,10 @@ Gameplay systems should declare their authoring meaning once, and the Authoring 
 Gameplay systems
   -> feature-owned authoring contracts and facts
       -> read-only resolved setup graph
-          -> Intent, Overview, Guide, Map, Validate, Facts, and selected-context projections
+          -> Intent, Overview, Guide, Map, Hygiene, Facts, and selected-context projections
 ```
 
-The graph is the authoring memory. Tabs are projections. Contracts and existing Unity setup evidence are the source material. Map, Validate, Overview, Guide, Facts, and selected-context surfaces should read graph projections instead of reconstructing route, proof, or validation meaning locally.
+The graph is the authoring memory. Tabs are projections. Contracts and existing Unity setup evidence are the source material. Map, Hygiene, Overview, Guide, Facts, and selected-context surfaces should read graph projections instead of reconstructing route, proof, or validation meaning locally.
 
 The old route-report and validation-card paths are archived and removed. Do not recreate `PyralisAuthoringRouteReport`, `PyralisAuthoringValidationModel`, or tab-local setup card models beside the graph. Route proof templates, capability vocabulary, route analysis, setup-flow validation, scene-readiness validation, and grammar facts still exist where they earn their keep as source inputs, fallback grammar, or audit dictionaries.
 
@@ -133,11 +133,11 @@ Keep existing visible layout unless the graph exposes a clearer ordering.
 
 Current implementation: the visible Map tab reads `PyralisAuthoringSetupGraph` through `PyralisAuthoringSetupGraphProjection.BuildSetupMapRows`, `BuildMapConnectionRows`, `FindSceneSurfaceNodes`, and `BuildReadinessRows`. It must not read `PyralisAuthoringRouteReport`, `PyralisAuthoringValidationModel`, or route analysis directly.
 
-### Phase 3: Validate Projection
+### Phase 3: Hygiene Projection
 
 Attach validation issues to graph node ids.
 
-`PyralisSceneReadinessValidator` keeps its concrete Unity knowledge. The graph normalizes scene-readiness evidence into validation rows so Validate can group issues by resolved graph node id instead of by repeated string heuristics.
+`PyralisSceneReadinessValidator` keeps its concrete Unity knowledge. The graph normalizes scene-readiness evidence into hygiene rows so Hygiene can group issues by resolved graph node id instead of by repeated string heuristics.
 
 Good direction:
 
@@ -149,11 +149,11 @@ scene.camera
 
 Avoid flattening useful validator detail into generic graph warnings.
 
-Current implementation: scene-readiness issues are reflected as deterministic `ValidationEvidence` graph nodes, and Validate renders required, recommended, and proof-enhancer buckets from `PyralisAuthoringSetupGraphProjection.BuildValidationRows`.
+Current implementation: scene-readiness issues are reflected as deterministic `ValidationEvidence` graph nodes, and Hygiene renders required, recommended, and proof-enhancer buckets from `PyralisAuthoringSetupGraphProjection.BuildValidationRows`.
 Current implementation: setup-flow evidence nodes remain distinct runtime evidence nodes, but their ids derive from canonical `PyralisSetupFlowGuidance.GetStableId(...)` setup ids when available, and the graph links each setup-flow evidence node back to the matching setup node. Keep this split: setup nodes describe spine grammar, evidence nodes describe the current scene/setup state.
-Current implementation: `PyralisAuthoringSetupGraphProjection.IsReadinessNode` is the shared readiness filter for Validate and Overview. It treats setup-chain nodes, the capability summary node, pawn/no-pawn requirements, scene-surface nodes, and validation-evidence nodes as setup health. Tabs may render those rows differently, but they should not each invent their own readiness filter.
-Current implementation: the Authoring Window no longer caches or passes `PyralisAuthoringRouteReport` into visible tabs. Validate readiness buckets and detailed evidence cards are graph-backed through `PyralisAuthoringSetupGraphProjection.BuildValidationRows`. The older `PyralisAuthoringValidationModel` card surface was removed after typed issue projection moved to `PyralisAuthoringSetupGraphProjection.BuildTypedValidationIssues`; do not reintroduce tab-local validation card models.
-Current implementation: the visible Validate tab reads `PyralisAuthoringSetupGraph` through current-step and validation-row projections. Concrete setup-flow and scene-readiness validators remain graph inputs inside the builder; Validate must not call those validators or legacy route/validation models directly.
+Current implementation: `PyralisAuthoringSetupGraphProjection.IsReadinessNode` is the shared readiness filter for Hygiene and Overview. It treats setup-chain nodes, the capability summary node, pawn/no-pawn requirements, scene-surface nodes, and validation-evidence nodes as setup health. Tabs may render those rows differently, but they should not each invent their own readiness filter.
+Current implementation: the Authoring Window no longer caches or passes `PyralisAuthoringRouteReport` into visible tabs. Hygiene readiness buckets and detailed evidence cards are graph-backed through `PyralisAuthoringSetupGraphProjection.BuildValidationRows`. The older `PyralisAuthoringValidationModel` card surface was removed after typed issue projection moved to `PyralisAuthoringSetupGraphProjection.BuildTypedValidationIssues`; do not reintroduce tab-local validation card models.
+Current implementation: the visible Hygiene tab reads `PyralisAuthoringSetupGraph` through current-step and validation-row projections. Concrete setup-flow and scene-readiness validators remain graph inputs inside the builder; Hygiene must not call those validators or legacy route/validation models directly.
 Current implementation: graph evidence can also project typed `PyralisAuthoringIssue` rows through `PyralisAuthoringSetupGraphProjection.BuildTypedValidationIssues`. Use this path for new typed validation consumers instead of adding separate validation-card infrastructure.
 
 ### Phase 4: Guide And Selected Context Projection
@@ -186,9 +186,9 @@ Current implementation: proof vocabulary templates are fallback grammar only. `P
 Current implementation: Overview guidance, current step, proof-support rows, and Do Now readiness are graph-backed. Overview no longer accepts `PyralisAuthoringRouteReport`; it reads route name, first unresolved node, readiness lanes, and proof support from `PyralisAuthoringSetupGraph` projections. The old `ResolvedAuthoringContractProofGuidance` code path was removed after graph proof edges took over visible proof support. See `Docs/_Archive/Migration/authoring-proof-guidance-to-graph.md` for the migration note.
 
 Current implementation: Intent projection asks `PyralisAuthoringCapabilityDescriptorRegistry` for reflected capability descriptors and selects matching `RuntimeCapabilityFamily` rows from contract `AuthoringCapability` flags, route lane, and world axioms. Fallback vocabulary may supply labels and generic wording, but it must not create assets, imply presets, or choose game content.
-Current implementation: the Authoring Window owns two cached graph lenses. The current setup graph is built without Intent and represents what authored assets, scene objects, contracts, validators, and reflected dependencies actually prove. Map, Validate, and Facts read this graph so truth/audit tabs do not become wish lists. The intent-projected graph is built with the active Intent selection and is used by Overview and Guide to prioritize missing setup for the selected first proof. This is a projection question only: it must not mutate SessionDefinition, GameModeDefinition, ParticipantDefinition, PawnDefinition, scene objects, or profile assets.
-Current implementation: Overview surfaces the active Intent focus and first-proof priority explicitly. Map does not surface Intent focus; it shows current scene/setup reality, setup chain rows, scene-surface evidence, missing field/component/setup issues, and collapsed developer route connections. Validate owns graph integrity: proof blockers, required/recommended evidence, proof enhancers, stable graph ids, evidence origins, and deeper graph reasoning. This keeps concrete Unity repair work in Map while still letting Validate explain why the resolved graph is blocked. Plain `Input` intent contributes to selection/action targeting; it does not infer camera/framing unless `Camera`, camera lane evidence, or a visual proof requirement asks for it.
-Current implementation: tab renderers translate graph state into beginner-facing setup language first. Overview uses "Intent Focus", "First Proof", "Setup Health", and "Next Missing Link"; Guide uses route-step roles such as "Do This First", "Blocks Proof", "Proof Target", and "Supports Proof"; Map uses "Setup Chain", "Scene Surface Scan", "Scene Setup Issues", and collapsed "Developer Route Connections"; Validate keeps reference ids, source ids, evidence states, and evidence origin available as diagnostic detail. Do not make graph/node terminology the primary read unless the tab is explicitly acting as an audit surface such as Validate or Facts.
+Current implementation: the Authoring Window owns two cached graph lenses. The current setup graph is built without Intent and represents what authored assets, scene objects, contracts, validators, and reflected dependencies actually prove. Map, Hygiene, and Facts read this graph so truth/audit tabs do not become wish lists. The intent-projected graph is built with the active Intent selection and is used by Overview and Guide to prioritize missing setup for the selected first proof. This is a projection question only: it must not mutate SessionDefinition, GameModeDefinition, ParticipantDefinition, PawnDefinition, scene objects, or profile assets.
+Current implementation: Overview surfaces the active Intent focus and first-proof priority explicitly. Map does not surface Intent focus; it shows current scene/setup reality, setup chain rows, scene-surface evidence, missing field/component/setup issues, and collapsed developer route connections. Hygiene owns graph integrity: proof blockers, required/recommended evidence, proof enhancers, stable graph ids, evidence origins, dependency pressure, and deeper graph reasoning. This keeps concrete Unity repair work in Map while still letting Hygiene explain why the resolved graph is blocked. Plain `Input` intent contributes to selection/action targeting; it does not infer camera/framing unless `Camera`, camera lane evidence, or a visual proof requirement asks for it.
+Current implementation: tab renderers translate graph state into beginner-facing setup language first. Overview uses "Intent Focus", "First Proof", "Setup Health", and "Next Missing Link"; Guide uses route-step roles such as "Do This First", "Blocks Proof", "Proof Target", and "Supports Proof"; Map uses "Setup Chain", "Scene Surface Scan", "Scene Setup Issues", and collapsed "Developer Route Connections"; Hygiene keeps reference ids, source ids, evidence states, evidence origin, and source dependency pressure available as diagnostic detail. Do not make graph/node terminology the primary read unless the tab is explicitly acting as an audit surface such as Hygiene or Facts.
 
 Current implementation: `PyralisCapabilityVocabulary` owns broad fallback capability vocabulary. `PyralisAuthoringCapabilityDescriptorRegistry` is the graph-facing capability surface: it prefers contracts/reflection, then fills generic labels and fallback wording from vocabulary. Feature-specific setup truth should live in contracts/reflection rather than hardcoded card copy.
 
@@ -285,7 +285,7 @@ These areas should shrink as graph projections take over:
 
 - Legacy Map migration notes and tests that predate graph projection.
 - Overview-specific proof and checklist reconstruction.
-- Legacy Validate keyword/category guessing and typed-card migration tests that predate graph evidence.
+- Legacy validation keyword/category guessing and typed-card migration tests that predate graph evidence.
 - Guide card duplication.
 - Facts semantic tag fallback guessing.
 - Selected-context hard-coded explanations.

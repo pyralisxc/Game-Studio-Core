@@ -18,11 +18,12 @@ namespace NeonBlack.Gameplay.Features.Hazards
         NativeSetup = new[]
         {
             "Add HazardSpawner to a scene GameObject.",
-            "Wire references to DifficultyManager, Camera, and Outcome Sink.",
+            "Wire DifficultyManager if this scene owns pacing directly.",
             "Populate Hazard Entries with prefabs and weights."
         },
         FirstProof = "Start the game and verify hazards begin spawning around the play area.",
-        AssignmentFields = new[] { "_hazardEntries", "_difficultyManager", "_targetCamera" }
+        AssignmentFields = new[] { nameof(_hazardEntries), nameof(_difficultyManager) },
+        ExpertAdvice = "Gameplay state, camera bounds, outcome sinks, and pickup burst surfaces are normally supplied by GameManager or the Pyralis runtime scope. Assign those service fields directly only for standalone test scenes or specialized custom orchestration."
     )]
     [DefaultExecutionOrder(-10)]
     public class HazardSpawner : MonoBehaviour, IRuntimeValidationProvider
@@ -45,11 +46,11 @@ namespace NeonBlack.Gameplay.Features.Hazards
             if (_difficultyManager == null)
                 yield return "Difficulty Manager is unassigned. Fallback timing will be used.";
 
-            if (_gameplayStateSource == null)
-                yield return "Gameplay State Source is unassigned. GameManager must provide it at runtime.";
+            if (_gameplayStateSource == null && _gameplayStateReader == null)
+                yield return "Gameplay state is not assigned yet. GameManager or the runtime scope normally supplies it; assign Gameplay State Source only for standalone spawner tests.";
 
-            if (_cameraBoundsSource == null && _targetCamera == null)
-                yield return "No camera or camera bounds source assigned.";
+            if (_cameraBoundsProvider == null)
+                yield return "Camera bounds are not assigned yet. Assign GameplaySessionBootstrap.cameraRigController so the runtime can supply visible camera bounds.";
         }
         [System.Serializable]
         public class HazardEntry
@@ -92,10 +93,6 @@ namespace NeonBlack.Gameplay.Features.Hazards
         private DifficultyManager _difficultyManager;
         [SerializeField, Tooltip("Optional gameplay state reader. When empty, the scene orchestrator should configure this component before play.")]
         private MonoBehaviour _gameplayStateSource;
-        [SerializeField, Tooltip("Optional camera bounds provider, usually CinemachineCameraRigController.")]
-        private MonoBehaviour _cameraBoundsSource;
-        [SerializeField, Tooltip("Camera used for spawn bounds when no camera bounds provider is configured.")]
-        private Camera _targetCamera;
         [SerializeField, Tooltip("Optional hazard outcome sink. When empty, the scene orchestrator should configure this component before play.")]
         private MonoBehaviour _hazardOutcomeSource;
         [SerializeField, Tooltip("Optional pickup burst surface for hazards that spawn collectibles.")]
@@ -122,7 +119,6 @@ namespace NeonBlack.Gameplay.Features.Hazards
         private void Awake()
         {
             _gameplayStateReader = _gameplayStateSource as IGameplayStateReader;
-            _cameraBoundsProvider = _cameraBoundsSource as ICameraBoundsProvider;
             _hazardOutcomeSink = _hazardOutcomeSource as IHazardOutcomeSink;
             _pickupBurstSpawnSurface = _pickupBurstSurfaceSource as IPickupBurstSpawnSurface;
             InitializePools();
@@ -611,19 +607,8 @@ namespace NeonBlack.Gameplay.Features.Hazards
 
         private bool TryGetCameraBounds(float margin, out CameraBounds2D bounds)
         {
-            ICameraBoundsProvider provider = _cameraBoundsProvider ?? _cameraBoundsSource as ICameraBoundsProvider;
-            if (provider != null && provider.TryGetCameraBounds2D(margin, out bounds))
+            if (_cameraBoundsProvider != null && _cameraBoundsProvider.TryGetCameraBounds2D(margin, out bounds))
                 return true;
-
-            if (_targetCamera != null)
-            {
-                bounds = new CameraBounds2D(
-                    _targetCamera,
-                    _targetCamera.transform.position,
-                    _targetCamera.orthographicSize * _targetCamera.aspect - margin,
-                    _targetCamera.orthographicSize - margin);
-                return true;
-            }
 
             bounds = default;
             return false;
@@ -631,7 +616,7 @@ namespace NeonBlack.Gameplay.Features.Hazards
 
         private bool HasRequiredRuntimeServices()
         {
-            if (_gameplayStateReader != null && _hazardOutcomeSink != null && (_cameraBoundsProvider != null || _targetCamera != null))
+            if (_gameplayStateReader != null && _hazardOutcomeSink != null && _cameraBoundsProvider != null)
                 return true;
 
             if (!_missingRuntimeServicesLogged)

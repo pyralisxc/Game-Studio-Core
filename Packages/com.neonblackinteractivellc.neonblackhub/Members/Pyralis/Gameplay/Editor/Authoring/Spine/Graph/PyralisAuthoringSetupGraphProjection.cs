@@ -836,6 +836,95 @@ namespace NeonBlack.Gameplay.Editor
             };
         }
 
+        public static IReadOnlyList<PyralisAuthoringValidationGraphSection> BuildHygieneSections(PyralisAuthoringSetupGraph graph)
+        {
+            if (graph == null)
+                return Array.Empty<PyralisAuthoringValidationGraphSection>();
+
+            return new[]
+            {
+                new PyralisAuthoringValidationGraphSection(
+                    "Unvalidated Graph Nodes",
+                    PyralisAuthoringGraphEvidenceState.Unknown,
+                    BuildHygieneUnknownRows(graph)),
+                new PyralisAuthoringValidationGraphSection(
+                    "Explicit Runtime / Scene Findings",
+                    PyralisAuthoringGraphEvidenceState.Missing,
+                    BuildHygieneEvidenceRows(graph)),
+                new PyralisAuthoringValidationGraphSection(
+                    "Proof Blocker Links",
+                    PyralisAuthoringGraphEvidenceState.Blocked,
+                    BuildHygieneProofBlockerRows(graph))
+            };
+        }
+
+        public static IReadOnlyList<PyralisAuthoringValidationGraphRow> BuildHygieneDetailRows(PyralisAuthoringSetupGraph graph)
+        {
+            if (graph == null)
+                return Array.Empty<PyralisAuthoringValidationGraphRow>();
+
+            List<PyralisAuthoringValidationGraphRow> rows = new List<PyralisAuthoringValidationGraphRow>();
+            IReadOnlyList<PyralisAuthoringValidationGraphSection> sections = BuildHygieneSections(graph);
+            for (int i = 0; i < sections.Count; i++)
+            {
+                PyralisAuthoringValidationGraphSection section = sections[i];
+                if (section == null || !section.HasRows)
+                    continue;
+
+                rows.AddRange(section.Rows);
+            }
+
+            return rows.ToArray();
+        }
+
+        private static IReadOnlyList<PyralisAuthoringValidationGraphRow> BuildHygieneUnknownRows(PyralisAuthoringSetupGraph graph)
+        {
+            return graph.Nodes
+                .Where(node => node != null
+                    && node.EvidenceState == PyralisAuthoringGraphEvidenceState.Unknown
+                    && node.Kind != PyralisAuthoringGraphNodeKind.Proof
+                    && node.Kind != PyralisAuthoringGraphNodeKind.Capability)
+                .Select(node => new PyralisAuthoringValidationGraphRow(node))
+                .ToArray();
+        }
+
+        private static IReadOnlyList<PyralisAuthoringValidationGraphRow> BuildHygieneEvidenceRows(PyralisAuthoringSetupGraph graph)
+        {
+            return graph.Nodes
+                .Where(node => node != null
+                    && node.Kind == PyralisAuthoringGraphNodeKind.ValidationEvidence
+                    && node.EvidenceState != PyralisAuthoringGraphEvidenceState.Ready
+                    && node.EvidenceState != PyralisAuthoringGraphEvidenceState.Optional)
+                .Select(node => new PyralisAuthoringValidationGraphRow(node))
+                .ToArray();
+        }
+
+        private static IReadOnlyList<PyralisAuthoringValidationGraphRow> BuildHygieneProofBlockerRows(PyralisAuthoringSetupGraph graph)
+        {
+            HashSet<string> seen = new HashSet<string>(StringComparer.Ordinal);
+            List<PyralisAuthoringValidationGraphRow> rows = new List<PyralisAuthoringValidationGraphRow>();
+
+            for (int i = 0; i < graph.Edges.Count; i++)
+            {
+                PyralisAuthoringGraphEdge edge = graph.Edges[i];
+                if (edge == null || edge.Kind != PyralisAuthoringGraphEdgeKind.BlockedBy)
+                    continue;
+
+                if (!graph.TryFindNode(edge.ToNodeId, out PyralisAuthoringGraphNode blocker)
+                    || blocker == null
+                    || blocker.EvidenceState == PyralisAuthoringGraphEvidenceState.Ready
+                    || blocker.EvidenceState == PyralisAuthoringGraphEvidenceState.Optional
+                    || !seen.Add(blocker.StableId))
+                {
+                    continue;
+                }
+
+                rows.Add(new PyralisAuthoringValidationGraphRow(blocker));
+            }
+
+            return rows.ToArray();
+        }
+
         public static IReadOnlyList<PyralisAuthoringValidationGraphRow> BuildValidationDetailRows(PyralisAuthoringSetupGraph graph)
         {
             if (graph == null)
@@ -1452,7 +1541,7 @@ namespace NeonBlack.Gameplay.Editor
             if (node.NativeSetup.Length > 0)
                 return node.NativeSetup[0];
 
-            return "Use Map for topology, Validate for the full issue list, and the Inspector for field-level edits.";
+            return "Use Map for topology, Hygiene for the full graph issue list, and the Inspector for field-level edits.";
         }
 
         private static string GetCurrentRouteName(PyralisAuthoringSetupGraph graph)
@@ -1657,7 +1746,7 @@ namespace NeonBlack.Gameplay.Editor
                 GameModeDefinition => "Inspect required feature modules, playfield, camera, board/turn data, and rule flags.",
                 ParticipantDefinition => "Inspect default pawn, input profile, seat index, and auto-join ownership.",
                 PawnDefinition => "Inspect pawn prefab, movement/input/presentation profiles, and feature modules.",
-                Component => "Use the Inspector for field values and Validate for concrete readiness issues.",
+                Component => "Use the Inspector for field values and Hygiene for concrete readiness issues.",
                 GameObject => "Select the most specific Pyralis component on this object when you need field-level meaning.",
                 _ => "Inspect the selected asset fields in Unity."
             };

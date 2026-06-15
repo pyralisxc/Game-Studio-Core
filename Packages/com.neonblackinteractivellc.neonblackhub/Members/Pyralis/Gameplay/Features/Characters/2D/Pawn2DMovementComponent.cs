@@ -15,7 +15,7 @@ namespace NeonBlack.Gameplay.Features.Characters
     [AuthoringContract(
         Capability = AuthoringCapability.Movement, 
         PriorityValueOverride = 50,
-        Relevance = "Tunable 2D movement module supporting top-down and platformer (side-view) modes.",
+        Relevance = "Tunable 2D movement module supporting top-down and side-view modes. PlayfieldProfile owns normal movement bounds; camera-visible bounds are an explicit arcade option.",
         Axioms = AuthoringWorldAxiom.Dimensions2D,
         NativeSetup = new[] 
         { 
@@ -23,10 +23,10 @@ namespace NeonBlack.Gameplay.Features.Characters
             "Keep on the same root as Motor2D.",
             "Configure LayerMasks for ground check if Jump is enabled."
         },
-        AssignmentFields = new[] { nameof(moveSpeed), nameof(dashEnabled), nameof(dashSpeed), nameof(dashCooldown), nameof(jumpEnabled), nameof(jumpVelocity), nameof(groundLayer), nameof(useCameraVisibleBoundsForMovement), nameof(cameraBoundsSource), nameof(targetCamera), nameof(gameplayStateSource) },
+        AssignmentFields = new[] { nameof(moveSpeed), nameof(dashEnabled), nameof(dashSpeed), nameof(dashCooldown), nameof(jumpEnabled), nameof(jumpVelocity), nameof(groundLayer), nameof(inputZones) },
         FirstProofTargetId = "proof.1p-pawn-movement",
         FirstProof = "Pawn responds to input in the scene. Use the Scene View to verify the Ground Check raycast (if side-view) is hitting the correct layer.",
-        ExpertAdvice = "Top-down route: leave Jump Enabled off and set Gravity Scale to 0. Side-view route: enable Jump, set Ground Layer, and ensure Rigidbody2D 'Collision Detection' is set to Continuous for high-speed dashes."
+        ExpertAdvice = "Top-down route: leave Jump Enabled off and set Gravity Scale to 0. Side-view route: enable Jump, set Ground Layer, and ensure Rigidbody2D 'Collision Detection' is set to Continuous for high-speed dashes. Leave camera-visible movement bounds off unless the camera view itself is the legal play area."
     )]
 [AddComponentMenu("NeonBlack/Gameplay/Characters/2D/Pawn 2D Movement Component")]
     [RequireComponent(typeof(Rigidbody2D))]
@@ -47,8 +47,8 @@ namespace NeonBlack.Gameplay.Features.Characters
                 if (jumpVelocity <= 0f) yield return "Jump Velocity must be greater than zero when side-view jump is enabled.";
                 if (gravityScale <= 0f) yield return "Gravity Scale must be greater than zero when side-view jump is enabled.";
             }
-            if (useCameraVisibleBoundsForMovement && cameraBoundsSource == null && targetCamera == null)
-                yield return "Use Camera Visible Bounds For Movement is enabled, but Camera Bounds Source and Target Camera are empty. Prefer PlayfieldProfile for legal movement bounds; use camera bounds only for screen-edge arcade behavior.";
+            if (useCameraVisibleBoundsForMovement && cameraBoundsProvider == null)
+                yield return "Use Camera Visible Bounds For Movement is enabled, but no camera bounds provider has been supplied by the session. Assign GameplaySessionBootstrap.cameraRigController; prefer PlayfieldProfile for normal legal movement bounds.";
         }
         [Header("Movement - Speed")]
         [SerializeField] private float moveSpeed = 4f;
@@ -64,10 +64,6 @@ namespace NeonBlack.Gameplay.Features.Characters
         [SerializeField] private bool screenWrap = false;
         [SerializeField, Tooltip("Use visible camera bounds as movement bounds when no PlayfieldProfile bounds are active. Leave off for normal authored movement; PlayfieldProfile owns legal movement space.")]
         private bool useCameraVisibleBoundsForMovement = false;
-        [SerializeField, Tooltip("Optional camera used for explicit camera-visible movement bounds when Use Camera Visible Bounds For Movement is enabled.")]
-        private Camera targetCamera;
-        [SerializeField, Tooltip("Optional camera bounds provider for explicit camera-visible movement bounds. Usually leave empty; PlayfieldProfile owns normal movement bounds.")]
-        private MonoBehaviour cameraBoundsSource;
         [SerializeField, Tooltip("Optional gameplay state reader. When empty, the scene orchestrator should configure this component before play.")]
         private MonoBehaviour gameplayStateSource;
 
@@ -100,7 +96,6 @@ namespace NeonBlack.Gameplay.Features.Characters
         private readonly Collider2D[] groundCheckHits = new Collider2D[8];
 
         private Rigidbody2D rb2d;
-        private Camera runtimeCamera;
         private ICameraBoundsProvider cameraBoundsProvider;
         private IPlayfieldBoundsProvider playfieldBoundsProvider;
         private IGameplayStateReader gameplayStateReader;
@@ -137,7 +132,7 @@ namespace NeonBlack.Gameplay.Features.Characters
         public bool RuntimeGrounded => isGrounded;
         public bool RuntimeJumpQueued => jumpQueued;
         public Object RuntimeGameplayStateSource => gameplayStateReader as Object;
-        public Object RuntimeCameraBoundsSource => cameraBoundsProvider as Object ?? runtimeCamera;
+        public Object RuntimeCameraBoundsSource => cameraBoundsProvider as Object;
         public Object RuntimePlayfieldBoundsSource => playfieldBoundsProvider as Object;
 
         public bool TryGetRuntimeGameplayActive(out bool isGameplayActive)
@@ -156,9 +151,7 @@ namespace NeonBlack.Gameplay.Features.Characters
             rb2d = GetComponent<Rigidbody2D>();
             rb2d.bodyType = RigidbodyType2D.Kinematic;
             rb2d.gravityScale = 0f;
-            cameraBoundsProvider = cameraBoundsSource as ICameraBoundsProvider;
             gameplayStateReader = gameplayStateSource as IGameplayStateReader;
-            runtimeCamera = targetCamera;
             model.Configure(BuildMotorConfig());
             ConfigureRigidbodyForMovementMode();
         }
@@ -430,19 +423,8 @@ namespace NeonBlack.Gameplay.Features.Characters
 
         private bool TryGetCameraBounds(out CameraBounds2D bounds)
         {
-            ICameraBoundsProvider provider = cameraBoundsProvider ?? cameraBoundsSource as ICameraBoundsProvider;
-            if (provider != null && provider.TryGetCameraBounds2D(TotalMargin, out bounds))
+            if (cameraBoundsProvider != null && cameraBoundsProvider.TryGetCameraBounds2D(TotalMargin, out bounds))
                 return true;
-
-            if (runtimeCamera != null)
-            {
-                bounds = new CameraBounds2D(
-                    runtimeCamera,
-                    runtimeCamera.transform.position,
-                    runtimeCamera.orthographicSize * runtimeCamera.aspect - TotalMargin,
-                    runtimeCamera.orthographicSize - TotalMargin);
-                return true;
-            }
 
             bounds = default;
             return false;

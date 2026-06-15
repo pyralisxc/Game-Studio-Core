@@ -18,6 +18,7 @@ using NeonBlack.Gameplay.Features.Scoring;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using VContainer;
 using VContainer.Unity;
@@ -40,13 +41,19 @@ namespace NeonBlack.Gameplay.Core.Runtime
     )]
     public class PyralisGameplayLifetimeScope : LifetimeScope
     {
+        private const string NetworkedSessionStateServiceTypeName = "NeonBlack.Gameplay.Networking.Participants.NetworkedSessionStateService, NeonBlack.Gameplay.Networking";
+        private const string NetworkedParticipantRosterServiceTypeName = "NeonBlack.Gameplay.Networking.Participants.NetworkedParticipantRosterService, NeonBlack.Gameplay.Networking";
+        private const string NetworkedParticipantSpawnServiceTypeName = "NeonBlack.Gameplay.Networking.Participants.NetworkedParticipantSpawnService, NeonBlack.Gameplay.Networking";
+        private const string NetworkedSessionOwnershipServiceTypeName = "NeonBlack.Gameplay.Networking.Runtime.NetworkedSessionOwnershipService, NeonBlack.Gameplay.Networking";
+        private const string NetworkedParticipantAuthorityServiceTypeName = "NeonBlack.Gameplay.Networking.Runtime.NetworkedParticipantAuthorityService, NeonBlack.Gameplay.Networking";
+
         private bool _isConfigured;
         private SessionDefinition _sessionDefinition;
         private SessionStateService _sessionStateService;
         private ParticipantRosterService _participantRosterService;
         private ParticipantSpawnService _participantSpawnService;
         private ParticipantInputRouter _participantInputRouter;
-        private SceneLoader _sceneLoader;
+        private MonoBehaviour _sceneNavigatorSource;
         private TimeManager _timeManager;
         private CameraShake _cameraShake;
         private CinemachineCameraRigController _cameraRigController;
@@ -59,31 +66,61 @@ namespace NeonBlack.Gameplay.Core.Runtime
         [SerializeField] private ProgressionCurveDefinition progressionCurve;
 
         public bool InjectLoadedScenesOnBuild { get; set; } = true;
+        public ParticipantRosterService ParticipantRosterService => _participantRosterService;
 
         public void ConfigureRuntime(
             SessionDefinition sessionDefinition,
-            SessionStateService sessionStateService,
-            ParticipantRosterService participantRosterService,
-            ParticipantSpawnService participantSpawnService,
-            ParticipantInputRouter participantInputRouter,
-            SceneLoader sceneLoader,
+            Transform[] spawnPoints,
+            PlayerInputManager playerInputManager,
+            MonoBehaviour sceneNavigatorSource,
             TimeManager timeManager,
             CameraShake cameraShake,
             CinemachineCameraRigController cameraRigController,
-            ISessionOwnershipService sessionOwnershipService,
-            IParticipantAuthorityService participantAuthorityService)
+            SessionStateService sessionStateServiceOverride = null,
+            ParticipantRosterService participantRosterServiceOverride = null,
+            ParticipantSpawnService participantSpawnServiceOverride = null,
+            ParticipantInputRouter participantInputRouterOverride = null)
         {
             _sessionDefinition = sessionDefinition;
-            _sessionStateService = sessionStateService;
-            _participantRosterService = participantRosterService;
-            _participantSpawnService = participantSpawnService;
-            _participantInputRouter = participantInputRouter;
-            _sceneLoader = sceneLoader;
+            _sceneNavigatorSource = sceneNavigatorSource;
             _timeManager = timeManager;
             _cameraShake = cameraShake;
             _cameraRigController = cameraRigController;
-            _sessionOwnershipService = sessionOwnershipService;
-            _participantAuthorityService = participantAuthorityService;
+            bool useNetcodeServices = sessionDefinition != null && sessionDefinition.networkMode != GameplayNetworkMode.LocalOnly;
+
+            _sessionStateService = ResolveCoreComponent(
+                sessionStateServiceOverride,
+                "SessionStateService",
+                useNetcodeServices ? NetworkedSessionStateServiceTypeName : null);
+            _sessionStateService.SetSessionDefinition(sessionDefinition);
+
+            _participantRosterService = ResolveCoreComponent(
+                participantRosterServiceOverride,
+                "ParticipantRosterService",
+                useNetcodeServices ? NetworkedParticipantRosterServiceTypeName : null);
+            _participantRosterService.SetSessionDefinition(sessionDefinition);
+
+            _participantSpawnService = ResolveCoreComponent(
+                participantSpawnServiceOverride,
+                "ParticipantSpawnService",
+                useNetcodeServices ? NetworkedParticipantSpawnServiceTypeName : null);
+            _participantSpawnService.SetRosterService(_participantRosterService);
+            _participantSpawnService.SetSessionStateService(_sessionStateService);
+            _participantSpawnService.SetSpawnPoints(spawnPoints);
+            _participantSpawnService.SetCameraBoundsProvider(cameraRigController);
+            _participantSpawnService.SetPlayfieldBoundsProvider(sessionDefinition?.defaultGameMode?.playfieldProfile);
+
+            _participantInputRouter = ResolveCoreComponent(
+                participantInputRouterOverride,
+                "ParticipantInputRouter",
+                null);
+            _participantInputRouter.SetSessionDefinition(sessionDefinition);
+            _participantInputRouter.SetRosterService(_participantRosterService);
+            _participantInputRouter.SetPlayerInputManager(playerInputManager);
+
+            ParticipantQueryUtility.Initialize(_participantRosterService, _participantRosterService);
+            _sessionOwnershipService = ResolveOrCreateSessionOwnershipService(useNetcodeServices);
+            _participantAuthorityService = ResolveOrCreateParticipantAuthorityService(useNetcodeServices);
             _featureServicePolicy = PyralisRuntimeFeatureServicePolicy.Resolve(sessionDefinition);
             _isConfigured = true;
         }
@@ -124,14 +161,25 @@ namespace NeonBlack.Gameplay.Core.Runtime
 
         private void RegisterCoreSceneServices(IContainerBuilder builder)
         {
-            var sceneLoader = _sceneLoader != null ? _sceneLoader : FindServiceInHierarchy<SceneLoader>();
             var timeManager = _timeManager != null ? _timeManager : FindServiceInHierarchy<TimeManager>();
             var cameraShake = _cameraShake != null ? _cameraShake : FindServiceInHierarchy<CameraShake>();
 
-            RegisterComponent(builder, sceneLoader);
+            RegisterSceneNavigator(builder);
             RegisterComponent(builder, timeManager);
             RegisterComponent(builder, cameraShake);
             RegisterComponent(builder, _cameraRigController);
+        }
+
+        private void RegisterSceneNavigator(IContainerBuilder builder)
+        {
+            ISceneNavigator navigator = _sceneNavigatorSource as ISceneNavigator;
+            if (navigator == null && _sceneNavigatorSource != null)
+                navigator = _sceneNavigatorSource.GetComponent<ISceneNavigator>();
+            if (navigator == null)
+                navigator = FindServiceInHierarchy<ISceneNavigator>();
+
+            if (navigator is Component component)
+                RegisterComponent(builder, component);
         }
 
         private void RegisterFeatureServices(IContainerBuilder builder)
@@ -345,6 +393,58 @@ namespace NeonBlack.Gameplay.Core.Runtime
         private T FindServiceInHierarchy<T>() where T : class
         {
             return GetComponentInChildren<T>(true);
+        }
+
+        private T ResolveCoreComponent<T>(T overrideComponent, string serviceName, string preferredTypeName)
+            where T : Component
+        {
+            if (overrideComponent != null)
+                return overrideComponent;
+
+            T existing = FindServiceInHierarchy<T>();
+            if (existing != null)
+                return existing;
+
+            GameObject go = new GameObject(serviceName);
+            go.transform.SetParent(transform, false);
+
+            if (!string.IsNullOrWhiteSpace(preferredTypeName))
+            {
+                Type preferredType = Type.GetType(preferredTypeName);
+                if (preferredType != null && typeof(T).IsAssignableFrom(preferredType) && typeof(Component).IsAssignableFrom(preferredType))
+                    return (T)go.AddComponent(preferredType);
+
+                Debug.LogWarning($"[PyralisGameplayLifetimeScope] Networked service type `{preferredTypeName}` was not found. Falling back to `{typeof(T).Name}`.", this);
+            }
+
+            return go.AddComponent<T>();
+        }
+
+        private static ISessionOwnershipService ResolveOrCreateSessionOwnershipService(bool useNetcodeServices)
+        {
+            if (useNetcodeServices && TryCreateServiceInstance(NetworkedSessionOwnershipServiceTypeName, out ISessionOwnershipService networkedService))
+                return networkedService;
+
+            return new LocalSessionOwnershipService();
+        }
+
+        private static IParticipantAuthorityService ResolveOrCreateParticipantAuthorityService(bool useNetcodeServices)
+        {
+            if (useNetcodeServices && TryCreateServiceInstance(NetworkedParticipantAuthorityServiceTypeName, out IParticipantAuthorityService networkedService))
+                return networkedService;
+
+            return new LocalParticipantAuthorityService();
+        }
+
+        private static bool TryCreateServiceInstance<T>(string typeName, out T service) where T : class
+        {
+            service = null;
+            Type type = Type.GetType(typeName);
+            if (type == null || !typeof(T).IsAssignableFrom(type))
+                return false;
+
+            service = Activator.CreateInstance(type) as T;
+            return service != null;
         }
     }
 }

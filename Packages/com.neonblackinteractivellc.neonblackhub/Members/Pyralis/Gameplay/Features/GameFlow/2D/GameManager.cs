@@ -40,12 +40,12 @@ public interface IGameplaySessionFlow : IGameplayStateReader
     { 
         "Add GameManager to the scene.",
         "Wire system references (Score, Hazards, Pickups, etc.).",
-        "Assign player controller reference."
+        "For participant-spawned pawns, let the roster provide active controllers. Use Player Controllers only for standalone compatibility scenes."
     },
     FirstProof = "Start the game and verify the session initializes and transitions to the Playing state."
 ,
-        AssignmentFields = new[] { "playerRoot", "scoreService", "hazardSpawner" },
-        ExpertAdvice = "The GameManager is the 2D arcade orchestrator. It manages the lifecycle from Splash to Game Over. Use the inspector events to hook up UI and audio transitions.",
+        AssignmentFields = new[] { nameof(scoreManager), nameof(hazardSpawner), nameof(pickupSpawner), nameof(difficultyManager), nameof(playerControllers) },
+        ExpertAdvice = "The GameManager is the 2D arcade orchestrator. Prefer participant roster pawns for active players; use explicit Player Controllers only for hand-authored standalone compatibility scenes. Use inspector events to hook up UI and audio transitions.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/gameflow")]
 [AddComponentMenu("NeonBlack/Gameplay/Game Flow/2D Game Manager")]
 [DefaultExecutionOrder(-20)]
@@ -75,14 +75,8 @@ public class GameManager : MonoBehaviour
     [SerializeField, Tooltip("LevelRegistry asset. Required for random restart mode.")]
     private LevelRegistry levelRegistry;
 
-    [Header("Player")]
-    [SerializeField, Tooltip("Primary player GameObject reference.")]
-    private GameObject player;
-
-    [SerializeField, Tooltip("Primary 2D motor reference.")]
-    private Motor2D primaryPlayerController;
-
-    [SerializeField, Tooltip("Optional explicit player list for local multiplayer scenes. When empty, active roster pawns are used.")]
+    [Header("Standalone Compatibility")]
+    [SerializeField, Tooltip("Optional explicit 2D controller list for standalone scenes that do not use participant spawning. Participant-spawned scenes should leave this empty and use the roster.")]
     private Motor2D[] playerControllers;
 
     [SerializeField, Tooltip("Seconds to wait for the death animation before hiding the player.")]
@@ -99,6 +93,7 @@ public class GameManager : MonoBehaviour
     private ISceneNavigator _sceneNavigator;
     private IGameplaySettingsApplier _settings;
     private GameState _currentState;
+    private Motor2D _primaryPlayerController;
 
     public GameState CurrentState => _currentState;
     public bool IsGameplayActive => _currentState == GameState.Playing;
@@ -137,9 +132,6 @@ public class GameManager : MonoBehaviour
     {
         scoreManager ??= GetComponent<ParticipantScoreService>();
         difficultyManager ??= GetComponent<DifficultyManager>();
-
-        if (player != null && primaryPlayerController == null)
-            primaryPlayerController = ResolvePlayerController(player);
 
         RefreshTrackedPlayers(includeInactive: true);
         ConfigureRuntimeDependencies();
@@ -205,7 +197,7 @@ public class GameManager : MonoBehaviour
 
     public void PlayerDied()
     {
-        PlayerDied(primaryPlayerController);
+        PlayerDied(_primaryPlayerController);
     }
 
     public void PlayerDied(Motor2D deadPlayer)
@@ -228,9 +220,7 @@ public class GameManager : MonoBehaviour
 
     public bool TryHandleHazardImpact(GameObject target, GameObject source, Vector3 hitPoint)
     {
-        Motor2D deadPlayer = ResolvePlayerController(target);
-        if (deadPlayer == null)
-            deadPlayer = target != null ? target.GetComponentInParent<Motor2D>() : null;
+        Motor2D deadPlayer = target != null ? target.GetComponentInParent<Motor2D>() : null;
 
         if (deadPlayer == null)
             return false;
@@ -328,19 +318,13 @@ public class GameManager : MonoBehaviour
             RegisterRosterPlayers(includeInactive);
         }
 
-        if (primaryPlayerController == null && _trackedPlayerControllers.Count > 0)
-            primaryPlayerController = _trackedPlayerControllers[0];
-
-        if (player == null && primaryPlayerController != null)
-            player = primaryPlayerController.gameObject;
+        _primaryPlayerController = _trackedPlayerControllers.Count > 0 ? _trackedPlayerControllers[0] : null;
     }
 
     private void RegisterRosterPlayers(bool includeInactive)
     {
         if (_participantRosterService == null)
         {
-            if (player != null)
-                RegisterTrackedPlayer(ResolvePlayerController(player), includeInactive);
             return;
         }
 
@@ -377,13 +361,6 @@ public class GameManager : MonoBehaviour
 
         StillnessBonus2D stillnessBonus = controller.GetComponent<StillnessBonus2D>();
         stillnessBonus?.ConfigureRuntime(this, scoreManager);
-    }
-
-    private static Motor2D ResolvePlayerController(GameObject playerObject)
-    {
-        return playerObject != null
-            ? playerObject.GetComponent<Motor2D>()
-            : null;
     }
 
     private void ConfigureRuntimeDependencies()

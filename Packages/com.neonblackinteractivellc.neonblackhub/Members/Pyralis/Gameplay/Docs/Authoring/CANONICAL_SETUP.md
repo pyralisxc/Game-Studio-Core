@@ -37,7 +37,7 @@ On `GameplaySessionBootstrap`, assign:
 - `Spawn Points` - optional Transforms where pawn-backed participants should appear
 - `Player Input Manager` - optional, only when using local join or Unity Input System player joining
 - `Camera Rig Controller` - optional, assign the `Camera Root` when using Pyralis camera control or camera-aware visible bounds
-- `Camera Bounds Source` - optional, use only for specialized custom `ICameraBoundsProvider` services; the `CinemachineCameraRigController` provides bounds when assigned as the camera rig
+- `Camera Rig Controller` is the single normal camera-bounds entry. Camera-aware runtime systems consume the assigned `CinemachineCameraRigController` as their `ICameraBoundsProvider`.
 
 With the standard bootstrap-owned service path enabled, the bootstrap creates these child objects at runtime when they are not assigned:
 

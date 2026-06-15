@@ -1938,6 +1938,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
             string sceneLoaderSource = File.ReadAllText(Path.Combine(gameplayRoot, "Core", "SceneLoader.cs"));
             string sceneNavigatorSource = File.ReadAllText(Path.Combine(gameplayRoot, "Core", "SceneNavigator.cs"));
             string mainMenuSource = File.ReadAllText(Path.Combine(gameplayRoot, "Core", "Navigation", "UI", "MainMenuManager.cs"));
+            string bootstrapSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Platform", "Session", "GameplaySessionBootstrap.cs"));
+            string lifetimeScopeSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Platform", "Composition", "PyralisGameplayLifetimeScope.cs"));
             string gameManagerSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "GameFlow", "2D", "GameManager.cs"));
             string inputHandlerSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Input", "2D", "PlayerInputHandler.cs"));
             string inputZoneEditorSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Input", "2D", "Editor", "Inspectors", "InputZoneSetEditor.cs"));
@@ -1949,6 +1951,10 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(sceneFaderSource.Contains("ISceneNavigator"), Is.True);
             Assert.That(sceneLoaderSource.Contains("ISceneNavigator"), Is.True);
             Assert.That(sceneNavigatorSource.Contains("SceneLoader.Instance"), Is.False);
+            Assert.That(lifetimeScopeSource.Contains("RegisterSceneNavigator"), Is.True);
+            Assert.That(lifetimeScopeSource.Contains("FindServiceInHierarchy<ISceneNavigator>"), Is.True);
+            Assert.That(bootstrapSource.Contains("sceneNavigatorSource"), Is.True);
+            Assert.That(bootstrapSource.Contains("SceneLoader sceneLoader"), Is.False);
 
             Assert.That(mainMenuSource.Contains("sceneNavigatorSource"), Is.True);
             Assert.That(mainMenuSource.Contains("SceneLoader.Instance"), Is.False);

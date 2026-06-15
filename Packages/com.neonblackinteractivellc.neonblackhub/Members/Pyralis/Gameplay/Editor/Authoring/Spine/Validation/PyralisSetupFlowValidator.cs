@@ -888,7 +888,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
 
             return ready
                 ? "Scene has an ICameraBoundsProvider for the selected camera/playfield proof."
-                : "Selected intent includes camera or bounds behavior. Assign CinemachineCameraRigController to Bootstrap > Camera Rig Controller, or use Camera Bounds Source only for a specialized custom ICameraBoundsProvider.";
+                : "Selected intent includes camera or bounds behavior. Assign CinemachineCameraRigController to GameplaySessionBootstrap > Camera Rig Controller; camera-aware runtime systems consume that single camera bounds provider.";
         }
 
         private static string GetScoreServiceMessage(bool setupReady, bool required, bool ready)

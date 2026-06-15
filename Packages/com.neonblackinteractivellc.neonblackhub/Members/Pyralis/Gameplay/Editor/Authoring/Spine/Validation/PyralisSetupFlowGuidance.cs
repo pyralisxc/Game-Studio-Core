@@ -197,7 +197,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                         "Assign",
                         PyralisAuthoringActionSurface.Inspector,
                         "GameplaySessionBootstrap",
-                        "the same CinemachineCameraRigController in Camera Rig Controller; only use Camera Bounds Source for a specialized custom ICameraBoundsProvider",
+                        "the same CinemachineCameraRigController in GameplaySessionBootstrap > Camera Rig Controller; camera-aware runtime systems consume that single camera bounds provider",
                         "camera-aware spawners, hazards, pickups, and framing can read visible bounds; pawn movement uses PlayfieldProfile unless camera-visible bounds are explicitly enabled on the pawn");
                 case PyralisSetupFlowStepId.AssignPlayfieldProfile:
                     return PyralisAuthoringNativeActionFactory.CreateAssignmentAction(
@@ -290,7 +290,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                         "Inspect",
                         PyralisAuthoringActionSurface.Inspector,
                         "the object or asset named by the readiness issue",
-                        "clear required scene/prefab readiness issues before entering Play Mode; use Validate for the detailed list and Inspector Add Component or object picker for the named handoff",
+                        "clear required scene/prefab readiness issues before entering Play Mode; use Hygiene for the detailed graph list and Inspector Add Component or object picker for the named handoff",
                         "Play Mode is only testing a fully wired proof path");
                 default:
                     return null;

@@ -1,4 +1,3 @@
-using System;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
 
@@ -103,105 +102,51 @@ namespace NeonBlack.Gameplay.Core.Runtime
                 if (module == null)
                     continue;
 
-                string moduleText = JoinSignals(module.moduleId, module.authoringCategory, module.featureTags);
-                usesCombat |= Contains(moduleText, "combat")
-                    || Contains(moduleText, "weapon")
-                    || Contains(moduleText, "projectile")
-                    || Contains(moduleText, "hazard");
-                usesEnemy |= Contains(moduleText, "enemy")
-                    || Contains(moduleText, "npc");
-                usesRpg |= Contains(moduleText, "rpg")
-                    || Contains(moduleText, "inventory")
-                    || Contains(moduleText, "quest")
-                    || Contains(moduleText, "dialogue")
-                    || Contains(moduleText, "vendor")
-                    || Contains(moduleText, "equipment")
-                    || Contains(moduleText, "skill");
-                usesGameFlow |= Contains(moduleText, "gameflow")
-                    || Contains(moduleText, "game flow")
-                    || Contains(moduleText, "sessionflow")
-                    || Contains(moduleText, "session flow")
-                    || Contains(moduleText, "arcade")
-                    || Contains(moduleText, "loop")
-                    || Contains(moduleText, "respawn")
-                    || Contains(moduleText, "hazard")
-                    || Contains(moduleText, "pickup")
-                    || Contains(moduleText, "collectible")
-                    || Contains(moduleText, "score");
-                usesScoring |= Contains(moduleText, "score")
-                    || Contains(moduleText, "scoring")
-                    || Contains(moduleText, "leaderboard")
-                    || Contains(moduleText, "objective")
-                    || Contains(moduleText, "pickup")
-                    || Contains(moduleText, "collectible")
-                    || Contains(moduleText, "reward");
-                usesFeedback |= Contains(moduleText, "feedback")
-                    || Contains(moduleText, "hud")
-                    || Contains(moduleText, "ui")
-                    || Contains(moduleText, "floating")
-                    || Contains(moduleText, "popup")
-                    || Contains(moduleText, "damage")
-                    || Contains(moduleText, "heal")
-                    || Contains(moduleText, "status")
-                    || Contains(moduleText, "alert");
-
                 ResolvedAuthoringContract contract = ResolvedAuthoringContractRegistry.FindByModuleId(module.moduleId);
-                if (contract == null)
-                    continue;
-
-                usesCombat |= contract.Capability.HasFlag(AuthoringCapability.Combat)
-                    || contract.Capability.HasFlag(AuthoringCapability.CombatState)
-                    || contract.Capability.HasFlag(AuthoringCapability.CombatSensors)
-                    || contract.Capability.HasFlag(AuthoringCapability.RangedFlow);
-                usesEnemy |= Contains(contract.AuthoringLane, "enemy")
-                    || Contains(contract.AuthoringCategory, "enemy");
-                usesRpg |= Contains(contract.AuthoringLane, "rpg")
-                    || Contains(contract.AuthoringCategory, "rpg")
-                    || Contains(contract.Relevance, "inventory")
-                    || Contains(contract.Relevance, "quest")
-                    || Contains(contract.Relevance, "dialogue")
-                    || Contains(contract.Relevance, "vendor")
-                    || Contains(contract.Relevance, "equipment")
-                    || Contains(contract.Relevance, "skill");
-                usesGameFlow |= Contains(contract.AuthoringLane, "gameflow")
-                    || Contains(contract.AuthoringLane, "game flow")
-                    || Contains(contract.AuthoringCategory, "gameflow")
-                    || Contains(contract.AuthoringCategory, "game flow")
-                    || Contains(contract.Relevance, "session flow")
-                    || Contains(contract.Relevance, "game loop")
-                    || Contains(contract.Relevance, "respawn");
-                usesScoring |= contract.Capability.HasFlag(AuthoringCapability.Scoring)
-                    || Contains(contract.AuthoringLane, "scoring")
-                    || Contains(contract.AuthoringCategory, "scoring")
-                    || Contains(contract.Relevance, "score")
-                    || Contains(contract.Relevance, "leaderboard")
-                    || Contains(contract.Relevance, "objective");
-                usesFeedback |= contract.Capability.HasFlag(AuthoringCapability.UI)
-                    || contract.Capability.HasFlag(AuthoringCapability.VFX)
-                    || Contains(contract.AuthoringLane, "feedback")
-                    || Contains(contract.AuthoringCategory, "feedback")
-                    || Contains(contract.Relevance, "feedback")
-                    || Contains(contract.Relevance, "hud")
-                    || Contains(contract.Relevance, "popup");
+                if (contract != null)
+                {
+                    AppendContractSignals(
+                        contract,
+                        ref usesCombat,
+                        ref usesEnemy,
+                        ref usesRpg,
+                        ref usesGameFlow,
+                        ref usesScoring,
+                        ref usesFeedback);
+                }
             }
         }
 
-        private static string JoinSignals(string first, string second, string[] rest)
+        private static void AppendContractSignals(
+            ResolvedAuthoringContract contract,
+            ref bool usesCombat,
+            ref bool usesEnemy,
+            ref bool usesRpg,
+            ref bool usesGameFlow,
+            ref bool usesScoring,
+            ref bool usesFeedback)
         {
-            string result = (first ?? string.Empty) + " " + (second ?? string.Empty);
-            if (rest == null)
-                return result;
-
-            for (int i = 0; i < rest.Length; i++)
-                result += " " + (rest[i] ?? string.Empty);
-
-            return result;
-        }
-
-        private static bool Contains(string value, string token)
-        {
-            return !string.IsNullOrWhiteSpace(value)
-                && value.IndexOf(token, StringComparison.OrdinalIgnoreCase) >= 0;
+            usesCombat |= contract.Capability.HasFlag(AuthoringCapability.Combat)
+                || contract.Capability.HasFlag(AuthoringCapability.CombatState)
+                || contract.Capability.HasFlag(AuthoringCapability.CombatSensors)
+                || contract.Capability.HasFlag(AuthoringCapability.RangedFlow);
+            usesEnemy |= contract.Capability.HasFlag(AuthoringCapability.TacticsAggressive)
+                || contract.Capability.HasFlag(AuthoringCapability.TacticsDefensive);
+            usesRpg |= contract.Capability.HasFlag(AuthoringCapability.Rpg)
+                || contract.Capability.HasFlag(AuthoringCapability.Inventory)
+                || contract.Capability.HasFlag(AuthoringCapability.Quests)
+                || contract.Capability.HasFlag(AuthoringCapability.Dialogue)
+                || contract.Capability.HasFlag(AuthoringCapability.Vendors)
+                || contract.Capability.HasFlag(AuthoringCapability.SkillTree)
+                || contract.Capability.HasFlag(AuthoringCapability.Progression)
+                || contract.Capability.HasFlag(AuthoringCapability.Stats);
+            usesGameFlow |= contract.Capability.HasFlag(AuthoringCapability.Rules)
+                || contract.Capability.HasFlag(AuthoringCapability.Participants);
+            usesScoring |= contract.Capability.HasFlag(AuthoringCapability.Scoring)
+                || contract.Capability.HasFlag(AuthoringCapability.Rules);
+            usesFeedback |= contract.Capability.HasFlag(AuthoringCapability.UI)
+                || contract.Capability.HasFlag(AuthoringCapability.VFX)
+                || contract.Capability.HasFlag(AuthoringCapability.Animation);
         }
     }
 }

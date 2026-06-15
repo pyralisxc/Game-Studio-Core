@@ -115,7 +115,7 @@ namespace NeonBlack.Gameplay.Editor
             if (currentStep != null && !string.IsNullOrWhiteSpace(currentStep.Message))
                 return currentStep.Message;
 
-            return "Use the Inspector for this selected asset, and use Map or Validate to see how it participates in the resolved setup graph.";
+            return "Use the Inspector for this selected asset, and use Map or Hygiene to see how it participates in the resolved setup graph.";
         }
 
         private static void DrawGameObjectContext(GameObject gameObject)

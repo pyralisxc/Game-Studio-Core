@@ -325,6 +325,9 @@ namespace NeonBlack.Gameplay.Editor
                 if (!isSerialized || field.GetCustomAttribute<HideInInspector>() != null)
                     continue;
 
+                if (IsRuntimeServiceReferenceField(type, field))
+                    continue;
+
                 // Support for PropertyOrder (common in many Unity inspector frameworks like Odin or custom ones)
                 // If the field has a high order or is marked as a "Customization" moment by naming or type, categorize it accordingly.
                 bool isCustomization = IsCustomizationMoment(field.FieldType);
@@ -344,6 +347,35 @@ namespace NeonBlack.Gameplay.Editor
                 else
                     assignmentFields.Add(fieldEntry);
             }
+        }
+
+        private static bool IsRuntimeServiceReferenceField(Type declaringType, FieldInfo field)
+        {
+            string fieldName = field.Name.TrimStart('_');
+
+            if (declaringType != null
+                && declaringType.Name == "CinemachineCameraRigController"
+                && string.Equals(fieldName, "targetCamera", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            if (string.Equals(fieldName, "gameplayStateSource", StringComparison.Ordinal)
+                || string.Equals(fieldName, "cameraBoundsSource", StringComparison.Ordinal)
+                || string.Equals(fieldName, "hazardOutcomeSource", StringComparison.Ordinal)
+                || string.Equals(fieldName, "pickupBurstSurfaceSource", StringComparison.Ordinal)
+                || string.Equals(fieldName, "scoreAwardSource", StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            if (string.Equals(fieldName, "targetCamera", StringComparison.Ordinal)
+                && typeof(Camera).IsAssignableFrom(field.FieldType))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         private static bool IsCustomizationMoment(Type type)

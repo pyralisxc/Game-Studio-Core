@@ -10,12 +10,12 @@ namespace NeonBlack.Gameplay.Core.Runtime
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Setup,
-        Relevance = "Lightweight static helper for simple scene loads. Prefers ISceneNavigator when available.",
+        Relevance = "Static fallback for direct SceneManager loads when no authored ISceneNavigator route exists.",
         FirstProof = "Calling LoadScene correctly changes the active Unity scene.",
-        ExpertAdvice = "SceneNavigator is a static bypass for logic scripts. For production flows with UI faders, prefer injecting ISceneNavigator (SceneLoader) into your systems.",
+        ExpertAdvice = "SceneNavigator is a static bypass for utility scripts. User-facing runtime components should depend on ISceneNavigator, with SceneFader as the current menu/game-shell route and SceneLoader as a lightweight fallback.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/navigation"
     )]
-public static class SceneNavigator
+    public static class SceneNavigator
     {
         public static void LoadScene(string sceneName)
         {

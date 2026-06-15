@@ -293,7 +293,7 @@ Every row or issue should eventually have:
 
 Prefer durable issue categories or codes over keyword grouping. Text can change; issue meaning should not.
 
-`PyralisSetupFlowStep` rows should carry stable ids and native action metadata. The display label is for humans, not for routing behavior. Overview, Map, Validate, tests, and future feature contributors should prefer the step id, work intent, and `PyralisAuthoringNativeAction` over string-matching labels or message text. Message text can still specialize a row, but it should not be the only source of meaning.
+`PyralisSetupFlowStep` rows should carry stable ids and native action metadata. The display label is for humans, not for routing behavior. Overview, Map, Hygiene, tests, and future feature contributors should prefer the step id, work intent, and `PyralisAuthoringNativeAction` over string-matching labels or message text. Message text can still specialize a row, but it should not be the only source of meaning.
 
 Recommended setup should not all land in the same visual priority. Use work intent to keep the flow calm:
 
@@ -340,7 +340,7 @@ Intent should stay studio-wide:
 - explain what the toggles imply without creating assets or choosing design taste
 - hand off to Project, Hierarchy, Inspector, Prefab, Input, Animation, UI, and Play Mode surfaces only when the route has enough declared intent
 
-Intent is not the whole setup flow and not the proof itself. It names the project-wide world/control/capability shape so Overview and Guide can focus the next route proof with clearer context. Map, Validate, Facts, and native Unity Inspectors still read what the current setup actually proves.
+Intent is not the whole setup flow and not the proof itself. It names the project-wide world/control/capability shape so Overview and Guide can focus the next route proof with clearer context. Map, Hygiene, Facts, and native Unity Inspectors still read what the current setup actually proves.
 
 ### Overview
 
@@ -371,7 +371,7 @@ Cameron should be able to test the Authoring Window flow with one active route w
 4. Clear `Do Now` items before trusting Play Mode.
 5. Use `Proof Enhancers` only when the first proof would be hard to read without them.
 6. Leave optional capabilities alone unless the current proof specifically needs that capability.
-7. Use `Inspect Best Target`, `Open Map`, and `Open Validate` to move between object inspection, dependency mapping, and issue triage.
+7. Use `Inspect Best Target`, `Open Map`, and `Open Hygiene` to move between object inspection, dependency mapping, and issue triage.
 8. Press Play only for the first proof named by Overview.
 
 The flow is solid enough for product testing when a route can move from `Do Now` to a first proof without the user asking which object to inspect next.

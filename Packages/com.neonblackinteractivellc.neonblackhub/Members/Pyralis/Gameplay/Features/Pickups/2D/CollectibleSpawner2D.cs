@@ -23,11 +23,11 @@ namespace NeonBlack.Gameplay.Features.Pickups
     { 
         "Add to the scene Spawners root.",
         "Assign a Collectible2D prefab.",
-        "Assign Camera Bounds Source and Gameplay State Source."
+        "Tune pool, spawn, and minimum-on-screen values."
     },
-    AssignmentFields = new[] { nameof(_crumbPrefab), nameof(_poolSize), nameof(_initialCrumbCount), nameof(_spawnInterval), nameof(_minimumOnScreen), nameof(_spawnMargin), nameof(_cameraBoundsSource), nameof(_targetCamera), nameof(_gameplayStateSource) },
+    AssignmentFields = new[] { nameof(_crumbPrefab), nameof(_poolSize), nameof(_initialCrumbCount), nameof(_spawnInterval), nameof(_minimumOnScreen), nameof(_spawnMargin) },
     FirstProof = "Enter Play Mode and verify collectibles appear across the screen.",
-    ExpertAdvice = "Use a pool size that covers the maximum expected collectibles. Higher minimum on-screen counts ensure the player always has something to collect."
+    ExpertAdvice = "Use a pool size that covers the maximum expected collectibles. Higher minimum-on-screen counts ensure the player always has something to collect. Gameplay state and camera bounds are normally supplied by GameManager or the Pyralis runtime scope; assign those fields directly only for standalone spawner tests."
 )]
 [DefaultExecutionOrder(-10)]
 [AddComponentMenu("NeonBlack/Gameplay/Pickups/Collectible Spawner 2D")]
@@ -37,8 +37,8 @@ public class CollectibleSpawner2D : MonoBehaviour, IPickupSpawnSurface, IPickupB
     {
         if (_crumbPrefab == null) yield return "Crumb Prefab is unassigned.";
         if (_poolSize < _initialCrumbCount) yield return "Pool Size is smaller than Initial Crumb Count.";
-        if (_cameraBoundsSource == null && _targetCamera == null) yield return "No camera or camera bounds source assigned.";
-        if (_gameplayStateSource == null) yield return "Gameplay State Source is unassigned.";
+        if (_cameraBoundsProvider == null) yield return "Camera bounds are not assigned yet. Assign GameplaySessionBootstrap.cameraRigController so the runtime can supply visible camera bounds.";
+        if (_gameplayStateSource == null && _gameplayStateReader == null) yield return "Gameplay state is not assigned yet. GameManager or the runtime scope normally supplies it; assign Gameplay State Source only for standalone spawner tests.";
     }
     [Header("Collectible Prefab")]
     [SerializeField, Tooltip("The collectible prefab (must have Collectible2D component).")]
@@ -80,11 +80,6 @@ public class CollectibleSpawner2D : MonoBehaviour, IPickupSpawnSurface, IPickupB
     private MonoBehaviour _spawnSurfaceSource;
     [SerializeField, Tooltip("Optional gameplay state reader. When empty, the scene orchestrator should configure this component before play.")]
     private MonoBehaviour _gameplayStateSource;
-    [SerializeField, Tooltip("Optional camera bounds provider, usually CinemachineCameraRigController.")]
-    private MonoBehaviour _cameraBoundsSource;
-    [SerializeField, Tooltip("Camera used for spawn bounds when no camera bounds provider is configured.")]
-    private Camera _targetCamera;
-
     private Queue<Collectible2D> _pool = new Queue<Collectible2D>();
     // HashSet instead of List: ReturnCollectible calls Remove() which is O(n) on a List.
     // At 200-1000 collectibles with mass hazard sweeps, O(1) HashSet removal matters.
@@ -111,7 +106,6 @@ public class CollectibleSpawner2D : MonoBehaviour, IPickupSpawnSurface, IPickupB
     {
         _spawnSurface = ResolveSpawnSurface();
         _gameplayStateReader = _gameplayStateSource as IGameplayStateReader;
-        _cameraBoundsProvider = _cameraBoundsSource as ICameraBoundsProvider;
         if (_crumbPrefab == null)
         {
             Debug.LogError("[CollectibleSpawner2D] _crumbPrefab is not assigned in the Inspector. Drag your Collectible2D prefab into the CollectibleSpawner2D's _crumbPrefab slot.");
@@ -346,19 +340,8 @@ public class CollectibleSpawner2D : MonoBehaviour, IPickupSpawnSurface, IPickupB
 
     private bool TryGetCameraBounds(float margin, out CameraBounds2D bounds)
     {
-        ICameraBoundsProvider provider = _cameraBoundsProvider ?? _cameraBoundsSource as ICameraBoundsProvider;
-        if (provider != null && provider.TryGetCameraBounds2D(margin, out bounds))
+        if (_cameraBoundsProvider != null && _cameraBoundsProvider.TryGetCameraBounds2D(margin, out bounds))
             return true;
-
-        if (_targetCamera != null)
-        {
-            bounds = new CameraBounds2D(
-                _targetCamera,
-                _targetCamera.transform.position,
-                _targetCamera.orthographicSize * _targetCamera.aspect - margin,
-                _targetCamera.orthographicSize - margin);
-            return true;
-        }
 
         bounds = default;
         return false;
@@ -366,13 +349,13 @@ public class CollectibleSpawner2D : MonoBehaviour, IPickupSpawnSurface, IPickupB
 
     private bool HasRequiredRuntimeServices()
     {
-        if (_gameplayStateReader != null && (_cameraBoundsProvider != null || _targetCamera != null))
+        if (_gameplayStateReader != null && _cameraBoundsProvider != null)
             return true;
 
         if (!_missingRuntimeServicesLogged)
         {
             _missingRuntimeServicesLogged = true;
-            Debug.LogError("[CollectibleSpawner2D] Missing runtime services. Configure a gameplay state reader and a camera bounds provider or target camera.", this);
+            Debug.LogError("[CollectibleSpawner2D] Missing runtime services. Configure a gameplay state reader and assign GameplaySessionBootstrap.cameraRigController so camera bounds are supplied.", this);
         }
 
         return false;

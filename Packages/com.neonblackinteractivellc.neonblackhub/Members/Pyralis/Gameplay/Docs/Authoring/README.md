@@ -38,7 +38,7 @@ The authoring system should have one operating model:
 Gameplay code / authored assets
   -> contracts + reflection + dependency tree + scene evidence + validators + grammar
       -> resolved setup graph
-          -> Overview / Intent / Guide / Map / Validate / Facts / Inspector handoffs
+          -> Overview / Intent / Guide / Map / Hygiene / Facts / Inspector handoffs
 ```
 
 Use `AUTHORING_BLUEPRINT.md` as the canonical map for where information comes from and how cleanup closes. In short:

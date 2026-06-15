@@ -20,7 +20,7 @@ namespace NeonBlack.Gameplay.Editor
             Intent,
             Guide,
             Map,
-            Validate,
+            Hygiene,
             Facts
         }
 
@@ -45,7 +45,7 @@ namespace NeonBlack.Gameplay.Editor
         [SerializeField] private Vector2 _intentScroll;
         [SerializeField] private Vector2 _intentCapabilityScroll;
         [SerializeField] private Vector2 _mapScroll;
-        [SerializeField] private Vector2 _validateScroll;
+        [SerializeField] private Vector2 _hygieneScroll;
         [SerializeField] private Vector2 _guideScroll;
         [SerializeField] private Vector2 _factsScroll;
         private double _lastInspectorRepaintTime;
@@ -109,7 +109,7 @@ namespace NeonBlack.Gameplay.Editor
                 "tabOverview" => AuthoringWindowMode.Overview,
                 "tabIntent" => AuthoringWindowMode.Intent,
                 "tabMap" => AuthoringWindowMode.Map,
-                "tabValidate" => AuthoringWindowMode.Validate,
+                "tabHygiene" => AuthoringWindowMode.Hygiene,
                 "tabGuide" => AuthoringWindowMode.Guide,
                 "tabFacts" => AuthoringWindowMode.Facts,
                 _ => _mode
@@ -190,7 +190,7 @@ namespace NeonBlack.Gameplay.Editor
                 AuthoringWindowMode.Intent => "tabIntent",
                 AuthoringWindowMode.Guide => "tabGuide",
                 AuthoringWindowMode.Map => "tabMap",
-                AuthoringWindowMode.Validate => "tabValidate",
+                AuthoringWindowMode.Hygiene => "tabHygiene",
                 AuthoringWindowMode.Facts => "tabFacts",
                 _ => "tabOverview"
             };
@@ -205,7 +205,7 @@ namespace NeonBlack.Gameplay.Editor
                 case AuthoringWindowMode.Overview: return ref _overviewScroll;
                 case AuthoringWindowMode.Intent: return ref _intentScroll;
                 case AuthoringWindowMode.Map: return ref _mapScroll;
-                case AuthoringWindowMode.Validate: return ref _validateScroll;
+                case AuthoringWindowMode.Hygiene: return ref _hygieneScroll;
                 case AuthoringWindowMode.Guide: return ref _guideScroll;
                 case AuthoringWindowMode.Facts: return ref _factsScroll;
                 default: return ref _overviewScroll;
@@ -230,8 +230,8 @@ namespace NeonBlack.Gameplay.Editor
                 case AuthoringWindowMode.Map:
                     PyralisAuthoringMapRenderer.Draw(activeSetup, selection, GetCachedCurrentSetupGraph(activeSetup));
                     break;
-                case AuthoringWindowMode.Validate:
-                    PyralisAuthoringValidateRenderer.Draw(activeSetup, GetCachedCurrentSetupGraph(activeSetup));
+                case AuthoringWindowMode.Hygiene:
+                    PyralisAuthoringHygieneRenderer.Draw(activeSetup, GetCachedCurrentSetupGraph(activeSetup));
                     break;
                 case AuthoringWindowMode.Facts:
                     PyralisAuthoringFactExplorerRenderer.Draw(activeSetup, GetCachedCurrentSetupGraph(activeSetup));

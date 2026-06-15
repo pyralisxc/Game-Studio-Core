@@ -12,7 +12,7 @@ namespace NeonBlack.Gameplay.Editor
         public static void Draw(Object activeSetup, Object selection, PyralisAuthoringSetupGraph graph)
         {
             EditorGUILayout.LabelField("Setup Map", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox("Use Map for scene and setup reality: selected context, authored links, scene surfaces, missing fields, and object wiring. Intent does not change this view; Validate owns graph integrity.", MessageType.Info);
+            EditorGUILayout.HelpBox("Use Map for scene and setup reality: selected context, authored links, scene surfaces, missing fields, and object wiring. Intent does not change this view; Hygiene owns graph integrity and developer audits.", MessageType.Info);
             DrawActiveAndSelectedContext(activeSetup, selection);
             DrawYouAreHereChain(graph);
             DrawSceneSurfaceSnapshot(graph);
@@ -90,7 +90,7 @@ namespace NeonBlack.Gameplay.Editor
         {
             EditorGUILayout.Space(12f);
             EditorGUILayout.LabelField("Developer Route Connections", EditorStyles.boldLabel);
-            PyralisAuthoringWindowText.DrawSemanticHelpBox("Collapsed reference view for how current scene/setup nodes connect. Open Validate when graph blockers need deeper evidence.", MessageType.Info);
+            PyralisAuthoringWindowText.DrawSemanticHelpBox("Collapsed reference view for how current scene/setup nodes connect. Open Hygiene when graph blockers need deeper evidence.", MessageType.Info);
 
             IReadOnlyList<PyralisAuthoringGraphConnectionRow> rows = PyralisAuthoringSetupGraphProjection.BuildMapConnectionRows(graph);
             const string key = "Pyralis.AuthoringWindow.Map.RouteConnections";

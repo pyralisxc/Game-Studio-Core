@@ -275,7 +275,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             AppendReferencedHierarchyIssue(GetObjectReference<Object>(serializedBootstrap, "participantRosterService"), "Participant roster service", inspectedRoots, requiredIssues);
             AppendReferencedHierarchyIssue(GetObjectReference<Object>(serializedBootstrap, "participantSpawnService"), "Participant spawn service", inspectedRoots, requiredIssues);
             AppendReferencedHierarchyIssue(GetObjectReference<Object>(serializedBootstrap, "participantInputRouter"), "Participant input router", inspectedRoots, requiredIssues);
-            AppendReferencedHierarchyIssue(GetObjectReference<Object>(serializedBootstrap, "sceneLoader"), "Scene loader", inspectedRoots, requiredIssues);
+            AppendReferencedHierarchyIssue(GetObjectReference<Object>(serializedBootstrap, "sceneNavigatorSource"), "Scene navigator", inspectedRoots, requiredIssues);
             AppendReferencedHierarchyIssue(GetObjectReference<Object>(serializedBootstrap, "timeManager"), "Time manager", inspectedRoots, requiredIssues);
             AppendReferencedHierarchyIssue(GetObjectReference<Object>(serializedBootstrap, "cameraShake"), "Camera shake", inspectedRoots, requiredIssues);
             AppendArrayReferenceIssues(serializedBootstrap, "spawnPoints", "Spawn point", inspectedRoots, requiredIssues);

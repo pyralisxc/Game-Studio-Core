@@ -117,12 +117,12 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Capability = AuthoringCapability.Input,
         Priority = AuthoringPriority.AuxiliaryDefault,
         Lane = "Input",
-        Relevance = "Maps high-level gameplay actions (Move, Jump, Interact) to Unity Input System actions.",
+        Relevance = "Maps participant-owned gameplay actions (Move, Jump, Interact) to Unity Input System actions.",
         Axioms = AuthoringWorldAxiom.None,
         ProfileType = typeof(InputProfile),
         AssignmentFields = new[] { nameof(actions), nameof(actionBindings), nameof(primaryActionMap) },
         FirstProof = "Verify that input actions mapped in this profile correctly drive character movement and actions.",
-        ExpertAdvice = "InputProfile decouples gameplay logic from physical keys. Use the action role to map common verbs (Jump, Dash) across different control schemes.",
+        ExpertAdvice = "InputProfile is assigned from ParticipantDefinition.inputProfile. The participant owns who is controlling the route; pawn input modules only consume the resolved profile.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/input",
         NativeSetup = new[] 
         { 
@@ -212,7 +212,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
                 issues.Add("Player-owned pawn input needs a required Move action row. Add Built-In Action > Move or mark the existing Move row required.");
         }
 
-        [Tooltip("Primary input action asset used by this participant or pawn definition.")]
+        [Tooltip("Primary input action asset used by the ParticipantDefinition that owns player, seat, hand, cursor, faction, or pawn input.")]
         public InputActionAsset actions;
         [Tooltip("Default action map name expected by shared and compatibility input bridges.")]
         public string primaryActionMap = "Player";

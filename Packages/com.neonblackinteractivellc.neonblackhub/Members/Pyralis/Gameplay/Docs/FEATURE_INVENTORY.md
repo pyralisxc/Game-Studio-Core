@@ -101,8 +101,9 @@ What this gives us:
 
 Available:
 
-- `SceneLoader` (`Core/`) - singleton scene transition service with fade
-- `SceneNavigator` (`Core/`) - static helper routing through `SceneLoader` with `SceneManager` fallback
+- `SceneFader` (`Core/Navigation/UI/`) - current game-shell `ISceneNavigator` route with fade and optional loading-screen handoff
+- `SceneLoader` (`Core/`) - lightweight generated-canvas `ISceneNavigator` fallback
+- `SceneNavigator` (`Core/`) - direct static `SceneManager` fallback for non-authored utility paths
 - `TimeManager` (`Core/`) - freeze frames and slow-motion
 - `CameraShake` (`Presentation/Visuals/`) - singleton shake service with 2D, 3D, rotation-only, and combined shake modes
 - `ParticipantScoreService` (`Features/Scoring/Runtime/Shared/`) - canonical multi-participant scoring

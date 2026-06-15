@@ -10,26 +10,26 @@ using VContainer;
 
 namespace NeonBlack.Gameplay.Features.Input
 {
-/// <summary>
+    /// <summary>
     /// Watches PlayerInput instances and maps them into the participant roster.
     /// This keeps the session local-first while matching an N-participant model.
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Input | AuthoringCapability.Setup,
-        Relevance = "Routes physical input device events to the correct participant and their pawn.",
+        Relevance = "Routes physical input device events to the correct participant; participant definitions own the InputProfile that pawn and non-pawn control surfaces consume.",
         Axioms = AuthoringWorldAxiom.None,
         RequiredComponents = new[] { typeof(ParticipantInputRouter) },
         AssignmentFields = new[] { nameof(sessionDefinition), nameof(rosterService), nameof(playerInputManager) },
         FirstProof = "Join a new player and verify they are correctly assigned to a participant seat in the roster.",
         NativeSetup = new[] 
         { 
-            "Add ParticipantInputRouter to the Gameplay Session GO.",
+            "Add ParticipantInputRouter to the Gameplay Root or let GameplaySessionBootstrap create it.",
             "Ensure it is wired to the ParticipantRosterService."
         },
-        ExpertAdvice = "The Input Router watches for new 'PlayerJoined' events and automatically registers them into the Roster. It ensures that InputProfiles are correctly applied to the newly created PlayerInput instances.",
+        ExpertAdvice = "The Input Router watches PlayerInput join/leave events for local join. For 1P auto-join, no PlayerInputManager is required; ParticipantDefinition.inputProfile remains the single authored input owner.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/input"
     )]
-public class ParticipantInputRouter : MonoBehaviour, IRuntimeValidationProvider
+    public class ParticipantInputRouter : MonoBehaviour, IRuntimeValidationProvider
     {
         public IEnumerable<string> GetRuntimeValidationIssues()
         {
@@ -200,8 +200,6 @@ public class ParticipantInputRouter : MonoBehaviour, IRuntimeValidationProvider
                 return;
 
             playerInputManager = GetComponentInParent<PlayerInputManager>();
-            if (playerInputManager == null && PlayerInputManager.instance != null && PlayerInputManager.instance.gameObject.scene == gameObject.scene)
-                playerInputManager = PlayerInputManager.instance;
         }
 
         private ParticipantDefinition ResolveDefinitionForSeat(int currentInputCount)

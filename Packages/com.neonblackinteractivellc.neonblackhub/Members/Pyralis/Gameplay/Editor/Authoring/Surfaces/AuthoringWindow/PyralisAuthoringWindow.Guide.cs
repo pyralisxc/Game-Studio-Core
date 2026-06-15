@@ -273,7 +273,7 @@ namespace NeonBlack.Gameplay.Editor
 
                 EditorGUILayout.Space(4f);
                 EditorGUILayout.LabelField("What To Check First", EditorStyles.miniBoldLabel);
-                EditorGUILayout.LabelField(!string.IsNullOrWhiteSpace(selectedContext.NextCheck) ? selectedContext.NextCheck : "Use Map and Validate to find the next unresolved graph node.", EditorStyles.wordWrappedMiniLabel);
+                EditorGUILayout.LabelField(!string.IsNullOrWhiteSpace(selectedContext.NextCheck) ? selectedContext.NextCheck : "Use Map and Hygiene to find the next unresolved graph node.", EditorStyles.wordWrappedMiniLabel);
 
                 EditorGUILayout.Space(4f);
                 EditorGUILayout.LabelField("Runtime Meaning", EditorStyles.miniBoldLabel);

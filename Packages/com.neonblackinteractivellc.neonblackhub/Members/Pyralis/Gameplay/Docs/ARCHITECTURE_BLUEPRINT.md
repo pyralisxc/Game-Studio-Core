@@ -107,7 +107,7 @@ For the 2D stack, `Motor2D` is the shared 2D pawn motor surface. Focused ownersh
 
 ### 4.5. Runtime Composition Registers Core First, Features By Evidence
 
-`GameplaySessionBootstrap` remains the scene entrypoint and `PyralisGameplayLifetimeScope` remains the dependency graph. The always-on runtime spine is intentionally small:
+`GameplaySessionBootstrap` remains the scene entrypoint and serialized handoff. `PyralisGameplayLifetimeScope` owns runtime service creation, dependency registration, and route-specific service activation. The always-on runtime spine is intentionally small:
 
 - session definition and session state
 - participant roster
@@ -116,7 +116,7 @@ For the 2D stack, `Motor2D` is the shared 2D pawn motor surface. Focused ownersh
 - authored scene services such as scene loading, time, camera shake, settings, and camera rig when present
 - ownership and authority services
 
-Feature services are not core by default. Combat, enemy, RPG, game-flow, scoring, and feedback services register when the authored route asks for them through `GameModeDefinition`, participant pawns, feature modules, or reflected feature contracts. Loaded scene components can still trigger the matching service group as compatibility evidence so existing scenes do not fail just because their route metadata is incomplete.
+Feature services are not core by default. Combat, enemy, RPG, game-flow, scoring, and feedback services register when the authored route asks for them through `GameModeDefinition`, participant pawns, resolved feature contracts, or actual loaded scene components. Uncontracted feature-module names, display names, authoring categories, and tags do not create runtime service behavior; if a module needs a service group, its feature code needs an `[AuthoringContract]` that declares the capability.
 
 This keeps a movement proof from carrying RPG, enemy, combat, scoring, feedback, and arcade game-flow assumptions while preserving feature parity for scenes that actually use those systems.
 

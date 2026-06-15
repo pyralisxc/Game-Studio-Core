@@ -12,18 +12,18 @@ namespace NeonBlack.Gameplay.Core.Runtime
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Setup,
-        Relevance = "Handles all scene transitions with a fade by creating its own fade canvas at runtime.",
+        Relevance = "Simple ISceneNavigator implementation that fades with a generated runtime canvas. Use SceneFader for menu/game-shell flows that need loading-screen routing.",
         Axioms = AuthoringWorldAxiom.None,
         RequiredInterfaces = new[] { typeof(ISceneNavigator) },
         NativeSetup = new[] 
         { 
             "Add to a Bootstrap child GameObject or assign to GameplaySessionBootstrap.",
             "Configure Fade Duration.",
-            "Prefer one navigation owner per menu flow: SceneLoader or SceneFader."
+            "Prefer one navigation owner per menu flow. SceneFader is the current game-shell route; SceneLoader remains a lightweight generated-canvas fallback."
         },
         AssignmentFields = new[] { nameof(fadeDuration) },
         FirstProof = "Transitioning between scenes triggers a smooth fade out and fade in.",
-        ExpertAdvice = "Inject ISceneNavigator to trigger transitions. Keep Fade Duration non-negative; zero gives an instant cut with the generated fade canvas.",
+        ExpertAdvice = "Inject ISceneNavigator to trigger transitions. Keep Fade Duration non-negative; zero gives an instant cut with the generated fade canvas. Do not place SceneLoader and SceneFader in the same scene unless one is intentionally unused.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/navigation"
     )]
     public class SceneLoader : MonoBehaviour, ISceneNavigator

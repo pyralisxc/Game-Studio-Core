@@ -16,7 +16,7 @@ For your first playable proof, use only native Unity actions:
 Run this route before adding score, combat, networking, or extras:
 
 - Open `authoring-native-1p-proof-checklist.md` (repo `docs/` root) and follow it in sequence.
-- In the Authoring Window, stay in **Overview -> Map -> Validate** until
+- In the Authoring Window, stay in **Overview -> Map -> Hygiene** until
   - Do Now is clear
   - required links are green
   - Play blockers are clear.
@@ -47,7 +47,7 @@ The Authoring Window has six modes:
 - **Intent**: lets you steer the proof focus with DNA axioms, presentation lane, and capability toggles without applying presets.
 - **Guide**: shows the full intent-filtered route checklist for the active setup, then explains what the selected script or asset does, which values matter, and what to wire first.
 - **Map**: shows current scene/setup reality: active setup, current links, scene-surface evidence, missing fields, concrete Unity setup issues, and collapsed developer route connections without editing fields.
-- **Validate**: shows graph integrity: blockers, recommended edits, proof enhancers, source origins, stable node ids, and deeper graph evidence for the selected setup object.
+- **Hygiene**: shows graph integrity, blockers, recommended edits, proof enhancers, source origins, stable node ids, dependency pressure, and deeper graph evidence for the selected setup object.
 - **Facts**: shows the read-only cookbook and dictionary so coverage and provenance can be audited.
 
 For the first-pass proof, use this native flow:
@@ -70,11 +70,11 @@ For a first-playability proof, keep this as your mental baseline:
 - movement proof first (pawn spawns, input, and one visible movement loop),
 - then add one optional system at a time (score, combat, UI, network, etc.).
 
-The Authoring Window is the route guide. Open it from the Setup Flow when you need overall progress, intent shaping, selection guidance, setup mapping, validation, or fact coverage. Use **Overview** for the route-aware next decision, **Intent** for route/capability steering, **Guide** for the expanded checklist, **Map** for current scene/setup reality and scene-surface issues, **Validate** for graph integrity and developer evidence, and **Facts** when you need to audit where guidance came from. Overview reads the active route before judging readiness: pawn-backed routes require participant pawns and spawn points, while tabletop or other no-pawn routes treat empty pawn fields as correct.
+The Authoring Window is the route guide. Open it from the Setup Flow when you need overall progress, intent shaping, selection guidance, setup mapping, hygiene, or fact coverage. Use **Overview** for the route-aware next decision, **Intent** for route/capability steering, **Guide** for the expanded checklist, **Map** for current scene/setup reality and scene-surface issues, **Hygiene** for graph integrity, dependency pressure, and developer evidence, and **Facts** when you need to audit where guidance came from. Overview reads the active route before judging readiness: pawn-backed routes require participant pawns and spawn points, while tabletop or other no-pawn routes treat empty pawn fields as correct.
 
 Use the Authoring Window as a senior setup companion, not a scene generator. It should explain why a route needs a pawn, board surface, camera/cursor, action resolver, input profile, or UI presenter, then send you to the normal Unity object or Inspector field where you make the creative choice.
 
-When a session/mode route is active, the Authoring Window keeps two graph lenses straight. The **current setup graph** is what Unity and authored assets prove; **Map**, **Validate**, and **Facts** read that truth surface. The **intent-projected graph** applies the active Intent selection as a focus lens; **Overview** and **Guide** use it to prioritize the next setup tissue to connect for the selected proof. **Intent** owns the steering controls, **Guide** owns graph-filtered route rows and selected-object help, **Overview** owns the next one to three moves, **Map** owns scene/setup reality, **Validate** owns graph integrity, and **Facts** owns the full dictionary. The tabs read reflected route capabilities from the authored setup, contracts/reflection, and grammar vocabulary, then explain:
+When a session/mode route is active, the Authoring Window keeps two graph lenses straight. The **current setup graph** is what Unity and authored assets prove; **Map**, **Hygiene**, and **Facts** read that truth surface. The **intent-projected graph** applies the active Intent selection as a focus lens; **Overview** and **Guide** use it to prioritize the next setup tissue to connect for the selected proof. **Intent** owns the steering controls, **Guide** owns graph-filtered route rows and selected-object help, **Overview** owns the next one to three moves, **Map** owns scene/setup reality, **Hygiene** owns graph integrity and dependency audits, and **Facts** owns the full dictionary. The tabs read reflected route capabilities from the authored setup, contracts/reflection, and grammar vocabulary, then explain:
 
 - the **Intent** tab DNA axioms, presentation lane, and capability ingredients that define what kind of game route is being authored
 - design questions to answer before setup, such as what the player controls, what kind of space the game happens in, and what the first proof of interaction should be
@@ -266,7 +266,7 @@ Those objects affect Pyralis through the parts Unity and gameplay systems can ob
 - board/card/action coordinates or selectable surfaces
 - sorting, depth, and presentation rules
 
-Use `PlayfieldProfile` when the mode needs authored legal movement bounds, screen wrap, arena depth, or placed gameplay space. Use the assigned `CinemachineCameraRigController` when camera-aware spawners, hazards, pickups, generated content, or framing need visible camera bounds. A camera rig frames the proof; it should not become the pawn's movement boundary unless the pawn or spawner explicitly opts into camera-visible bounds. Reserve `Camera Bounds Source` for specialized custom `ICameraBoundsProvider` services. Use helpers such as `TilemapGround`, `DepthSorting`, `ArenaZone`, and future procedural-generation surfaces only when they match the scene; otherwise plain Unity art and geometry with correct layers/colliders is enough.
+Use `PlayfieldProfile` when the mode needs authored legal movement bounds, screen wrap, arena depth, or placed gameplay space. Use the assigned `CinemachineCameraRigController` when camera-aware spawners, hazards, pickups, generated content, or framing need visible camera bounds. A camera rig frames the proof; it should not become the pawn's movement boundary unless the pawn explicitly opts into camera-visible bounds. Camera-aware runtime systems consume the single camera rig assigned to `GameplaySessionBootstrap > Camera Rig Controller`. Use helpers such as `TilemapGround`, `DepthSorting`, `ArenaZone`, and future procedural-generation surfaces only when they match the scene; otherwise plain Unity art and geometry with correct layers/colliders is enough.
 
 When you do add one, keep the feedback loop small:
 

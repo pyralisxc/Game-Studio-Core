@@ -670,7 +670,7 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringActionSurface.Inspector,
                 target,
                 field,
-                "the validation issue is gone from Validate and Guide");
+                "the validation issue is gone from Hygiene and Guide");
         }
 
         private static string ResolveDependencyAnchorNodeId(PyralisSetupDependencyNode dependencyNode)

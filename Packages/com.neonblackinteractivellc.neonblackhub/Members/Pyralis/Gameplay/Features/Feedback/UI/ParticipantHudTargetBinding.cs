@@ -43,17 +43,7 @@ namespace NeonBlack.Gameplay.Features.Feedback.UI
             if (usePrimaryParticipant)
                 return _participantRoster.TryGetPrimaryParticipant(out participant);
 
-            for (int i = 0; i < _participantRoster.Participants.Count; i++)
-            {
-                ParticipantHandle candidate = _participantRoster.Participants[i];
-                if (candidate != null && candidate.SeatIndex == participantSeat)
-                {
-                    participant = candidate;
-                    return true;
-                }
-            }
-
-            return false;
+            return _participantRoster.TryGetParticipantBySeat(participantSeat, out participant);
         }
     }
 }

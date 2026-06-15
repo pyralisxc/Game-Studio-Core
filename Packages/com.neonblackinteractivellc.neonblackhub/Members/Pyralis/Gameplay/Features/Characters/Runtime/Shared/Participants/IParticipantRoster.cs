@@ -14,5 +14,6 @@ namespace NeonBlack.Gameplay.Characters
         bool RemoveParticipant(PlayerInput playerInput);
         bool RemoveParticipant(ParticipantHandle participant);
         bool TryGetPrimaryParticipant(out ParticipantHandle participant);
+        bool TryGetParticipantBySeat(int seatIndex, out ParticipantHandle participant);
     }
 }

@@ -23,14 +23,10 @@ namespace NeonBlack.Gameplay.Features.Input
 ///       when hardware input should trigger dash. Leave Dash absent for games where this
 ///       2D controller should not dash from keyboard/gamepad input.
 ///
-/// Setup: Attach to the Player GameObject alongside Motor2D.
-///   1. Drag InputSystem_Actions.inputactions (Assets root) into _inputActions.
-///   2. Wire VirtualJoystick, LeftZone, RightZone, and Canvas in the Inspector.
-///   3. Optionally add PlayerInput so local multiplayer can pair devices per player.
-///   4. The "Player/Move" action handles gamepad leftStick + WASD/arrows.
-///      Gamepad dpad is supplemented via a raw read when it is not in the asset.
-///   5. The InputProfile Jump Action drives side-view 2D jump when the movement component enables it.
-///   6. The InputProfile Dash Action drives hardware dash when one is assigned.
+    /// Setup: new 2D player pawns should add Motor2DInputAdapter alongside Motor2D.
+    /// ParticipantDefinition.inputProfile supplies the InputActionAsset and action rows.
+    /// Optional direct scene pawns can still assign _inputActions locally for experiments.
+    /// Add PlayerInput only when local device pairing is part of the proof.
 /// </summary>
 [AddComponentMenu("NeonBlack/Gameplay/Input/Advanced/2D Player Input Handler")]
 [RequireComponent(typeof(Motor2D))]
