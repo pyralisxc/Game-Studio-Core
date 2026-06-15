@@ -15,6 +15,6 @@ Feature folders are organized by gameplay responsibility first, then by runtime 
 - `Characters` owns participant/pawn spawning, pawn initialization, and runtime pawn service injection.
 - `Input` owns input routing and participant input profile resolution.
 - `Respawn` owns death timing, lives, countdown, and revive feedback; pawn identity and instantiation stay with `ParticipantSpawnService`.
-- `Platform` owns cross-feature runtime composition state, not gameplay-specific defaults.
+- `Platform` owns cross-feature runtime composition state, not gameplay-specific defaults. Its lifetime scope registers the core spine unconditionally, then registers combat, enemy, RPG, game-flow, scoring, and feedback service groups only when route metadata, feature modules, reflected contracts, or loaded scene components provide evidence that the route uses them.
 
 When touching a feature branch, prefer making its source of truth obvious over adding compatibility glue.

@@ -12,7 +12,6 @@ The active NeonBlack Gameplay codebase lives under:
 - `Members/Pyralis/Gameplay/Features`
 - `Members/Pyralis/Gameplay/Presentation`
 - `Members/Pyralis/Gameplay/Networking`
-- `Members/Pyralis/Gameplay/Integrations`
 
 ## Startup model
 

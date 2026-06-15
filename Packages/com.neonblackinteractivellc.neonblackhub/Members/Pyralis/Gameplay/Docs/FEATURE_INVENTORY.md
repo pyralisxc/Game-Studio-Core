@@ -644,7 +644,7 @@ Available:
 - `Features/Zones/3D/DamageZone`
 - `Features/Environment/3D/TilemapGround`
 - `Features/Environment/3D/DepthSorting`
-- `Features/Respawn/3D/PlayerSpawner`
+- `Features/Spawning/3D/PlayerSpawner`
 - `Features/Traversal/Runtime/3D/ClimbZone`
 - `Features/Traversal/Runtime/3D/GrabDetector`
 - `Features/Traversal/Runtime/3D/LedgeProbe3D`

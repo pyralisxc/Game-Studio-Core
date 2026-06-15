@@ -42,7 +42,7 @@ namespace NeonBlack.Gameplay.Features.Feedback.UI
         private float _combatAlertTimer;
 
         [Inject]
-        private void Construct(IParticipantFeedbackStream feedbackStream)
+        private void Construct(IParticipantFeedbackStream feedbackStream = null)
         {
             _feedbackStream = feedbackStream;
         }

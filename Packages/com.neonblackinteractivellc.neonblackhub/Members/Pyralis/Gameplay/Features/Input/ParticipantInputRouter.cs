@@ -154,7 +154,7 @@ public class ParticipantInputRouter : MonoBehaviour, IRuntimeValidationProvider
                 return;
             }
 
-            if (PlayerInput.all.Count > 0 || sessionDefinition == null || sessionDefinition.defaultParticipants == null)
+            if (sessionDefinition == null || sessionDefinition.defaultParticipants == null)
                 return;
 
             for (int i = 0; i < sessionDefinition.defaultParticipants.Length; i++)

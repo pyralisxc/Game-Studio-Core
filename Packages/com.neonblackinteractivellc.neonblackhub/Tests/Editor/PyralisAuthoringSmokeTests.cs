@@ -85,7 +85,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             string pawnSource = File.ReadAllText(Path.Combine(gameplayRoot, "Data", "Definitions", "PawnDefinition.cs"));
             string runtimeContextSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Platform", "Composition", "GameplayRuntimeContext.cs"));
             string spawnSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Characters", "Runtime", "Shared", "Services", "ParticipantSpawnService.cs"));
-            string spawnerSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Respawn", "3D", "PlayerSpawner.cs"));
+            string spawnerSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Spawning", "3D", "PlayerSpawner.cs"));
             string bootstrapSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Characters", "GameplaySessionBootstrap.cs"));
             string playfieldSource = File.ReadAllText(Path.Combine(gameplayRoot, "Data", "Profiles", "PlayfieldProfile.cs"));
             string pawn2DMovementSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Characters", "2D", "Pawn2DMovementComponent.cs"));

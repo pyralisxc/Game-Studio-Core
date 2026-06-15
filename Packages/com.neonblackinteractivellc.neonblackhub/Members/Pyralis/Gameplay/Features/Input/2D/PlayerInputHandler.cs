@@ -12,6 +12,10 @@ using VContainer;
 namespace NeonBlack.Gameplay.Features.Input
 {
 /// <summary>
+/// Lower-level input reader used by <see cref="Motor2DInputAdapter"/>.
+/// New 2D player pawns should add Motor2DInputAdapter unless they intentionally
+/// need a custom direct-input route.
+///
 /// Reads input and feeds movement direction to Motor2D.
 /// Input priority: Gamepad -> Keyboard -> Virtual Joystick.
 ///
@@ -28,7 +32,7 @@ namespace NeonBlack.Gameplay.Features.Input
 ///   5. The InputProfile Jump Action drives side-view 2D jump when the movement component enables it.
 ///   6. The InputProfile Dash Action drives hardware dash when one is assigned.
 /// </summary>
-[AddComponentMenu("NeonBlack/Gameplay/Input/2D Player Input Handler")]
+[AddComponentMenu("NeonBlack/Gameplay/Input/Advanced/2D Player Input Handler")]
 [RequireComponent(typeof(Motor2D))]
 [DefaultExecutionOrder(-10)] // Register before settings services push input values during Start().
 public class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver, IPawnInputModule, IPawnRuntimeServicesReceiver
@@ -98,6 +102,7 @@ public class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver, IPawnIn
     private Vector2             _lastNonZeroDir = Vector2.right;
     private RectTransform       _dashZone; // assigned by ApplySettings; right zone by default
     private bool                _loggedMissingGameplayState;
+    private bool                _loggedMissingInputActions;
     private InputProfile        _inputProfile;
 
     // Unity Lifecycle
@@ -120,8 +125,6 @@ public class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver, IPawnIn
 
         if (_inputActions != null)
             BindActions();
-        else
-            Debug.LogError("[PlayerInputHandler] No InputActionAsset is assigned. Assign one in InputProfile or on PlayerInput.", this);
     }
 
     private void OnEnable()
@@ -166,6 +169,7 @@ public class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver, IPawnIn
         // taps on buttons (Restart, Main Menu, Settings) that overlap the same screen area.
         DisableZoneRaycast(_leftZone);
         DisableZoneRaycast(_rightZone);
+        ReportMissingInputActionsIfNeeded();
     }
 
     private static void DisableZoneRaycast(RectTransform zone)
@@ -287,6 +291,8 @@ public class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver, IPawnIn
             SetInputActions(inputProfile.actions, inputProfile);
         else if (_inputActions != null)
             BindActions();
+        else
+            ReportMissingInputActionsIfNeeded();
 
         ParticipantInputProfileUtility.ApplyToPlayerInput(_playerInput, inputProfile);
         _gamepadEnabled = inputProfile.supportsGamepad;
@@ -338,6 +344,15 @@ public class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver, IPawnIn
             ParticipantInputProfileUtility.LogMissingAction(this, nameof(PlayerInputHandler), _inputProfile, "Block", blockActionName);
 
         return true;
+    }
+
+    private void ReportMissingInputActionsIfNeeded()
+    {
+        if (_inputActions != null || _loggedMissingInputActions)
+            return;
+
+        _loggedMissingInputActions = true;
+        Debug.LogWarning("[PlayerInputHandler] No InputActionAsset is assigned yet. For participant-spawned pawns, assign Actions on the controlling ParticipantDefinition InputProfile; direct scene pawns can assign Actions on PlayerInput.", this);
     }
 
     private void Update()
@@ -514,7 +529,7 @@ public class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver, IPawnIn
         if (!_loggedMissingGameplayState)
         {
             _loggedMissingGameplayState = true;
-            Debug.LogError("[PlayerInputHandler] Gameplay State Source is not configured. Assign a component that implements IGameplayStateReader or let the scene session configure it.", this);
+            Debug.LogWarning("[PlayerInputHandler] Gameplay State Source is not configured yet. GameplaySessionBootstrap normally supplies SessionStateService during participant spawn; direct scene pawns can assign an IGameplayStateReader source.", this);
         }
 
         return false;

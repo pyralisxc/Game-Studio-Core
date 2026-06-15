@@ -103,6 +103,23 @@ For the 3D brawler, `Motor3D` is the composition root. It coordinates focused si
 
 For the 2D stack, `Motor2D` is the shared 2D pawn motor surface. Focused ownership lives in `Motor2DInputAdapter`, `PlayerInputHandler`, `PawnCombatBehaviour2D`, `Pawn2DMovementComponent`, and `Pawn2DPresentationComponent`.
 
+`Motor2DInputAdapter` is the supported Add Component surface for new player-controlled 2D pawns. `PlayerInputHandler` remains the lower-level reader behind that route and is only a direct setup surface for custom input experiments.
+
+### 4.5. Runtime Composition Registers Core First, Features By Evidence
+
+`GameplaySessionBootstrap` remains the scene entrypoint and `PyralisGameplayLifetimeScope` remains the dependency graph. The always-on runtime spine is intentionally small:
+
+- session definition and session state
+- participant roster
+- participant spawning
+- participant input routing
+- authored scene services such as scene loading, time, camera shake, settings, and camera rig when present
+- ownership and authority services
+
+Feature services are not core by default. Combat, enemy, RPG, game-flow, scoring, and feedback services register when the authored route asks for them through `GameModeDefinition`, participant pawns, feature modules, or reflected feature contracts. Loaded scene components can still trigger the matching service group as compatibility evidence so existing scenes do not fail just because their route metadata is incomplete.
+
+This keeps a movement proof from carrying RPG, enemy, combat, scoring, feedback, and arcade game-flow assumptions while preserving feature parity for scenes that actually use those systems.
+
 ### 5. Runtime Is Transport-Agnostic
 
 Gameplay architecture should not assume local-only or network-only ownership.

@@ -268,7 +268,9 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             HashSet<GameObject> inspectedRoots = new HashSet<GameObject>();
             AppendReferencedHierarchyIssue(bootstrap.gameObject, "Gameplay root", inspectedRoots, requiredIssues);
             AppendReferencedHierarchyIssue(GetObjectReference<Object>(serializedBootstrap, "cameraRigController"), "Camera rig", inspectedRoots, requiredIssues);
-            AppendReferencedHierarchyIssue(GetObjectReference<Object>(serializedBootstrap, "playerInputManager"), "Player input manager", inspectedRoots, requiredIssues);
+            PlayerInputManager playerInputManager = GetObjectReference<PlayerInputManager>(serializedBootstrap, "playerInputManager");
+            AppendReferencedHierarchyIssue(playerInputManager, "Player input manager", inspectedRoots, requiredIssues);
+            AppendPlayerInputManagerIssues(playerInputManager, requiredIssues);
             AppendReferencedHierarchyIssue(GetObjectReference<Object>(serializedBootstrap, "sessionStateService"), "Session state service", inspectedRoots, requiredIssues);
             AppendReferencedHierarchyIssue(GetObjectReference<Object>(serializedBootstrap, "participantRosterService"), "Participant roster service", inspectedRoots, requiredIssues);
             AppendReferencedHierarchyIssue(GetObjectReference<Object>(serializedBootstrap, "participantSpawnService"), "Participant spawn service", inspectedRoots, requiredIssues);
@@ -284,6 +286,28 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             AppendSceneComponentIssues<ProjectileLauncherBase>(scene, "Projectile launcher", inspectedRoots, requiredIssues);
             AppendSceneServiceIssues<ISessionScoreService>(scene, "Score service", inspectedRoots, requiredIssues);
             AppendSceneSpriteRendererIssues(scene, inspectedRoots, requiredIssues);
+        }
+
+        private static void AppendPlayerInputManagerIssues(PlayerInputManager playerInputManager, List<string> requiredIssues)
+        {
+            if (playerInputManager == null)
+                return;
+
+            if (playerInputManager.playerPrefab == null)
+            {
+                requiredIssues.Add("Bootstrap has a PlayerInputManager assigned, but PlayerInputManager > Player Prefab is empty. Clear Bootstrap > Player Input Manager for single-player auto-join, or assign a dedicated PlayerInput prefab for local join.");
+                return;
+            }
+
+            PlayerInput playerInput = playerInputManager.playerPrefab.GetComponent<PlayerInput>();
+            if (playerInput == null)
+            {
+                requiredIssues.Add($"PlayerInputManager prefab `{playerInputManager.playerPrefab.name}` needs a Unity PlayerInput component for local join.");
+                return;
+            }
+
+            if (playerInput.actions == null)
+                requiredIssues.Add($"PlayerInputManager prefab `{playerInputManager.playerPrefab.name}` has PlayerInput but no Actions asset. Assign the same Input Actions asset used by the controlling InputProfile.");
         }
 
         private static void AppendCameraAndAudioIssues(
@@ -324,7 +348,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             }
 
             if (!hasSceneCamera)
-                recommendedIssues.Add("Scene should have at least one enabled Camera before Play Mode can show a visual proof.");
+                requiredIssues.Add("Scene needs at least one enabled Camera before Play Mode can show a visual proof.");
 
             if (!hasSceneAudioListener)
                 recommendedIssues.Add("Scene should have one enabled AudioListener, usually on Main Camera, before Play Mode to avoid Unity audio errors.");
@@ -618,17 +642,28 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             {
                 AppendMissingScriptIssue(prefab, $"Pawn prefab `{prefab.name}`", requiredIssues);
 
+                if (!prefab.activeSelf)
+                    requiredIssues.Add($"Participant slot {participantSlot} pawn prefab `{prefab.name}` root GameObject is inactive. Enable the prefab root before Play Mode so the spawned pawn can run.");
+
                 if (prefab.GetComponent<PawnRoot>() == null)
                     requiredIssues.Add($"Participant slot {participantSlot} pawn prefab `{prefab.name}` is missing PawnRoot on its root GameObject.");
+                else if (!HasEnabledComponentImplementing<PawnRoot>(prefab))
+                    requiredIssues.Add($"Participant slot {participantSlot} pawn prefab `{prefab.name}` has PawnRoot disabled or on an inactive child. Enable PawnRoot on the prefab root before Play Mode.");
 
                 if (!HasComponentImplementing<IPawnMotor>(prefab))
                     requiredIssues.Add($"Participant slot {participantSlot} pawn prefab `{prefab.name}` is missing a lane motor component implementing IPawnMotor.");
+                else if (!HasEnabledComponentImplementing<IPawnMotor>(prefab))
+                    requiredIssues.Add($"Participant slot {participantSlot} pawn prefab `{prefab.name}` has a lane motor component, but it is disabled or on an inactive GameObject.");
 
                 if (!HasComponentImplementing<IPawnInputModule>(prefab))
                     requiredIssues.Add($"Participant slot {participantSlot} pawn prefab `{prefab.name}` is missing an input adapter component implementing IPawnInputModule so the selected InputProfile can reach movement.");
+                else if (!HasEnabledComponentImplementing<IPawnInputModule>(prefab))
+                    requiredIssues.Add($"Participant slot {participantSlot} pawn prefab `{prefab.name}` has an input adapter, but it is disabled or on an inactive GameObject.");
 
                 if (!HasComponentImplementing<IPawnPresentationModule>(prefab))
                     requiredIssues.Add($"Participant slot {participantSlot} pawn prefab `{prefab.name}` needs a component implementing IPawnPresentationModule.");
+                else if (!HasEnabledComponentImplementing<IPawnPresentationModule>(prefab))
+                    requiredIssues.Add($"Participant slot {participantSlot} pawn prefab `{prefab.name}` has a presentation module, but it is disabled or on an inactive GameObject.");
 
                 AppendPrefabSpriteRendererIssues(participantSlot, prefab, requiredIssues);
                 AppendPawnPrefabPresentationPhysicsIssues(participantSlot, prefab, recommendedIssues);
@@ -893,6 +928,22 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             for (int i = 0; i < behaviours.Length; i++)
             {
                 if (behaviours[i] is T)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static bool HasEnabledComponentImplementing<T>(GameObject root) where T : class
+        {
+            if (root == null)
+                return false;
+
+            MonoBehaviour[] behaviours = root.GetComponentsInChildren<MonoBehaviour>(true);
+            for (int i = 0; i < behaviours.Length; i++)
+            {
+                MonoBehaviour behaviour = behaviours[i];
+                if (behaviour is T && behaviour.enabled && behaviour.gameObject.activeSelf)
                     return true;
             }
 

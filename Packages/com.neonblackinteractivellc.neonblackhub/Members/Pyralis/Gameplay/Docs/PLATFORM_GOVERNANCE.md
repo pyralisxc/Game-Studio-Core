@@ -10,7 +10,6 @@ Pyralis stays as one Unity package for now, but it is governed like a platform.
 - `Features/<FeatureName>/` owns its complete gameplay slice.
 - `Networking/` owns authority, replication, ownership, and backend adapters.
 - `Presentation/` owns cross-feature camera, animation, audio, HUD, and VFX infrastructure.
-- `Integrations/` owns package and service adapters.
 
 ## Scope Rules
 
@@ -57,4 +56,4 @@ When a feature spans multiple families, keep the lower-level reusable contracts 
 
 - New features must declare one network role before use.
 - Gameplay code should target Pyralis networking contracts, not backend-specific APIs.
-- Backend-specific implementations belong in `Networking/` or `Integrations/`.
+- Backend-specific implementations belong in `Networking/`.

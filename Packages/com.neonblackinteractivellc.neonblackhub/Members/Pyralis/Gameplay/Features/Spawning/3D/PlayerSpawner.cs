@@ -7,7 +7,7 @@ using TMPro;
 using UnityEngine;
 using VContainer;
 
-namespace NeonBlack.Gameplay.Features.Respawn
+namespace NeonBlack.Gameplay.Features.Spawning
 {
     /// <summary>
     /// Participant-owned respawn coordinator. Pawn identity and instantiation stay with

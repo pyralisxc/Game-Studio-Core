@@ -118,7 +118,9 @@ These were major refactor blockers and are now resolved or intentionally stabili
 - tabletop now has a first Unity-facing selection/action bridge: `TabletopBoardSelectionBridge` lets project-owned board presenters, card-hand UI, cursors, or menus translate piece and destination selections into `BoardMoveActionPayload` requests through `ActionQueueService` without putting legal-move rules in UI code
 - tabletop now has a first scene-proof presenter: `TabletopBoardGridPresenter` builds selectable board-space GameObjects and piece views from `BoardDefinition`, initializes `TabletopBoardSelectionBridge`, and can resolve legal moves immediately for prototypes before custom board art or turn animation exists
 - platform composition files no longer live under the Characters feature: bootstrap-owned runtime composition helpers live under `Features/Platform/Composition`, while foundational contracts and runtime utilities stay under `Core`
+- gameplay folderbase cleanup folded `PlayerSpawner` into `Features/Spawning/3D`, removed empty package-level `Runtime` and placeholder `Integrations` roots, and keeps respawn behavior as spawning infrastructure instead of a separate one-file feature island
 - source contract tests now guard against reintroducing `GameplayPlatformContext` or `PlatformServiceRegistry` as a second service-location layer; new runtime dependencies should flow through `PyralisGameplayLifetimeScope`, explicit bootstrap configuration, participant/session services, or feature-owned runtime contexts
+- runtime service registration now has a smaller default spine: `PyralisGameplayLifetimeScope` always registers session, participant, scene, camera/settings, and ownership services, while combat, enemy, RPG, game-flow, scoring, and feedback service groups are enabled from authored route evidence or loaded scene feature components rather than being assumed for every session.
 - compatibility singleton owners now clean up after themselves during teardown: `TimeManager`, `SceneLoader`, `SceneFader`, `SettingsManager`, and `GameManager` clear their static surfaces on destruction or subsystem registration, and `PlayerSpawner` destroys its generated `DontDestroyOnLoad` countdown UI instead of leaking persistent canvases across scene/test teardown
 - final pre-scene authoring audit now has docs and contracts aligned with the real code path: package quick start sends creators through START_HERE, the Authoring Window, Setup Flow, generic capability setup, and `PyralisGameplayLifetimeScope`; architecture docs name `GameplaySessionBootstrap` as the Unity-facing entry point and the lifetime scope as the VContainer graph; menu docs no longer teach direct SceneLoader singleton loading
 - MVP readiness is now defined as Beginner Prototype Ready through guided Unity setup: the active gates are Game Shell, Pawn-Backed Action across `Sprite2D`, `Billboard2_5D`, and `Rigged3D`, and Non-Pawn Tabletop; each route must satisfy runtime, authoring, guidance, validation, and proof before it can be called ready.
@@ -136,13 +138,14 @@ Current focus:
 - treat `dotnet test` as a smoke check only unless Unity Test Runner summaries are present
 - after Unity batch tests, rerun `dotnet restore` before the final solution build because Unity can clear generated `Temp/obj` assets
 
-### 2. Finalize Service Transition
+### 2. Keep Service Ownership Small And Route-Driven
 
-The 2026-06-09 pass bridged the legacy registry to the `VContainer` graph, but a few persistent services (e.g., `TimeManager`, `SceneLoader`) still use local singleton lookups alongside DI.
+`GameplaySessionBootstrap` configures the runtime spine and `PyralisGameplayLifetimeScope` owns dependency registration. Core services register for every route; feature services register when route metadata, feature modules, reflected contracts, or loaded scene components show they are needed.
 
 Current focus:
 - continue migrating persistent service implementations to full DI ownership.
-- remove the bridged registry once transition consumers are fully migrated to `IObjectResolver`.
+- keep RPG, enemy, combat, game-flow, scoring, feedback, hazard, pickup, and UI-specific systems feature-owned rather than promoted into the mandatory session spine.
+- remove remaining compatibility lookup surfaces only after callers use injected services, explicit participant/session references, or feature-owned runtime contexts.
 
 ### 3. Setup Validation Is Production-Ready; Keep Deepening Lane-Specific Checks
 
@@ -179,7 +182,7 @@ The participant model is real, but a few older systems still think in terms of o
 Current examples:
 
 - `Features/Characters/PlayerRegistry.cs`
-- parts of `Features/Respawn/3D/PlayerSpawner.cs`
+- parts of `Features/Spawning/3D/PlayerSpawner.cs`
 - some menu-driven and 2D scene-specific flows
 - legacy-facing 2D adapter and scene-flow assumptions that still need participant-native proof in Play Mode
 

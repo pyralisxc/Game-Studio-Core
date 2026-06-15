@@ -561,6 +561,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(pawnContract.SetupNodeId, Is.EqualTo("pawn.definition"));
             Assert.That(pawnRootContract, Is.Not.Null);
             Assert.That(pawnRootContract.SetupNodeId, Is.EqualTo("pawn.definition"));
+            Assert.That(pawnRootContract.AssignmentFields, Does.Not.Contain("pawnDefinition"),
+                "PawnRoot receives the participant pawn definition at spawn time; authoring should not teach a required back-reference from prefab root to PawnDefinition.");
         }
 
         [Test]

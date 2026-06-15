@@ -17,16 +17,16 @@ namespace NeonBlack.Gameplay.Characters
     [AuthoringContract(
         Capability = AuthoringCapability.Movement | AuthoringCapability.Session,
         SetupNodeId = "pawn.definition",
-        Relevance = "The root coordinator for participant-owned pawns. Handles profile application and feature installation.",
-        NativeSetup = new[] { "Add to Pawn prefab root", "Assign PawnDefinition" },
-        AssignmentFields = new[] { nameof(pawnDefinition) },
+        Relevance = "The root coordinator for participant-owned pawns. Handles profile application and feature installation after a participant spawns the pawn prefab.",
+        NativeSetup = new[] { "Add to Pawn prefab root" },
         FirstProof = "Pawn spawns and receives its defined movement/combat profiles.",
-        ExpertAdvice = "The PawnRoot is the composition root. It reads the PawnDefinition and installs requested feature modules (Combat, Traversal, etc.) at runtime. Pawn prefabs should not carry their own scene cameras.",
+        ExpertAdvice = "PawnDefinition owns the prefab reference. PawnRoot receives the participant's PawnDefinition during spawn; assign the local field only when placing a pawn directly in a scene without ParticipantSpawnService.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/pawns"
     )]
 [AddComponentMenu("NeonBlack/Gameplay/Characters/Pawn Root")]
     public class PawnRoot : MonoBehaviour, IPawnParticipantInitializer
     {
+        [Tooltip("Optional prefab-local fallback. Spawned pawns receive this from ParticipantDefinition.defaultPawn, so beginner prefab setup usually leaves this empty.")]
         [SerializeField] private PawnDefinition pawnDefinition;
         public PawnDefinition PawnDefinition => pawnDefinition;
         public ParticipantHandle Participant { get; private set; }

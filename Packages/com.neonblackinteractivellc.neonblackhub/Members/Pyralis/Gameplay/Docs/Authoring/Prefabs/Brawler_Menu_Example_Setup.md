@@ -71,7 +71,7 @@ Typical scene systems:
 - `CameraZone` for profile changes
 - `DamageZone` for environmental hazards
 - `CinemachineCameraRigController` for camera framing and zone transitions
-- optional `PlayerSpawner` from `Features/Respawn/3D` for respawn-based scenes
+- optional `PlayerSpawner` from `Features/Spawning/3D` for respawn-based scenes
 
 ## Recommended startup choice
 

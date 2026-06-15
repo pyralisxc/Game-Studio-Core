@@ -31,8 +31,6 @@ Rigged 3D support is Animator-driven and intended for both `Generic` and `Humano
 - `Features/`: runtime systems and gameplay modules
 - `Networking/`: ownership, authority, and backend-facing runtime contracts
 - `Presentation/`: cross-feature visual and camera infrastructure
-- `Integrations/`: adapters for external services and packages
-- `Samples/`: package-level reference setups
 - `Tests/`: package-level validation infrastructure
 - `Docs/`: setup and architecture notes
 

@@ -397,6 +397,9 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             if (!setupReady)
                 return PyralisSetupFlowStepStatus.Blocked;
 
+            if (hasPlayerInputManager && !hasUsablePlayerInputManager)
+                return PyralisSetupFlowStepStatus.Missing;
+
             if (!recommended)
                 return hasPlayerInputManager && hasUsablePlayerInputManager
                     ? PyralisSetupFlowStepStatus.Ready

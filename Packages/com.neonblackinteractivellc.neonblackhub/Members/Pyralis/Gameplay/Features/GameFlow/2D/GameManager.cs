@@ -119,11 +119,14 @@ public class GameManager : MonoBehaviour
     private void Construct(
         ParticipantRosterService participantRosterService = null,
         ILeaderboardService leaderboardService = null,
+        ICameraBoundsProvider cameraBoundsProvider = null,
         ISceneNavigator sceneNavigator = null,
         IGameplaySettingsApplier settings = null)
     {
         _participantRosterService = participantRosterService;
         _leaderboardService = leaderboardService;
+        if (cameraBoundsProvider != null)
+            _cameraBoundsProvider = cameraBoundsProvider;
         if (sceneNavigator != null)
             _sceneNavigator = sceneNavigator;
         if (settings != null)

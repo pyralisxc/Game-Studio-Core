@@ -11,6 +11,11 @@ using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Features.Combat;
 using NeonBlack.Gameplay.Features.Enemies;
 using NeonBlack.Gameplay.Features.Characters;
+using NeonBlack.Gameplay.Features.Feedback;
+using NeonBlack.Gameplay.Features.GameFlow;
+using NeonBlack.Gameplay.Features.Pickups;
+using NeonBlack.Gameplay.Features.Scoring;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -47,6 +52,7 @@ namespace NeonBlack.Gameplay.Core.Runtime
         private CinemachineCameraRigController _cameraRigController;
         private ISessionOwnershipService _sessionOwnershipService;
         private IParticipantAuthorityService _participantAuthorityService;
+        private PyralisRuntimeFeatureServicePolicy _featureServicePolicy;
 
         [Header("RPG Definitions")]
         [SerializeField] private ItemCatalogDefinition itemCatalog;
@@ -78,6 +84,7 @@ namespace NeonBlack.Gameplay.Core.Runtime
             _cameraRigController = cameraRigController;
             _sessionOwnershipService = sessionOwnershipService;
             _participantAuthorityService = participantAuthorityService;
+            _featureServicePolicy = PyralisRuntimeFeatureServicePolicy.Resolve(sessionDefinition);
             _isConfigured = true;
         }
 
@@ -91,17 +98,32 @@ namespace NeonBlack.Gameplay.Core.Runtime
 
         protected override void Configure(IContainerBuilder builder)
         {
+            RegisterCoreSessionServices(builder);
+            RegisterCoreSceneServices(builder);
+            RegisterFeatureServices(builder);
+            RegisterOwnershipServices(builder);
+            RegisterSettingsServices(builder);
+
+            builder.RegisterBuildCallback(container =>
+            {
+                if (InjectLoadedScenesOnBuild)
+                    InjectLoadedSceneObjects(container);
+            });
+        }
+
+        private void RegisterCoreSessionServices(IContainerBuilder builder)
+        {
             if (_sessionDefinition != null)
                 builder.RegisterInstance(_sessionDefinition).AsSelf();
 
             RegisterComponent(builder, _sessionStateService);
-
             RegisterComponent(builder, _participantRosterService);
-
             RegisterComponent(builder, _participantSpawnService);
             RegisterComponent(builder, _participantInputRouter);
+        }
 
-            // Core Services: resolve from configured references or owned child hierarchy.
+        private void RegisterCoreSceneServices(IContainerBuilder builder)
+        {
             var sceneLoader = _sceneLoader != null ? _sceneLoader : FindServiceInHierarchy<SceneLoader>();
             var timeManager = _timeManager != null ? _timeManager : FindServiceInHierarchy<TimeManager>();
             var cameraShake = _cameraShake != null ? _cameraShake : FindServiceInHierarchy<CameraShake>();
@@ -110,14 +132,64 @@ namespace NeonBlack.Gameplay.Core.Runtime
             RegisterComponent(builder, timeManager);
             RegisterComponent(builder, cameraShake);
             RegisterComponent(builder, _cameraRigController);
+        }
 
+        private void RegisterFeatureServices(IContainerBuilder builder)
+        {
+            bool usesCombatServices = _featureServicePolicy.UsesCombatServices
+                || HasLoadedSceneComponent<PawnCombatBehaviour>()
+                || HasLoadedSceneComponent<PawnCombatBehaviour2D>();
+            bool usesEnemyServices = _featureServicePolicy.UsesEnemyServices
+                || HasLoadedSceneComponent<EnemyAI>()
+                || HasLoadedSceneComponent<BattleManager>();
+            bool usesRpgServices = _featureServicePolicy.UsesRpgServices
+                || HasLoadedSceneComponentInNamespace("NeonBlack.Gameplay.Features.Rpg");
+            bool usesGameFlowServices = _featureServicePolicy.UsesGameFlowServices
+                || HasLoadedSceneComponent<GameManager>()
+                || HasLoadedSceneComponentInNamespace("NeonBlack.Gameplay.Features.GameFlow");
+            bool usesScoringServices = _featureServicePolicy.UsesScoringServices
+                || HasLoadedSceneComponent<ParticipantScoreService>()
+                || HasLoadedSceneComponent<LeaderboardManager>()
+                || HasLoadedSceneComponent<StillnessBonus2D>()
+                || HasLoadedSceneComponent<CollectibleFeedback2D>();
+            bool usesFeedbackServices = _featureServicePolicy.UsesFeedbackServices
+                || HasLoadedSceneComponent<ParticipantFeedbackService>()
+                || HasLoadedSceneComponentInNamespace("NeonBlack.Gameplay.Features.Feedback");
+
+            if (usesCombatServices)
+                RegisterCombatServices(builder);
+
+            if (usesEnemyServices)
+                RegisterEnemyServices(builder);
+
+            if (usesRpgServices)
+                RegisterRpgServices(builder);
+
+            if (usesGameFlowServices)
+                RegisterGameFlowServices(builder);
+
+            if (usesScoringServices)
+                RegisterScoringServices(builder);
+
+            if (usesFeedbackServices)
+                RegisterFeedbackServices(builder);
+        }
+
+        private static void RegisterCombatServices(IContainerBuilder builder)
+        {
             builder.Register<PawnComboProcessor>(Lifetime.Transient);
             builder.Register<PawnDamageHandler>(Lifetime.Transient);
+        }
 
+        private void RegisterEnemyServices(IContainerBuilder builder)
+        {
             builder.Register<EnemyDetectionService>(Lifetime.Singleton);
             builder.Register<EnemyCombatProcessor>(Lifetime.Singleton);
             RegisterComponent(builder, FindServiceInHierarchy<BattleManager>());
+        }
 
+        private void RegisterRpgServices(IContainerBuilder builder)
+        {
             builder.Register<LocalRpgPersistenceService>(Lifetime.Singleton).As<IRpgPersistenceService>();
 
             if (itemCatalog != null)
@@ -135,25 +207,41 @@ namespace NeonBlack.Gameplay.Core.Runtime
             builder.Register<VendorService>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
             builder.Register<RpgOpenZoneService>(Lifetime.Singleton).AsSelf();
             builder.Register<HubInteractionService>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
+        }
 
+        private void RegisterGameFlowServices(IContainerBuilder builder)
+        {
+            RegisterComponent(builder, FindLoadedSceneComponent<GameManager>() ?? FindServiceInHierarchy<GameManager>());
+        }
+
+        private void RegisterScoringServices(IContainerBuilder builder)
+        {
+            RegisterComponent(builder, FindLoadedSceneComponent<ParticipantScoreService>() ?? FindServiceInHierarchy<ParticipantScoreService>());
+            RegisterComponent(builder, FindLoadedSceneComponent<LeaderboardManager>() ?? FindServiceInHierarchy<LeaderboardManager>());
+        }
+
+        private void RegisterFeedbackServices(IContainerBuilder builder)
+        {
+            RegisterComponent(builder, FindLoadedSceneComponent<ParticipantFeedbackService>() ?? FindServiceInHierarchy<ParticipantFeedbackService>());
+        }
+
+        private void RegisterOwnershipServices(IContainerBuilder builder)
+        {
             if (_sessionOwnershipService != null)
                 builder.RegisterInstance<ISessionOwnershipService>(_sessionOwnershipService);
 
             if (_participantAuthorityService != null)
                 builder.RegisterInstance<IParticipantAuthorityService>(_participantAuthorityService);
+        }
 
+        private void RegisterSettingsServices(IContainerBuilder builder)
+        {
             var settingsApplier = FindServiceInHierarchy<IGameplaySettingsApplier>();
             if (settingsApplier != null)
                 builder.RegisterInstance<IGameplaySettingsApplier>(settingsApplier);
             else
                 builder.RegisterInstance<IGameplaySettingsApplier>(new NullGameplaySettingsApplier());
-
-            builder.RegisterBuildCallback(container =>
-            {
-                if (InjectLoadedScenesOnBuild)
-                    InjectLoadedSceneObjects(container);
-            });
-}
+        }
 
         protected override void OnDestroy()
         {
@@ -170,7 +258,7 @@ namespace NeonBlack.Gameplay.Core.Runtime
         }
 
         private void InjectLoadedSceneObjects(IObjectResolver container)
-{
+        {
             HashSet<GameObject> injectedRoots = new HashSet<GameObject>();
 
             for (int sceneIndex = 0; sceneIndex < SceneManager.sceneCount; sceneIndex++)
@@ -189,6 +277,69 @@ namespace NeonBlack.Gameplay.Core.Runtime
                     container.InjectGameObject(root);
                 }
             }
+        }
+
+        private static bool HasLoadedSceneComponent<T>() where T : Component
+        {
+            return FindLoadedSceneComponent<T>() != null;
+        }
+
+        private static T FindLoadedSceneComponent<T>() where T : Component
+        {
+            for (int sceneIndex = 0; sceneIndex < SceneManager.sceneCount; sceneIndex++)
+            {
+                Scene scene = SceneManager.GetSceneAt(sceneIndex);
+                if (!scene.isLoaded)
+                    continue;
+
+                GameObject[] roots = scene.GetRootGameObjects();
+                for (int rootIndex = 0; rootIndex < roots.Length; rootIndex++)
+                {
+                    if (roots[rootIndex] == null)
+                        continue;
+
+                    T component = roots[rootIndex].GetComponentInChildren<T>(true);
+                    if (component != null)
+                        return component;
+                }
+            }
+
+            return null;
+        }
+
+        private static bool HasLoadedSceneComponentInNamespace(string namespacePrefix)
+        {
+            if (string.IsNullOrWhiteSpace(namespacePrefix))
+                return false;
+
+            for (int sceneIndex = 0; sceneIndex < SceneManager.sceneCount; sceneIndex++)
+            {
+                Scene scene = SceneManager.GetSceneAt(sceneIndex);
+                if (!scene.isLoaded)
+                    continue;
+
+                GameObject[] roots = scene.GetRootGameObjects();
+                for (int rootIndex = 0; rootIndex < roots.Length; rootIndex++)
+                {
+                    GameObject root = roots[rootIndex];
+                    if (root == null)
+                        continue;
+
+                    MonoBehaviour[] behaviours = root.GetComponentsInChildren<MonoBehaviour>(true);
+                    for (int i = 0; i < behaviours.Length; i++)
+                    {
+                        Type type = behaviours[i] != null ? behaviours[i].GetType() : null;
+                        if (type != null
+                            && type.Namespace != null
+                            && type.Namespace.StartsWith(namespacePrefix, StringComparison.Ordinal))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
         }
 
         private T FindServiceInHierarchy<T>() where T : class

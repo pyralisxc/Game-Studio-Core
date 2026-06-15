@@ -1248,6 +1248,9 @@ namespace NeonBlack.Gameplay.Tests.Editor
             string hazardSharedPath = Path.Combine(gameplayRoot, "Features", "Hazards", "2D", "Hazard.SharedBehaviours.cs");
             string hazardCrossingPath = Path.Combine(gameplayRoot, "Features", "Hazards", "2D", "Hazard.CrossingSequence.cs");
             string playerInputPath = Path.Combine(gameplayRoot, "Features", "Input", "2D", "PlayerInputHandler.cs");
+            string participantInputRouterPath = Path.Combine(gameplayRoot, "Features", "Input", "ParticipantInputRouter.cs");
+            string setupFlowValidatorPath = Path.Combine(gameplayRoot, "Editor", "Authoring", "Spine", "Validation", "PyralisSetupFlowValidator.cs");
+            string sceneReadinessValidatorPath = Path.Combine(gameplayRoot, "Editor", "Authoring", "Spine", "Validation", "PyralisSceneReadinessValidator.cs");
             string stillnessBonusPath = Path.Combine(gameplayRoot, "Features", "Scoring", "2D", "StillnessBonus2D.cs");
             string uiManagerPath = Path.Combine(gameplayRoot, "Features", "GameFlow", "2D", "UI", "UIManager.cs");
             string settingsScreenPath = Path.Combine(gameplayRoot, "Features", "Settings", "UI", "SettingsScreen.cs");
@@ -1258,6 +1261,12 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(File.Exists(Path.Combine(contractsRoot, "IPickupBurstSpawnSurface.cs")), Is.True);
             Assert.That(File.Exists(Path.Combine(contractsRoot, "ISessionScoreService.cs")), Is.True);
             Assert.That(File.Exists(Path.Combine(contractsRoot, "IGameplaySettingsApplier.cs")), Is.True);
+
+            string movementSource = File.ReadAllText(movementPath);
+            Assert.That(movementSource.Contains("if (!TryGetMovementBounds(out MovementBounds2D bounds))\r\n                return;"), Is.False,
+                "2D movement should not require camera/playfield bounds. Bounds clamp or wrap movement when present; they should not gate movement.");
+            Assert.That(movementSource.Contains("if (gameplayStateReader != null)"), Is.True,
+                "2D movement should require gameplay state but allow unbounded movement when no bounds provider is authored.");
 
             string[] runtimeFiles =
             {
@@ -1299,6 +1308,18 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(File.ReadAllText(hazardPath).Contains("IHazardOutcomeSink"), Is.True);
             Assert.That(File.ReadAllText(hazardSpawnerPath).Contains("IPickupBurstSpawnSurface"), Is.True);
             Assert.That(File.ReadAllText(playerInputPath).Contains("IGameplayStateReader"), Is.True);
+            Assert.That(File.ReadAllText(playerInputPath).Contains("Debug.LogError(\"[PlayerInputHandler] No InputActionAsset"), Is.False,
+                "PlayerInputHandler should not error during Awake before participant-spawned profiles can apply their InputProfile actions.");
+            Assert.That(File.ReadAllText(playerInputPath).Contains("Debug.LogError(\"[PlayerInputHandler] Gameplay State Source"), Is.False,
+                "PlayerInputHandler should let the bootstrap/session route provide gameplay state instead of erroring during composition.");
+            Assert.That(File.ReadAllText(participantInputRouterPath).Contains("PlayerInput.all.Count > 0 || sessionDefinition"), Is.False,
+                "Auto-registering default participants should not be blocked by stray PlayerInput instances; explicit PlayerInput joins are handled by roster registration first.");
+            string setupFlowValidatorSource = File.ReadAllText(setupFlowValidatorPath);
+            Assert.That(setupFlowValidatorSource.Contains("hasPlayerInputManager && !hasUsablePlayerInputManager"), Is.True);
+            Assert.That(setupFlowValidatorSource.Contains("return PyralisSetupFlowStepStatus.Missing;"), Is.True,
+                "An assigned but incomplete PlayerInputManager should be a visible setup issue instead of an optional row.");
+            Assert.That(File.ReadAllText(sceneReadinessValidatorPath).Contains("Clear Bootstrap > Player Input Manager for single-player auto-join"), Is.True,
+                "Scene readiness should tell users why an incomplete PlayerInputManager can block/confuse the spawn proof.");
             Assert.That(File.ReadAllText(stillnessBonusPath).Contains("ISessionScoreAwardSink"), Is.True);
             Assert.That(File.ReadAllText(uiManagerPath).Contains("IGameplaySessionFlow"), Is.True);
             Assert.That(File.ReadAllText(settingsScreenPath).Contains("_musicVolumeSlider"), Is.True);

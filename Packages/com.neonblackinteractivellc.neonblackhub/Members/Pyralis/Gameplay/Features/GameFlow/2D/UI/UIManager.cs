@@ -123,7 +123,7 @@ public class UIManager : MonoBehaviour
     }
 
     [Inject]
-    private void Construct(ISessionScoreService scoreService, IGameplaySessionFlow gameplaySession)
+    private void Construct(ISessionScoreService scoreService = null, IGameplaySessionFlow gameplaySession = null)
     {
         _scoreService = scoreService;
         _gameplaySession = gameplaySession;

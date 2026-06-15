@@ -118,7 +118,7 @@ For pawn-backed games, each spawned participant should resolve through:
 - `PawnDefinition`
 - a pawn prefab that includes `PawnRoot`
 
-`PawnRoot` is the runtime composition root for a pawn. It applies authored profiles and installs feature modules from `FeatureModuleDefinition`.
+`PawnRoot` is the runtime composition root for a pawn. It applies authored profiles and installs feature modules from `FeatureModuleDefinition`. In the normal participant-spawn path, the `PawnDefinition` points to the pawn prefab and `PawnRoot` receives that definition at runtime; the `PawnRoot` field is only a direct-scene fallback, not a required back-reference.
 
 A pawn prefab is normal Unity content, not a Pyralis preset. Create it in the Hierarchy or Prefab Mode, add the lane components your intent requires, wire visible Inspector fields, then drag the finished prefab into `PawnDefinition > Pawn Prefab`. The authoring system should explain and validate that shape; it should not silently choose the user's art, map, animation controller, combat feel, or local-multiplayer ownership.
 
@@ -152,11 +152,11 @@ For a beginner 2D movement proof, the clean prefab route is:
 1. Create a Hierarchy GameObject and name it for the pawn.
 2. Add `SpriteRenderer` and assign a visible sprite before Play Mode.
 3. Add `Animator` even if the controller will be assigned later; this keeps the animation route explicit.
-4. Add `PawnRoot`, then assign the matching `PawnDefinition`.
+4. Add `PawnRoot`; leave its local Pawn Definition field empty unless this prefab will be placed directly in the scene without participant spawning.
 5. Add `Motor2D`; Unity adds `Pawn2DMovementComponent` and `Pawn2DPresentationComponent`.
 6. Add `Motor2DInputAdapter`.
 7. Add Unity `PlayerInput` only when the proof needs explicit local keyboard/gamepad ownership, and assign the same Input Actions asset used by the `InputProfile`.
-8. Save the GameObject as a prefab and assign it to `PawnDefinition > Pawn Prefab`.
+8. Save the GameObject as a prefab and assign the prefab to `PawnDefinition > Pawn Prefab`.
 
 `Motor2D` is the shared 2D pawn motor surface. Movement, presentation, and input live in focused sibling components so the stack stays inspectable and profile-driven.
 
@@ -212,7 +212,7 @@ Networking is a first-class concern, but gameplay code should target Pyralis con
 Current rules:
 
 - use Pyralis participant/session ownership concepts
-- keep backend-specific logic in `Networking/` or `Integrations/`
+- keep backend-specific logic in `Networking/`
 - do not build new gameplay systems directly on NGO types
 - set `SessionDefinition.networkMode` to an NGO mode only when the scene owns network authority and spawn rules
 - use `NetworkManager` + `UnityTransport` for the supported MVP backend
