@@ -7,7 +7,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
     [AuthoringContract(
         Capability = AuthoringCapability.Combat, 
         Relevance = "Defines how an actor reacts to combat events (guard, parry, block, shield break).",
-        NativeSetup = new[] { "Create Asset.", "Configure parry and guard windows.", "Set shield break durations." },
+        NativeSetup = new[] { "Configure parry and guard windows.", "Set shield break durations." },
         AssignmentFields = new[] { nameof(enableGuard), nameof(enableParry), nameof(blockDamageReduction) },
         FirstProof = "Trigger a parry in-game and verify the reaction lock is applied.",
         ExpertAdvice = "Use parryReactionLockDuration to stun the attacker when a parry is successful.",

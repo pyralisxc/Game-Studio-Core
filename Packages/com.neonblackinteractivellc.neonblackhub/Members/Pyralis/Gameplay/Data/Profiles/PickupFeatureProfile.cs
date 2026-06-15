@@ -9,7 +9,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Relevance = "Tuning asset for the actor-level pickup collection feature.",
         AssignmentFields = new[] { nameof(enableAutoCollect), nameof(interactionRadius), nameof(collectibleLayers) },
         FirstProof = "Walk over a pickup and verify it is collected.",
-        NativeSetup = new[] { "Create Asset.", "Assign to a Pawn or Interaction component." },
+        NativeSetup = new[] { "Assign to a Pawn or Interaction component." },
         ExpertAdvice = "Enable 'preferNearestPickup' for precise interaction in dense item clusters. Auto-collect is best for currency, while interaction-collect is better for loot crates.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/inventory"
     )]

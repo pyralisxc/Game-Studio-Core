@@ -7,7 +7,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
     [AuthoringContract(
         Capability = AuthoringCapability.UI | AuthoringCapability.VFX, 
         Relevance = "Configures which gameplay events (damage, death, score) trigger visual feedback or HUD notifications.",
-        NativeSetup = new[] { "Create Asset.", "Toggle desired event publications." },
+        NativeSetup = new[] { "Toggle desired event publications." },
         AssignmentFields = new[] { nameof(publishDamageEvents), nameof(publishDeathEvents), nameof(publishScoreEvents) },
         FirstProof = "Verify that damage events trigger floating text or HUD updates.",
         ExpertAdvice = "Use these toggles to silence feedback for specific actor archetypes (e.g., destructible props vs. bosses).",

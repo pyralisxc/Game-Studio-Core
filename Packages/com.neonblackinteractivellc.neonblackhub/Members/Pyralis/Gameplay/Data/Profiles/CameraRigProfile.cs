@@ -15,7 +15,6 @@ namespace NeonBlack.Gameplay.Data.Profiles
         AssignmentFields = new[] { nameof(presentationMode), nameof(useCinemachine), nameof(followOffset), nameof(orthographic), nameof(minZoom), nameof(maxZoom) },
         FirstProof = "Verify the camera follows the focus object at the specified offset.",
         ExpertAdvice = "CameraRigProfile defines how the world is seen. For 2D games, check 'Orthographic'. Use 'Follow Offset' to position the camera relative to the pawn or group focus.",
-        NativeSetup = new[] { "Create Asset" },
         DocumentationURL = "https://docs.neonblack.com/pyralis/camera"
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Camera Rig Profile", fileName = "CameraRigProfile", order = -70)]

@@ -13,7 +13,6 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Relevance = "Project-window creation path for settings and menu defaults.",
         AssignmentFields = new[] { nameof(mixer), nameof(defaultMusicVolume), nameof(defaultSfxVolume) },
         FirstProof = "Check that volumes are applied correctly in the main menu.",
-        NativeSetup = new[] { "Create Asset" },
         ExpertAdvice = "SettingsProfile provides initial values for the user's preferences. Ensure your AudioMixer has parameters exposed with the names 'MusicVolume' and 'SfxVolume'.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/core"
     )]

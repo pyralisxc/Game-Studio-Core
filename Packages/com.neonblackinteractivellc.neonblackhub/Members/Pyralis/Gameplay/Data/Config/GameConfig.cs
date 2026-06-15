@@ -13,7 +13,7 @@ namespace NeonBlack.Gameplay.Core.Config
     [AuthoringContract(
         Capability = AuthoringCapability.Setup,
         Relevance = "The master wiring point for the game project; defines the entry session and service prefabs.",
-        NativeSetup = new[] { "Create Asset.", "Assign Session Definition.", "Set Scene names." },
+        NativeSetup = new[] { "Assign Session Definition.", "Set Scene names." },
         AssignmentFields = new[] { nameof(sessionDefinition), nameof(mainMenuScene) },
         FirstProof = "Verify the game boots into the specified main menu scene.",
         ExpertAdvice = "Use service prefabs only if you need custom logic for core services like Time or Scene Loading."

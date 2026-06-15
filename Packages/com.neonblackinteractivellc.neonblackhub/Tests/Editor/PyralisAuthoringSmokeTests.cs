@@ -116,6 +116,55 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
+        public void ContractNativeSetup_SmokeDoesNotDuplicateReflectedCreateAssetMenu()
+        {
+            string gameplayRoot = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Packages", "com.neonblackinteractivellc.neonblackhub", "Members", "Pyralis", "Gameplay"));
+            string[] sourceFiles = Directory.GetFiles(gameplayRoot, "*.cs", SearchOption.AllDirectories);
+            string[] duplicateCreateSetupMarkers =
+            {
+                "NativeSetup = new[] { \"Create Asset\" }",
+                "NativeSetup = new[] { \"Create Asset.\" }",
+                "NativeSetup = new[] { \"Create asset in Project window.\" }",
+                "\"Create Asset.\", ",
+                "\"Create asset in Project window.\", "
+            };
+
+            foreach (string sourceFile in sourceFiles)
+            {
+                string source = File.ReadAllText(sourceFile);
+                if (!source.Contains("[CreateAssetMenu"))
+                    continue;
+
+                for (int i = 0; i < duplicateCreateSetupMarkers.Length; i++)
+                {
+                    Assert.That(
+                        source.Contains(duplicateCreateSetupMarkers[i]),
+                        Is.False,
+                        $"{sourceFile} should let CreateAssetMenu reflection generate the Project create action instead of duplicating it in NativeSetup.");
+                }
+            }
+        }
+
+        [Test]
+        public void ContractNativeSetup_SmokePrefersReflectedCreateActionBeforeFallbackSteps()
+        {
+            ResolvedAuthoringContract contract = ResolvedAuthoringContractRegistry.FindByType(typeof(PawnMovementProfile));
+            Assert.That(contract, Is.Not.Null);
+
+            PyralisAuthoringFact fact = PyralisReflectiveFactScanner.CreateFactFromContract(contract);
+            Assert.That(fact.NativeActions.Length, Is.GreaterThanOrEqualTo(2));
+
+            PyralisAuthoringNativeAction first = fact.NativeActions[0];
+            Assert.That(first.Verb, Is.EqualTo("Create"));
+            Assert.That(first.Surface, Is.EqualTo(PyralisAuthoringActionSurface.ProjectWindow));
+            Assert.That(first.Target, Is.EqualTo("Pawn Movement Profile"));
+            Assert.That(first.FieldOrComponent, Does.Contain("Create -> NeonBlack/Profiles/Pawn Movement Profile"));
+            Assert.That(fact.NativeActions.Any(action => action.Target == "contract NativeSetup fallback"), Is.False);
+            Assert.That(fact.NativeActions.Any(action => action.FieldOrComponent == "Create asset in Project window."), Is.False);
+            Assert.That(fact.NativeActions.Any(action => action.FieldOrComponent == "Assign to a PawnDefinition."), Is.True);
+        }
+
+        [Test]
         public void GameplaySeams_SmokeKeepSingleRuntimeOwners()
         {
             string gameplayRoot = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Packages", "com.neonblackinteractivellc.neonblackhub", "Members", "Pyralis", "Gameplay"));

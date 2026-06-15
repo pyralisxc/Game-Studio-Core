@@ -13,7 +13,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Priority = AuthoringPriority.AuxiliaryDefault,
         Lane = "Combat",
         Relevance = "Defines the core combat parameters for a pawn archetype.",
-        NativeSetup = new[] { "Create Asset.", "Set base damage and cooldowns.", "Configure block reduction." },
+        NativeSetup = new[] { "Set base damage and cooldowns.", "Configure block reduction." },
         AssignmentFields = new[] { nameof(baseDamage), nameof(attackCooldown), nameof(attackWeapon), nameof(primarySequence) },
         FirstProof = "Verify the pawn can attack and take damage in-game.",
         ExpertAdvice = "Use comboResetTime to control the window for continuing a combo. Assign a WeaponData asset to define the hitboxes and visual effects of the attack.",

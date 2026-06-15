@@ -8,8 +8,7 @@ namespace NeonBlack.Gameplay.Features.Combat
         Capability = AuthoringCapability.Combat, 
         Relevance = "Project-window creation path for firing cadence, burst, and spread behavior.",
         AssignmentFields = new[] { nameof(fireModeId), nameof(cooldown), nameof(burstCount) },
-        FirstProof = "Equip a weapon with this fire mode and verify the firing cadence and spread.",
-        NativeSetup = new[] { "Create Asset" }
+        FirstProof = "Equip a weapon with this fire mode and verify the firing cadence and spread."
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Combat/Fire Mode Definition", fileName = "FireModeDefinition")]
     public class FireModeDefinition : ScriptableObject

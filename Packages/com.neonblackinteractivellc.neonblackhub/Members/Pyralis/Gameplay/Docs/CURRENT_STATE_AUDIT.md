@@ -125,6 +125,7 @@ These were major refactor blockers and are now resolved or intentionally stabili
 - compatibility singleton owners now clean up after themselves during teardown: `TimeManager`, `SceneLoader`, `SceneFader`, `SettingsManager`, and `GameManager` clear their static surfaces on destruction or subsystem registration, and `PlayerSpawner` destroys its generated `DontDestroyOnLoad` countdown UI instead of leaking persistent canvases across scene/test teardown
 - final pre-scene authoring audit now has docs and contracts aligned with the real code path: package quick start sends creators through START_HERE, the Authoring Window, Setup Flow, generic capability setup, and `PyralisGameplayLifetimeScope`; architecture docs name `GameplaySessionBootstrap` as the Unity-facing entry point and the lifetime scope as the VContainer graph; menu docs no longer teach direct SceneLoader singleton loading
 - MVP readiness is now defined as Beginner Prototype Ready through guided Unity setup: the active gates are Game Shell, Pawn-Backed Action across `Sprite2D`, `Billboard2_5D`, and `Rigged3D`, and Non-Pawn Tabletop; each route must satisfy runtime, authoring, guidance, validation, and proof before it can be called ready.
+- contract native-action cleanup has started: exact `NativeSetup = "Create Asset"` duplicates were removed from create-menu definitions/profiles, reflected `CreateAssetMenu` and `AddComponentMenu` actions now take priority over fallback prose, and smoke tests guard against reintroducing create-menu duplication.
 
 ## Highest-Priority Remaining Issues
 

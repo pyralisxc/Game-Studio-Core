@@ -10,7 +10,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
     [AuthoringContract(
         Capability = AuthoringCapability.Combat,
         Relevance = "The central configuration for an enemy; binds combat and reaction profiles together.",
-        NativeSetup = new[] { "Create Asset.", "Assign Combat and Reaction profiles.", "Add optional Feature Modules (Ambient, etc)." },
+        NativeSetup = new[] { "Assign Combat and Reaction profiles.", "Add optional Feature Modules (Ambient, etc)." },
         AssignmentFields = new[] { nameof(combatProfile), nameof(reactionProfile) },
         FirstProof = "Confirm the enemy uses all assigned profiles in its runtime behavior.",
         ExpertAdvice = "Use modular profiles to share behaviors across multiple enemy types while keeping the root profile unique per archetype.",

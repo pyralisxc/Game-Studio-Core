@@ -9,7 +9,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
     [AuthoringContract(
         Capability = AuthoringCapability.Inventory | AuthoringCapability.Stats,
         Relevance = "Extends standard items with equipment slots and stat modifiers.",
-        NativeSetup = new[] { "Create Asset.", "Add Allowed Slot Ids.", "Add Stat Modifiers." },
+        NativeSetup = new[] { "Add Allowed Slot Ids.", "Add Stat Modifiers." },
         AssignmentFields = new[] { nameof(allowedSlotIds) },
         FirstProof = "Verify the item can be equipped into the specified slots and correctly modifies stats.",
         ExpertAdvice = "Use stat modifiers to provide meaningful progression and customization through equipment."

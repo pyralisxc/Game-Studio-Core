@@ -8,7 +8,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
     [AuthoringContract(
         Capability = AuthoringCapability.Combat | AuthoringCapability.Stats,
         Relevance = "Defines common status effect vulnerabilities and immunities for an actor.",
-        NativeSetup = new[] { "Create Asset.", "List starting effects.", "Set default shield reduction." },
+        NativeSetup = new[] { "List starting effects.", "Set default shield reduction." },
         AssignmentFields = new[] { nameof(defaultShieldDamageReduction) },
         FirstProof = "Verify the actor is spawned with the specified starting effects.",
         ExpertAdvice = "Use defaultShieldDamageReduction to scale incoming damage when the actor has an active shield effect.",

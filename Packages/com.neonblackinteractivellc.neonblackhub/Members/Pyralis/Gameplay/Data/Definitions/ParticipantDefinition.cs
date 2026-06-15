@@ -14,7 +14,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
         AssignmentFields = new[] { nameof(displayName), nameof(defaultPawn), nameof(inputProfile), nameof(teamIndex) },
         FirstProof = "Add this Participant Definition to the 'Default Participants' array in a Session Definition.",
         ExpertAdvice = "ParticipantDefinitions represent seats or control owners. Put the InputProfile here when this participant is who controls the route. Assign a PawnDefinition only for pawn-backed actors; no-pawn routes can control boards, hands, cursors, cameras, factions, menus, or action surfaces.",
-        NativeSetup = new[] { "Create asset in Project window.", "Assign an InputProfile when this participant receives player input.", "Assign a PawnDefinition only for pawn-backed routes." },
+        NativeSetup = new[] { "Assign an InputProfile when this participant receives player input.", "Assign a PawnDefinition only for pawn-backed routes." },
         DocumentationURL = "https://docs.neonblack.com/pyralis/session"
     )]
 [CreateAssetMenu(menuName = "NeonBlack/Definitions/Participant Definition", fileName = "ParticipantDefinition", order = 20)]

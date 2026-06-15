@@ -13,7 +13,6 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Relevance = "Project-window creation path for movement space, bounds, wrap, and arena-depth rules.",
         AssignmentFields = new[] { nameof(movementMode), nameof(minBounds), nameof(maxBounds) },
         FirstProof = "Verify that actors are clamped to the defined bounds in-game.",
-        NativeSetup = new[] { "Create Asset" },
         ExpertAdvice = "The Playfield defines the physical boundaries of the simulation. Use 'Clamp To Bounds' for arena-style games to keep participants within the playable area.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/core"
     )]

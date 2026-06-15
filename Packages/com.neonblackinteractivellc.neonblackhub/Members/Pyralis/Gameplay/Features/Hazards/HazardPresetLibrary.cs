@@ -10,7 +10,7 @@ namespace NeonBlack.Gameplay.Features.Hazards
 [AuthoringContract(
     Capability = AuthoringCapability.Combat,
     Relevance = "A designer-facing catalogue of hazard presets for quick assignment and lookup.",
-    NativeSetup = new[] { "Create Asset.", "Add HazardData entries.", "Set unique preset names." },
+    NativeSetup = new[] { "Add HazardData entries.", "Set unique preset names." },
     AssignmentFields = new[] { nameof(presets) },
     FirstProof = "Verify that hazards can be correctly looked up by name from this library.",
     ExpertAdvice = "Use this to manage a large variety of hazards without cluttering scene references."

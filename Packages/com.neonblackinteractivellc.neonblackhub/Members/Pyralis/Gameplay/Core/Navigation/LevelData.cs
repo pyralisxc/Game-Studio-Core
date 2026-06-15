@@ -21,7 +21,7 @@ namespace NeonBlack.Gameplay.Core.Navigation
         Relevance = "Data container for level configuration, including display names and scene references.",
         AssignmentFields = new[] { nameof(sceneName), nameof(displayName), nameof(previewImage) },
         FirstProof = "Verify the level is selectable in the menu and loads the correct scene.",
-        NativeSetup = new[] { "Create Asset.", "Set SceneName to match Build Settings.", "Assign Preview Image." },
+        NativeSetup = new[] { "Set SceneName to match Build Settings.", "Assign Preview Image." },
         ExpertAdvice = "LevelData assets are primarily used by the LevelRegistry to build the world-select UI. Ensure the SceneName exactly matches the entry in File -> Build Settings.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/navigation"
     )]

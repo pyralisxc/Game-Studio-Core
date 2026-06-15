@@ -482,6 +482,8 @@ A feature contract is the source of truth for:
 - customization moments
 - developer first-proof guidance and resolved proof target id
 
+Contracts should not repeat Unity metadata that reflection already owns. If a `ScriptableObject` has `CreateAssetMenu`, the Project-window create action is generated from that attribute. If a `MonoBehaviour` has `AddComponentMenu`, the Inspector Add Component action is generated from that attribute. Use contract `NativeSetup` only for setup meaning that Unity metadata cannot infer, such as which authored field to connect, which Inspector tool to use, or what route-specific choice the creator should make after the object exists.
+
 The Authoring Window, fact registry, feature-module Inspector, contract validator, and proof guidance all read this contract data. If a feature-specific rule appears in a central switch or hand-authored setup row, move it into the feature contract unless the rule is truly generic to every feature module.
 
 New feature module checklist:

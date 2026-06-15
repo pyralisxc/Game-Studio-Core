@@ -10,7 +10,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
     [AuthoringContract(
         Capability = AuthoringCapability.Movement,
         Relevance = "Defines the jumping, dodging, and climbing capabilities of a pawn.",
-        NativeSetup = new[] { "Create Asset.", "Assign to a PawnDefinition.", "Enable desired traversal features." },
+        NativeSetup = new[] { "Assign to a PawnDefinition.", "Enable desired traversal features." },
         AssignmentFields = new[] { nameof(allowJump), nameof(jumpHeight), nameof(gravity), nameof(allowDodge), nameof(dodgeDistance) },
         FirstProof = "Verify the pawn can jump and crouch correctly in-game.",
         ExpertAdvice = "Use jumpHeight and gravity to tune the arc of the jump. If 'allowJump' is off, the actor will be grounded unless a separate 'Hop' feature is installed.",

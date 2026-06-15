@@ -699,6 +699,28 @@ namespace NeonBlack.Gameplay.Editor
         internal static PyralisAuthoringNativeAction[] BuildNativeActions(Type type, string[] nativeSetup)
         {
             List<PyralisAuthoringNativeAction> actions = new List<PyralisAuthoringNativeAction>();
+            CreateAssetMenuAttribute createAssetAttr = type != null ? type.GetCustomAttribute<CreateAssetMenuAttribute>() : null;
+            AddComponentMenu addComponentAttr = type != null ? type.GetCustomAttribute<AddComponentMenu>() : null;
+
+            if (createAssetAttr != null)
+            {
+                string menuName = string.IsNullOrWhiteSpace(createAssetAttr.menuName)
+                    ? AuthoringCapabilityRegistry.PrettifyTypeName(type.Name)
+                    : createAssetAttr.menuName;
+
+                actions.Add(PyralisAuthoringNativeActionFactory.CreateAssetAction(
+                    AuthoringCapabilityRegistry.PrettifyTypeName(type.Name),
+                    menuName,
+                    "the asset exists in the project"));
+            }
+
+            if (addComponentAttr != null && !string.IsNullOrWhiteSpace(addComponentAttr.componentMenu))
+            {
+                actions.Add(PyralisAuthoringNativeActionFactory.AddComponentAction(
+                    "selected GameObject",
+                    addComponentAttr.componentMenu,
+                    "the component is added to the Inspector"));
+            }
 
             if (nativeSetup != null && nativeSetup.Length > 0)
             {
@@ -708,36 +730,24 @@ namespace NeonBlack.Gameplay.Editor
                     if (string.IsNullOrWhiteSpace(step))
                         continue;
 
+                    if (createAssetAttr != null && IsGenericCreateAssetStep(step))
+                        continue;
+
                     actions.Add(BuildNativeActionFromStep(step));
                 }
             }
 
-            if (type == null)
-                return actions.ToArray();
-
-            var createAssetAttr = type.GetCustomAttribute<CreateAssetMenuAttribute>();
-            if (createAssetAttr != null)
-            {
-                string menuName = string.IsNullOrWhiteSpace(createAssetAttr.menuName) 
-                    ? AuthoringCapabilityRegistry.PrettifyTypeName(type.Name) 
-                    : createAssetAttr.menuName;
-                
-                actions.Add(PyralisAuthoringNativeActionFactory.CreateAssetAction(
-                    AuthoringCapabilityRegistry.PrettifyTypeName(type.Name),
-                    menuName,
-                    "the asset exists in the project"));
-            }
-
-            var addComponentAttr = type.GetCustomAttribute<AddComponentMenu>();
-            if (addComponentAttr != null && !string.IsNullOrWhiteSpace(addComponentAttr.componentMenu))
-            {
-                actions.Add(PyralisAuthoringNativeActionFactory.AddComponentAction(
-                    "selected GameObject",
-                    addComponentAttr.componentMenu,
-                    "the component is added to the Inspector"));
-            }
-
             return actions.ToArray();
+        }
+
+        private static bool IsGenericCreateAssetStep(string step)
+        {
+            if (string.IsNullOrWhiteSpace(step))
+                return false;
+
+            string normalized = step.Trim().TrimEnd('.').ToLowerInvariant();
+            return normalized == "create asset"
+                || normalized == "create asset in project window";
         }
 
         private static PyralisAuthoringNativeAction BuildNativeActionFromStep(string step)

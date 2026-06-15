@@ -13,7 +13,6 @@ namespace NeonBlack.Gameplay.Features.Combat
         Relevance = "Project-window creation path for one combat action.",
         AssignmentFields = new[] { nameof(displayName), nameof(inputType), nameof(animationSignal) },
         FirstProof = "Verify the combat action triggers the correct animation and applies damage/weapon effects.",
-        NativeSetup = new[] { "Create Asset" },
         ExpertAdvice = "Use comboStep to sequence multi-hit attacks. Use cooldownOverride if this move should be slower or faster than the weapon default."
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Combat/Combat Action Definition", fileName = "CombatActionDefinition")]

@@ -15,7 +15,7 @@ namespace NeonBlack.Gameplay.Core.Config
         ProfileType = typeof(InputConfig),
         AssignmentFields = new[] { nameof(actions) },
         FirstProof = "Verify that the assigned InputActionAsset is loaded by the input system.",
-        NativeSetup = new[] { "Create asset in Project window.", "Assign your .inputactions asset." },
+        NativeSetup = new[] { "Assign your .inputactions asset." },
         ExpertAdvice = "Assign an InputActionAsset that defines the gameplay controls for this lane. Use unique InputConfigs for players vs AI if specific binding overrides are needed.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/input"
     )]

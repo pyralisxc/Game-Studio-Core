@@ -12,8 +12,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
         Capability = AuthoringCapability.Tabletop | AuthoringCapability.TurnBased, 
         Relevance = "Project-window creation path for tabletop and turn/menu action order.",
         AssignmentFields = new[] { nameof(participantSeats), nameof(phases) },
-        FirstProof = "Verify the turn sequence in the Tabletop Board Grid Presenter.",
-        NativeSetup = new[] { "Create Asset" }
+        FirstProof = "Verify the turn sequence in the Tabletop Board Grid Presenter."
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Rules/Turn Order Definition", fileName = "TurnOrderDefinition", order = -70)]
     public class TurnOrderDefinition : ScriptableObject, IRuntimeValidationProvider

@@ -14,7 +14,6 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Relevance = "Project-window creation path for pawn presentation lane and visual setup choices.",
         AssignmentFields = new[] { nameof(presentationMode), nameof(hudPrefab), nameof(primaryTint) },
         FirstProof = "Change the primary tint and see it reflected on the pawn in the scene.",
-        NativeSetup = new[] { "Create Asset" },
         ExpertAdvice = "The presentation profile decides how the actor is rendered. Use 'Billboard2_5D' for sprites that face the camera in 3D space. 'Shadow Mode' determines if a blob shadow is auto-generated.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/visuals"
     )]

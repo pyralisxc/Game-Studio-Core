@@ -7,7 +7,7 @@ namespace NeonBlack.Gameplay.Features.Combat
     [AuthoringContract(
         Capability = AuthoringCapability.Combat | AuthoringCapability.VFX,
         Relevance = "Controls hit/miss VFX, audio, and impact feel for projectiles.",
-        NativeSetup = new[] { "Create Asset.", "Assign Hit/Miss effects.", "Set impact intensity." },
+        NativeSetup = new[] { "Assign Hit/Miss effects.", "Set impact intensity." },
         AssignmentFields = new[] { nameof(impactId), nameof(hitEffectPrefab) },
         FirstProof = "Verify hit effects spawn at the correct location with correct audio.",
         ExpertAdvice = "Use small hitPauseDuration to add 'weight' to physical impacts."

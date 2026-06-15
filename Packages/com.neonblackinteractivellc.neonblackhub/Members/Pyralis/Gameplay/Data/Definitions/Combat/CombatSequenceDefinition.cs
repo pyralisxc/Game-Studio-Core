@@ -11,7 +11,7 @@ namespace NeonBlack.Gameplay.Features.Combat
     [AuthoringContract(
         Capability = AuthoringCapability.Combat,
         Relevance = "Defines a sequence of combat actions (combos) triggered by a specific input type.",
-        NativeSetup = new[] { "Create Asset.", "Set Input Type.", "Add CombatActionDefinitions to the actions array." },
+        NativeSetup = new[] { "Set Input Type.", "Add CombatActionDefinitions to the actions array." },
         AssignmentFields = new[] { nameof(inputType), nameof(actions) },
         FirstProof = "Verify the actor performs the sequence of animations and attacks in order.",
         ExpertAdvice = "Use sequences to build multi-hit brawler combos. Each action in the list must correspond to the correct combo step."

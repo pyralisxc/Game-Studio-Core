@@ -14,7 +14,7 @@ namespace NeonBlack.Gameplay.Core.Navigation
         Relevance = "Ordered list of all playable worlds. Referenced by menu and session flow.",
         AssignmentFields = new[] { nameof(LevelRegistry.levels) },
         FirstProof = "The Level Registry is correctly discovered by the Session and Menu services.",
-        NativeSetup = new[] { "Create Asset.", "Populate the Levels array with LevelData assets." },
+        NativeSetup = new[] { "Populate the Levels array with LevelData assets." },
         ExpertAdvice = "The Registry is the source of truth for the level selector UI. Use it to centralize world definitions across the project.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/navigation"
     )]

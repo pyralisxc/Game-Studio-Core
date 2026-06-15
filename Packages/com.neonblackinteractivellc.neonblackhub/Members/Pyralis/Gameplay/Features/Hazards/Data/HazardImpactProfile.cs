@@ -9,7 +9,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
     [AuthoringContract(
         Capability = AuthoringCapability.Combat,
         Relevance = "Defines the damage, knockback, and status effects applied by a hazard on contact.",
-        NativeSetup = new[] { "Create Asset.", "Set Damage and Tick Interval.", "Configure Targeting." },
+        NativeSetup = new[] { "Set Damage and Tick Interval.", "Configure Targeting." },
         AssignmentFields = new[] { nameof(effectId), nameof(damagePerTick) },
         FirstProof = "Verify the hazard applies the correct damage and status effects to targets.",
         ExpertAdvice = "Use destroyCollectiblesOnContact for obstacle hazards that should 'eat' powerups."

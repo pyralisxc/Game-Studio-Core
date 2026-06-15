@@ -11,8 +11,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
         Capability = AuthoringCapability.Tabletop | AuthoringCapability.Grid, 
         Relevance = "Project-window creation path for tabletop board pieces.",
         AssignmentFields = new[] { nameof(pieceId), nameof(displayName), nameof(visualPrefab) },
-        FirstProof = "Verify the piece is instantiated correctly on the board with the assigned visual prefab.",
-        NativeSetup = new[] { "Create Asset" }
+        FirstProof = "Verify the piece is instantiated correctly on the board with the assigned visual prefab."
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Rules/Board Piece Definition", fileName = "BoardPieceDefinition", order = -90)]
     public class BoardPieceDefinition : ScriptableObject, IRuntimeValidationProvider

@@ -7,7 +7,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
     [AuthoringContract(
         Capability = AuthoringCapability.Puzzle | AuthoringCapability.Session,
         Relevance = "Defines how an actor interacts with world objects.",
-        NativeSetup = new[] { "Create Asset.", "Set Interaction Cooldown." },
+        NativeSetup = new[] { "Set Interaction Cooldown." },
         AssignmentFields = new[] { nameof(enableInteraction) },
         FirstProof = "Verify the actor can trigger interaction events on compatible world objects.",
         ExpertAdvice = "Use interactionCooldown to prevent rapid-fire interaction spamming.",

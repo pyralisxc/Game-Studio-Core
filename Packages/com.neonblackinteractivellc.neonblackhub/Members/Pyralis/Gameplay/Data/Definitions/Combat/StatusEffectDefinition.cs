@@ -33,7 +33,7 @@ namespace NeonBlack.Gameplay.Features.Combat
     [AuthoringContract(
         Capability = AuthoringCapability.Combat,
         Relevance = "Defines a status effect (buff or debuff) that can be applied to actors.",
-        NativeSetup = new[] { "Create Asset.", "Set Effect Kind and Duration.", "Configure stack mode." },
+        NativeSetup = new[] { "Set Effect Kind and Duration.", "Configure stack mode." },
         AssignmentFields = new[] { nameof(effectId), nameof(displayName), nameof(duration) },
         FirstProof = "Apply the effect to an actor and verify its magnitude and duration match the definition.",
         ExpertAdvice = "Use tickInterval for effects that apply over time (e.g., Poison, Heal)."

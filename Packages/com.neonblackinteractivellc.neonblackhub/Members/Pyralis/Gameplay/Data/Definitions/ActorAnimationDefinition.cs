@@ -10,7 +10,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
     [AuthoringContract(
         Capability = AuthoringCapability.Animation,
         Relevance = "Defines the animation signal contract supported by an actor setup.",
-        NativeSetup = new[] { "Create Asset.", "Set supported presentation modes.", "Optionally list supported signals." },
+        NativeSetup = new[] { "Set supported presentation modes.", "Optionally list supported signals." },
         AssignmentFields = new[] { nameof(supportsSprite2D), nameof(supportsBillboard2_5D), nameof(supportsRigged3D) },
         FirstProof = "Verify animation signals trigger correctly in the prefab's Animator.",
         ExpertAdvice = "Leave Supported Signals empty to accept all standard signals. Use specific signals only if the animator is restricted."
