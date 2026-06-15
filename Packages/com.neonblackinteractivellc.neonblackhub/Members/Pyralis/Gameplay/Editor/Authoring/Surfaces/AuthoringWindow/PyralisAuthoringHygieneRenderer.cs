@@ -17,7 +17,7 @@ namespace NeonBlack.Gameplay.Editor
 
             if (activeSetup == null)
             {
-                EditorGUILayout.HelpBox("Select a Bootstrap, Session, Game Mode, Participant, Pawn, Runtime Pattern, or Feature Module asset so Hygiene can inspect its resolved setup graph.", MessageType.Info);
+                EditorGUILayout.HelpBox("Select a Bootstrap, Session, Game Mode, Participant, Pawn, or Feature Module asset so Hygiene can inspect its resolved setup graph.", MessageType.Info);
                 DrawSourceDependencyHygiene();
                 return;
             }
@@ -46,7 +46,7 @@ namespace NeonBlack.Gameplay.Editor
             if (graph == null)
                 return false;
 
-            IReadOnlyList<PyralisAuthoringValidationGraphSection> sections = PyralisAuthoringSetupGraphProjection.BuildHygieneSections(graph);
+            IReadOnlyList<PyralisAuthoringGraphAuditSection> sections = PyralisAuthoringSetupGraphProjection.BuildHygieneSections(graph);
             if (!HasRows(sections))
                 return false;
 
@@ -54,7 +54,7 @@ namespace NeonBlack.Gameplay.Editor
             EditorGUILayout.LabelField("Graph Audit Buckets", EditorStyles.boldLabel);
             for (int i = 0; i < sections.Count; i++)
             {
-                PyralisAuthoringValidationGraphSection section = sections[i];
+                PyralisAuthoringGraphAuditSection section = sections[i];
                 if (section == null || !section.HasRows)
                     continue;
 
@@ -145,7 +145,7 @@ namespace NeonBlack.Gameplay.Editor
 
         private static void DrawGraphAuditDetails(PyralisAuthoringSetupGraph graph)
         {
-            IReadOnlyList<PyralisAuthoringValidationGraphRow> rows = PyralisAuthoringSetupGraphProjection.BuildHygieneDetailRows(graph);
+            IReadOnlyList<PyralisAuthoringGraphAuditRow> rows = PyralisAuthoringSetupGraphProjection.BuildHygieneDetailRows(graph);
             if (rows == null || rows.Count == 0)
             {
                 EditorGUILayout.HelpBox("Hygiene did not find unvalidated graph nodes, explicit runtime/scene findings, or proof blocker links. Use Map for scene setup repair.", MessageType.Info);
@@ -155,7 +155,7 @@ namespace NeonBlack.Gameplay.Editor
             string currentGroup = string.Empty;
             for (int i = 0; i < rows.Count; i++)
             {
-                PyralisAuthoringValidationGraphRow row = rows[i];
+                PyralisAuthoringGraphAuditRow row = rows[i];
                 if (row == null)
                     continue;
 
@@ -171,7 +171,7 @@ namespace NeonBlack.Gameplay.Editor
             }
         }
 
-        private static bool HasRows(IReadOnlyList<PyralisAuthoringValidationGraphSection> sections)
+        private static bool HasRows(IReadOnlyList<PyralisAuthoringGraphAuditSection> sections)
         {
             if (sections == null)
                 return false;
@@ -192,7 +192,7 @@ namespace NeonBlack.Gameplay.Editor
 
         private static void DrawReadinessBucket(
             string label,
-            IReadOnlyList<PyralisAuthoringValidationGraphRow> issues,
+            IReadOnlyList<PyralisAuthoringGraphAuditRow> issues,
             MessageType messageType)
         {
             if (issues == null || issues.Count == 0)
@@ -203,7 +203,7 @@ namespace NeonBlack.Gameplay.Editor
             int visible = Mathf.Min(issues.Count, 4);
             for (int i = 0; i < visible; i++)
             {
-                PyralisAuthoringValidationGraphRow issue = issues[i];
+                PyralisAuthoringGraphAuditRow issue = issues[i];
                 if (issue == null)
                     continue;
 
@@ -217,7 +217,7 @@ namespace NeonBlack.Gameplay.Editor
                 EditorGUILayout.LabelField("+" + (issues.Count - visible) + " more audit finding(s)", EditorStyles.miniLabel);
         }
 
-        private static void DrawGraphEvidenceCard(PyralisAuthoringValidationGraphRow issue)
+        private static void DrawGraphEvidenceCard(PyralisAuthoringGraphAuditRow issue)
         {
             if (issue == null)
                 return;

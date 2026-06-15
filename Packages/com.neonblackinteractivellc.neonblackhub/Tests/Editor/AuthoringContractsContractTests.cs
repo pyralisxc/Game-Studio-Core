@@ -668,8 +668,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
                     && node.SourceOrigin == PyralisAuthoringGraphSourceOrigin.RuntimeEvidence),
                 Is.True);
             Assert.That(
-                PyralisAuthoringSetupGraphProjection.BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.Missing)
-                    .Concat(PyralisAuthoringSetupGraphProjection.BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.Blocked))
+                PyralisAuthoringSetupGraphProjection.BuildReadinessAuditRows(graph, PyralisAuthoringGraphEvidenceState.Missing)
+                    .Concat(PyralisAuthoringSetupGraphProjection.BuildReadinessAuditRows(graph, PyralisAuthoringGraphEvidenceState.Blocked))
                     .Any(row => !string.IsNullOrWhiteSpace(row.OriginLabel)),
                 Is.True);
 
@@ -688,15 +688,15 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
 
         [Test]
-        public void AuthoringSetupGraphProjection_ValidationRowsIncludeSetupFlowEvidence()
+        public void AuthoringSetupGraphProjection_ReadinessAuditRowsIncludeSetupFlowEvidence()
         {
             GameObject root = new GameObject("Bootstrap Validation Graph");
             GameplaySessionBootstrap bootstrap = root.AddComponent<GameplaySessionBootstrap>();
 
             PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
-            PyralisAuthoringValidationGraphRow[] rows = PyralisAuthoringSetupGraphProjection
-                .BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.Missing)
-                .Concat(PyralisAuthoringSetupGraphProjection.BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.Blocked))
+            PyralisAuthoringGraphAuditRow[] rows = PyralisAuthoringSetupGraphProjection
+                .BuildReadinessAuditRows(graph, PyralisAuthoringGraphEvidenceState.Missing)
+                .Concat(PyralisAuthoringSetupGraphProjection.BuildReadinessAuditRows(graph, PyralisAuthoringGraphEvidenceState.Blocked))
                 .ToArray();
 
             Assert.That(
@@ -716,16 +716,16 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void AuthoringSetupGraphProjection_ValidationSectionsOwnVisibleValidateBuckets()
+        public void AuthoringSetupGraphProjection_ReadinessAuditSectionsOwnVisibleBuckets()
         {
             GameObject root = new GameObject("Bootstrap Validation Section Graph");
             GameplaySessionBootstrap bootstrap = root.AddComponent<GameplaySessionBootstrap>();
 
             PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
-            IReadOnlyList<PyralisAuthoringValidationGraphSection> sections =
-                PyralisAuthoringSetupGraphProjection.BuildValidationSections(graph);
-            IReadOnlyList<PyralisAuthoringValidationGraphRow> details =
-                PyralisAuthoringSetupGraphProjection.BuildValidationDetailRows(graph);
+            IReadOnlyList<PyralisAuthoringGraphAuditSection> sections =
+                PyralisAuthoringSetupGraphProjection.BuildReadinessAuditSections(graph);
+            IReadOnlyList<PyralisAuthoringGraphAuditRow> details =
+                PyralisAuthoringSetupGraphProjection.BuildReadinessAuditDetailRows(graph);
 
             Assert.That(sections.Select(section => section.Label), Is.EqualTo(new[]
             {

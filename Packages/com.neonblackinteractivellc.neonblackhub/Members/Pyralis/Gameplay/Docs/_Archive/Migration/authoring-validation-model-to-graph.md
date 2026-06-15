@@ -6,7 +6,7 @@ Keep current validation work on these paths:
 
 - `PyralisSetupFlowValidator` and `PyralisSceneReadinessValidator` provide source evidence.
 - `PyralisAuthoringSetupGraphBuilder` attaches that evidence to graph nodes.
-- `PyralisAuthoringSetupGraphProjection.BuildValidationRows(...)` renders Validate rows.
+- `PyralisAuthoringSetupGraphProjection.BuildReadinessAuditRows(...)` renders graph-backed readiness audit rows.
 - `PyralisAuthoringSetupGraphProjection.BuildTypedValidationIssues(...)` projects typed `PyralisAuthoringIssue` data.
 
 Pawn prefab readiness text that was still useful moved to `PyralisPawnPrefabReadinessAnalysis` so route analysis can keep reporting native 2D pawn prefab issues without retaining a separate validation-card model.

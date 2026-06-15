@@ -160,11 +160,11 @@ namespace NeonBlack.Gameplay.Editor
 
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                IReadOnlyList<PyralisAuthoringValidationGraphRow> rows = PyralisAuthoringSetupGraphProjection.BuildValidationDetailRows(graph);
+                IReadOnlyList<PyralisAuthoringGraphAuditRow> rows = PyralisAuthoringSetupGraphProjection.BuildReadinessAuditDetailRows(graph);
                 int visibleCount = 0;
                 for (int i = 0; i < rows.Count; i++)
                 {
-                    PyralisAuthoringValidationGraphRow row = rows[i];
+                    PyralisAuthoringGraphAuditRow row = rows[i];
                     if (!IsSceneSetupIssue(row))
                         continue;
 
@@ -177,7 +177,7 @@ namespace NeonBlack.Gameplay.Editor
             }
         }
 
-        private static bool IsSceneSetupIssue(PyralisAuthoringValidationGraphRow row)
+        private static bool IsSceneSetupIssue(PyralisAuthoringGraphAuditRow row)
         {
             PyralisAuthoringGraphNode node = row?.Node;
             if (node == null)
@@ -207,7 +207,7 @@ namespace NeonBlack.Gameplay.Editor
             return false;
         }
 
-        private static void DrawSceneSetupIssueRow(PyralisAuthoringValidationGraphRow row)
+        private static void DrawSceneSetupIssueRow(PyralisAuthoringGraphAuditRow row)
         {
             PyralisAuthoringGraphNode node = row.Node;
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))

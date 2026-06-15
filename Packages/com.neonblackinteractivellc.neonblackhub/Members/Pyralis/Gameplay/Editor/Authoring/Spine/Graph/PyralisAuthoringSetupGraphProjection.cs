@@ -47,9 +47,9 @@ namespace NeonBlack.Gameplay.Editor
         public bool IsMissing => Node != null && (EffectiveEvidenceState == PyralisAuthoringGraphEvidenceState.Missing || EffectiveEvidenceState == PyralisAuthoringGraphEvidenceState.Blocked);
     }
 
-    public sealed class PyralisAuthoringValidationGraphRow
+    public sealed class PyralisAuthoringGraphAuditRow
     {
-        public PyralisAuthoringValidationGraphRow(PyralisAuthoringGraphNode node)
+        public PyralisAuthoringGraphAuditRow(PyralisAuthoringGraphNode node)
         {
             Node = node;
         }
@@ -95,21 +95,21 @@ namespace NeonBlack.Gameplay.Editor
         }
     }
 
-    public sealed class PyralisAuthoringValidationGraphSection
+    public sealed class PyralisAuthoringGraphAuditSection
     {
-        public PyralisAuthoringValidationGraphSection(
+        public PyralisAuthoringGraphAuditSection(
             string label,
             PyralisAuthoringGraphEvidenceState evidenceState,
-            IReadOnlyList<PyralisAuthoringValidationGraphRow> rows)
+            IReadOnlyList<PyralisAuthoringGraphAuditRow> rows)
         {
             Label = label ?? string.Empty;
             EvidenceState = evidenceState;
-            Rows = rows ?? Array.Empty<PyralisAuthoringValidationGraphRow>();
+            Rows = rows ?? Array.Empty<PyralisAuthoringGraphAuditRow>();
         }
 
         public string Label { get; }
         public PyralisAuthoringGraphEvidenceState EvidenceState { get; }
-        public IReadOnlyList<PyralisAuthoringValidationGraphRow> Rows { get; }
+        public IReadOnlyList<PyralisAuthoringGraphAuditRow> Rows { get; }
         public bool HasRows => Rows.Count > 0;
     }
 
@@ -801,73 +801,73 @@ namespace NeonBlack.Gameplay.Editor
             return graph.Nodes.Count(node => node != null && node.EvidenceState == evidenceState);
         }
 
-        public static IReadOnlyList<PyralisAuthoringValidationGraphRow> BuildValidationRows(PyralisAuthoringSetupGraph graph, PyralisAuthoringGraphEvidenceState evidenceState)
+        public static IReadOnlyList<PyralisAuthoringGraphAuditRow> BuildReadinessAuditRows(PyralisAuthoringSetupGraph graph, PyralisAuthoringGraphEvidenceState evidenceState)
         {
             if (graph == null)
-                return Array.Empty<PyralisAuthoringValidationGraphRow>();
+                return Array.Empty<PyralisAuthoringGraphAuditRow>();
 
             return graph.Nodes
                 .Where(node => node != null
                     && IsReadinessNode(node)
                     && node.EvidenceState == evidenceState)
-                .Select(node => new PyralisAuthoringValidationGraphRow(node))
+                .Select(node => new PyralisAuthoringGraphAuditRow(node))
                 .ToArray();
         }
 
-        public static IReadOnlyList<PyralisAuthoringValidationGraphSection> BuildValidationSections(PyralisAuthoringSetupGraph graph)
+        public static IReadOnlyList<PyralisAuthoringGraphAuditSection> BuildReadinessAuditSections(PyralisAuthoringSetupGraph graph)
         {
             if (graph == null)
-                return Array.Empty<PyralisAuthoringValidationGraphSection>();
+                return Array.Empty<PyralisAuthoringGraphAuditSection>();
 
             return new[]
             {
-                new PyralisAuthoringValidationGraphSection(
+                new PyralisAuthoringGraphAuditSection(
                     "Required Before Play",
                     PyralisAuthoringGraphEvidenceState.Blocked,
-                    BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.Blocked)),
-                new PyralisAuthoringValidationGraphSection(
+                    BuildReadinessAuditRows(graph, PyralisAuthoringGraphEvidenceState.Blocked)),
+                new PyralisAuthoringGraphAuditSection(
                     "Recommended Before Play",
                     PyralisAuthoringGraphEvidenceState.Missing,
-                    BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.Missing)),
-                new PyralisAuthoringValidationGraphSection(
+                    BuildReadinessAuditRows(graph, PyralisAuthoringGraphEvidenceState.Missing)),
+                new PyralisAuthoringGraphAuditSection(
                     "Proof Enhancers",
                     PyralisAuthoringGraphEvidenceState.CandidateDetected,
-                    BuildValidationRows(graph, PyralisAuthoringGraphEvidenceState.CandidateDetected))
+                    BuildReadinessAuditRows(graph, PyralisAuthoringGraphEvidenceState.CandidateDetected))
             };
         }
 
-        public static IReadOnlyList<PyralisAuthoringValidationGraphSection> BuildHygieneSections(PyralisAuthoringSetupGraph graph)
+        public static IReadOnlyList<PyralisAuthoringGraphAuditSection> BuildHygieneSections(PyralisAuthoringSetupGraph graph)
         {
             if (graph == null)
-                return Array.Empty<PyralisAuthoringValidationGraphSection>();
+                return Array.Empty<PyralisAuthoringGraphAuditSection>();
 
             return new[]
             {
-                new PyralisAuthoringValidationGraphSection(
+                new PyralisAuthoringGraphAuditSection(
                     "Unvalidated Graph Nodes",
                     PyralisAuthoringGraphEvidenceState.Unknown,
                     BuildHygieneUnknownRows(graph)),
-                new PyralisAuthoringValidationGraphSection(
+                new PyralisAuthoringGraphAuditSection(
                     "Explicit Runtime / Scene Findings",
                     PyralisAuthoringGraphEvidenceState.Missing,
                     BuildHygieneEvidenceRows(graph)),
-                new PyralisAuthoringValidationGraphSection(
+                new PyralisAuthoringGraphAuditSection(
                     "Proof Blocker Links",
                     PyralisAuthoringGraphEvidenceState.Blocked,
                     BuildHygieneProofBlockerRows(graph))
             };
         }
 
-        public static IReadOnlyList<PyralisAuthoringValidationGraphRow> BuildHygieneDetailRows(PyralisAuthoringSetupGraph graph)
+        public static IReadOnlyList<PyralisAuthoringGraphAuditRow> BuildHygieneDetailRows(PyralisAuthoringSetupGraph graph)
         {
             if (graph == null)
-                return Array.Empty<PyralisAuthoringValidationGraphRow>();
+                return Array.Empty<PyralisAuthoringGraphAuditRow>();
 
-            List<PyralisAuthoringValidationGraphRow> rows = new List<PyralisAuthoringValidationGraphRow>();
-            IReadOnlyList<PyralisAuthoringValidationGraphSection> sections = BuildHygieneSections(graph);
+            List<PyralisAuthoringGraphAuditRow> rows = new List<PyralisAuthoringGraphAuditRow>();
+            IReadOnlyList<PyralisAuthoringGraphAuditSection> sections = BuildHygieneSections(graph);
             for (int i = 0; i < sections.Count; i++)
             {
-                PyralisAuthoringValidationGraphSection section = sections[i];
+                PyralisAuthoringGraphAuditSection section = sections[i];
                 if (section == null || !section.HasRows)
                     continue;
 
@@ -877,32 +877,32 @@ namespace NeonBlack.Gameplay.Editor
             return rows.ToArray();
         }
 
-        private static IReadOnlyList<PyralisAuthoringValidationGraphRow> BuildHygieneUnknownRows(PyralisAuthoringSetupGraph graph)
+        private static IReadOnlyList<PyralisAuthoringGraphAuditRow> BuildHygieneUnknownRows(PyralisAuthoringSetupGraph graph)
         {
             return graph.Nodes
                 .Where(node => node != null
                     && node.EvidenceState == PyralisAuthoringGraphEvidenceState.Unknown
                     && node.Kind != PyralisAuthoringGraphNodeKind.Proof
                     && node.Kind != PyralisAuthoringGraphNodeKind.Capability)
-                .Select(node => new PyralisAuthoringValidationGraphRow(node))
+                .Select(node => new PyralisAuthoringGraphAuditRow(node))
                 .ToArray();
         }
 
-        private static IReadOnlyList<PyralisAuthoringValidationGraphRow> BuildHygieneEvidenceRows(PyralisAuthoringSetupGraph graph)
+        private static IReadOnlyList<PyralisAuthoringGraphAuditRow> BuildHygieneEvidenceRows(PyralisAuthoringSetupGraph graph)
         {
             return graph.Nodes
                 .Where(node => node != null
                     && node.Kind == PyralisAuthoringGraphNodeKind.ValidationEvidence
                     && node.EvidenceState != PyralisAuthoringGraphEvidenceState.Ready
                     && node.EvidenceState != PyralisAuthoringGraphEvidenceState.Optional)
-                .Select(node => new PyralisAuthoringValidationGraphRow(node))
+                .Select(node => new PyralisAuthoringGraphAuditRow(node))
                 .ToArray();
         }
 
-        private static IReadOnlyList<PyralisAuthoringValidationGraphRow> BuildHygieneProofBlockerRows(PyralisAuthoringSetupGraph graph)
+        private static IReadOnlyList<PyralisAuthoringGraphAuditRow> BuildHygieneProofBlockerRows(PyralisAuthoringSetupGraph graph)
         {
             HashSet<string> seen = new HashSet<string>(StringComparer.Ordinal);
-            List<PyralisAuthoringValidationGraphRow> rows = new List<PyralisAuthoringValidationGraphRow>();
+            List<PyralisAuthoringGraphAuditRow> rows = new List<PyralisAuthoringGraphAuditRow>();
 
             for (int i = 0; i < graph.Edges.Count; i++)
             {
@@ -919,22 +919,22 @@ namespace NeonBlack.Gameplay.Editor
                     continue;
                 }
 
-                rows.Add(new PyralisAuthoringValidationGraphRow(blocker));
+                rows.Add(new PyralisAuthoringGraphAuditRow(blocker));
             }
 
             return rows.ToArray();
         }
 
-        public static IReadOnlyList<PyralisAuthoringValidationGraphRow> BuildValidationDetailRows(PyralisAuthoringSetupGraph graph)
+        public static IReadOnlyList<PyralisAuthoringGraphAuditRow> BuildReadinessAuditDetailRows(PyralisAuthoringSetupGraph graph)
         {
             if (graph == null)
-                return Array.Empty<PyralisAuthoringValidationGraphRow>();
+                return Array.Empty<PyralisAuthoringGraphAuditRow>();
 
-            List<PyralisAuthoringValidationGraphRow> rows = new List<PyralisAuthoringValidationGraphRow>();
-            IReadOnlyList<PyralisAuthoringValidationGraphSection> sections = BuildValidationSections(graph);
+            List<PyralisAuthoringGraphAuditRow> rows = new List<PyralisAuthoringGraphAuditRow>();
+            IReadOnlyList<PyralisAuthoringGraphAuditSection> sections = BuildReadinessAuditSections(graph);
             for (int i = 0; i < sections.Count; i++)
             {
-                PyralisAuthoringValidationGraphSection section = sections[i];
+                PyralisAuthoringGraphAuditSection section = sections[i];
                 if (section == null || !section.HasRows)
                     continue;
 

@@ -89,6 +89,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(Directory.Exists(GameplayEditorLayer("Authoring", "Spine", "Graph")), Is.True);
             Assert.That(Directory.Exists(GameplayEditorLayer("Authoring", "Spine", "Validation")), Is.True);
             Assert.That(Directory.Exists(GameplayEditorLayer("Authoring", "Spine", "Evidence")), Is.True);
+            Assert.That(Directory.Exists(GameplayEditorLayer("Authoring", "Spine", "Hygiene")), Is.True);
             Assert.That(Directory.Exists(GameplayEditorLayer("Authoring", "Surfaces", "AuthoringWindow")), Is.True);
             Assert.That(Directory.Exists(GameplayEditorLayer("Authoring", "Surfaces", "Inspectors")), Is.True);
             Assert.That(Directory.Exists(GameplayEditorLayer("Authoring", "Surfaces", "Tools")), Is.True);
@@ -103,6 +104,10 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Spine", "Graph", "PyralisAuthoringCapabilityDescriptor.cs")), Is.True);
             Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Spine", "Graph", "PyralisAuthoringSetupGraphProjection.cs")), Is.True);
             Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Spine", "Validation", "PyralisSetupFlowValidator.cs")), Is.True);
+            Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Spine", "Hygiene", "PyralisSourceDependencyHygieneScanner.cs")), Is.True);
+            Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Spine", "Hygiene", "PyralisAssetHygieneScanner.cs")), Is.True);
+            Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Spine", "Facts", "PyralisSourceDependencyHygieneScanner.cs")), Is.False);
+            Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Spine", "Facts", "PyralisAssetHygieneScanner.cs")), Is.False);
             Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Surfaces", "AuthoringWindow", "PyralisAuthoringWindow.cs")), Is.True);
             Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Surfaces", "AuthoringWindow", "PyralisCurrentStepPrimaryActionGuidance.cs")), Is.True);
             Assert.That(File.Exists(GameplayEditorLayer("Authoring", "Surfaces", "AuthoringWindow", "UI", "PyralisAuthoringWindow.uxml")), Is.True);
@@ -136,17 +141,17 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void PyralisAuthoringWindow_MapAndValidateTabs_ReadGraphProjectionNotLegacyModels()
+        public void PyralisAuthoringWindow_MapAndHygieneTabs_ReadGraphProjectionNotLegacyModels()
         {
             string windowPath = FindGameplayEditorFile("PyralisAuthoringWindow.cs");
             string mapRendererPath = FindGameplayEditorFile("PyralisAuthoringMapRenderer.cs");
-            string validateRendererPath = FindGameplayEditorFile("PyralisAuthoringValidateRenderer.cs");
+            string hygieneRendererPath = FindGameplayEditorFile("PyralisAuthoringHygieneRenderer.cs");
             string factRendererPath = FindGameplayEditorFile("PyralisAuthoringFactExplorerRenderer.cs");
             string guidePath = FindGameplayEditorFile("PyralisAuthoringWindow.Guide.cs");
 
             string windowSource = File.ReadAllText(windowPath);
             string mapSource = File.ReadAllText(mapRendererPath);
-            string validateSource = File.ReadAllText(validateRendererPath);
+            string hygieneSource = File.ReadAllText(hygieneRendererPath);
             string factSource = File.ReadAllText(factRendererPath);
             string guideSource = File.ReadAllText(guidePath);
 
@@ -157,33 +162,33 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(windowSource.Contains("PyralisAuthoringSetupGraphBuilder.Build(graphSource)"), Is.True);
             Assert.That(windowSource.Contains("PyralisAuthoringSetupGraphBuilder.Build(graphSource, GetCurrentIntentSelection())"), Is.True);
             Assert.That(windowSource.Contains("PyralisAuthoringMapRenderer.Draw(activeSetup, selection, GetCachedCurrentSetupGraph(activeSetup))"), Is.True);
-            Assert.That(windowSource.Contains("PyralisAuthoringValidateRenderer.Draw(activeSetup, GetCachedCurrentSetupGraph(activeSetup))"), Is.True);
+            Assert.That(windowSource.Contains("PyralisAuthoringHygieneRenderer.Draw(activeSetup, GetCachedCurrentSetupGraph(activeSetup))"), Is.True);
             Assert.That(windowSource.Contains("PyralisAuthoringFactExplorerRenderer.Draw(activeSetup, GetCachedCurrentSetupGraph(activeSetup))"), Is.True);
             Assert.That(mapSource.Contains("PyralisAuthoringSetupGraphBuilder.Build"), Is.False);
             Assert.That(mapSource.Contains("PyralisAuthoringSetupGraph graph"), Is.True);
             Assert.That(mapSource.Contains("PyralisAuthoringSetupGraphProjection.BuildSetupMapRows"), Is.True);
             Assert.That(mapSource.Contains("PyralisAuthoringSetupGraphProjection.BuildMapConnectionRows"), Is.True);
-            Assert.That(mapSource.Contains("PyralisAuthoringSetupGraphProjection.BuildValidationDetailRows"), Is.True);
+            Assert.That(mapSource.Contains("PyralisAuthoringSetupGraphProjection.BuildReadinessAuditDetailRows"), Is.True);
             Assert.That(mapSource.Contains("Scene Setup Issues"), Is.True);
             Assert.That(mapSource.Contains("Map for scene and setup reality"), Is.True);
             Assert.That(mapSource.Contains("PyralisAuthoringRouteReport"), Is.False);
             Assert.That(mapSource.Contains("PyralisAuthoringValidationModel"), Is.False);
             Assert.That(mapSource.Contains("PyralisSetupRouteAnalysis.Build"), Is.False);
 
-            Assert.That(validateSource.Contains("PyralisAuthoringSetupGraphBuilder.Build"), Is.False);
-            Assert.That(validateSource.Contains("PyralisAuthoringSetupGraph graph"), Is.True);
-            Assert.That(validateSource.Contains("PyralisAuthoringSetupGraphProjection.BuildValidationSections"), Is.True);
-            Assert.That(validateSource.Contains("PyralisAuthoringSetupGraphProjection.BuildValidationDetailRows"), Is.True);
-            Assert.That(validateSource.Contains("PyralisAuthoringSetupGraphProjection.BuildValidationRows"), Is.False);
-            Assert.That(validateSource.Contains("Validate Graph"), Is.True);
-            Assert.That(validateSource.Contains("Graph Size"), Is.True);
-            Assert.That(validateSource.Contains("Map owns concrete scene and Inspector setup issues"), Is.True);
-            Assert.That(validateSource.Contains("Inspect Target"), Is.False);
-            Assert.That(validateSource.Contains("Native Unity Action"), Is.False);
-            Assert.That(validateSource.Contains("PyralisAuthoringRouteReport"), Is.False);
-            Assert.That(validateSource.Contains("PyralisAuthoringValidationModel"), Is.False);
-            Assert.That(validateSource.Contains("PyralisSetupFlowValidator.BuildReport"), Is.False);
-            Assert.That(validateSource.Contains("PyralisSceneReadinessValidator.BuildReport"), Is.False);
+            Assert.That(hygieneSource.Contains("PyralisAuthoringSetupGraphBuilder.Build"), Is.False);
+            Assert.That(hygieneSource.Contains("PyralisAuthoringSetupGraph graph"), Is.True);
+            Assert.That(hygieneSource.Contains("PyralisAuthoringSetupGraphProjection.BuildHygieneSections"), Is.True);
+            Assert.That(hygieneSource.Contains("PyralisAuthoringSetupGraphProjection.BuildHygieneDetailRows"), Is.True);
+            Assert.That(hygieneSource.Contains("PyralisAuthoringSetupGraphProjection.BuildReadinessAuditRows"), Is.False);
+            Assert.That(hygieneSource.Contains("Hygiene"), Is.True);
+            Assert.That(hygieneSource.Contains("Graph Size"), Is.True);
+            Assert.That(hygieneSource.Contains("Map owns concrete scene and Inspector setup issues"), Is.True);
+            Assert.That(hygieneSource.Contains("Inspect Target"), Is.False);
+            Assert.That(hygieneSource.Contains("Native Unity Action"), Is.False);
+            Assert.That(hygieneSource.Contains("PyralisAuthoringRouteReport"), Is.False);
+            Assert.That(hygieneSource.Contains("PyralisAuthoringValidationModel"), Is.False);
+            Assert.That(hygieneSource.Contains("PyralisSetupFlowValidator.BuildReport"), Is.False);
+            Assert.That(hygieneSource.Contains("PyralisSceneReadinessValidator.BuildReport"), Is.False);
 
             Assert.That(factSource.Contains("PyralisAuthoringSetupGraphBuilder.Build"), Is.False);
             Assert.That(factSource.Contains("PyralisAuthoringSetupGraph graph"), Is.True);

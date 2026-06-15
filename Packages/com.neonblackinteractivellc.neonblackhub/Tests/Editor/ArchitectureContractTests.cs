@@ -1831,6 +1831,31 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
+        public void GameplayRuntime_LifetimeScopeLabelsSceneScansAsCompatibilityEvidence()
+        {
+            string gameplayRoot = Path.Combine(
+                Application.dataPath,
+                "..",
+                "Packages",
+                "com.neonblackinteractivellc.neonblackhub",
+                "Members",
+                "Pyralis",
+                "Gameplay");
+
+            string lifetimeScopeSource = File.ReadAllText(Path.Combine(
+                gameplayRoot,
+                "Features",
+                "Platform",
+                "Composition",
+                "PyralisGameplayLifetimeScope.cs"));
+
+            Assert.That(lifetimeScopeSource.Contains("HasCompatibilitySceneComponent<"), Is.True);
+            Assert.That(lifetimeScopeSource.Contains("HasCompatibilitySceneComponentInNamespace"), Is.True);
+            Assert.That(lifetimeScopeSource.Contains("Compatibility evidence"), Is.True);
+            Assert.That(lifetimeScopeSource.Contains("HasLoadedSceneComponentInNamespace"), Is.False);
+        }
+
+        [Test]
         public void GameplayRuntime_Source_RestrictsGlobalSceneDiscoveryToSceneGuard()
         {
             string gameplayRoot = Path.Combine(

@@ -193,7 +193,7 @@ namespace NeonBlack.Gameplay.Features.Platform.Session
                 new[] { missingSetup, unknownContract, runtimeEvidence, proof },
                 new[] { new PyralisAuthoringGraphEdge("proof.1p", "setup.session", PyralisAuthoringGraphEdgeKind.BlockedBy, "missing setup") });
 
-            IReadOnlyList<PyralisAuthoringValidationGraphSection> sections =
+            IReadOnlyList<PyralisAuthoringGraphAuditSection> sections =
                 PyralisAuthoringSetupGraphProjection.BuildHygieneSections(graph);
 
             Assert.That(sections.Select(section => section.Label), Does.Contain("Unvalidated Graph Nodes"));

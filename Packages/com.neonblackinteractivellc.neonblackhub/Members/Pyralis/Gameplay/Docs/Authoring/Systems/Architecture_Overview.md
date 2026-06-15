@@ -124,6 +124,8 @@ Put ScriptableObject definitions and profiles here: `GameModeDefinition`, `Parti
 
 Put editor-only tools here. The Pyralis authoring system lives under `Editor/Authoring`; keep the word "authoring" scoped to that system and to shared metadata that directly feeds it. Feature-local editor code can live under a feature's `Editor` folder when it is clearly an inspector or validation surface for that feature, but runtime gameplay folders should not carry authoring naming.
 
+Within `Editor/Authoring`, keep computation and audit tools under `Spine`, UI drawing under `Surfaces`, and fallback wording under `Grammar`. Hygiene scanners belong in `Spine/Hygiene`; `Spine/Facts` is for fact projection and reflective fact input, not source dependency pressure scans.
+
 ### Features
 
 Put all gameplay capability here. Each feature lives in `Features/[Name]/` and increasingly follows the governed runtime shape:

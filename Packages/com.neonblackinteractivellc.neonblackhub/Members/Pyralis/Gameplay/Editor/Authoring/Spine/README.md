@@ -14,3 +14,12 @@ feature-owned contracts and reflected setup references
 ```
 
 Developers should be able to add a gameplay feature by declaring its authoring contract and letting reflection/validation feed the graph without editing the core window or duplicating setup logic.
+
+Folder intent:
+
+- `Graph` compiles setup, evidence, proof, and projection rows.
+- `Validation` owns concrete setup and scene readiness validators.
+- `Evidence` captures scene/runtime evidence snapshots.
+- `Facts` owns fact projection and reflected fact inputs.
+- `Hygiene` owns graph/source/asset audit scanners that help developers find ownership pressure.
+- `Routes` owns route analysis and dependency-tree resolution.

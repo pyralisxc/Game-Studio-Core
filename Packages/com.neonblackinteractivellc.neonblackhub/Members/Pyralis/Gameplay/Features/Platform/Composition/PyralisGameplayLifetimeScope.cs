@@ -185,24 +185,24 @@ namespace NeonBlack.Gameplay.Core.Runtime
         private void RegisterFeatureServices(IContainerBuilder builder)
         {
             bool usesCombatServices = _featureServicePolicy.UsesCombatServices
-                || HasLoadedSceneComponent<PawnCombatBehaviour>()
-                || HasLoadedSceneComponent<PawnCombatBehaviour2D>();
+                || HasCompatibilitySceneComponent<PawnCombatBehaviour>()
+                || HasCompatibilitySceneComponent<PawnCombatBehaviour2D>();
             bool usesEnemyServices = _featureServicePolicy.UsesEnemyServices
-                || HasLoadedSceneComponent<EnemyAI>()
-                || HasLoadedSceneComponent<BattleManager>();
+                || HasCompatibilitySceneComponent<EnemyAI>()
+                || HasCompatibilitySceneComponent<BattleManager>();
             bool usesRpgServices = _featureServicePolicy.UsesRpgServices
-                || HasLoadedSceneComponentInNamespace("NeonBlack.Gameplay.Features.Rpg");
+                || HasCompatibilitySceneComponentInNamespace("NeonBlack.Gameplay.Features.Rpg");
             bool usesGameFlowServices = _featureServicePolicy.UsesGameFlowServices
-                || HasLoadedSceneComponent<GameManager>()
-                || HasLoadedSceneComponentInNamespace("NeonBlack.Gameplay.Features.GameFlow");
+                || HasCompatibilitySceneComponent<GameManager>()
+                || HasCompatibilitySceneComponentInNamespace("NeonBlack.Gameplay.Features.GameFlow");
             bool usesScoringServices = _featureServicePolicy.UsesScoringServices
-                || HasLoadedSceneComponent<ParticipantScoreService>()
-                || HasLoadedSceneComponent<LeaderboardManager>()
-                || HasLoadedSceneComponent<StillnessBonus2D>()
-                || HasLoadedSceneComponent<CollectibleFeedback2D>();
+                || HasCompatibilitySceneComponent<ParticipantScoreService>()
+                || HasCompatibilitySceneComponent<LeaderboardManager>()
+                || HasCompatibilitySceneComponent<StillnessBonus2D>()
+                || HasCompatibilitySceneComponent<CollectibleFeedback2D>();
             bool usesFeedbackServices = _featureServicePolicy.UsesFeedbackServices
-                || HasLoadedSceneComponent<ParticipantFeedbackService>()
-                || HasLoadedSceneComponentInNamespace("NeonBlack.Gameplay.Features.Feedback");
+                || HasCompatibilitySceneComponent<ParticipantFeedbackService>()
+                || HasCompatibilitySceneComponentInNamespace("NeonBlack.Gameplay.Features.Feedback");
 
             if (usesCombatServices)
                 RegisterCombatServices(builder);
@@ -327,8 +327,10 @@ namespace NeonBlack.Gameplay.Core.Runtime
             }
         }
 
-        private static bool HasLoadedSceneComponent<T>() where T : Component
+        private static bool HasCompatibilitySceneComponent<T>() where T : Component
         {
+            // Compatibility evidence keeps hand-authored existing scenes alive while feature contracts
+            // become the primary activation path. Do not treat these scans as new route truth.
             return FindLoadedSceneComponent<T>() != null;
         }
 
@@ -355,8 +357,10 @@ namespace NeonBlack.Gameplay.Core.Runtime
             return null;
         }
 
-        private static bool HasLoadedSceneComponentInNamespace(string namespacePrefix)
+        private static bool HasCompatibilitySceneComponentInNamespace(string namespacePrefix)
         {
+            // Namespace scans are compatibility evidence for older scene-authored feature stacks.
+            // Prefer policy/contract activation for new feature services.
             if (string.IsNullOrWhiteSpace(namespacePrefix))
                 return false;
 
