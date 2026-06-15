@@ -499,7 +499,7 @@ namespace NeonBlack.Gameplay.Editor
             if (selection == null || selection.Capabilities == AuthoringCapability.None)
                 return "Route shape: choose one capability ingredient so the graph can decide pawn, no-pawn, or action-surface ownership.";
 
-            RuntimeCapabilityFamily[] families = PyralisIntentCapabilityProjection.BuildRuntimeFamilies(
+            RuntimeCapabilityFamily[] families = PyralisAuthoringCapabilityDescriptorRegistry.BuildRuntimeFamilies(
                 selection.Capabilities,
                 selection.Lane,
                 selection.Axioms);

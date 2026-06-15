@@ -62,7 +62,7 @@ namespace NeonBlack.Gameplay.Editor
             if (intentSelection == null || intentSelection.Capabilities == AuthoringCapability.None)
                 return Array.Empty<RuntimeCapabilityFamily>();
 
-            return PyralisIntentCapabilityProjection.BuildRuntimeFamilies(
+            return PyralisAuthoringCapabilityDescriptorRegistry.BuildRuntimeFamilies(
                 intentSelection.Capabilities,
                 intentSelection.Lane,
                 intentSelection.Axioms);

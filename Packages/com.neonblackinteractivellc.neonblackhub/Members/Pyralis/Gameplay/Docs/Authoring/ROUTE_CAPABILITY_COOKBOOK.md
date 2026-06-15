@@ -6,7 +6,7 @@ Use this guide when choosing the capability language for a route. First-shape se
 
 A game setup can use more than one runtime capability. Reflected contracts and grammar vocabulary describe control surfaces and proof requirements; they are not exclusive genres or presets.
 
-Use Intent to filter the graph, then wire the actual setup through `SessionDefinition.defaultGameMode`, `GameModeDefinition` fields, participants, pawns, feature modules, scene evidence, contracts/reflection, and grammar vocabulary. First-proof requirements should resolve as graph proof nodes so Overview, Guide, Map, and Validate can explain the same setup facts without text guessing.
+Use Intent to filter the graph, then wire the actual setup through `SessionDefinition.defaultGameMode`, `GameModeDefinition` fields, participants, pawns, feature modules, scene evidence, contracts/reflection, and grammar vocabulary. First-proof requirements should resolve as graph proof nodes so Overview, Guide, Map, and Hygiene can explain the same setup facts without text guessing.
 
 Authoring should react to graph-filtered capabilities. A pawn action setup should prioritize pawn prefab, input, spawn, camera, and movement proof. A tabletop setup should not ask for pawn fields; it should prioritize board/card/action/cursor surfaces. A scoring setup should not block Play Mode before one score-changing event exists. The route should guide the developer's creative choices instead of forcing every game through one starter scene.
 

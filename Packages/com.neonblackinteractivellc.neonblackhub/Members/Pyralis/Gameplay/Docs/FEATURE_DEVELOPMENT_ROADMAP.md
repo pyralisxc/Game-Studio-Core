@@ -81,7 +81,7 @@ Authoring rollout order:
 1. normalize existing runtime capability cards, setup-flow rows, and common guide language into typed facts - active foundation started
 2. migrate one complete route, starting with 2D pawn movement, through the registry - setup-node relationships, first proof fact, and first Sprite2D convention provider are started
 3. prove the route manually through native Unity authoring before calling it authoring-ready
-4. add typed validator issues with stable issue codes - started in the Validate model and visible cards, still needs broader inspector/field coverage
+4. add typed validator issues with stable issue codes - started in the graph-backed Hygiene model and visible cards, still needs broader inspector/field coverage
 5. add route proof facts that connect setup nodes, scene evidence, and first Play Mode proof - broad proof targets and scene-evidence fact anchors are in place, still needs manual Computer Use proof notes
 6. add inspector handoff facts for selected field/component guidance - expanded across core setup, 2D pawn/input, tabletop, camera, feature-module, and selected route fields; still needs more per-route field audits after live testing
 7. add a read-only Fact Explorer tab that shows provenance, confidence, and missing coverage - started in the Authoring Window

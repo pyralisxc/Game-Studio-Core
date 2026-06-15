@@ -114,7 +114,7 @@ Keep the implementation split by responsibility:
 | `PyralisProofFamilyVocabulary` | generic fallback proof family templates |
 | `PyralisAuthoringIntentAdvisor` | pre-setup/fallback read model that ranks route-intent and graph-compatible vocabulary from selected world/playfield, control shape, lane, and goals |
 | `PyralisAuthoringSetupGraph` | read-only resolved graph of setup nodes, edges, evidence, proof targets, selected context, and source contracts |
-| `PyralisAuthoringSetupGraphProjection` | Map, Overview, Guide, Validate, reflective-contract, and selected-context projection rows derived from the resolved setup graph |
+| `PyralisAuthoringSetupGraphProjection` | Map, Overview, Guide, Hygiene, reflective-contract, and selected-context projection rows derived from the resolved setup graph |
 | `PyralisAuthoringSceneSurfaceGuidance` | scene-surface labels, route relevance, next-fix text, expected evidence, and success text |
 | `PyralisSetupFlowMonitor` | bootstrap/setup-flow readiness checks that should stay aligned with the window |
 | `PyralisSceneReadinessValidator` | scene and prefab evidence checks |
@@ -127,7 +127,7 @@ The active guidance pipeline is:
 Gameplay code and authored assets
   -> feature contracts + reflected dependency tree + validators + grammar vocabulary
       -> resolved setup graph
-          -> Map, Overview, Guide, Validate, Facts, selected context, inspectors, and docs
+          -> Map, Overview, Guide, Hygiene, Facts, selected context, inspectors, and docs
 ```
 
 Do not store the same route advice separately in multiple windows, inspectors, validators, or docs. If code structure proves it, reflect it. If humans need meaning, put it in a contract. If readiness changes, project it through graph evidence. If wording is generic, put it in Grammar/Vocabulary and let visible surfaces render from graph projections.
@@ -149,7 +149,7 @@ Gameplay code / feature code
           -> Intent
           -> Guide
           -> Map
-          -> Validate
+          -> Hygiene
           -> Facts
           -> Inspector handoffs
 ```
@@ -183,7 +183,7 @@ This refactor is complete when cleanup work stops finding new operating models a
 
 Lock-in requires:
 
-- Map, Overview, Guide, Validate, Facts, selected context, and Inspector handoffs read graph projections instead of direct legacy route/fact/proof models.
+- Map, Overview, Guide, Hygiene, Facts, selected context, and Inspector handoffs read graph projections instead of direct legacy route/fact/proof models.
 - Intent behaves as a graph and capability filter, not a recipe or preset system.
 - Feature-specific setup guidance lives in contracts or reflected feature metadata.
 - Grammar/vocabulary contains fallback wording and studio-wide Unity/Pyralis language only.
@@ -255,7 +255,7 @@ The grammar and graph inputs should grow in this order:
 1. grammar/vocabulary facts that preserve product voice - implemented for capability vocabulary
 2. setup-flow facts for core setup nodes and native actions - implemented for current setup step ids
 3. route proof facts that relate capability cards, setup nodes, and first Play Mode proof - expanded for pawn, tabletop/card, action selection, NPC/enemy, custom object, UI/HUD/menu, camera/world, generated content, and networking proof anchors
-4. typed validator issues with stable issue codes - started through the Validate model adapter and visible metadata block
+4. typed validator issues with stable issue codes - started through the graph-backed Hygiene model and visible metadata block
 5. inspector handoff facts for selected field/component guidance - expanded for core setup, 2D pawn/input, tabletop rules, camera/playfield, feature modules, Cinemachine camera fields, tabletop presenter fields, and camera framing customization
 6. read-only Fact Explorer views that show provenance, confidence, and missing coverage - started as the Authoring Window `Facts` tab
 7. read-only reflection/convention facts from Unity metadata such as `CreateAssetMenu`, `AddComponentMenu`, `RequireComponent`, and serialized fields - expanded across core setup, pawn, tabletop, action, camera, UI, custom feature, NPC/enemy, combat, projectile, and feedback surfaces
@@ -399,9 +399,9 @@ Map is the current scene/setup reality map. Each row should show:
 
 Map should teach what currently exists and what concrete Unity setup is missing. It can read graph evidence, but it presents scene and setup issues rather than graph integrity.
 
-### Validate
+### Hygiene
 
-Validate should be graph integrity, not a second scene checklist. Evidence cards should include:
+Hygiene should be graph integrity, not a second scene checklist. Evidence cards should include:
 
 - severity
 - stable graph node id
@@ -410,7 +410,7 @@ Validate should be graph integrity, not a second scene checklist. Evidence cards
 - blocker/proof relationship when known
 - graph finding and source detail
 
-Validation can mention source detail, but concrete Unity repair and inspection actions belong in Map or the Inspector. This keeps Validate useful for developers auditing the resolved graph without making it compete with the beginner setup flow.
+Hygiene can mention source detail, but concrete Unity repair and inspection actions belong in Map or the Inspector. This keeps Hygiene useful for developers auditing the resolved graph without making it compete with the beginner setup flow.
 
 ### Native Creation Workflow
 

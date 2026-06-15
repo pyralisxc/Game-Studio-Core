@@ -356,15 +356,19 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void PyralisAuthoringWindow_IntentProjectionUsesReflectedCapabilityDescriptors()
         {
-            string projectionPath = FindGameplayEditorFile("PyralisIntentCapabilityProjection.cs");
             string intentPath = FindGameplayEditorFile("PyralisAuthoringWindow.Intent.cs");
+            string graphBuilderPath = FindGameplayEditorFile("PyralisAuthoringSetupGraphBuilder.cs");
+            string graphProjectionPath = FindGameplayEditorFile("PyralisAuthoringSetupGraphProjection.cs");
             string descriptorPath = FindGameplayEditorFile("PyralisAuthoringCapabilityDescriptor.cs");
-            string projectionSource = File.ReadAllText(projectionPath);
             string intentSource = File.ReadAllText(intentPath);
+            string graphBuilderSource = File.ReadAllText(graphBuilderPath);
+            string graphProjectionSource = File.ReadAllText(graphProjectionPath);
             string descriptorSource = File.ReadAllText(descriptorPath);
 
-            Assert.That(projectionSource.Contains("PyralisAuthoringCapabilityDescriptorRegistry.BuildRuntimeFamilies"), Is.True);
-            Assert.That(projectionSource.Contains("PyralisRuntimeCapabilityFamilyMap.GetFamilies"), Is.False);
+            Assert.That(graphBuilderSource.Contains("PyralisAuthoringCapabilityDescriptorRegistry.BuildRuntimeFamilies"), Is.True);
+            Assert.That(graphProjectionSource.Contains("PyralisAuthoringCapabilityDescriptorRegistry.BuildRuntimeFamilies"), Is.True);
+            Assert.That(graphBuilderSource.Contains("PyralisRuntimeCapabilityFamilyMap.GetFamilies"), Is.False);
+            Assert.That(graphProjectionSource.Contains("PyralisRuntimeCapabilityFamilyMap.GetFamilies"), Is.False);
             Assert.That(intentSource.Contains("BuildIntentCapabilityGroups"), Is.True);
             Assert.That(intentSource.Contains("ShouldShowIntentCapability"), Is.True);
             Assert.That(intentSource.Contains("foreach (AuthoringCapability capability in AuthoringCapabilityRegistry.GetAllIndividualCapabilities())"), Is.True);
