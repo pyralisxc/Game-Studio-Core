@@ -733,6 +733,9 @@ namespace NeonBlack.Gameplay.Editor
                     if (createAssetAttr != null && IsGenericCreateAssetStep(step))
                         continue;
 
+                    if (addComponentAttr != null && IsGenericAddComponentStep(step))
+                        continue;
+
                     actions.Add(BuildNativeActionFromStep(step));
                 }
             }
@@ -748,6 +751,15 @@ namespace NeonBlack.Gameplay.Editor
             string normalized = step.Trim().TrimEnd('.').ToLowerInvariant();
             return normalized == "create asset"
                 || normalized == "create asset in project window";
+        }
+
+        private static bool IsGenericAddComponentStep(string step)
+        {
+            if (string.IsNullOrWhiteSpace(step))
+                return false;
+
+            string normalized = step.Trim().TrimEnd('.').ToLowerInvariant();
+            return normalized == "add component";
         }
 
         private static PyralisAuthoringNativeAction BuildNativeActionFromStep(string step)

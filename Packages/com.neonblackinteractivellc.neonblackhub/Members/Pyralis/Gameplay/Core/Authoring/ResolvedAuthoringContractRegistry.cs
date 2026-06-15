@@ -364,6 +364,18 @@ namespace NeonBlack.Gameplay.Core.Contracts
                 return attr.NativeSetup;
 
             string displayName = AuthoringCapabilityRegistry.PrettifyTypeName(type.Name);
+            if (typeof(ScriptableObject).IsAssignableFrom(type)
+                && type.GetCustomAttribute<CreateAssetMenuAttribute>() != null)
+            {
+                return Array.Empty<string>();
+            }
+
+            if (typeof(MonoBehaviour).IsAssignableFrom(type)
+                && type.GetCustomAttribute<AddComponentMenu>() != null)
+            {
+                return Array.Empty<string>();
+            }
+
             if (typeof(MonoBehaviour).IsAssignableFrom(type))
                 return new[] { $"Add or assign {displayName} on the relevant scene or prefab object." };
 

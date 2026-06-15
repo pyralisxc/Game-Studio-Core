@@ -10,6 +10,7 @@ using NeonBlack.Gameplay.Editor;
 using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Features.Combat;
 using NeonBlack.Gameplay.Features.Characters;
+using NeonBlack.Gameplay.Features.Input;
 using NeonBlack.Gameplay.Features.Scoring;
 using NeonBlack.Gameplay.Features.Tabletop;
 using NeonBlack.Gameplay.Presentation.Animation;
@@ -116,7 +117,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void ContractNativeSetup_SmokeDoesNotDuplicateReflectedCreateAssetMenu()
+        public void ContractNativeSetup_SmokeDoesNotDuplicateReflectedUnityMetadata()
         {
             string gameplayRoot = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Packages", "com.neonblackinteractivellc.neonblackhub", "Members", "Pyralis", "Gameplay"));
             string[] sourceFiles = Directory.GetFiles(gameplayRoot, "*.cs", SearchOption.AllDirectories);
@@ -128,19 +129,37 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 "\"Create Asset.\", ",
                 "\"Create asset in Project window.\", "
             };
+            string[] duplicateAddComponentSetupMarkers =
+            {
+                "NativeSetup = new[] { \"Add Component\" }",
+                "NativeSetup = new[] { \"Add Component.\" }",
+                "\"Add Component\", ",
+                "\"Add Component.\", "
+            };
 
             foreach (string sourceFile in sourceFiles)
             {
                 string source = File.ReadAllText(sourceFile);
-                if (!source.Contains("[CreateAssetMenu"))
-                    continue;
-
-                for (int i = 0; i < duplicateCreateSetupMarkers.Length; i++)
+                if (source.Contains("[CreateAssetMenu"))
                 {
-                    Assert.That(
-                        source.Contains(duplicateCreateSetupMarkers[i]),
-                        Is.False,
-                        $"{sourceFile} should let CreateAssetMenu reflection generate the Project create action instead of duplicating it in NativeSetup.");
+                    for (int i = 0; i < duplicateCreateSetupMarkers.Length; i++)
+                    {
+                        Assert.That(
+                            source.Contains(duplicateCreateSetupMarkers[i]),
+                            Is.False,
+                            $"{sourceFile} should let CreateAssetMenu reflection generate the Project create action instead of duplicating it in NativeSetup.");
+                    }
+                }
+
+                if (source.Contains("[AddComponentMenu"))
+                {
+                    for (int i = 0; i < duplicateAddComponentSetupMarkers.Length; i++)
+                    {
+                        Assert.That(
+                            source.Contains(duplicateAddComponentSetupMarkers[i]),
+                            Is.False,
+                            $"{sourceFile} should let AddComponentMenu reflection generate the Inspector add-component action instead of duplicating it in NativeSetup.");
+                    }
                 }
             }
         }
@@ -162,6 +181,29 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(fact.NativeActions.Any(action => action.Target == "contract NativeSetup fallback"), Is.False);
             Assert.That(fact.NativeActions.Any(action => action.FieldOrComponent == "Create asset in Project window."), Is.False);
             Assert.That(fact.NativeActions.Any(action => action.FieldOrComponent == "Assign to a PawnDefinition."), Is.True);
+        }
+
+        [Test]
+        public void ContractNativeSetup_SmokeUnityMetadataPreventsGeneratedFallbackSetup()
+        {
+            ResolvedAuthoringContract settingsContract = ResolvedAuthoringContractRegistry.FindByType(typeof(SettingsProfile));
+            Assert.That(settingsContract, Is.Not.Null);
+            Assert.That(settingsContract.NativeSetup, Is.Empty);
+
+            PyralisAuthoringFact settingsFact = PyralisReflectiveFactScanner.CreateFactFromContract(settingsContract);
+            Assert.That(settingsFact.NativeActions.Length, Is.EqualTo(1));
+            Assert.That(settingsFact.NativeActions[0].Surface, Is.EqualTo(PyralisAuthoringActionSurface.ProjectWindow));
+            Assert.That(settingsFact.NativeActions[0].FieldOrComponent, Does.Contain("Create -> NeonBlack/Profiles/Settings Profile"));
+
+            ResolvedAuthoringContract inputAdapterContract = ResolvedAuthoringContractRegistry.FindByType(typeof(Motor2DInputAdapter));
+            Assert.That(inputAdapterContract, Is.Not.Null);
+            Assert.That(inputAdapterContract.NativeSetup, Is.Empty);
+
+            PyralisAuthoringFact inputAdapterFact = PyralisReflectiveFactScanner.CreateFactFromContract(inputAdapterContract);
+            Assert.That(inputAdapterFact.NativeActions.Length, Is.EqualTo(1));
+            Assert.That(inputAdapterFact.NativeActions[0].Surface, Is.EqualTo(PyralisAuthoringActionSurface.Inspector));
+            Assert.That(inputAdapterFact.NativeActions[0].FieldOrComponent, Does.Contain("Add Component -> NeonBlack/Gameplay/Input/2D Motor Input Adapter"));
+            Assert.That(inputAdapterFact.RequiredUnitySurfaces, Does.Contain(nameof(Motor2D)));
         }
 
         [Test]

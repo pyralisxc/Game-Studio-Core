@@ -36,7 +36,7 @@ namespace NeonBlack.Gameplay.Core.Runtime
         Axioms = AuthoringWorldAxiom.None,
         AssignmentFields = new[] { nameof(InjectLoadedScenesOnBuild) },
         FirstProof = "Check the VContainer debugger to ensure all gameplay services are correctly registered in the scope.",
-        NativeSetup = new[] { "Add Component", "Configure VContainer Resolver" }
+        NativeSetup = new[] { "Configure VContainer Resolver" }
     )]
     public class PyralisGameplayLifetimeScope : LifetimeScope
     {
