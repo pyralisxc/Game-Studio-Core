@@ -363,6 +363,11 @@ namespace NeonBlack.Gameplay.Features.Platform.Session
             Assert.That(inputRouterSource, Does.Not.Contain("PlayerInputManager.instance"));
             Assert.That(gameManagerSource, Does.Not.Contain("private GameObject player"));
             Assert.That(gameManagerSource, Does.Not.Contain("private Motor2D primaryPlayerController"));
+            Assert.That(gameManagerSource, Does.Not.Contain("public interface IGameplaySessionFlow : IGameplayStateReader"));
+            Assert.That(gameManagerSource, Does.Not.Contain(", IGameplayStateReader"));
+            Assert.That(gameManagerSource, Does.Not.Contain("ConfigureRuntime(this"));
+            Assert.That(gameManagerSource, Does.Contain("SessionStateService"));
+            Assert.That(gameManagerSource, Does.Contain("SetPhase"));
             Assert.That(gameManagerSource, Does.Contain("Standalone Compatibility"));
         }
 

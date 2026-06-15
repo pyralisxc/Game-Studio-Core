@@ -17,7 +17,7 @@ namespace NeonBlack.Gameplay.Features.GameFlow
 {
 public enum GameState { Playing, Dead, GameOver }
 
-public interface IGameplaySessionFlow : IGameplayStateReader
+public interface IGameplaySessionFlow
 {
     GameState CurrentState { get; }
 
@@ -32,9 +32,9 @@ public interface IGameplaySessionFlow : IGameplayStateReader
 /// </summary>
 [AuthoringContract(
     Capability = AuthoringCapability.Setup | AuthoringCapability.Session,
-    Relevance = "Central game orchestrator; coordinates scoring, difficulty, spawning, and high-level game flow.",
+    Relevance = "2D arcade flow orchestrator; coordinates scoring, difficulty, hazards, pickups, and arcade states while SessionStateService owns shared gameplay-active state.",
     Axioms = AuthoringWorldAxiom.Dimensions2D,
-    RequiredInterfaces = new[] { typeof(IGameplaySessionFlow), typeof(IGameplayStateReader), typeof(IHazardOutcomeSink) },
+    RequiredInterfaces = new[] { typeof(IGameplaySessionFlow), typeof(IHazardOutcomeSink) },
     RequiredComponents = new[] { typeof(GameManager) },
     NativeSetup = new[] 
     { 
@@ -45,14 +45,13 @@ public interface IGameplaySessionFlow : IGameplayStateReader
     FirstProof = "Start the game and verify the session initializes and transitions to the Playing state."
 ,
         AssignmentFields = new[] { nameof(scoreManager), nameof(hazardSpawner), nameof(pickupSpawner), nameof(difficultyManager), nameof(playerControllers) },
-        ExpertAdvice = "The GameManager is the 2D arcade orchestrator. Prefer participant roster pawns for active players; use explicit Player Controllers only for hand-authored standalone compatibility scenes. Use inspector events to hook up UI and audio transitions.",
+        ExpertAdvice = "The GameManager is the 2D arcade orchestrator. SessionStateService remains the normal IGameplayStateReader for movement/input/spawner activity. Prefer participant roster pawns for active players; use explicit Player Controllers only for hand-authored standalone compatibility scenes.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/gameflow")]
 [AddComponentMenu("NeonBlack/Gameplay/Game Flow/2D Game Manager")]
 [DefaultExecutionOrder(-20)]
-public class GameManager : MonoBehaviour
-, IGameplayStateReader
-    , IGameplaySessionFlow
-    , IHazardOutcomeSink
+public class GameManager : MonoBehaviour,
+    IGameplaySessionFlow,
+    IHazardOutcomeSink
 {
     [Header("System References")]
     [SerializeField, Tooltip("ParticipantScoreService colocated with this manager or explicitly assigned.")]
@@ -92,12 +91,13 @@ public class GameManager : MonoBehaviour
     private ICameraBoundsProvider _cameraBoundsProvider;
     private ISceneNavigator _sceneNavigator;
     private IGameplaySettingsApplier _settings;
+    private IGameplayStateReader _gameplayStateReader;
+    private SessionStateService _sessionStateService;
     private GameState _currentState;
     private Motor2D _primaryPlayerController;
+    private readonly ArcadeFlowStateReader _standaloneStateReader = new ArcadeFlowStateReader();
 
     public GameState CurrentState => _currentState;
-    public bool IsGameplayActive => _currentState == GameState.Playing;
-
     public void AddGameStateChangedListener(UnityAction<GameState> listener)
     {
         if (listener != null)
@@ -116,7 +116,9 @@ public class GameManager : MonoBehaviour
         ILeaderboardService leaderboardService = null,
         ICameraBoundsProvider cameraBoundsProvider = null,
         ISceneNavigator sceneNavigator = null,
-        IGameplaySettingsApplier settings = null)
+        IGameplaySettingsApplier settings = null,
+        IGameplayStateReader gameplayStateReader = null,
+        SessionStateService sessionStateService = null)
     {
         _participantRosterService = participantRosterService;
         _leaderboardService = leaderboardService;
@@ -126,6 +128,10 @@ public class GameManager : MonoBehaviour
             _sceneNavigator = sceneNavigator;
         if (settings != null)
             _settings = settings;
+        if (gameplayStateReader != null)
+            _gameplayStateReader = gameplayStateReader;
+        if (sessionStateService != null)
+            _sessionStateService = sessionStateService;
     }
 
     private void Awake()
@@ -284,7 +290,18 @@ public class GameManager : MonoBehaviour
     private void SetState(GameState state)
     {
         _currentState = state;
+        ApplySessionPhase(state);
         OnGameStateChanged?.Invoke(state);
+    }
+
+    private void ApplySessionPhase(GameState state)
+    {
+        if (_sessionStateService == null)
+            return;
+
+        _sessionStateService.SetPhase(state == GameState.Playing
+            ? SessionStateService.SessionPhase.Gameplay
+            : SessionStateService.SessionPhase.Results);
     }
 
     private bool AreAllTrackedPlayersDead()
@@ -354,19 +371,20 @@ public class GameManager : MonoBehaviour
             _playerStartPositions[controller] = controller.transform.position;
 
         Pawn2DMovementComponent movement = controller.GetComponent<Pawn2DMovementComponent>();
-        movement?.ConfigureRuntime(this, _cameraBoundsProvider);
+        movement?.ConfigureRuntime(ResolveGameplayStateReader(), _cameraBoundsProvider);
 
         PlayerInputHandler inputHandler = controller.GetComponent<PlayerInputHandler>();
-        inputHandler?.ConfigureRuntime(this);
+        inputHandler?.ConfigureRuntime(ResolveGameplayStateReader());
 
         StillnessBonus2D stillnessBonus = controller.GetComponent<StillnessBonus2D>();
-        stillnessBonus?.ConfigureRuntime(this, scoreManager);
+        stillnessBonus?.ConfigureRuntime(ResolveGameplayStateReader(), scoreManager);
     }
 
     private void ConfigureRuntimeDependencies()
     {
-        pickupSpawner?.ConfigureRuntime(this, _cameraBoundsProvider);
-        hazardSpawner?.ConfigureRuntime(this, _cameraBoundsProvider, this, pickupSpawner);
+        IGameplayStateReader stateReader = ResolveGameplayStateReader();
+        pickupSpawner?.ConfigureRuntime(stateReader, _cameraBoundsProvider);
+        hazardSpawner?.ConfigureRuntime(stateReader, _cameraBoundsProvider, this, pickupSpawner);
     }
 
     public void SetSceneNavigator(ISceneNavigator sceneNavigator)
@@ -394,6 +412,24 @@ public class GameManager : MonoBehaviour
         }
 
         Debug.LogError("[GameManager] Scene Navigator is not injected. Ensure ISceneNavigator is registered in the LifetimeScope.", this);
+    }
+
+    private IGameplayStateReader ResolveGameplayStateReader()
+    {
+        if (_gameplayStateReader != null)
+            return _gameplayStateReader;
+
+        if (_sessionStateService != null)
+            return _sessionStateService;
+
+        _standaloneStateReader.Owner = this;
+        return _standaloneStateReader;
+    }
+
+    private sealed class ArcadeFlowStateReader : IGameplayStateReader
+    {
+        public GameManager Owner { get; set; }
+        public bool IsGameplayActive => Owner != null && Owner.CurrentState == GameState.Playing;
     }
 }
 }

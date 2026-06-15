@@ -56,7 +56,7 @@ namespace NeonBlack.Gameplay.Features.Scoring
         private float _stillnessThreshold = 0.05f;
 
         [Header("Runtime Services")]
-        [SerializeField, Tooltip("Gameplay state provider that controls when the stillness timer runs. GameManager implements IGameplayStateReader, or assign a custom session state component.")]
+        [SerializeField, Tooltip("Gameplay state provider that controls when the stillness timer runs. SessionStateService normally supplies IGameplayStateReader; assign this only for standalone custom state.")]
         private MonoBehaviour _gameplayStateSource;
 
         [SerializeField, Tooltip("Score award target for stillness rewards. ParticipantScoreService implements ISessionScoreAwardSink, or assign a custom score/resource service.")]

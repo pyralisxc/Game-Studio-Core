@@ -37,6 +37,8 @@ The current refactor pass now includes these concrete shared-core building block
 
 This means the package has a real Inspector-driven shared-core startup path. New gameplay and authoring work should extend this path directly instead of preserving abandoned setup routes.
 
+`SessionStateService` is the shared gameplay-active state owner. Feature systems that need to know whether gameplay is running should consume `IGameplayStateReader`. Mode-specific flow orchestrators, such as the 2D `GameManager`, should expose their own flow contract for panels, scoring, and arcade transitions, then drive the shared session phase rather than implementing a second gameplay-state source.
+
 ## Core Architectural Principles
 
 ### 1. N-Participant Core

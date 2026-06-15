@@ -1252,6 +1252,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             string setupFlowValidatorPath = Path.Combine(gameplayRoot, "Editor", "Authoring", "Spine", "Validation", "PyralisSetupFlowValidator.cs");
             string sceneReadinessValidatorPath = Path.Combine(gameplayRoot, "Editor", "Authoring", "Spine", "Validation", "PyralisSceneReadinessValidator.cs");
             string stillnessBonusPath = Path.Combine(gameplayRoot, "Features", "Scoring", "2D", "StillnessBonus2D.cs");
+            string gameManagerPath = Path.Combine(gameplayRoot, "Features", "GameFlow", "2D", "GameManager.cs");
             string uiManagerPath = Path.Combine(gameplayRoot, "Features", "GameFlow", "2D", "UI", "UIManager.cs");
             string settingsScreenPath = Path.Combine(gameplayRoot, "Features", "Settings", "UI", "SettingsScreen.cs");
             string settingsMenuPath = Path.Combine(gameplayRoot, "Features", "Settings", "UI", "SettingsMenu.cs");
@@ -1321,7 +1322,16 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(File.ReadAllText(sceneReadinessValidatorPath).Contains("Clear Bootstrap > Player Input Manager for single-player auto-join"), Is.True,
                 "Scene readiness should tell users why an incomplete PlayerInputManager can block/confuse the spawn proof.");
             Assert.That(File.ReadAllText(stillnessBonusPath).Contains("ISessionScoreAwardSink"), Is.True);
+            string gameManagerSource = File.ReadAllText(gameManagerPath);
+            Assert.That(gameManagerSource.Contains("public interface IGameplaySessionFlow : IGameplayStateReader"), Is.False);
+            Assert.That(gameManagerSource.Contains(": IGameplaySessionFlow"), Is.True);
+            Assert.That(gameManagerSource.Contains(", IGameplayStateReader"), Is.False);
+            Assert.That(gameManagerSource.Contains("ConfigureRuntime(this"), Is.False);
+            Assert.That(gameManagerSource.Contains("SessionStateService"), Is.True);
+            Assert.That(gameManagerSource.Contains("SetPhase"), Is.True,
+                "GameManager should drive the shared session phase instead of acting as its own gameplay-state reader.");
             Assert.That(File.ReadAllText(uiManagerPath).Contains("IGameplaySessionFlow"), Is.True);
+            Assert.That(File.ReadAllText(uiManagerPath).Contains("IGameplayStateReader"), Is.True);
             Assert.That(File.ReadAllText(settingsScreenPath).Contains("_musicVolumeSlider"), Is.True);
             Assert.That(File.ReadAllText(playerInputPath).Contains("PlayerInputHandler Instance"), Is.False);
             Assert.That(File.ReadAllText(uiManagerPath).Contains("UIManager Instance"), Is.False);

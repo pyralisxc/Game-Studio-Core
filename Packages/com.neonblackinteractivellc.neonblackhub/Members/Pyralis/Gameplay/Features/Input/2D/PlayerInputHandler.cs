@@ -50,7 +50,7 @@ public class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver, IPawnIn
     [SerializeField, Tooltip("The Canvas containing the input UI. Required for zone hit-testing on non-overlay canvases.")]
     private Canvas _canvas;
 
-    [SerializeField, Tooltip("Gameplay state provider that controls when player input is accepted. GameManager implements IGameplayStateReader, or assign a custom session state component.")]
+    [SerializeField, Tooltip("Gameplay state provider that controls when player input is accepted. SessionStateService normally supplies IGameplayStateReader; assign this only for standalone custom state.")]
     private MonoBehaviour _gameplayStateSource;
 
     [SerializeField, Tooltip("Settings service that pushes joystick/gamepad deadzone and swap-controls values. SettingsManager implements IInputSettingsRegistrar.")]

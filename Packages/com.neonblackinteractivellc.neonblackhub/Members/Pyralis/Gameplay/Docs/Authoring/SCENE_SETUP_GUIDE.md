@@ -181,7 +181,8 @@ Primary scripts:
 
 Current ownership:
 
-- `Features/GameFlow/2D/GameManager` for 2D run/session orchestration
+- `Features/GameFlow/2D/GameManager` for 2D arcade flow orchestration
+- `SessionStateService` for shared gameplay-active state
 - `Features/Hazards/2D/DifficultyManager` for hazard difficulty pacing
 - `Features/Hazards/2D/HazardSpawner` for 2D hazard spawning
 - `Features/Scoring/Runtime/Shared/ParticipantScoreService` for run-level scoring
@@ -193,7 +194,7 @@ Typical player object:
 - `Motor2DInputAdapter`
 - optional `StillnessBonus2D`
 
-`GameManager` uses `CollectibleSpawner2D` and `Motor2D` as the canonical pickup and movement surfaces for the supported 2D score-loop flow.
+`GameManager` coordinates scoring, hazards, pickups, and arcade state. It should read active pawns from the participant roster; explicit `playerControllers` are only for standalone compatibility scenes that are not using participant spawning.
 
 Optional support components:
 

@@ -20,12 +20,12 @@ namespace NeonBlack.Gameplay.Features.GameFlow
     { 
         "Add UIManager to the UI Canvas.",
         "Wire panel GameObjects and TMP labels.",
-        "Assign session flow and score service sources."
+        "Assign session flow, gameplay state, and score service sources."
     },
     AssignmentFields = new[] { "_hudPanel", "_gameOverPanel", "_scoreLabel", "_timeLabel" },
     FirstProof = "The HUD shows points and survival time when the game starts."
 ,
-        ExpertAdvice = "The UIManager is a high-level presentation layer. It listens to the IGameplaySessionFlow to toggle panels based on game state.",
+        ExpertAdvice = "The UIManager is a high-level presentation layer. It listens to IGameplaySessionFlow for arcade panels and IGameplayStateReader for active-time updates.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/ui")]
 [DefaultExecutionOrder(-10)]
 public class UIManager : MonoBehaviour
@@ -69,6 +69,7 @@ public class UIManager : MonoBehaviour
 
     private ISessionScoreService _scoreService;
     private IGameplaySessionFlow _gameplaySession;
+    private IGameplayStateReader _gameplayStateReader;
     private bool  _showingHUD;
     private float _timeUpdateTimer;
     // Pre-allocated buffer for zero-GC time string writes.
@@ -123,10 +124,14 @@ public class UIManager : MonoBehaviour
     }
 
     [Inject]
-    private void Construct(ISessionScoreService scoreService = null, IGameplaySessionFlow gameplaySession = null)
+    private void Construct(
+        ISessionScoreService scoreService = null,
+        IGameplaySessionFlow gameplaySession = null,
+        IGameplayStateReader gameplayStateReader = null)
     {
         _scoreService = scoreService;
         _gameplaySession = gameplaySession;
+        _gameplayStateReader = gameplayStateReader;
     }
 
     private void Update()
@@ -134,7 +139,7 @@ public class UIManager : MonoBehaviour
         // Rebuild the time string every 0.1 s so tenths-of-a-second feel responsive,
         // without allocating a string every single frame.
         if (_gameplaySession != null
-            && _gameplaySession.IsGameplayActive
+            && (_gameplayStateReader == null || _gameplayStateReader.IsGameplayActive)
             && _timeLabel != null
             && _scoreService != null)
         {

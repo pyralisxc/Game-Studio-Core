@@ -52,7 +52,7 @@ public class SettingsScreen : MonoBehaviour
     [SerializeField, Tooltip("Settings service that stores and applies slider/toggle values. SettingsManager implements IGameplaySettingsApplier.")]
     private MonoBehaviour _settingsSource;
 
-    [SerializeField, Tooltip("Optional gameplay state reader used to pause time only when settings are opened during active gameplay. GameManager implements IGameplayStateReader.")]
+    [SerializeField, Tooltip("Optional gameplay state reader used to pause time only when settings are opened during active gameplay. SessionStateService normally supplies IGameplayStateReader.")]
     private MonoBehaviour _gameplayStateSource;
 
     private bool _isOpen;
