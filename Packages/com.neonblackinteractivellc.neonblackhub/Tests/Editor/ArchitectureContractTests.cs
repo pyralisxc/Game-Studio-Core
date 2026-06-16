@@ -1097,6 +1097,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(weaponSource.Contains("projectileLifetime"), Is.False);
             Assert.That(weaponSource.Contains("projectileImpactDefinition"), Is.False);
             Assert.That(pawnCombatSource.Contains("weapon.projectileDefinition"), Is.True);
+            Assert.That(pawnCombatSource.Contains("PawnComboProcessor"), Is.True);
             Assert.That(pawnProjectileModuleSource.Contains("ProjectileFireRequest"), Is.True);
             Assert.That(pawnProjectileModuleSource.Contains("weapon.projectileDefinition"), Is.True);
             Assert.That(pawnProjectileModuleSource.Contains("damageMultiplier: damageMultiplier"), Is.True);
@@ -1104,6 +1105,9 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(pawnProjectileModuleSource.Contains("launcher.Fire(request)"), Is.True);
             Assert.That(pawnCombatSource.Contains("Instantiate(weapon.projectilePrefab"), Is.False);
             Assert.That(pawnCombat2DSource.Contains("ProjectileFireRequest"), Is.True);
+            Assert.That(pawnCombat2DSource.Contains("PawnComboProcessor"), Is.True);
+            Assert.That(pawnCombat2DSource.Contains("private sealed class ComboRuntimeState"), Is.False);
+            Assert.That(pawnCombat2DSource.Contains("TickComboState("), Is.False);
             Assert.That(pawnCombat2DSource.Contains("weapon.projectileDefinition"), Is.True);
             Assert.That(pawnCombat2DSource.Contains("damageMultiplier: _outgoingDamageMultiplier"), Is.True);
             Assert.That(pawnCombat2DSource.Contains("knockbackMultiplier: _outgoingKnockbackMultiplier"), Is.True);
@@ -1930,6 +1934,30 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(source.Contains("public IActorAnimationController Animation"), Is.True);
             Assert.That(source.Contains("public IActorKnockbackController Knockback"), Is.True);
             Assert.That(source.Contains("public IEnemyActorState EnemyActorState"), Is.True);
+        }
+
+        [Test]
+        public void EnemyRuntimeAndInspector_Source_KeepSetupTruthInAuthoring()
+        {
+            string gameplayRoot = Path.Combine(
+                Application.dataPath,
+                "..",
+                "Packages",
+                "com.neonblackinteractivellc.neonblackhub",
+                "Members",
+                "Pyralis",
+                "Gameplay");
+
+            string enemySource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Enemies", "3D", "EnemyAI.cs"));
+            string enemyEditorSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Enemies", "3D", "Editor", "Inspectors", "EnemyAIEditor.cs"));
+
+            Assert.That(enemySource.Contains("RequireComponent(typeof(HealthComponent))"), Is.True);
+            Assert.That(enemySource.Contains("private HealthComponent _healthComponent;"), Is.True);
+            Assert.That(enemySource.Contains("GetComponent<HealthComponent>().OnDeath"), Is.False);
+            Assert.That(enemyEditorSource.Contains("PyralisInspectorGuide"), Is.False);
+            Assert.That(enemyEditorSource.Contains("DrawValidationIssues"), Is.False);
+            Assert.That(enemyEditorSource.Contains("GetField("), Is.False);
+            Assert.That(enemyEditorSource.Contains("UnityEditor.Animations.AnimatorController"), Is.False);
         }
 
         [Test]

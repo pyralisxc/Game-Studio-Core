@@ -26,7 +26,7 @@ namespace NeonBlack.Gameplay.Features.Pickups
     },
     FirstProof = "Walk the player into the collectible and verify points are added to the score service.",
     ExpertAdvice = "Use CircleCollider2D for optimal performance. Collectibles bob vertically based on local time to avoid visual synchronization.",
-    AssignmentFields = new[] { nameof(_bobSpeed), nameof(_bobHeight), nameof(_awardSinkSource) }
+    AssignmentFields = new[] { nameof(_bobSpeed), nameof(_bobHeight) }
 )]
 [AddComponentMenu("NeonBlack/Gameplay/Pickups/Collectible 2D")]
 [RequireComponent(typeof(CircleCollider2D))]

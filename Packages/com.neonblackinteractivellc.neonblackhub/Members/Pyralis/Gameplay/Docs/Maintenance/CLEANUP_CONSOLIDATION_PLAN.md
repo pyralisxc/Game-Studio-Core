@@ -46,7 +46,9 @@ This cleanup phase is complete when:
 - Keep `PyralisGameplayLifetimeScope` as the service composition owner.
 - Keep `ParticipantDefinition.inputProfile` as the only authored input owner.
 - Keep `ParticipantDefinition.defaultPawn -> PawnDefinition.pawnPrefab` as the spawn route.
-- Keep `GameManager.playerControllers` only as explicit standalone compatibility.
+- Keep `GameManager.playerControllers` as explicit standalone compatibility, not reflected beginner assignment guidance.
+- Keep contracts from declaring their own component type as a required component; reflection already proves the source component exists.
+- Keep injected runtime service override fields out of normal assignment guidance unless they are the only supported setup path.
 - Keep `PlayfieldProfile` as movement-space owner and `CameraRigProfile` as framing owner.
 
 ### Phase 4: Movement, Presentation, And Camera Clarity
@@ -58,14 +60,17 @@ This cleanup phase is complete when:
 - Split large files only when there is a real owner boundary, not just because they are long.
 - Keep `Pawn2DPresentationComponent` as a beginner-facing facade until presentation pressure proves a real extraction boundary.
 - Keep `Motor3D` as a coordinator until feature fallback routing earns a narrower adapter.
-- Plan a later behavior-tested convergence where `PawnCombatBehaviour2D` uses the shared `PawnComboProcessor` instead of carrying its own combo runtime.
-- Treat `EnemyAI` and `Hazard` as later extraction targets only after tests prove the state/sequence behavior that would move.
+- Keep `PawnCombatBehaviour2D` on the shared `PawnComboProcessor`; 2D combat should own HitBox2D/projectile application, not duplicate combo state machines.
+- Keep `EnemyAI` setup assumptions explicit through required components and graph evidence; feature inspectors should edit fields, not run private reflection validators.
+- Keep `Hazard` contracts focused on required beginner fields and leave optional modifiers conditional in wording until contract metadata can express conditional setup.
+- Treat deeper `EnemyAI` and `Hazard` state/sequence extraction as later work only after behavior tests prove the code that would move.
 
 ### Phase 5: Hygiene Guardrail
 
 - Re-export Hygiene after cleanup.
 - Confirm unresolved/no-route state has no proof blockers.
 - Confirm contract inventory is separate from route failure.
+- Keep source pressure useful by distinguishing real runtime reflection/static lookups from ordinary editor `SerializedProperty` binding.
 - Use dependency-pressure changes to choose the next cleanup slice.
 
 ### Phase 6: Documentation And Verification

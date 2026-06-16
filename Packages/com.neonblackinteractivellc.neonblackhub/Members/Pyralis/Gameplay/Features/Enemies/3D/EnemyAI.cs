@@ -33,6 +33,7 @@ namespace NeonBlack.Gameplay.Features.Enemies
     )]
 [AddComponentMenu("NeonBlack/Gameplay/Enemies/Enemy AI")]
     [RequireComponent(typeof(CharacterController))]
+    [RequireComponent(typeof(HealthComponent))]
     [RequireComponent(typeof(EnemyMovementModule))]
     [RequireComponent(typeof(EnemyDetectionModule))]
     [RequireComponent(typeof(EnemyCombatModule))]
@@ -63,6 +64,7 @@ namespace NeonBlack.Gameplay.Features.Enemies
         private EnemyDetectionModule _detectionModule;
         private EnemyCombatModule _combatModule;
         private EnemyAnimationModule _animationModule;
+        private HealthComponent _healthComponent;
         private ActorFeatureHost _featureHost;
         private IEnemyReactionState _reactionState;
 
@@ -99,6 +101,7 @@ namespace NeonBlack.Gameplay.Features.Enemies
             _detectionModule = GetComponent<EnemyDetectionModule>();
             _combatModule = GetComponent<EnemyCombatModule>();
             _animationModule = GetComponent<EnemyAnimationModule>();
+            _healthComponent = GetComponent<HealthComponent>();
             _featureHost = GetComponent<ActorFeatureHost>();
 
             _spawnPos = transform.position;
@@ -121,8 +124,8 @@ namespace NeonBlack.Gameplay.Features.Enemies
                     spriteDefaultFacesRight);
             }
 
-            GetComponent<HealthComponent>().OnDeath.AddListener(OnDeath);
-            GetComponent<HealthComponent>().OnDamaged.AddListener(OnHit);
+            _healthComponent.OnDeath.AddListener(OnDeath);
+            _healthComponent.OnDamaged.AddListener(OnHit);
 
             InitializeFeatureModules();
         }
@@ -240,7 +243,7 @@ namespace NeonBlack.Gameplay.Features.Enemies
         {
             return new ActorFeatureContext(
                 gameObject,
-                health: GetComponent<HealthComponent>(),
+                health: _healthComponent,
                 animation: GetComponent<ActorAnimationDriver>(),
                 knockback: GetComponent<KnockbackReceiver>(),
                 enemyActorState: this,

@@ -25,11 +25,11 @@ namespace NeonBlack.Gameplay.Features.Scoring
         { 
             "Attach to the Player GameObject.",
             "Ensure a Motor2D is present.",
-            "Assign a Score Award Source."
+            "Tune reward timing and point values."
         },
-        AssignmentFields = new[] { nameof(_collectiblesPerBonus), nameof(_stillnessInterval), nameof(_stillnessThreshold), nameof(_gameplayStateSource), nameof(_scoreAwardSource), nameof(_bonusClip) },
+        AssignmentFields = new[] { nameof(_collectiblesPerBonus), nameof(_stillnessInterval), nameof(_stillnessThreshold), nameof(_bonusClip) },
         FirstProof = "Stay still for 3 seconds and verify the score increases.",
-        ExpertAdvice = "Set the stillness threshold high enough to ignore micro-movement or drift. Ensure the score award source is correctly wired."
+        ExpertAdvice = "Set the stillness threshold high enough to ignore micro-movement or drift. Runtime scoring and gameplay state are normally supplied by the session scope; use the source fields only for standalone custom orchestration."
     )]
     [RequireComponent(typeof(Motor2D))]
     [AddComponentMenu("NeonBlack/Gameplay/Features/Scoring/Stillness Bonus 2D")]
@@ -39,7 +39,6 @@ namespace NeonBlack.Gameplay.Features.Scoring
         {
             if (_collectiblesPerBonus <= 0) yield return "Collectibles Per Bonus must be positive.";
             if (_stillnessInterval <= 0f) yield return "Stillness Interval must be greater than zero.";
-            if (_scoreAwardSource == null) yield return "Score Award Source is unassigned.";
         }
         [Header("Reward Settings")]
         [SerializeField, Tooltip("Points added to the score each time the stillness interval completes.")]

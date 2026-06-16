@@ -13,10 +13,11 @@ namespace NeonBlack.Gameplay.Features.Pickups
         NativeSetup = new[] 
         { 
             "Add to a 3D prefab with a Collider (Is Trigger).",
-            "Assign an award sink if not using the global service."
+            "Tune collectible bobbing and score value."
         },
         FirstProof = "Walk an actor into the collectible and verify it disappears and awards points.",
-        AssignmentFields = new[] { nameof(bobSpeed), nameof(bobHeight), nameof(awardSinkSource) }
+        ExpertAdvice = "Runtime award routing is normally injected by the session scope. Use Award Sink Source only for standalone/custom award routing.",
+        AssignmentFields = new[] { nameof(bobSpeed), nameof(bobHeight) }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Pickups/Collectible 3D")]
     [RequireComponent(typeof(Collider))]

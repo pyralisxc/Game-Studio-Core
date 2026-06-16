@@ -98,7 +98,7 @@ namespace NeonBlack.Gameplay.Editor
         private static readonly Regex SerializedFieldRegex = new Regex(@"\[(SerializeField|SerializeReference)\]", RegexOptions.Compiled);
         private static readonly Regex UnityLookupRegex = new Regex(@"\b(GetComponent|GetComponents|FindObjectOfType|FindObjectsOfType|FindFirstObjectByType|FindAnyObjectByType|FindObjectsByType|GameObject\.Find|Resources\.Load)\b", RegexOptions.Compiled);
         private static readonly Regex StaticAccessRegex = new Regex(@"\b(Instance|Current|Default|Shared|Main)\s*\.", RegexOptions.Compiled);
-        private static readonly Regex ReflectionOrStringLookupRegex = new Regex(@"\b(Type\.GetType|GetType\(\)|nameof\(|GetMethod|GetField|GetProperty|FindProperty)\b", RegexOptions.Compiled);
+        private static readonly Regex ReflectionOrStringLookupRegex = new Regex(@"\b(Type\.GetType|GetType\(\)|GetMethod|GetField|GetProperty)\b", RegexOptions.Compiled);
 
         public static IReadOnlyList<PyralisSourceDependencyHygieneRecord> ScanPackage()
         {

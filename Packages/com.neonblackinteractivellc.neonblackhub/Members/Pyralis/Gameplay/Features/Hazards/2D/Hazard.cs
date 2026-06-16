@@ -46,12 +46,12 @@ namespace NeonBlack.Gameplay.Features.Hazards
     NativeSetup = new[]
     {
         "Attach Hazard script to a GameObject.",
-        "Wire child SpriteRenderers for Shadow, Outline, and Lane.",
-        "Add Collider2Ds to the Hit Colliders list.",
-        "Assign a HazardData ScriptableObject."
+        "Assign a HazardData ScriptableObject.",
+        "Wire the Shadow SpriteRenderer and Hit Colliders required by this hazard prefab.",
+        "Wire optional Outline, Lane, Explosion, feedback, and service overrides only when the selected HazardData uses those modifiers."
     },
     FirstProof = "Place a hazard in the scene and verify it executes its sequence (Slam, Crossing, etc.) on start.",
-    AssignmentFields = new[] { nameof(_data), nameof(_hitColliders), nameof(_shadowRenderer), nameof(_outlineRenderer), nameof(_laneRenderer), nameof(_explosionEffect), nameof(_cameraShakeSink), nameof(_settingsSource) },
+    AssignmentFields = new[] { nameof(_data), nameof(_hitColliders), nameof(_shadowRenderer) },
     ExpertAdvice = "Ensure a Kinematic Rigidbody2D is on the root for explosive hazards. Keep Shadow and Outline renderers on separate child objects."
 )]
 public partial class Hazard : MonoBehaviour, IRuntimeValidationProvider

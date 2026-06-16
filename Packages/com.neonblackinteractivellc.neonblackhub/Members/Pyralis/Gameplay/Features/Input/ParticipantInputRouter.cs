@@ -18,7 +18,6 @@ namespace NeonBlack.Gameplay.Features.Input
         Capability = AuthoringCapability.Input | AuthoringCapability.Setup,
         Relevance = "Routes physical input device events to the correct participant; participant definitions own the InputProfile that pawn and non-pawn control surfaces consume.",
         Axioms = AuthoringWorldAxiom.None,
-        RequiredComponents = new[] { typeof(ParticipantInputRouter) },
         AssignmentFields = new[] { nameof(sessionDefinition), nameof(rosterService), nameof(playerInputManager) },
         FirstProof = "Join a new player and verify they are correctly assigned to a participant seat in the roster.",
         NativeSetup = new[] 

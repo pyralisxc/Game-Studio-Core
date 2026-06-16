@@ -179,7 +179,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(hygieneSource.Contains("PyralisAuthoringSetupGraphBuilder.Build"), Is.False);
             Assert.That(hygieneSource.Contains("PyralisAuthoringSetupGraph graph"), Is.True);
             Assert.That(hygieneSource.Contains("PyralisAuthoringSetupGraphProjection.BuildHygieneSections"), Is.True);
-            Assert.That(hygieneSource.Contains("PyralisAuthoringSetupGraphProjection.BuildHygieneDetailRows"), Is.True);
+            Assert.That(hygieneSource.Contains("PyralisAuthoringSetupGraphProjection.BuildHygieneDetailRows"), Is.False);
             Assert.That(hygieneSource.Contains("PyralisAuthoringSetupGraphProjection.BuildReadinessAuditRows"), Is.False);
             Assert.That(hygieneSource.Contains("PyralisAuthoringGraphJsonExportControl.Draw(\"Hygiene\", graph)"), Is.True);
 
@@ -195,9 +195,17 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(exportControlSource.Contains("PyralisAuthoringSetupGraphJsonExporter.ToHygieneJson"), Is.True);
             Assert.That(exportControlSource.Contains("PyralisSourceDependencyHygieneScanner.ScanPackage()"), Is.True);
             Assert.That(exportControlSource.Contains("GUILayout.Button(content, GUILayout.Width(105f))"), Is.True);
+            Assert.That(exportControlSource.Contains("EditorApplication.delayCall"), Is.True);
+            Assert.That(exportControlSource.Contains("AssetDatabase.Refresh();"), Is.True);
+            Assert.That(exportControlSource.Contains("EditorUtility.RevealInFinder"), Is.True);
+            Assert.That(windowSource.Contains("try"), Is.True);
+            Assert.That(windowSource.Contains("finally"), Is.True);
+            Assert.That(windowSource.Contains("EditorGUILayout.EndScrollView();"), Is.True);
             Assert.That(hygieneSource.Contains("Hygiene"), Is.True);
             Assert.That(hygieneSource.Contains("Graph Size"), Is.True);
             Assert.That(hygieneSource.Contains("Map owns concrete scene and Inspector setup issues"), Is.True);
+            Assert.That(hygieneSource.Contains("Audit Summary"), Is.True);
+            Assert.That(hygieneSource.Contains("Detailed graph rows are collapsed by default"), Is.True);
             Assert.That(hygieneSource.Contains("Inspect Target"), Is.False);
             Assert.That(hygieneSource.Contains("Native Unity Action"), Is.False);
             Assert.That(hygieneSource.Contains("PyralisAuthoringRouteReport"), Is.False);

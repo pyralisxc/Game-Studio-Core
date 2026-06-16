@@ -160,6 +160,34 @@ namespace NeonBlack.Gameplay.Features.Platform.Session
         }
 
         [Test]
+        public void SourceDependencyHygiene_DoesNotTreatInspectorPropertyBindingAsReflectionPressure()
+        {
+            const string source = @"
+using UnityEditor;
+using UnityEngine;
+
+namespace NeonBlack.Gameplay.Features.Enemies.Editor.Inspectors
+{
+    public sealed class InspectorFixture : UnityEditor.Editor
+    {
+        private SerializedProperty _profile;
+
+        private void OnEnable()
+        {
+            _profile = serializedObject.FindProperty(nameof(_profile));
+        }
+    }
+}";
+
+            PyralisSourceDependencyHygieneRecord record =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Enemies/Editor/Inspectors/InspectorFixture.cs",
+                    source);
+
+            Assert.That(record.ReflectionOrStringLookupCount, Is.EqualTo(0));
+        }
+
+        [Test]
         public void HygieneProjection_SmokeAuditsGraphEvidenceWithoutPlayReadinessBuckets()
         {
             PyralisAuthoringGraphNode missingSetup = new PyralisAuthoringGraphNode(
@@ -481,9 +509,13 @@ namespace NeonBlack.Gameplay.Features.Platform.Session
 
             string inputRouterSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Input", "ParticipantInputRouter.cs"));
             string gameManagerSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "GameFlow", "2D", "GameManager.cs"));
+            string uiManagerSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "GameFlow", "2D", "UI", "UIManager.cs"));
             Assert.That(inputRouterSource, Does.Not.Contain("PlayerInputManager.instance"));
+            Assert.That(inputRouterSource, Does.Not.Contain("RequiredComponents = new[] { typeof(ParticipantInputRouter)"));
             Assert.That(gameManagerSource, Does.Not.Contain("private GameObject player"));
             Assert.That(gameManagerSource, Does.Not.Contain("private Motor2D primaryPlayerController"));
+            Assert.That(gameManagerSource, Does.Not.Contain("RequiredComponents = new[] { typeof(GameManager)"));
+            Assert.That(uiManagerSource, Does.Not.Contain("RequiredComponents = new[] { typeof(UIManager)"));
             Assert.That(gameManagerSource, Does.Not.Contain("public interface IGameplaySessionFlow : IGameplayStateReader"));
             Assert.That(gameManagerSource, Does.Not.Contain(", IGameplayStateReader"));
             Assert.That(gameManagerSource, Does.Not.Contain("ConfigureRuntime(this"));
@@ -496,13 +528,19 @@ namespace NeonBlack.Gameplay.Features.Platform.Session
         public void ReflectiveContracts_SmokeDoNotPromoteRuntimeServiceFallbackFields()
         {
             AssertContractFactDoesNotExposeRuntimeServiceFields(typeof(Pawn2DMovementComponent));
+            AssertContractFactDoesNotExposeRuntimeServiceFields(typeof(Hazard));
             AssertContractFactDoesNotExposeRuntimeServiceFields(typeof(HazardSpawner));
             AssertContractFactDoesNotExposeRuntimeServiceFields(typeof(CollectibleSpawner2D));
+            AssertContractFactDoesNotExposeRuntimeServiceFields(typeof(Collectible2D));
+            AssertContractFactDoesNotExposeRuntimeServiceFields(typeof(Collectible3D));
+            AssertContractFactDoesNotExposeRuntimeServiceFields(typeof(CollectibleFeedback2D));
+            AssertContractFactDoesNotExposeRuntimeServiceFields(typeof(StillnessBonus2D));
 
             ResolvedAuthoringContract gameManagerContract = ResolvedAuthoringContractRegistry.FindByType(typeof(GameManager));
             Assert.That(gameManagerContract, Is.Not.Null);
             Assert.That(gameManagerContract.AssignmentFields, Does.Contain("scoreManager"));
             Assert.That(gameManagerContract.AssignmentFields, Does.Contain("hazardSpawner"));
+            Assert.That(gameManagerContract.AssignmentFields, Does.Not.Contain("playerControllers"));
             Assert.That(gameManagerContract.AssignmentFields, Does.Not.Contain("playerRoot"));
             Assert.That(gameManagerContract.AssignmentFields, Does.Not.Contain("scoreService"));
 
@@ -522,7 +560,10 @@ namespace NeonBlack.Gameplay.Features.Platform.Session
             Assert.That(fact.AssignmentFields, Has.None.Contains("hazardOutcomeSource"));
             Assert.That(fact.AssignmentFields, Has.None.Contains("pickupBurstSurfaceSource"));
             Assert.That(fact.AssignmentFields, Has.None.Contains("scoreAwardSource"));
+            Assert.That(fact.AssignmentFields, Has.None.Contains("awardSinkSource"));
             Assert.That(fact.AssignmentFields, Has.None.Contains("targetCamera"));
+            Assert.That(fact.AssignmentFields, Has.None.Contains("cameraShakeSink"));
+            Assert.That(fact.AssignmentFields, Has.None.Contains("settingsSource"));
         }
 
         [Test]

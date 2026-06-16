@@ -155,8 +155,14 @@ namespace NeonBlack.Gameplay.Editor
                     
                     ref Vector2 scroll = ref GetCurrentScroll();
                     scroll = EditorGUILayout.BeginScrollView(scroll);
-                    DrawModeContent(currentActiveSetup, currentSelection);
-                    EditorGUILayout.EndScrollView();
+                    try
+                    {
+                        DrawModeContent(currentActiveSetup, currentSelection);
+                    }
+                    finally
+                    {
+                        EditorGUILayout.EndScrollView();
+                    }
                 }));
             }
         }

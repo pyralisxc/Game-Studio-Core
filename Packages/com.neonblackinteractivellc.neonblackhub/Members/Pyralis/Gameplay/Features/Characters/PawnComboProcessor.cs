@@ -18,6 +18,7 @@ namespace NeonBlack.Gameplay.Features.Characters
 
             public void Reset()
             {
+                Sequence = null;
                 ActiveAction = null;
                 CurrentIndex = -1;
                 Timer = 0f;

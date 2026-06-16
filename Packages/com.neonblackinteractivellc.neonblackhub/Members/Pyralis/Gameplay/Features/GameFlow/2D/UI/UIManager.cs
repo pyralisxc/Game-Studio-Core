@@ -15,7 +15,6 @@ namespace NeonBlack.Gameplay.Features.GameFlow
     Capability = AuthoringCapability.UI,
     Relevance = "Manages gameplay UI: HUD, game over screen, and settings navigation.",
     Axioms = AuthoringWorldAxiom.None,
-    RequiredComponents = new[] { typeof(UIManager) },
     NativeSetup = new[] 
     { 
         "Add UIManager to the UI Canvas.",
@@ -23,10 +22,9 @@ namespace NeonBlack.Gameplay.Features.GameFlow
         "Assign session flow, gameplay state, and score service sources."
     },
     AssignmentFields = new[] { "_hudPanel", "_gameOverPanel", "_scoreLabel", "_timeLabel" },
-    FirstProof = "The HUD shows points and survival time when the game starts."
-,
-        ExpertAdvice = "The UIManager is a high-level presentation layer. It listens to IGameplaySessionFlow for arcade panels and IGameplayStateReader for active-time updates.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/ui")]
+    FirstProof = "The HUD shows points and survival time when the game starts.",
+    ExpertAdvice = "The UIManager is a high-level presentation layer. It listens to IGameplaySessionFlow for arcade panels and IGameplayStateReader for active-time updates.",
+    DocumentationURL = "https://docs.neonblack.com/pyralis/ui")]
 [DefaultExecutionOrder(-10)]
 public class UIManager : MonoBehaviour
 {

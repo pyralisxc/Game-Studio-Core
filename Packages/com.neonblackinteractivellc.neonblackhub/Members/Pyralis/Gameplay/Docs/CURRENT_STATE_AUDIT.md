@@ -132,6 +132,9 @@ These were major refactor blockers and are now resolved or intentionally stabili
 - final pre-scene authoring audit now has docs and contracts aligned with the real code path: package quick start sends creators through START_HERE, the Authoring Window, Setup Flow, generic capability setup, and `PyralisGameplayLifetimeScope`; architecture docs name `GameplaySessionBootstrap` as the Unity-facing entry point and the lifetime scope as the VContainer graph; menu docs no longer teach direct SceneLoader singleton loading
 - MVP readiness is now defined as Beginner Prototype Ready through guided Unity setup: the active gates are Game Shell, Pawn-Backed Action across `Sprite2D`, `Billboard2_5D`, and `Rigged3D`, and Non-Pawn Tabletop; each route must satisfy runtime, authoring, guidance, validation, and proof before it can be called ready.
 - contract native-action cleanup has started: exact `NativeSetup = "Create Asset"` duplicates were removed from create-menu definitions/profiles, reflected `CreateAssetMenu` and `AddComponentMenu` actions now take priority over fallback prose, and smoke tests guard against reintroducing create-menu duplication.
+- runtime/authoring contract cleanup now keeps fallback surfaces out of beginner guidance: `PawnCombatBehaviour2D` uses the shared `PawnComboProcessor`, self-required component declarations have been removed from core route contracts, and injected service override fields on pickups/scoring are no longer reflected as normal assignment work.
+- Hygiene now acts as the developer audit dashboard instead of a validation clone: the tab summarizes graph integrity and source dependency pressure, exports Map/Hygiene JSON to `Editor/Authoring/TempGraphs`, ignores normal inspector `FindProperty`/`nameof` binding as reflection pressure, and leaves concrete scene repair work to Map.
+- enemy and hazard setup truth is tighter: `EnemyAI` explicitly requires `HealthComponent`, `EnemyAIEditor` no longer runs its own private-field setup validator, and the 2D `Hazard` contract reflects only the required beginner assignment fields while leaving explosion, lane, outline, camera shake, and settings hooks as optional modifiers.
 
 ## Highest-Priority Remaining Issues
 
@@ -183,26 +186,25 @@ Current focus:
 - prove one small host/client pawn scene after prefab creation, then expand into movement/projectile replication in deliberate slices
 - for tabletop, prove the first scene with `TabletopBoardGridPresenter`, then replace its default generated visuals with project-owned board art, UI, cursor, or card-hand presenters as the game shape becomes clear
 
-### 4. Some Compatibility Gameplay Surfaces Still Assume One Primary Player
+### 4. Primary-Player Compatibility Is Narrow But Still Needs Guardrails
 
-The participant model is real, but a few older systems still think in terms of one main player for compatibility.
+The participant model is real. Remaining primary-player surfaces are narrow compatibility/default affordances rather than the supported setup path.
 
 Current examples:
 
-- `Features/Characters/PlayerRegistry.cs`
-- parts of `Features/Spawning/3D/PlayerSpawner.cs`
-- some menu-driven and 2D scene-specific flows
-- legacy-facing 2D adapter and scene-flow assumptions that still need participant-native proof in Play Mode
+- `Features/Characters/PlayerRegistry.cs` remains a compatibility bridge for older scene wiring that still asks for an `IPlayerProvider`.
+- `Features/Spawning/3D/PlayerSpawner.cs` is participant-seat-explicit when configured; `targetSeatIndex = -1` intentionally follows the primary participant for default/compatibility routes.
+- some menu-driven and 2D scene-specific flows still need participant-native proof in Play Mode.
 
 Why it matters:
 
-- keeps older gameplay layers from feeling fully participant-native
-- makes local multiplayer harder to generalize than it should be
-- encourages compatibility code to linger longer than necessary
+- compatibility surfaces can still pull future code back toward one-primary-player thinking if tests and docs stop naming them as compatibility/default paths
+- local multiplayer stays easier to reason about when new code is participant-seat-explicit by default
 
 Current focus:
 
-- keep new respawn and lookup work participant-seat-explicit instead of falling back to "first participant" unless a compatibility path intentionally requests that behavior
+- keep new respawn and lookup work participant-seat-explicit instead of falling back to "first participant" unless a compatibility/default path intentionally requests that behavior
+- avoid deleting `PlayerRegistry` until remaining callers either use participant/session references or explicitly accept a compatibility bridge
 
 ### 5. Hot-Path Allocation And Polling Risks Need A Focused Pass
 
@@ -251,9 +253,9 @@ Why it matters:
 Current focus:
 
 - keep setup docs, inspector handoffs, and validation aligned with canonical types
-- keep route walkthroughs, first-proof sequencing, and beginner next steps in the Authoring Window instead of inspector guide blocks
+- keep route walkthroughs, first-proof sequencing, and beginner next steps in the Authoring Window instead of inspector guide blocks or feature inspector validators
 - make preferred authored paths the only runtime path where clean-break setup is viable
-- remove compatibility fields instead of documenting them as long-term migration surfaces
+- remove compatibility fields from reflected beginner guidance instead of documenting them as long-term migration surfaces
 - keep Intent as a toggleable graph filter, not a preset route recipe
 - demote proof and capability vocabulary to fallback wording while graph evidence owns proof readiness
 

@@ -35,26 +35,6 @@ namespace NeonBlack.Gameplay.Features.Characters
                 yield return "Hit Box Zones is empty. Melee attacks need HitBox2D slots.";
             if (attackCooldown < 0f) yield return "Attack Cooldown cannot be negative.";
         }
-        private sealed class ComboRuntimeState
-        {
-            public CombatSequenceDefinition Sequence;
-            public CombatActionDefinition ActiveAction;
-            public int CurrentIndex = -1;
-            public float Timer;
-            public bool AllowNextBranch;
-            public bool WaitingForHitConfirm;
-
-            public void Reset()
-            {
-                Sequence = null;
-                ActiveAction = null;
-                CurrentIndex = -1;
-                Timer = 0f;
-                AllowNextBranch = false;
-                WaitingForHitConfirm = false;
-            }
-        }
-
         [Header("Combo")]
         [SerializeField] private float comboResetTime = 1.5f;
         [SerializeField] private float combatWindow = 3f;
@@ -84,10 +64,7 @@ namespace NeonBlack.Gameplay.Features.Characters
         private ActorAnimationDriver _animationDriver;
         private HealthComponent _health;
         private IActorFeedbackPublisher _feedbackPublisher;
-
-        private readonly ComboRuntimeState _primaryState = new ComboRuntimeState();
-        private readonly ComboRuntimeState _secondaryState = new ComboRuntimeState();
-        private ComboRuntimeState _currentSequenceState;
+        private PawnComboProcessor _comboProcessor;
 
         private int _attackCount;
         private int _kickCount;
@@ -105,6 +82,7 @@ namespace NeonBlack.Gameplay.Features.Characters
             _animationDriver = GetComponent<ActorAnimationDriver>();
             _health = GetComponent<HealthComponent>();
             _feedbackPublisher = GetComponent<IActorFeedbackPublisher>();
+            _comboProcessor = new PawnComboProcessor();
 
             CacheHitBoxOffsets();
             SubscribeHitBoxes();
@@ -130,8 +108,7 @@ namespace NeonBlack.Gameplay.Features.Characters
             _combatTimer -= Time.deltaTime;
             _actingTimer -= Time.deltaTime;
 
-            TickComboState(_primaryState);
-            TickComboState(_secondaryState);
+            _comboProcessor.Tick(Time.deltaTime, comboResetTime);
 
             if (_actingTimer <= 0f && _motor != null)
                 _motor.SetActionLock(false);
@@ -141,7 +118,7 @@ namespace NeonBlack.Gameplay.Features.Characters
         {
             if (primarySequence != null && primarySequence.actions != null && primarySequence.actions.Length > 0)
             {
-                ExecuteSequenceAction(_primaryState, primarySequence, CombatInputType.Primary, attackWeapon, "Punch", ref _attackTimer, attackCooldown);
+                ExecuteSequenceAction(_comboProcessor.PrimaryState, primarySequence, CombatInputType.Primary, attackWeapon, "Punch", ref _attackTimer, attackCooldown);
                 return;
             }
 
@@ -152,7 +129,7 @@ namespace NeonBlack.Gameplay.Features.Characters
         {
             if (secondarySequence != null && secondarySequence.actions != null && secondarySequence.actions.Length > 0)
             {
-                ExecuteSequenceAction(_secondaryState, secondarySequence, CombatInputType.Secondary, kickWeapon, "Kick", ref _kickTimer, kickCooldown);
+                ExecuteSequenceAction(_comboProcessor.SecondaryState, secondarySequence, CombatInputType.Secondary, kickWeapon, "Kick", ref _kickTimer, kickCooldown);
                 return;
             }
 
@@ -188,7 +165,7 @@ namespace NeonBlack.Gameplay.Features.Characters
         }
 
         private bool ExecuteSequenceAction(
-            ComboRuntimeState state,
+            PawnComboProcessor.ComboRuntimeState state,
             CombatSequenceDefinition sequence,
             CombatInputType inputType,
             WeaponData fallbackWeapon,
@@ -196,44 +173,33 @@ namespace NeonBlack.Gameplay.Features.Characters
             ref float cooldownTimer,
             float fallbackCooldown)
         {
-            if (_motor == null || sequence == null || sequence.actions == null || sequence.actions.Length == 0)
+            if (_motor == null)
                 return false;
 
-            bool canBranch = state.CurrentIndex >= 0 && state.Timer > 0f && state.AllowNextBranch;
-            int nextIndex = canBranch ? state.CurrentIndex + 1 : 0;
-            if (nextIndex >= sequence.actions.Length)
-                nextIndex = sequence.restartFromFirstActionWhenBranchFails ? 0 : sequence.actions.Length - 1;
-
-            CombatActionDefinition action = sequence.actions[nextIndex];
-            if (action == null || cooldownTimer > 0f || _motor.IsActionLocked)
+            if (!_comboProcessor.TryExecuteAction(
+                state,
+                sequence,
+                comboResetTime,
+                combatWindow,
+                ref _combatTimer,
+                _motor.IsActionLocked,
+                cooldownTimer,
+                out int _,
+                out CombatActionDefinition action))
+            {
                 return false;
+            }
 
             WeaponData resolvedWeapon = action.weapon != null ? action.weapon : fallbackWeapon;
             float resolvedCooldown = ResolveActionCooldown(action, resolvedWeapon, fallbackCooldown);
             cooldownTimer = resolvedCooldown;
-            _combatTimer = combatWindow;
-
-            state.Sequence = sequence;
-            state.ActiveAction = action;
-            state.CurrentIndex = nextIndex;
-            state.Timer = action.comboWindow > 0f ? action.comboWindow : comboResetTime;
-            state.AllowNextBranch = !action.requiresHitConfirmForNextBranch;
-            state.WaitingForHitConfirm = action.requiresHitConfirmForNextBranch;
-            _currentSequenceState = state;
 
             _motor.ResetMoveToIdle();
             _motor.SetActionLock(true);
             _actingTimer = Mathf.Max(resolvedWeapon != null ? resolvedWeapon.hitDelay + resolvedWeapon.hitDuration : hitDelay + hitDuration, 0.05f);
 
             TriggerCombatAnimation(action, inputType);
-            ActivateHitBoxForZone(action.fallbackHitBoxZone, resolvedWeapon ?? fallbackWeapon, action.fallbackHitBoxZone, state);
-
-            if (action.finisherResetsCombo || (nextIndex >= sequence.actions.Length - 1 && sequence.resetAfterFinalAction))
-            {
-                state.AllowNextBranch = false;
-                state.WaitingForHitConfirm = false;
-                state.CurrentIndex = -1;
-            }
+            ActivateHitBoxForZone(action.fallbackHitBoxZone, resolvedWeapon ?? fallbackWeapon, action.fallbackHitBoxZone);
 
             return true;
         }
@@ -295,7 +261,7 @@ namespace NeonBlack.Gameplay.Features.Characters
             return fallbackCooldown;
         }
 
-        private void ActivateHitBoxForZone(string defaultZoneName, WeaponData weapon, string explicitZoneName = null, ComboRuntimeState state = null)
+        private void ActivateHitBoxForZone(string defaultZoneName, WeaponData weapon, string explicitZoneName = null)
         {
             if (weapon != null
                 && (weapon.weaponType == WeaponType.Ranged || weapon.weaponType == WeaponType.Thrown)
@@ -321,8 +287,6 @@ namespace NeonBlack.Gameplay.Features.Characters
             float duration = weapon != null ? weapon.hitDuration : hitDuration;
 
             SyncHitBoxSides();
-            if (state != null)
-                _currentSequenceState = state;
 
             StartCoroutine(HitBoxTimingRoutine(box, damage, knockback, delay, duration));
         }
@@ -404,33 +368,13 @@ namespace NeonBlack.Gameplay.Features.Characters
 
         private void HandleHitConfirmed(GameObject _)
         {
-            if (_currentSequenceState == null || !_currentSequenceState.WaitingForHitConfirm)
-                return;
-
-            _currentSequenceState.WaitingForHitConfirm = false;
-            _currentSequenceState.AllowNextBranch = true;
-            _currentSequenceState.Timer = Mathf.Max(_currentSequenceState.Timer, comboResetTime);
-            if (_currentSequenceState.ActiveAction != null)
+            _comboProcessor.HandleHitConfirmed(comboResetTime, (step, isFinisher) =>
             {
-                _animationDriver?.TriggerCustom("ComboConfirm", intValue: _currentSequenceState.ActiveAction.comboStep);
-                _feedbackPublisher?.PublishCombo(_currentSequenceState.ActiveAction.comboStep);
-                if (_currentSequenceState.ActiveAction.finisherResetsCombo)
-                    _feedbackPublisher?.PublishFinisher(_currentSequenceState.ActiveAction.comboStep);
-            }
-        }
-
-        private void TickComboState(ComboRuntimeState state)
-        {
-            if (state == null || state.Timer <= 0f)
-                return;
-
-            state.Timer -= Time.deltaTime;
-            if (state.Timer > 0f)
-                return;
-
-            state.Reset();
-            if (_currentSequenceState == state)
-                _currentSequenceState = null;
+                _animationDriver?.TriggerCustom("ComboConfirm", intValue: step);
+                _feedbackPublisher?.PublishCombo(step);
+                if (isFinisher)
+                    _feedbackPublisher?.PublishFinisher(step);
+            });
         }
 
         private void CacheHitBoxOffsets()

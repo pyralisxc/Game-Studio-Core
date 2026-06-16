@@ -30,9 +30,9 @@ namespace NeonBlack.Gameplay.Features.Pickups
         "Assign AudioClips and ParticleSystems.",
         "Ensure AudioSource is routed to the SFX mixer group."
     },
-    AssignmentFields = new[] { nameof(_collectClip), nameof(_collectFX), nameof(_destroyClip), nameof(_destroyFX), nameof(_scoreAwardSource) },
+    AssignmentFields = new[] { nameof(_collectClip), nameof(_collectFX), nameof(_destroyClip), nameof(_destroyFX) },
     FirstProof = "Collect a pickup and verify the sparkle particles play and the collection sound triggers.",
-    ExpertAdvice = "Set SFX spatial blend to 0 (2D) for consistent UI-style feedback. Ensure Particle Systems have 'Stop Action' set to 'Disable' or 'None' for pooling."
+    ExpertAdvice = "Set SFX spatial blend to 0 (2D) for consistent UI-style feedback. Runtime score awards are normally injected by the session scope; use Score Award Source only for standalone/custom award routing."
 )]
 [AddComponentMenu("NeonBlack/Gameplay/Pickups/Collectible Feedback 2D")]
 public class CollectibleFeedback2D : MonoBehaviour, IPickupAwardSink, IRuntimeValidationProvider
@@ -41,7 +41,6 @@ public class CollectibleFeedback2D : MonoBehaviour, IPickupAwardSink, IRuntimeVa
     {
         if (_collectClip == null) yield return "Collect Clip is unassigned.";
         if (_collectFX == null) yield return "Collect FX particle system is unassigned.";
-        if (_scoreAwardSource == null) yield return "Score Award Source is unassigned. No points will be awarded.";
 
         AudioSource audio = GetComponent<AudioSource>();
         if (audio != null && audio.outputAudioMixerGroup == null)

@@ -32,8 +32,11 @@ namespace NeonBlack.Gameplay.Editor
 
             Directory.CreateDirectory(TempGraphFolder);
             WriteSnapshot(graph, viewName);
-            AssetDatabase.Refresh();
-            EditorUtility.RevealInFinder(TempGraphFolder);
+            EditorApplication.delayCall += () =>
+            {
+                AssetDatabase.Refresh();
+                EditorUtility.RevealInFinder(TempGraphFolder);
+            };
         }
 
         private static void WriteSnapshot(PyralisAuthoringSetupGraph graph, string viewName)

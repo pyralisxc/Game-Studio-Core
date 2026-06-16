@@ -8,6 +8,7 @@ namespace NeonBlack.Gameplay.Editor
 {
     internal static class PyralisAuthoringHygieneRenderer
     {
+        private static readonly Dictionary<string, bool> GraphAuditFoldouts = new Dictionary<string, bool>();
         private static IReadOnlyList<PyralisSourceDependencyHygieneRecord> _dependencyRecords;
 
         public static void Draw(Object activeSetup, PyralisAuthoringSetupGraph graph)
@@ -31,38 +32,53 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringWindowText.DrawSemanticMiniLabel("Scene-specific repair actions are shown in Map. Hygiene keeps the diagnostic view graph-first.");
             }
 
-            bool hasGraphAuditFindings = DrawGraphAuditBuckets(graph);
-            if (!hasGraphAuditFindings)
-                EditorGUILayout.HelpBox("No graph hygiene findings found for the selected item.", MessageType.Info);
-
-            EditorGUILayout.Space(8f);
-            EditorGUILayout.LabelField("Graph Audit Details", EditorStyles.boldLabel);
-            DrawGraphAuditDetails(graph);
-
+            DrawGraphAuditDashboard(graph);
             DrawSourceDependencyHygiene();
+            DrawGraphAuditDetails(graph);
         }
 
-        private static bool DrawGraphAuditBuckets(PyralisAuthoringSetupGraph graph)
+        private static void DrawGraphAuditDashboard(PyralisAuthoringSetupGraph graph)
         {
             if (graph == null)
-                return false;
+                return;
 
             IReadOnlyList<PyralisAuthoringGraphAuditSection> sections = PyralisAuthoringSetupGraphProjection.BuildHygieneSections(graph);
-            if (!HasRows(sections))
-                return false;
+            if (sections == null || sections.Count == 0)
+                return;
 
             EditorGUILayout.Space(8f);
-            EditorGUILayout.LabelField("Graph Audit Buckets", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Audit Summary", EditorStyles.boldLabel);
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                for (int i = 0; i < sections.Count; i++)
+                {
+                    PyralisAuthoringGraphAuditSection section = sections[i];
+                    if (section == null)
+                        continue;
+
+                    string detail = GetSectionSummary(section);
+                    EditorGUILayout.LabelField(section.Label, $"{section.Rows.Count} {detail}", EditorStyles.wordWrappedMiniLabel);
+                }
+
+                PyralisAuthoringWindowText.DrawSemanticMiniLabel("Hygiene summarizes graph health and code pressure. Map owns concrete scene and Inspector setup issues.");
+            }
+
+            bool drewBlockingGraphRows = false;
             for (int i = 0; i < sections.Count; i++)
             {
                 PyralisAuthoringGraphAuditSection section = sections[i];
                 if (section == null || !section.HasRows)
                     continue;
 
+                if (!ShouldSurfaceSectionRows(section))
+                    continue;
+
                 DrawReadinessBucket(section.Label, section.Rows, GetMessageType(section.EvidenceState));
+                drewBlockingGraphRows = true;
             }
 
-            return true;
+            if (!drewBlockingGraphRows)
+                EditorGUILayout.HelpBox("No graph integrity blockers found. Scene setup findings are summarized here and handled in Map.", MessageType.Info);
         }
 
         private static void DrawSourceDependencyHygiene()
@@ -146,30 +162,85 @@ namespace NeonBlack.Gameplay.Editor
 
         private static void DrawGraphAuditDetails(PyralisAuthoringSetupGraph graph)
         {
-            IReadOnlyList<PyralisAuthoringGraphAuditRow> rows = PyralisAuthoringSetupGraphProjection.BuildHygieneDetailRows(graph);
-            if (rows == null || rows.Count == 0)
+            IReadOnlyList<PyralisAuthoringGraphAuditSection> sections = PyralisAuthoringSetupGraphProjection.BuildHygieneSections(graph);
+            if (sections == null || sections.Count == 0 || !HasRows(sections))
             {
                 EditorGUILayout.HelpBox("Hygiene did not find unvalidated graph nodes, explicit runtime/scene findings, or proof blocker links. Use Map for scene setup repair.", MessageType.Info);
                 return;
             }
 
-            string currentGroup = string.Empty;
-            for (int i = 0; i < rows.Count; i++)
+            EditorGUILayout.Space(8f);
+            EditorGUILayout.LabelField("Graph Audit Details", EditorStyles.boldLabel);
+            PyralisAuthoringWindowText.DrawSemanticMiniLabel("Detailed graph rows are collapsed by default. Export JSON for the full machine-readable audit.");
+
+            for (int i = 0; i < sections.Count; i++)
             {
-                PyralisAuthoringGraphAuditRow row = rows[i];
-                if (row == null)
+                PyralisAuthoringGraphAuditSection section = sections[i];
+                if (section == null || !section.HasRows)
                     continue;
 
-                string group = string.IsNullOrWhiteSpace(row.SourceLabel) ? "Graph Evidence" : row.SourceLabel;
-                if (!string.Equals(group, currentGroup, System.StringComparison.Ordinal))
+                bool defaultOpen = ShouldSurfaceSectionRows(section);
+                if (!DrawFoldout(section.Label, section.Rows.Count, defaultOpen))
+                    continue;
+
+                int visible = Mathf.Min(section.Rows.Count, ShouldSurfaceSectionRows(section) ? 8 : 4);
+                for (int rowIndex = 0; rowIndex < visible; rowIndex++)
                 {
-                    EditorGUILayout.Space(4f);
-                    EditorGUILayout.LabelField(group, EditorStyles.miniBoldLabel);
-                    currentGroup = group;
+                    PyralisAuthoringGraphAuditRow row = section.Rows[rowIndex];
+                    if (row == null)
+                        continue;
+
+                    DrawGraphEvidenceCard(row);
                 }
 
-                DrawGraphEvidenceCard(row);
+                if (section.Rows.Count > visible)
+                    EditorGUILayout.LabelField("+" + (section.Rows.Count - visible) + " more row(s) in JSON export", EditorStyles.miniLabel);
             }
+        }
+
+        private static string GetSectionSummary(PyralisAuthoringGraphAuditSection section)
+        {
+            if (section == null)
+                return "rows";
+
+            if (string.Equals(section.Label, "Contract Inventory / Not Route-Evaluated", System.StringComparison.Ordinal))
+                return "contract node(s) available as source truth, not route failures";
+
+            if (string.Equals(section.Label, "Explicit Runtime / Scene Findings", System.StringComparison.Ordinal))
+                return "scene/runtime finding(s); repair path lives in Map";
+
+            if (string.Equals(section.Label, "Proof Blocker Links", System.StringComparison.Ordinal))
+                return "proof blocker link(s)";
+
+            if (string.Equals(section.Label, "Unvalidated Graph Nodes", System.StringComparison.Ordinal))
+                return "graph node(s) missing validation coverage";
+
+            return "row(s)";
+        }
+
+        private static bool ShouldSurfaceSectionRows(PyralisAuthoringGraphAuditSection section)
+        {
+            if (section == null)
+                return false;
+
+            return string.Equals(section.Label, "Unvalidated Graph Nodes", System.StringComparison.Ordinal)
+                || string.Equals(section.Label, "Proof Blocker Links", System.StringComparison.Ordinal);
+        }
+
+        private static bool DrawFoldout(string label, int rowCount, bool defaultOpen)
+        {
+            string key = string.IsNullOrWhiteSpace(label) ? "Graph Audit Details" : label;
+            if (!GraphAuditFoldouts.TryGetValue(key, out bool isOpen))
+            {
+                isOpen = defaultOpen;
+                GraphAuditFoldouts[key] = isOpen;
+            }
+
+            bool nextOpen = EditorGUILayout.Foldout(isOpen, $"{label} ({rowCount})", true);
+            if (nextOpen != isOpen)
+                GraphAuditFoldouts[key] = nextOpen;
+
+            return nextOpen;
         }
 
         private static bool HasRows(IReadOnlyList<PyralisAuthoringGraphAuditSection> sections)
