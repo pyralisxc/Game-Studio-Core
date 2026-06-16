@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Features.Combat;
 using UnityEngine;
@@ -39,6 +41,94 @@ namespace NeonBlack.Gameplay.Features.Zones
             {
                 if (profile.statusEffects[i] != null)
                     state.statusReceiver.ApplyStatusEffect(profile.statusEffects[i], source);
+            }
+        }
+    }
+
+    internal sealed class DamageZoneTargetRuntime
+    {
+        private readonly List<DamageZoneTargetState> _targets = new List<DamageZoneTargetState>(8);
+        private readonly HashSet<HealthComponent> _targetLookup = new HashSet<HealthComponent>();
+
+        public bool HasTargets => _targets.Count > 0;
+
+        public bool AddTarget(HealthComponent health)
+        {
+            if (health == null || _targetLookup.Contains(health))
+                return false;
+
+            _targetLookup.Add(health);
+            _targets.Add(new DamageZoneTargetState
+            {
+                health = health,
+                statusReceiver = health.GetComponent<IActorStatusEffectReceiver>() ?? health.GetComponentInParent<IActorStatusEffectReceiver>(),
+                knockback = health.GetComponent<KnockbackReceiver>() ?? health.GetComponentInParent<KnockbackReceiver>(),
+                timer = 0f
+            });
+            return true;
+        }
+
+        public bool RemoveTarget(HealthComponent health)
+        {
+            if (health == null || !_targetLookup.Remove(health))
+                return false;
+
+            for (int i = 0; i < _targets.Count; i++)
+            {
+                if (_targets[i].health == health)
+                {
+                    _targets.RemoveAt(i);
+                    break;
+                }
+            }
+
+            return true;
+        }
+
+        public void Tick(
+            GameObject source,
+            Transform sourceTransform,
+            HazardImpactProfile impactProfile,
+            float fallbackDamagePerTick,
+            float fallbackTickInterval,
+            float fallbackKnockbackForce)
+        {
+            if (_targets.Count == 0)
+                return;
+
+            float interval = impactProfile != null ? impactProfile.tickInterval : fallbackTickInterval;
+
+            for (int i = _targets.Count - 1; i >= 0; i--)
+            {
+                DamageZoneTargetState state = _targets[i];
+                HealthComponent health = state.health;
+
+                if (health == null || health.IsDead)
+                {
+                    _targetLookup.Remove(health);
+                    _targets.RemoveAt(i);
+                    continue;
+                }
+
+                state.timer -= Time.deltaTime;
+                if (state.timer > 0f)
+                {
+                    _targets[i] = state;
+                    continue;
+                }
+
+                state.timer = interval;
+                _targets[i] = state;
+
+                if (impactProfile != null)
+                {
+                    DamageZoneImpactRuntime.ApplyProfileImpact(source, sourceTransform, state, impactProfile);
+                    continue;
+                }
+
+                health.TakeDamage(fallbackDamagePerTick, health.transform.position, source);
+                if (fallbackKnockbackForce > 0f && state.knockback != null)
+                    state.knockback.ApplyKnockback(Vector3.up * fallbackKnockbackForce);
             }
         }
     }

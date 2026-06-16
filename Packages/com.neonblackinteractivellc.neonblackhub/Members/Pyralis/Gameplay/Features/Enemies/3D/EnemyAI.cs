@@ -1,12 +1,9 @@
 using System.Collections.Generic;
-using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Enums;
 using NeonBlack.Gameplay.Features.Combat;
-using NeonBlack.Gameplay.Features.Composition;
 using UnityEngine;
-using VContainer;
 
 namespace NeonBlack.Gameplay.Features.Enemies
 {
@@ -34,7 +31,7 @@ namespace NeonBlack.Gameplay.Features.Enemies
     [RequireComponent(typeof(EnemyDetectionModule))]
     [RequireComponent(typeof(EnemyCombatModule))]
     [RequireComponent(typeof(EnemyAnimationModule))]
-    public class EnemyAI : MonoBehaviour, IActorMovementModifierReceiver, IActorCombatModifierReceiver, IEnemyActorState
+    public partial class EnemyAI : MonoBehaviour, IActorMovementModifierReceiver, IActorCombatModifierReceiver, IEnemyActorState
     {
         public enum EnemyState { Patrol, Chase, Attack, Dead }
 
@@ -189,40 +186,5 @@ namespace NeonBlack.Gameplay.Features.Enemies
             _runtime?.SetPresentationCamera(camera);
         }
 
-        private void ApplyFeatureProfile(EnemyFeatureProfile profile)
-        {
-            if (profile == null) return;
-            if (profile.combatProfile != null) CombatModule.ApplyCombatProfile(profile.combatProfile);
-        }
-
-        private IObjectResolver _resolver;
-
-        [Inject]
-        public void Construct(IObjectResolver resolver)
-        {
-            _resolver = resolver;
-        }
-
-        private void InitializeFeatureModules()
-        {
-            FeatureModuleDefinition[] definitions = enemyFeatureProfile != null ? enemyFeatureProfile.featureModules : null;
-            if (definitions == null || definitions.Length == 0) return;
-            ActorFeatureHost featureHost = _runtime.EnsureFeatureHost();
-            featureHost.InitializeFeatures(new FeatureHostInitializationContext(_runtime.BuildFeatureContext(enemyFeatureProfile, this), _resolver), definitions);
-            featureHost.TryGetInstalledFeature(out _reactionState);
-        }
-
-#if UNITY_EDITOR
-        private void OnDrawGizmosSelected()
-        {
-            if (DetectionModule == null) return;
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawWireSphere(transform.position, DetectionModule.AggroRange);
-            Gizmos.color = new Color(1f, 0.5f, 0f, 0.4f);
-            Gizmos.DrawWireSphere(transform.position, DetectionModule.LeashRange);
-            Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(transform.position, CombatModule != null ? CombatModule.MinAttackRange : 1f);
-        }
-#endif
     }
 }

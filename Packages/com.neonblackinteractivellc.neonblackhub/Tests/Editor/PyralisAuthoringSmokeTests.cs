@@ -365,7 +365,7 @@ namespace NeonBlack.Gameplay.Features.Enemies.Editor.Inspectors
         }
 
         [Test]
-        public void HygieneProjection_SmokeAuditsGraphEvidenceWithoutPlayReadinessBuckets()
+        public void HygieneProjection_SmokeAuditsGraphHealthWithoutSceneRepairBuckets()
         {
             PyralisAuthoringGraphNode missingSetup = new PyralisAuthoringGraphNode(
                 "setup.session",
@@ -403,8 +403,8 @@ namespace NeonBlack.Gameplay.Features.Enemies.Editor.Inspectors
 
             Assert.That(sections.Select(section => section.Label), Does.Contain("Unvalidated Graph Nodes"));
             Assert.That(sections.Select(section => section.Label), Does.Contain("Contract Inventory / Not Route-Evaluated"));
-            Assert.That(sections.Select(section => section.Label), Does.Contain("Explicit Runtime / Scene Findings"));
             Assert.That(sections.Select(section => section.Label), Does.Contain("Proof Blocker Links"));
+            Assert.That(sections.Select(section => section.Label), Does.Not.Contain("Explicit Runtime / Scene Findings"));
             Assert.That(sections.Select(section => section.Label), Does.Not.Contain("Required Before Play"));
             PyralisAuthoringGraphAuditSection inventorySection =
                 sections.First(section => section.Label == "Contract Inventory / Not Route-Evaluated");
@@ -412,8 +412,9 @@ namespace NeonBlack.Gameplay.Features.Enemies.Editor.Inspectors
             PyralisAuthoringGraphAuditSection unvalidatedSection =
                 sections.First(section => section.Label == "Unvalidated Graph Nodes");
             Assert.That(unvalidatedSection.Rows.Select(row => row.NodeId), Does.Not.Contain("contract.custom"));
-            Assert.That(sections.SelectMany(section => section.Rows).Select(row => row.NodeId), Does.Contain("validation.input"));
             Assert.That(sections.SelectMany(section => section.Rows).Select(row => row.NodeId), Does.Contain("setup.session"));
+            Assert.That(sections.SelectMany(section => section.Rows).Select(row => row.NodeId), Does.Not.Contain("validation.input"));
+            Assert.That(PyralisAuthoringSetupGraphProjection.BuildMapSceneSetupIssueRows(graph).Select(row => row.NodeId), Does.Contain("validation.input"));
         }
 
         [Test]
@@ -446,11 +447,18 @@ namespace NeonBlack.Gameplay.Features.Enemies.Editor.Inspectors
                 PyralisAuthoringGraphNodeKind.Proof,
                 PyralisAuthoringGraphSourceKind.ProofVocabulary,
                 PyralisAuthoringGraphEvidenceState.Missing);
+            PyralisAuthoringGraphNode sceneIssue = new PyralisAuthoringGraphNode(
+                "validation.input-profile",
+                "Input Profile",
+                PyralisAuthoringGraphNodeKind.ValidationEvidence,
+                PyralisAuthoringGraphSourceKind.SceneReadiness,
+                PyralisAuthoringGraphEvidenceState.Missing,
+                guidance: "Assign the participant input profile.");
 
             PyralisAuthoringSetupGraph graph = new PyralisAuthoringSetupGraph(
                 null,
                 null,
-                new[] { missingSetup, proof },
+                new[] { missingSetup, proof, sceneIssue },
                 new[] { new PyralisAuthoringGraphEdge("proof.1p", "setup.session", PyralisAuthoringGraphEdgeKind.BlockedBy, "missing setup") });
 
             string mapJson = PyralisAuthoringSetupGraphJsonExporter.ToMapJson(graph);
@@ -479,6 +487,7 @@ namespace NeonBlack.Gameplay.Features.Enemies.Editor.Inspectors
             Assert.That(mapJson, Does.Contain("\"mapRows\""));
             Assert.That(mapJson, Does.Contain("\"mapConnections\""));
             Assert.That(mapJson, Does.Contain("\"sceneSetupIssues\""));
+            Assert.That(mapJson, Does.Contain("validation.input-profile"));
             Assert.That(mapJson, Does.Not.Contain("\"hygieneSections\""));
 
             Assert.That(hygieneJson, Does.Contain("pyralis.authoring.hygieneSnapshot.v1"));
@@ -497,6 +506,7 @@ namespace NeonBlack.Gameplay.Features.Enemies.Editor.Inspectors
             Assert.That(hygieneJson, Does.Contain("\"localComponentLookupCount\""));
             Assert.That(hygieneJson, Does.Contain("\"broadUnityDiscoveryCount\""));
             Assert.That(hygieneJson, Does.Contain("\"contractSourcePressure\""));
+            Assert.That(hygieneJson, Does.Not.Contain("validation.input-profile"));
             Assert.That(hygieneJson, Does.Not.Contain("\"mapRows\""));
 
             Assert.That(noRouteHygieneJson, Does.Contain("pyralis.authoring.hygieneSnapshot.v1"));

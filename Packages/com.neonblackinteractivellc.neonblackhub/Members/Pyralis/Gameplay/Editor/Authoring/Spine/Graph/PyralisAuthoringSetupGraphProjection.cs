@@ -894,10 +894,6 @@ namespace NeonBlack.Gameplay.Editor
                     PyralisAuthoringGraphEvidenceState.Unknown,
                     BuildHygieneContractInventoryRows(graph)),
                 new PyralisAuthoringGraphAuditSection(
-                    "Explicit Runtime / Scene Findings",
-                    PyralisAuthoringGraphEvidenceState.Missing,
-                    BuildHygieneEvidenceRows(graph)),
-                new PyralisAuthoringGraphAuditSection(
                     "Proof Blocker Links",
                     PyralisAuthoringGraphEvidenceState.Blocked,
                     BuildHygieneProofBlockerRows(graph))
@@ -941,17 +937,6 @@ namespace NeonBlack.Gameplay.Editor
                 .Where(node => node != null
                     && node.Kind == PyralisAuthoringGraphNodeKind.Contract
                     && node.EvidenceState == PyralisAuthoringGraphEvidenceState.Unknown)
-                .Select(node => new PyralisAuthoringGraphAuditRow(node))
-                .ToArray();
-        }
-
-        private static IReadOnlyList<PyralisAuthoringGraphAuditRow> BuildHygieneEvidenceRows(PyralisAuthoringSetupGraph graph)
-        {
-            return graph.Nodes
-                .Where(node => node != null
-                    && node.Kind == PyralisAuthoringGraphNodeKind.ValidationEvidence
-                    && node.EvidenceState != PyralisAuthoringGraphEvidenceState.Ready
-                    && node.EvidenceState != PyralisAuthoringGraphEvidenceState.Optional)
                 .Select(node => new PyralisAuthoringGraphAuditRow(node))
                 .ToArray();
         }

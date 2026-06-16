@@ -84,6 +84,20 @@ This cleanup phase is complete when:
 - Keep `ArenaZone` as the beginner-facing encounter facade. Camera profile handoff belongs in `ArenaZone.Camera`; spawner activation, exit blockers, and enemy clear tracking belong in `ArenaZone.Spawning`.
 - Treat deeper `EnemyAI` and `Hazard` state/sequence extraction as later work only after behavior tests prove the code that would move.
 
+### Phase 4A: Hygiene-Driven Source Lane Cleanup
+
+- Keep the beginner-facing components stable while splitting source files by real owner lanes.
+- `Pawn2DMovementComponent` owns the 2D movement facade; config, validation, and gizmo drawing live in dedicated source lanes.
+- `Motor3D` owns frame coordination; the per-frame loop and frame substeps live in `Motor3D.Loop`.
+- `Pawn3DTraversalComponent` owns traversal probing and public traversal operations; profile application and dependency references live in dedicated source lanes, while climb and hang execution stay separate.
+- `EnemyCombatModule` owns enemy combat setup/ticking; attack execution, profiles, range measurement, and hitbox maintenance live in dedicated source lanes.
+- `EnemyReactionFeatureRuntime` owns reaction state; feature initialization and impact sink resolution live in a feature/reference lane, while damage/death reaction behavior stays in the main file.
+- `EnemyAI` owns tactical state coordination; feature installation and editor gizmos live outside the main state-machine file.
+- `DamageZone` and `DamageZone2D` own Unity physics entry points only; `DamageZoneTargetRuntime` owns shared target tracking, ticking, and profile/fallback impact application.
+- `WorldHealthBar` keeps the health-bar facade and serialized presentation surface; canvas construction, runtime ticking, and health-event response live in dedicated source lanes.
+- `ActorFloatingFeedbackReceiver` keeps feedback event routing; popup pooling/lifetime and validation live in dedicated source lanes.
+- `Pawn2DPresentationComponent` remains one beginner-facing presentation facade; animation signal mapping, sprite facing/tint, deformation, profile application, feedback, and validation are split into source lanes.
+
 ### Phase 5: Hygiene Guardrail
 
 - Re-export Hygiene after cleanup.

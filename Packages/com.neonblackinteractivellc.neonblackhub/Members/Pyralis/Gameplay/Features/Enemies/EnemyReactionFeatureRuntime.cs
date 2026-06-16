@@ -1,4 +1,3 @@
-using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Core.Contracts;
@@ -33,7 +32,7 @@ namespace NeonBlack.Gameplay.Features.Enemies
             "EnemyReactionProfile.hitPauseDuration"
         }
     )]
-    public class EnemyReactionFeatureRuntime : MonoBehaviour, IFeatureModuleRuntime, IEnemyReactionState
+    public partial class EnemyReactionFeatureRuntime : MonoBehaviour, IFeatureModuleRuntime, IEnemyReactionState
 {
         [SerializeField] private EnemyReactionProfile reactionProfile;
         [SerializeField] private MonoBehaviour hitPauseSink;
@@ -53,55 +52,6 @@ namespace NeonBlack.Gameplay.Features.Enemies
         {
             if (_reactionLockTimer > 0f)
                 _reactionLockTimer -= Time.deltaTime;
-        }
-
-        public void InitializeFeature(FeatureRuntimeInitializationContext initializationContext)
-        {
-            ActorFeatureContext context = initializationContext != null ? initializationContext.ActorContext : null;
-            FeatureModuleDefinition definition = initializationContext != null ? initializationContext.Definition : null;
-            _context = context;
-            reactionProfile = initializationContext.GetProfile<EnemyReactionProfile>(definition != null ? definition.profileAsset : null);
-            _health = context.Health;
-            _knockback = context.Knockback as KnockbackReceiver;
-            _feedbackPublisher = context != null && context.ActorObject != null
-                ? context.ActorObject.GetComponent<IActorFeedbackPublisher>()
-                : null;
-            _hitPauseSink = ResolveHitPauseSink();
-            _cameraShakeSink = ResolveCameraShakeSink();
-
-            if (reactionProfile != null)
-                reactionProfile.Sanitize();
-
-            if (_health != null)
-            {
-                _health.Damaged += HandleDamaged;
-                _health.Died += HandleDeath;
-            }
-        }
-
-        public void ShutdownFeature()
-        {
-            if (_health != null)
-            {
-                _health.Damaged -= HandleDamaged;
-                _health.Died -= HandleDeath;
-            }
-
-            _context = null;
-            _health = null;
-            _knockback = null;
-            _feedbackPublisher = null;
-            _hitPauseSink = null;
-            _cameraShakeSink = null;
-            _reactionLockTimer = 0f;
-        }
-
-        public void SetImpactFeedbackSinks(IHitPauseSink hitPause, ICameraShakeSink cameraShake)
-        {
-            _hitPauseSink = hitPause;
-            _cameraShakeSink = cameraShake;
-            hitPauseSink = hitPause as MonoBehaviour;
-            cameraShakeSink = cameraShake as MonoBehaviour;
         }
 
         private void HandleDamaged(float damage)
@@ -134,24 +84,6 @@ namespace NeonBlack.Gameplay.Features.Enemies
         {
             if (reactionProfile != null && reactionProfile.clearKnockbackOnDeath)
                 _knockback?.ClearKnockback();
-        }
-
-        private IHitPauseSink ResolveHitPauseSink()
-        {
-            if (_hitPauseSink != null)
-                return _hitPauseSink;
-
-            _hitPauseSink = hitPauseSink as IHitPauseSink;
-            return _hitPauseSink;
-        }
-
-        private ICameraShakeSink ResolveCameraShakeSink()
-        {
-            if (_cameraShakeSink != null)
-                return _cameraShakeSink;
-
-            _cameraShakeSink = cameraShakeSink as ICameraShakeSink;
-            return _cameraShakeSink;
         }
     }
 }

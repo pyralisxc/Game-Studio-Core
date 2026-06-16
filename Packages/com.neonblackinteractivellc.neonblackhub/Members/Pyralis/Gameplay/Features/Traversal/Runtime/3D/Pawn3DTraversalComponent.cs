@@ -28,9 +28,6 @@ Axioms = AuthoringWorldAxiom.Dimensions3D,
         [SerializeField] private float climbCooldown = 1.2f;
         [SerializeField] private LedgeProbe3D ledgeProbe = new LedgeProbe3D();
 
-        private Pawn3DMovementComponent _movement;
-        private CharacterController _controller;
-        private ActorAnimationDriver _animationDriver;
         private IClimbZone _currentClimbZone;
         private IClimbZone _hangZone;
         private Coroutine _activeClimb;
@@ -38,13 +35,6 @@ Axioms = AuthoringWorldAxiom.Dimensions3D,
         private float _shimmyVelocityX;
 
         public float ShimmyVelocityX => _shimmyVelocityX;
-
-        private void Awake()
-        {
-            _movement = GetComponent<Pawn3DMovementComponent>();
-            _controller = GetComponent<CharacterController>();
-            _animationDriver = GetComponent<ActorAnimationDriver>();
-        }
 
         private void OnDisable()
         {
@@ -138,25 +128,5 @@ Axioms = AuthoringWorldAxiom.Dimensions3D,
         public void ClearClimbZone() => _currentClimbZone = null;
 
         public void TriggerClimbUp() => _animationDriver?.TriggerSignal(ActorAnimationSignal.ClimbEnd);
-
-        public void ApplyTraversalProfile(PawnProfileApplicationContext context, PawnTraversalProfile profile)
-        {
-            if (profile == null)
-                return;
-
-            allowClimb = profile.allowClimb;
-            allowHang = profile.allowHang;
-            climbCooldown = profile.climbCooldown;
-            if (EnsureDependencies())
-                _movement.ApplyTraversalProfile(profile);
-        }
-
-        private bool EnsureDependencies()
-        {
-            _movement ??= GetComponent<Pawn3DMovementComponent>();
-            _controller ??= GetComponent<CharacterController>();
-            _animationDriver ??= GetComponent<ActorAnimationDriver>();
-            return _movement != null && _controller != null;
-        }
     }
 }

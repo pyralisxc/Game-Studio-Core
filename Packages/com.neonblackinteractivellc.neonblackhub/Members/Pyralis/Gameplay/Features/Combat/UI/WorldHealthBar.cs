@@ -212,98 +212,6 @@ namespace NeonBlack.Gameplay.Features.Combat
             UpdateHpLabel();
         }
 
-        private void LateUpdate()
-        {
-            if (_canvasRoot == null) return;
-
-            // Continuously poll health so the bar can never drift out of sync.
-            _targetFill = Mathf.Clamp01(_health.HealthPercent);
-
-            // Follow character and billboard to camera.
-            _canvasRoot.position = transform.position + barOffset;
-            if (_cam != null) _canvasRoot.rotation = _cam.transform.rotation;
-
-            // Animate green fill toward true HP
-            // Resize the fill rect directly - more reliable than Image.Type.Filled.
-            float curFill = _fill.rectTransform.sizeDelta.x / CW;
-            curFill = fillAnimSpeed > 0f
-            ? Mathf.MoveTowards(curFill, _targetFill, fillAnimSpeed * Time.deltaTime)
-            : _targetFill;
-            _fill.rectTransform.sizeDelta = new Vector2(CW * curFill, 0f);
-
-            // Colour gradient (may be overridden below by the flash block).
-            RefreshFillColor(curFill);
-
-            // Ghost bar drains toward true HP after delay
-            if (_ghost != null)
-            {
-                _ghostTimer -= Time.deltaTime;
-                if (_ghostTimer <= 0f)
-                {
-                    float ghostFill = _ghost.rectTransform.sizeDelta.x / CW;
-                    if (ghostFill > _targetFill)
-                    {
-                        ghostFill = Mathf.MoveTowards(ghostFill, _targetFill, ghostDrainSpeed * Time.deltaTime);
-                        _ghost.rectTransform.sizeDelta = new Vector2(CW * ghostFill, 0f);
-                    }
-                }
-            }
-
-            // Scale punch
-            if (_isPunching)
-            {
-                _punchTimer -= Time.deltaTime;
-                float t = Mathf.Clamp01(1f - _punchTimer / punchDuration);
-                _canvasRoot.localScale = _baseScale * Mathf.Lerp(1f, punchScale, Mathf.Sin(t * Mathf.PI));
-                if (_punchTimer <= 0f)
-                {
-                    _isPunching = false;
-                    _canvasRoot.localScale = _baseScale;
-                }
-            }
-
-            // Low HP pulse flash
-            // Overrides the gradient colour set above by RefreshFillColor.
-            if (flashAtLowHp && _targetFill <= flashThreshold)
-            {
-                _flashTimer += Time.deltaTime * flashSpeed;
-                float pulse = Mathf.Sin(_flashTimer * Mathf.PI * 2f) * 0.5f + 0.5f;
-                _fill.color = Color.Lerp(lowHpColor, Color.white, pulse * 0.30f);
-            }
-
-            // Auto-hide countdown
-            if (!alwaysVisible && _visible)
-            {
-                _hideTimer -= Time.deltaTime;
-                if (_hideTimer <= 0f) _visible = false;
-            }
-
-            _group.alpha = Mathf.MoveTowards(
-            _group.alpha, (_visible || alwaysVisible) ? 1f : 0f, fadeSpeed * Time.deltaTime);
-        }
-
-        // Health callbacks
-        private void OnDamaged(float amount)
-        {
-            _targetFill = Mathf.Clamp01(_health.HealthPercent);
-            _ghostTimer = ghostDelay;  // ghost holds position; drains after delay
-            Show();
-            UpdateHpLabel();
-            if (punchOnDamage) TriggerPunch();
-            if (showDamageNumbers)
-                ResolveDamageNumberSink()?.Spawn(amount, transform.position + numberSpawnOffset);
-        }
-
-        private void OnHealed(float amount)
-        {
-            _targetFill = Mathf.Clamp01(_health.HealthPercent);
-            if (_ghost != null) _ghost.rectTransform.sizeDelta = new Vector2(CW * _targetFill, 0f);  // no ghost delay on heals - snap forward
-            if (!alwaysVisible) Show();
-            UpdateHpLabel();
-            if (showHealNumbers)
-                ResolveDamageNumberSink()?.SpawnHeal(amount, transform.position + numberSpawnOffset);
-        }
-
         public void SetTargetCamera(Camera camera)
         {
             targetCamera = camera;
@@ -316,33 +224,6 @@ namespace NeonBlack.Gameplay.Features.Combat
         }
 
         private void OnDeath() { _visible = false; }
-
-        // Helpers
-        private void Show() { _visible = true; _hideTimer = hideDelay; }
-        private void TriggerPunch() { _isPunching = true; _punchTimer = punchDuration; }
-
-        /// <summary>
-        /// Sets fill colour using optional gradient (fillColor to midHpColor to lowHpColor).
-        /// Skipped when the low-HP flash owns the colour.
-        /// </summary>
-        private void RefreshFillColor(float pct)
-        {
-            if (_fill == null) return;
-            if (flashAtLowHp && _targetFill <= flashThreshold) return;
-
-            if (fillGradient)
-            {
-                // Above 50% HP: lerp from midHpColor to fillColor
-                // Below 50% HP: lerp from lowHpColor to midHpColor
-                _fill.color = pct >= 0.5f
-                ? Color.Lerp(midHpColor, fillColor, (pct - 0.5f) * 2f)
-                : Color.Lerp(lowHpColor, midHpColor, pct * 2f);
-            }
-            else
-            {
-                _fill.color = fillColor;
-            }
-        }
 
         private void UpdateHpLabel()
         {

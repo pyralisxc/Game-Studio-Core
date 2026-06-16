@@ -14,7 +14,7 @@ namespace NeonBlack.Gameplay.Editor
         public static void Draw(Object activeSetup, PyralisAuthoringSetupGraph graph)
         {
             EditorGUILayout.LabelField("Hygiene", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox("Use Hygiene as the developer audit surface: graph integrity, proof blockers, dependency pressure, source origins, and stable node ids. Map owns concrete scene and Inspector setup issues.", MessageType.Info);
+            EditorGUILayout.HelpBox("Use Hygiene as the programmer audit surface: graph integrity, proof links, dependency pressure, source origins, and stable node ids. Map owns concrete scene and Inspector setup issues.", MessageType.Info);
             PyralisAuthoringGraphJsonExportControl.Draw("Hygiene", graph);
 
             if (activeSetup == null)
@@ -29,7 +29,7 @@ namespace NeonBlack.Gameplay.Editor
                 EditorGUILayout.LabelField("Active Setup", activeSetup.name);
                 EditorGUILayout.LabelField("Route", graph != null ? graph.RouteName : "No graph");
                 EditorGUILayout.LabelField("Graph Size", graph != null ? $"{graph.Nodes.Count} nodes, {graph.Edges.Count} edges" : "No graph", EditorStyles.wordWrappedLabel);
-                PyralisAuthoringWindowText.DrawSemanticMiniLabel("Scene-specific repair actions are shown in Map. Hygiene keeps the diagnostic view graph-first.");
+                PyralisAuthoringWindowText.DrawSemanticMiniLabel("Scene-specific repair actions are shown in Map. Hygiene stays focused on code and graph health.");
             }
 
             DrawGraphAuditDashboard(graph);
@@ -78,7 +78,7 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             if (!drewBlockingGraphRows)
-                EditorGUILayout.HelpBox("No graph integrity blockers found. Scene setup findings are summarized here and handled in Map.", MessageType.Info);
+                EditorGUILayout.HelpBox("No graph integrity blockers found. Scene setup findings are handled in Map.", MessageType.Info);
         }
 
         private static void DrawSourceDependencyHygiene()
@@ -250,7 +250,7 @@ namespace NeonBlack.Gameplay.Editor
             IReadOnlyList<PyralisAuthoringGraphAuditSection> sections = PyralisAuthoringSetupGraphProjection.BuildHygieneSections(graph);
             if (sections == null || sections.Count == 0 || !HasRows(sections))
             {
-                EditorGUILayout.HelpBox("Hygiene did not find unvalidated graph nodes, explicit runtime/scene findings, or proof blocker links. Use Map for scene setup repair.", MessageType.Info);
+                EditorGUILayout.HelpBox("Hygiene did not find unvalidated graph nodes or proof blocker links. Use Map for scene setup repair.", MessageType.Info);
                 return;
             }
 
@@ -290,9 +290,6 @@ namespace NeonBlack.Gameplay.Editor
 
             if (string.Equals(section.Label, "Contract Inventory / Not Route-Evaluated", System.StringComparison.Ordinal))
                 return "contract node(s) available as source truth, not route failures";
-
-            if (string.Equals(section.Label, "Explicit Runtime / Scene Findings", System.StringComparison.Ordinal))
-                return "scene/runtime finding(s); repair path lives in Map";
 
             if (string.Equals(section.Label, "Proof Blocker Links", System.StringComparison.Ordinal))
                 return "proof blocker link(s)";
