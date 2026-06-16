@@ -118,9 +118,13 @@ namespace NeonBlack.Gameplay.Editor
                     continue;
 
                 bool unsupported = HasUnsupportedLane(fact, selection.Lane);
+                bool axiomContradiction = IsAxiomContradiction(selection.Axioms, fact.Axioms);
                 int score = ScoreFact(selection, fact, relatedStableIds, unsupported);
                 
                 if (score <= 0 && !unsupported && !HasCapabilityOverlap(selection, fact) && !HasGoalOverlap(selection, fact))
+                    continue;
+
+                if (axiomContradiction && fact.Kind == PyralisAuthoringFactKind.RouteIntent)
                     continue;
 
                 if (unsupported && (score > 0 || HasCapabilityOverlap(selection, fact) || HasGoalOverlap(selection, fact)))
@@ -319,6 +323,9 @@ namespace NeonBlack.Gameplay.Editor
                 if (fact == null || fact.Kind != PyralisAuthoringFactKind.RouteIntent)
                     continue;
 
+                if (IsAxiomContradiction(selection.Axioms, fact.Axioms))
+                    continue;
+
                 int score = ScoreFact(selection, fact, new HashSet<string>(StringComparer.Ordinal), false);
                 if (score >= 40)
                     matches.Add(new ScoredIntentFact(fact, score));
@@ -454,7 +461,7 @@ namespace NeonBlack.Gameplay.Editor
             if (overlap == AuthoringWorldAxiom.None) return 0;
 
             int count = 0;
-            uint value = (uint)overlap;
+            ulong value = (ulong)overlap;
             while (value != 0)
             {
                 value &= (value - 1);
@@ -469,7 +476,7 @@ namespace NeonBlack.Gameplay.Editor
             if (overlap == AuthoringCapability.None) return 0;
 
             int count = 0;
-            uint value = (uint)overlap;
+            ulong value = (ulong)overlap;
             while (value != 0)
             {
                 value &= (value - 1);
@@ -490,6 +497,7 @@ namespace NeonBlack.Gameplay.Editor
             if (HasAxiom(selection, AuthoringWorldAxiom.Realtime) && HasAxiom(fact, AuthoringWorldAxiom.TurnBased)) return true;
             if (HasAxiom(selection, AuthoringWorldAxiom.TurnBased) && HasAxiom(fact, AuthoringWorldAxiom.Realtime)) return true;
             if (HasAxiom(selection, AuthoringWorldAxiom.GravityNone) && HasAxiom(fact, AuthoringWorldAxiom.GravityVertical)) return true;
+            if (HasAxiom(selection, AuthoringWorldAxiom.GravityVertical) && HasAxiom(fact, AuthoringWorldAxiom.GravityNone)) return true;
             
             return false;
         }

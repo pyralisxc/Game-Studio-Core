@@ -9,7 +9,6 @@ using NeonBlack.Gameplay.Features.Feedback.UI;
 using NeonBlack.Gameplay.Features.Composition;
 using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Editor;
-using NeonBlack.Gameplay.Editor.Inspectors;
 using NeonBlack.Gameplay.Core.Runtime;
 using NUnit.Framework;
 using System.Linq;
@@ -54,13 +53,6 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             for (int i = 0; i < mojibakeTokens.Length; i++)
                 Assert.That(source.Contains(mojibakeTokens[i]), Is.False, $"Unexpected mojibake token `{mojibakeTokens[i]}` in {path}");
-        }
-
-        protected static bool UsesSharedGuide(string source)
-        {
-            return source.Contains("PyralisInspectorGuide.DrawGuide")
-                || source.Contains("PyralisInspectorGuide.DrawFieldGuide")
-                || source.Contains("PyralisInspectorHandoff.DrawAuthoringButton");
         }
 
         protected static AnimatorController CreateTestAnimatorController(string assetName)

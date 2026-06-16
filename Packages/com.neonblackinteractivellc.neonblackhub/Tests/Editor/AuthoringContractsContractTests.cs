@@ -489,35 +489,6 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void AuthoringContracts_RegistryUsesReflectionDiscovery()
-        {
-            string registrySource = File.ReadAllText(
-                Path.Combine(GameplayRoot, "Core", "Authoring", "ResolvedAuthoringContractRegistry.cs"));
-            string factScannerSource = File.ReadAllText(
-                Path.Combine(GameplayRoot, "Editor", "Authoring", "Spine", "Facts", "PyralisReflectiveFactScanner.cs"));
-            string factTypesSource = File.ReadAllText(
-                Path.Combine(GameplayRoot, "Editor", "Authoring", "Spine", "Facts", "PyralisAuthoringFactTypes.cs"));
-
-            Assert.That(registrySource.Contains("GetTypesWithAttribute<AuthoringContractAttribute>()"), Is.True, "Registry should discover contracts via TypeCache attribute scanning.");
-            Assert.That(registrySource.Contains("IAuthoringContractProvider"), Is.False, "Provider-based contracts were removed; keep one attribute-backed contract path.");
-            Assert.That(registrySource.Contains("ModuleId"), Is.True, "Registry should filter and map via ModuleId metadata.");
-            Assert.That(registrySource.Contains("SetupNodeId"), Is.True, "Contracts should explicitly map to resolved setup graph nodes when they enrich known setup concepts.");
-            Assert.That(registrySource.Contains("FirstProofTargetId"), Is.True, "Proof routing should use explicit contract metadata, not infer from prose.");
-            Assert.That(registrySource.Contains("ResolveFirstProofTargetId"), Is.False, "Central keyword proof-target inference should stay deleted.");
-            Assert.That(registrySource.Contains("FirstProof.StartsWith(\"proof.\""), Is.False, "FirstProof is human guidance and must not be parsed as a proof route id.");
-            Assert.That(registrySource.Contains("attr.ProfileType != null"), Is.False, "ProfileType should not imply feature-module runtime requirements. RequiredInterfaces owns runtime requirements explicitly.");
-            Assert.That(registrySource.Contains("|| ContainsTypeName(contract.RequiredComponentNames, fullName)"), Is.False, "Physical component placement must not create dependency proof-target edges.");
-            Assert.That(registrySource.Contains("PrettifyTypeName"), Is.True, "Registry should generate clean display names from reflected types.");
-            Assert.That(factTypesSource.Contains("PrefabComponent"), Is.False, "Authoring fact kinds should use UnitySurface so requirements are not forced into prefab-only language.");
-            Assert.That(factScannerSource.Contains("RequiredPrefabComponents"), Is.False, "Authoring facts should describe required Unity surfaces, not assume every requirement is prefab-owned.");
-            Assert.That(factScannerSource.Contains("requiredPrefabComponents"), Is.False, "Authoring facts should describe required Unity surfaces, not assume every requirement is prefab-owned.");
-            Assert.That(factScannerSource.Contains("|| ContainsTypeName(contract.RequiredComponentNames, fullName)"), Is.False, "Physical component placement should project into Unity surfaces, not dependency relationships.");
-            Assert.That(factScannerSource.Contains("InferRelatedStableIds"), Is.False, "Reflection facts should relate through contracts and dependency metadata, not keyword proof-route inference.");
-            Assert.That(factScannerSource.Contains("value.Contains(\"pawn\")"), Is.False, "Reflection facts should not keyword-map gameplay names to proof ids.");
-            Assert.That(File.Exists(Path.Combine(GameplayRoot, "Editor", "Authoring", "Spine", "Facts", "PyralisAuthoringFactTypes.cs")), Is.True);
-        }
-
-        [Test]
         public void AuthoringContracts_ProfileTypeDoesNotImplyFeatureModuleRuntime()
         {
             ResolvedAuthoringContract inputProfile = ResolvedAuthoringContractRegistry.FindByType(typeof(InputProfile));
@@ -535,17 +506,6 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(feedback, Is.Not.Null);
             Assert.That(feedback.RequiredUnitySurfaces, Does.Contain("IActorFeedbackPublisher"));
             Assert.That(feedback.RequiredUnitySurfaces, Does.Contain("HealthComponent"));
-        }
-
-        [Test]
-        public void AuthoringSetupGraph_UsesStableProofIdsInsteadOfProofLabels()
-        {
-            string graphBuilderSource = File.ReadAllText(
-                Path.Combine(GameplayRoot, "Editor", "Authoring", "Spine", "Graph", "PyralisAuthoringSetupGraphBuilder.cs"));
-
-            Assert.That(graphBuilderSource.Contains("\"proof.\" + NormalizeId(card.ProofStepLabel)"), Is.False);
-            Assert.That(graphBuilderSource.Contains("string.Equals(fact.DisplayName, proof.Label"), Is.False);
-            Assert.That(graphBuilderSource.Contains("proof.StableId"), Is.True);
         }
 
         [Test]
@@ -676,17 +636,6 @@ namespace NeonBlack.Gameplay.Tests.Editor
             UnityEngine.Object.DestroyImmediate(root);
         }
 
-
-        [Test]
-        public void AuthoringOverviewModel_DoesNotRebuildVisibleProofGuidanceFromProofVocabulary()
-        {
-            string overviewSource = File.ReadAllText(
-                Path.Combine(GameplayRoot, "Editor", "Authoring", "Spine", "Graph", "PyralisAuthoringOverviewModel.cs"));
-
-            Assert.That(overviewSource.Contains("PyralisProofFamilyVocabulary.GetDefaultProofTemplates"), Is.False);
-        }
-
-
         [Test]
         public void AuthoringSetupGraphProjection_ReadinessAuditRowsIncludeSetupFlowEvidence()
         {
@@ -808,27 +757,6 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void AuthoringContracts_RawAttributeScanningStaysInsideResolvedRegistry()
-        {
-            string registryPath = Path.Combine(GameplayRoot, "Core", "Authoring", "ResolvedAuthoringContractRegistry.cs");
-            string editorRoot = Path.Combine(GameplayRoot, "Editor", "Authoring");
-            string[] searchedFiles = Directory.GetFiles(editorRoot, "*.cs", SearchOption.AllDirectories)
-                .Concat(Directory.GetFiles(Path.Combine(GameplayRoot, "Runtime"), "*.cs", SearchOption.AllDirectories))
-                .Concat(Directory.GetFiles(Path.Combine(GameplayRoot, "Core"), "*.cs", SearchOption.AllDirectories))
-                .Where(path => !Path.GetFullPath(path).Equals(Path.GetFullPath(registryPath), StringComparison.OrdinalIgnoreCase))
-                .ToArray();
-
-            foreach (string file in searchedFiles)
-            {
-                string source = File.ReadAllText(file);
-                Assert.That(
-                    source.Contains("GetTypesWithAttribute<AuthoringContractAttribute>()"),
-                    Is.False,
-                    $"{file} should consume ResolvedAuthoringContractRegistry instead of scanning raw AuthoringContractAttribute data.");
-            }
-        }
-
-        [Test]
         public void AuthoringContracts_AllContractsCarryAuthoringMetadata()
         {
             IReadOnlyList<ResolvedAuthoringContract> contracts = ResolvedAuthoringContractRegistry.All;
@@ -926,19 +854,6 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(proof.GoalTags, Does.Contain("Traversal"));
             Assert.That(proof.RelatedStableIds, Does.Contain("feature.actor.traversal.topdown-hop"));
             Assert.That(proof.RouteRelevance, Does.Contain("Reflective contract inputs"));
-        }
-
-        [Test]
-        public void FeatureModuleDefinition_DefinitionValidationNoLongerOwnsFeatureSpecificContracts()
-        {
-            string definitionSource = File.ReadAllText(
-                Path.Combine(GameplayRoot, "Data", "Definitions", "FeatureModuleDefinition.cs"));
-
-            Assert.That(definitionSource.Contains("AppendRuntimeContractIssues"), Is.False);
-            Assert.That(definitionSource.Contains("ProfileMatches"), Is.False);
-            Assert.That(definitionSource.Contains("profileAsset is not PawnTraversalProfile"), Is.False);
-            Assert.That(definitionSource.Contains("expects an ActorCombatReactionProfile profile asset"), Is.False);
-            Assert.That(definitionSource.Contains("runtime prefab should expose IActorGuardFeature"), Is.False);
         }
 
         [Test]

@@ -1,14 +1,10 @@
-using System.Collections;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Profiles;
-using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Enums;
 using NeonBlack.Gameplay.Features.Combat;
 using NeonBlack.Gameplay.Features.Composition;
-using NeonBlack.Gameplay.Characters;
-using NeonBlack.Gameplay.Presentation.Visuals;
 using UnityEngine;
 using VContainer;
 
@@ -31,7 +27,7 @@ namespace NeonBlack.Gameplay.Features.Enemies
         Axioms = AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.Dimensions3D,
         DocumentationURL = "https://docs.neonblack.com/pyralis/enemy-ai"
     )]
-[AddComponentMenu("NeonBlack/Gameplay/Enemies/Enemy AI")]
+    [AddComponentMenu("NeonBlack/Gameplay/Enemies/Enemy AI")]
     [RequireComponent(typeof(CharacterController))]
     [RequireComponent(typeof(HealthComponent))]
     [RequireComponent(typeof(EnemyMovementModule))]
@@ -59,13 +55,7 @@ namespace NeonBlack.Gameplay.Features.Enemies
         [Header("Profiles")]
         [SerializeField] private EnemyFeatureProfile enemyFeatureProfile;
 
-        private CharacterController _controller;
-        private EnemyMovementModule _movementModule;
-        private EnemyDetectionModule _detectionModule;
-        private EnemyCombatModule _combatModule;
-        private EnemyAnimationModule _animationModule;
-        private HealthComponent _healthComponent;
-        private ActorFeatureHost _featureHost;
+        private EnemyActorRuntimeReferences _runtime;
         private IEnemyReactionState _reactionState;
 
         private EnemyState _state = EnemyState.Patrol;
@@ -82,10 +72,10 @@ namespace NeonBlack.Gameplay.Features.Enemies
         public bool IsChasing => _state == EnemyState.Chase;
         public bool IsAttacking => _state == EnemyState.Attack;
 
-        public EnemyMovementModule MovementModule => _movementModule;
-        public EnemyDetectionModule DetectionModule => _detectionModule;
-        public EnemyCombatModule CombatModule => _combatModule;
-        public EnemyAnimationModule AnimationModule => _animationModule;
+        public EnemyMovementModule MovementModule => _runtime?.MovementModule;
+        public EnemyDetectionModule DetectionModule => _runtime?.DetectionModule;
+        public EnemyCombatModule CombatModule => _runtime?.CombatModule;
+        public EnemyAnimationModule AnimationModule => _runtime?.AnimationModule;
         public MovementMode MovementMode => movementMode;
         public float MoveSpeed => moveSpeed;
         public float StatusMoveSpeedMultiplier => _statusMoveSpeedMultiplier;
@@ -96,14 +86,7 @@ namespace NeonBlack.Gameplay.Features.Enemies
 
         private void Awake()
         {
-            _controller = GetComponent<CharacterController>();
-            _movementModule = GetComponent<EnemyMovementModule>();
-            _detectionModule = GetComponent<EnemyDetectionModule>();
-            _combatModule = GetComponent<EnemyCombatModule>();
-            _animationModule = GetComponent<EnemyAnimationModule>();
-            _healthComponent = GetComponent<HealthComponent>();
-            _featureHost = GetComponent<ActorFeatureHost>();
-
+            _runtime = EnemyActorRuntimeReferences.Resolve(gameObject);
             _spawnPos = transform.position;
             
             _states[EnemyState.Patrol] = new PatrolState();
@@ -111,21 +94,11 @@ namespace NeonBlack.Gameplay.Features.Enemies
             _states[EnemyState.Attack] = new AttackState();
 
             ApplyFeatureProfile(enemyFeatureProfile);
-            
-            var billboard = GetComponent<BillboardFacing3D>();
-            if (billboard != null)
-            {
-                billboard.Configure(
-                    visualRoot != null ? visualRoot : transform,
-                    visualRoot,
-                    GetComponentInChildren<SpriteRenderer>(),
-                    presentationCamera,
-                    BillboardFacing3D.FacingMode.YAxisOnly,
-                    spriteDefaultFacesRight);
-            }
 
-            _healthComponent.OnDeath.AddListener(OnDeath);
-            _healthComponent.OnDamaged.AddListener(OnHit);
+            _runtime.ConfigureBillboard(transform, visualRoot, presentationCamera, spriteDefaultFacesRight);
+
+            _runtime.HealthComponent?.OnDeath.AddListener(OnDeath);
+            _runtime.HealthComponent?.OnDamaged.AddListener(OnHit);
 
             InitializeFeatureModules();
         }
@@ -139,13 +112,13 @@ namespace NeonBlack.Gameplay.Features.Enemies
         {
             if (_state == EnemyState.Dead) return;
 
-            _movementModule.Tick(Time.deltaTime);
-            _combatModule.Tick(Time.deltaTime);
+            MovementModule.Tick(Time.deltaTime);
+            CombatModule.Tick(Time.deltaTime);
 
             if ((_reactionState != null && _reactionState.IsReactionLocked) || _statusActionLocked)
             {
                 UpdateAnimator();
-                _movementModule.ApplyStationaryMotion(Time.deltaTime);
+                MovementModule.ApplyStationaryMotion(Time.deltaTime);
                 return;
             }
 
@@ -183,8 +156,8 @@ namespace NeonBlack.Gameplay.Features.Enemies
 
         private void UpdateAnimator()
         {
-            bool isMoving = _state == EnemyState.Chase || (_state == EnemyState.Patrol && _controller.velocity.sqrMagnitude > 0.05f);
-            _animationModule.UpdateMovement(isMoving, _movementModule.IsGrounded);
+            bool isMoving = _state == EnemyState.Chase || (_state == EnemyState.Patrol && _runtime.Controller.velocity.sqrMagnitude > 0.05f);
+            AnimationModule.UpdateMovement(isMoving, MovementModule.IsGrounded);
         }
 
         private void OnDeath()
@@ -193,33 +166,33 @@ namespace NeonBlack.Gameplay.Features.Enemies
                 _states[_state].OnExit(this);
 
             _state = EnemyState.Dead;
-            _animationModule.TriggerDeath();
-            _controller.enabled = false;
-            _combatModule.DisableAllHitBoxes();
+            AnimationModule.TriggerDeath();
+            _runtime.Controller.enabled = false;
+            CombatModule.DisableAllHitBoxes();
         }
 
         private void OnHit(float damage)
         {
-            _animationModule.TriggerHurt();
-            if (_state == EnemyState.Patrol && _detectionModule.HorizontalDistance(movementMode) < _detectionModule.LeashRange)
+            AnimationModule.TriggerHurt();
+            if (_state == EnemyState.Patrol && DetectionModule.HorizontalDistance(movementMode) < DetectionModule.LeashRange)
                 ChangeState(EnemyState.Chase);
         }
 
         public void SetStatusMoveSpeedMultiplier(float multiplier) => _statusMoveSpeedMultiplier = Mathf.Max(multiplier, 0f);
         public void SetStatusActionLock(bool locked) => _statusActionLocked = locked;
-        public void SetOutgoingDamageMultiplier(float multiplier) => _combatModule.SetOutgoingDamageMultiplier(multiplier);
-        public void SetOutgoingKnockbackMultiplier(float multiplier) => _combatModule.SetOutgoingKnockbackMultiplier(multiplier);
+        public void SetOutgoingDamageMultiplier(float multiplier) => CombatModule.SetOutgoingDamageMultiplier(multiplier);
+        public void SetOutgoingKnockbackMultiplier(float multiplier) => CombatModule.SetOutgoingKnockbackMultiplier(multiplier);
 
         public void SetPresentationCamera(Camera camera)
         {
             presentationCamera = camera;
-            GetComponent<BillboardFacing3D>()?.SetCameraOverride(camera);
+            _runtime?.SetPresentationCamera(camera);
         }
 
         private void ApplyFeatureProfile(EnemyFeatureProfile profile)
         {
             if (profile == null) return;
-            if (profile.combatProfile != null) _combatModule.ApplyCombatProfile(profile.combatProfile);
+            if (profile.combatProfile != null) CombatModule.ApplyCombatProfile(profile.combatProfile);
         }
 
         private IObjectResolver _resolver;
@@ -234,33 +207,21 @@ namespace NeonBlack.Gameplay.Features.Enemies
         {
             FeatureModuleDefinition[] definitions = enemyFeatureProfile != null ? enemyFeatureProfile.featureModules : null;
             if (definitions == null || definitions.Length == 0) return;
-            _featureHost ??= gameObject.AddComponent<ActorFeatureHost>();
-            _featureHost.InitializeFeatures(new FeatureHostInitializationContext(BuildFeatureContext(), _resolver), definitions);
-            _featureHost.TryGetInstalledFeature(out _reactionState);
-        }
-
-        private ActorFeatureContext BuildFeatureContext()
-        {
-            return new ActorFeatureContext(
-                gameObject,
-                health: _healthComponent,
-                animation: GetComponent<ActorAnimationDriver>(),
-                knockback: GetComponent<KnockbackReceiver>(),
-                enemyActorState: this,
-                presentationMode: GetComponent<ActorAnimationDriver>() != null ? GetComponent<ActorAnimationDriver>().PresentationMode : ActorPresentationMode.Billboard2_5D,
-                authoredProfiles: new ScriptableObject[] { enemyFeatureProfile });
+            ActorFeatureHost featureHost = _runtime.EnsureFeatureHost();
+            featureHost.InitializeFeatures(new FeatureHostInitializationContext(_runtime.BuildFeatureContext(enemyFeatureProfile, this), _resolver), definitions);
+            featureHost.TryGetInstalledFeature(out _reactionState);
         }
 
 #if UNITY_EDITOR
         private void OnDrawGizmosSelected()
         {
-            if (_detectionModule == null) return;
+            if (DetectionModule == null) return;
             Gizmos.color = Color.yellow;
-            Gizmos.DrawWireSphere(transform.position, _detectionModule.AggroRange);
+            Gizmos.DrawWireSphere(transform.position, DetectionModule.AggroRange);
             Gizmos.color = new Color(1f, 0.5f, 0f, 0.4f);
-            Gizmos.DrawWireSphere(transform.position, _detectionModule.LeashRange);
+            Gizmos.DrawWireSphere(transform.position, DetectionModule.LeashRange);
             Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(transform.position, _combatModule != null ? _combatModule.MinAttackRange : 1f);
+            Gizmos.DrawWireSphere(transform.position, CombatModule != null ? CombatModule.MinAttackRange : 1f);
         }
 #endif
     }

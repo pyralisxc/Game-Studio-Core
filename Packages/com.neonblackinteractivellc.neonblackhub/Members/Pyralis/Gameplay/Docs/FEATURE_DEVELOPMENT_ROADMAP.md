@@ -373,7 +373,7 @@ Build order:
 9. Open-Zone Readiness - foundational code added
 10. Golden RPG Sample
 
-The implementation history has been folded into current package docs and runtime tests. Treat this roadmap, `FEATURE_DEVELOPMENT_SCOPE.md`, `RPG_SYSTEMS_ROADMAP.md`, and the active source contracts as the durable RPG direction instead of dated external plan files.
+The implementation history has been folded into current package docs and runtime tests. Treat this roadmap, `FEATURE_DEVELOPMENT_SCOPE.md`, `RPG_SYSTEMS_ROADMAP.md`, and focused contract/graph smoke tests as the durable RPG direction instead of dated external plan files.
 
 ## Current Priority
 

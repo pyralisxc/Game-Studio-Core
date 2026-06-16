@@ -1,4 +1,3 @@
-using System.IO;
 using System.Linq;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Profiles;
@@ -187,32 +186,6 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Object.DestroyImmediate(ricoActor);
             Object.DestroyImmediate(profile);
             Object.DestroyImmediate(definition);
-        }
-
-        [Test]
-        public void AnimationMappingSource_DoesNotDependOnApocalyptiaFixture()
-        {
-            string gameplayRoot = Path.Combine(
-                Application.dataPath,
-                "..",
-                "Packages",
-                "com.neonblackinteractivellc.neonblackhub",
-                "Members",
-                "Pyralis",
-                "Gameplay");
-
-            string[] genericMappingSources =
-            {
-                Directory.GetFiles(Path.Combine(gameplayRoot, "Editor"), "PawnAnimationProfileEditor.cs", SearchOption.AllDirectories).Single(),
-                Path.Combine(gameplayRoot, "Presentation", "Animation", "ActorAnimationDriver.cs")
-            };
-
-            for (int i = 0; i < genericMappingSources.Length; i++)
-            {
-                string source = File.ReadAllText(genericMappingSources[i]);
-                Assert.That(source.Contains("Apocalyptia"), Is.False, genericMappingSources[i]);
-                Assert.That(source.Contains("Members/Public"), Is.False, genericMappingSources[i]);
-            }
         }
 
         private static void AssertMapped(

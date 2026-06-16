@@ -34,15 +34,7 @@ namespace NeonBlack.Gameplay.Features.Zones
         public UnityEvent<GameObject> OnTargetEntered;
         public UnityEvent<GameObject> OnTargetExited;
 
-        private struct TargetState
-        {
-            public HealthComponent health;
-            public IActorStatusEffectReceiver statusReceiver;
-            public KnockbackReceiver knockback;
-            public float timer;
-        }
-
-        private readonly List<TargetState> _targets = new List<TargetState>(8);
+        private readonly List<DamageZoneTargetState> _targets = new List<DamageZoneTargetState>(8);
         private readonly HashSet<HealthComponent> _targetLookup = new HashSet<HealthComponent>();
 
         private void Awake()
@@ -59,15 +51,15 @@ namespace NeonBlack.Gameplay.Features.Zones
                 return;
 
             _targetLookup.Add(health);
-            
-            _targets.Add(new TargetState 
-            { 
-                health = health, 
+
+            _targets.Add(new DamageZoneTargetState
+            {
+                health = health,
                 statusReceiver = health.GetComponent<IActorStatusEffectReceiver>() ?? health.GetComponentInParent<IActorStatusEffectReceiver>(),
                 knockback = health.GetComponent<KnockbackReceiver>() ?? health.GetComponentInParent<KnockbackReceiver>(),
-                timer = 0f 
+                timer = 0f
             });
-            
+
             OnTargetEntered?.Invoke(health.gameObject);
         }
 
@@ -97,7 +89,7 @@ namespace NeonBlack.Gameplay.Features.Zones
 
             for (int i = _targets.Count - 1; i >= 0; i--)
             {
-                TargetState state = _targets[i];
+                DamageZoneTargetState state = _targets[i];
                 HealthComponent health = state.health;
 
                 if (health == null || health.IsDead)
@@ -119,7 +111,7 @@ namespace NeonBlack.Gameplay.Features.Zones
 
                 if (impactProfile != null)
                 {
-                    ApplyImpactRefined(state, impactProfile);
+                    DamageZoneImpactRuntime.ApplyProfileImpact(gameObject, transform, state, impactProfile);
                     continue;
                 }
 
@@ -127,29 +119,6 @@ namespace NeonBlack.Gameplay.Features.Zones
                 if (knockbackForce > 0f && state.knockback != null)
                 {
                     state.knockback.ApplyKnockback(Vector3.up * knockbackForce);
-                }
-            }
-        }
-
-        private void ApplyImpactRefined(TargetState state, HazardImpactProfile profile)
-        {
-            if (profile.damagePerTick > 0f)
-                state.health.TakeDamage(profile.damagePerTick, state.health.transform.position, gameObject);
-
-            if (profile.knockbackForce > 0f && state.knockback != null)
-            {
-                Vector3 delta = state.health.transform.position - transform.position;
-                delta.z = 0f;
-                Vector3 dir = delta.sqrMagnitude > 0.0001f ? delta.normalized : (profile.useUpwardKnockback ? Vector3.up : Vector3.right);
-                state.knockback.ApplyKnockback(dir * profile.knockbackForce);
-            }
-
-            if (state.statusReceiver != null && profile.statusEffects != null)
-            {
-                for (int i = 0; i < profile.statusEffects.Length; i++)
-                {
-                    if (profile.statusEffects[i] != null)
-                        state.statusReceiver.ApplyStatusEffect(profile.statusEffects[i], gameObject);
                 }
             }
         }

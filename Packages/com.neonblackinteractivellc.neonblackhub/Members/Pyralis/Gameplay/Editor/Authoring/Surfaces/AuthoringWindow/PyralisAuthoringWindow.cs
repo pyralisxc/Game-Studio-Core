@@ -363,7 +363,7 @@ namespace NeonBlack.Gameplay.Editor
         private PyralisAuthoringIntentModel GetCachedIntentModel()
         {
             string key = $"{_intentLane}_{_intentAxioms}_{_intentCapabilities}_{_authoringCacheVersion}";
-            if (_cachedIntentModelKey == key)
+            if (_cachedIntentModelKey == key && _cachedIntentModel != null)
                 return _cachedIntentModel;
 
             _cachedIntentModelKey = key;

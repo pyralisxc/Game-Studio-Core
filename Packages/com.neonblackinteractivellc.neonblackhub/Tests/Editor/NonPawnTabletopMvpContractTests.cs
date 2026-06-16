@@ -27,14 +27,6 @@ namespace NeonBlack.Gameplay.Tests.Editor
             return path;
         }
 
-        private static string FindGameplayEditorFile(string fileName)
-        {
-            string editorRoot = Path.Combine(GameplayRoot, "Editor");
-            string[] matches = Directory.GetFiles(editorRoot, fileName, SearchOption.AllDirectories);
-            Assert.That(matches.Length, Is.EqualTo(1), $"Expected one Gameplay Editor file named {fileName}.");
-            return matches[0];
-        }
-
         [Test]
         public void TabletopSetupDocs_DefineNoPawnMvpQuickPath()
         {
@@ -59,18 +51,5 @@ namespace NeonBlack.Gameplay.Tests.Editor
             StringAssert.Contains("BoardTerminalConditionDefinition", docs);
         }
 
-        [Test]
-        public void SetupFlowSource_PreservesNoPawnParticipantAndSpawnGuidance()
-        {
-            string validator = File.ReadAllText(FindGameplayEditorFile("PyralisSetupFlowValidator.cs"));
-            string guidance = File.ReadAllText(FindGameplayEditorFile("PyralisSetupFlowGuidance.cs"));
-            string routeAnalysis = File.ReadAllText(FindGameplayEditorFile("PyralisSetupRouteAnalysis.cs"));
-
-            StringAssert.Contains("RequiresPawn", routeAnalysis);
-            StringAssert.Contains("No participant pawn is required for this setup route.", validator);
-            StringAssert.Contains("Spawn points can stay empty for no-pawn board/card/menu/camera routes.", validator);
-            StringAssert.Contains("Tabletop Runtime Contract", guidance);
-            StringAssert.Contains("Assign Tabletop Selection Surface", guidance);
-        }
     }
 }

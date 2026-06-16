@@ -1,7 +1,5 @@
-using System.Collections;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Profiles;
-using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Features.Combat;
 using NeonBlack.Gameplay.Features.Composition;
 using NeonBlack.Gameplay.Core.Contracts;
@@ -27,7 +25,7 @@ namespace NeonBlack.Gameplay.Features.Characters
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Characters/2D/Pawn Combat Behaviour 2D")]
     [RequireComponent(typeof(Motor2D))]
-    public class PawnCombatBehaviour2D : MonoBehaviour, IPawnCombatModule, IPawnCombatInputReceiver2D, IActorCombatModifierReceiver, IRuntimeValidationProvider
+    public partial class PawnCombatBehaviour2D : MonoBehaviour, IPawnCombatModule, IPawnCombatInputReceiver2D, IActorCombatModifierReceiver, IRuntimeValidationProvider
     {
         public IEnumerable<string> GetRuntimeValidationIssues()
         {
@@ -60,10 +58,7 @@ namespace NeonBlack.Gameplay.Features.Characters
         [SerializeField] private CombatSequenceDefinition primarySequence;
         [SerializeField] private CombatSequenceDefinition secondarySequence;
 
-        private Motor2D _motor;
-        private ActorAnimationDriver _animationDriver;
-        private HealthComponent _health;
-        private IActorFeedbackPublisher _feedbackPublisher;
+        private PawnCombat2DRuntimeReferences _runtime;
         private PawnComboProcessor _comboProcessor;
 
         private int _attackCount;
@@ -76,12 +71,12 @@ namespace NeonBlack.Gameplay.Features.Characters
         private float _outgoingDamageMultiplier = 1f;
         private float _outgoingKnockbackMultiplier = 1f;
 
+        private PawnCombat2DRuntimeReferences Runtime =>
+            _runtime ??= PawnCombat2DRuntimeReferences.Resolve(gameObject, projectileLauncher);
+
         private void Awake()
         {
-            _motor = GetComponent<Motor2D>();
-            _animationDriver = GetComponent<ActorAnimationDriver>();
-            _health = GetComponent<HealthComponent>();
-            _feedbackPublisher = GetComponent<IActorFeedbackPublisher>();
+            _runtime = PawnCombat2DRuntimeReferences.Resolve(gameObject, projectileLauncher);
             _comboProcessor = new PawnComboProcessor();
 
             CacheHitBoxOffsets();
@@ -110,8 +105,8 @@ namespace NeonBlack.Gameplay.Features.Characters
 
             _comboProcessor.Tick(Time.deltaTime, comboResetTime);
 
-            if (_actingTimer <= 0f && _motor != null)
-                _motor.SetActionLock(false);
+            if (_actingTimer <= 0f && Runtime.Motor != null)
+                Runtime.Motor.SetActionLock(false);
         }
 
         public void HandlePrimaryAttackInput()
@@ -164,256 +159,6 @@ namespace NeonBlack.Gameplay.Features.Characters
             _outgoingKnockbackMultiplier = Mathf.Max(multiplier, 0f);
         }
 
-        private bool ExecuteSequenceAction(
-            PawnComboProcessor.ComboRuntimeState state,
-            CombatSequenceDefinition sequence,
-            CombatInputType inputType,
-            WeaponData fallbackWeapon,
-            string fallbackZoneName,
-            ref float cooldownTimer,
-            float fallbackCooldown)
-        {
-            if (_motor == null)
-                return false;
-
-            if (!_comboProcessor.TryExecuteAction(
-                state,
-                sequence,
-                comboResetTime,
-                combatWindow,
-                ref _combatTimer,
-                _motor.IsActionLocked,
-                cooldownTimer,
-                out int _,
-                out CombatActionDefinition action))
-            {
-                return false;
-            }
-
-            WeaponData resolvedWeapon = action.weapon != null ? action.weapon : fallbackWeapon;
-            float resolvedCooldown = ResolveActionCooldown(action, resolvedWeapon, fallbackCooldown);
-            cooldownTimer = resolvedCooldown;
-
-            _motor.ResetMoveToIdle();
-            _motor.SetActionLock(true);
-            _actingTimer = Mathf.Max(resolvedWeapon != null ? resolvedWeapon.hitDelay + resolvedWeapon.hitDuration : hitDelay + hitDuration, 0.05f);
-
-            TriggerCombatAnimation(action, inputType);
-            ActivateHitBoxForZone(action.fallbackHitBoxZone, resolvedWeapon ?? fallbackWeapon, action.fallbackHitBoxZone);
-
-            return true;
-        }
-
-        private void ExecuteFallbackAttack()
-        {
-            if (_motor == null || _attackTimer > 0f || _motor.IsActionLocked)
-                return;
-
-            _attackTimer = attackCooldown;
-            _combatTimer = combatWindow;
-            _attackCount = (_attackCount % 3) + 1;
-            _motor.ResetMoveToIdle();
-            _motor.SetActionLock(true);
-            _actingTimer = Mathf.Max(attackWeapon != null ? attackWeapon.hitDelay + attackWeapon.hitDuration : hitDelay + hitDuration, 0.05f);
-            _animationDriver?.SetIntSignal(ActorAnimationSignal.AttackPrimary, _attackCount);
-            _animationDriver?.TriggerSignal(ActorAnimationSignal.AttackPrimary, intValue: _attackCount);
-            ActivateHitBoxForZone("Punch", attackWeapon);
-        }
-
-        private void ExecuteFallbackKick()
-        {
-            if (_motor == null || _kickTimer > 0f || _motor.IsActionLocked)
-                return;
-
-            _kickTimer = kickCooldown;
-            _combatTimer = combatWindow;
-            _kickCount = (_kickCount % 3) + 1;
-            _motor.ResetMoveToIdle();
-            _motor.SetActionLock(true);
-            _actingTimer = Mathf.Max(kickWeapon != null ? kickWeapon.hitDelay + kickWeapon.hitDuration : hitDelay + hitDuration, 0.05f);
-            _animationDriver?.SetIntSignal(ActorAnimationSignal.AttackSecondary, _kickCount);
-            _animationDriver?.TriggerSignal(ActorAnimationSignal.AttackSecondary, intValue: _kickCount);
-            ActivateHitBoxForZone("Kick", kickWeapon);
-        }
-
-        private void TriggerCombatAnimation(CombatActionDefinition action, CombatInputType inputType)
-        {
-            ActorAnimationSignal signal = action != null ? action.animationSignal : inputType == CombatInputType.Secondary
-                ? ActorAnimationSignal.AttackSecondary
-                : ActorAnimationSignal.AttackPrimary;
-
-            int comboStep = action != null ? action.comboStep : 1;
-            _animationDriver?.SetIntSignal(signal, comboStep);
-            _animationDriver?.TriggerSignal(signal, intValue: comboStep);
-
-            if (action != null && action.finisherResetsCombo)
-                _animationDriver?.TriggerCustom("ComboFinisher", intValue: comboStep);
-        }
-
-        private float ResolveActionCooldown(CombatActionDefinition action, WeaponData resolvedWeapon, float fallbackCooldown)
-        {
-            if (action != null && action.cooldownOverride >= 0f)
-                return action.cooldownOverride;
-
-            if (resolvedWeapon != null && resolvedWeapon.attackCooldown > 0f)
-                return resolvedWeapon.attackCooldown;
-
-            return fallbackCooldown;
-        }
-
-        private void ActivateHitBoxForZone(string defaultZoneName, WeaponData weapon, string explicitZoneName = null)
-        {
-            if (weapon != null
-                && (weapon.weaponType == WeaponType.Ranged || weapon.weaponType == WeaponType.Thrown)
-                && weapon.projectileDefinition != null)
-            {
-                FireProjectile(weapon);
-                return;
-            }
-
-            string zoneName = !string.IsNullOrEmpty(explicitZoneName)
-                ? explicitZoneName
-                : weapon != null && !string.IsNullOrEmpty(weapon.hitBoxZone)
-                    ? weapon.hitBoxZone
-                    : defaultZoneName;
-
-            HitBox2D box = GetZoneByName(zoneName) ?? GetZoneByName(defaultZoneName);
-            if (box == null)
-                return;
-
-            float damage = (weapon != null ? weapon.damage : baseDamage) * _outgoingDamageMultiplier;
-            float knockback = (weapon != null ? weapon.knockbackForce : baseKnockback) * _outgoingKnockbackMultiplier;
-            float delay = weapon != null ? weapon.hitDelay : hitDelay;
-            float duration = weapon != null ? weapon.hitDuration : hitDuration;
-
-            SyncHitBoxSides();
-
-            StartCoroutine(HitBoxTimingRoutine(box, damage, knockback, delay, duration));
-        }
-
-        private IEnumerator HitBoxTimingRoutine(HitBox2D box, float damage, float knockback, float delay, float duration)
-        {
-            if (delay > 0f)
-                yield return new WaitForSeconds(delay);
-
-            box.ConfigureDamage(damage, knockback);
-            box.Fire(duration);
-        }
-
-        private void FireProjectile(WeaponData weapon)
-        {
-            if (weapon == null || weapon.projectileDefinition == null)
-                return;
-
-            ProjectileLauncher2D launcher = ResolveProjectileLauncher();
-            if (launcher == null)
-            {
-                Debug.LogWarning($"{nameof(PawnCombatBehaviour2D)} needs a {nameof(ProjectileLauncher2D)} to fire ranged weapon `{weapon.weaponName}` through the authored projectile path.", this);
-                return;
-            }
-
-            bool facingRight = _motor == null || _motor.FacingRight;
-            Vector3 spawnPos = projectileSpawnPoint != null
-                ? projectileSpawnPoint.position
-                : transform.position + Vector3.up * 0.25f + (facingRight ? Vector3.right : Vector3.left) * 0.5f;
-
-            Vector3 forward = facingRight ? Vector3.right : Vector3.left;
-            ProjectileFireRequest request = new ProjectileFireRequest(
-                weapon.projectileDefinition,
-                weapon.fireModeDefinition,
-                spawnPos,
-                forward,
-                gameObject,
-                _health != null ? _health.faction : Faction.Neutral,
-                damageMultiplier: _outgoingDamageMultiplier,
-                knockbackMultiplier: _outgoingKnockbackMultiplier);
-
-            launcher.Fire(request);
-        }
-
-        private ProjectileLauncher2D ResolveProjectileLauncher()
-        {
-            if (projectileLauncher != null)
-                return projectileLauncher;
-
-            projectileLauncher = GetComponentInParent<ProjectileLauncher2D>();
-            if (projectileLauncher == null)
-                projectileLauncher = GetComponentInChildren<ProjectileLauncher2D>();
-
-            return projectileLauncher;
-        }
-
-        private HitBox2D GetZoneByName(string zoneName)
-        {
-            if (hitBoxZones == null || string.IsNullOrEmpty(zoneName))
-                return null;
-
-            foreach (HitBoxSlot2D slot in hitBoxZones)
-            {
-                if (slot != null && slot.zoneName == zoneName)
-                    return slot.hitBox;
-            }
-
-            return null;
-        }
-
-        private void SyncHitBoxSides()
-        {
-            if (_motor == null || hitBoxZones == null)
-                return;
-
-            foreach (HitBoxSlot2D slot in hitBoxZones)
-                slot?.MirrorToSide(transform, _motor.FacingRight);
-        }
-
-        private void HandleHitConfirmed(GameObject _)
-        {
-            _comboProcessor.HandleHitConfirmed(comboResetTime, (step, isFinisher) =>
-            {
-                _animationDriver?.TriggerCustom("ComboConfirm", intValue: step);
-                _feedbackPublisher?.PublishCombo(step);
-                if (isFinisher)
-                    _feedbackPublisher?.PublishFinisher(step);
-            });
-        }
-
-        private void CacheHitBoxOffsets()
-        {
-            if (hitBoxZones == null)
-                return;
-
-            foreach (HitBoxSlot2D slot in hitBoxZones)
-            {
-                slot.absOffsetX = slot.hitBox != null
-                    ? Mathf.Max(Mathf.Abs(slot.hitBox.transform.position.x - transform.position.x), 0.25f)
-                    : 0.25f;
-            }
-        }
-
-        private void SubscribeHitBoxes()
-        {
-            if (hitBoxZones == null)
-                return;
-
-            foreach (HitBoxSlot2D slot in hitBoxZones)
-            {
-                if (slot?.hitBox != null)
-                    slot.hitBox.HitConfirmed += HandleHitConfirmed;
-            }
-        }
-
-        private void UnsubscribeHitBoxes()
-        {
-            if (hitBoxZones == null)
-                return;
-
-            foreach (HitBoxSlot2D slot in hitBoxZones)
-            {
-                if (slot?.hitBox != null)
-                    slot.hitBox.HitConfirmed -= HandleHitConfirmed;
-            }
-        }
-
         private WeaponData ActiveWeapon =>
             equippedWeapons != null && equippedWeapons.Length > _activeWeaponIndex
                 ? equippedWeapons[_activeWeaponIndex]
@@ -422,7 +167,7 @@ namespace NeonBlack.Gameplay.Features.Characters
         private void ApplyActiveWeapon()
         {
             WeaponData weapon = ActiveWeapon;
-            _animationDriver?.SetRuntimeControllerOverride(weapon != null ? weapon.overrideController : null);
+            Runtime.AnimationDriver?.SetRuntimeControllerOverride(weapon != null ? weapon.overrideController : null);
         }
     }
 }

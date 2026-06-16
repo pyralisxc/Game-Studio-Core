@@ -16,7 +16,7 @@ namespace NeonBlack.Gameplay.Features.Enemies
         ExpertAdvice = "Use attackRangeOverride if the calculated hitbox range is inaccurate. Sequential mode is best for simple bosses.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/enemies"
     )]
-    public class EnemyCombatModule : MonoBehaviour
+    public partial class EnemyCombatModule : MonoBehaviour
 {
         [Header("Combat Settings")]
         [SerializeField] private EnemyCombatProfile combatProfile;
@@ -138,83 +138,5 @@ namespace NeonBlack.Gameplay.Features.Enemies
             }
         }
 
-        public void ApplyCombatProfile(EnemyCombatProfile profile)
-        {
-            if (profile == null) return;
-            profile.Sanitize();
-            attackSequence = profile.attackSequence;
-            attackMode = profile.attackMode;
-            usePrioritySelection = profile.usePrioritySelection;
-            preferAttacksCurrentlyInRange = profile.preferAttacksCurrentlyInRange;
-            attackCooldown = profile.attackCooldown;
-            attackRangeOverride = profile.attackRangeOverride;
-            rangeWeight = profile.rangeWeight;
-            damageWeight = profile.damageWeight;
-            knockbackWeight = profile.knockbackWeight;
-            assetPriorityWeight = profile.assetPriorityWeight;
-        }
-
-        private float GetAttackEffectiveRange(EnemyAttack atk)
-        {
-            if (atk == null) return _computedAttackRange;
-            HitBox zone = GetZoneHitBox(atk.hitBoxZone);
-            if (zone != null && zone.TryGetEnemyAttackRangeOverride(out float hitBoxRangeOverride))
-                return hitBoxRangeOverride;
-            if (atk.attackRange > 0f) return atk.attackRange;
-            return _computedAttackRange + Mathf.Max(0f, atk.attackRadius);
-        }
-
-        private float GetMinAttackRange()
-        {
-            if (attackSequence == null || attackSequence.Length == 0) return Mathf.Max(0.5f, _computedAttackRange);
-            float minRange = float.MaxValue;
-            bool found = false;
-            foreach (var atk in attackSequence)
-            {
-                if (atk == null) continue;
-                found = true;
-                minRange = Mathf.Min(minRange, Mathf.Max(0.1f, GetAttackEffectiveRange(atk)));
-            }
-            return found ? minRange : Mathf.Max(0.5f, _computedAttackRange);
-        }
-
-        private HitBox GetZoneHitBox(string zoneName)
-        {
-            if (hitBoxZones == null || string.IsNullOrEmpty(zoneName)) return null;
-            foreach (var slot in hitBoxZones)
-                if (slot.zoneName == zoneName) return slot.hitBox;
-            return null;
-        }
-
-        private float MeasureHitBoxRange(HitBox box, float absOffsetX)
-        {
-            if (box == null) return 1.0f;
-            var col = box.GetComponent<Collider>();
-            if (col == null) return 1.0f;
-            float halfExtent = col is BoxCollider bc ? bc.size.x * 0.5f * Mathf.Abs(box.transform.lossyScale.x) : col.bounds.extents.x;
-            return absOffsetX + halfExtent;
-        }
-
-        public void SetOutgoingDamageMultiplier(float multiplier) => _outgoingDamageMultiplier = Mathf.Max(multiplier, 0f);
-        public void SetOutgoingKnockbackMultiplier(float multiplier) => _outgoingKnockbackMultiplier = Mathf.Max(multiplier, 0f);
-
-        public void DisableAllHitBoxes()
-        {
-            StopAllCoroutines();
-
-            if (hitBoxZones == null)
-                return;
-
-            for (int i = 0; i < hitBoxZones.Length; i++)
-            {
-                HitBox hitBox = hitBoxZones[i].hitBox;
-                if (hitBox == null)
-                    continue;
-
-                hitBox.ClearHitSet();
-                if (_hitBoxOriginalScales.TryGetValue(hitBox, out Vector3 originalScale))
-                    hitBox.transform.localScale = originalScale;
-            }
-        }
     }
 }

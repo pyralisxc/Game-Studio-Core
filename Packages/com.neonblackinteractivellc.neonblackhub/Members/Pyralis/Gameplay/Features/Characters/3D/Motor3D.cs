@@ -27,7 +27,7 @@ namespace NeonBlack.Gameplay.Features.Characters
         "Assign the InputSystem_Actions asset on Pawn3DInputModule.",
         "Ensure an Animator with the required parameters is present."
     },
-    AssignmentFields = new[] { nameof(_input), nameof(_movement), nameof(_traversal), nameof(_presentation) },
+    AssignmentFields = new[] { "Pawn3DInputModule", "Pawn3DMovementComponent", "Pawn3DTraversalComponent", "Pawn3DPresentationComponent" },
     FirstProof = "Pawn responds to Move input and plays walk animations. Traversal features like Jump or Ledge-climb function when in range.",
     ExpertAdvice = "Motor3D is a high-level coordinator. It does not move the pawn directly but Ticks its sibling modules in a deterministic order. Ensure CharacterController 'Skin Width' is at least 10% of the radius to prevent jitter on slopes.",
     DocumentationURL = "https://docs.neonblack.com/pyralis/movement"
@@ -40,55 +40,49 @@ namespace NeonBlack.Gameplay.Features.Characters
 [RequireComponent(typeof(Pawn3DMovementComponent))]
 [RequireComponent(typeof(Pawn3DTraversalComponent))]
 [RequireComponent(typeof(Pawn3DPresentationComponent))]
-public class Motor3D : MonoBehaviour, ICharacterMotorState, IActorReactionResponder, IActorMovementModifierReceiver, IClimbTraversalActor
+public partial class Motor3D : MonoBehaviour, ICharacterMotorState, IActorReactionResponder, IActorMovementModifierReceiver, IClimbTraversalActor
 {
-    //  Module references  //
-    private Pawn3DInputModule         _input;
-    private Pawn3DMovementComponent   _movement;
-    private Pawn3DTraversalComponent  _traversal;
-    private Pawn3DPresentationComponent _presentation;
-    private PawnCombatBehaviour       _combat;
-    private HealthComponent           _health;
-    private ActorFeatureHost          _featureHost;
-    private IActorTraversalFeature    _traversalFeature;
-    private IActorInteractionFeature  _interactionFeature;
-    private IActorGuardFeature        _guardFeature;
+    private Motor3DRuntimeReferences _runtime;
     private float                     _reactionLockTimer;
     private bool                      _statusActionLocked;
 
+    private Pawn3DInputModule Input => _runtime?.Input;
+    private Pawn3DMovementComponent Movement => _runtime?.Movement;
+    private Pawn3DTraversalComponent Traversal => _runtime?.Traversal;
+    private Pawn3DPresentationComponent Presentation => _runtime?.Presentation;
+    private PawnCombatBehaviour Combat => _runtime?.Combat;
+    private HealthComponent Health => _runtime?.Health;
+    private IActorTraversalFeature TraversalFeature => _runtime?.TraversalFeature;
+    private IActorInteractionFeature InteractionFeature => _runtime?.InteractionFeature;
+    private IActorGuardFeature GuardFeature => _runtime?.GuardFeature;
+
     //  ICharacterMotorState  //
-    public bool IsGrounded  => _movement.State.IsGrounded;
-    public bool IsAirborne  => !_movement.State.IsGrounded || _movement.State.VelocityY > 0f;
-    public bool FacingRight => _movement.State.FacingRight;
+    public bool IsGrounded  => Movement.State.IsGrounded;
+    public bool IsAirborne  => !Movement.State.IsGrounded || Movement.State.VelocityY > 0f;
+    public bool FacingRight => Movement.State.FacingRight;
     public bool IsActing
     {
-        get => _movement.State.IsActing;
-        set => _movement.SetActing(value);
+        get => Movement.State.IsActing;
+        set => Movement.SetActing(value);
     }
 
-    public void ResetMoveToIdle() => _presentation.ResetMoveToIdle();
+    public void ResetMoveToIdle() => Presentation.ResetMoveToIdle();
 
     //  Public accessors (for camera, UI, and other systems)  //
-    public bool  IsBlocking           => _guardFeature?.IsGuarding ?? (_combat?.IsBlocking ?? false);
-    public float BlockDamageReduction => _guardFeature?.BlockDamageReduction ?? (_combat?.BlockDamageReduction ?? 0f);
-    public float BlockFrontalAngle    => _guardFeature?.BlockFrontalAngle ?? (_combat?.BlockFrontalAngle ?? 90f);
-    public bool     IsCrouching     => _movement.State.IsCrouching;
-    public bool     IsSprinting     => _movement.State.IsSprinting;
-    public Vector3  CurrentVelocity => new Vector3(_movement.State.VelocityX, _movement.State.VelocityY, _movement.State.VelocityZ);
+    public bool  IsBlocking           => GuardFeature?.IsGuarding ?? (Combat?.IsBlocking ?? false);
+    public float BlockDamageReduction => GuardFeature?.BlockDamageReduction ?? (Combat?.BlockDamageReduction ?? 0f);
+    public float BlockFrontalAngle    => GuardFeature?.BlockFrontalAngle ?? (Combat?.BlockFrontalAngle ?? 90f);
+    public bool     IsCrouching     => Movement.State.IsCrouching;
+    public bool     IsSprinting     => Movement.State.IsSprinting;
+    public Vector3  CurrentVelocity => new Vector3(Movement.State.VelocityX, Movement.State.VelocityY, Movement.State.VelocityZ);
 
     //  Unity lifecycle  //
     private void Awake()
     {
-        _input        = GetComponent<Pawn3DInputModule>();
-        _movement     = GetComponent<Pawn3DMovementComponent>();
-        _traversal    = GetComponent<Pawn3DTraversalComponent>();
-        _presentation = GetComponent<Pawn3DPresentationComponent>();
-        _combat       = GetComponent<PawnCombatBehaviour>();
-        _health       = GetComponent<HealthComponent>();
-        _featureHost  = GetComponent<ActorFeatureHost>();
+        _runtime = Motor3DRuntimeReferences.Capture(gameObject);
 
-        if (_health != null)
-            _health.OnDamaged.AddListener(_ => _movement.TriggerKnockBack());
+        if (Health != null && Movement != null)
+            Health.OnDamaged.AddListener(_ => Movement.TriggerKnockBack());
     }
 
     //  Update  //
@@ -100,150 +94,96 @@ public class Motor3D : MonoBehaviour, ICharacterMotorState, IActorReactionRespon
         {
             if (_reactionLockTimer > 0f)
                 _reactionLockTimer = Mathf.Max(0f, _reactionLockTimer - Time.deltaTime);
-            _combat?.UpdateCombatTimers();
-            _movement.ApplyMovement(Vector3.zero);
-            _presentation.Apply(_traversalFeature != null ? _traversalFeature.ShimmyVelocityX : _traversal.ShimmyVelocityX);
+            Combat?.UpdateCombatTimers();
+            Movement.ApplyMovement(Vector3.zero);
+            Presentation.Apply(TraversalFeature != null ? TraversalFeature.ShimmyVelocityX : Traversal.ShimmyVelocityX);
             return;
         }
 
         // 1. Collect all input for this frame into a single snapshot.
-        FrameInput fi = _input.CollectFrameInput();
+        FrameInput fi = Input.CollectFrameInput();
 
         // 2. Advance combat timers (affects movement multipliers this frame).
-        _combat?.UpdateCombatTimers();
+        Combat?.UpdateCombatTimers();
 
         // 3. Resolve look-around mouse position and LookAround animator toggle.
-        _presentation.UpdateLookAround(fi);
+        Presentation.UpdateLookAround(fi);
 
         // 4. Handle crouch and power-slide input.
         if (fi.CrouchPressed)
         {
-            if (!_movement.TryStartPowerSlide())
-                _movement.SetCrouch(true);
+            if (!Movement.TryStartPowerSlide())
+                Movement.SetCrouch(true);
         }
-        if (fi.CrouchReleased) _movement.SetCrouch(false);
+        if (fi.CrouchReleased) Movement.SetCrouch(false);
 
         // 5. Dispatch combat input.
-        if (fi.AttackPressed)      _combat?.HandleAttack();
-        if (fi.KickPressed)        _combat?.HandleKick();
+        if (fi.AttackPressed)      Combat?.HandleAttack();
+        if (fi.KickPressed)        Combat?.HandleKick();
         if (fi.BlockPressed)
         {
-            if (_guardFeature != null) _guardFeature.BeginGuard();
-            else _combat?.HandleBlockStart();
+            if (GuardFeature != null) GuardFeature.BeginGuard();
+            else Combat?.HandleBlockStart();
         }
         if (fi.BlockReleased)
         {
-            if (_guardFeature != null) _guardFeature.EndGuard();
-            else _combat?.HandleBlockEnd();
+            if (GuardFeature != null) GuardFeature.EndGuard();
+            else Combat?.HandleBlockEnd();
         }
-        if (fi.WeaponCycleDelta != 0) _combat?.CycleWeapon(fi.WeaponCycleDelta);
+        if (fi.WeaponCycleDelta != 0) Combat?.CycleWeapon(fi.WeaponCycleDelta);
 
         // 6. Handle dodge roll.
-        if (fi.RollPressed && _movement.TryStartDodge(fi.Move))
-            _health?.ForceIFrames(_movement.DodgeDuration);
+        if (fi.RollPressed && Movement.TryStartDodge(fi.Move))
+            Health?.ForceIFrames(Movement.DodgeDuration);
 
         // 7. Tick the movement model from the previous frame's physics results.
-        Vector3 velocity = _movement.Tick(fi);
+        Vector3 velocity = Movement.Tick(fi);
 
         // 8. While hanging, the traversal module drives movement directly  skip normal path.
-        if ((_traversalFeature != null && _traversalFeature.HandleHangFrame(fi))
-            || (_traversalFeature == null && _traversal.HandleHangFrame(fi)))
+        if ((TraversalFeature != null && TraversalFeature.HandleHangFrame(fi))
+            || (TraversalFeature == null && Traversal.HandleHangFrame(fi)))
         {
-            _presentation.Apply(_traversalFeature != null ? _traversalFeature.ShimmyVelocityX : _traversal.ShimmyVelocityX);
+            Presentation.Apply(TraversalFeature != null ? TraversalFeature.ShimmyVelocityX : Traversal.ShimmyVelocityX);
             return;
         }
 
         // 9. Probe for ledges and handle interact.
-        if (_traversalFeature != null) _traversalFeature.ProbeTraversal();
-        else _traversal.ProbeLedge();
+        if (TraversalFeature != null) TraversalFeature.ProbeTraversal();
+        else Traversal.ProbeLedge();
         if (fi.InteractPressed)
         {
-            if (_interactionFeature != null) _interactionFeature.TryHandleInteraction();
-            else _traversal.HandleInteract();
+            if (InteractionFeature != null) InteractionFeature.TryHandleInteraction();
+            else Traversal.HandleInteract();
         }
 
         // 10. Apply velocity to the CharacterController and record this frame's physics results.
-        _movement.ApplyMovement(velocity);
+        Movement.ApplyMovement(velocity);
 
         // 11. Update animator, billboard, and visual feedback.
-        _presentation.Apply(_traversalFeature != null ? _traversalFeature.ShimmyVelocityX : _traversal.ShimmyVelocityX);
+        Presentation.Apply(TraversalFeature != null ? TraversalFeature.ShimmyVelocityX : Traversal.ShimmyVelocityX);
     }
 
     private void OnControllerColliderHit(ControllerColliderHit hit) =>
-        _movement.NotifyColliderHit(hit);
+        Movement.NotifyColliderHit(hit);
 
     //  Public API  //
     /// <summary>Trigger the knocked-back hit-reaction. Wire to HealthComponent.OnDamaged or call from combat code.</summary>
-    public void TriggerKnockedBack() => _movement.TriggerKnockBack();
+    public void TriggerKnockedBack() => Movement.TriggerKnockBack();
 
     /// <summary>Play the ClimbUp animation. Call from an external ladder or climbable script.</summary>
-    public void TriggerClimbUp() => _traversal.TriggerClimbUp();
+    public void TriggerClimbUp() => Traversal.TriggerClimbUp();
 
     /// <summary>Swap the InputConfig (per-participant overrides). Delegates to the input module.</summary>
     public void SetInputConfig(InputConfig config, bool overrideExisting = true) =>
-        _input.SetInputConfig(config, overrideExisting);
+        Input.SetInputConfig(config, overrideExisting);
 
     /// <summary>Swap the raw InputActionAsset. Delegates to the input module.</summary>
     public void SetInputActions(InputActionAsset asset, bool overrideExisting = true) =>
-        _input.SetInputActions(asset, overrideExisting);
-
-    public void ApplyReactionLock(float duration)
-    {
-        _reactionLockTimer = Mathf.Max(_reactionLockTimer, duration);
-        _presentation.ResetMoveToIdle();
-    }
-
-    public void ClearReactionLock()
-    {
-        _reactionLockTimer = 0f;
-    }
-
-    public void SetStatusMoveSpeedMultiplier(float multiplier)
-    {
-        _movement?.SetExternalSpeedMultiplier(multiplier);
-    }
-
-    public void SetStatusActionLock(bool locked)
-    {
-        _statusActionLocked = locked;
-        if (locked)
-            _presentation?.ResetMoveToIdle();
-    }
-
-    //  Traversal forwarding (for external ClimbZone triggers)  //
-    public void TryLedgeGrab(IClimbZone zone, float maxVelocityY = 0f)
-    {
-        if (_traversalFeature != null) _traversalFeature.TryLedgeGrab(zone, maxVelocityY);
-        else _traversal.TryLedgeGrab(zone, maxVelocityY);
-    }
-    public void SetClimbZone(IClimbZone zone)
-    {
-        if (_traversalFeature != null) _traversalFeature.SetClimbZone(zone);
-        else _traversal.SetClimbZone(zone);
-    }
-    public void ClearClimbZone()
-    {
-        if (_traversalFeature != null) _traversalFeature.ClearClimbZone();
-        else _traversal.ClearClimbZone();
-    }
+        Input.SetInputActions(asset, overrideExisting);
 
     private void ResolveFeatureModules()
     {
-        if (_featureHost == null)
-            _featureHost = GetComponent<ActorFeatureHost>();
-
-        if (_featureHost == null)
-            return;
-
-        _traversalFeature ??= _featureHost.TryGetInstalledFeature(out IActorTraversalFeature traversalFeature)
-            ? traversalFeature
-            : null;
-        _interactionFeature ??= _featureHost.TryGetInstalledFeature(out IActorInteractionFeature interactionFeature)
-            ? interactionFeature
-            : null;
-        _guardFeature ??= _featureHost.TryGetInstalledFeature(out IActorGuardFeature guardFeature)
-            ? guardFeature
-            : null;
+        _runtime?.ResolveFeatureModules();
     }
 }
 }

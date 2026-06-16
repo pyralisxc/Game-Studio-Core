@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Profiles;
-using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Runtime;
 using NeonBlack.Gameplay.Characters;
@@ -31,7 +30,7 @@ namespace NeonBlack.Gameplay.Features.Characters
 [AddComponentMenu("NeonBlack/Gameplay/Characters/2D/Pawn 2D Movement Component")]
     [RequireComponent(typeof(Rigidbody2D))]
     [RequireComponent(typeof(PolygonCollider2D))]
-    public sealed class Pawn2DMovementComponent : MonoBehaviour, IPawnMotor, IMovementModule, IActorReactionResponder, IActorMovementModifierReceiver, IPawnRuntimeServicesReceiver, IRuntimeValidationProvider
+    public sealed partial class Pawn2DMovementComponent : MonoBehaviour, IPawnMotor, IMovementModule, IActorReactionResponder, IActorMovementModifierReceiver, IPawnRuntimeServicesReceiver, IRuntimeValidationProvider
     {
         public IEnumerable<string> GetRuntimeValidationIssues()
         {
@@ -107,7 +106,6 @@ namespace NeonBlack.Gameplay.Features.Characters
         private bool missingRuntimeServicesLogged;
         private float reactionLockTimer;
         private float statusMoveSpeedMultiplier = 1f;
-        private bool spriteDefaultFacesRight = true;
         private bool jumpQueued;
         private bool isGrounded = true;
 
@@ -203,19 +201,6 @@ namespace NeonBlack.Gameplay.Features.Characters
             }
 
             TickTopDownNoGravityMovement();
-        }
-
-        private void TickTopDownNoGravityMovement()
-        {
-            Vector2 velocity = model.Tick(BuildMotorInput(), Time.fixedDeltaTime);
-            Vector2 newPos = rb2d.position + velocity * Time.fixedDeltaTime;
-
-            if (TryGetMovementBounds(out MovementBounds2D bounds))
-                newPos = ApplyTopDownBounds(newPos, bounds);
-
-            newPos = ApplyInputDeadZones(newPos);
-
-            rb2d.MovePosition(newPos);
         }
 
         private void Update()
@@ -334,216 +319,6 @@ namespace NeonBlack.Gameplay.Features.Characters
             gravityScale = profile.gravityScale2D;
             model.Configure(BuildMotorConfig());
             ConfigureRigidbodyForMovementMode();
-        }
-
-        public void ApplyPresentationProfile(PawnPresentationProfile profile)
-        {
-            if (profile == null)
-                return;
-
-            spriteDefaultFacesRight = profile.spriteDefaultFacesRight;
-        }
-
-        public void ApplyPresentationProfile(PawnProfileApplicationContext context, PawnPresentationProfile presentationProfile)
-        {
-            ApplyPresentationProfile(presentationProfile);
-        }
-
-        private readonly struct MovementBounds2D
-        {
-            public MovementBounds2D(Vector2 center, float halfWidth, float halfHeight, bool allowScreenWrap)
-            {
-                Center = center;
-                HalfWidth = Mathf.Max(0f, halfWidth);
-                HalfHeight = Mathf.Max(0f, halfHeight);
-                AllowScreenWrap = allowScreenWrap;
-            }
-
-            public Vector2 Center { get; }
-            public float HalfWidth { get; }
-            public float HalfHeight { get; }
-            public bool AllowScreenWrap { get; }
-            public bool IsValid => HalfWidth > 0f && HalfHeight > 0f;
-        }
-
-        private bool TryGetMovementBounds(out MovementBounds2D bounds)
-        {
-            if (playfieldBoundsProvider != null
-                && playfieldBoundsProvider.TryGetPlayfieldBounds2D(TotalMargin, out PlayfieldBounds2D playfieldBounds)
-                && playfieldBounds.IsValid)
-            {
-                bounds = new MovementBounds2D(
-                    playfieldBounds.Center,
-                    playfieldBounds.HalfWidth,
-                    playfieldBounds.HalfHeight,
-                    playfieldBounds.AllowScreenWrap);
-                return true;
-            }
-
-            if (useCameraVisibleBoundsForMovement && TryGetCameraBounds(out CameraBounds2D cameraBounds) && cameraBounds.IsValid)
-            {
-                bounds = new MovementBounds2D(
-                    cameraBounds.Center,
-                    cameraBounds.HalfWidth,
-                    cameraBounds.HalfHeight,
-                    screenWrap);
-                return true;
-            }
-
-            bounds = default;
-            return false;
-        }
-
-        private bool TryGetCameraBounds(out CameraBounds2D bounds)
-        {
-            if (cameraBoundsProvider != null && cameraBoundsProvider.TryGetCameraBounds2D(TotalMargin, out bounds))
-                return true;
-
-            bounds = default;
-            return false;
-        }
-
-        private void TickSideViewGravityMovement()
-        {
-            UpdateGroundedState();
-
-            Vector2 velocity = rb2d.linearVelocity;
-            float targetX = (IsActionLocked ? 0f : moveDirection.x) * MoveSpeed;
-            float rate = Mathf.Abs(targetX) > 0.01f ? acceleration : deceleration;
-            velocity.x = rate > 0f
-                ? Mathf.MoveTowards(velocity.x, targetX, rate * Time.fixedDeltaTime)
-                : targetX;
-
-            if (jumpQueued && isGrounded)
-            {
-                velocity.y = jumpVelocity;
-                isGrounded = false;
-            }
-
-            jumpQueued = false;
-
-            if (velocity.y < -maxFallSpeed)
-                velocity.y = -maxFallSpeed;
-
-            rb2d.linearVelocity = velocity;
-
-            if (TryGetMovementBounds(out MovementBounds2D bounds))
-                ClampSideViewPositionToHorizontalBounds(bounds);
-        }
-
-        private void UpdateGroundedState()
-        {
-            if (!jumpEnabled)
-            {
-                isGrounded = true;
-                return;
-            }
-
-            Vector2 checkPosition = (Vector2)transform.position + groundCheckOffset;
-            ContactFilter2D groundFilter = new ContactFilter2D
-            {
-                useLayerMask = true,
-                useTriggers = false,
-                layerMask = groundLayer
-            };
-            int hitCount = Physics2D.OverlapCircle(checkPosition, groundCheckRadius, groundFilter, groundCheckHits);
-            isGrounded = false;
-            for (int i = 0; i < hitCount; i++)
-            {
-                Collider2D hit = groundCheckHits[i];
-                if (hit == null || hit.transform.IsChildOf(transform))
-                    continue;
-
-                isGrounded = true;
-                break;
-            }
-        }
-
-        private void ClampSideViewPositionToHorizontalBounds(MovementBounds2D bounds)
-        {
-            Vector2 boundsCenter = bounds.Center;
-            Vector2 pivotPos = rb2d.position;
-            Vector2 centrePos = pivotPos + spriteRadiusOffset;
-            float clampedX = Mathf.Clamp(centrePos.x, boundsCenter.x - bounds.HalfWidth, boundsCenter.x + bounds.HalfWidth);
-            if (Mathf.Approximately(clampedX, centrePos.x))
-                return;
-
-            rb2d.position = new Vector2(clampedX - spriteRadiusOffset.x, pivotPos.y);
-            Vector2 velocity = rb2d.linearVelocity;
-            velocity.x = 0f;
-            rb2d.linearVelocity = velocity;
-        }
-
-        private void ConfigureRigidbodyForMovementMode()
-        {
-            if (rb2d == null)
-                return;
-
-            rb2d.bodyType = EffectiveMovementStyle == Pawn2DMovementStyle.SideViewGravity
-                ? RigidbodyType2D.Dynamic
-                : RigidbodyType2D.Kinematic;
-            rb2d.gravityScale = EffectiveMovementStyle == Pawn2DMovementStyle.SideViewGravity ? gravityScale : 0f;
-            rb2d.freezeRotation = true;
-            if (EffectiveMovementStyle == Pawn2DMovementStyle.TopDownNoGravity)
-                rb2d.linearVelocity = Vector2.zero;
-        }
-
-        private Vector2 ApplyTopDownBounds(Vector2 newPos, MovementBounds2D bounds)
-        {
-            Vector2 centrePos = newPos + spriteRadiusOffset;
-            Vector2 boundsCenter = bounds.Center;
-
-            if (screenWrap || bounds.AllowScreenWrap)
-            {
-                if (centrePos.x > boundsCenter.x + bounds.HalfWidth) centrePos.x = boundsCenter.x - bounds.HalfWidth;
-                if (centrePos.x < boundsCenter.x - bounds.HalfWidth) centrePos.x = boundsCenter.x + bounds.HalfWidth;
-                if (centrePos.y > boundsCenter.y + bounds.HalfHeight) centrePos.y = boundsCenter.y - bounds.HalfHeight;
-                if (centrePos.y < boundsCenter.y - bounds.HalfHeight) centrePos.y = boundsCenter.y + bounds.HalfHeight;
-            }
-            else
-            {
-                centrePos.x = Mathf.Clamp(centrePos.x, boundsCenter.x - bounds.HalfWidth, boundsCenter.x + bounds.HalfWidth);
-                centrePos.y = Mathf.Clamp(centrePos.y, boundsCenter.y - bounds.HalfHeight, boundsCenter.y + bounds.HalfHeight);
-            }
-
-            return centrePos - spriteRadiusOffset;
-        }
-
-        private Vector2 ApplyInputDeadZones(Vector2 newPos)
-        {
-            if (inputZones == null || !inputZones.IsInAnyDeadZone(newPos))
-                return newPos;
-
-            Vector2 currentPos = rb2d.position;
-            Vector2 slideX = new Vector2(newPos.x, currentPos.y);
-            if (!inputZones.IsInAnyDeadZone(slideX))
-            {
-                newPos = slideX;
-            }
-            else
-            {
-                Vector2 slideY = new Vector2(currentPos.x, newPos.y);
-                newPos = !inputZones.IsInAnyDeadZone(slideY) ? slideY : currentPos;
-            }
-
-            if (model.State.IsDashing)
-                model.CancelDash();
-
-            return newPos;
-        }
-
-        private void ClampPositionToBounds()
-        {
-            if (rb2d == null || !TryGetMovementBounds(out MovementBounds2D bounds))
-                return;
-
-            Vector2 boundsCenter = bounds.Center;
-            Vector2 pivotPos = rb2d.position;
-            Vector2 centrePos = pivotPos + spriteRadiusOffset;
-            Vector2 clampedCentre;
-            clampedCentre.x = Mathf.Clamp(centrePos.x, boundsCenter.x - bounds.HalfWidth, boundsCenter.x + bounds.HalfWidth);
-            clampedCentre.y = Mathf.Clamp(centrePos.y, boundsCenter.y - bounds.HalfHeight, boundsCenter.y + bounds.HalfHeight);
-            rb2d.MovePosition(clampedCentre - spriteRadiusOffset);
         }
 
         private bool HasRequiredRuntimeServices()

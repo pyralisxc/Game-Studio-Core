@@ -15,6 +15,17 @@ namespace NeonBlack.Gameplay.Editor
         BoundaryRisk
     }
 
+    public enum PyralisSourceDependencyPressureKind
+    {
+        RuntimeOwnership,
+        ReferenceAssembly,
+        AcceptedComposition,
+        EditorAudit,
+        GrammarVocabulary,
+        CompatibilitySurface,
+        ScannerImplementation
+    }
+
     public sealed class PyralisSourceDependencyHygieneRecord
     {
         public string AssetPath { get; }
@@ -25,10 +36,14 @@ namespace NeonBlack.Gameplay.Editor
         public int ConcreteCrossDomainCount { get; }
         public int SerializedFieldCount { get; }
         public int UnityLookupCount { get; }
+        public int LocalComponentLookupCount { get; }
+        public int BroadUnityDiscoveryCount { get; }
         public int StaticAccessCount { get; }
         public int ReflectionOrStringLookupCount { get; }
         public int RiskScore { get; }
         public PyralisSourceDependencyRisk Risk { get; }
+        public PyralisSourceDependencyPressureKind PressureKind { get; }
+        public string ReviewHint { get; }
         public IReadOnlyList<string> Reasons { get; }
 
         public PyralisSourceDependencyHygieneRecord(
@@ -40,10 +55,14 @@ namespace NeonBlack.Gameplay.Editor
             int concreteCrossDomainCount,
             int serializedFieldCount,
             int unityLookupCount,
+            int localComponentLookupCount,
+            int broadUnityDiscoveryCount,
             int staticAccessCount,
             int reflectionOrStringLookupCount,
             int riskScore,
             PyralisSourceDependencyRisk risk,
+            PyralisSourceDependencyPressureKind pressureKind,
+            string reviewHint,
             IReadOnlyList<string> reasons)
         {
             AssetPath = assetPath;
@@ -54,10 +73,14 @@ namespace NeonBlack.Gameplay.Editor
             ConcreteCrossDomainCount = concreteCrossDomainCount;
             SerializedFieldCount = serializedFieldCount;
             UnityLookupCount = unityLookupCount;
+            LocalComponentLookupCount = localComponentLookupCount;
+            BroadUnityDiscoveryCount = broadUnityDiscoveryCount;
             StaticAccessCount = staticAccessCount;
             ReflectionOrStringLookupCount = reflectionOrStringLookupCount;
             RiskScore = riskScore;
             Risk = risk;
+            PressureKind = pressureKind;
+            ReviewHint = reviewHint ?? string.Empty;
             Reasons = reasons ?? Array.Empty<string>();
         }
     }
@@ -96,7 +119,8 @@ namespace NeonBlack.Gameplay.Editor
 
         private static readonly Regex UsingRegex = new Regex(@"^\s*using\s+([A-Za-z0-9_.]+)\s*;", RegexOptions.Multiline | RegexOptions.Compiled);
         private static readonly Regex SerializedFieldRegex = new Regex(@"\[(SerializeField|SerializeReference)\]", RegexOptions.Compiled);
-        private static readonly Regex UnityLookupRegex = new Regex(@"\b(GetComponent|GetComponents|FindObjectOfType|FindObjectsOfType|FindFirstObjectByType|FindAnyObjectByType|FindObjectsByType|GameObject\.Find|Resources\.Load)\b", RegexOptions.Compiled);
+        private static readonly Regex LocalComponentLookupRegex = new Regex(@"\bGetComponents?(InChildren|InParent)?\b", RegexOptions.Compiled);
+        private static readonly Regex BroadUnityDiscoveryRegex = new Regex(@"\b(FindObjectOfType|FindObjectsOfType|FindFirstObjectByType|FindAnyObjectByType|FindObjectsByType|GameObject\.Find|Resources\.Load)\b", RegexOptions.Compiled);
         private static readonly Regex StaticAccessRegex = new Regex(@"\b(Instance|Current|Default|Shared|Main)\s*\.", RegexOptions.Compiled);
         private static readonly Regex ReflectionOrStringLookupRegex = new Regex(@"\b(Type\.GetType|GetType\(\)|GetMethod|GetField|GetProperty)\b", RegexOptions.Compiled);
 
@@ -135,7 +159,8 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             return records
-                .OrderByDescending(record => record.RiskScore)
+                .OrderBy(record => GetCleanupPriority(record.PressureKind))
+                .ThenByDescending(record => record.RiskScore)
                 .ThenBy(record => record.FileName, StringComparer.Ordinal)
                 .ToArray();
         }
@@ -169,12 +194,15 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             int serializedFieldCount = SerializedFieldRegex.Matches(safeSource).Count;
-            int unityLookupCount = UnityLookupRegex.Matches(safeSource).Count;
+            int localComponentLookupCount = LocalComponentLookupRegex.Matches(safeSource).Count;
+            int broadUnityDiscoveryCount = BroadUnityDiscoveryRegex.Matches(safeSource).Count;
+            int unityLookupCount = localComponentLookupCount + broadUnityDiscoveryCount;
             int staticAccessCount = StaticAccessRegex.Matches(safeSource).Count;
             int reflectionOrStringLookupCount = ReflectionOrStringLookupRegex.Matches(safeSource).Count;
             int dependencyCount = neonBlackUsingCount + serializedFieldCount + unityLookupCount + reflectionOrStringLookupCount;
-            int riskScore = CalculateRiskScore(domains.Count, concreteCrossDomainCount, serializedFieldCount, unityLookupCount, staticAccessCount, reflectionOrStringLookupCount);
-            List<string> reasons = BuildReasons(domains.Count, concreteCrossDomainCount, serializedFieldCount, unityLookupCount, staticAccessCount, reflectionOrStringLookupCount);
+            int riskScore = CalculateRiskScore(domains.Count, concreteCrossDomainCount, serializedFieldCount, localComponentLookupCount, broadUnityDiscoveryCount, staticAccessCount, reflectionOrStringLookupCount);
+            PyralisSourceDependencyPressureKind pressureKind = ResolvePressureKind(safePath, ownerDomain);
+            List<string> reasons = BuildReasons(domains.Count, concreteCrossDomainCount, serializedFieldCount, localComponentLookupCount, broadUnityDiscoveryCount, staticAccessCount, reflectionOrStringLookupCount);
 
             return new PyralisSourceDependencyHygieneRecord(
                 safePath,
@@ -185,11 +213,30 @@ namespace NeonBlack.Gameplay.Editor
                 concreteCrossDomainCount,
                 serializedFieldCount,
                 unityLookupCount,
+                localComponentLookupCount,
+                broadUnityDiscoveryCount,
                 staticAccessCount,
                 reflectionOrStringLookupCount,
                 riskScore,
                 ResolveRisk(riskScore),
+                pressureKind,
+                BuildReviewHint(pressureKind),
                 reasons);
+        }
+
+        public static int GetCleanupPriority(PyralisSourceDependencyPressureKind pressureKind)
+        {
+            return pressureKind switch
+            {
+                PyralisSourceDependencyPressureKind.RuntimeOwnership => 0,
+                PyralisSourceDependencyPressureKind.CompatibilitySurface => 1,
+                PyralisSourceDependencyPressureKind.AcceptedComposition => 2,
+                PyralisSourceDependencyPressureKind.ReferenceAssembly => 3,
+                PyralisSourceDependencyPressureKind.EditorAudit => 4,
+                PyralisSourceDependencyPressureKind.GrammarVocabulary => 5,
+                PyralisSourceDependencyPressureKind.ScannerImplementation => 6,
+                _ => 6
+            };
         }
 
         private static bool ShouldSkip(string file)
@@ -281,13 +328,15 @@ namespace NeonBlack.Gameplay.Editor
             int domainCount,
             int concreteCrossDomainCount,
             int serializedFieldCount,
-            int unityLookupCount,
+            int localComponentLookupCount,
+            int broadUnityDiscoveryCount,
             int staticAccessCount,
             int reflectionOrStringLookupCount)
         {
             int score = Math.Max(0, domainCount - 2);
             score += concreteCrossDomainCount * 2;
-            score += unityLookupCount * 3;
+            score += localComponentLookupCount / 3;
+            score += broadUnityDiscoveryCount * 4;
             score += staticAccessCount * 2;
             score += reflectionOrStringLookupCount * 2;
             score += serializedFieldCount / 4;
@@ -298,7 +347,8 @@ namespace NeonBlack.Gameplay.Editor
             int domainCount,
             int concreteCrossDomainCount,
             int serializedFieldCount,
-            int unityLookupCount,
+            int localComponentLookupCount,
+            int broadUnityDiscoveryCount,
             int staticAccessCount,
             int reflectionOrStringLookupCount)
         {
@@ -309,8 +359,10 @@ namespace NeonBlack.Gameplay.Editor
                 reasons.Add(concreteCrossDomainCount + " concrete cross-domain reference(s).");
             if (serializedFieldCount >= 6)
                 reasons.Add(serializedFieldCount + " serialized field/reference marker(s).");
-            if (unityLookupCount > 0)
-                reasons.Add(unityLookupCount + " Unity lookup/discovery call(s).");
+            if (localComponentLookupCount >= 6)
+                reasons.Add(localComponentLookupCount + " local component lookup/cache call(s).");
+            if (broadUnityDiscoveryCount > 0)
+                reasons.Add(broadUnityDiscoveryCount + " broad Unity scene/resource discovery call(s).");
             if (staticAccessCount > 0)
                 reasons.Add(staticAccessCount + " static/global access marker(s).");
             if (reflectionOrStringLookupCount > 0)
@@ -330,6 +382,60 @@ namespace NeonBlack.Gameplay.Editor
             if (riskScore >= 4)
                 return PyralisSourceDependencyRisk.Watch;
             return PyralisSourceDependencyRisk.Low;
+        }
+
+        private static PyralisSourceDependencyPressureKind ResolvePressureKind(string assetPath, string ownerDomain)
+        {
+            string normalized = (assetPath ?? string.Empty).Replace('\\', '/');
+            if (normalized.Contains("/Editor/Authoring/Spine/Hygiene/", StringComparison.Ordinal))
+                return PyralisSourceDependencyPressureKind.ScannerImplementation;
+
+            if (normalized.Contains("/Editor/Authoring/Grammar/", StringComparison.Ordinal))
+                return PyralisSourceDependencyPressureKind.GrammarVocabulary;
+
+            if (normalized.Contains("/Editor/Authoring/Spine/Validation/", StringComparison.Ordinal)
+                || normalized.Contains("/Editor/Authoring/Spine/Evidence/", StringComparison.Ordinal)
+                || normalized.Contains("/Editor/Authoring/Spine/Graph/", StringComparison.Ordinal)
+                || normalized.Contains("/Editor/Authoring/Surfaces/", StringComparison.Ordinal)
+                || string.Equals(ownerDomain, "Editor", StringComparison.Ordinal))
+            {
+                return PyralisSourceDependencyPressureKind.EditorAudit;
+            }
+
+            if (normalized.Contains("/Features/Platform/Composition/", StringComparison.Ordinal)
+                || normalized.Contains("/Features/Platform/Session/", StringComparison.Ordinal))
+            {
+                return PyralisSourceDependencyPressureKind.AcceptedComposition;
+            }
+
+            if (normalized.EndsWith("RuntimeReferences.cs", StringComparison.Ordinal)
+                || normalized.EndsWith("RuntimeReferenceCache.cs", StringComparison.Ordinal))
+            {
+                return PyralisSourceDependencyPressureKind.ReferenceAssembly;
+            }
+
+            if (normalized.Contains("/Features/GameFlow/", StringComparison.Ordinal)
+                || normalized.Contains("/Features/Spawning/", StringComparison.Ordinal)
+                || normalized.Contains("/PlayerRegistry", StringComparison.Ordinal))
+            {
+                return PyralisSourceDependencyPressureKind.CompatibilitySurface;
+            }
+
+            return PyralisSourceDependencyPressureKind.RuntimeOwnership;
+        }
+
+        private static string BuildReviewHint(PyralisSourceDependencyPressureKind pressureKind)
+        {
+            return pressureKind switch
+            {
+                PyralisSourceDependencyPressureKind.ReferenceAssembly => "Expected pressure for a focused reference/context assembly helper; review only if gameplay decisions move into it.",
+                PyralisSourceDependencyPressureKind.AcceptedComposition => "Expected pressure for bootstrap/composition code; review only if it starts owning feature behavior instead of wiring services.",
+                PyralisSourceDependencyPressureKind.EditorAudit => "Expected pressure for graph, evidence, or validator code; review for duplicated setup truth before splitting.",
+                PyralisSourceDependencyPressureKind.GrammarVocabulary => "Vocabulary pressure is acceptable when it is wording only; move feature-specific setup meaning back to contracts/reflection.",
+                PyralisSourceDependencyPressureKind.CompatibilitySurface => "Compatibility pressure should stay explicit and shrink when participant/session-native paths replace it.",
+                PyralisSourceDependencyPressureKind.ScannerImplementation => "Scanner pressure describes the audit tool itself; tune false positives before treating this as runtime architecture risk.",
+                _ => "Runtime ownership pressure; check whether this script owns too many domains or should delegate to a feature service/profile/presenter."
+            };
         }
     }
 }

@@ -76,9 +76,9 @@ These were major refactor blockers and are now resolved or intentionally stabili
 - setup docs are consolidated around canonical naming rather than compatibility naming
 - Unity Safe Mode compilation was cleared after the asmdef, editor, and test-reference stabilization pass
 - active Gameplay runtime consumers of the protected singleton/global lookup list have been removed; remaining references are editor warnings or documented persistence surfaces
-- concrete Gameplay MonoBehaviour and ScriptableObject authoring surfaces now have guided CustomEditor coverage enforced by source contract tests
+- concrete Gameplay MonoBehaviour and ScriptableObject authoring surfaces now use compact Inspector handoffs while route setup guidance belongs to the graph-backed Authoring Window
 - setup flow validates first-layer route requirements for scoring services, projectile launchers, gameplay state, camera bounds, pawn prefab internals, and runtime-system claims
-- source/doc mojibake cleanup is now protected by source hygiene tests
+- source/doc mojibake cleanup is maintained through lightweight docs checks and normal review rather than broad source-shape test suites
 - the 2026-05-24 first hardening slice fixed damage-zone dictionary mutation during ticking, made pooled `Projectile` instances release through `ProjectilePoolHandle` instead of always destroying themselves, repointed the package README to live setup docs, and cleaned corrupted movement-model comments
 - pawn 2D and 3D ranged/thrown weapon firing now routes through `ProjectileFireRequest`, `ProjectileFirePlanner`, and `ProjectileLauncher2D/3D`; `WeaponData` uses a clean authored `ProjectileDefinition` contract instead of legacy inline projectile fields
 - 3D movement now preserves the previous `MovementPhysicsFrame` until `BrawlerMovementModel.Tick` consumes grounding, then clears the accumulator inside `Pawn3DMovementComponent.ApplyMovement` before recording fresh CharacterController results
@@ -122,7 +122,7 @@ These were major refactor blockers and are now resolved or intentionally stabili
 - setup simplification now separates camera framing from legal movement bounds: `GameplaySessionBootstrap` lives under `Features/Platform/Session`, 2D pawn movement uses `PlayfieldProfile` for movement bounds by default, camera-visible bounds only constrain pawns when explicitly enabled, and Overview is a short current-action surface while Guide owns the longer graph route
 - 2D pawn movement now names its two supported runtime lanes directly: top-down/no-gravity uses a Kinematic Rigidbody2D driven by the X/Y motor, while side-view/gravity uses a Dynamic Rigidbody2D for vertical motion and ground checks. Pawn prefab readiness now reads `PawnMovementProfile.Effective2DMovementStyle` before warning about non-zero Rigidbody2D gravity.
 - 2D pawn presentation now mirrors that cleanup without breaking prefab setup: `Pawn2DPresentationComponent` remains the single beginner-facing presentation component, but its internals are split into animation-signal, sprite-facing/tint, deformation, and feedback reset lanes so later presenter extraction has obvious seams.
-- source contract tests now guard against reintroducing `GameplayPlatformContext` or `PlatformServiceRegistry` as a second service-location layer; new runtime dependencies should flow through `PyralisGameplayLifetimeScope`, explicit bootstrap configuration, participant/session services, or feature-owned runtime contexts
+- Hygiene and focused runtime/graph tests now guard against reintroducing `GameplayPlatformContext` or `PlatformServiceRegistry` as a second service-location layer; new runtime dependencies should flow through `PyralisGameplayLifetimeScope`, explicit bootstrap configuration, participant/session services, or feature-owned runtime contexts
 - runtime service registration now has a smaller default spine: `GameplaySessionBootstrap` is the Unity-facing handoff, while `PyralisGameplayLifetimeScope` owns creation and registration for session state, participant roster, participant spawning, participant input routing, scene navigation, camera/settings, and ownership services. Combat, enemy, RPG, game-flow, scoring, and feedback service groups are enabled from authored mode flags, resolved feature contracts, or actual loaded scene feature components; uncontracted module names/tags do not create runtime service behavior.
 - scene navigation is interface-first: Bootstrap exposes a generic `sceneNavigatorSource`, and `PyralisGameplayLifetimeScope` registers any authored `ISceneNavigator` under the bootstrap hierarchy, with `SceneFader` as the current game-shell route and `SceneLoader` as a lightweight generated-canvas fallback.
 - participant ownership is the normal gameplay path: `ParticipantDefinition.inputProfile` owns input, `ParticipantDefinition.defaultPawn -> PawnDefinition -> pawnPrefab` owns pawn spawning, and the 2D `GameManager` uses participant-roster pawns by default. Explicit `playerControllers` on `GameManager` are a standalone compatibility path only.
@@ -132,20 +132,28 @@ These were major refactor blockers and are now resolved or intentionally stabili
 - final pre-scene authoring audit now has docs and contracts aligned with the real code path: package quick start sends creators through START_HERE, the Authoring Window, Setup Flow, generic capability setup, and `PyralisGameplayLifetimeScope`; architecture docs name `GameplaySessionBootstrap` as the Unity-facing entry point and the lifetime scope as the VContainer graph; menu docs no longer teach direct SceneLoader singleton loading
 - MVP readiness is now defined as Beginner Prototype Ready through guided Unity setup: the active gates are Game Shell, Pawn-Backed Action across `Sprite2D`, `Billboard2_5D`, and `Rigged3D`, and Non-Pawn Tabletop; each route must satisfy runtime, authoring, guidance, validation, and proof before it can be called ready.
 - contract native-action cleanup has started: exact `NativeSetup = "Create Asset"` duplicates were removed from create-menu definitions/profiles, reflected `CreateAssetMenu` and `AddComponentMenu` actions now take priority over fallback prose, and smoke tests guard against reintroducing create-menu duplication.
-- runtime/authoring contract cleanup now keeps fallback surfaces out of beginner guidance: `PawnCombatBehaviour2D` uses the shared `PawnComboProcessor`, self-required component declarations have been removed from core route contracts, and injected service override fields on pickups/scoring are no longer reflected as normal assignment work.
+- runtime/authoring contract cleanup now keeps fallback surfaces out of beginner guidance: `PawnCombatBehaviour2D` uses the shared `PawnComboProcessor`, delegates sibling reference and projectile launcher lookup to `PawnCombat2DRuntimeReferences`, self-required component declarations have been removed from core route contracts, and injected service override fields on pickups/scoring are no longer reflected as normal assignment work.
 - Hygiene now acts as the developer audit dashboard instead of a validation clone: the tab summarizes graph integrity and source dependency pressure, exports Map/Hygiene JSON to `Editor/Authoring/TempGraphs`, ignores normal inspector `FindProperty`/`nameof` binding as reflection pressure, and leaves concrete scene repair work to Map.
-- enemy and hazard setup truth is tighter: `EnemyAI` explicitly requires `HealthComponent`, `EnemyAIEditor` no longer runs its own private-field setup validator, and the 2D `Hazard` contract reflects only the required beginner assignment fields while leaving explosion, lane, outline, camera shake, and settings hooks as optional modifiers.
+- enemy and hazard setup truth is tighter: `EnemyAI` explicitly requires `HealthComponent`, keeps tactical state coordination separate from `EnemyActorRuntimeReferences` reference/context assembly, Hygiene classifies focused runtime reference helpers separately from behavior ownership pressure, `EnemyAIEditor` no longer runs its own private-field setup validator, and the 2D `Hazard` contract reflects only the required beginner assignment fields while leaving explosion, lane, outline, camera shake, and settings hooks as optional modifiers. `HazardRuntimeReferences` now owns hazard audio, feedback-runtime, camera-shake, settings, rigidbody, and actor-target lookup so the hazard sequence partials stay behavior-focused.
+- 2D pawn movement keeps one beginner-facing `Pawn2DMovementComponent`, but its source lanes are now explicit partials: top-down/no-gravity movement, side-view/gravity movement, and movement bounds live separately from the facade. Presentation profile application stays with `Pawn2DPresentationComponent`, so movement no longer carries unused presentation ownership.
+- 3D pawn combat keeps one beginner-facing `PawnCombatBehaviour`, but its source lanes are now explicit partials: the facade owns profile/public combat state, `PawnCombatRuntimeReferences` owns sibling reference assembly, `PawnCombatBehaviour.Sequences` owns combo/fallback action execution, and `PawnCombatBehaviour.HitResolution` owns hitbox, projectile, and hit-confirm feedback resolution.
+- character runtime ownership now uses focused reference/context helpers for the main 3D pawn stack: `PawnRootRuntimeReferences` owns feature-host/profile receiver/context references, `Motor3DRuntimeReferences` owns sibling module and feature fallback lookup, and `Pawn3DMovementRuntimeReferences` owns movement component dependencies so `PawnRoot`, `Motor3D`, and `Pawn3DMovementComponent` stay behavior/coordinator-focused. `PawnRoot` now keeps its participant initialization facade separate from profile application and feature-module installation source lanes.
+- encounter runtime ownership is clearer: `ArenaZone` remains the designer-facing combat section, while camera profile switching and spawner/blocker tracking live in dedicated source lanes so encounter trigger behavior, camera handoff, and enemy clear tracking do not read as one mixed owner.
+- 3D movement and traversal ownership now has explicit source lanes: `Pawn3DMovementComponent` keeps the movement facade and serialized tuning, while controller physics, crouch capsule handling, profile application, and config building live in dedicated partials; `Pawn3DTraversalComponent` keeps traversal setup/probing, while climb and hang execution live in dedicated partials. `Motor3D` remains the frame coordinator, with status/reaction forwarding and external traversal forwarding split out from the per-frame sequence.
+- feedback, input, zones, and enemy combat pressure are clearer after the hygiene-driven cleanup pass: `WorldHealthBar` keeps health/event state while generated canvas construction lives in `WorldHealthBar.Canvas`; `Pawn2DPresentationComponent` keeps the 2D presentation facade while profile application, feedback triggers, and local validation live in dedicated lanes; `DamageZone` and `DamageZone2D` share `DamageZoneImpactRuntime` for profile impact application; `PlayerInputHandler` keeps frame input polling while action binding/profile application and action callbacks live in dedicated lanes; `EnemyCombatModule` keeps attack execution while profile, range, and hitbox-maintenance lanes are split out.
+- platform/session folder ownership is clearer: `GameplaySessionBootstrap`, participant identity, participant roster, participant spawning, session state, and participant lookup now live under `Features/Platform/Session`; an asmref keeps those moved runtime scripts in the current Characters assembly until a deliberate platform assembly split is worth the churn.
 
 ## Highest-Priority Remaining Issues
 
 ### 1. Keep Unity Test Runner As The Main Gate
 
-The .NET solution build is a useful fast compile gate, and source/editor contract tests catch many structural regressions. It is not enough for foundation readiness by itself. Projectile pooling/contact, traversal cleanup, participant spawning, networking MVP wiring, runtime/PlayMode proof surfaces, sample packaging, and prefab/script serialization now have Unity Test Runner proof, so keep that proof fresh as prefab and scene work begins.
+The .NET solution build is a useful fast compile gate, and focused editor smoke tests cover contracts, graph output, setup flow, and definition validation. Broad source-shape audits have moved out of the active test gate because they froze refactors more than they proved behavior. Projectile pooling/contact, traversal cleanup, participant spawning, networking MVP wiring, runtime/PlayMode proof surfaces, sample packaging, and prefab/script serialization now have Unity Test Runner proof, so keep that proof fresh as prefab and scene work begins.
 
 Current focus:
 
 - run Unity EditMode and PlayMode tests after closing the GUI Editor or through a deliberate batchmode validation run without `-quit`
-- keep adding PlayMode tests for prefab behavior that cannot be proven through static/source contracts
+- keep adding PlayMode tests for prefab behavior that cannot be proven through contract, graph, or definition smoke tests
+- use Hygiene exports for architectural pressure and source-dependency drift instead of adding broad source-string test suites
 - treat `dotnet test` as a smoke check only unless Unity Test Runner summaries are present
 - after Unity batch tests, rerun `dotnet restore` before the final solution build because Unity can clear generated `Temp/obj` assets
 
@@ -268,11 +276,12 @@ The codebase is no longer centered on one monolithic player controller, but seve
 Current examples:
 
 - `Features/Enemies/3D/EnemyAI.cs`
+- `Features/Enemies/3D/EnemyActorRuntimeReferences.cs`
 - `Editor/Authoring/Spine/Validation/PyralisSetupFlowValidator.cs`
 - the guided `GameplaySessionBootstrap` inspector surface
-- `Features/Characters/PawnCombatBehaviour.cs`
+- `Features/Characters/PawnCombatBehaviour.cs` is reduced to the combat facade, but its source lanes still need occasional review as combat features expand
 - `Features/Hazards/2D/HazardSpawner.cs`
-- `Features/Combat/UI/WorldHealthBar.cs`
+- `Features/Combat/UI/WorldHealthBar.cs` is reduced to runtime state and health events, but world-space UI behavior still deserves PlayMode/profiler attention before large combat scenes
 
 Why it matters:
 
@@ -346,9 +355,9 @@ Current source-of-truth path:
 - `Docs/Authoring/SCENE_SETUP_GUIDE.md`
 - selected Inspector field guides and graph-backed Authoring Window tabs
 
-### 13. Source Encoding Hygiene Is Now Guarded
+### 13. Source Encoding Hygiene Is Lightweight
 
-The active Gameplay source/docs had several mojibake sequences from past UTF-8/Windows encoding mismatches. The known active markers have been cleaned and source contract tests now guard Gameplay `.cs` and `.md` files.
+The active Gameplay source/docs had several mojibake sequences from past UTF-8/Windows encoding mismatches. The known active markers have been cleaned. Keep source and docs readable through lightweight docs checks, review, and targeted tests only when encoding drift becomes active again.
 
 Why it matters:
 
@@ -360,7 +369,7 @@ Current focus:
 
 - keep comments and docs plain ASCII or valid UTF-8 when touching nearby files
 - avoid decorative separator comments that are easy to corrupt
-- keep the source-hygiene contract green as new docs and scripts are added
+- avoid reintroducing broad source-string gates unless a specific recurring encoding issue returns
 
 ## Recommended Order Of Attack
 

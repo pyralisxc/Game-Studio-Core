@@ -146,14 +146,34 @@ namespace NeonBlack.Gameplay.Editor
                 sourceKindCounts = CountBy(graph?.Nodes, node => node.SourceKind.ToString()),
                 evidenceStateCounts = CountBy(graph?.Nodes, node => node.EvidenceState.ToString()),
                 dependencyPressureSummary = BuildDependencyPressureSummary(safeDependencyRecords),
+                cleanupFocus = BuildCleanupFocus(safeDependencyRecords)
+                    .Select(BuildDependencyPressure)
+                    .ToArray(),
                 dependencyPressure = safeDependencyRecords
                     .Where(record => record != null && record.Risk != PyralisSourceDependencyRisk.Low)
-                    .OrderByDescending(record => record.RiskScore)
+                    .OrderBy(record => PyralisSourceDependencyHygieneScanner.GetCleanupPriority(record.PressureKind))
+                    .ThenByDescending(record => record.RiskScore)
+                    .ThenBy(record => record.FileName, StringComparer.Ordinal)
                     .Take(32)
                     .Select(BuildDependencyPressure)
                     .ToArray(),
                 contractSourcePressure = BuildContractSourcePressure(graph)
             };
+        }
+
+        private static PyralisSourceDependencyHygieneRecord[] BuildCleanupFocus(
+            IReadOnlyList<PyralisSourceDependencyHygieneRecord> dependencyRecords)
+        {
+            if (dependencyRecords == null)
+                return Array.Empty<PyralisSourceDependencyHygieneRecord>();
+
+            return dependencyRecords
+                .Where(record => record != null && record.Risk != PyralisSourceDependencyRisk.Low)
+                .OrderBy(record => PyralisSourceDependencyHygieneScanner.GetCleanupPriority(record.PressureKind))
+                .ThenByDescending(record => record.RiskScore)
+                .ThenBy(record => record.FileName, StringComparer.Ordinal)
+                .Take(16)
+                .ToArray();
         }
 
         private static DependencyPressureSummarySnapshot BuildDependencyPressureSummary(
@@ -170,9 +190,13 @@ namespace NeonBlack.Gameplay.Editor
             {
                 totalPressureRecordCount = pressureRecords.Length,
                 exportedTopRecordCount = Math.Min(32, pressureRecords.Length),
+                exportedCleanupFocusCount = Math.Min(16, CountCleanupFocusRecords(pressureRecords)),
+                actionablePressureRecordCount = CountActionablePressureRecords(pressureRecords),
+                expectedPressureRecordCount = Math.Max(0, pressureRecords.Length - CountActionablePressureRecords(pressureRecords)),
                 omittedRecordCount = Math.Max(0, pressureRecords.Length - 32),
                 highestRiskScore = pressureRecords.Length > 0 ? pressureRecords[0].RiskScore : 0,
                 riskCounts = CountBy(pressureRecords, record => record.Risk.ToString()),
+                pressureKindCounts = CountBy(pressureRecords, record => record.PressureKind.ToString()),
                 ownerDomainCounts = CountBy(pressureRecords, record => record.OwnerDomain),
                 touchedDomainCounts = CountDomains(pressureRecords)
             };
@@ -315,12 +339,63 @@ namespace NeonBlack.Gameplay.Editor
                 concreteCrossDomainCount = record.ConcreteCrossDomainCount,
                 serializedFieldCount = record.SerializedFieldCount,
                 unityLookupCount = record.UnityLookupCount,
+                localComponentLookupCount = record.LocalComponentLookupCount,
+                broadUnityDiscoveryCount = record.BroadUnityDiscoveryCount,
                 staticAccessCount = record.StaticAccessCount,
                 reflectionOrStringLookupCount = record.ReflectionOrStringLookupCount,
                 riskScore = record.RiskScore,
                 risk = record.Risk.ToString(),
+                pressureKind = record.PressureKind.ToString(),
+                cleanupPriority = PyralisSourceDependencyHygieneScanner.GetCleanupPriority(record.PressureKind),
+                cleanupFocus = IsCleanupFocus(record.PressureKind),
+                reviewHint = record.ReviewHint,
                 reasons = record.Reasons.ToArray()
             };
+        }
+
+        private static int CountCleanupFocusRecords(IReadOnlyList<PyralisSourceDependencyHygieneRecord> records)
+        {
+            if (records == null)
+                return 0;
+
+            int count = 0;
+            for (int i = 0; i < records.Count; i++)
+            {
+                PyralisSourceDependencyHygieneRecord record = records[i];
+                if (record != null && record.Risk != PyralisSourceDependencyRisk.Low && IsCleanupFocus(record.PressureKind))
+                    count++;
+            }
+
+            return count;
+        }
+
+        private static int CountActionablePressureRecords(IReadOnlyList<PyralisSourceDependencyHygieneRecord> records)
+        {
+            if (records == null)
+                return 0;
+
+            int count = 0;
+            for (int i = 0; i < records.Count; i++)
+            {
+                PyralisSourceDependencyHygieneRecord record = records[i];
+                if (record != null && record.Risk != PyralisSourceDependencyRisk.Low && IsActionablePressure(record.PressureKind))
+                    count++;
+            }
+
+            return count;
+        }
+
+        private static bool IsCleanupFocus(PyralisSourceDependencyPressureKind pressureKind)
+        {
+            return pressureKind == PyralisSourceDependencyPressureKind.RuntimeOwnership
+                || pressureKind == PyralisSourceDependencyPressureKind.CompatibilitySurface
+                || pressureKind == PyralisSourceDependencyPressureKind.AcceptedComposition;
+        }
+
+        private static bool IsActionablePressure(PyralisSourceDependencyPressureKind pressureKind)
+        {
+            return pressureKind == PyralisSourceDependencyPressureKind.RuntimeOwnership
+                || pressureKind == PyralisSourceDependencyPressureKind.CompatibilitySurface;
         }
 
         private static ContractPressureSnapshot[] BuildContractSourcePressure(PyralisAuthoringSetupGraph graph)
@@ -515,6 +590,7 @@ namespace NeonBlack.Gameplay.Editor
             public CountSnapshot[] sourceKindCounts;
             public CountSnapshot[] evidenceStateCounts;
             public DependencyPressureSummarySnapshot dependencyPressureSummary;
+            public DependencyPressureSnapshot[] cleanupFocus;
             public DependencyPressureSnapshot[] dependencyPressure;
             public ContractPressureSnapshot[] contractSourcePressure;
         }
@@ -635,10 +711,16 @@ namespace NeonBlack.Gameplay.Editor
             public int concreteCrossDomainCount;
             public int serializedFieldCount;
             public int unityLookupCount;
+            public int localComponentLookupCount;
+            public int broadUnityDiscoveryCount;
             public int staticAccessCount;
             public int reflectionOrStringLookupCount;
             public int riskScore;
             public string risk;
+            public string pressureKind;
+            public int cleanupPriority;
+            public bool cleanupFocus;
+            public string reviewHint;
             public string[] reasons;
         }
 
@@ -647,9 +729,13 @@ namespace NeonBlack.Gameplay.Editor
         {
             public int totalPressureRecordCount;
             public int exportedTopRecordCount;
+            public int exportedCleanupFocusCount;
+            public int actionablePressureRecordCount;
+            public int expectedPressureRecordCount;
             public int omittedRecordCount;
             public int highestRiskScore;
             public CountSnapshot[] riskCounts;
+            public CountSnapshot[] pressureKindCounts;
             public CountSnapshot[] ownerDomainCounts;
             public CountSnapshot[] touchedDomainCounts;
         }

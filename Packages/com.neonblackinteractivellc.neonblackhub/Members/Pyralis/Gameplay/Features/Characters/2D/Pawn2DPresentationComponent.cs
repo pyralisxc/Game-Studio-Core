@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Presentation.Animation;
@@ -20,19 +19,11 @@ namespace NeonBlack.Gameplay.Features.Characters
     [AddComponentMenu("NeonBlack/Gameplay/Characters/2D/Pawn 2D Presentation Component")]
     [RequireComponent(typeof(Pawn2DMovementComponent))]
     [RequireComponent(typeof(ActorAnimationDriver))]
-    public sealed class Pawn2DPresentationComponent : MonoBehaviour, IPawnPresentationModule, IRuntimeValidationProvider
+    public sealed partial class Pawn2DPresentationComponent : MonoBehaviour, IPawnPresentationModule, IRuntimeValidationProvider
     {
         private const float MovementInputThresholdSqr = 0.01f;
         private const float PresentationVelocityThreshold = 0.1f;
         private const float DeformationVelocityThreshold = 0.2f;
-
-        public IEnumerable<string> GetRuntimeValidationIssues()
-        {
-            if (spriteRenderer == null && GetComponentInChildren<SpriteRenderer>(true) == null)
-                yield return "Sprite Renderer is empty and no child SpriteRenderer was found.";
-            if (stretchAmount < 1f)
-                yield return "Stretch Amount should be at least 1.";
-        }
         [Header("Sprite")]
         [SerializeField] private SpriteRenderer spriteRenderer;
         [SerializeField] private bool spriteDefaultFacesRight = true;
@@ -93,35 +84,6 @@ namespace NeonBlack.Gameplay.Features.Characters
             TickDeformationLane();
         }
 
-        public void ApplyPresentationProfile(PawnProfileApplicationContext context, PawnPresentationProfile presentationProfile)
-        {
-            if (presentationProfile != null)
-            {
-                spriteDefaultFacesRight = presentationProfile.spriteDefaultFacesRight;
-                Color participantTint = context.Participant?.Definition != null
-                    ? context.Participant.Definition.tint
-                    : Color.white;
-                idleTint = MultiplyTint(presentationProfile.primaryTint, participantTint);
-                movingTint = idleTint;
-            }
-
-            animationDriver?.ApplyProfiles(
-                presentationProfile,
-                context.PawnDefinition != null ? context.PawnDefinition.animationProfile : null);
-
-            if (presentationProfile != null && spriteRenderer != null)
-                spriteRenderer.color = idleTint;
-        }
-
-        private static Color MultiplyTint(Color baseTint, Color participantTint)
-        {
-            return new Color(
-                baseTint.r * participantTint.r,
-                baseTint.g * participantTint.g,
-                baseTint.b * participantTint.b,
-                baseTint.a * participantTint.a);
-        }
-
         public void ResetForRound()
         {
             ResetTransientVisualState();
@@ -138,24 +100,6 @@ namespace NeonBlack.Gameplay.Features.Characters
             animationDriver?.SetBoolSignal(ActorAnimationSignal.Move, false);
             animationDriver?.SetBoolSignal(ActorAnimationSignal.Idle, true);
             animationDriver?.SetBoolSignal(ActorAnimationSignal.Dash, false);
-        }
-
-        public void PlayDashFeedback()
-        {
-            if (dashClip != null)
-                audioSource.PlayOneShot(dashClip);
-            animationDriver?.TriggerSignal(ActorAnimationSignal.Dash);
-        }
-
-        public void PlayDeathFeedback()
-        {
-            ResetTransientVisualState();
-            animationDriver?.TriggerSignal(ActorAnimationSignal.Death);
-            if (deathClip != null)
-                audioSource.PlayOneShot(deathClip);
-#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
-            try { Handheld.Vibrate(); } catch { }
-#endif
         }
 
         public void ResetMoveToIdle()

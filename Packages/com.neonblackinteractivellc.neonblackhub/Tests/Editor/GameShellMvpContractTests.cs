@@ -1,4 +1,8 @@
 using System.IO;
+using System.Linq;
+using System.Reflection;
+using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Core.Navigation;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -31,31 +35,34 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void MainMenuManager_Source_ExposesCreditsPanelFlow()
+        public void MainMenuManager_RuntimeSurfaceExposesCreditsPanelFlow()
         {
-            string source = File.ReadAllText(Path.Combine(GameplayRoot, "Core", "Navigation", "UI", "MainMenuManager.cs"));
+            const BindingFlags members = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
-            StringAssert.Contains("creditsPanel", source);
-            StringAssert.Contains("creditsButton", source);
-            StringAssert.Contains("creditsBackButton", source);
-            StringAssert.Contains("OnCredits", source);
-            StringAssert.Contains("creditsButton.onClick.AddListener(OnCredits)", source);
-            StringAssert.Contains("creditsBackButton.onClick.AddListener(OnBackToMain)", source);
-            StringAssert.Contains("creditsPanel.SetActive(creditsPanel == target)", source);
+            Assert.That(typeof(MainMenuManager).GetField("creditsPanel", members), Is.Not.Null);
+            Assert.That(typeof(MainMenuManager).GetField("creditsButton", members), Is.Not.Null);
+            Assert.That(typeof(MainMenuManager).GetField("creditsBackButton", members), Is.Not.Null);
+            Assert.That(typeof(MainMenuManager).GetMethod("OnCredits", members), Is.Not.Null);
+            Assert.That(typeof(MainMenuManager).GetMethod("SetSceneNavigator", members), Is.Not.Null);
         }
 
         [Test]
-        public void MainMenuManagerEditor_GuidesCreditsAndRequiredNavigation()
+        public void MainMenuManager_AuthoringContractGuidesCreditsAndRequiredNavigation()
         {
-            string source = File.ReadAllText(Path.Combine(GameplayRoot, "Core", "Navigation", "UI", "MainMenuManager.cs"));
+            AuthoringContractAttribute contract = typeof(MainMenuManager)
+                .GetCustomAttributes(typeof(AuthoringContractAttribute), false)
+                .Cast<AuthoringContractAttribute>()
+                .SingleOrDefault();
 
-            StringAssert.Contains("AuthoringContract", source);
-            StringAssert.Contains("Credits", source);
-            StringAssert.Contains("creditsPanel", source);
-            StringAssert.Contains("creditsButton", source);
-            StringAssert.Contains("creditsBackButton", source);
-            StringAssert.Contains("sceneNavigator", source);
-            StringAssert.Contains("AssignmentFields", source);
+            Assert.That(contract, Is.Not.Null);
+            Assert.That(contract.Capability.HasFlag(AuthoringCapability.UI), Is.True);
+            Assert.That(contract.AssignmentFields, Does.Contain("mainPanel"));
+            Assert.That(contract.AssignmentFields, Does.Contain("newGameButton"));
+            Assert.That(contract.AssignmentFields, Does.Contain("exitButton"));
+            Assert.That(contract.AssignmentFields, Does.Contain("gameSceneName"));
+            Assert.That(contract.AssignmentFields, Does.Contain("sceneNavigatorSource"));
+            Assert.That(string.Join(" ", contract.NativeSetup), Does.Contain("Back button"));
+            Assert.That(contract.ExpertAdvice, Does.Contain("Scene Navigator Source"));
         }
 
         [Test]

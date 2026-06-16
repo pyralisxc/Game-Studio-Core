@@ -232,18 +232,14 @@ public partial class Hazard
         if (_resolvedCameraShakeSink != null)
             return _resolvedCameraShakeSink;
 
-        _resolvedCameraShakeSink = _cameraShakeSink as ICameraShakeSink;
+        _resolvedCameraShakeSink = HazardRuntimeReferences.ResolveCameraShakeSink(_cameraShakeSink);
         return _resolvedCameraShakeSink;
     }
 
     private float ResolveSfxVolume()
     {
         if (_settings == null && _settingsSource != null)
-        {
-            _settings = _settingsSource as IGameplaySettingsApplier;
-            if (_settings == null)
-                _settings = _settingsSource.GetComponent<IGameplaySettingsApplier>();
-        }
+            _settings = HazardRuntimeReferences.ResolveSettings(_settingsSource);
 
         return _settings != null ? _settings.SFXVolume : 1f;
     }

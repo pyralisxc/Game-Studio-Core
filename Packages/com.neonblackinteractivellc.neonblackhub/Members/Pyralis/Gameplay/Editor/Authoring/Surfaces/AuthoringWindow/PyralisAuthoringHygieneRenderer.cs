@@ -107,24 +107,24 @@ namespace NeonBlack.Gameplay.Editor
             {
                 EditorGUILayout.LabelField("Scanned Scripts", _dependencyRecords.Count.ToString());
                 EditorGUILayout.LabelField("Watch / Heavy / Boundary Risk", $"{watchCount} / {heavyCount} / {boundaryRiskCount}");
+                EditorGUILayout.LabelField("Actionable / Expected Pressure", $"{CountActionablePressure()} / {CountExpectedPressure()}");
                 PyralisAuthoringWindowText.DrawSemanticMiniLabel("Use this as a heat map. A high score is not a failure; it is a prompt to check whether ownership is still obvious.");
+                DrawPressureKindSummary();
             }
 
-            int visible = 0;
-            for (int i = 0; i < _dependencyRecords.Count && visible < 8; i++)
+            IReadOnlyList<PyralisSourceDependencyHygieneRecord> visibleRecords = BuildVisiblePressureRecords();
+            if (visibleRecords.Count > 0)
+                EditorGUILayout.LabelField("Cleanup Focus", EditorStyles.boldLabel);
+
+            for (int i = 0; i < visibleRecords.Count; i++)
             {
-                PyralisSourceDependencyHygieneRecord record = _dependencyRecords[i];
-                if (record == null || record.Risk == PyralisSourceDependencyRisk.Low)
-                    continue;
-
-                DrawDependencyPressureCard(record);
-                visible++;
+                DrawDependencyPressureCard(visibleRecords[i]);
             }
 
-            if (visible == 0)
+            if (visibleRecords.Count == 0)
                 EditorGUILayout.HelpBox("No notable dependency pressure found in the package scan.", MessageType.Info);
 
-            int remaining = _dependencyRecords.Count(record => record != null && record.Risk != PyralisSourceDependencyRisk.Low) - visible;
+            int remaining = _dependencyRecords.Count(record => record != null && record.Risk != PyralisSourceDependencyRisk.Low) - visibleRecords.Count;
             if (remaining > 0)
                 EditorGUILayout.LabelField("+" + remaining + " more script(s) with dependency pressure", EditorStyles.miniLabel);
         }
@@ -144,20 +144,105 @@ namespace NeonBlack.Gameplay.Editor
             return count;
         }
 
+        private static IReadOnlyList<PyralisSourceDependencyHygieneRecord> BuildVisiblePressureRecords()
+        {
+            if (_dependencyRecords == null)
+                return System.Array.Empty<PyralisSourceDependencyHygieneRecord>();
+
+            return _dependencyRecords
+                .Where(record => record != null && record.Risk != PyralisSourceDependencyRisk.Low)
+                .OrderBy(record => PyralisSourceDependencyHygieneScanner.GetCleanupPriority(record.PressureKind))
+                .ThenByDescending(record => record.RiskScore)
+                .ThenBy(record => record.FileName, System.StringComparer.Ordinal)
+                .Take(8)
+                .ToArray();
+        }
+
         private static void DrawDependencyPressureCard(PyralisSourceDependencyHygieneRecord record)
         {
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 EditorGUILayout.LabelField(record.FileName, $"{record.Risk} ({record.RiskScore})", EditorStyles.boldLabel);
                 EditorGUILayout.LabelField("Owner Domain", record.OwnerDomain, EditorStyles.wordWrappedMiniLabel);
+                EditorGUILayout.LabelField("Pressure Kind", record.PressureKind.ToString(), EditorStyles.wordWrappedMiniLabel);
                 EditorGUILayout.LabelField("Dependencies", $"{record.DependencyCount} total, {record.Domains.Count} domain(s), {record.ConcreteCrossDomainCount} concrete cross-domain", EditorStyles.wordWrappedMiniLabel);
-                EditorGUILayout.LabelField("Unity Lookup / Static / Reflection", $"{record.UnityLookupCount} / {record.StaticAccessCount} / {record.ReflectionOrStringLookupCount}", EditorStyles.wordWrappedMiniLabel);
+                EditorGUILayout.LabelField("Local Lookup / Broad Discovery", $"{record.LocalComponentLookupCount} / {record.BroadUnityDiscoveryCount}", EditorStyles.wordWrappedMiniLabel);
+                EditorGUILayout.LabelField("Static / Reflection", $"{record.StaticAccessCount} / {record.ReflectionOrStringLookupCount}", EditorStyles.wordWrappedMiniLabel);
+                if (!string.IsNullOrWhiteSpace(record.ReviewHint))
+                    PyralisAuthoringWindowText.DrawSemanticMiniLabel(record.ReviewHint);
+                if (record.PressureKind != PyralisSourceDependencyPressureKind.RuntimeOwnership
+                    && record.PressureKind != PyralisSourceDependencyPressureKind.CompatibilitySurface)
+                {
+                    PyralisAuthoringWindowText.DrawSemanticMiniLabel("Expected pressure: keep it visible for audit, but do not treat it as the next gameplay cleanup unless behavior or setup truth has drifted into this file.");
+                }
+
                 if (record.Domains.Count > 0)
                     PyralisAuthoringWindowPrimitives.DrawMiniList("Domains", record.Domains, "Pyralis domains inferred from path and source namespaces.", 6);
                 PyralisAuthoringWindowPrimitives.DrawMiniList("Pressure Reasons", record.Reasons, "Why this script is showing up in the hygiene scan.", 4);
                 if (!string.IsNullOrWhiteSpace(record.AssetPath))
                     EditorGUILayout.LabelField("Source", record.AssetPath, EditorStyles.wordWrappedMiniLabel);
             }
+        }
+
+        private static void DrawPressureKindSummary()
+        {
+            if (_dependencyRecords == null)
+                return;
+
+            IReadOnlyList<string> summaries = _dependencyRecords
+                .Where(record => record != null && record.Risk != PyralisSourceDependencyRisk.Low)
+                .GroupBy(record => record.PressureKind)
+                .OrderByDescending(group => group.Count())
+                .ThenBy(group => group.Key.ToString(), System.StringComparer.Ordinal)
+                .Select(group => group.Key + ": " + group.Count())
+                .ToArray();
+
+            if (summaries.Count > 0)
+                PyralisAuthoringWindowPrimitives.DrawMiniList("Pressure Types", summaries, "Classification keeps expected composition/editor pressure separate from runtime ownership cleanup.", 6);
+        }
+
+        private static int CountActionablePressure()
+        {
+            if (_dependencyRecords == null)
+                return 0;
+
+            int count = 0;
+            for (int i = 0; i < _dependencyRecords.Count; i++)
+            {
+                PyralisSourceDependencyHygieneRecord record = _dependencyRecords[i];
+                if (record == null || record.Risk == PyralisSourceDependencyRisk.Low)
+                    continue;
+
+                if (record.PressureKind == PyralisSourceDependencyPressureKind.RuntimeOwnership
+                    || record.PressureKind == PyralisSourceDependencyPressureKind.CompatibilitySurface)
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        private static int CountExpectedPressure()
+        {
+            if (_dependencyRecords == null)
+                return 0;
+
+            int count = 0;
+            for (int i = 0; i < _dependencyRecords.Count; i++)
+            {
+                PyralisSourceDependencyHygieneRecord record = _dependencyRecords[i];
+                if (record == null || record.Risk == PyralisSourceDependencyRisk.Low)
+                    continue;
+
+                if (record.PressureKind != PyralisSourceDependencyPressureKind.RuntimeOwnership
+                    && record.PressureKind != PyralisSourceDependencyPressureKind.CompatibilitySurface)
+                {
+                    count++;
+                }
+            }
+
+            return count;
         }
 
         private static void DrawGraphAuditDetails(PyralisAuthoringSetupGraph graph)

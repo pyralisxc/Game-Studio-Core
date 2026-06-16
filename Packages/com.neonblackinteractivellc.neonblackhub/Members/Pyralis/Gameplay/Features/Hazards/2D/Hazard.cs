@@ -4,7 +4,6 @@ using NeonBlack.Gameplay.Features.Characters;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Features.Composition;
-using NeonBlack.Gameplay.Features.Combat;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Features.Hazards
@@ -68,7 +67,7 @@ public partial class Hazard : MonoBehaviour, IRuntimeValidationProvider
         if (_data != null && _data.enableExplosion)
         {
             if (_explosionEffect == null) yield return "Explosive hazard needs an Explosion Effect child.";
-            if (GetComponent<Rigidbody2D>() == null) yield return "Explosive hazard needs a Kinematic Rigidbody2D on root.";
+            if (!Runtime.HasRootRigidbody2D) yield return "Explosive hazard needs a Kinematic Rigidbody2D on root.";
         }
 
         if (_data != null && _data.hazardType == HazardData.HazardType.Crossing && _laneRenderer == null)
@@ -121,6 +120,7 @@ public partial class Hazard : MonoBehaviour, IRuntimeValidationProvider
     private Vector2       _cachedHitSz; // cached at Awake (colliders are in default enabled state from prefab) so ShowLaneRenderer works correctly
     private AudioSource   _audioSource;
     private HazardFeedbackRuntime _feedbackRuntime;
+    private HazardRuntimeReferences _runtime;
     private ICameraBoundsProvider _cameraBoundsProvider;
     private IHazardOutcomeSink _hazardOutcomeSink;
     private IPickupBurstSpawnSurface _pickupBurstSpawnSurface;
@@ -157,6 +157,9 @@ public partial class Hazard : MonoBehaviour, IRuntimeValidationProvider
         return wait;
     }
 
+    private HazardRuntimeReferences Runtime =>
+        _runtime ??= HazardRuntimeReferences.Resolve(gameObject, _cameraShakeSink, _settingsSource);
+
     private void Awake()
     {
         _prefabScale = transform.localScale;
@@ -165,16 +168,12 @@ public partial class Hazard : MonoBehaviour, IRuntimeValidationProvider
         // so we must read this before any DisableAllColliders() call ever runs.
         _cachedHitSz = GetPrimaryHitColliderSize();
 
-        // Get or create a 2D (non-spatial) AudioSource so sounds have equal volume
-        // regardless of the hazard's world position (correct for an orthographic 2D game).
-        _audioSource = GetComponent<AudioSource>();
-        if (_audioSource == null) _audioSource = gameObject.AddComponent<AudioSource>();
-        _audioSource.spatialBlend = 0f;   // 2D audio with no distance attenuation
-        _audioSource.playOnAwake  = false;
-
-        _feedbackRuntime = GetComponent<HazardFeedbackRuntime>() ?? GetComponentInChildren<HazardFeedbackRuntime>(true);
+        _runtime = HazardRuntimeReferences.Resolve(gameObject, _cameraShakeSink, _settingsSource);
+        _audioSource = _runtime.AudioSource;
+        _feedbackRuntime = _runtime.FeedbackRuntime;
         _feedbackRuntime?.ApplyProfile(_data != null ? _data.feedbackProfile : null);
-        _resolvedCameraShakeSink = ResolveCameraShakeSink();
+        _resolvedCameraShakeSink = _runtime.CameraShakeSink;
+        _settings = _runtime.Settings;
     }
 
     /// <summary>Resolves the nearest active participant when available, otherwise falls back to the registered IPlayerProvider.</summary>
@@ -269,7 +268,7 @@ public partial class Hazard : MonoBehaviour, IRuntimeValidationProvider
             // A Kinematic Rigidbody2D on the root is REQUIRED for the explosion child's
             // Collider2D(s) to route OnTriggerEnter2D events to this script.
             // Without it, the explosion hitbox fires into the void and never kills the player.
-            if (GetComponent<Rigidbody2D>() == null)
+            if (!Runtime.HasRootRigidbody2D)
                 Debug.LogError($"[Hazard] '{name}': enableExplosion requires a Kinematic Rigidbody2D on the " +
                                "root GameObject so the explosion child's colliders route trigger events to " +
                                "this script. Add a Rigidbody2D (Body Type: Kinematic, Gravity Scale: 0, " +
@@ -392,13 +391,12 @@ public partial class Hazard : MonoBehaviour, IRuntimeValidationProvider
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (IsActorTarget(other))
+        bool isActorTarget = HazardRuntimeReferences.IsActorTarget(other);
+        if (isActorTarget)
         {
             // Dash i-frames: a dashing player is invulnerable.
-            Motor2D cc = other.GetComponent<Motor2D>();
-            if (cc == null)
-                cc = other.GetComponentInParent<Motor2D>();
-            if (cc != null && cc.IsDashing) return;
+            Motor2D motor = HazardRuntimeReferences.ResolveTargetMotor(other);
+            if (motor != null && motor.IsDashing) return;
 
             bool appliedImpact = _data != null
                 && _data.impactProfile != null
@@ -410,15 +408,8 @@ public partial class Hazard : MonoBehaviour, IRuntimeValidationProvider
 
         if (_data != null && _data.enableExplosion
             && _data.explosionTrigger == HazardData.ExplosionTrigger.OnImpact
-            && (IsActorTarget(other) || other.TryGetComponent<Hazard>(out _)))
+            && (isActorTarget || HazardRuntimeReferences.IsHazardTarget(other)))
             _pendingImpactExplosion = true;
-    }
-
-    private static bool IsActorTarget(Collider2D other)
-    {
-        return other != null
-            && (other.GetComponentInParent<Motor2D>() != null
-                || other.GetComponentInParent<HealthComponent>() != null);
     }
 
     private void LogFeedbackValidationIssues()

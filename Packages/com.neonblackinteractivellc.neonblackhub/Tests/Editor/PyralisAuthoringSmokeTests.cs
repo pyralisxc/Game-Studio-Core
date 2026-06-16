@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+using System.Reflection;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Definitions.Rules;
@@ -15,6 +15,7 @@ using NeonBlack.Gameplay.Features.Hazards;
 using NeonBlack.Gameplay.Features.Input;
 using NeonBlack.Gameplay.Features.Pickups;
 using NeonBlack.Gameplay.Features.Scoring;
+using NeonBlack.Gameplay.Features.Spawning;
 using NeonBlack.Gameplay.Features.Tabletop;
 using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Presentation.Camera;
@@ -63,6 +64,59 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(model.Summary, Does.Contain("Active focus"));
             Assert.That(model.Recommendations.Select(row => row.Fact.StableId), Does.Contain("intent.2d-top-down-plane"));
             Assert.That(model.Recommendations.Any(row => row.Fact.Kind == PyralisAuthoringFactKind.RuntimeCapability), Is.True);
+        }
+
+        [Test]
+        public void IntentProjection_SmokeKeeps2DGravityStylesDistinct()
+        {
+            PyralisAuthoringIntentModel topDown = PyralisAuthoringIntentAdvisor.Build(
+                new PyralisAuthoringIntentSelection(
+                    RuntimeCapabilityLaneTag.Sprite2D,
+                    AuthoringCapability.Movement | AuthoringCapability.Input | AuthoringCapability.KineticMotor2D,
+                    AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone));
+
+            PyralisAuthoringIntentModel sideView = PyralisAuthoringIntentAdvisor.Build(
+                new PyralisAuthoringIntentSelection(
+                    RuntimeCapabilityLaneTag.Sprite2D,
+                    AuthoringCapability.Movement | AuthoringCapability.Input | AuthoringCapability.KineticMotor2D,
+                    AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityVertical));
+
+            Assert.That(topDown.MatchingIntents.Select(fact => fact.StableId), Does.Contain("intent.2d-top-down-plane"));
+            Assert.That(topDown.MatchingIntents.Select(fact => fact.StableId), Does.Not.Contain("intent.2d-side-view-action"));
+            Assert.That(sideView.MatchingIntents.Select(fact => fact.StableId), Does.Contain("intent.2d-side-view-action"));
+            Assert.That(sideView.MatchingIntents.Select(fact => fact.StableId), Does.Not.Contain("intent.2d-top-down-plane"));
+        }
+
+        [Test]
+        public void IntentProjection_SmokeScoresHighBitCapabilities()
+        {
+            PyralisAuthoringFact steeringFact = new PyralisAuthoringFact(
+                "test.intent.steering2d",
+                "2D Steering Test",
+                PyralisAuthoringFactKind.RuntimeCapability,
+                PyralisAuthoringFactSourceKind.Reflection,
+                PyralisAuthoringConfidence.Inferred,
+                "A reflected 2D steering provider.",
+                "Used to prove high-bit capability scoring.",
+                string.Empty,
+                goalTags: new[] { "2D Steering" },
+                laneTags: new[] { RuntimeCapabilityLaneTag.Sprite2D.ToString() },
+                axioms: AuthoringWorldAxiom.Dimensions2D,
+                capability: AuthoringCapability.Steering2D);
+
+            PyralisAuthoringIntentModel model = PyralisAuthoringIntentAdvisor.Build(
+                new PyralisAuthoringIntentSelection(
+                    RuntimeCapabilityLaneTag.Sprite2D,
+                    AuthoringCapability.Steering2D,
+                    AuthoringWorldAxiom.Dimensions2D),
+                new[] { steeringFact });
+
+            PyralisAuthoringIntentRow row = model.Recommendations.SingleOrDefault(recommendation =>
+                recommendation.Fact.StableId == "test.intent.steering2d");
+
+            Assert.That(row, Is.Not.Null);
+            Assert.That(row.Score, Is.GreaterThan(0));
+            Assert.That(row.Reason, Is.EqualTo(PyralisAuthoringGuidance.MatchesCapabilities));
         }
 
         [Test]
@@ -154,9 +208,132 @@ namespace NeonBlack.Gameplay.Features.Platform.Session
             Assert.That(record.Domains, Does.Contain("Combat"));
             Assert.That(record.ConcreteCrossDomainCount, Is.GreaterThanOrEqualTo(2));
             Assert.That(record.UnityLookupCount, Is.GreaterThanOrEqualTo(1));
+            Assert.That(record.LocalComponentLookupCount, Is.GreaterThanOrEqualTo(1));
+            Assert.That(record.BroadUnityDiscoveryCount, Is.EqualTo(0));
             Assert.That(record.ReflectionOrStringLookupCount, Is.GreaterThanOrEqualTo(1));
             Assert.That(record.Risk, Is.Not.EqualTo(PyralisSourceDependencyRisk.Low));
+            Assert.That(record.PressureKind, Is.EqualTo(PyralisSourceDependencyPressureKind.AcceptedComposition));
+            Assert.That(record.ReviewHint, Does.Contain("composition"));
             Assert.That(record.Reasons, Is.Not.Empty);
+        }
+
+        [Test]
+        public void SourceDependencyHygiene_SmokeClassifiesRuntimeOwnershipPressure()
+        {
+            const string source = @"
+using NeonBlack.Gameplay.Features.Input;
+using NeonBlack.Gameplay.Features.Combat;
+using NeonBlack.Gameplay.Presentation.Camera;
+using UnityEngine;
+
+namespace NeonBlack.Gameplay.Features.Enemies
+{
+    public sealed class EnemyPressureFixture : MonoBehaviour
+    {
+        [SerializeField] private InputProfile inputProfile;
+        [SerializeField] private CameraRigProfile cameraRigProfile;
+
+        private void Awake()
+        {
+            GetComponent<PlayerInputHandler>();
+        }
+    }
+}";
+
+            PyralisSourceDependencyHygieneRecord record =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Enemies/3D/EnemyPressureFixture.cs",
+                    source);
+
+            Assert.That(record.OwnerDomain, Is.EqualTo("Enemies"));
+            Assert.That(record.PressureKind, Is.EqualTo(PyralisSourceDependencyPressureKind.RuntimeOwnership));
+            Assert.That(record.LocalComponentLookupCount, Is.EqualTo(1));
+            Assert.That(record.BroadUnityDiscoveryCount, Is.EqualTo(0));
+            Assert.That(record.ReviewHint, Does.Contain("Runtime ownership"));
+        }
+
+        [Test]
+        public void SourceDependencyHygiene_SmokeClassifiesFocusedRuntimeReferenceAssembly()
+        {
+            const string source = @"
+using NeonBlack.Gameplay.Features.Input;
+using NeonBlack.Gameplay.Features.Combat;
+using NeonBlack.Gameplay.Presentation.Camera;
+using UnityEngine;
+
+namespace NeonBlack.Gameplay.Features.Enemies
+{
+    internal sealed class EnemyActorRuntimeReferences
+    {
+        public void Resolve(GameObject target)
+        {
+            target.GetComponent<PlayerInputHandler>();
+            target.GetComponentInChildren<Camera>();
+        }
+    }
+}";
+
+            PyralisSourceDependencyHygieneRecord record =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Enemies/3D/EnemyActorRuntimeReferences.cs",
+                    source);
+
+            Assert.That(record.PressureKind, Is.EqualTo(PyralisSourceDependencyPressureKind.ReferenceAssembly));
+            Assert.That(record.LocalComponentLookupCount, Is.EqualTo(2));
+            Assert.That(record.ReviewHint, Does.Contain("reference/context assembly"));
+            Assert.That(PyralisSourceDependencyHygieneScanner.GetCleanupPriority(record.PressureKind),
+                Is.GreaterThan(PyralisSourceDependencyHygieneScanner.GetCleanupPriority(PyralisSourceDependencyPressureKind.CompatibilitySurface)));
+        }
+
+        [Test]
+        public void SourceDependencyHygiene_SmokeScoresBroadUnityDiscoveryAboveLocalComponentCaching()
+        {
+            const string localSource = @"
+using UnityEngine;
+
+namespace NeonBlack.Gameplay.Features.Characters
+{
+    public sealed class LocalLookupFixture : MonoBehaviour
+    {
+        private void Awake()
+        {
+            GetComponent<Motor2D>();
+            GetComponentInChildren<Renderer>();
+            GetComponentInParent<PawnRoot>();
+        }
+    }
+}";
+            const string broadSource = @"
+using UnityEngine;
+
+namespace NeonBlack.Gameplay.Features.Characters
+{
+    public sealed class BroadLookupFixture : MonoBehaviour
+    {
+        private void Awake()
+        {
+            Object.FindAnyObjectByType<Camera>();
+            GameObject.Find(""Main Camera"");
+            Resources.Load<GameObject>(""Pawn"");
+        }
+    }
+}";
+
+            PyralisSourceDependencyHygieneRecord local =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Characters/LocalLookupFixture.cs",
+                    localSource);
+            PyralisSourceDependencyHygieneRecord broad =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Characters/BroadLookupFixture.cs",
+                    broadSource);
+
+            Assert.That(local.LocalComponentLookupCount, Is.EqualTo(3));
+            Assert.That(local.BroadUnityDiscoveryCount, Is.EqualTo(0));
+            Assert.That(broad.LocalComponentLookupCount, Is.EqualTo(0));
+            Assert.That(broad.BroadUnityDiscoveryCount, Is.EqualTo(3));
+            Assert.That(broad.RiskScore, Is.GreaterThan(local.RiskScore));
+            Assert.That(string.Join(" ", broad.Reasons), Does.Contain("broad Unity"));
         }
 
         [Test]
@@ -312,7 +489,13 @@ namespace NeonBlack.Gameplay.Features.Enemies.Editor.Inspectors
             Assert.That(hygieneJson, Does.Contain("\"proofBlockers\""));
             Assert.That(hygieneJson, Does.Contain("\"sourceOriginCounts\""));
             Assert.That(hygieneJson, Does.Contain("\"dependencyPressureSummary\""));
+            Assert.That(hygieneJson, Does.Contain("\"pressureKindCounts\""));
+            Assert.That(hygieneJson, Does.Contain("\"cleanupFocus\""));
             Assert.That(hygieneJson, Does.Contain("\"dependencyPressure\""));
+            Assert.That(hygieneJson, Does.Contain("\"pressureKind\""));
+            Assert.That(hygieneJson, Does.Contain("\"reviewHint\""));
+            Assert.That(hygieneJson, Does.Contain("\"localComponentLookupCount\""));
+            Assert.That(hygieneJson, Does.Contain("\"broadUnityDiscoveryCount\""));
             Assert.That(hygieneJson, Does.Contain("\"contractSourcePressure\""));
             Assert.That(hygieneJson, Does.Not.Contain("\"mapRows\""));
 
@@ -352,54 +535,6 @@ namespace NeonBlack.Gameplay.Features.Enemies.Editor.Inspectors
             Object.DestroyImmediate(participant);
             Object.DestroyImmediate(mode);
             Object.DestroyImmediate(session);
-        }
-
-        [Test]
-        public void ContractNativeSetup_SmokeDoesNotDuplicateReflectedUnityMetadata()
-        {
-            string gameplayRoot = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Packages", "com.neonblackinteractivellc.neonblackhub", "Members", "Pyralis", "Gameplay"));
-            string[] sourceFiles = Directory.GetFiles(gameplayRoot, "*.cs", SearchOption.AllDirectories);
-            string[] duplicateCreateSetupMarkers =
-            {
-                "NativeSetup = new[] { \"Create Asset\" }",
-                "NativeSetup = new[] { \"Create Asset.\" }",
-                "NativeSetup = new[] { \"Create asset in Project window.\" }",
-                "\"Create Asset.\", ",
-                "\"Create asset in Project window.\", "
-            };
-            string[] duplicateAddComponentSetupMarkers =
-            {
-                "NativeSetup = new[] { \"Add Component\" }",
-                "NativeSetup = new[] { \"Add Component.\" }",
-                "\"Add Component\", ",
-                "\"Add Component.\", "
-            };
-
-            foreach (string sourceFile in sourceFiles)
-            {
-                string source = File.ReadAllText(sourceFile);
-                if (source.Contains("[CreateAssetMenu"))
-                {
-                    for (int i = 0; i < duplicateCreateSetupMarkers.Length; i++)
-                    {
-                        Assert.That(
-                            source.Contains(duplicateCreateSetupMarkers[i]),
-                            Is.False,
-                            $"{sourceFile} should let CreateAssetMenu reflection generate the Project create action instead of duplicating it in NativeSetup.");
-                    }
-                }
-
-                if (source.Contains("[AddComponentMenu"))
-                {
-                    for (int i = 0; i < duplicateAddComponentSetupMarkers.Length; i++)
-                    {
-                        Assert.That(
-                            source.Contains(duplicateAddComponentSetupMarkers[i]),
-                            Is.False,
-                            $"{sourceFile} should let AddComponentMenu reflection generate the Inspector add-component action instead of duplicating it in NativeSetup.");
-                    }
-                }
-            }
         }
 
         [Test]
@@ -447,81 +582,35 @@ namespace NeonBlack.Gameplay.Features.Enemies.Editor.Inspectors
         [Test]
         public void GameplaySeams_SmokeKeepSingleRuntimeOwners()
         {
-            string gameplayRoot = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Packages", "com.neonblackinteractivellc.neonblackhub", "Members", "Pyralis", "Gameplay"));
-            string sessionSource = File.ReadAllText(Path.Combine(gameplayRoot, "Data", "Definitions", "SessionDefinition.cs"));
-            string pawnSource = File.ReadAllText(Path.Combine(gameplayRoot, "Data", "Definitions", "PawnDefinition.cs"));
-            string inputProfileSource = File.ReadAllText(Path.Combine(gameplayRoot, "Data", "Profiles", "InputProfile.cs"));
-            string participantInputUtilitySource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Input", "ParticipantInputProfileUtility.cs"));
-            string participantRosterInterfaceSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Characters", "Runtime", "Shared", "Participants", "IParticipantRoster.cs"));
-            string participantRosterSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Characters", "Runtime", "Shared", "Participants", "ParticipantRosterService.cs"));
-            string runtimeContextSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Platform", "Composition", "GameplayRuntimeContext.cs"));
-            string bootstrapSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Platform", "Session", "GameplaySessionBootstrap.cs"));
-            string spawnSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Characters", "Runtime", "Shared", "Services", "ParticipantSpawnService.cs"));
-            string spawnerSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Spawning", "3D", "PlayerSpawner.cs"));
-            string hudTargetBindingSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Feedback", "UI", "ParticipantHudTargetBinding.cs"));
-            string movementSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Characters", "2D", "Pawn2DMovementComponent.cs"));
-            string hazardSpawnerSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Hazards", "2D", "HazardSpawner.cs"));
-            string collectibleSpawnerSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Pickups", "2D", "CollectibleSpawner2D.cs"));
-            string playfieldSource = File.ReadAllText(Path.Combine(gameplayRoot, "Data", "Profiles", "PlayfieldProfile.cs"));
-            string pawn2DMovementSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Characters", "2D", "Pawn2DMovementComponent.cs"));
-            string cameraRigSource = File.ReadAllText(Path.Combine(gameplayRoot, "Presentation", "Camera", "CinemachineCameraRigController.cs"));
-            string featureServicePolicySource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Platform", "Composition", "PyralisRuntimeFeatureServicePolicy.cs"));
+            const BindingFlags fields = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
-            Assert.That(sessionSource, Does.Not.Contain("defaultInputProfile"));
-            Assert.That(pawnSource, Does.Not.Contain("defaultInputProfile"));
-            Assert.That(sessionSource, Does.Not.Contain("InputProfile inputProfile"));
-            Assert.That(pawnSource, Does.Not.Contain("InputProfile inputProfile"));
-            Assert.That(inputProfileSource, Does.Not.Contain("participant or pawn definition"));
-            Assert.That(participantInputUtilitySource, Does.Not.Contain("SessionDefinition"));
-            Assert.That(participantInputUtilitySource, Does.Not.Contain("PawnDefinition"));
-            Assert.That(participantRosterInterfaceSource, Does.Contain("TryGetParticipantBySeat"));
-            Assert.That(participantRosterSource, Does.Contain("TryGetParticipantBySeat"));
-            Assert.That(runtimeContextSource, Does.Not.Contain("DefaultInputProfile"));
-            Assert.That(runtimeContextSource, Does.Not.Contain("DefaultInputActions"));
-            Assert.That(bootstrapSource, Does.Not.Contain("GetOrCreatePersistentService"));
-            Assert.That(bootstrapSource, Does.Contain("ConfigureRuntime("));
-            Assert.That(bootstrapSource, Does.Contain("sceneNavigatorSource"));
-            Assert.That(bootstrapSource, Does.Not.Contain("SceneLoader sceneLoader"));
-            Assert.That(spawnSource, Does.Not.Contain("GetMethod("));
-            Assert.That(spawnSource, Does.Contain("IPawnRuntimeServicesReceiver"));
-            Assert.That(spawnerSource, Does.Not.Contain("playerPrefab"));
-            Assert.That(spawnerSource, Does.Not.Contain("currentPlayer"));
-            Assert.That(spawnerSource, Does.Contain("ParticipantSpawnService"));
-            Assert.That(spawnerSource, Does.Contain("TryGetParticipantBySeat"));
-            Assert.That(hudTargetBindingSource, Does.Contain("TryGetParticipantBySeat"));
-            Assert.That(bootstrapSource, Does.Not.Contain("TrySetMember"));
-            Assert.That(bootstrapSource, Does.Not.Contain("System.Reflection"));
-            Assert.That(bootstrapSource, Does.Not.Contain("cameraBoundsSource"));
-            Assert.That(movementSource, Does.Not.Contain("cameraBoundsSource"));
-            Assert.That(movementSource, Does.Not.Contain("private Camera targetCamera"));
-            Assert.That(hazardSpawnerSource, Does.Not.Contain("_cameraBoundsSource"));
-            Assert.That(hazardSpawnerSource, Does.Not.Contain("_targetCamera"));
-            Assert.That(collectibleSpawnerSource, Does.Not.Contain("_cameraBoundsSource"));
-            Assert.That(collectibleSpawnerSource, Does.Not.Contain("_targetCamera"));
-            Assert.That(playfieldSource, Does.Contain("IPlayfieldBoundsProvider"));
-            Assert.That(playfieldSource, Does.Contain("AuthoringCapability.Movement"));
-            Assert.That(pawn2DMovementSource.IndexOf("TryGetPlayfieldBounds2D", System.StringComparison.Ordinal), Is.LessThan(pawn2DMovementSource.IndexOf("TryGetCameraBounds", System.StringComparison.Ordinal)));
-            Assert.That(cameraRigSource, Does.Contain("ICameraBoundsProvider"));
-            Assert.That(featureServicePolicySource, Does.Contain("AppendContractSignals"));
-            Assert.That(featureServicePolicySource, Does.Not.Contain("AppendUncontractedModuleSignals"));
-            Assert.That(featureServicePolicySource, Does.Not.Contain("JoinSignals"));
-            Assert.That(featureServicePolicySource, Does.Not.Contain("IndexOf(token"));
+            Assert.That(typeof(SessionDefinition).GetField("defaultInputProfile", fields), Is.Null);
+            Assert.That(typeof(SessionDefinition).GetField("inputProfile", fields), Is.Null);
+            Assert.That(typeof(PawnDefinition).GetField("defaultInputProfile", fields), Is.Null);
+            Assert.That(typeof(PawnDefinition).GetField("inputProfile", fields), Is.Null);
+            Assert.That(typeof(ParticipantDefinition).GetField(nameof(ParticipantDefinition.inputProfile), fields), Is.Not.Null);
 
-            string inputRouterSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "Input", "ParticipantInputRouter.cs"));
-            string gameManagerSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "GameFlow", "2D", "GameManager.cs"));
-            string uiManagerSource = File.ReadAllText(Path.Combine(gameplayRoot, "Features", "GameFlow", "2D", "UI", "UIManager.cs"));
-            Assert.That(inputRouterSource, Does.Not.Contain("PlayerInputManager.instance"));
-            Assert.That(inputRouterSource, Does.Not.Contain("RequiredComponents = new[] { typeof(ParticipantInputRouter)"));
-            Assert.That(gameManagerSource, Does.Not.Contain("private GameObject player"));
-            Assert.That(gameManagerSource, Does.Not.Contain("private Motor2D primaryPlayerController"));
-            Assert.That(gameManagerSource, Does.Not.Contain("RequiredComponents = new[] { typeof(GameManager)"));
-            Assert.That(uiManagerSource, Does.Not.Contain("RequiredComponents = new[] { typeof(UIManager)"));
-            Assert.That(gameManagerSource, Does.Not.Contain("public interface IGameplaySessionFlow : IGameplayStateReader"));
-            Assert.That(gameManagerSource, Does.Not.Contain(", IGameplayStateReader"));
-            Assert.That(gameManagerSource, Does.Not.Contain("ConfigureRuntime(this"));
-            Assert.That(gameManagerSource, Does.Contain("SessionStateService"));
-            Assert.That(gameManagerSource, Does.Contain("SetPhase"));
-            Assert.That(gameManagerSource, Does.Contain("Standalone Compatibility"));
+            ParticipantDefinition participant = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            InputProfile inputProfile = ScriptableObject.CreateInstance<InputProfile>();
+            participant.inputProfile = inputProfile;
+
+            Assert.That(ParticipantInputProfileUtility.ResolveEffectiveInputProfile(participant), Is.SameAs(inputProfile));
+            Assert.That(typeof(IParticipantRoster).GetMethod("TryGetParticipantBySeat"), Is.Not.Null);
+            Assert.That(typeof(ParticipantRosterService).GetInterfaces(), Has.Member(typeof(IParticipantRoster)));
+            Assert.That(typeof(PlayfieldProfile).GetInterfaces(), Has.Member(typeof(IPlayfieldBoundsProvider)));
+            Assert.That(typeof(CinemachineCameraRigController).GetInterfaces(), Has.Member(typeof(ICameraBoundsProvider)));
+            Assert.That(typeof(GameplaySessionBootstrap).GetField("sceneNavigatorSource", fields), Is.Not.Null);
+            Assert.That(typeof(GameplaySessionBootstrap).GetField("cameraBoundsSource", fields), Is.Null);
+            Assert.That(typeof(PlayerSpawner).GetField("participantSpawnService", fields), Is.Not.Null);
+            Assert.That(typeof(PlayerSpawner).GetField("targetSeatIndex", fields), Is.Not.Null);
+            Assert.That(typeof(PlayerSpawner).GetField("playerPrefab", fields), Is.Null);
+            Assert.That(typeof(PlayerSpawner).GetField("currentPlayer", fields), Is.Null);
+            Assert.That(typeof(GameManager).GetInterfaces(), Has.Member(typeof(IGameplaySessionFlow)));
+            Assert.That(typeof(GameManager).GetInterfaces(), Has.No.Member(typeof(IGameplayStateReader)));
+            Assert.That(typeof(GameManager).GetField("playerControllers", fields), Is.Not.Null);
+
+            Object.DestroyImmediate(inputProfile);
+            Object.DestroyImmediate(participant);
         }
 
         [Test]

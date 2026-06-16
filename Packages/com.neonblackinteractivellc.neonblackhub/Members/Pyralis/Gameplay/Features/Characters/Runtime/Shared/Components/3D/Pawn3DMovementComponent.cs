@@ -1,4 +1,3 @@
-using System.Linq;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Enums;
@@ -31,7 +30,7 @@ namespace NeonBlack.Gameplay.Characters
     )]
 [AddComponentMenu("NeonBlack/Gameplay/3D/Pawn 3D Movement Component")]
     [RequireComponent(typeof(CharacterController))]
-    public sealed class Pawn3DMovementComponent : MonoBehaviour, IPawnMotor, IMovementModule
+    public sealed partial class Pawn3DMovementComponent : MonoBehaviour, IPawnMotor, IMovementModule
     {
         //  Movement  //
         [Header("Movement")]
@@ -128,9 +127,7 @@ namespace NeonBlack.Gameplay.Characters
         [SerializeField] private Vector3 crouchCenter             = new Vector3(0f, 0.5f, 0f);
 
         //  Component references  //
-        private CharacterController _controller;
-        private IActorKnockbackController _knockback;
-        private IPawnCombatMovementContext _combat;
+        private Pawn3DMovementRuntimeReferences _runtime;
         private Camera              _cam;
         private float               _capsuleSkin;
         private float               _externalSpeedMultiplier = 1f;
@@ -158,16 +155,14 @@ namespace NeonBlack.Gameplay.Characters
         //  Unity lifecycle  //
         private void Awake()
         {
-            _controller  = GetComponent<CharacterController>();
-            _knockback   = GetComponents<MonoBehaviour>().OfType<IActorKnockbackController>().FirstOrDefault();
-            _combat      = GetComponents<MonoBehaviour>().OfType<IPawnCombatMovementContext>().FirstOrDefault();
+            _runtime = Pawn3DMovementRuntimeReferences.Capture(gameObject);
             _cam         = movementCamera;
-            _capsuleSkin = Mathf.Max(_controller.skinWidth, 0.01f);
+            _capsuleSkin = Mathf.Max(_runtime.Controller.skinWidth, 0.01f);
 
             // Use CharacterController live values as source-of-truth so existing
             // configs remain stable without matching serialized field defaults.
-            normalHeight = _controller.height;
-            normalCenter = _controller.center;
+            normalHeight = _runtime.Controller.height;
+            normalCenter = _runtime.Controller.center;
             if (crouchHeight >= normalHeight)
                 crouchHeight = Mathf.Max(0.5f, normalHeight * 0.5f);
             crouchCenter = normalCenter - Vector3.up * ((normalHeight - crouchHeight) * 0.5f);
@@ -191,85 +186,6 @@ namespace NeonBlack.Gameplay.Characters
         /// Apply model velocity + knockback via CharacterController and record
         /// this frame's physics results for the next <see cref="Tick"/> call.
         /// </summary>
-        public void ApplyMovement(Vector3 modelVelocity)
-        {
-            if (!_controller.enabled) return;
-
-            ResetPhysicsFrame();
-
-            Vector3 knockbackVelocity = Vector3.zero;
-            if (_knockback != null)
-            {
-                _knockback.Tick(Time.deltaTime);
-                knockbackVelocity = _knockback.Velocity;
-            }
-
-            CollisionFlags flags = _controller.Move((modelVelocity + knockbackVelocity) * Time.deltaTime);
-
-            bool byCollision = (flags & CollisionFlags.Below) != 0;
-            bool byProbe     = false;
-            if (!byCollision && modelVelocity.y <= 0f)
-            {
-                float   radius = Mathf.Clamp(groundCheckRadius, 0.02f, _controller.radius * 0.95f);
-                Vector3 origin = GetGroundProbeOrigin();
-                byProbe = Physics.SphereCast(origin, radius, Vector3.down, out _,
-                    Mathf.Max(groundProbeExtraDistance, 0.02f), groundLayer, QueryTriggerInteraction.Ignore);
-            }
-            _physicsFrame.GroundedByCollision = byCollision;
-            _physicsFrame.GroundedByProbe     = byProbe;
-        }
-
-        /// <summary>
-        /// Feed a CharacterController surface contact into this frame's physics accumulator.
-        /// Call from <see cref="Motor3D.OnControllerColliderHit"/>.
-        /// </summary>
-        public void NotifyColliderHit(ControllerColliderHit hit)
-        {
-            if (hit.normal.y > 0.1f)
-            {
-                _physicsFrame.GroundNormal = hit.normal;
-            }
-            else if (hit.normal.y >= -0.1f)
-            {
-                Vector3 moveDir = new Vector3(_model.State.VelocityX, 0f, _model.State.VelocityZ);
-                if (moveDir.sqrMagnitude > 0.01f && Vector3.Dot(moveDir.normalized, -hit.normal) > 0.3f)
-                    _physicsFrame.HasWallContact = true;
-            }
-        }
-
-        //  Crouch  //
-        /// <summary>Enter or exit crouch. Respects ceiling clearance when standing up.</summary>
-        public void SetCrouch(bool crouch)
-        {
-            if (!allowCrouch)
-            {
-                _model.SetCrouching(false);
-                return;
-            }
-
-            if (crouch)
-            {
-                _model.SetCrouching(true);
-                _controller.height = crouchHeight;
-                _controller.center = crouchCenter;
-                return;
-            }
-            if (!CanStandUp()) return;
-            _model.SetCrouching(false);
-            _controller.height = normalHeight;
-            _controller.center = normalCenter;
-        }
-
-        private bool CanStandUp()
-        {
-            Vector3 center = transform.TransformPoint(normalCenter);
-            float   radius = Mathf.Max(_controller.radius - _capsuleSkin, 0.01f);
-            float   half   = Mathf.Max(normalHeight * 0.5f - radius, 0f);
-            return !Physics.CheckCapsule(
-                center + Vector3.up * half, center - Vector3.up * half,
-                radius, groundLayer, QueryTriggerInteraction.Ignore);
-        }
-
         //  Dodge & power slide  //
         /// <summary>Request a dodge roll. Returns true if the model accepted it.</summary>
         public bool TryStartDodge(Vector2 moveInput) => _model.TryStartDodge(moveInput);
@@ -301,7 +217,7 @@ namespace NeonBlack.Gameplay.Characters
             _model.Tick(BuildMovementInput(fi), _physicsFrame, Time.deltaTime);
         }
 
-        public void SetMovementEnabled(bool enabled) => _controller.enabled = enabled;
+        public void SetMovementEnabled(bool enabled) => _runtime.Controller.enabled = enabled;
 
         public void SetExternalSpeedMultiplier(float multiplier)
         {
@@ -317,42 +233,6 @@ namespace NeonBlack.Gameplay.Characters
         }
 
         //  IPawnMotor  //
-        public void ApplyMovementProfile(PawnProfileApplicationContext context, PawnMovementProfile profile)
-        {
-            if (profile == null) return;
-            movementMode         = profile.movementMode;
-            walkSpeed            = profile.walkSpeed;
-            sprintSpeed          = profile.sprintSpeed;
-            crouchSpeed          = profile.crouchSpeed;
-            depthSpeedMultiplier = profile.depthSpeedMultiplier;
-            _config = BuildConfig();
-            _model.Configure(_config);
-        }
-
-        /// <summary>Apply traversal tuning (jump, dodge, gravity) from a profile.</summary>
-        public void ApplyTraversalProfile(PawnTraversalProfile profile)
-        {
-            if (profile == null) return;
-            allowJump = profile.allowJump;
-            allowDodge = profile.allowDodge;
-            allowCrouch = profile.allowCrouch;
-            allowPowerSlide = profile.allowDodge && profile.allowCrouch;
-            jumpHeight    = profile.jumpHeight;
-            gravity       = profile.gravity;
-            dodgeDistance = profile.dodgeDistance;
-            dodgeDuration = profile.dodgeDuration;
-            dodgeCooldown = profile.dodgeCooldown;
-            _config = BuildConfig();
-            _model.Configure(_config);
-        }
-
-        //  Helpers  //
-        private Vector3 GetGroundProbeOrigin()
-        {
-            Bounds b = _controller.bounds;
-            return new Vector3(b.center.x, b.min.y + 0.02f, b.center.z);
-        }
-
         private MovementInput BuildMovementInput(FrameInput fi) => new MovementInput
         {
             Move                       = fi.Move,
@@ -360,10 +240,10 @@ namespace NeonBlack.Gameplay.Characters
             SprintHeld                 = fi.SprintHeld,
             JumpPressed                = fi.JumpPressed,
             JumpReleased               = fi.JumpReleased,
-            AttackTimerActive          = _combat != null && _combat.AttackTimer > 0f,
-            KickTimerActive            = _combat != null && _combat.KickTimer > 0f,
-            AttackMoveMultiplier       = _combat?.AttackMoveMultiplier ?? 1f,
-            AerialAttackMoveMultiplier = _combat?.AerialAttackMoveMultiplier ?? 1f,
+            AttackTimerActive          = _runtime.Combat != null && _runtime.Combat.AttackTimer > 0f,
+            KickTimerActive            = _runtime.Combat != null && _runtime.Combat.KickTimer > 0f,
+            AttackMoveMultiplier       = _runtime.Combat?.AttackMoveMultiplier ?? 1f,
+            AerialAttackMoveMultiplier = _runtime.Combat?.AerialAttackMoveMultiplier ?? 1f,
             CameraRight                = _cam != null ? _cam.transform.right : Vector3.right,
         };
 
@@ -393,60 +273,5 @@ namespace NeonBlack.Gameplay.Characters
             return planarMove.sqrMagnitude > 1f ? planarMove.normalized : planarMove;
         }
 
-        private MovementConfig BuildConfig() => new MovementConfig
-        {
-            MovementMode               = movementMode,
-            TopDownAllowJump           = topDownAllowJump,
-            AllowJump                   = allowJump,
-            AllowDodge                  = allowDodge,
-            AllowCrouch                 = allowCrouch,
-            AllowPowerSlide             = allowPowerSlide,
-            WalkSpeed                  = walkSpeed * _externalSpeedMultiplier,
-            SprintSpeed                = sprintSpeed * _externalSpeedMultiplier,
-            CrouchSpeed                = crouchSpeed * _externalSpeedMultiplier,
-            DepthSpeedMultiplier       = depthSpeedMultiplier,
-            AccelerationTime           = accelerationTime,
-            DecelerationTime           = decelerationTime,
-            JumpHeight                 = jumpHeight,
-            Gravity                    = gravity,
-            CoyoteTime                 = coyoteTime,
-            JumpBufferTime             = jumpBufferTime,
-            JumpCutMultiplier          = jumpCutMultiplier,
-            MaxJumps                   = maxJumps,
-            LandSquashThreshold        = landSquashThreshold,
-            LandSlowDuration           = landSlowDuration,
-            LandSlowMultiplier         = landSlowMultiplier,
-            SlideAngle                 = slideAngle,
-            SlideSpeed                 = slideSpeed,
-            SlideSteering              = slideSteering,
-            SlideBlendTime             = slideBlendTime,
-            WallSlideGravityMultiplier = wallSlideGravityMultiplier,
-            WallSlideFallSpeedCap      = wallSlideFallSpeedCap,
-            DodgeDistance              = dodgeDistance,
-            DodgeDuration              = dodgeDuration,
-            DodgeCooldown              = dodgeCooldown,
-            RollCooldown               = rollCooldown,
-            PowerSlideDistance         = powerSlideDistance,
-            PowerSlideDuration         = powerSlideDuration,
-            PowerSlideCooldown         = powerSlideCooldown,
-            ClimbCooldown              = 0f, // owned by Pawn3DTraversalComponent
-        };
-
-        //  Debug gizmos  //
-#if UNITY_EDITOR
-        private void OnDrawGizmosSelected()
-        {
-            if (!Application.isPlaying || _controller == null) return;
-            Bounds  b      = _controller.bounds;
-            Vector3 origin = new Vector3(b.center.x, b.min.y + 0.02f, b.center.z);
-            float   radius = Mathf.Clamp(groundCheckRadius, 0.02f, _controller.radius * 0.95f);
-            Gizmos.color = _model.State.IsGrounded ? new Color(0f, 1f, 0f, 0.4f) : new Color(1f, 0f, 0f, 0.4f);
-            Gizmos.DrawSphere(origin, radius);
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawLine(origin, origin + Vector3.down * Mathf.Max(groundProbeExtraDistance, 0.02f));
-            Gizmos.color = Color.white;
-            Gizmos.DrawWireSphere(new Vector3(b.center.x, b.min.y, b.center.z), 0.03f);
-        }
-#endif
     }
 }

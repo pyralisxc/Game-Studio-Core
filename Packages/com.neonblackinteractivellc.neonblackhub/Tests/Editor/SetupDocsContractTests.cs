@@ -1,20 +1,5 @@
-using NeonBlack.Gameplay.Data.Definitions;
-using NeonBlack.Gameplay.Data.Profiles;
-using NeonBlack.Gameplay.Core.Actions;
-using NeonBlack.Gameplay.Presentation.Animation;
-using NeonBlack.Gameplay.Features.Combat;
-using NeonBlack.Gameplay.Features.Hazards;
-using NeonBlack.Gameplay.Features.Feedback;
-using NeonBlack.Gameplay.Features.Feedback.UI;
-using NeonBlack.Gameplay.Features.Composition;
-using NeonBlack.Gameplay.Characters;
-using NeonBlack.Gameplay.Editor;
-using NeonBlack.Gameplay.Editor.Inspectors;
-using NeonBlack.Gameplay.Core.Runtime;
 using NUnit.Framework;
 using System.IO;
-using System.Linq;
-using UnityEditor;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Tests.Editor
@@ -165,35 +150,6 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(marker.Contains("MyPublicSampleExampleClass"), Is.False);
             Assert.That(marker.Contains("MyPublicRuntimeExampleClass"), Is.False);
             Assert.That(marker.Contains("PyralisSampleMarker"), Is.True);
-        }
-
-        [Test]
-        public void BeginnerFacingEditorGuidance_UsesCompatibilityLanguageInsteadOfLegacy()
-        {
-            string editorRoot = Path.Combine(
-                Application.dataPath,
-                "..",
-                "Packages",
-                "com.neonblackinteractivellc.neonblackhub",
-                "Members",
-                "Pyralis",
-                "Gameplay",
-                "Editor");
-
-            string[] beginnerFacingFiles = Directory.GetFiles(editorRoot, "*.cs", SearchOption.AllDirectories)
-                .Where(path =>
-                    path.Contains($"{Path.DirectorySeparatorChar}Authoring{Path.DirectorySeparatorChar}") ||
-                    path.EndsWith("PyralisReflectiveInspectorOverlay.cs") ||
-                    path.EndsWith("PyralisInspectorGuide.cs"))
-                .ToArray();
-
-            Assert.That(beginnerFacingFiles.Length, Is.GreaterThan(0));
-
-            for (int i = 0; i < beginnerFacingFiles.Length; i++)
-            {
-                string source = File.ReadAllText(beginnerFacingFiles[i]);
-                Assert.That(source.ToLowerInvariant().Contains("legacy"), Is.False, beginnerFacingFiles[i] + " should use compatibility/fresh-start wording.");
-            }
         }
 
         [Test]

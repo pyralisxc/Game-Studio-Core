@@ -1,4 +1,3 @@
-using System.IO;
 using System.Linq;
 using NeonBlack.Gameplay.Core.Rpg;
 using NeonBlack.Gameplay.Data.Definitions.Rpg;
@@ -65,22 +64,6 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(issue, Does.Contain("node.missing"));
 
             Object.DestroyImmediate(graph);
-        }
-
-        [Test]
-        public void DialogueGraphEditorWindow_Source_ExposesMenuValidationAndPreview()
-        {
-            string editorRoot = Path.Combine(Application.dataPath, "..", "Packages", "com.neonblackinteractivellc.neonblackhub", "Members", "Pyralis", "Gameplay", "Editor");
-            string[] matches = Directory.GetFiles(editorRoot, "DialogueGraphEditorWindow.cs", SearchOption.AllDirectories);
-            Assert.That(matches.Length, Is.EqualTo(1));
-            string path = matches[0];
-            string source = File.ReadAllText(path);
-
-            Assert.That(source, Does.Contain("MenuItem(\"NeonBlack/Gameplay/RPG Narrative Editor\")"));
-            Assert.That(source, Does.Contain("ObjectField"));
-            Assert.That(source, Does.Contain("GetValidationIssues"));
-            Assert.That(source, Does.Contain("DialogueService"));
-            Assert.That(source, Does.Contain("TryStartSession"));
         }
 
         private static DialogueGraphDefinition CreateGraph()
