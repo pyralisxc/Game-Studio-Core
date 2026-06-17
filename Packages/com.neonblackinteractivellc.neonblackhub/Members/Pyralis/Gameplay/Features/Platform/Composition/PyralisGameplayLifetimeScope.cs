@@ -5,16 +5,8 @@ using NeonBlack.Gameplay.Presentation.Visuals;
 using NeonBlack.Gameplay.Core.Contracts.Networking;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Runtime;
-using NeonBlack.Gameplay.Core.Rpg;
-using NeonBlack.Gameplay.Features.Input;
 using NeonBlack.Gameplay.Characters;
-using NeonBlack.Gameplay.Features.Combat;
-using NeonBlack.Gameplay.Features.Enemies;
-using NeonBlack.Gameplay.Features.Characters;
-using NeonBlack.Gameplay.Features.Feedback;
-using NeonBlack.Gameplay.Features.GameFlow;
-using NeonBlack.Gameplay.Features.Pickups;
-using NeonBlack.Gameplay.Features.Scoring;
+using NeonBlack.Gameplay.Features.Input;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -129,7 +121,7 @@ namespace NeonBlack.Gameplay.Core.Runtime
             ParticipantQueryUtility.Initialize(_participantRosterService, _participantRosterService);
             _sessionOwnershipService = ResolveOrCreateSessionOwnershipService(useNetcodeServices);
             _participantAuthorityService = ResolveOrCreateParticipantAuthorityService(useNetcodeServices);
-            _featureServicePolicy = PyralisRuntimeFeatureServicePolicy.Resolve(sessionDefinition);
+            _featureServicePolicy = PyralisRuntimeFeatureServicePolicy.ResolveWithCompatibilityEvidence(sessionDefinition);
             _isConfigured = true;
         }
 
@@ -192,93 +184,12 @@ namespace NeonBlack.Gameplay.Core.Runtime
 
         private void RegisterFeatureServices(IContainerBuilder builder)
         {
-            bool usesCombatServices = _featureServicePolicy.UsesCombatServices
-                || HasCompatibilitySceneComponent<PawnCombatBehaviour>()
-                || HasCompatibilitySceneComponent<PawnCombatBehaviour2D>();
-            bool usesEnemyServices = _featureServicePolicy.UsesEnemyServices
-                || HasCompatibilitySceneComponent<EnemyAI>()
-                || HasCompatibilitySceneComponent<BattleManager>();
-            bool usesRpgServices = _featureServicePolicy.UsesRpgServices
-                || HasCompatibilitySceneComponentInNamespace("NeonBlack.Gameplay.Features.Rpg");
-            bool usesGameFlowServices = _featureServicePolicy.UsesGameFlowServices
-                || HasCompatibilitySceneComponent<GameManager>()
-                || HasCompatibilitySceneComponentInNamespace("NeonBlack.Gameplay.Features.GameFlow");
-            bool usesScoringServices = _featureServicePolicy.UsesScoringServices
-                || HasCompatibilitySceneComponent<ParticipantScoreService>()
-                || HasCompatibilitySceneComponent<LeaderboardManager>()
-                || HasCompatibilitySceneComponent<StillnessBonus2D>()
-                || HasCompatibilitySceneComponent<CollectibleFeedback2D>();
-            bool usesFeedbackServices = _featureServicePolicy.UsesFeedbackServices
-                || HasCompatibilitySceneComponent<ParticipantFeedbackService>()
-                || HasCompatibilitySceneComponentInNamespace("NeonBlack.Gameplay.Features.Feedback");
-
-            if (usesCombatServices)
-                RegisterCombatServices(builder);
-
-            if (usesEnemyServices)
-                RegisterEnemyServices(builder);
-
-            if (usesRpgServices)
-                RegisterRpgServices(builder);
-
-            if (usesGameFlowServices)
-                RegisterGameFlowServices(builder);
-
-            if (usesScoringServices)
-                RegisterScoringServices(builder);
-
-            if (usesFeedbackServices)
-                RegisterFeedbackServices(builder);
-        }
-
-        private static void RegisterCombatServices(IContainerBuilder builder)
-        {
-            builder.Register<PawnComboProcessor>(Lifetime.Transient);
-            builder.Register<PawnDamageHandler>(Lifetime.Transient);
-        }
-
-        private void RegisterEnemyServices(IContainerBuilder builder)
-        {
-            builder.Register<EnemyDetectionService>(Lifetime.Singleton);
-            builder.Register<EnemyCombatProcessor>(Lifetime.Singleton);
-            RegisterComponent(builder, FindServiceInHierarchy<BattleManager>());
-        }
-
-        private void RegisterRpgServices(IContainerBuilder builder)
-        {
-            builder.Register<LocalRpgPersistenceService>(Lifetime.Singleton).As<IRpgPersistenceService>();
-
-            if (itemCatalog != null)
-                builder.RegisterInstance<IItemCatalog>(itemCatalog);
-
-            if (progressionCurve != null)
-                builder.RegisterInstance<IProgressionCurve>(progressionCurve);
-
-            builder.Register<InventoryService>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
-            builder.Register<ProgressionService>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
-            builder.Register<QuestService>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
-            builder.Register<EquipmentService>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
-            builder.Register<SkillTreeService>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
-            builder.Register<DialogueService>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
-            builder.Register<VendorService>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
-            builder.Register<RpgOpenZoneService>(Lifetime.Singleton).AsSelf();
-            builder.Register<HubInteractionService>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
-        }
-
-        private void RegisterGameFlowServices(IContainerBuilder builder)
-        {
-            RegisterComponent(builder, FindLoadedSceneComponent<GameManager>() ?? FindServiceInHierarchy<GameManager>());
-        }
-
-        private void RegisterScoringServices(IContainerBuilder builder)
-        {
-            RegisterComponent(builder, FindLoadedSceneComponent<ParticipantScoreService>() ?? FindServiceInHierarchy<ParticipantScoreService>());
-            RegisterComponent(builder, FindLoadedSceneComponent<LeaderboardManager>() ?? FindServiceInHierarchy<LeaderboardManager>());
-        }
-
-        private void RegisterFeedbackServices(IContainerBuilder builder)
-        {
-            RegisterComponent(builder, FindLoadedSceneComponent<ParticipantFeedbackService>() ?? FindServiceInHierarchy<ParticipantFeedbackService>());
+            PyralisFeatureServiceInstaller.RegisterFeatureServices(
+                builder,
+                _featureServicePolicy,
+                this,
+                itemCatalog,
+                progressionCurve);
         }
 
         private void RegisterOwnershipServices(IContainerBuilder builder)
@@ -333,73 +244,6 @@ namespace NeonBlack.Gameplay.Core.Runtime
                     container.InjectGameObject(root);
                 }
             }
-        }
-
-        private static bool HasCompatibilitySceneComponent<T>() where T : Component
-        {
-            // Compatibility evidence keeps hand-authored existing scenes alive while feature contracts
-            // become the primary activation path. Do not treat these scans as new route truth.
-            return FindLoadedSceneComponent<T>() != null;
-        }
-
-        private static T FindLoadedSceneComponent<T>() where T : Component
-        {
-            for (int sceneIndex = 0; sceneIndex < SceneManager.sceneCount; sceneIndex++)
-            {
-                Scene scene = SceneManager.GetSceneAt(sceneIndex);
-                if (!scene.isLoaded)
-                    continue;
-
-                GameObject[] roots = scene.GetRootGameObjects();
-                for (int rootIndex = 0; rootIndex < roots.Length; rootIndex++)
-                {
-                    if (roots[rootIndex] == null)
-                        continue;
-
-                    T component = roots[rootIndex].GetComponentInChildren<T>(true);
-                    if (component != null)
-                        return component;
-                }
-            }
-
-            return null;
-        }
-
-        private static bool HasCompatibilitySceneComponentInNamespace(string namespacePrefix)
-        {
-            // Namespace scans are compatibility evidence for older scene-authored feature stacks.
-            // Prefer policy/contract activation for new feature services.
-            if (string.IsNullOrWhiteSpace(namespacePrefix))
-                return false;
-
-            for (int sceneIndex = 0; sceneIndex < SceneManager.sceneCount; sceneIndex++)
-            {
-                Scene scene = SceneManager.GetSceneAt(sceneIndex);
-                if (!scene.isLoaded)
-                    continue;
-
-                GameObject[] roots = scene.GetRootGameObjects();
-                for (int rootIndex = 0; rootIndex < roots.Length; rootIndex++)
-                {
-                    GameObject root = roots[rootIndex];
-                    if (root == null)
-                        continue;
-
-                    MonoBehaviour[] behaviours = root.GetComponentsInChildren<MonoBehaviour>(true);
-                    for (int i = 0; i < behaviours.Length; i++)
-                    {
-                        Type type = behaviours[i] != null ? behaviours[i].GetType() : null;
-                        if (type != null
-                            && type.Namespace != null
-                            && type.Namespace.StartsWith(namespacePrefix, StringComparison.Ordinal))
-                        {
-                            return true;
-                        }
-                    }
-                }
-            }
-
-            return false;
         }
 
         private T FindServiceInHierarchy<T>() where T : class

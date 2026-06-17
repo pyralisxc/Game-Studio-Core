@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Features.Combat;
@@ -29,22 +28,8 @@ namespace NeonBlack.Gameplay.Features.Zones
         DocumentationURL = "https://docs.neonblack.com/pyralis/combat/hazards"
     )]
     [RequireComponent(typeof(BoxCollider))]
-    public class DamageZone : MonoBehaviour, IRuntimeValidationProvider
+    public partial class DamageZone : MonoBehaviour, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
-        {
-            BoxCollider box = GetComponent<BoxCollider>();
-            if (box == null)
-                yield return "BoxCollider is required for 3D trigger damage.";
-            else if (!box.isTrigger)
-                yield return "BoxCollider is not set to Is Trigger. Awake will force it on.";
-
-            if (impactProfile == null && damagePerTick <= 0f)
-                yield return "Fallback Damage Per Tick must be greater than zero when Impact Profile is empty.";
-
-            if (tickInterval <= 0f)
-                yield return "Tick Interval must be greater than zero.";
-        }
         [Header("Profile")]
         [SerializeField] private HazardImpactProfile impactProfile;
         [Header("Fallback Damage")]
@@ -113,20 +98,5 @@ namespace NeonBlack.Gameplay.Features.Zones
             };
         }
 
-#if UNITY_EDITOR
-        private void OnDrawGizmos()
-        {
-            BoxCollider box = GetComponent<BoxCollider>();
-            if (box == null)
-                return;
-
-            Gizmos.color = new Color(1f, 0.15f, 0f, 0.18f);
-            Gizmos.matrix = transform.localToWorldMatrix;
-            Gizmos.DrawCube(box.center, box.size);
-
-            Gizmos.color = new Color(1f, 0.15f, 0f, 0.7f);
-            Gizmos.DrawWireCube(box.center, box.size);
-        }
-#endif
     }
 }

@@ -337,9 +337,9 @@ Read only the guide that matches your immediate task:
 
 - Full setup manual: `MANUAL.md`
 - Asset relationship map: `AUTHORING_MODEL.md`
-- First scene root and route chain: `SCENE_SETUP_GUIDE.md`
+- First scene root and route chain: this `START_HERE.md` guide plus `AUTHORING_MODEL.md`
 - Pawn prefab, camera, combat, health, hazards, pickups, and scoring: follow the Authoring Window, selected Inspector field guides, and `AUTHORING_MODEL.md`
-- UI/HUD, board/card/tabletop, and scene flow: follow the Authoring Window, selected Inspector field guides, `SCENE_SETUP_GUIDE.md`, and `AUTHORING_MODEL.md`
+- UI/HUD, board/card/tabletop, and scene flow: follow the Authoring Window, selected Inspector field guides, and `AUTHORING_MODEL.md`
 - Deeper architecture: `CANONICAL_SETUP.md`
 
 ## Mental Model

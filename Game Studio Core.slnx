@@ -28,6 +28,7 @@
   <Project Path="NeonBlack.Gameplay.Presentation.csproj" />
   <Project Path="NeonBlack.Gameplay.Features.Composition.csproj" />
   <Project Path="Neonblackinteractivellc.Neonblackhub.csproj" />
+  <Project Path="NeonBlack.Gameplay.Feature.Rpg.Editor.csproj" />
   <Project Path="NeonBlack.Gameplay.Feature.Scoring.csproj" />
   <Project Path="NeonBlack.Gameplay.Feature.Feedback.csproj" />
   <Project Path="NeonBlack.Gameplay.Feature.Traversal.csproj" />

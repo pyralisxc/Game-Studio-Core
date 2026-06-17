@@ -1,5 +1,15 @@
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
+using NeonBlack.Gameplay.Features.Characters;
+using NeonBlack.Gameplay.Features.Combat;
+using NeonBlack.Gameplay.Features.Enemies;
+using NeonBlack.Gameplay.Features.Feedback;
+using NeonBlack.Gameplay.Features.GameFlow;
+using NeonBlack.Gameplay.Features.Pickups;
+using NeonBlack.Gameplay.Features.Scoring;
+using System;
+using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace NeonBlack.Gameplay.Core.Runtime
 {
@@ -27,6 +37,23 @@ namespace NeonBlack.Gameplay.Core.Runtime
         public bool UsesGameFlowServices { get; }
         public bool UsesScoringServices { get; }
         public bool UsesFeedbackServices { get; }
+
+        public PyralisRuntimeFeatureServicePolicy WithCompatibilityEvidence(
+            bool usesCombatServices,
+            bool usesEnemyServices,
+            bool usesRpgServices,
+            bool usesGameFlowServices,
+            bool usesScoringServices,
+            bool usesFeedbackServices)
+        {
+            return new PyralisRuntimeFeatureServicePolicy(
+                UsesCombatServices || usesCombatServices,
+                UsesEnemyServices || usesEnemyServices,
+                UsesRpgServices || usesRpgServices,
+                UsesGameFlowServices || usesGameFlowServices,
+                UsesScoringServices || usesScoringServices,
+                UsesFeedbackServices || usesFeedbackServices);
+        }
 
         public static PyralisRuntimeFeatureServicePolicy Resolve(SessionDefinition sessionDefinition)
         {
@@ -82,6 +109,24 @@ namespace NeonBlack.Gameplay.Core.Runtime
                 usesGameFlow,
                 usesScoring,
                 usesFeedback);
+        }
+
+        public static PyralisRuntimeFeatureServicePolicy ResolveWithCompatibilityEvidence(SessionDefinition sessionDefinition)
+        {
+            return Resolve(sessionDefinition).WithCompatibilityEvidence(
+                HasCompatibilitySceneComponent<PawnCombatBehaviour>()
+                || HasCompatibilitySceneComponent<PawnCombatBehaviour2D>(),
+                HasCompatibilitySceneComponent<EnemyAI>()
+                || HasCompatibilitySceneComponent<BattleManager>(),
+                HasCompatibilitySceneComponentInNamespace("NeonBlack.Gameplay.Features.Rpg"),
+                HasCompatibilitySceneComponent<GameManager>()
+                || HasCompatibilitySceneComponentInNamespace("NeonBlack.Gameplay.Features.GameFlow"),
+                HasCompatibilitySceneComponent<ParticipantScoreService>()
+                || HasCompatibilitySceneComponent<LeaderboardManager>()
+                || HasCompatibilitySceneComponent<StillnessBonus2D>()
+                || HasCompatibilitySceneComponent<CollectibleFeedback2D>(),
+                HasCompatibilitySceneComponent<ParticipantFeedbackService>()
+                || HasCompatibilitySceneComponentInNamespace("NeonBlack.Gameplay.Features.Feedback"));
         }
 
         private static void AppendModuleSignals(
@@ -147,6 +192,73 @@ namespace NeonBlack.Gameplay.Core.Runtime
             usesFeedback |= contract.Capability.HasFlag(AuthoringCapability.UI)
                 || contract.Capability.HasFlag(AuthoringCapability.VFX)
                 || contract.Capability.HasFlag(AuthoringCapability.Animation);
+        }
+
+        private static bool HasCompatibilitySceneComponent<T>() where T : Component
+        {
+            // Compatibility evidence keeps hand-authored existing scenes alive while feature contracts
+            // become the primary activation path. Do not treat these scans as new route truth.
+            return FindLoadedSceneComponent<T>() != null;
+        }
+
+        private static T FindLoadedSceneComponent<T>() where T : Component
+        {
+            for (int sceneIndex = 0; sceneIndex < SceneManager.sceneCount; sceneIndex++)
+            {
+                Scene scene = SceneManager.GetSceneAt(sceneIndex);
+                if (!scene.isLoaded)
+                    continue;
+
+                GameObject[] roots = scene.GetRootGameObjects();
+                for (int rootIndex = 0; rootIndex < roots.Length; rootIndex++)
+                {
+                    if (roots[rootIndex] == null)
+                        continue;
+
+                    T component = roots[rootIndex].GetComponentInChildren<T>(true);
+                    if (component != null)
+                        return component;
+                }
+            }
+
+            return null;
+        }
+
+        private static bool HasCompatibilitySceneComponentInNamespace(string namespacePrefix)
+        {
+            // Namespace scans are compatibility evidence for older scene-authored feature stacks.
+            // Prefer policy/contract activation for new feature services.
+            if (string.IsNullOrWhiteSpace(namespacePrefix))
+                return false;
+
+            for (int sceneIndex = 0; sceneIndex < SceneManager.sceneCount; sceneIndex++)
+            {
+                Scene scene = SceneManager.GetSceneAt(sceneIndex);
+                if (!scene.isLoaded)
+                    continue;
+
+                GameObject[] roots = scene.GetRootGameObjects();
+                for (int rootIndex = 0; rootIndex < roots.Length; rootIndex++)
+                {
+                    GameObject root = roots[rootIndex];
+                    if (root == null)
+                        continue;
+
+                    MonoBehaviour[] behaviours = root.GetComponentsInChildren<MonoBehaviour>(true);
+                    for (int i = 0; i < behaviours.Length; i++)
+                    {
+                        Type type = behaviours[i] != null ? behaviours[i].GetType() : null;
+                        if (type != null
+                            && type.Namespace != null
+                            && type.Namespace.StartsWith(namespacePrefix, StringComparison.Ordinal))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
         }
     }
 }

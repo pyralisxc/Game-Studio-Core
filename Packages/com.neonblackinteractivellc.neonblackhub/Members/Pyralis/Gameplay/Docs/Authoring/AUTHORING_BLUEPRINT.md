@@ -10,17 +10,14 @@ Pyralis docs should stay current and purposeful:
 
 - `README.md` files orient the reader and name the right next document.
 - `START_HERE.md` teaches the first human setup path.
-- `AUTHORING_EXPERIENCE_VISION.md` owns the concise product north star: Authoring is the map, Unity is the workshop, and Inspectors are the local knobs.
-- `AUTHORING_BLUEPRINT.md` owns Authoring Window product direction, UX rules, implementation phases, and maintenance rules.
-- `RESOLVED_SETUP_GRAPH_SCOPE.md` owns the full migration boundary for the read-only authoring setup graph.
+- `AUTHORING_BLUEPRINT.md` owns Authoring Window product direction, UX rules, graph projection, tab ownership, and maintenance rules.
 - `AUTHORING_MODEL.md` owns the asset/runtime relationship map behind the window.
 - `CANONICAL_SETUP.md` owns the technical setup contract.
+- `ROUTE_CAPABILITY_COOKBOOK.md` owns compact route-capability vocabulary.
 - `FEATURE_DEVELOPMENT_ROADMAP.md` owns route-completeness sequencing.
 - `CURRENT_STATE_AUDIT.md` owns the present platform state and highest-priority risks.
-- `CORE_PACKAGE_READINESS_CHECKPOINTS.md` owns near-term readiness gates and validation workflow.
-- dated audits and old refactor notes are historical records unless an active README names them as current.
 
-When these docs disagree, prefer the active README reading order, this blueprint for Authoring Window behavior, and the current code/tests for implementation truth. Update the stale doc instead of preserving conflicting guidance.
+When docs disagree, prefer `AGENTS.md`, the package `README.md`, this blueprint for Authoring Window behavior, and the current code/tests for implementation truth. Update or delete stale guidance instead of preserving conflicting paths.
 
 ## North Star
 
@@ -419,6 +416,8 @@ Hygiene should be graph integrity, not a second scene checklist. Evidence cards 
 Hygiene can mention source detail, but concrete Unity repair and inspection actions belong in Map or the Inspector. This keeps Hygiene useful for developers auditing the resolved graph without making it compete with the beginner setup flow.
 
 Hygiene may offer the same compact read-only Graph JSON Snapshot button as Map, with the view marked as `Hygiene`, so developers and agents can inspect graph summary, Hygiene sections/rows, proof blockers, source-origin counts, dependency pressure summaries, top dependency-pressure records, and contract source pressure outside the Unity UI without scraping visible text. It should not include Map-only setup rows. Hygiene remains useful before a setup route exists: graph-specific sections may be empty, but dependency pressure and source audit data should still export. Contract inventory that has not been route-evaluated should be labeled as inventory, not as actionable graph failure. The shared export action should keep Map and Hygiene on one implementation while writing the current tab's graph view separately.
+
+Hygiene pressure kinds are not all cleanup commands. `RuntimeOwnership` and `CompatibilitySurface` are the default cleanup focus. `PawnCoordinator`, `PawnCapabilitySibling`, `LocalPresentationSurface`, `SceneZoneSurface`, `InputRoutingSurface`, `EnemyCapabilityModule`, `ActorFeatureContext`, `SceneCameraRig`, `AuthoredDataAsset`, `HazardRuntimeSurface`, `DomainUtility`, `FeatureModule`, `AuthoredRuntimeSurface`, `GameFlowRuntimeSurface`, `AcceptedComposition`, `ReferenceAssembly`, `EditorAudit`, `GrammarVocabulary`, and `ScannerImplementation` describe expected pressure shapes unless their review hint says they have crossed ownership boundaries.
 
 ### Native Creation Workflow
 

@@ -13,6 +13,7 @@
         "NeonBlack.Gameplay.Feature.Enemies.Editor",
         "NeonBlack.Gameplay.Feature.Feedback",
         "NeonBlack.Gameplay.Feature.Interaction",
+        "NeonBlack.Gameplay.Feature.Rpg.Editor",
         "NeonBlack.Gameplay.Feature.Scoring",
         "NeonBlack.Gameplay.Feature.Traversal",
         "NeonBlack.Gameplay.Feature.Traversal.Editor",

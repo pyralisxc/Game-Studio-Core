@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Features.Combat;
 using NeonBlack.Gameplay.Features.Composition;
@@ -27,12 +26,6 @@ namespace NeonBlack.Gameplay.Features.Characters
     [RequireComponent(typeof(Motor2D))]
     public partial class PawnCombatBehaviour2D : MonoBehaviour, IPawnCombatModule, IPawnCombatInputReceiver2D, IActorCombatModifierReceiver, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
-        {
-            if (hitBoxZones == null || hitBoxZones.Length == 0)
-                yield return "Hit Box Zones is empty. Melee attacks need HitBox2D slots.";
-            if (attackCooldown < 0f) yield return "Attack Cooldown cannot be negative.";
-        }
         [Header("Combo")]
         [SerializeField] private float comboResetTime = 1.5f;
         [SerializeField] private float combatWindow = 3f;
@@ -129,24 +122,6 @@ namespace NeonBlack.Gameplay.Features.Characters
             }
 
             ExecuteFallbackKick();
-        }
-
-        public void ApplyCombatProfile(PawnProfileApplicationContext context, PawnCombatProfile profile)
-        {
-            if (profile == null)
-                return;
-
-            baseDamage = profile.baseDamage;
-            baseKnockback = profile.baseKnockback;
-            attackCooldown = profile.attackCooldown;
-            kickCooldown = profile.kickCooldown;
-            comboResetTime = profile.comboResetTime;
-            combatWindow = profile.combatWindow;
-            attackWeapon = profile.attackWeapon;
-            kickWeapon = profile.kickWeapon;
-            primarySequence = profile.primarySequence;
-            secondarySequence = profile.secondarySequence;
-            ApplyActiveWeapon();
         }
 
         public void SetOutgoingDamageMultiplier(float multiplier)

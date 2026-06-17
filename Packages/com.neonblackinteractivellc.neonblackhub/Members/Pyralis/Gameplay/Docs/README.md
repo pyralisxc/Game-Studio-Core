@@ -1,39 +1,22 @@
 # Pyralis Gameplay Docs
 
-This folder contains the living Pyralis product, setup, architecture, readiness, and validation documentation.
+This folder intentionally stays small. Active docs describe current truth only; old audits, phase plans, migration notes, and duplicate setup guides should be deleted or folded into the living docs below.
 
-Active docs should describe the current product truth. Dated audits, superseded plans, and historical notes belong in `_Archive/`.
+## Living Docs
 
-## Start Here
+- `CURRENT_STATE_AUDIT.md` - current health, risks, cleanup focus, and verification posture.
+- `ARCHITECTURE_BLUEPRINT.md` - runtime ownership, folderbase, vocabulary, and system boundaries.
+- `FEATURE_DEVELOPMENT_ROADMAP.md` - current feature expansion priorities.
+- `Authoring/START_HERE.md` - human first-setup path.
+- `Authoring/AUTHORING_BLUEPRINT.md` - Authoring Window behavior, tab ownership, graph projection, and hygiene rules.
+- `Authoring/AUTHORING_MODEL.md` - asset/profile/runtime relationship map.
+- `Authoring/CANONICAL_SETUP.md` - technical setup-chain contract.
+- `Authoring/ROUTE_CAPABILITY_COOKBOOK.md` - compact route-capability vocabulary reference.
 
-- `Authoring/START_HERE.md` - beginner first-scene path.
-- `Authoring/README.md` - authoring-doc index.
-- `Authoring/CANONICAL_SETUP.md` - technical setup contract.
-- `Authoring/AUTHORING_MODEL.md` - asset, profile, runtime, and authoring relationship map.
-- `Authoring/AUTHORING_BLUEPRINT.md` - Authoring Window product and implementation blueprint.
-- `Authoring/ROUTE_CAPABILITY_COOKBOOK.md` - composable route-capability guidance.
+## Maintenance Rule
 
-## Current State And Readiness
+If a new rule is important for every agent, put it in `AGENTS.md`.
 
-- `CURRENT_STATE_AUDIT.md` - current platform architecture status and top risks.
-- `CORE_CRITICAL_AUDIT_2026-06-14.md` - deep critical audit of runtime ownership, route parity, authoring evidence, scene flow, prefab variants, and next cleanup phases.
-- `CORE_PACKAGE_READINESS_CHECKPOINTS.md` - near-term route gates and validation workflow.
-- `RUNTIME_PARITY_MATRIX.md` - lane and route status matrix.
-- `FEATURE_DEVELOPMENT_ROADMAP.md` - executable route-completeness roadmap.
-- `FEATURE_DEVELOPMENT_SCOPE.md` - intended platform capability scope.
-- `FEATURE_INVENTORY.md` - broad capability inventory.
-- `RPG_SYSTEMS_ROADMAP.md` - RPG platform program scope and sequencing.
+If a new rule is important for humans opening the package, put it in `README.md`.
 
-## Standards
-
-- `ARCHITECTURE_BLUEPRINT.md` - target architecture and vocabulary.
-- `PLATFORM_GOVERNANCE.md` - ownership and feature-folder rules.
-- `WORK_PRODUCT_EXPECTATIONS.md` - development and quality expectations.
-- `PROOF_SCENE_POLICY.md` - temporary proof-scene policy and promotion rules.
-- `Authoring/Systems/Migration_and_Readability_Standard.md` - cleanup and readability rules.
-
-## Archive
-
-- `_Archive/Migration/` - migration notes that still explain active cleanup boundaries.
-
-When active docs and archive files disagree, follow the active docs.
+If a new rule belongs to one subsystem, update that subsystem's living doc. Do not add a new markdown file unless it will remain a durable source of truth.

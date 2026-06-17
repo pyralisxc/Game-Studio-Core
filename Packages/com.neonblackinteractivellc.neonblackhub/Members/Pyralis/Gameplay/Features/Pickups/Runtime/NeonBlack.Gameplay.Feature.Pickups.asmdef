@@ -5,7 +5,7 @@
         "NeonBlack.Gameplay.Data",
         "NeonBlack.Gameplay.Features.Composition"
     ],
-"includePlatforms": [],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

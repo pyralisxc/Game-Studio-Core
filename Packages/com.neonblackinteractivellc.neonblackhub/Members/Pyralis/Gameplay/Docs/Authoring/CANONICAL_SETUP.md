@@ -279,11 +279,9 @@ HUD is now split into:
 
 1. `Docs/Authoring/START_HERE.md`
 2. `Docs/Authoring/AUTHORING_MODEL.md`
-3. `Docs/Authoring/SCENE_SETUP_GUIDE.md`
-4. `Docs/Authoring/ROUTE_CAPABILITY_COOKBOOK.md` when choosing capability filters
-5. selected Inspector field guides only when a route asks for that object
-6. `Docs/Authoring/AUTHORING_MODEL.md` when asset/profile relationships are unclear
-7. `Docs/Authoring/Systems/Architecture_Overview.md` when changing architecture
+3. `Docs/Authoring/ROUTE_CAPABILITY_COOKBOOK.md` when choosing capability filters
+4. `Docs/Authoring/AUTHORING_BLUEPRINT.md` when changing Authoring Window behavior
+5. `Docs/ARCHITECTURE_BLUEPRINT.md` when changing runtime ownership or folderbase architecture
 
 ## 9. Rules For New Docs
 
@@ -292,3 +290,4 @@ When writing or updating setup docs:
 - prefer canonical type names over historical aliases
 - describe the current DI/composition path and avoid global lookup language
 - point back to this doc when introducing subsystem-specific setup
+- delete or merge stale setup docs instead of adding parallel guides

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Features.Scoring;
@@ -35,17 +34,8 @@ namespace NeonBlack.Gameplay.Features.Pickups
     ExpertAdvice = "Set SFX spatial blend to 0 (2D) for consistent UI-style feedback. Runtime score awards are normally injected by the session scope; use Score Award Source only for standalone/custom award routing."
 )]
 [AddComponentMenu("NeonBlack/Gameplay/Pickups/Collectible Feedback 2D")]
-public class CollectibleFeedback2D : MonoBehaviour, IPickupAwardSink, IRuntimeValidationProvider
+public partial class CollectibleFeedback2D : MonoBehaviour, IPickupAwardSink, IRuntimeValidationProvider
 {
-    public IEnumerable<string> GetRuntimeValidationIssues()
-    {
-        if (_collectClip == null) yield return "Collect Clip is unassigned.";
-        if (_collectFX == null) yield return "Collect FX particle system is unassigned.";
-
-        AudioSource audio = GetComponent<AudioSource>();
-        if (audio != null && audio.outputAudioMixerGroup == null)
-            yield return "AudioSource is missing an Output Mixer Group. Volume settings will not apply.";
-    }
     [Header("Collect Feedback")]
     [SerializeField, Tooltip("Sound played when the player collects a collectible.")]
     private AudioClip _collectClip;

@@ -5,13 +5,13 @@ This folder contains the active Pyralis gameplay framework for Neon Black Hub.
 The current source of truth is a shared gameplay stack built around:
 
 - `GameplaySessionBootstrap`
-- participant-owned pawns through `PawnRoot`
+- `PyralisGameplayLifetimeScope`
 - authored `SessionDefinition`, `ParticipantDefinition`, `PawnDefinition`, and `GameModeDefinition`
-- a clean-slate animation workflow using:
-  - `PawnPresentationProfile`
-  - `PawnAnimationProfile`
-  - `ActorAnimationDefinition`
-  - `ActorAnimationDriver`
+- participant-owned pawns through `PawnRoot`
+- participant-owned input through `ParticipantDefinition.inputProfile`
+- explicit pawn sibling components for physical identity
+- `ActorFeatureHost` for optional/swappable gameplay capabilities
+- contracts, reflection, dependency-tree discovery, validators, and the resolved authoring graph
 
 ## Supported pawn presentation targets
 
@@ -23,16 +23,26 @@ NeonBlack Gameplay now supports three official presentation modes:
 
 Rigged 3D support is Animator-driven and intended for both `Generic` and `Humanoid` rigs.
 
+## Runtime rule of thumb
+
+- Siblings describe what a pawn **is**: root, motor, movement, presentation, input receiver, collider/rigidbody/controller, and core physical identity.
+- Features describe what a pawn **can do**: interaction, traversal extras, combat styles, pickups, feedback, status, and route-specific capabilities.
+- Participants describe who is **driving**: human, AI, network authority, seat, team, or non-pawn actor.
+- Scenes own scene-scale direction: bootstrap, lifetime scope, camera rig, spawners, scene services, and proof-specific objects.
+- Authoring reads contracts/reflection/dependency evidence and projects the resolved graph; it does not create hidden presets or duplicate setup truth.
+
 ## Layout
 
-- `Core/`: runtime services, shared config, runtime contracts, and shared contract metadata consumed by `Editor/Authoring`
+- `Core/`: engine spine, shared runtime services, runtime contracts, and shared contract metadata consumed by `Editor/Authoring`
 - `Data/`: ScriptableObject definitions and profiles
-- `Editor/`: authoring helpers and custom inspectors
-- `Features/`: runtime systems and gameplay modules
+- `Editor/`: shared authoring helpers and custom inspectors
+- `Features/`: optional runtime systems, gameplay modules, feature-owned composition, feature UI, and feature-specific editor tools
 - `Networking/`: ownership, authority, and backend-facing runtime contracts
 - `Presentation/`: cross-feature visual and camera infrastructure
 - `Tests/`: package-level validation infrastructure
 - `Docs/`: setup and architecture notes
+
+Feature folders should own their local composition and tooling when the logic is not part of the universal authoring spine. For example, RPG service registration lives under `Features/Rpg/Runtime/Composition`, while the RPG narrative editor lives under `Features/Rpg/Editor/Tools`.
 
 ## Current pawn animation architecture
 
@@ -46,10 +56,10 @@ Pawn animation is data-driven and Unity-authored:
 
 ## Recommended reading
 
-- `Docs/Authoring/START_HERE.md`
-- `Docs/Authoring/AUTHORING_BLUEPRINT.md`
-- `Docs/Authoring/AUTHORING_MODEL.md`
-- `Docs/Authoring/README.md`
-- `Docs/Authoring/CANONICAL_SETUP.md`
-- `Docs/Authoring/SCENE_SETUP_GUIDE.md`
-- `Docs/NewGameTypeGuide.md`
+- `Docs/CURRENT_STATE_AUDIT.md` for current health, risks, and cleanup focus.
+- `Docs/ARCHITECTURE_BLUEPRINT.md` for runtime ownership, folderbase, and system boundaries.
+- `Docs/Authoring/START_HERE.md` for the first human setup path.
+- `Docs/Authoring/AUTHORING_BLUEPRINT.md` for Authoring Window behavior.
+- `Docs/Authoring/AUTHORING_MODEL.md` for asset/profile/runtime relationships.
+- `Docs/Authoring/CANONICAL_SETUP.md` for the technical setup contract.
+- `Docs/FEATURE_DEVELOPMENT_ROADMAP.md` for current expansion priorities.

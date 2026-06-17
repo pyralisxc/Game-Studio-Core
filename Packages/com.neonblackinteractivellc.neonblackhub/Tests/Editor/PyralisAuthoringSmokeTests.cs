@@ -348,6 +348,588 @@ namespace NeonBlack.Gameplay.Features.Traversal
         }
 
         [Test]
+        public void SourceDependencyHygiene_SmokeClassifiesPawnCapabilitySiblingAsExpectedPressure()
+        {
+            const string source = @"
+using NeonBlack.Gameplay.Features.Combat;
+using NeonBlack.Gameplay.Features.Composition;
+using NeonBlack.Gameplay.Presentation.Animation;
+using UnityEngine;
+
+namespace NeonBlack.Gameplay.Features.Characters
+{
+    public sealed class PawnCombatBehaviour2D : MonoBehaviour
+    {
+        [SerializeField] private HitBox2D hitBox;
+        private void Awake() { GetComponent<Motor2D>(); }
+    }
+}";
+
+            PyralisSourceDependencyHygieneRecord record =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Characters/2D/PawnCombatBehaviour2D.cs",
+                    source);
+
+            Assert.That(record.PressureKind, Is.EqualTo(PyralisSourceDependencyPressureKind.PawnCapabilitySibling));
+            Assert.That(record.ReviewHint, Does.Contain("pawn capability sibling"));
+            Assert.That(PyralisSourceDependencyHygieneScanner.GetCleanupPriority(record.PressureKind),
+                Is.GreaterThan(PyralisSourceDependencyHygieneScanner.GetCleanupPriority(PyralisSourceDependencyPressureKind.PawnCoordinator)));
+        }
+
+        [Test]
+        public void SourceDependencyHygiene_SmokeClassifiesLocalPresentationSurfaceAsExpectedPressure()
+        {
+            const string source = @"
+using NeonBlack.Gameplay.Features.Combat;
+using TMPro;
+using UnityEngine;
+
+namespace NeonBlack.Gameplay.Features.Combat
+{
+    public sealed class WorldHealthBar : MonoBehaviour
+    {
+        [SerializeField] private TMP_Text label;
+        private void Awake() { GetComponent<HealthComponent>(); }
+    }
+}";
+
+            PyralisSourceDependencyHygieneRecord record =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Combat/UI/WorldHealthBar.cs",
+                    source);
+
+            Assert.That(record.PressureKind, Is.EqualTo(PyralisSourceDependencyPressureKind.LocalPresentationSurface));
+            Assert.That(record.ReviewHint, Does.Contain("local presentation"));
+            Assert.That(PyralisSourceDependencyHygieneScanner.GetCleanupPriority(record.PressureKind),
+                Is.GreaterThan(PyralisSourceDependencyHygieneScanner.GetCleanupPriority(PyralisSourceDependencyPressureKind.PawnCapabilitySibling)));
+        }
+
+        [Test]
+        public void SourceDependencyHygiene_SmokeClassifiesSceneZoneSurfaceAsExpectedPressure()
+        {
+            const string source = @"
+using NeonBlack.Gameplay.Data.Profiles;
+using NeonBlack.Gameplay.Presentation.Camera;
+using UnityEngine;
+
+namespace NeonBlack.Gameplay.Features.Zones
+{
+    public sealed class CameraZone : MonoBehaviour
+    {
+        [SerializeField] private CameraRigProfile profile;
+        private void Awake() { GetComponent<BoxCollider>(); }
+    }
+}";
+
+            PyralisSourceDependencyHygieneRecord record =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Zones/3D/CameraZone.cs",
+                    source);
+
+            Assert.That(record.PressureKind, Is.EqualTo(PyralisSourceDependencyPressureKind.SceneZoneSurface));
+            Assert.That(record.ReviewHint, Does.Contain("scene-authored"));
+        }
+
+        [Test]
+        public void SourceDependencyHygiene_SmokeClassifiesDomainUtilityAsExpectedPressure()
+        {
+            const string source = @"
+using NeonBlack.Gameplay.Features.Combat;
+using UnityEngine;
+
+namespace NeonBlack.Gameplay.Features.Hazards
+{
+    public static class HazardImpactUtility
+    {
+        public static bool TryApply(GameObject target)
+        {
+            return target.GetComponentInParent<HealthComponent>() != null;
+        }
+    }
+}";
+
+            PyralisSourceDependencyHygieneRecord record =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Hazards/HazardImpactUtility.cs",
+                    source);
+
+            Assert.That(record.PressureKind, Is.EqualTo(PyralisSourceDependencyPressureKind.DomainUtility));
+            Assert.That(record.ReviewHint, Does.Contain("stateless domain helper"));
+        }
+
+        [Test]
+        public void SourceDependencyHygiene_SmokeClassifiesInputRoutingSurfaceAsExpectedPressure()
+        {
+            const string source = @"
+using NeonBlack.Gameplay.Data.Definitions;
+using NeonBlack.Gameplay.Data.Profiles;
+using NeonBlack.Gameplay.Features.Composition;
+using UnityEngine;
+using UnityEngine.InputSystem;
+
+namespace NeonBlack.Gameplay.Features.Input
+{
+    public sealed class ParticipantInputRouter : MonoBehaviour
+    {
+        [SerializeField] private SessionDefinition sessionDefinition;
+        [SerializeField] private PlayerInputManager playerInputManager;
+        private void Apply(PlayerInput input, ParticipantHandle participant)
+        {
+            InputProfile profile = participant.Definition.inputProfile;
+        }
+    }
+}";
+
+            PyralisSourceDependencyHygieneRecord record =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Input/ParticipantInputRouter.cs",
+                    source);
+
+            Assert.That(record.PressureKind, Is.EqualTo(PyralisSourceDependencyPressureKind.InputRoutingSurface));
+            Assert.That(record.ReviewHint, Does.Contain("ParticipantDefinition.inputProfile"));
+        }
+
+        [Test]
+        public void SourceDependencyHygiene_SmokeClassifiesEnemyCapabilityModuleAsExpectedPressure()
+        {
+            const string source = @"
+using NeonBlack.Gameplay.Data.Profiles;
+using NeonBlack.Gameplay.Features.Combat;
+using NeonBlack.Gameplay.Presentation.Animation;
+using UnityEngine;
+
+namespace NeonBlack.Gameplay.Features.Enemies
+{
+    public sealed class EnemyCombatModule : MonoBehaviour
+    {
+        [SerializeField] private EnemyCombatProfile combatProfile;
+        private void Awake() { GetComponent<ActorAnimationDriver>(); }
+    }
+}";
+
+            PyralisSourceDependencyHygieneRecord record =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Enemies/3D/EnemyCombatModule.cs",
+                    source);
+
+            Assert.That(record.PressureKind, Is.EqualTo(PyralisSourceDependencyPressureKind.EnemyCapabilityModule));
+            Assert.That(record.ReviewHint, Does.Contain("NPC capability module"));
+        }
+
+        [Test]
+        public void SourceDependencyHygiene_SmokeClassifiesEnemyCoordinatorAsExpectedPressure()
+        {
+            const string source = @"
+using NeonBlack.Gameplay.Data.Profiles;
+using NeonBlack.Gameplay.Features.Combat;
+using NeonBlack.Gameplay.Presentation.Animation;
+using UnityEngine;
+
+namespace NeonBlack.Gameplay.Features.Enemies
+{
+    public sealed class EnemyAI : MonoBehaviour
+    {
+        [SerializeField] private EnemyCombatProfile combatProfile;
+        private void Tick() { }
+    }
+}";
+
+            PyralisSourceDependencyHygieneRecord record =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Enemies/3D/EnemyAI.cs",
+                    source);
+
+            Assert.That(record.PressureKind, Is.EqualTo(PyralisSourceDependencyPressureKind.EnemyCoordinator));
+            Assert.That(record.ReviewHint, Does.Contain("NPC tactical coordinator"));
+        }
+
+        [Test]
+        public void SourceDependencyHygiene_SmokeClassifiesCombatContactSurfaceAsExpectedPressure()
+        {
+            const string source = @"
+using NeonBlack.Gameplay.Features.Characters;
+using NeonBlack.Gameplay.Presentation.Animation;
+using UnityEngine;
+
+namespace NeonBlack.Gameplay.Features.Combat
+{
+    public sealed class HitBox : MonoBehaviour
+    {
+        [SerializeField] private GameObject owner;
+        private void Awake() { GetComponent<Collider>(); }
+    }
+}";
+
+            PyralisSourceDependencyHygieneRecord record =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Combat/HitBox.cs",
+                    source);
+
+            Assert.That(record.PressureKind, Is.EqualTo(PyralisSourceDependencyPressureKind.CombatContactSurface));
+            Assert.That(record.ReviewHint, Does.Contain("combat contact"));
+        }
+
+        [Test]
+        public void SourceDependencyHygiene_SmokeClassifiesNetworkAdapterAsExpectedPressure()
+        {
+            const string source = @"
+using NeonBlack.Gameplay.Features.Characters;
+using Unity.Netcode;
+using UnityEngine;
+
+namespace NeonBlack.Gameplay.Networking.Characters
+{
+    public sealed class NetworkMotor3D : NetworkBehaviour
+    {
+        [SerializeField] private Motor3D motor;
+    }
+}";
+
+            PyralisSourceDependencyHygieneRecord record =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Networking/Characters/NetworkMotor3D.cs",
+                    source);
+
+            Assert.That(record.PressureKind, Is.EqualTo(PyralisSourceDependencyPressureKind.NetworkAdapterSurface));
+            Assert.That(record.ReviewHint, Does.Contain("networking adapter"));
+        }
+
+        [Test]
+        public void SourceDependencyHygiene_SmokeClassifiesPersistenceDataSurfaceAsExpectedPressure()
+        {
+            const string source = @"
+using UnityEngine;
+
+namespace NeonBlack.Gameplay.Core.Rpg
+{
+    [System.Serializable]
+    public sealed class RpgOwnerSaveData
+    {
+        [SerializeField] private string ownerId;
+        [SerializeField] private int level;
+    }
+}";
+
+            PyralisSourceDependencyHygieneRecord record =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Core/Rpg/RpgOwnerSaveData.cs",
+                    source);
+
+            Assert.That(record.PressureKind, Is.EqualTo(PyralisSourceDependencyPressureKind.PersistenceDataSurface));
+            Assert.That(record.ReviewHint, Does.Contain("save/snapshot data"));
+        }
+
+        [Test]
+        public void SourceDependencyHygiene_SmokeClassifiesSceneNavigationSurfaceAsExpectedPressure()
+        {
+            const string source = @"
+using UnityEngine;
+using UnityEngine.EventSystems;
+
+namespace NeonBlack.Gameplay.Core.Navigation
+{
+    public sealed class SceneGuard : MonoBehaviour
+    {
+        private void Awake() { FindObjectsByType<EventSystem>(FindObjectsInactive.Exclude); }
+    }
+}";
+
+            PyralisSourceDependencyHygieneRecord record =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Core/Navigation/UI/SceneGuard.cs",
+                    source);
+
+            Assert.That(record.PressureKind, Is.EqualTo(PyralisSourceDependencyPressureKind.SceneNavigationSurface));
+            Assert.That(record.ReviewHint, Does.Contain("scene navigation"));
+        }
+
+        [Test]
+        public void SourceDependencyHygiene_SmokeClassifiesRpgSceneSurfaceAsExpectedPressure()
+        {
+            const string source = @"
+using NeonBlack.Gameplay.Features.Composition;
+using NeonBlack.Gameplay.Core.Rpg;
+using UnityEngine;
+
+namespace NeonBlack.Gameplay.Features.Rpg.UI
+{
+    public sealed class HubInteractionSceneController : MonoBehaviour
+    {
+        [SerializeField] private RpgOwnerKey owner;
+    }
+}";
+
+            PyralisSourceDependencyHygieneRecord record =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Rpg/UI/HubInteractionSceneController.cs",
+                    source);
+
+            Assert.That(record.PressureKind, Is.EqualTo(PyralisSourceDependencyPressureKind.RpgSceneSurface));
+            Assert.That(record.ReviewHint, Does.Contain("RPG scene"));
+        }
+
+        [Test]
+        public void SourceDependencyHygiene_SmokeClassifiesRpgPanelRouterAsRpgSceneSurface()
+        {
+            const string source = @"
+using NeonBlack.Gameplay.Core.Rpg;
+using NeonBlack.Gameplay.Features.Composition;
+using UnityEngine;
+
+namespace NeonBlack.Gameplay.Features.Rpg.UI
+{
+    public sealed class RpgHubPanelRouter : MonoBehaviour
+    {
+        [SerializeField] private HubInteractionResult result;
+    }
+}";
+
+            PyralisSourceDependencyHygieneRecord record =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Rpg/UI/RpgHubPanelRouter.cs",
+                    source);
+
+            Assert.That(record.PressureKind, Is.EqualTo(PyralisSourceDependencyPressureKind.RpgSceneSurface));
+        }
+
+        [Test]
+        public void SourceDependencyHygiene_SmokeClassifiesScoringRuntimeSurfaceAsExpectedPressure()
+        {
+            const string source = @"
+using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Features.Characters;
+using UnityEngine;
+
+namespace NeonBlack.Gameplay.Features.Scoring
+{
+    public sealed class StillnessBonus2D : MonoBehaviour
+    {
+        [SerializeField] private Motor2D motor;
+    }
+}";
+
+            PyralisSourceDependencyHygieneRecord record =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Scoring/2D/StillnessBonus2D.cs",
+                    source);
+
+            Assert.That(record.PressureKind, Is.EqualTo(PyralisSourceDependencyPressureKind.ScoringRuntimeSurface));
+            Assert.That(record.ReviewHint, Does.Contain("scoring feature"));
+        }
+
+        [Test]
+        public void SourceDependencyHygiene_SmokeClassifiesSpawningRuntimeSurfaceAsExpectedPressure()
+        {
+            const string source = @"
+using NeonBlack.Gameplay.Characters;
+using NeonBlack.Gameplay.Features.Combat;
+using UnityEngine;
+
+namespace NeonBlack.Gameplay.Features.Spawning
+{
+    public sealed class PlayerSpawner : MonoBehaviour
+    {
+        [SerializeField] private ParticipantSpawnService participantSpawnService;
+        [SerializeField] private Transform[] spawnPoints;
+    }
+}";
+
+            PyralisSourceDependencyHygieneRecord record =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Spawning/3D/PlayerSpawner.cs",
+                    source);
+
+            Assert.That(record.PressureKind, Is.EqualTo(PyralisSourceDependencyPressureKind.SpawningRuntimeSurface));
+            Assert.That(record.ReviewHint, Does.Contain("spawning surfaces"));
+        }
+
+        [Test]
+        public void SourceDependencyHygiene_SmokeClassifiesGameFlowRuntimeSurfaceAsExpectedPressure()
+        {
+            const string source = @"
+using NeonBlack.Gameplay.Characters;
+using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Features.Hazards;
+using NeonBlack.Gameplay.Features.Scoring;
+using UnityEngine;
+
+namespace NeonBlack.Gameplay.Features.GameFlow
+{
+    public sealed class GameManager : MonoBehaviour, IGameplaySessionFlow, IHazardOutcomeSink
+    {
+        [SerializeField] private ParticipantScoreService scoreManager;
+        [SerializeField] private HazardSpawner hazardSpawner;
+    }
+}";
+
+            PyralisSourceDependencyHygieneRecord record =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/GameFlow/2D/GameManager.cs",
+                    source);
+
+            Assert.That(record.PressureKind, Is.EqualTo(PyralisSourceDependencyPressureKind.GameFlowRuntimeSurface));
+            Assert.That(record.ReviewHint, Does.Contain("game-flow surface"));
+            Assert.That(PyralisSourceDependencyHygieneScanner.GetCleanupPriority(record.PressureKind),
+                Is.GreaterThan(PyralisSourceDependencyHygieneScanner.GetCleanupPriority(PyralisSourceDependencyPressureKind.CompatibilitySurface)));
+        }
+
+        [Test]
+        public void SourceDependencyHygiene_SmokeClassifiesContractReflectionSurfaceAsExpectedPressure()
+        {
+            const string source = @"
+using System;
+using System.Reflection;
+using NeonBlack.Gameplay.Presentation.Animation;
+
+namespace NeonBlack.Gameplay.Core.Contracts
+{
+    public static class ResolvedAuthoringContractRegistry
+    {
+        public static Type Resolve(Type type) => type.GetTypeInfo().AsType();
+    }
+}";
+
+            PyralisSourceDependencyHygieneRecord record =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Core/Authoring/ResolvedAuthoringContractRegistry.cs",
+                    source);
+
+            Assert.That(record.PressureKind, Is.EqualTo(PyralisSourceDependencyPressureKind.ContractReflectionSurface));
+            Assert.That(record.ReviewHint, Does.Contain("contract spine"));
+        }
+
+        [Test]
+        public void SourceDependencyHygiene_SmokeClassifiesPawnProjectileModuleAsCapabilitySibling()
+        {
+            const string source = @"
+using NeonBlack.Gameplay.Features.Combat;
+using NeonBlack.Gameplay.Characters;
+using UnityEngine;
+
+namespace NeonBlack.Gameplay.Features.Characters
+{
+    public sealed class PawnProjectileModule : MonoBehaviour
+    {
+        [SerializeField] private ProjectileLauncher3D projectileLauncher;
+    }
+}";
+
+            PyralisSourceDependencyHygieneRecord record =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Characters/PawnProjectileModule.cs",
+                    source);
+
+            Assert.That(record.PressureKind, Is.EqualTo(PyralisSourceDependencyPressureKind.PawnCapabilitySibling));
+        }
+
+        [Test]
+        public void SourceDependencyHygiene_SmokeClassifiesActorFeatureContextAsExpectedPressure()
+        {
+            const string source = @"
+using NeonBlack.Gameplay.Data.Definitions;
+using NeonBlack.Gameplay.Data.Profiles;
+using NeonBlack.Gameplay.Presentation.Animation;
+using UnityEngine;
+
+namespace NeonBlack.Gameplay.Features.Composition
+{
+    public sealed class ActorFeatureContext
+    {
+        public GameObject ActorObject { get; }
+        public PawnDefinition PawnDefinition { get; }
+        public ActorPresentationMode PresentationMode { get; }
+    }
+}";
+
+            PyralisSourceDependencyHygieneRecord record =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Composition/ActorFeatureContext.cs",
+                    source);
+
+            Assert.That(record.PressureKind, Is.EqualTo(PyralisSourceDependencyPressureKind.ActorFeatureContext));
+            Assert.That(record.ReviewHint, Does.Contain("read-only context"));
+        }
+
+        [Test]
+        public void SourceDependencyHygiene_SmokeClassifiesSceneCameraRigAsExpectedPressure()
+        {
+            const string source = @"
+using NeonBlack.Gameplay.Data.Profiles;
+using NeonBlack.Gameplay.Characters;
+using Unity.Cinemachine;
+using UnityEngine;
+
+namespace NeonBlack.Gameplay.Presentation.Camera
+{
+    public sealed class CinemachineCameraRigController : MonoBehaviour
+    {
+        [SerializeField] private CameraRigProfile cameraRigProfile;
+        [SerializeField] private CinemachineCamera sharedCamera;
+    }
+}";
+
+            PyralisSourceDependencyHygieneRecord record =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Presentation/Camera/CinemachineCameraRigController.cs",
+                    source);
+
+            Assert.That(record.PressureKind, Is.EqualTo(PyralisSourceDependencyPressureKind.SceneCameraRig));
+            Assert.That(record.ReviewHint, Does.Contain("scene-owned camera rig"));
+        }
+
+        [Test]
+        public void SourceDependencyHygiene_SmokeClassifiesAuthoredDataAssetAsExpectedPressure()
+        {
+            const string source = @"
+using NeonBlack.Gameplay.Data.Profiles;
+using NeonBlack.Gameplay.Features.Combat;
+using UnityEngine;
+
+namespace NeonBlack.Gameplay.Data.Definitions
+{
+    public sealed class PawnDefinition : ScriptableObject
+    {
+        [SerializeField] private PawnCombatProfile combatProfile;
+        [SerializeField] private WeaponData startingWeapon;
+    }
+}";
+
+            PyralisSourceDependencyHygieneRecord record =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Data/Definitions/PawnDefinition.cs",
+                    source);
+
+            Assert.That(record.PressureKind, Is.EqualTo(PyralisSourceDependencyPressureKind.AuthoredDataAsset));
+            Assert.That(record.ReviewHint, Does.Contain("authored data"));
+        }
+
+        [Test]
+        public void SourceDependencyHygiene_SmokeClassifiesHazardRuntimeSurfaceAsExpectedPressure()
+        {
+            const string source = @"
+using NeonBlack.Gameplay.Features.Characters;
+using NeonBlack.Gameplay.Features.Composition;
+using UnityEngine;
+
+namespace NeonBlack.Gameplay.Features.Hazards
+{
+    public sealed class Hazard : MonoBehaviour
+    {
+        [SerializeField] private HazardData data;
+        private void Awake() { GetComponent<Rigidbody2D>(); }
+    }
+}";
+
+            PyralisSourceDependencyHygieneRecord record =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Hazards/2D/Hazard.cs",
+                    source);
+
+            Assert.That(record.PressureKind, Is.EqualTo(PyralisSourceDependencyPressureKind.HazardRuntimeSurface));
+            Assert.That(record.ReviewHint, Does.Contain("hazard runtime"));
+        }
+
+        [Test]
         public void SourceDependencyHygiene_SmokeClassifiesAuthoredRuntimeSurfaceAsExpectedPressure()
         {
             const string source = @"

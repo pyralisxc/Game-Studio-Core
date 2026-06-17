@@ -43,7 +43,7 @@ namespace NeonBlack.Gameplay.Editor
                     "Selecting a destination enqueues a BoardMoveActionPayload.",
                     "Invalid selections report LastIssue instead of mutating board state."
                 },
-                manualPath: PyralisInspectorGuide.AuthoringDocPath("SCENE_SETUP_GUIDE.md")));
+                manualPath: PyralisInspectorGuide.AuthoringDocPath("START_HERE.md")));
 
             DrawDefaultInspector();
             serializedObject.ApplyModifiedProperties();

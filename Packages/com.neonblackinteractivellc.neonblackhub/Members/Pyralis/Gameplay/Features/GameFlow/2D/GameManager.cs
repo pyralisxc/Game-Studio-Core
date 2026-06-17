@@ -1,17 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
+using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Features.Characters;
 using NeonBlack.Gameplay.Features.Hazards;
-using NeonBlack.Gameplay.Features.Input;
 using NeonBlack.Gameplay.Features.Pickups;
-using NeonBlack.Gameplay.Core.Navigation;
-using NeonBlack.Gameplay.Core.Contracts;
-using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Features.Scoring;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.SceneManagement;
-using VContainer;
 
 namespace NeonBlack.Gameplay.Features.GameFlow
 {
@@ -46,7 +41,7 @@ public interface IGameplaySessionFlow
     DocumentationURL = "https://docs.neonblack.com/pyralis/gameflow")]
 [AddComponentMenu("NeonBlack/Gameplay/Game Flow/2D Game Manager")]
 [DefaultExecutionOrder(-20)]
-public class GameManager : MonoBehaviour,
+public partial class GameManager : MonoBehaviour,
     IGameplaySessionFlow,
     IHazardOutcomeSink
 {
@@ -63,36 +58,14 @@ public class GameManager : MonoBehaviour,
     [SerializeField, Tooltip("DifficultyManager for this scene.")]
     private DifficultyManager difficultyManager;
 
-    [Header("Scene Names")]
-    [SerializeField, Tooltip("Exact name of the main menu scene as listed in Build Settings.")]
-    private string mainMenuSceneName = SceneNames.MainMenu;
-
-    [Header("Levels")]
-    [SerializeField, Tooltip("LevelRegistry asset. Required for random restart mode.")]
-    private LevelRegistry levelRegistry;
-
-    [Header("Standalone Compatibility")]
-    [SerializeField, Tooltip("Optional explicit 2D controller list for standalone scenes that do not use participant spawning. Participant-spawned scenes should leave this empty and use the roster.")]
-    private Motor2D[] playerControllers;
-
     [SerializeField, Tooltip("Seconds to wait for the death animation before hiding the player.")]
     private float deathAnimDuration = 0.5f;
 
     [Header("Events")]
     public UnityEvent<GameState> OnGameStateChanged;
 
-    private readonly List<Motor2D> _trackedPlayerControllers = new List<Motor2D>(8);
-    private readonly Dictionary<Motor2D, Vector3> _playerStartPositions = new Dictionary<Motor2D, Vector3>();
-    private ParticipantRosterService _participantRosterService;
     private ILeaderboardService _leaderboardService;
-    private ICameraBoundsProvider _cameraBoundsProvider;
-    private ISceneNavigator _sceneNavigator;
-    private IGameplaySettingsApplier _settings;
-    private IGameplayStateReader _gameplayStateReader;
-    private SessionStateService _sessionStateService;
     private GameState _currentState;
-    private Motor2D _primaryPlayerController;
-    private readonly ArcadeFlowStateReader _standaloneStateReader = new ArcadeFlowStateReader();
 
     public GameState CurrentState => _currentState;
     public void AddGameStateChangedListener(UnityAction<GameState> listener)
@@ -105,30 +78,6 @@ public class GameManager : MonoBehaviour,
     {
         if (listener != null)
             OnGameStateChanged.RemoveListener(listener);
-    }
-
-    [Inject]
-    private void Construct(
-        ParticipantRosterService participantRosterService = null,
-        ILeaderboardService leaderboardService = null,
-        ICameraBoundsProvider cameraBoundsProvider = null,
-        ISceneNavigator sceneNavigator = null,
-        IGameplaySettingsApplier settings = null,
-        IGameplayStateReader gameplayStateReader = null,
-        SessionStateService sessionStateService = null)
-    {
-        _participantRosterService = participantRosterService;
-        _leaderboardService = leaderboardService;
-        if (cameraBoundsProvider != null)
-            _cameraBoundsProvider = cameraBoundsProvider;
-        if (sceneNavigator != null)
-            _sceneNavigator = sceneNavigator;
-        if (settings != null)
-            _settings = settings;
-        if (gameplayStateReader != null)
-            _gameplayStateReader = gameplayStateReader;
-        if (sessionStateService != null)
-            _sessionStateService = sessionStateService;
     }
 
     private void Awake()
@@ -217,46 +166,6 @@ public class GameManager : MonoBehaviour,
         StartCoroutine(GameOverRoutine());
     }
 
-    public bool TryHandleHazardImpact(GameObject target, GameObject source, Vector3 hitPoint)
-    {
-        Motor2D deadPlayer = target != null ? target.GetComponentInParent<Motor2D>() : null;
-
-        if (deadPlayer == null)
-            return false;
-
-        PlayerDied(deadPlayer);
-        return true;
-    }
-
-    public void RestartGame()
-    {
-        _settings?.Save();
-
-        string sceneToLoad;
-        if (LevelSession.IsRandom && levelRegistry != null)
-        {
-            LevelData next = levelRegistry.GetRandom();
-            sceneToLoad = next != null ? next.sceneName : SceneManager.GetActiveScene().name;
-            LevelSession.ChosenSceneName = sceneToLoad;
-        }
-        else if (!string.IsNullOrEmpty(LevelSession.ChosenSceneName))
-        {
-            sceneToLoad = LevelSession.ChosenSceneName;
-        }
-        else
-        {
-            sceneToLoad = SceneManager.GetActiveScene().name;
-        }
-
-        LoadScene(sceneToLoad);
-    }
-
-    public void GoToMainMenu()
-    {
-        _settings?.Save();
-        LoadScene(mainMenuSceneName);
-    }
-
     private static readonly Dictionary<float, WaitForSecondsRealtime> _realtimeWaitPool = new Dictionary<float, WaitForSecondsRealtime>();
 
     private static WaitForSecondsRealtime GetWaitRealtime(float seconds)
@@ -280,151 +189,5 @@ public class GameManager : MonoBehaviour,
         SetState(GameState.GameOver);
     }
 
-    private void SetState(GameState state)
-    {
-        _currentState = state;
-        ApplySessionPhase(state);
-        OnGameStateChanged?.Invoke(state);
-    }
-
-    private void ApplySessionPhase(GameState state)
-    {
-        if (_sessionStateService == null)
-            return;
-
-        _sessionStateService.SetPhase(state == GameState.Playing
-            ? SessionStateService.SessionPhase.Gameplay
-            : SessionStateService.SessionPhase.Results);
-    }
-
-    private bool AreAllTrackedPlayersDead()
-    {
-        bool foundAnyPlayer = false;
-        for (int i = 0; i < _trackedPlayerControllers.Count; i++)
-        {
-            Motor2D playerController = _trackedPlayerControllers[i];
-            if (playerController == null)
-                continue;
-
-            foundAnyPlayer = true;
-            if (!playerController.IsDead)
-                return false;
-        }
-
-        return foundAnyPlayer;
-    }
-
-    private void RefreshTrackedPlayers(bool includeInactive)
-    {
-        _trackedPlayerControllers.Clear();
-
-        if (playerControllers != null && playerControllers.Length > 0)
-        {
-            for (int i = 0; i < playerControllers.Length; i++)
-                RegisterTrackedPlayer(playerControllers[i], includeInactive);
-        }
-        else
-        {
-            RegisterRosterPlayers(includeInactive);
-        }
-
-        _primaryPlayerController = _trackedPlayerControllers.Count > 0 ? _trackedPlayerControllers[0] : null;
-    }
-
-    private void RegisterRosterPlayers(bool includeInactive)
-    {
-        if (_participantRosterService == null)
-        {
-            return;
-        }
-
-        for (int i = 0; i < _participantRosterService.Participants.Count; i++)
-        {
-            ParticipantHandle participant = _participantRosterService.Participants[i];
-            if (participant?.PawnInstance == null)
-                continue;
-
-            if (!includeInactive && !participant.PawnInstance.activeInHierarchy)
-                continue;
-
-            RegisterTrackedPlayer(participant.PawnInstance.GetComponent<Motor2D>(), includeInactive);
-        }
-    }
-
-    private void RegisterTrackedPlayer(Motor2D controller, bool includeInactive)
-    {
-        if (controller == null || _trackedPlayerControllers.Contains(controller))
-            return;
-
-        if (!includeInactive && !controller.gameObject.activeInHierarchy)
-            return;
-
-        _trackedPlayerControllers.Add(controller);
-        if (!_playerStartPositions.ContainsKey(controller))
-            _playerStartPositions[controller] = controller.transform.position;
-
-        IGameplayStateReader stateReader = ResolveGameplayStateReader();
-
-        Pawn2DMovementComponent movement = controller.GetComponent<Pawn2DMovementComponent>();
-        movement?.ConfigureRuntime(stateReader, _cameraBoundsProvider);
-
-        PlayerInputHandler inputHandler = controller.GetComponent<PlayerInputHandler>();
-        inputHandler?.ConfigureRuntime(stateReader);
-
-        StillnessBonus2D stillnessBonus = controller.GetComponent<StillnessBonus2D>();
-        stillnessBonus?.ConfigureRuntime(stateReader, scoreManager);
-    }
-
-    private void ConfigureRuntimeDependencies()
-    {
-        IGameplayStateReader stateReader = ResolveGameplayStateReader();
-        pickupSpawner?.ConfigureRuntime(stateReader, _cameraBoundsProvider);
-        hazardSpawner?.ConfigureRuntime(stateReader, _cameraBoundsProvider, this, pickupSpawner);
-    }
-
-    public void SetSceneNavigator(ISceneNavigator sceneNavigator)
-    {
-        _sceneNavigator = sceneNavigator;
-    }
-
-    public void SetSettings(IGameplaySettingsApplier settings)
-    {
-        _settings = settings;
-    }
-
-    private void LoadScene(string sceneName)
-    {
-        if (string.IsNullOrWhiteSpace(sceneName))
-        {
-            Debug.LogError("[GameManager] Scene name is blank.", this);
-            return;
-        }
-
-        if (_sceneNavigator != null)
-        {
-            _sceneNavigator.LoadScene(sceneName);
-            return;
-        }
-
-        Debug.LogError("[GameManager] Scene Navigator is not injected. Ensure ISceneNavigator is registered in the LifetimeScope.", this);
-    }
-
-    private IGameplayStateReader ResolveGameplayStateReader()
-    {
-        if (_gameplayStateReader != null)
-            return _gameplayStateReader;
-
-        if (_sessionStateService != null)
-            return _sessionStateService;
-
-        _standaloneStateReader.Owner = this;
-        return _standaloneStateReader;
-    }
-
-    private sealed class ArcadeFlowStateReader : IGameplayStateReader
-    {
-        public GameManager Owner { get; set; }
-        public bool IsGameplayActive => Owner != null && Owner.CurrentState == GameState.Playing;
-    }
 }
 }

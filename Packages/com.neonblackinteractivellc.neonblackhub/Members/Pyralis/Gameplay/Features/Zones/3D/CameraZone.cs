@@ -28,7 +28,7 @@ namespace NeonBlack.Gameplay.Features.Zones
 )]
 [AddComponentMenu("NeonBlack/Gameplay/Camera/Camera Zone 3D")]
 [RequireComponent(typeof(BoxCollider))]
-public class CameraZone : MonoBehaviour
+public partial class CameraZone : MonoBehaviour
 {
     [Header("Runtime References")]
     [Tooltip("Optional explicit camera rig reference. When left empty, Pyralis injects the active shared camera rig.")]
@@ -107,19 +107,5 @@ public class CameraZone : MonoBehaviour
         cameraRigController?.SwitchProfile(profile, transitionDuration);
     }
 
-#if UNITY_EDITOR
-    private void OnDrawGizmos()
-    {
-        var box = GetComponent<BoxCollider>();
-        if (box == null) return;
-
-        Gizmos.color  = new Color(0.8f, 0.2f, 1f, 0.1f);
-        Gizmos.matrix = transform.localToWorldMatrix;
-        Gizmos.DrawCube(box.center, box.size);
-
-        Gizmos.color = new Color(0.8f, 0.2f, 1f, 0.5f);
-        Gizmos.DrawWireCube(box.center, box.size);
-    }
-#endif
 }
 }

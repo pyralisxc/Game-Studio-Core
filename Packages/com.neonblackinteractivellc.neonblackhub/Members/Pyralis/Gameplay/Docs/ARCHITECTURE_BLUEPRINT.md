@@ -120,9 +120,23 @@ For the 2D stack, `Motor2D` is the shared 2D pawn motor surface. Focused ownersh
 
 Feature services are not core by default. Combat, enemy, RPG, game-flow, scoring, and feedback services register when the authored route asks for them through `GameModeDefinition`, participant pawns, resolved feature contracts, or actual loaded scene components.
 
+Feature-specific service lists should not expand the composition root. `PyralisGameplayLifetimeScope` owns the visible service graph entrypoint; `PyralisRuntimeFeatureServicePolicy` owns route and compatibility activation evidence; the platform feature-service installer owns common registration mechanics; and feature installers such as RPG's runtime composition installer own concrete feature lists when a domain is broad enough to justify its own local seam. This keeps the lifetime scope readable without creating a second setup path.
+
 **Strict Authoring Rule:** `GameplaySessionBootstrap` uses Unity's `RequireComponent` path to keep `PyralisGameplayLifetimeScope` visible, and runtime systems must not autospawn GameObjects or create presets to fix missing scene references. Missing core services stay null at runtime and log a clear error, while the Authoring Window and Map/Scene Readiness guide the user to manually add the missing objects in the scene. Hygiene can audit the graph pressure, but concrete scene repair belongs in Map. This keeps the scene hierarchy as the singular source of truth and prevents hidden systems-on-top-of-systems complexity.
 
 This keeps a movement proof from carrying RPG, enemy, combat, scoring, feedback, and arcade game-flow assumptions while preserving feature parity for scenes that actually use those systems.
+
+### 4.6. Optional Feature Domains Stay Feature-Owned
+
+Optional feature domains can be broad without becoming core engine spine. RPG is the current example:
+
+- domain models and services stay pure runtime/domain code,
+- `Data/Definitions/Rpg` owns authored ScriptableObject assets,
+- `Features/Rpg/Runtime/Composition` owns RPG service registration,
+- `Features/Rpg/UI` owns scene and panel presenters,
+- `Features/Rpg/Editor` owns RPG-specific editor tools.
+
+Shared authoring should discover RPG through contracts, reflection, dependency evidence, and graph projections. It should not carry a separate RPG setup system, and the universal `Editor/Authoring` folder should stay focused on the graph spine rather than feature-specific creative tools.
 
 ### 5. Runtime Is Transport-Agnostic
 
@@ -419,6 +433,15 @@ The 3D brawler pawn is fully decomposed. `Motor3D` is the composition root - it 
 Mode-specific differences are applied through profiles and optional modules.
 
 Core pawn identity stays Unity-native and visible on the prefab. `ActorFeatureHost` extends an authored actor with optional capability modules; it does not construct the actor's base movement identity. A creator inspecting a 2D or 3D pawn prefab should see the core motor, input, movement, traversal, presentation, health, and combat pieces directly when that route requires them. Optional traversal, guard, pickup, feedback, status, and interaction modules can be installed through feature definitions, but they should query or modify the explicit sibling stack instead of becoming the only owner of movement, input, or presentation state.
+
+Ownership shorthand:
+
+- siblings describe what a pawn is,
+- feature modules describe what a pawn can do,
+- participants describe who is driving,
+- scene camera rigs describe what is watching.
+
+`ParticipantDefinition.inputProfile` is the authored input source of truth. `ParticipantInputRouter` may observe Unity `PlayerInput` join/leave events and apply that profile to live `PlayerInput` instances, but it should not become a second input policy owner. Camera setup follows the same split: scene-owned Cinemachine rig/controller/profile assets own framing, while pawns expose targets or sockets and zones request profile transitions.
 
 Current implementation note:
 

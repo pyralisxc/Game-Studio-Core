@@ -19,7 +19,7 @@ namespace NeonBlack.Gameplay.Features.Zones
     )]
 [RequireComponent(typeof(Collider2D))]
     [AddComponentMenu("NeonBlack/Gameplay/Zones/Damage Zone 2D")]
-    public class DamageZone2D : MonoBehaviour
+    public partial class DamageZone2D : MonoBehaviour, IRuntimeValidationProvider
     {
         [Header("Profile")]
         [SerializeField] private HazardImpactProfile impactProfile;

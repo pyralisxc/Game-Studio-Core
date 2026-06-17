@@ -19,7 +19,7 @@ namespace NeonBlack.Gameplay.Features.Hazards.Editor
                 new PyralisGuideSection(
                     "What This Is",
                     "HazardFeedbackRuntime plays hazard flash feedback and world-space popup text from a HazardFeedbackProfile applied by a hazard runtime or setup route.",
-                    manualPath: PyralisInspectorGuide.AuthoringDocPath("SCENE_SETUP_GUIDE.md")),
+                    manualPath: PyralisInspectorGuide.AuthoringDocPath("START_HERE.md")),
                 new PyralisGuideSection(
                     "Required Fields",
                     null,
@@ -75,7 +75,7 @@ namespace NeonBlack.Gameplay.Features.Hazards.Editor
                 new PyralisGuideSection(
                     "What This Is",
                     "DamageZone2D applies repeated hazard impact or fallback damage to HealthComponent targets that stay inside a 2D trigger zone.",
-                    manualPath: PyralisInspectorGuide.AuthoringDocPath("SCENE_SETUP_GUIDE.md")),
+                    manualPath: PyralisInspectorGuide.AuthoringDocPath("START_HERE.md")),
                 new PyralisGuideSection(
                     "Required Fields",
                     null,

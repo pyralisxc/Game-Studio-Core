@@ -13,16 +13,21 @@ Pyralis lives at:
 
 `Packages\com.neonblackinteractivellc.neonblackhub\Members\Pyralis\Gameplay`
 
-Before product, architecture, or package-maintenance decisions, read the relevant local docs:
+Before product, architecture, or package-maintenance decisions, start with the small living-doc set:
 
 - `Packages\com.neonblackinteractivellc.neonblackhub\Members\Pyralis\Gameplay\README.md`
 - `Packages\com.neonblackinteractivellc.neonblackhub\Members\Pyralis\Gameplay\Docs\CURRENT_STATE_AUDIT.md`
 - `Packages\com.neonblackinteractivellc.neonblackhub\Members\Pyralis\Gameplay\Docs\ARCHITECTURE_BLUEPRINT.md`
-- `Packages\com.neonblackinteractivellc.neonblackhub\Members\Pyralis\Gameplay\Docs\\Authoring\AUTHORING_MODEL.md`
-- `Packages\com.neonblackinteractivellc.neonblackhub\Members\Pyralis\Gameplay\Docs\\Authoring\CANONICAL_SETUP.md`
-- `Packages\com.neonblackinteractivellc.neonblackhub\Members\Pyralis\Gameplay\Docs\\Authoring\START_HERE.md`
-- `Packages\com.neonblackinteractivellc.neonblackhub\Members\Pyralis\Gameplay\Docs\FEATURE_DEVELOPMENT_SCOPE.md`
-- `Packages\com.neonblackinteractivellc.neonblackhub\Members\Pyralis\Gameplay\Docs\FEATURE_DEVELOPMENT_ROADMAP.md`
+
+Read deeper only when changing that surface:
+
+- `Packages\com.neonblackinteractivellc.neonblackhub\Members\Pyralis\Gameplay\Docs\Authoring\START_HERE.md` for the human first-setup path.
+- `Packages\com.neonblackinteractivellc.neonblackhub\Members\Pyralis\Gameplay\Docs\Authoring\AUTHORING_BLUEPRINT.md` for Authoring Window, graph, intent, map, hygiene, facts, and guide behavior.
+- `Packages\com.neonblackinteractivellc.neonblackhub\Members\Pyralis\Gameplay\Docs\Authoring\AUTHORING_MODEL.md` for asset/profile/runtime relationships.
+- `Packages\com.neonblackinteractivellc.neonblackhub\Members\Pyralis\Gameplay\Docs\Authoring\CANONICAL_SETUP.md` for setup-chain contract details.
+- `Packages\com.neonblackinteractivellc.neonblackhub\Members\Pyralis\Gameplay\Docs\FEATURE_DEVELOPMENT_ROADMAP.md` for current feature expansion priorities.
+
+Do not use dated audits, migration notes, or old setup guides as source truth. If onboarding density rises, fold the current rule into this file, the package README, or the relevant living doc, then delete the stale source.
 
 ## Development Expectations
 
@@ -31,8 +36,9 @@ Before product, architecture, or package-maintenance decisions, read the relevan
 - Prefer Unity packages, Unity ecosystem packages, and credible free/open packages before writing custom infrastructure.
 - Treat code, folder, package, docs, and validation maintenance as part of each slice, not as deferred cleanup.
 - Skip Unity generated/cache/build files for normal context. Treat `.meta` files as identity/reference files: preserve and create them with assets/scripts, inspect them only when GUID/reference/import behavior matters, and never blanket-ignore them during moves or package changes.
-- Keep `GameplaySessionBootstrap`, `PyralisGameplayLifetimeScope`, participant/session services, authored definitions/profiles, setup flow, and runtime patterns as the current source of truth.
+- Keep `GameplaySessionBootstrap`, `PyralisGameplayLifetimeScope`, participant/session services, authored definitions/profiles, contracts/reflection, dependency tree, validators, and the resolved authoring graph as the current source of truth.
 - Do not reintroduce hidden singleton service lookups, first-player assumptions, or compatibility bridges unless preserving committed content requires it.
+- Keep the runtime simple and Unity-native: explicit pawn sibling components describe what a pawn is, `ActorFeatureHost` describes optional capabilities, and `ParticipantDefinition` owns input for the participant driving the pawn.
 - Keep active docs focused on present truth and intended direction. Remove stale legacy/history commentary from setup and architecture docs unless it protects active migration, shipped compatibility, or project data; move useful history to an archive, changelog, migration note, or audit file.
 
 ## Validation

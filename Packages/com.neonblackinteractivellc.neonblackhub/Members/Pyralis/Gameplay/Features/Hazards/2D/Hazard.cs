@@ -55,24 +55,6 @@ namespace NeonBlack.Gameplay.Features.Hazards
 )]
 public partial class Hazard : MonoBehaviour, IRuntimeValidationProvider
 {
-    public IEnumerable<string> GetRuntimeValidationIssues()
-    {
-        if (_data == null) yield return "Hazard Data is unassigned.";
-        if (_shadowRenderer == null) yield return "Shadow Renderer is unassigned.";
-        if (_hitColliders == null || _hitColliders.Count == 0) yield return "Hit Colliders list is empty.";
-
-        if (_outlineRenderer != null && _shadowRenderer != null && _outlineRenderer.gameObject == _shadowRenderer.gameObject)
-            yield return "Outline and Shadow renderers are on the same GameObject.";
-
-        if (_data != null && _data.enableExplosion)
-        {
-            if (_explosionEffect == null) yield return "Explosive hazard needs an Explosion Effect child.";
-            if (!Runtime.HasRootRigidbody2D) yield return "Explosive hazard needs a Kinematic Rigidbody2D on root.";
-        }
-
-        if (_data != null && _data.hazardType == HazardData.HazardType.Crossing && _laneRenderer == null)
-            yield return "Crossing hazard needs a Lane Renderer.";
-    }
     [Header("Child Renderers")]
     [SerializeField] private SpriteRenderer _shadowRenderer;
     [SerializeField] private SpriteRenderer _outlineRenderer;
@@ -470,45 +452,5 @@ public partial class Hazard : MonoBehaviour, IRuntimeValidationProvider
         Color c = col; c.a = _outlineRenderer.color.a; _outlineRenderer.color = c;
     }
 
-#if UNITY_EDITOR
-    private void OnDrawGizmosSelected()
-    {
-        // -- Crossing path (visible during play mode when Start/End are set) --
-        if (CrossingStart != CrossingEnd)
-        {
-            UnityEditor.Handles.color = new Color(1f, 0.85f, 0f, 0.9f);
-            UnityEditor.Handles.DrawLine(CrossingStart, CrossingEnd);
-            UnityEditor.Handles.DrawSolidDisc(CrossingStart, Vector3.forward, 0.12f);
-            UnityEditor.Handles.DrawSolidDisc(CrossingEnd,   Vector3.forward, 0.12f);
-        }
-
-        if (_data == null) return;
-
-        // -- Explosion proximity radius ------------------------------------
-        if (_data.enableExplosion && _data.explosionTrigger == HazardData.ExplosionTrigger.OnProximity)
-        {
-            Gizmos.color = new Color(1f, 0.2f, 0.2f, 0.15f);
-            Gizmos.DrawSphere(transform.position, _data.explosionProximityRadius);
-            Gizmos.color = new Color(1f, 0.2f, 0.2f, 0.85f);
-            Gizmos.DrawWireSphere(transform.position, _data.explosionProximityRadius);
-        }
-
-        // -- Targeting lock-on radius -------------------------------------
-        if (_data.enableTargeting && _data.lockOnRadius > 0f)
-        {
-            Gizmos.color = new Color(0.2f, 1f, 0.2f, 0.25f);
-            Gizmos.DrawWireSphere(transform.position, _data.lockOnRadius);
-        }
-
-        // -- Crumb destroy radius -----------------------------------------
-        if (_data.destroysNearbyCollectibles)
-        {
-            Vector2 sz   = GetPrimaryHitColliderSize();
-            float radius = Mathf.Max(sz.x, sz.y) * 0.5f * _data.collectibleDestroyRadiusScale;
-            Gizmos.color = new Color(0.6f, 0.4f, 0f, 0.2f);
-            Gizmos.DrawWireSphere(transform.position, radius);
-        }
-    }
-#endif
 }
 }

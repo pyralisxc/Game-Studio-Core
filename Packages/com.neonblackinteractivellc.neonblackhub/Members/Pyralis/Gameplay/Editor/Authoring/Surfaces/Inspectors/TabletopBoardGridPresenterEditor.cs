@@ -46,7 +46,7 @@ namespace NeonBlack.Gameplay.Editor
                     "When Turn Order Definition is assigned, only the active seat can move and a resolved local move advances to the next seat.",
                     "Invalid setup or illegal moves should report LastIssue instead of mutating board state."
                 },
-                manualPath: PyralisInspectorGuide.AuthoringDocPath("SCENE_SETUP_GUIDE.md")));
+                manualPath: PyralisInspectorGuide.AuthoringDocPath("START_HERE.md")));
 
             DrawDefaultInspector();
             serializedObject.ApplyModifiedProperties();
