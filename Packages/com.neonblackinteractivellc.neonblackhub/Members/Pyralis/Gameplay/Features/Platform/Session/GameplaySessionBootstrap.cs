@@ -32,11 +32,12 @@ namespace NeonBlack.Gameplay.Characters
         },
         AssignmentFields = new[] { nameof(sessionDefinition), nameof(spawnPoints), nameof(cameraRigController), nameof(playerInputManager) },
         FirstProof = "Enter Play Mode and confirm the session initializes. Verify participant pawns spawn at designated points and the camera frames the action correctly.",
-        ExpertAdvice = "The Bootstrap is the heart of the Pyralis session. Ensure your SessionDefinition has at least one Participant defined. The Bootstrap auto-creates required services (Roster, Spawn, State) if they are missing from its children.",
+        ExpertAdvice = "The Bootstrap is the Unity-facing session entry point. Add the core runtime service components under the Gameplay Root or assign explicit override fields so the LifetimeScope can register authored scene objects instead of creating hidden services.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/bootstrap"
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Setup/Gameplay Session Bootstrap")]
     [DefaultExecutionOrder(-1100)]
+    [RequireComponent(typeof(PyralisGameplayLifetimeScope))]
     public class GameplaySessionBootstrap : MonoBehaviour
     {
         [Header("Session")]
@@ -70,7 +71,10 @@ namespace NeonBlack.Gameplay.Characters
             if (dontDestroyOnLoad)
                 DontDestroyOnLoad(gameObject);
 
-            PyralisGameplayLifetimeScope lifetimeScope = GetOrCreateLifetimeScope();
+            PyralisGameplayLifetimeScope lifetimeScope = GetRequiredLifetimeScope();
+            if (lifetimeScope == null)
+                return;
+
             lifetimeScope.InjectLoadedScenesOnBuild = injectLoadedScenesOnBuild;
             lifetimeScope.ConfigureRuntime(
                 sessionDefinition,
@@ -96,11 +100,14 @@ namespace NeonBlack.Gameplay.Characters
                 cameraRigController.SetGameMode(sessionDefinition.defaultGameMode);
         }
 
-        private PyralisGameplayLifetimeScope GetOrCreateLifetimeScope()
+        private PyralisGameplayLifetimeScope GetRequiredLifetimeScope()
         {
             PyralisGameplayLifetimeScope lifetimeScope = GetComponent<PyralisGameplayLifetimeScope>();
             if (lifetimeScope == null)
-                lifetimeScope = gameObject.AddComponent<PyralisGameplayLifetimeScope>();
+            {
+                Debug.LogError("[GameplaySessionBootstrap] Missing PyralisGameplayLifetimeScope. Add it to the Gameplay Root before Play Mode; GameplaySessionBootstrap requires the visible composition root.", this);
+                return null;
+            }
 
             lifetimeScope.autoRun = false;
             return lifetimeScope;
@@ -140,7 +147,7 @@ namespace NeonBlack.Gameplay.Characters
             Transform existing = transform.Find(serviceName);
             if (existing == null)
             {
-                Debug.Log($"[GameplaySessionBootstrap] LifetimeScope will create service '{serviceName}' at runtime. To customize, add an authored GameObject named '{serviceName}' with the {typeof(T).Name} component under the Gameplay Root.", this);
+                Debug.LogWarning($"[GameplaySessionBootstrap] Core service '{serviceName}' is not authored under the Gameplay Root. Add a child GameObject named '{serviceName}' with {typeof(T).Name}, or assign the Bootstrap override field before Play Mode.", this);
             }
         }
 

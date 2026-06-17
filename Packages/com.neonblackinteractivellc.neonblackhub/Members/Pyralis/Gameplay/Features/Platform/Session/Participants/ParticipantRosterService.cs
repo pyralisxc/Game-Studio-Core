@@ -22,7 +22,8 @@ namespace NeonBlack.Gameplay.Characters
         ExpertAdvice = "Source of truth for all active participants. Bridges Unity's PlayerInput system to the Pyralis 'Participant' model. Use it to iterate over players or find specific client authority.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/participants"
     )]
-public class ParticipantRosterService : MonoBehaviour, IParticipantRoster, IPlayerProvider, IRuntimeValidationProvider
+    [AddComponentMenu("NeonBlack/Gameplay/Setup/Participant Roster Service")]
+    public class ParticipantRosterService : MonoBehaviour, IParticipantRoster, IPlayerProvider, IRuntimeValidationProvider
     {
         public IEnumerable<string> GetRuntimeValidationIssues()
         {

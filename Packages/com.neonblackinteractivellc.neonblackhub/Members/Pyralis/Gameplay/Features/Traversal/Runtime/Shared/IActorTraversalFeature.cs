@@ -10,7 +10,7 @@ namespace NeonBlack.Gameplay.Features.Traversal
         ModuleId = "actor.traversal.3d",
         Capability = AuthoringCapability.Traversal,
         Lane = "Traversal",
-        Relevance = "The interface contract for specialized world movement like climbing and hanging.",
+        Relevance = "Optional traversal capability contract for specialized world movement like climbing and hanging.",
         ProfileType = typeof(PawnTraversalProfile),
         RequiredInterfaces = new[] { typeof(IFeatureModuleRuntime), typeof(IActorTraversalFeature) },
         SupportedLanes = new[] { ActorPresentationMode.Billboard2_5D, ActorPresentationMode.ThirdPerson3D },
@@ -21,9 +21,10 @@ namespace NeonBlack.Gameplay.Features.Traversal
         {
             "create PawnTraversalProfile",
             "create FeatureModuleDefinition",
-            "assign runtime prefab with PawnTraversalFeatureRuntime3D",
+            "assign a feature runtime prefab with PawnTraversalFeatureRuntime3D",
             "assign profile asset",
             "add module to PawnDefinition.featureModules",
+            "keep Motor3D, Pawn3DMovementComponent, and Pawn3DTraversalComponent as explicit pawn siblings",
             "bind Jump or Interact in InputProfile"
         },
         FirstProof = "Press Jump or Interact when near a valid ClimbZone and verify the actor transition.",
@@ -36,7 +37,7 @@ namespace NeonBlack.Gameplay.Features.Traversal
             "PawnDefinition.featureModules",
             "InputProfile.gameplayActions"
         },
-        ExpertAdvice = "Traversal features are often implemented as 'Feature Modules' which are dynamically added to the actor. Use this interface to query shimmy speed or trigger climbs.",
+        ExpertAdvice = "Traversal feature modules extend an authored actor; they do not replace the core 3D pawn siblings. Use this interface to let Motor3D coordinate optional shimmy, climb, or hang behavior without making ActorFeatureHost the owner of base movement.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/traversal"
     )]
 public interface IActorTraversalFeature

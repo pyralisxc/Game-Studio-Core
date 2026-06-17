@@ -23,6 +23,10 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
 {
     public static class PyralisSetupFlowValidator
     {
+        private const string NetworkedSessionStateServiceFullName = "NeonBlack.Gameplay.Networking.Participants.NetworkedSessionStateService";
+        private const string NetworkedParticipantRosterServiceFullName = "NeonBlack.Gameplay.Networking.Participants.NetworkedParticipantRosterService";
+        private const string NetworkedParticipantSpawnServiceFullName = "NeonBlack.Gameplay.Networking.Participants.NetworkedParticipantSpawnService";
+
         public static PyralisSetupFlowReport BuildReport(GameplaySessionBootstrap bootstrap)
         {
             List<PyralisSetupFlowStep> steps = new List<PyralisSetupFlowStep>();
@@ -49,6 +53,8 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             bool hasLifetimeScope = bootstrap.GetComponent<PyralisGameplayLifetimeScope>() != null;
 
             PyralisSetupRouteAnalysis route = PyralisSetupRouteAnalysis.Build(session);
+            bool usesNetworkedCoreServices = session != null && session.networkMode != GameplayNetworkMode.LocalOnly;
+            List<string> coreServiceIssues = BuildCoreServiceIssues(bootstrap, serializedBootstrap, usesNetworkedCoreServices);
             GameModeDefinition mode = route.Mode;
             bool hasSelectedCapabilities = route.HasSelectedCapabilities;
             bool requiresPawn = route.RequiresPawn;
@@ -115,7 +121,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 hasLifetimeScope ? PyralisSetupFlowStepStatus.Ready : PyralisSetupFlowStepStatus.Recommended,
                 hasLifetimeScope
                     ? "PyralisGameplayLifetimeScope is visible on this root."
-                    : "Runtime can create this automatically, but adding it now makes the supported composition root easier to inspect.",
+                    : "Add PyralisGameplayLifetimeScope to the Gameplay Root so the supported composition root is visible before Play Mode.",
                 hasLifetimeScope ? (Object)bootstrap.GetComponent<PyralisGameplayLifetimeScope>() : bootstrap.gameObject,
                 hasLifetimeScope ? PyralisSetupFlowActionKind.SelectObject : PyralisSetupFlowActionKind.AddLifetimeScope,
                 stepId: PyralisSetupFlowStepId.VisibleLifetimeScope));
@@ -132,11 +138,12 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
 
             steps.Add(new PyralisSetupFlowStep(
                 "Runtime Service Ownership",
-                PyralisSetupFlowStepStatus.Ready,
-                "GameplaySessionBootstrap builds PyralisGameplayLifetimeScope as the singular source of truth for runtime services. Systems depend on direct VContainer injection, not hidden global lookups.",
+                GetRuntimeServiceOwnershipStatus(session, coreServiceIssues),
+                GetRuntimeServiceOwnershipMessage(session, coreServiceIssues, usesNetworkedCoreServices),
                 bootstrap,
                 PyralisSetupFlowActionKind.SelectObject,
-                stepId: PyralisSetupFlowStepId.RuntimeServiceOwnership));
+                stepId: PyralisSetupFlowStepId.RuntimeServiceOwnership,
+                nativeAction: GetRuntimeServiceOwnershipAction(usesNetworkedCoreServices)));
 
             steps.Add(new PyralisSetupFlowStep(
                 "Assign Session Definition",
@@ -325,6 +332,124 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 return PyralisSetupFlowStepStatus.Blocked;
 
             return ready ? PyralisSetupFlowStepStatus.Ready : PyralisSetupFlowStepStatus.Missing;
+        }
+
+        private static PyralisSetupFlowStepStatus GetRuntimeServiceOwnershipStatus(
+            SessionDefinition session,
+            IReadOnlyList<string> coreServiceIssues)
+        {
+            if (session == null)
+                return PyralisSetupFlowStepStatus.Ready;
+
+            return coreServiceIssues == null || coreServiceIssues.Count == 0
+                ? PyralisSetupFlowStepStatus.Ready
+                : PyralisSetupFlowStepStatus.Missing;
+        }
+
+        private static string GetRuntimeServiceOwnershipMessage(
+            SessionDefinition session,
+            IReadOnlyList<string> coreServiceIssues,
+            bool usesNetworkedCoreServices)
+        {
+            if (session == null)
+            {
+                return "GameplaySessionBootstrap and PyralisGameplayLifetimeScope are the runtime composition path. Assign SessionDefinition before checking authored core services.";
+            }
+
+            if (coreServiceIssues == null || coreServiceIssues.Count == 0)
+            {
+                return usesNetworkedCoreServices
+                    ? "Networked core services are authored and ready for PyralisGameplayLifetimeScope registration."
+                    : "Core runtime services are authored and ready for PyralisGameplayLifetimeScope registration.";
+            }
+
+            return "Runtime no longer creates hidden core service GameObjects. Add or assign these authored services under the Gameplay Root before Play Mode: "
+                + string.Join("; ", coreServiceIssues);
+        }
+
+        private static PyralisAuthoringNativeAction GetRuntimeServiceOwnershipAction(bool usesNetworkedCoreServices)
+        {
+            string serviceList = usesNetworkedCoreServices
+                ? "NetworkedSessionStateService, NetworkedParticipantRosterService, NetworkedParticipantSpawnService, and ParticipantInputRouter"
+                : "SessionStateService, ParticipantRosterService, ParticipantSpawnService, and ParticipantInputRouter";
+
+            return new PyralisAuthoringNativeAction(
+                "Add or assign",
+                PyralisAuthoringActionSurface.Inspector,
+                "Gameplay Root",
+                serviceList + " as child components or Bootstrap override fields",
+                "Runtime Service Ownership is ready and no core service is runtime-created");
+        }
+
+        private static List<string> BuildCoreServiceIssues(
+            GameplaySessionBootstrap bootstrap,
+            SerializedObject serializedBootstrap,
+            bool usesNetworkedCoreServices)
+        {
+            List<string> issues = new List<string>();
+            AppendCoreServiceIssue<SessionStateService>(
+                bootstrap,
+                serializedBootstrap,
+                "sessionStateService",
+                "SessionStateService",
+                usesNetworkedCoreServices ? NetworkedSessionStateServiceFullName : string.Empty,
+                issues);
+            AppendCoreServiceIssue<ParticipantRosterService>(
+                bootstrap,
+                serializedBootstrap,
+                "participantRosterService",
+                "ParticipantRosterService",
+                usesNetworkedCoreServices ? NetworkedParticipantRosterServiceFullName : string.Empty,
+                issues);
+            AppendCoreServiceIssue<ParticipantSpawnService>(
+                bootstrap,
+                serializedBootstrap,
+                "participantSpawnService",
+                "ParticipantSpawnService",
+                usesNetworkedCoreServices ? NetworkedParticipantSpawnServiceFullName : string.Empty,
+                issues);
+            AppendCoreServiceIssue<ParticipantInputRouter>(
+                bootstrap,
+                serializedBootstrap,
+                "participantInputRouter",
+                "ParticipantInputRouter",
+                string.Empty,
+                issues);
+            return issues;
+        }
+
+        private static void AppendCoreServiceIssue<T>(
+            GameplaySessionBootstrap bootstrap,
+            SerializedObject serializedBootstrap,
+            string propertyName,
+            string serviceName,
+            string preferredFullTypeName,
+            List<string> issues) where T : Component
+        {
+            T service = GetObjectReference<T>(serializedBootstrap, propertyName);
+            service ??= bootstrap != null ? bootstrap.GetComponentInChildren<T>(true) : null;
+            if (service == null)
+            {
+                issues.Add(serviceName);
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(preferredFullTypeName)
+                && !string.Equals(service.GetType().FullName, preferredFullTypeName, StringComparison.Ordinal))
+            {
+                issues.Add($"{serviceName} should use {GetTypeDisplayName(preferredFullTypeName)} for this networked route, but found {service.GetType().Name}");
+            }
+        }
+
+        private static string GetTypeDisplayName(string fullTypeName)
+        {
+            if (string.IsNullOrWhiteSpace(fullTypeName))
+                return string.Empty;
+
+            int lastDot = fullTypeName.LastIndexOf('.');
+            return lastDot >= 0 && lastDot < fullTypeName.Length - 1
+                ? fullTypeName.Substring(lastDot + 1)
+                : fullTypeName;
         }
 
         private static PyralisSetupFlowStepStatus GetParticipantPawnStatus(bool setupReady, bool requiresPawn, bool hasParticipantPawn, string participantPawnIssue)
@@ -874,7 +999,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
 
             return ready
                 ? "Scene has an IGameplayStateReader for active/dead/game-over aware systems."
-                : "GameplaySessionBootstrap provisions SessionStateService through the supported startup path; add a custom IGameplayStateReader only when this intent deliberately owns gameplay state differently.";
+                : "Author SessionStateService under the Gameplay Root or assign a custom IGameplayStateReader only when this intent deliberately owns gameplay state differently.";
 
         }
 

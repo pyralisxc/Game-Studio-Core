@@ -92,31 +92,39 @@ namespace NeonBlack.Gameplay.Core.Runtime
                 sessionStateServiceOverride,
                 "SessionStateService",
                 useNetcodeServices ? NetworkedSessionStateServiceTypeName : null);
-            _sessionStateService.SetSessionDefinition(sessionDefinition);
+            _sessionStateService?.SetSessionDefinition(sessionDefinition);
 
             _participantRosterService = ResolveCoreComponent(
                 participantRosterServiceOverride,
                 "ParticipantRosterService",
                 useNetcodeServices ? NetworkedParticipantRosterServiceTypeName : null);
-            _participantRosterService.SetSessionDefinition(sessionDefinition);
+            _participantRosterService?.SetSessionDefinition(sessionDefinition);
 
             _participantSpawnService = ResolveCoreComponent(
                 participantSpawnServiceOverride,
                 "ParticipantSpawnService",
                 useNetcodeServices ? NetworkedParticipantSpawnServiceTypeName : null);
-            _participantSpawnService.SetRosterService(_participantRosterService);
-            _participantSpawnService.SetSessionStateService(_sessionStateService);
-            _participantSpawnService.SetSpawnPoints(spawnPoints);
-            _participantSpawnService.SetCameraBoundsProvider(cameraRigController);
-            _participantSpawnService.SetPlayfieldBoundsProvider(sessionDefinition?.defaultGameMode?.playfieldProfile);
+
+            if (_participantSpawnService != null)
+            {
+                _participantSpawnService.SetRosterService(_participantRosterService);
+                _participantSpawnService.SetSessionStateService(_sessionStateService);
+                _participantSpawnService.SetSpawnPoints(spawnPoints);
+                _participantSpawnService.SetCameraBoundsProvider(cameraRigController);
+                _participantSpawnService.SetPlayfieldBoundsProvider(sessionDefinition?.defaultGameMode?.playfieldProfile);
+            }
 
             _participantInputRouter = ResolveCoreComponent(
                 participantInputRouterOverride,
                 "ParticipantInputRouter",
                 null);
-            _participantInputRouter.SetSessionDefinition(sessionDefinition);
-            _participantInputRouter.SetRosterService(_participantRosterService);
-            _participantInputRouter.SetPlayerInputManager(playerInputManager);
+
+            if (_participantInputRouter != null)
+            {
+                _participantInputRouter.SetSessionDefinition(sessionDefinition);
+                _participantInputRouter.SetRosterService(_participantRosterService);
+                _participantInputRouter.SetPlayerInputManager(playerInputManager);
+            }
 
             ParticipantQueryUtility.Initialize(_participantRosterService, _participantRosterService);
             _sessionOwnershipService = ResolveOrCreateSessionOwnershipService(useNetcodeServices);
@@ -407,21 +415,43 @@ namespace NeonBlack.Gameplay.Core.Runtime
 
             T existing = FindServiceInHierarchy<T>();
             if (existing != null)
-                return existing;
-
-            GameObject go = new GameObject(serviceName);
-            go.transform.SetParent(transform, false);
-
-            if (!string.IsNullOrWhiteSpace(preferredTypeName))
             {
-                Type preferredType = Type.GetType(preferredTypeName);
-                if (preferredType != null && typeof(T).IsAssignableFrom(preferredType) && typeof(Component).IsAssignableFrom(preferredType))
-                    return (T)go.AddComponent(preferredType);
+                if (!MatchesPreferredCoreServiceType(existing, preferredTypeName, out string preferredDisplayName))
+                {
+                    Debug.LogError($"[PyralisGameplayLifetimeScope] Core service `{serviceName}` is authored as `{existing.GetType().Name}`, but this route expects `{preferredDisplayName}`. Replace the authored component or assign the correct Bootstrap override before Play Mode.", this);
+                    return null;
+                }
 
-                Debug.LogWarning($"[PyralisGameplayLifetimeScope] Networked service type `{preferredTypeName}` was not found. Falling back to `{typeof(T).Name}`.", this);
+                return existing;
             }
 
-            return go.AddComponent<T>();
+            Debug.LogError($"[PyralisGameplayLifetimeScope] Critical core service `{serviceName}` is missing from the scene. Add an authored child GameObject under the Gameplay Root with `{typeof(T).Name}`, or assign the Bootstrap override field before Play Mode.", this);
+            return null;
+        }
+
+        private static bool MatchesPreferredCoreServiceType<T>(T existing, string preferredTypeName, out string preferredDisplayName)
+            where T : Component
+        {
+            preferredDisplayName = typeof(T).Name;
+            if (existing == null || string.IsNullOrWhiteSpace(preferredTypeName))
+                return true;
+
+            Type preferredType = Type.GetType(preferredTypeName);
+            if (preferredType != null)
+            {
+                preferredDisplayName = preferredType.Name;
+                return preferredType.IsInstanceOfType(existing);
+            }
+
+            int assemblySeparator = preferredTypeName.IndexOf(',');
+            string preferredFullName = assemblySeparator >= 0
+                ? preferredTypeName.Substring(0, assemblySeparator).Trim()
+                : preferredTypeName.Trim();
+            preferredDisplayName = string.IsNullOrWhiteSpace(preferredFullName)
+                ? typeof(T).Name
+                : preferredFullName.Substring(preferredFullName.LastIndexOf('.') + 1);
+
+            return string.Equals(existing.GetType().FullName, preferredFullName, StringComparison.Ordinal);
         }
 
         private static ISessionOwnershipService ResolveOrCreateSessionOwnershipService(bool useNetcodeServices)

@@ -36,6 +36,9 @@ This cleanup phase is complete when:
   - `CompatibilitySurface`: keep explicit and shrink when participant/session-native paths replace it.
   - `ReferenceAssembly`: expected pressure for focused runtime reference/context helpers; review only if gameplay decisions move into the helper.
   - `AcceptedComposition`: watch composition roots, but do not split them unless they begin owning feature behavior.
+  - `PawnCoordinator`: expected pressure for explicit Unity-native pawn coordinators such as `PawnRoot`, `Motor2D`, and `Motor3D`; review only if they start constructing optional features or owning movement/combat/presentation behavior directly.
+  - `FeatureModule`: expected pressure for optional `ActorFeatureHost`-installed capability modules and feature-owned contracts; review only if they become required pawn identity.
+  - `AuthoredRuntimeSurface`: expected pressure for files that intentionally hold serialized runtime tuning, profile application, local validation, or gizmos; review if they duplicate graph/contract setup meaning.
   - `EditorAudit`: review for duplicate setup truth, not runtime architecture failure.
   - `GrammarVocabulary`: keep wording-only; move feature setup meaning back to contracts/reflection.
   - `ScannerImplementation`: tune false positives before treating the scanner as product risk.
@@ -51,7 +54,7 @@ This cleanup phase is complete when:
 ### Phase 3: Runtime Ownership Seams
 
 - Keep `GameplaySessionBootstrap` as the scene entrypoint.
-- Keep `PyralisGameplayLifetimeScope` as the service composition owner.
+- Keep `PyralisGameplayLifetimeScope` as the service composition owner. **Action:** Strip `ResolveCoreComponent` autospawn logic; replace with explicit authoring/validation.
 - Keep participant/session runtime files under `Features/Platform/Session`: participant identity, roster, spawn service, session state, and participant lookup are platform/session ownership, not character behavior ownership. The current asmref is an assembly-stability bridge only; do not use it as an excuse to move new pawn behavior into Platform.
 - Keep `ParticipantDefinition.inputProfile` as the only authored input owner.
 - Keep `ParticipantDefinition.defaultPawn -> PawnDefinition.pawnPrefab` as the spawn route.
@@ -70,7 +73,7 @@ This cleanup phase is complete when:
 - Keep `Pawn2DMovementComponent` as the beginner-facing 2D movement facade, with top-down/no-gravity, side-view/gravity, and movement-bounds source lanes split into partials. Presentation profile application belongs to `Pawn2DPresentationComponent`.
 - Keep `Pawn2DPresentationComponent` as a beginner-facing facade until presentation pressure proves a real extraction boundary.
 - Keep `PawnRoot`, `Motor3D`, and `Pawn3DMovementComponent` behavior/coordinator-focused; `PawnRootRuntimeReferences`, `Motor3DRuntimeReferences`, and `Pawn3DMovementRuntimeReferences` own sibling/context lookup for the main 3D pawn stack. `PawnRoot` owns participant initialization as the facade, `PawnRoot.Profiles` owns profile application, and `PawnRoot.Features` owns feature-module installation and actor feature context creation.
-- Keep `Motor3D` as a coordinator until feature fallback routing earns a narrower adapter. Status/reaction forwarding and external traversal forwarding are source lanes, not separate gameplay owners.
+- Keep `Motor3D` as a Unity-native explicit sibling coordinator. It may ask `ActorFeatureHost` for optional traversal, guard, interaction, or status capabilities, but the pawn's core movement identity remains the visible `Motor3D`/input/movement/traversal/presentation sibling stack. Status/reaction forwarding and external traversal forwarding are source lanes, not separate gameplay owners.
 - Keep `Pawn3DMovementComponent` as the 3D movement facade, with CharacterController physics, crouch/capsule handling, movement config, and profile application split into source lanes. Do not move route truth or authoring guidance into those lanes.
 - Keep `Pawn3DTraversalComponent` as the traversal facade, with climb execution and hang/shimmy execution split into source lanes. Traversal profile meaning belongs in profiles/contracts; runtime behavior belongs in the component lanes.
 - Keep `PawnCombatBehaviour` as the beginner-facing 3D combat facade, with sibling reference assembly in `PawnCombatRuntimeReferences` and combo/fallback sequence execution plus hit/projectile resolution split into partial source lanes.
@@ -105,6 +108,7 @@ This cleanup phase is complete when:
 - Confirm contract inventory is separate from route failure.
 - Keep source pressure useful by distinguishing real runtime reflection/static lookups from ordinary editor `SerializedProperty` binding.
 - Keep the visible Hygiene tab and exported `cleanupFocus` ordered by cleanup usefulness: runtime ownership first, compatibility second, expected composition/reference/editor/grammar/scanner pressure after that.
+- Keep exported `cleanupFocus` limited to actionable runtime ownership and compatibility pressure. Expected coordinator, feature-module, authored-surface, composition, reference, editor, grammar, and scanner pressure remains visible in `dependencyPressure` and the tab summary, but should not be treated as the next cleanup target by default.
 - Treat exported `dependencyPressure` as prioritized audit inventory. Use `cleanupFocus`, `cleanupPriority`, and `cleanupFocus: true` to choose the next runtime cleanup slice instead of reading raw risk score as the plan.
 - Use dependency-pressure changes to choose the next cleanup slice.
 

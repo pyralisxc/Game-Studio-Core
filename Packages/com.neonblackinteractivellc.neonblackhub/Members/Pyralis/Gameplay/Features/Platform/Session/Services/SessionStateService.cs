@@ -25,7 +25,8 @@ namespace NeonBlack.Gameplay.Characters
         DocumentationURL = "https://docs.neonblack.com/pyralis/session",
         NativeSetup = new[] { "Add to GameplaySessionBootstrap child." }
     )]
-public class SessionStateService : MonoBehaviour, IGameService, IGameplayStateReader, IRuntimeValidationProvider
+    [AddComponentMenu("NeonBlack/Gameplay/Setup/Session State Service")]
+    public class SessionStateService : MonoBehaviour, IGameService, IGameplayStateReader, IRuntimeValidationProvider
     {
         public IEnumerable<string> GetRuntimeValidationIssues()
         {

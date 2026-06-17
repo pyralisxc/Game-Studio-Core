@@ -24,7 +24,8 @@ namespace NeonBlack.Gameplay.Characters
         ExpertAdvice = "Spawns pawns based on ParticipantDefinitions. If your game doesn't use physical pawns (e.g., pure UI or Card games), you can leave Spawn Points empty or disable 'Spawn On Register'.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/participants"
     )]
-public class ParticipantSpawnService : MonoBehaviour, IGameService, IRuntimeValidationProvider
+    [AddComponentMenu("NeonBlack/Gameplay/Setup/Participant Spawn Service")]
+    public class ParticipantSpawnService : MonoBehaviour, IGameService, IRuntimeValidationProvider
     {
         public IEnumerable<string> GetRuntimeValidationIssues()
         {

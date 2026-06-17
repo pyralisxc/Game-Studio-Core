@@ -168,7 +168,9 @@ namespace NeonBlack.Gameplay.Editor
                 return Array.Empty<PyralisSourceDependencyHygieneRecord>();
 
             return dependencyRecords
-                .Where(record => record != null && record.Risk != PyralisSourceDependencyRisk.Low)
+                .Where(record => record != null
+                    && record.Risk != PyralisSourceDependencyRisk.Low
+                    && IsCleanupFocus(record.PressureKind))
                 .OrderBy(record => PyralisSourceDependencyHygieneScanner.GetCleanupPriority(record.PressureKind))
                 .ThenByDescending(record => record.RiskScore)
                 .ThenBy(record => record.FileName, StringComparer.Ordinal)
@@ -388,8 +390,7 @@ namespace NeonBlack.Gameplay.Editor
         private static bool IsCleanupFocus(PyralisSourceDependencyPressureKind pressureKind)
         {
             return pressureKind == PyralisSourceDependencyPressureKind.RuntimeOwnership
-                || pressureKind == PyralisSourceDependencyPressureKind.CompatibilitySurface
-                || pressureKind == PyralisSourceDependencyPressureKind.AcceptedComposition;
+                || pressureKind == PyralisSourceDependencyPressureKind.CompatibilitySurface;
         }
 
         private static bool IsActionablePressure(PyralisSourceDependencyPressureKind pressureKind)

@@ -109,7 +109,7 @@ For the 2D stack, `Motor2D` is the shared 2D pawn motor surface. Focused ownersh
 
 ### 4.5. Runtime Composition Registers Core First, Features By Evidence
 
-`GameplaySessionBootstrap` remains the scene entrypoint and serialized handoff. `PyralisGameplayLifetimeScope` owns runtime service creation, dependency registration, and route-specific service activation. The always-on runtime spine is intentionally small:
+`GameplaySessionBootstrap` remains the scene entrypoint and serialized handoff. `PyralisGameplayLifetimeScope` owns runtime service resolution, dependency registration, and route-specific service activation. The always-on runtime spine is intentionally small:
 
 - session definition and session state
 - participant roster
@@ -118,7 +118,9 @@ For the 2D stack, `Motor2D` is the shared 2D pawn motor surface. Focused ownersh
 - authored scene services such as scene loading, time, camera shake, settings, and camera rig when present
 - ownership and authority services
 
-Feature services are not core by default. Combat, enemy, RPG, game-flow, scoring, and feedback services register when the authored route asks for them through `GameModeDefinition`, participant pawns, resolved feature contracts, or actual loaded scene components. Uncontracted feature-module names, display names, authoring categories, and tags do not create runtime service behavior; if a module needs a service group, its feature code needs an `[AuthoringContract]` that declares the capability.
+Feature services are not core by default. Combat, enemy, RPG, game-flow, scoring, and feedback services register when the authored route asks for them through `GameModeDefinition`, participant pawns, resolved feature contracts, or actual loaded scene components.
+
+**Strict Authoring Rule:** `GameplaySessionBootstrap` uses Unity's `RequireComponent` path to keep `PyralisGameplayLifetimeScope` visible, and runtime systems must not autospawn GameObjects or create presets to fix missing scene references. Missing core services stay null at runtime and log a clear error, while the Authoring Window and Map/Scene Readiness guide the user to manually add the missing objects in the scene. Hygiene can audit the graph pressure, but concrete scene repair belongs in Map. This keeps the scene hierarchy as the singular source of truth and prevents hidden systems-on-top-of-systems complexity.
 
 This keeps a movement proof from carrying RPG, enemy, combat, scoring, feedback, and arcade game-flow assumptions while preserving feature parity for scenes that actually use those systems.
 
@@ -415,6 +417,8 @@ The 3D brawler pawn is fully decomposed. `Motor3D` is the composition root - it 
 - `Pawn3DPresentationComponent` - Animator, billboard, land squash, debug HUD; implements `IPawnPresentationModule`
 
 Mode-specific differences are applied through profiles and optional modules.
+
+Core pawn identity stays Unity-native and visible on the prefab. `ActorFeatureHost` extends an authored actor with optional capability modules; it does not construct the actor's base movement identity. A creator inspecting a 2D or 3D pawn prefab should see the core motor, input, movement, traversal, presentation, health, and combat pieces directly when that route requires them. Optional traversal, guard, pickup, feedback, status, and interaction modules can be installed through feature definitions, but they should query or modify the explicit sibling stack instead of becoming the only owner of movement, input, or presentation state.
 
 Current implementation note:
 

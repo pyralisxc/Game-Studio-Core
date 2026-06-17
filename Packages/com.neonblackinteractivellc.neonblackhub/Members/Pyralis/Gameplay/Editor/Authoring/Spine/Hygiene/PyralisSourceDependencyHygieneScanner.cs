@@ -20,6 +20,9 @@ namespace NeonBlack.Gameplay.Editor
         RuntimeOwnership,
         ReferenceAssembly,
         AcceptedComposition,
+        PawnCoordinator,
+        FeatureModule,
+        AuthoredRuntimeSurface,
         EditorAudit,
         GrammarVocabulary,
         CompatibilitySurface,
@@ -201,7 +204,7 @@ namespace NeonBlack.Gameplay.Editor
             int reflectionOrStringLookupCount = ReflectionOrStringLookupRegex.Matches(safeSource).Count;
             int dependencyCount = neonBlackUsingCount + serializedFieldCount + unityLookupCount + reflectionOrStringLookupCount;
             int riskScore = CalculateRiskScore(domains.Count, concreteCrossDomainCount, serializedFieldCount, localComponentLookupCount, broadUnityDiscoveryCount, staticAccessCount, reflectionOrStringLookupCount);
-            PyralisSourceDependencyPressureKind pressureKind = ResolvePressureKind(safePath, ownerDomain);
+            PyralisSourceDependencyPressureKind pressureKind = ResolvePressureKind(safePath, safeSource, ownerDomain);
             List<string> reasons = BuildReasons(domains.Count, concreteCrossDomainCount, serializedFieldCount, localComponentLookupCount, broadUnityDiscoveryCount, staticAccessCount, reflectionOrStringLookupCount);
 
             return new PyralisSourceDependencyHygieneRecord(
@@ -231,10 +234,13 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisSourceDependencyPressureKind.RuntimeOwnership => 0,
                 PyralisSourceDependencyPressureKind.CompatibilitySurface => 1,
                 PyralisSourceDependencyPressureKind.AcceptedComposition => 2,
-                PyralisSourceDependencyPressureKind.ReferenceAssembly => 3,
-                PyralisSourceDependencyPressureKind.EditorAudit => 4,
-                PyralisSourceDependencyPressureKind.GrammarVocabulary => 5,
-                PyralisSourceDependencyPressureKind.ScannerImplementation => 6,
+                PyralisSourceDependencyPressureKind.PawnCoordinator => 3,
+                PyralisSourceDependencyPressureKind.FeatureModule => 4,
+                PyralisSourceDependencyPressureKind.AuthoredRuntimeSurface => 5,
+                PyralisSourceDependencyPressureKind.ReferenceAssembly => 6,
+                PyralisSourceDependencyPressureKind.EditorAudit => 7,
+                PyralisSourceDependencyPressureKind.GrammarVocabulary => 8,
+                PyralisSourceDependencyPressureKind.ScannerImplementation => 9,
                 _ => 6
             };
         }
@@ -384,9 +390,11 @@ namespace NeonBlack.Gameplay.Editor
             return PyralisSourceDependencyRisk.Low;
         }
 
-        private static PyralisSourceDependencyPressureKind ResolvePressureKind(string assetPath, string ownerDomain)
+        private static PyralisSourceDependencyPressureKind ResolvePressureKind(string assetPath, string source, string ownerDomain)
         {
             string normalized = (assetPath ?? string.Empty).Replace('\\', '/');
+            string fileName = Path.GetFileName(normalized);
+            string safeSource = source ?? string.Empty;
             if (normalized.Contains("/Editor/Authoring/Spine/Hygiene/", StringComparison.Ordinal))
                 return PyralisSourceDependencyPressureKind.ScannerImplementation;
 
@@ -406,6 +414,28 @@ namespace NeonBlack.Gameplay.Editor
                 || normalized.Contains("/Features/Platform/Session/", StringComparison.Ordinal))
             {
                 return PyralisSourceDependencyPressureKind.AcceptedComposition;
+            }
+
+            if (string.Equals(fileName, "PawnRoot.cs", StringComparison.Ordinal)
+                || string.Equals(fileName, "Motor2D.cs", StringComparison.Ordinal)
+                || string.Equals(fileName, "Motor3D.cs", StringComparison.Ordinal))
+            {
+                return PyralisSourceDependencyPressureKind.PawnCoordinator;
+            }
+
+            if (normalized.EndsWith(".Config.cs", StringComparison.Ordinal)
+                || normalized.EndsWith(".Profiles.cs", StringComparison.Ordinal)
+                || normalized.EndsWith(".Profile.cs", StringComparison.Ordinal)
+                || normalized.EndsWith(".Validation.cs", StringComparison.Ordinal)
+                || normalized.EndsWith(".Gizmos.cs", StringComparison.Ordinal))
+            {
+                return PyralisSourceDependencyPressureKind.AuthoredRuntimeSurface;
+            }
+
+            if (fileName.Contains("FeatureRuntime", StringComparison.Ordinal)
+                || safeSource.Contains("IFeatureModuleRuntime", StringComparison.Ordinal))
+            {
+                return PyralisSourceDependencyPressureKind.FeatureModule;
             }
 
             if (normalized.EndsWith("RuntimeReferences.cs", StringComparison.Ordinal)
@@ -430,6 +460,9 @@ namespace NeonBlack.Gameplay.Editor
             {
                 PyralisSourceDependencyPressureKind.ReferenceAssembly => "Expected pressure for a focused reference/context assembly helper; review only if gameplay decisions move into it.",
                 PyralisSourceDependencyPressureKind.AcceptedComposition => "Expected pressure for bootstrap/composition code; review only if it starts owning feature behavior instead of wiring services.",
+                PyralisSourceDependencyPressureKind.PawnCoordinator => "Expected pressure for an explicit pawn coordinator. Review only if it starts constructing optional features or owning movement/combat/presentation behavior directly.",
+                PyralisSourceDependencyPressureKind.FeatureModule => "Expected pressure for an optional feature module or feature contract. Review if it becomes required pawn identity instead of an installable capability.",
+                PyralisSourceDependencyPressureKind.AuthoredRuntimeSurface => "Expected pressure for authored runtime fields, profiles, validation, or gizmos. Review if setup meaning duplicates contracts or graph guidance.",
                 PyralisSourceDependencyPressureKind.EditorAudit => "Expected pressure for graph, evidence, or validator code; review for duplicated setup truth before splitting.",
                 PyralisSourceDependencyPressureKind.GrammarVocabulary => "Vocabulary pressure is acceptable when it is wording only; move feature-specific setup meaning back to contracts/reflection.",
                 PyralisSourceDependencyPressureKind.CompatibilitySurface => "Compatibility pressure should stay explicit and shrink when participant/session-native paths replace it.",

@@ -286,6 +286,97 @@ namespace NeonBlack.Gameplay.Features.Enemies
         }
 
         [Test]
+        public void SourceDependencyHygiene_SmokeClassifiesPawnCoordinatorAsExpectedPressure()
+        {
+            const string source = @"
+using NeonBlack.Gameplay.Features.Combat;
+using NeonBlack.Gameplay.Features.Composition;
+using NeonBlack.Gameplay.Features.Interaction;
+using NeonBlack.Gameplay.Features.Traversal;
+using UnityEngine;
+
+namespace NeonBlack.Gameplay.Features.Characters
+{
+    public sealed class Motor3D : MonoBehaviour
+    {
+        private void Awake()
+        {
+            GetComponent<ActorFeatureHost>();
+        }
+    }
+}";
+
+            PyralisSourceDependencyHygieneRecord record =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Characters/3D/Motor3D.cs",
+                    source);
+
+            Assert.That(record.PressureKind, Is.EqualTo(PyralisSourceDependencyPressureKind.PawnCoordinator));
+            Assert.That(record.ReviewHint, Does.Contain("pawn coordinator"));
+            Assert.That(PyralisSourceDependencyHygieneScanner.GetCleanupPriority(record.PressureKind),
+                Is.GreaterThan(PyralisSourceDependencyHygieneScanner.GetCleanupPriority(PyralisSourceDependencyPressureKind.CompatibilitySurface)));
+        }
+
+        [Test]
+        public void SourceDependencyHygiene_SmokeClassifiesFeatureRuntimeAsExpectedPressure()
+        {
+            const string source = @"
+using NeonBlack.Gameplay.Features.Composition;
+using NeonBlack.Gameplay.Features.Characters;
+using NeonBlack.Gameplay.Presentation.Animation;
+using UnityEngine;
+
+namespace NeonBlack.Gameplay.Features.Traversal
+{
+    public sealed class PawnTraversalFeatureRuntime3D : MonoBehaviour, IFeatureModuleRuntime
+    {
+        public string ModuleId => ""actor.traversal.3d"";
+        public void InitializeFeature(FeatureRuntimeInitializationContext initializationContext) {}
+        public void ShutdownFeature() {}
+    }
+}";
+
+            PyralisSourceDependencyHygieneRecord record =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Traversal/Runtime/3D/PawnTraversalFeatureRuntime3D.cs",
+                    source);
+
+            Assert.That(record.PressureKind, Is.EqualTo(PyralisSourceDependencyPressureKind.FeatureModule));
+            Assert.That(record.ReviewHint, Does.Contain("optional feature module"));
+            Assert.That(PyralisSourceDependencyHygieneScanner.GetCleanupPriority(record.PressureKind),
+                Is.GreaterThan(PyralisSourceDependencyHygieneScanner.GetCleanupPriority(PyralisSourceDependencyPressureKind.CompatibilitySurface)));
+        }
+
+        [Test]
+        public void SourceDependencyHygiene_SmokeClassifiesAuthoredRuntimeSurfaceAsExpectedPressure()
+        {
+            const string source = @"
+using UnityEngine;
+
+namespace NeonBlack.Gameplay.Features.Characters
+{
+    public sealed partial class Pawn3DMovementComponent
+    {
+        [SerializeField] private float walkSpeed;
+        [SerializeField] private float runSpeed;
+        [SerializeField] private float jumpImpulse;
+        [SerializeField] private float gravity;
+        [SerializeField] private float acceleration;
+        [SerializeField] private float deceleration;
+    }
+}";
+
+            PyralisSourceDependencyHygieneRecord record =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Characters/Runtime/Shared/Components/3D/Pawn3DMovementComponent.Config.cs",
+                    source);
+
+            Assert.That(record.PressureKind, Is.EqualTo(PyralisSourceDependencyPressureKind.AuthoredRuntimeSurface));
+            Assert.That(record.ReviewHint, Does.Contain("authored runtime fields"));
+            Assert.That(record.SerializedFieldCount, Is.GreaterThanOrEqualTo(6));
+        }
+
+        [Test]
         public void SourceDependencyHygiene_SmokeScoresBroadUnityDiscoveryAboveLocalComponentCaching()
         {
             const string localSource = @"

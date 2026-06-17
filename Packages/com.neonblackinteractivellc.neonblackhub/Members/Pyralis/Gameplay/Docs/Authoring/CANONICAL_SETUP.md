@@ -15,7 +15,16 @@ Attach these components to `Gameplay Root`:
 - `GameplaySessionBootstrap`
 - `PyralisGameplayLifetimeScope`
 
-`GameplaySessionBootstrap` will add `PyralisGameplayLifetimeScope` automatically if it is missing, but adding both up front makes the scene easier to inspect.
+`GameplaySessionBootstrap` uses Unity's `RequireComponent` path for `PyralisGameplayLifetimeScope`, so both components should be visible on the root before Play Mode.
+
+Under `Gameplay Root`, author these core service components as child objects or assign them into the matching `GameplaySessionBootstrap` override fields:
+
+- `SessionStateService`
+- `ParticipantRosterService`
+- `ParticipantSpawnService`
+- `ParticipantInputRouter`
+
+For networked sessions, use the networked session, roster, and spawn service replacements instead of the local service components.
 
 For the movement-first proof pass, stop after these links:
 
@@ -24,7 +33,7 @@ For the movement-first proof pass, stop after these links:
 - `Spawn Points` with at least one transform
 - a known input route for that participant (`ParticipantDefinition.inputProfile` or local join flow)
 - a Cinemachine-backed `Camera Root` assigned to `GameplaySessionBootstrap > Camera Rig Controller` for camera framing and visible camera bounds
-- auto-created core services (left enabled)
+- authored core runtime services listed above
 
 Delay scoring, HUD, combat, scene-flow, pickup/hazard, and network extras until movement proof is confirmed in Play mode.
 
@@ -32,24 +41,13 @@ On `GameplaySessionBootstrap`, assign:
 
 - `Session Definition` - your `SessionDefinition` asset
 - `Dont Destroy On Load` - on for persistent bootstrap scenes, off for isolated test scenes
-- `Auto Create Core Services` - on for first-scene proofs that use the standard bootstrap-owned service path
 - `Inject Loaded Scenes On Build` - on unless you have a custom injection flow
 - `Spawn Points` - optional Transforms where pawn-backed participants should appear
 - `Player Input Manager` - optional, only when using local join or Unity Input System player joining
 - `Camera Rig Controller` - optional, assign the `Camera Root` when using Pyralis camera control or camera-aware visible bounds
 - `Camera Rig Controller` is the single normal camera-bounds entry. Camera-aware runtime systems consume the assigned `CinemachineCameraRigController` as their `ICameraBoundsProvider`.
 
-With the standard bootstrap-owned service path enabled, the bootstrap creates these child objects at runtime when they are not assigned:
-
-- `SceneLoader`
-- `TimeManager`
-- `CameraShake`
-- `SessionStateService`
-- `ParticipantRosterService`
-- `ParticipantSpawnService`
-- `ParticipantInputRouter`
-
-You usually do not need to create those service objects by hand for a first scene.
+The runtime does not create missing service GameObjects. Map/Scene Readiness should point out any missing core service and tell you which child object or Bootstrap override field to author.
 
 Create additional root objects only when the selected route capabilities need them:
 

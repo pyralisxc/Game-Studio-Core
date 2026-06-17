@@ -22,7 +22,7 @@ Supported now:
 
 - `GameplayNetworkMode.LocalOnly` uses local/offline services.
 - `GameplayNetworkMode.NetcodeHost`, `NetcodeClient`, and `NetcodeServer` select networked participant/session services.
-- `GameplaySessionBootstrap` creates `NetworkedSessionStateService`, `NetworkedParticipantRosterService`, and `NetworkedParticipantSpawnService` when a session selects an NGO mode.
+- Networked scenes author `NetworkedSessionStateService`, `NetworkedParticipantRosterService`, and `NetworkedParticipantSpawnService` under the Gameplay Root or assign them into the Bootstrap override fields when a session selects an NGO mode.
 - networked sessions register NGO-backed `ISessionOwnershipService` and `IParticipantAuthorityService` implementations.
 - `PyralisNetworkSetupValidator` checks the required MVP scene wiring: `NetworkManager`, `UnityTransport`, pawn prefab `NetworkObject`, and Network Prefab registration.
 - `NetworkedParticipantSpawnService` calls `NetworkObject.Spawn`, `SpawnWithOwnership`, and `Despawn` on the server path.

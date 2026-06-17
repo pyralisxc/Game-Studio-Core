@@ -203,6 +203,9 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             if (lower.Contains("standaloneinputmodule"))
                 return "Select the EventSystem in the Hierarchy, then use the Inspector warning or Add Component path to replace StandaloneInputModule with InputSystemUIInputModule.";
 
+            if (lower.Contains("core runtime service"))
+                return "Select Gameplay Root in the Hierarchy, create a child GameObject for the named service, add the named Pyralis service component, or assign the Bootstrap override field.";
+
             if (lower.Contains("eventsystem"))
                 return "Create or select one EventSystem in the Hierarchy, then inspect its input module in the Inspector.";
 
@@ -233,6 +236,9 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
         private const string NetworkManagerTypeName = "Unity.Netcode.NetworkManager";
         private const string NetworkObjectTypeName = "Unity.Netcode.NetworkObject";
         private const string UnityTransportTypeName = "Unity.Netcode.Transports.UTP.UnityTransport";
+        private const string NetworkedSessionStateServiceFullName = "NeonBlack.Gameplay.Networking.Participants.NetworkedSessionStateService";
+        private const string NetworkedParticipantRosterServiceFullName = "NeonBlack.Gameplay.Networking.Participants.NetworkedParticipantRosterService";
+        private const string NetworkedParticipantSpawnServiceFullName = "NeonBlack.Gameplay.Networking.Participants.NetworkedParticipantSpawnService";
 
         public static PyralisSceneReadinessReport BuildReport(GameplaySessionBootstrap bootstrap)
         {
@@ -251,6 +257,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 return new PyralisSceneReadinessReport(requiredIssues, recommendedIssues);
 
             AppendSceneRootIssues(bootstrap, serializedBootstrap, requiredIssues, recommendedIssues);
+            AppendCoreRuntimeServiceIssues(bootstrap, serializedBootstrap, session, requiredIssues);
             AppendParticipantSeatIssues(session, requiredIssues, recommendedIssues);
             AppendParticipantInputIssues(session, requiredIssues);
             AppendParticipantPawnIssues(session, requiredIssues, recommendedIssues);
@@ -286,6 +293,80 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             AppendSceneComponentIssues<ProjectileLauncherBase>(scene, "Projectile launcher", inspectedRoots, requiredIssues);
             AppendSceneServiceIssues<ISessionScoreService>(scene, "Score service", inspectedRoots, requiredIssues);
             AppendSceneSpriteRendererIssues(scene, inspectedRoots, requiredIssues);
+        }
+
+        private static void AppendCoreRuntimeServiceIssues(
+            GameplaySessionBootstrap bootstrap,
+            SerializedObject serializedBootstrap,
+            SessionDefinition session,
+            List<string> requiredIssues)
+        {
+            if (bootstrap == null || session == null)
+                return;
+
+            bool usesNetworkedCoreServices = session.networkMode != GameplayNetworkMode.LocalOnly;
+            AppendCoreRuntimeServiceIssue<SessionStateService>(
+                bootstrap,
+                serializedBootstrap,
+                "sessionStateService",
+                "SessionStateService",
+                usesNetworkedCoreServices ? NetworkedSessionStateServiceFullName : string.Empty,
+                requiredIssues);
+            AppendCoreRuntimeServiceIssue<ParticipantRosterService>(
+                bootstrap,
+                serializedBootstrap,
+                "participantRosterService",
+                "ParticipantRosterService",
+                usesNetworkedCoreServices ? NetworkedParticipantRosterServiceFullName : string.Empty,
+                requiredIssues);
+            AppendCoreRuntimeServiceIssue<ParticipantSpawnService>(
+                bootstrap,
+                serializedBootstrap,
+                "participantSpawnService",
+                "ParticipantSpawnService",
+                usesNetworkedCoreServices ? NetworkedParticipantSpawnServiceFullName : string.Empty,
+                requiredIssues);
+            AppendCoreRuntimeServiceIssue<ParticipantInputRouter>(
+                bootstrap,
+                serializedBootstrap,
+                "participantInputRouter",
+                "ParticipantInputRouter",
+                string.Empty,
+                requiredIssues);
+        }
+
+        private static void AppendCoreRuntimeServiceIssue<T>(
+            GameplaySessionBootstrap bootstrap,
+            SerializedObject serializedBootstrap,
+            string propertyName,
+            string serviceName,
+            string preferredFullTypeName,
+            List<string> requiredIssues) where T : Component
+        {
+            T service = GetObjectReference<T>(serializedBootstrap, propertyName);
+            service ??= bootstrap.GetComponentInChildren<T>(true);
+            if (service == null)
+            {
+                requiredIssues.Add($"Gameplay Root is missing authored core runtime service `{serviceName}`. Add a child GameObject with {typeof(T).Name}, or assign Bootstrap > {ObjectNames.NicifyVariableName(propertyName)} before Play Mode.");
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(preferredFullTypeName)
+                && !string.Equals(service.GetType().FullName, preferredFullTypeName, System.StringComparison.Ordinal))
+            {
+                requiredIssues.Add($"Gameplay Root core runtime service `{serviceName}` uses `{service.GetType().Name}`, but this networked route expects `{GetTypeDisplayName(preferredFullTypeName)}`.");
+            }
+        }
+
+        private static string GetTypeDisplayName(string fullTypeName)
+        {
+            if (string.IsNullOrWhiteSpace(fullTypeName))
+                return string.Empty;
+
+            int lastDot = fullTypeName.LastIndexOf('.');
+            return lastDot >= 0 && lastDot < fullTypeName.Length - 1
+                ? fullTypeName.Substring(lastDot + 1)
+                : fullTypeName;
         }
 
         private static void AppendPlayerInputManagerIssues(PlayerInputManager playerInputManager, List<string> requiredIssues)

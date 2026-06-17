@@ -22,12 +22,13 @@ namespace NeonBlack.Gameplay.Features.Input
         FirstProof = "Join a new player and verify they are correctly assigned to a participant seat in the roster.",
         NativeSetup = new[] 
         { 
-            "Add ParticipantInputRouter to the Gameplay Root or let GameplaySessionBootstrap create it.",
+            "Add ParticipantInputRouter to the Gameplay Root or a Gameplay Root child.",
             "Ensure it is wired to the ParticipantRosterService."
         },
         ExpertAdvice = "The Input Router watches PlayerInput join/leave events for local join. For 1P auto-join, no PlayerInputManager is required; ParticipantDefinition.inputProfile remains the single authored input owner.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/input"
     )]
+    [AddComponentMenu("NeonBlack/Gameplay/Setup/Participant Input Router")]
     public class ParticipantInputRouter : MonoBehaviour, IRuntimeValidationProvider
     {
         public IEnumerable<string> GetRuntimeValidationIssues()

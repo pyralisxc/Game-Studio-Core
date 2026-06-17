@@ -205,12 +205,18 @@ On `GameplaySessionBootstrap`, assign the `SessionDefinition` you just wired. Th
 - `Player Input Manager` only for local player joining
 - `Camera Rig Controller` only if using the shared Pyralis camera flow
 
-Leave these on for first-scene proofs that use the standard bootstrap-owned service path:
+Keep this on for first-scene proofs that use the standard bootstrap-owned service path:
 
-- `Auto Create Core Services`
 - `Inject Loaded Scenes On Build`
 
-At runtime, the bootstrap creates service children for scene loading, time, camera shake, session state, participant roster, spawning, and input routing.
+Under `Gameplay Root`, create or assign the authored core runtime services that the LifetimeScope registers:
+
+- `SessionStateService`
+- `ParticipantRosterService`
+- `ParticipantSpawnService`
+- `ParticipantInputRouter`
+
+The runtime does not create missing service GameObjects. If one is absent, Overview/Map should tell you which Unity object or Bootstrap override field to author.
 
 After assigning the `SessionDefinition`, keep the `GameplaySessionBootstrap` selected and work down the **Setup Flow** list. Fix the selected intent's Do Now items first. Treat recommended items as proof enhancers, not universal requirements. Optional items can stay empty until the selected intent needs them.
 
@@ -220,7 +226,7 @@ For the first route proof, treat these as Do Now only when the selected intent a
 - one participant with required input profile for that route
 - pawn routes: one participant with `Default Pawn` and one `Spawn Point`
 - no-pawn routes: required control-surface assets (camera/cursor/menu/board/action)
-- `Auto Create Core Services` for the standard bootstrap-owned service path
+- authored core runtime services for the standard bootstrap-owned service path
 
 Treat these as optional until route proof works:
 

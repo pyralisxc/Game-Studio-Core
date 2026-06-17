@@ -16,7 +16,7 @@ namespace NeonBlack.Gameplay.Features.Traversal
         ModuleId = "actor.traversal.3d",
         Capability = AuthoringCapability.Traversal,
         Lane = "Traversal",
-        Relevance = "Enables advanced 3D world navigation including ledge hanging, climbing, and shimmying.",
+        Relevance = "Optional 3D traversal feature runtime for advanced ledge hanging, climbing, and shimmying.",
         ProfileType = typeof(PawnTraversalProfile),
         RequiredInterfaces = new[] { typeof(IFeatureModuleRuntime), typeof(IActorTraversalFeature) },
         RequiredInterfaceNames = new[] { "NeonBlack.Gameplay.Features.Characters.IActorInteractionHandler" },
@@ -25,12 +25,13 @@ namespace NeonBlack.Gameplay.Features.Traversal
         UnsupportedLanes = new[] { ActorPresentationMode.Sprite2D },
         NativeSetup = new[]
         {
-            "Create a PawnTraversalProfile asset for movement tuning.",
-            "Add PawnTraversalFeatureRuntime3D to the Pawn's runtime prefab.",
-            "Ensure Pawn3DTraversalComponent is also present for physics handling.",
-            "Register the module in the PawnDefinition feature list."
+            "Create a PawnTraversalProfile asset for traversal tuning.",
+            "Create or assign a FeatureModuleDefinition with module id actor.traversal.3d.",
+            "Assign a feature runtime prefab that contains PawnTraversalFeatureRuntime3D.",
+            "Keep Motor3D, Pawn3DMovementComponent, and Pawn3DTraversalComponent on the pawn root as explicit sibling components.",
+            "Register the module in the PawnDefinition featureModules list."
         },
-        ExpertAdvice = "Adjust ledge detection offsets in the profile to match your character's physical height. Use the 'ProbeTraversal' method to check for climbable surfaces during movement states.",
+        ExpertAdvice = "Adjust ledge detection offsets in the profile to match your character's physical height. ActorFeatureHost installs this optional module around the explicit traversal sibling; it should not be the only owner of base 3D movement.",
         FirstProof = "Character successfully grabs a ledge marked with an IClimbZone when jumping toward it.",
         AssignmentFields = new[] { nameof(traversalProfile) },
         DocumentationURL = "https://docs.neonblack.com/pyralis/traversal/3d",

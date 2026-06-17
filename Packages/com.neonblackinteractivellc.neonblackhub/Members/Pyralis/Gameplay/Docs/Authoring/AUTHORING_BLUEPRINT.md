@@ -28,6 +28,8 @@ The Pyralis Authoring Window should feel like a calm senior Unity teammate besid
 
 Its job is not to replace the Inspector, build a whole scene, choose game design, or hide Unity. Its job is to keep setup understandable while the developer keeps moving.
 
+**Explicit Authoring over Presets:** One of our core rules is to avoid "Autospawning" or "Presets." The engine should never create GameObjects behind the user's back to fix a validation error. Instead, it guides the user to the native Unity step (Hierarchy > Create) to maintain a concise and predictable codebase.
+
 Short version: Authoring is the map, Unity is the workshop, and Inspectors are the local knobs.
 
 The window guides a selected first proof, not a complete game setup. It can say whether setup is ready to attempt, but static discovery must not claim that Play Mode behavior has passed.
@@ -411,6 +413,8 @@ Hygiene should be graph integrity, not a second scene checklist. Evidence cards 
 - source kind and source origin
 - blocker/proof relationship when known
 - graph finding and source detail
+
+**Redundant System Detection:** Hygiene is responsible for detecting "Legacy vs New" system conflicts. When a new Feature Module is present (e.g., Combat Feature), the validator should flag legacy components (e.g., `PawnCombatBehaviour`) as redundant and guide the user to remove them. This prevents "systems on top of systems" and maintains a concise codebase.
 
 Hygiene can mention source detail, but concrete Unity repair and inspection actions belong in Map or the Inspector. This keeps Hygiene useful for developers auditing the resolved graph without making it compete with the beginner setup flow.
 
