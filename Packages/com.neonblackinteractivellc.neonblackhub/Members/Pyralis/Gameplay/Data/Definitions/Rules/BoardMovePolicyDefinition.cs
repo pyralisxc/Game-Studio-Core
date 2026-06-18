@@ -1,4 +1,4 @@
-using NeonBlack.Gameplay.Core.Rules.Board;
+﻿using NeonBlack.Gameplay.Core.Rules.Board;
 using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
 using UnityEngine;
@@ -35,9 +35,9 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
     [CreateAssetMenu(menuName = "NeonBlack/Rules/Board Move Policy", fileName = "BoardMovePolicy", order = -80)]
     public class BoardMovePolicyDefinition : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            return GetValidationIssues();
+            return PyralisRuntimeValidationIssueUtility.RequiredFrom(GetValidationIssues());
         }
 
         public string policyId = "policy.boardMove";

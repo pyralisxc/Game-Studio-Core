@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Features.Composition;
 using TMPro;
@@ -32,10 +32,10 @@ namespace NeonBlack.Gameplay.Features.Feedback.UI
                 healthLabel.text = $"{Mathf.CeilToInt(health.CurrentHealth)}/{Mathf.CeilToInt(health.MaxHealth)}";
         }
 
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (healthLabel == null && healthFillImage == null)
-                yield return "`ParticipantHealthPanel` should reference a health label, a fill image, or both.";
+                yield return PyralisRuntimeValidationIssue.Required("`ParticipantHealthPanel` should reference a health label, a fill image, or both.");
         }
     }
 }

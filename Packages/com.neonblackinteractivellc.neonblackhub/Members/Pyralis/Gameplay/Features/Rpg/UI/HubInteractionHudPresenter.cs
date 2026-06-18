@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Rpg;
@@ -105,16 +105,16 @@ namespace NeonBlack.Gameplay.Features.Rpg.UI
             InteractionResultShown?.Invoke(result);
         }
 
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (promptLabel == null)
-                yield return "`HubInteractionHudPresenter` should reference a prompt label so available hub actions are visible.";
+                yield return PyralisRuntimeValidationIssue.Required("`HubInteractionHudPresenter` should reference a prompt label so available hub actions are visible.");
 
             if (selectButton == null)
-                yield return "`HubInteractionHudPresenter` can show prompts without Select Button, but player confirmation needs a button or input bridge calling ConfirmSelectedPrompt().";
+                yield return PyralisRuntimeValidationIssue.Required("`HubInteractionHudPresenter` can show prompts without Select Button, but player confirmation needs a button or input bridge calling ConfirmSelectedPrompt().");
 
             if (notificationBodyLabel == null && notificationTitleLabel == null && routeLabel == null && issueLabel == null)
-                yield return "`HubInteractionHudPresenter` should reference at least one result or notification label for hub interaction feedback.";
+                yield return PyralisRuntimeValidationIssue.Required("`HubInteractionHudPresenter` should reference at least one result or notification label for hub interaction feedback.");
         }
 
         private void RenderPrompt()

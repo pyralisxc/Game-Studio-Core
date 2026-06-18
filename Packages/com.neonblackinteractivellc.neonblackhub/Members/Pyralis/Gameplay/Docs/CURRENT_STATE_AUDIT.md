@@ -31,14 +31,14 @@ The Authoring Window has six tabs:
 
 - **Overview**: best next action and one to three immediate moves.
 - **Intent**: route steering through DNA axioms, presentation lane, and capability toggles.
-- **Guide**: full current-intent checklist.
+- **Guide**: full current-setup checklist from the shared route working projection.
 - **Map**: scene/setup reality, field readiness, and Unity repair actions.
 - **Hygiene**: programmer audit for graph integrity, source pressure, dependency pressure, and code ownership hotspots.
 - **Facts**: compiled dictionary/cookbook.
 
-Map owns concrete Unity scene and Inspector setup issues. Hygiene owns code/graph health. Guide and Overview should be shaped by Intent. Facts should remain read-only evidence and vocabulary.
+Map owns concrete Unity scene and Inspector setup issues. Hygiene owns code/graph health. Overview, Guide, and Route Proof Trace should read the same current setup route projection so they cannot drift. Intent remains the steering surface for what the developer wants to wire next. Facts should remain read-only evidence and vocabulary.
 
-Map and Hygiene export tab-specific JSON snapshots for diagnostics. Map exports current setup reality only. Guide and Hygiene can also export a Route Proof Trace that follows the intent-projected proof path: ordered steps, blockers, direct proof support, source owners, contracts, and diagnostic questions. Route Proof Trace deliberately excludes scene-surface and scene-readiness repair work, and it does not promote broad later capabilities as direct support for a small first proof. Hygiene separates actionable Cleanup Focus from Watch List pressure so large expected scripts remain visible without reading as failures. These exports are read-only evidence for humans and agents; incorrect output should be fixed in contracts, dependency reflection, validators, graph projection, or grammar rather than patched in the export.
+Map and Hygiene export tab-specific JSON snapshots for diagnostics. Map exports current setup reality only. Guide and Hygiene can also export a Route Proof Trace that follows the same current route working projection Guide renders: current action, ordered fresh-scene steps, blockers, direct proof support, source owners, contracts, and diagnostic questions. Route Proof Trace deliberately separates `currentAction` from the first `orderedSteps` row so a ready foundation card does not masquerade as the next move. It also excludes scene-surface and scene-readiness repair work, and it does not promote broad later capabilities as direct support for a small first proof. Hygiene separates actionable Cleanup Focus from Watch List pressure so large expected scripts remain visible without reading as failures. These exports are read-only evidence for humans and agents; incorrect output should be fixed in contracts, dependency reflection, validators, graph projection, or grammar rather than patched in the export.
 
 ## Current Health
 
@@ -68,3 +68,11 @@ RPG is now treated as an optional platform feature rather than mandatory engine 
 Use Unity Test Runner or `.\Tools\Validation\Run-PreSceneValidation.ps1` as the durable gate when runtime/editor code changes. For docs-only consolidation, use link/reference checks and `git diff --check`.
 
 Manual Authoring Window walkthroughs are still required for user-flow confidence because static tests can prove graph shape but not whether the setup feels clear.
+
+The default test gate should stay focused on seam protection rather than fake gameplay confidence:
+
+- **Manual play proofs** answer whether the game actually feels and works in Unity.
+- **Automated tests** protect data transfer, ownership, routing, contracts, graph projections, exports, and refactor seams.
+- **Authoring exports** show what the system currently understands.
+
+Old broad feature-domain matrices, documentation contract audits, classifier detail sweeps, and source-text tests have been removed from the active package. Add new automated tests only when they protect a current seam, data transfer, route projection, or runtime ownership rule. Do not add tests that only lock source prose, stale docs, or simulated gameplay claims that still require a Unity proof.

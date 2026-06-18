@@ -31,6 +31,14 @@ Rigged 3D support is Animator-driven and intended for both `Generic` and `Humano
 - Scenes own scene-scale direction: bootstrap, lifetime scope, camera rig, spawners, scene services, and proof-specific objects.
 - Authoring reads contracts/reflection/dependency evidence and projects the resolved graph; it does not create hidden presets or duplicate setup truth.
 
+## Verification rule of thumb
+
+- Manual Unity play proofs test gameplay feel and whether the authored route actually works.
+- Automated tests protect data transfer, ownership, routing, contracts, graph projections, exports, and refactor seams.
+- Authoring JSON exports show what the system currently understands and where the next cleanup pressure lives.
+
+Do not keep broad optional domain matrices or documentation audits in the active suite. The default gate should catch broken seams without pretending to replace manual proof play.
+
 ## Layout
 
 - `Core/`: engine spine, shared runtime services, runtime contracts, and shared contract metadata consumed by `Editor/Authoring`

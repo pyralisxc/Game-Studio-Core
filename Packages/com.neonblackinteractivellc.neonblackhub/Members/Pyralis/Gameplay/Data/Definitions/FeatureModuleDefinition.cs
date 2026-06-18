@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Presentation.Animation;
@@ -37,9 +37,9 @@ namespace NeonBlack.Gameplay.Data.Definitions
 [CreateAssetMenu(menuName = "NeonBlack/Definitions/Feature Module Definition", fileName = "FeatureModuleDefinition", order = 50)]
     public class FeatureModuleDefinition : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            return GetValidationIssues();
+            return PyralisRuntimeValidationIssueUtility.RequiredFrom(GetValidationIssues());
         }
 
         private const string FeatureRuntimeInterfaceName = "NeonBlack.Gameplay.Features.Composition.IFeatureModuleRuntime";
@@ -191,7 +191,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
                         if (string.Equals(interfaceName, FeatureRuntimeInterfaceName, StringComparison.Ordinal))
                             continue;
 
-                        // Specific exception for combat modifiers on enemies if needed (legacy parity)
+                        // Enemy actors can receive status effects without exposing the pawn-facing combat modifier surface.
                         if (moduleId == "actor.status" && isEnemyActor && interfaceName.Contains("IActorCombatModifierReceiver"))
                             continue;
 
@@ -374,10 +374,10 @@ namespace NeonBlack.Gameplay.Data.Definitions
                 if (behaviours[i] is not IRuntimeValidationProvider provider)
                     continue;
 
-                foreach (string issue in provider.GetRuntimeValidationIssues())
+                foreach (PyralisRuntimeValidationIssue issue in provider.GetRuntimeValidationIssues())
                 {
-                    if (!string.IsNullOrWhiteSpace(issue))
-                        issues.Add(issue);
+                    if (issue != null && !string.IsNullOrWhiteSpace(issue.Message))
+                        issues.Add(issue.Message);
                 }
             }
         }

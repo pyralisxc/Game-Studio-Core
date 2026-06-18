@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Core.Contracts.Networking;
@@ -10,12 +10,12 @@ using VContainer;
 namespace NeonBlack.Gameplay.Characters
 {
     /// <summary>
-    /// Authoritative local/runtime roster of participants. Also bridges compatibility
-    /// single-player lookups by exposing the primary participant as an IPlayerProvider.
+    /// Authoritative local/runtime roster of participants. Also exposes the primary
+    /// participant through IPlayerProvider for narrow single-player query surfaces.
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Session,
-        Relevance = "Authoritative local roster of participants. Bridges compatibility for single-player lookups.",
+        Relevance = "Authoritative local roster of participants. Exposes the primary participant for narrow single-player query surfaces.",
         AssignmentFields = new[] { nameof(sessionDefinition) },
         FirstProof = "Enter Play Mode and spawn a pawn. Verify the 'Participants' list reflects the character.",
         NativeSetup = new[] { "Add to GameplaySessionBootstrap child." },
@@ -25,10 +25,10 @@ namespace NeonBlack.Gameplay.Characters
     [AddComponentMenu("NeonBlack/Gameplay/Setup/Participant Roster Service")]
     public class ParticipantRosterService : MonoBehaviour, IParticipantRoster, IPlayerProvider, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (sessionDefinition == null)
-                yield return "Session Definition is empty. This is expected when GameplaySessionBootstrap injects it at runtime.";
+                yield return PyralisRuntimeValidationIssue.Required("Session Definition is empty. This is expected when GameplaySessionBootstrap injects it at runtime.");
         }
         [SerializeField] private SessionDefinition sessionDefinition;
 

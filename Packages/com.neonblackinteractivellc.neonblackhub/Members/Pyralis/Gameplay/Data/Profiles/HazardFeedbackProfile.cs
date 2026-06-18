@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Presentation.Visuals;
 using UnityEngine;
@@ -17,10 +17,10 @@ namespace NeonBlack.Gameplay.Data.Profiles
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Hazard Feedback Profile", fileName = "HazardFeedbackProfile")]
     public class HazardFeedbackProfile : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            if (flashOnActivation && activationFlashPreset == null) yield return "Activation Flash is enabled but Preset is missing.";
-            if (flashOnExplosion && explosionFlashPreset == null) yield return "Explosion Flash is enabled but Preset is missing.";
+            if (flashOnActivation && activationFlashPreset == null) yield return PyralisRuntimeValidationIssue.Required("Activation Flash is enabled but Preset is missing.");
+            if (flashOnExplosion && explosionFlashPreset == null) yield return PyralisRuntimeValidationIssue.Required("Explosion Flash is enabled but Preset is missing.");
         }
 
         public bool flashOnActivation = true;

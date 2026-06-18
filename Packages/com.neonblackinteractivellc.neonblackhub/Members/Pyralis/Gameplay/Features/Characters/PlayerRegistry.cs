@@ -5,8 +5,8 @@ using UnityEngine;
 namespace NeonBlack.Gameplay.Characters
 {
 /// <summary>
-/// Compatibility bridge for older scene wiring that still asks for a primary player Transform.
-/// New gameplay should use participant/session services, injected contracts, or explicit runtime context.
+/// Narrow scene query for standalone objects that still need a primary player Transform.
+/// Session-authored gameplay should use participant/session services, injected contracts, or explicit runtime context.
 /// </summary>
 public class PlayerRegistry : MonoBehaviour, IPlayerProvider
 {
@@ -53,7 +53,7 @@ public class PlayerRegistry : MonoBehaviour, IPlayerProvider
 
     private static Transform ResolveEffectivePlayer()
     {
-        // 1. Try to resolve via the participant-aware bridge before falling back to local compatibility state.
+        // 1. Try to resolve via the participant-aware route before consulting local scene state.
         if (ParticipantQueryUtility.TryResolvePlayerProvider(out IPlayerProvider provider) && provider != null)
         {
             // If the provider is a PlayerRegistry, use the local registration
@@ -64,7 +64,7 @@ public class PlayerRegistry : MonoBehaviour, IPlayerProvider
             return provider.GetPlayerTransform();
         }
 
-        // 2. Compatibility fallback for scenes that still carry PlayerRegistry directly.
+        // 2. Direct-scene fallback for objects that intentionally carry PlayerRegistry.
         return _player;
     }
 

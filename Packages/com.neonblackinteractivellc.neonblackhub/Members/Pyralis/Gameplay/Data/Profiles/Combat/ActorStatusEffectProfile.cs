@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Features.Combat;
 using UnityEngine;
@@ -17,10 +17,10 @@ namespace NeonBlack.Gameplay.Data.Profiles
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Actor Status Effect Profile", fileName = "ActorStatusEffectProfile")]
     public class ActorStatusEffectProfile : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (defaultShieldDamageReduction < 0f || defaultShieldDamageReduction > 1f)
-                yield return "Default Shield Damage Reduction must be between 0 and 1.";
+                yield return PyralisRuntimeValidationIssue.Required("Default Shield Damage Reduction must be between 0 and 1.");
         }
 
         public StatusEffectDefinition[] startingEffects;

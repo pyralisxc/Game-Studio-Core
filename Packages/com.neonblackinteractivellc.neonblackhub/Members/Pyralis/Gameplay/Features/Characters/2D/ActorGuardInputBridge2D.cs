@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Features.Combat;
 using NeonBlack.Gameplay.Features.Characters;
@@ -22,10 +22,10 @@ namespace NeonBlack.Gameplay.Features.Characters
     [AddComponentMenu("NeonBlack/Gameplay/Characters/2D/Actor Guard Input Bridge 2D")]
     public class ActorGuardInputBridge2D : MonoBehaviour, IActorGuardInputReceiver2D, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (GetComponent<ActorFeatureHost>() == null)
-                yield return "ActorFeatureHost is missing. Feature input bridges need it.";
+                yield return PyralisRuntimeValidationIssue.Required("ActorFeatureHost is missing. Feature input bridges need it.");
         }
         private ActorFeatureHost _featureHost;
         private IActorGuardFeature _guardFeature;

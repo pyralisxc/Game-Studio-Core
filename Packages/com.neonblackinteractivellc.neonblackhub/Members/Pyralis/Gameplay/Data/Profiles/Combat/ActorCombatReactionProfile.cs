@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using NeonBlack.Gameplay.Core.Contracts;
 
@@ -16,10 +16,10 @@ namespace NeonBlack.Gameplay.Data.Profiles
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Actor Combat Reaction Profile", fileName = "ActorCombatReactionProfile")]
     public class ActorCombatReactionProfile : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            if (parryWindowDuration < 0f) yield return "Parry Window Duration cannot be negative.";
-            if (blockDamageReduction < 0f || blockDamageReduction > 1f) yield return "Block Damage Reduction must be between 0 and 1.";
+            if (parryWindowDuration < 0f) yield return PyralisRuntimeValidationIssue.Required("Parry Window Duration cannot be negative.");
+            if (blockDamageReduction < 0f || blockDamageReduction > 1f) yield return PyralisRuntimeValidationIssue.Required("Block Damage Reduction must be between 0 and 1.");
         }
 
         public bool enableGuard = true;

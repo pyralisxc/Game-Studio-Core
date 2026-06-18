@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
@@ -27,14 +27,14 @@ namespace NeonBlack.Gameplay.Characters
     [AddComponentMenu("NeonBlack/Gameplay/Setup/Participant Spawn Service")]
     public class ParticipantSpawnService : MonoBehaviour, IGameService, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (rosterService == null)
-                yield return "Roster Service is empty. This is expected when GameplaySessionBootstrap injects it at runtime.";
+                yield return PyralisRuntimeValidationIssue.Required("Roster Service is empty. This is expected when GameplaySessionBootstrap injects it at runtime.");
             if (sessionStateService == null)
-                yield return "Session State Service is empty. This is expected when GameplaySessionBootstrap injects it at runtime.";
+                yield return PyralisRuntimeValidationIssue.Required("Session State Service is empty. This is expected when GameplaySessionBootstrap injects it at runtime.");
             if (spawnPoints == null || spawnPoints.Length == 0)
-                yield return "Spawn Points is empty. Add spawn points for pawn-backed games.";
+                yield return PyralisRuntimeValidationIssue.Required("Spawn Points is empty. Add spawn points for pawn-backed games.");
         }
         [SerializeField] private ParticipantRosterService rosterService;
         [SerializeField] private SessionStateService sessionStateService;

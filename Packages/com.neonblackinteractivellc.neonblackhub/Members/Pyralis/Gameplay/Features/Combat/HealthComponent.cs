@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using NeonBlack.Gameplay.Core.Contracts;
@@ -29,16 +29,16 @@ namespace NeonBlack.Gameplay.Features.Combat
     [AddComponentMenu("NeonBlack/Gameplay/Combat/Health Component")]
     public class HealthComponent : MonoBehaviour, IActorHealthModifierReceiver, IActorHealthState, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (maxHealth <= 0f)
-                yield return "Max Health must be greater than zero.";
+                yield return PyralisRuntimeValidationIssue.Required("Max Health must be greater than zero.");
 
             if (destroyOnDeath && deathDestroyDelay < 0f)
-                yield return "Death Destroy Delay cannot be negative.";
+                yield return PyralisRuntimeValidationIssue.Required("Death Destroy Delay cannot be negative.");
 
             if (regenEnabled && regenRate <= 0f)
-                yield return "Regen is enabled but Regen Rate is <= 0.";
+                yield return PyralisRuntimeValidationIssue.Required("Regen is enabled but Regen Rate is <= 0.");
         }
     // Inspector
     [Header("Stats")]

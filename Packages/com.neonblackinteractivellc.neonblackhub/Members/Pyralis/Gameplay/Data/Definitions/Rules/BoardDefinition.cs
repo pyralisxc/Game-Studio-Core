@@ -1,4 +1,4 @@
-using NeonBlack.Gameplay.Core.Rules.Board;
+﻿using NeonBlack.Gameplay.Core.Rules.Board;
 using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
 using UnityEngine;
@@ -17,9 +17,9 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
     [CreateAssetMenu(menuName = "NeonBlack/Rules/Board Definition", fileName = "BoardDefinition", order = -100)]
     public class BoardDefinition : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            return GetValidationIssues();
+            return PyralisRuntimeValidationIssueUtility.RequiredFrom(GetValidationIssues());
         }
 
         public string boardId = "board.default";

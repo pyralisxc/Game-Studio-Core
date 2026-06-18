@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Presentation.Animation;
@@ -21,7 +21,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Pawn Animation Profile", fileName = "PawnAnimationProfile", order = -30)]
     public class PawnAnimationProfile : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             // The actual validation issues are complex and depend on UnityEditor APIs.
             // We return an empty list here and let the custom inspector handle the deep validation,

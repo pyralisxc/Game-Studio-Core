@@ -1,4 +1,4 @@
-using NeonBlack.Gameplay.Data.Definitions.Rules;
+﻿using NeonBlack.Gameplay.Data.Definitions.Rules;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Profiles;
 using System.Collections.Generic;
@@ -23,9 +23,9 @@ namespace NeonBlack.Gameplay.Data.Definitions
 [CreateAssetMenu(menuName = "NeonBlack/Definitions/Game Mode Definition", fileName = "GameModeDefinition", order = 10)]
     public class GameModeDefinition : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            return GetValidationIssues();
+            return PyralisRuntimeValidationIssueUtility.RequiredFrom(GetValidationIssues());
         }
 
         [Header("Scenes")]

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
@@ -20,14 +20,20 @@ namespace NeonBlack.Gameplay.Core.Navigation
     )]
 public class LevelRegistry : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (levels == null || levels.Length == 0)
-                yield return "Levels list is empty.";
+                yield return PyralisRuntimeValidationIssue.Required("Levels list is empty.");
             else
             {
                 for (int i = 0; i < levels.Length; i++)
-                    if (levels[i] == null) yield return $"Levels[{i}] is unassigned.";
+                    if (levels[i] == null)
+                    {
+                        yield return PyralisRuntimeValidationIssue.Required(
+                            $"Levels[{i}] is unassigned.",
+                            $"{nameof(levels)}[{i}]",
+                            nameof(LevelRegistry));
+                    }
             }
         }
 

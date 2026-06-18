@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Core.Runtime;
 using NeonBlack.Gameplay.Core.Contracts;
@@ -29,20 +29,20 @@ namespace NeonBlack.Gameplay.Features.Composition
     [DisallowMultipleComponent]
     public class ActorFeatureHost : MonoBehaviour, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (GetComponents<ActorFeatureHost>().Length > 1)
-                yield return "This actor has multiple ActorFeatureHost components. Keep one host on the actor root.";
+                yield return PyralisRuntimeValidationIssue.Required("This actor has multiple ActorFeatureHost components. Keep one host on the actor root.");
 
             if (GetComponent("PawnRoot") == null
                 && GetComponent("Motor3D") == null
                 && GetComponent("EnemyAI") == null)
             {
-                yield return "No known actor bootstrap component found. Ensure something calls InitializeFeatures at runtime.";
+                yield return PyralisRuntimeValidationIssue.Required("No known actor bootstrap component found. Ensure something calls InitializeFeatures at runtime.");
             }
 
             if (Application.isPlaying && InstalledModules.Count == 0)
-                yield return "No feature modules are currently installed. Check the actor definition/profile feature list.";
+                yield return PyralisRuntimeValidationIssue.Required("No feature modules are currently installed. Check the actor definition/profile feature list.");
         }
         private readonly List<IFeatureModuleRuntime> _featureModules = new List<IFeatureModuleRuntime>();
         private readonly List<GameObject> _featureInstances = new List<GameObject>();

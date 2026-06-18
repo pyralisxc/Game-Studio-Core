@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Rpg;
@@ -136,16 +136,16 @@ namespace NeonBlack.Gameplay.Features.Rpg.UI
             return LastResult;
         }
 
-        public System.Collections.Generic.IEnumerable<string> GetRuntimeValidationIssues()
+        public System.Collections.Generic.IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (hubDefinition == null && _runtimeHub == null)
-                yield return "`HubInteractionSceneController` should reference a Hub Definition.";
+                yield return PyralisRuntimeValidationIssue.Required("`HubInteractionSceneController` should reference a Hub Definition.");
 
             if (hudPresenter == null && GetComponentInChildren<HubInteractionHudPresenter>(true) == null)
-                yield return "`HubInteractionSceneController` should reference a Hub Interaction HUD Presenter or have one as a child.";
+                yield return PyralisRuntimeValidationIssue.Required("`HubInteractionSceneController` should reference a Hub Interaction HUD Presenter or have one as a child.");
 
             if (!_hasRuntimeOwner && string.IsNullOrWhiteSpace(ownerStableId))
-                yield return "`HubInteractionSceneController` needs Owner Stable Id unless a project input bridge supplies participant context.";
+                yield return PyralisRuntimeValidationIssue.Required("`HubInteractionSceneController` needs Owner Stable Id unless a project input bridge supplies participant context.");
         }
 
         private void HandlePromptConfirmed(HubPromptPayload prompt)

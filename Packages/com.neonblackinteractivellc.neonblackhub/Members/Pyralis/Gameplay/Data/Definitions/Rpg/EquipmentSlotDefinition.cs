@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Rpg;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
@@ -15,9 +15,9 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Equipment Slot", fileName = "EquipmentSlotDefinition")]
     public class EquipmentSlotDefinition : ScriptableObject, IEquipmentSlot, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            return GetValidationIssues();
+            return PyralisRuntimeValidationIssueUtility.RequiredFrom(GetValidationIssues());
         }
 
         public string slotId = "slot.new";

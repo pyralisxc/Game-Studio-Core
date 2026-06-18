@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Contracts.Networking;
@@ -28,10 +28,10 @@ namespace NeonBlack.Gameplay.Characters
     [AddComponentMenu("NeonBlack/Gameplay/Setup/Session State Service")]
     public class SessionStateService : MonoBehaviour, IGameService, IGameplayStateReader, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (sessionDefinition == null)
-                yield return "Session Definition is empty. This is expected when GameplaySessionBootstrap injects the session at runtime.";
+                yield return PyralisRuntimeValidationIssue.Required("Session Definition is empty. This is expected when GameplaySessionBootstrap injects the session at runtime.");
         }
         public enum SessionPhase
         {

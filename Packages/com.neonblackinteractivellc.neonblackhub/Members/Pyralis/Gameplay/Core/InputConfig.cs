@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -22,9 +22,13 @@ namespace NeonBlack.Gameplay.Core.Config
 [CreateAssetMenu(menuName = "NeonBlack/Core/Input Config", fileName = "InputConfig")]
 public class InputConfig : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            if (actions == null) yield return "Input Action Asset is missing.";
+            if (actions == null)
+                yield return PyralisRuntimeValidationIssue.Required(
+                    "Input Action Asset is missing.",
+                    nameof(actions),
+                    nameof(InputConfig));
         }
 
         public InputActionAsset actions;

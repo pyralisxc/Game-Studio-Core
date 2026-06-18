@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using NeonBlack.Gameplay.Core.Contracts;
@@ -23,10 +23,10 @@ namespace NeonBlack.Gameplay.Features.Scoring
 [DefaultExecutionOrder(-50)]
 public class LeaderboardManager : MonoBehaviour, ILeaderboardService, IRuntimeValidationProvider
 {
-    public IEnumerable<string> GetRuntimeValidationIssues()
+    public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
     {
-        if (string.IsNullOrWhiteSpace(_leaderboardId)) yield return "Leaderboard ID cannot be blank.";
-        if (_topScoresFetchLimit <= 0) yield return "Fetch limit must be positive.";
+        if (string.IsNullOrWhiteSpace(_leaderboardId)) yield return PyralisRuntimeValidationIssue.Required("Leaderboard ID cannot be blank.");
+        if (_topScoresFetchLimit <= 0) yield return PyralisRuntimeValidationIssue.Required("Fetch limit must be positive.");
     }
     [SerializeField, Tooltip("Must match the Leaderboard ID in your backend service when leaderboard integration is enabled.")]
     private string _leaderboardId = "main_leaderboard";

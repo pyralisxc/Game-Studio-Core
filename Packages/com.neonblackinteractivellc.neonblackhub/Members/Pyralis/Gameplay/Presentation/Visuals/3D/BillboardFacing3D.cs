@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
@@ -26,10 +26,10 @@ namespace NeonBlack.Gameplay.Presentation.Visuals
 [AddComponentMenu("NeonBlack/Gameplay/Runtime 3D/Presentation/Billboard Facing 3D")]
 public class BillboardFacing3D : MonoBehaviour, IRuntimeValidationProvider
 {
-    public IEnumerable<string> GetRuntimeValidationIssues()
+    public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
     {
-        if (target == null) yield return "Target transform is unassigned.";
-        if (cameraOverride == null) yield return "Camera Override is empty. Will fallback to Main Camera.";
+        if (target == null) yield return PyralisRuntimeValidationIssue.Required("Target transform is unassigned.");
+        if (cameraOverride == null) yield return PyralisRuntimeValidationIssue.Required("Camera Override is empty. Will fallback to Main Camera.");
     }
     public enum FacingMode
     {

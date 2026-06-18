@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using TMPro;
 using NeonBlack.Gameplay.Core.Contracts;
@@ -28,14 +28,14 @@ namespace NeonBlack.Gameplay.Features.Scoring
     [AddComponentMenu("NeonBlack/Gameplay/Scoring/Leaderboard Screen")]
     public class LeaderboardScreen : MonoBehaviour, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            if (_mainMenuPage == null) yield return "Main Menu Page is unassigned.";
-            if (_leaderboardPage == null) yield return "Leaderboard Page is unassigned.";
-            if (_rowContainer == null) yield return "Row Container is unassigned.";
-            if (_rowPrefab == null) yield return "Row Prefab is unassigned.";
+            if (_mainMenuPage == null) yield return PyralisRuntimeValidationIssue.Required("Main Menu Page is unassigned.");
+            if (_leaderboardPage == null) yield return PyralisRuntimeValidationIssue.Required("Leaderboard Page is unassigned.");
+            if (_rowContainer == null) yield return PyralisRuntimeValidationIssue.Required("Row Container is unassigned.");
+            if (_rowPrefab == null) yield return PyralisRuntimeValidationIssue.Required("Row Prefab is unassigned.");
             else if (_rowPrefab.GetComponentsInChildren<TextMeshProUGUI>(true).Length < 3)
-                yield return "Row Prefab needs at least 3 TMP labels for Rank, Name, and Score.";
+                yield return PyralisRuntimeValidationIssue.Required("Row Prefab needs at least 3 TMP labels for Rank, Name, and Score.");
         }
         [Header("Pages")]
         [SerializeField, Tooltip("Root GameObject of the main menu content. Hidden while leaderboard is open.")]

@@ -90,13 +90,13 @@ namespace NeonBlack.Gameplay.Editor
             EditorGUILayout.LabelField("Route Guide", EditorStyles.boldLabel);
             PyralisAuthoringGraphJsonExportControl.DrawRouteProofTrace(graph);
 
-            IReadOnlyList<PyralisAuthoringRouteStepRow> routeSteps = PyralisAuthoringSetupGraphProjection.BuildRouteStepRows(graph);
-            if (routeSteps != null && routeSteps.Count > 0)
+            PyralisAuthoringRouteWorkingProjection route = PyralisAuthoringSetupGraphProjection.BuildRouteWorkingProjection(graph);
+            if (route.OrderedSteps.Count > 0)
             {
                 PyralisAuthoringWindowText.DrawSemanticHelpBox(
-                    "Follow this graph-derived setup-card path from a fresh scene toward the first playable proof. Intent filters the route; setup-flow and validation evidence decide the ordered Unity actions.",
+                    "Follow this graph-derived setup-card path from a fresh scene toward the first playable proof. Intent helps choose what to wire, then the current setup graph, setup-flow evidence, and validation decide the ordered Unity actions.",
                     MessageType.Info);
-                DrawRouteStepRows(routeSteps);
+                DrawRouteStepRows(route.OrderedSteps);
                 return;
             }
 

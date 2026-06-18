@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
 using UnityEngine;
@@ -21,10 +21,10 @@ namespace NeonBlack.Gameplay.Core.Config
     [CreateAssetMenu(menuName = "NeonBlack/Core/Game Config", fileName = "GameConfig")]
     public class GameConfig : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            if (sessionDefinition == null) yield return "Session Definition is missing.";
-            if (string.IsNullOrWhiteSpace(mainMenuScene)) yield return "Main Menu Scene name is required.";
+            if (sessionDefinition == null) yield return PyralisRuntimeValidationIssue.Required("Session Definition is missing.");
+            if (string.IsNullOrWhiteSpace(mainMenuScene)) yield return PyralisRuntimeValidationIssue.Required("Main Menu Scene name is required.");
         }
 
         [Header("Session")]

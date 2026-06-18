@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
@@ -19,11 +19,11 @@ namespace NeonBlack.Gameplay.Data.Profiles
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Enemy Reaction Profile", fileName = "EnemyReactionProfile")]
     public class EnemyReactionProfile : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            if (hurtLockDuration < 0f) yield return "Hurt Lock Duration cannot be negative.";
-            if (staggerLockDuration < 0f) yield return "Stagger Lock Duration cannot be negative.";
-            if (hitPauseDuration < 0f) yield return "Hit Pause Duration cannot be negative.";
+            if (hurtLockDuration < 0f) yield return PyralisRuntimeValidationIssue.Required("Hurt Lock Duration cannot be negative.");
+            if (staggerLockDuration < 0f) yield return PyralisRuntimeValidationIssue.Required("Stagger Lock Duration cannot be negative.");
+            if (hitPauseDuration < 0f) yield return PyralisRuntimeValidationIssue.Required("Hit Pause Duration cannot be negative.");
         }
 
         public bool enableReactions = true;

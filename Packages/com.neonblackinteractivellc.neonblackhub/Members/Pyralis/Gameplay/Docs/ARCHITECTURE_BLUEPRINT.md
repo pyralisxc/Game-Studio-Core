@@ -120,7 +120,7 @@ For the 2D stack, `Motor2D` is the shared 2D pawn motor surface. Focused ownersh
 
 Feature services are not core by default. Combat, enemy, RPG, game-flow, scoring, and feedback services register when the authored route asks for them through `GameModeDefinition`, participant pawns, resolved feature contracts, or actual loaded scene components.
 
-Feature-specific service lists should not expand the composition root. `PyralisGameplayLifetimeScope` owns the visible service graph entrypoint; `PyralisRuntimeFeatureServicePolicy` owns route and compatibility activation evidence; the platform feature-service installer owns common registration mechanics; and feature installers such as RPG's runtime composition installer own concrete feature lists when a domain is broad enough to justify its own local seam. This keeps the lifetime scope readable without creating a second setup path.
+Feature-specific service lists should not expand the composition root. `PyralisGameplayLifetimeScope` owns the visible service graph entrypoint; `PyralisRuntimeFeatureServicePolicy` owns route and loaded-scene activation evidence; the platform feature-service installer owns common registration mechanics; and feature installers such as RPG's runtime composition installer own concrete feature lists when a domain is broad enough to justify its own local seam. This keeps the lifetime scope readable without creating a second setup path.
 
 **Strict Authoring Rule:** `GameplaySessionBootstrap` uses Unity's `RequireComponent` path to keep `PyralisGameplayLifetimeScope` visible, and runtime systems must not autospawn GameObjects or create presets to fix missing scene references. Missing core services stay null at runtime and log a clear error, while the Authoring Window and Map/Scene Readiness guide the user to manually add the missing objects in the scene. Hygiene can audit the graph pressure, but concrete scene repair belongs in Map. This keeps the scene hierarchy as the singular source of truth and prevents hidden systems-on-top-of-systems complexity.
 
@@ -468,7 +468,7 @@ Preferred split:
 
 This avoids forcing "aspect-bound movement" to mean "camera profile."
 
-## Shared Features Versus Compatibility-Specific Layers
+## Shared Features Versus One-Off Mode Layers
 
 ### Likely Shared
 
@@ -486,7 +486,7 @@ This avoids forcing "aspect-bound movement" to mean "camera profile."
 - pickup and score primitives,
 - hazard foundations,
 - camera service abstractions,
-- animation signal mapping and Animator compatibility tooling,
+- animation signal mapping and Animator tooling,
 - settings and save-backed configuration,
 - input ownership and routing.
 
@@ -550,8 +550,8 @@ The architecture is coherent enough for active route development, but several ar
 
 Highest-risk areas:
 
-- runtime services still include narrow static compatibility/query surfaces, especially participant lookup helpers, that should keep shrinking toward explicit lifetime-scope ownership and participant/session references
-- some older scene-facing flows still need participant-native proof in Play Mode
+- runtime services still include narrow static query surfaces, especially participant lookup helpers, that should keep shrinking toward explicit lifetime-scope ownership and participant/session references
+- some direct scene-facing flows still need participant-native proof in Play Mode
 - `CameraOcclusionFader` and a few polling/ticking systems need hot-path allocation cleanup before content density grows
 - several large MonoBehaviours and editor classes remain change hotspots
 - the aggregate `NeonBlack.Gameplay` assembly can still hide accidental cross-domain coupling
@@ -598,13 +598,13 @@ Arcade and brawler should remain example assemblies of shared parts, with reusab
 
 Keep architecture, standards, and migration docs current as code changes land.
 
-Docs should describe the supported path directly. Keep compatibility notes only when they protect active content, a supported public contract, or a still-open cleanup task.
+Docs should describe the supported path directly. Keep historical notes only when they protect active content, a supported public contract, or a still-open cleanup task.
 
 ### Target 5.5: Single Runtime Composition Path
 
 The long-term runtime service ownership model should have one primary composition root.
 
-`GameplaySessionBootstrap` remains the supported scene entrypoint, but it should feed a clear service graph rather than becoming a second service container. `PyralisGameplayLifetimeScope` should be the durable owner for dependency registration. Static singleton accessors and compatibility query helpers such as participant lookup should shrink toward narrow facades rather than becoming a second service-location model.
+`GameplaySessionBootstrap` remains the supported scene entrypoint, but it should feed a clear service graph rather than becoming a second service container. `PyralisGameplayLifetimeScope` should be the durable owner for dependency registration. Static singleton accessors and direct-scene query helpers such as participant lookup should shrink toward narrow facades rather than becoming a second service-location model.
 
 This matters because Unity scenes already have enough implicit state. The gameplay platform should not add several hidden service-resolution models on top of that.
 

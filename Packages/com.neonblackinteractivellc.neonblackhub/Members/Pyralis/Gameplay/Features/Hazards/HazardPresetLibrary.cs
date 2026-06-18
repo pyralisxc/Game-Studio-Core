@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
@@ -18,11 +18,11 @@ namespace NeonBlack.Gameplay.Features.Hazards
 [CreateAssetMenu(fileName = "HazardPresetLibrary", menuName = "NeonBlack/Hazards/Hazard Preset Library")]
 public class HazardPresetLibrary : ScriptableObject, IRuntimeValidationProvider
 {
-    public IEnumerable<string> GetRuntimeValidationIssues()
+    public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
     {
         if (presets == null || presets.Length == 0)
         {
-            yield return "Presets list is empty.";
+            yield return PyralisRuntimeValidationIssue.Required("Presets list is empty.");
             yield break;
         }
 
@@ -31,17 +31,17 @@ public class HazardPresetLibrary : ScriptableObject, IRuntimeValidationProvider
         {
             if (presets[i] == null)
             {
-                yield return $"Presets[{i}] is null.";
+                yield return PyralisRuntimeValidationIssue.Required($"Presets[{i}] is null.");
                 continue;
             }
 
             if (string.IsNullOrWhiteSpace(presets[i].presetName))
-                yield return $"Presets[{i}] is missing a name.";
+                yield return PyralisRuntimeValidationIssue.Required($"Presets[{i}] is missing a name.");
             else if (!names.Add(presets[i].presetName))
-                yield return $"Duplicate preset name: {presets[i].presetName}";
+                yield return PyralisRuntimeValidationIssue.Required($"Duplicate preset name: {presets[i].presetName}");
 
             if (presets[i].data == null)
-                yield return $"Presets[{i}] is missing HazardData.";
+                yield return PyralisRuntimeValidationIssue.Required($"Presets[{i}] is missing HazardData.");
         }
     }
 

@@ -47,7 +47,7 @@ namespace NeonBlack.Gameplay.Editor
         AuthoredRuntimeSurface,
         EditorAudit,
         GrammarVocabulary,
-        CompatibilitySurface,
+        DirectSceneQuerySurface,
         ScannerImplementation
     }
 
@@ -254,7 +254,7 @@ namespace NeonBlack.Gameplay.Editor
             return pressureKind switch
             {
                 PyralisSourceDependencyPressureKind.RuntimeOwnership => 0,
-                PyralisSourceDependencyPressureKind.CompatibilitySurface => 1,
+                PyralisSourceDependencyPressureKind.DirectSceneQuerySurface => 1,
                 PyralisSourceDependencyPressureKind.AcceptedComposition => 2,
                 PyralisSourceDependencyPressureKind.PawnCoordinator => 3,
                 PyralisSourceDependencyPressureKind.PawnCapabilitySibling => 4,
@@ -632,7 +632,7 @@ namespace NeonBlack.Gameplay.Editor
                 return PyralisSourceDependencyPressureKind.GameFlowRuntimeSurface;
 
             if (normalized.Contains("/PlayerRegistry", StringComparison.Ordinal))
-                return PyralisSourceDependencyPressureKind.CompatibilitySurface;
+                return PyralisSourceDependencyPressureKind.DirectSceneQuerySurface;
 
             return PyralisSourceDependencyPressureKind.RuntimeOwnership;
         }
@@ -670,7 +670,7 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisSourceDependencyPressureKind.AuthoredRuntimeSurface => "Expected pressure for authored runtime fields, profiles, validation, or gizmos. Review if setup meaning duplicates contracts or graph guidance.",
                 PyralisSourceDependencyPressureKind.EditorAudit => "Expected pressure for graph, evidence, or validator code; review for duplicated setup truth before splitting.",
                 PyralisSourceDependencyPressureKind.GrammarVocabulary => "Vocabulary pressure is acceptable when it is wording only; move feature-specific setup meaning back to contracts/reflection.",
-                PyralisSourceDependencyPressureKind.CompatibilitySurface => "Compatibility pressure should stay explicit and shrink when participant/session-native paths replace it.",
+                PyralisSourceDependencyPressureKind.DirectSceneQuerySurface => "Direct scene query pressure should stay explicit and shrink when participant/session-native paths can provide the reference.",
                 PyralisSourceDependencyPressureKind.ScannerImplementation => "Scanner pressure describes the audit tool itself; tune false positives before treating this as runtime architecture risk.",
                 _ => "Runtime ownership pressure; check whether this script owns too many domains or should delegate to a feature service/profile/presenter."
             };

@@ -1,4 +1,4 @@
-using NeonBlack.Gameplay.Data.Definitions;
+﻿using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Features.Combat;
 using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Core.Contracts;
@@ -19,13 +19,13 @@ namespace NeonBlack.Gameplay.Data.Profiles
 [CreateAssetMenu(menuName = "NeonBlack/Profiles/Enemy Feature Profile", fileName = "EnemyFeatureProfile")]
     public class EnemyFeatureProfile : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            if (combatProfile == null) yield return "Combat Profile is missing.";
-            if (reactionProfile == null) yield return "Reaction Profile is missing.";
+            if (combatProfile == null) yield return PyralisRuntimeValidationIssue.Required("Combat Profile is missing.");
+            if (reactionProfile == null) yield return PyralisRuntimeValidationIssue.Required("Reaction Profile is missing.");
 
             foreach (var issue in GetValidationIssues())
-                yield return issue;
+                yield return PyralisRuntimeValidationIssue.Required(issue);
         }
 
         public EnemyCombatProfile combatProfile;

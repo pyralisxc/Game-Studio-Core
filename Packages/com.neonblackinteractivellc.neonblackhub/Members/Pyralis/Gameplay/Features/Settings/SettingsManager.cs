@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Runtime;
@@ -35,13 +35,13 @@ namespace NeonBlack.Gameplay.Features.Settings
 [DefaultExecutionOrder(-40)]
 public class SettingsManager : MonoBehaviour, IGameplaySettingsApplier, IInputSettingsRegistrar, IRuntimeValidationProvider
 {
-    public IEnumerable<string> GetRuntimeValidationIssues()
+    public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
     {
         if (settingsProfile == null)
-            yield return "Settings Profile is required for default volume and deadzone values.";
+            yield return PyralisRuntimeValidationIssue.Required("Settings Profile is required for default volume and deadzone values.");
         
         if (Mixer == null)
-            yield return "No AudioMixer found. Assign one in the Settings Profile or use the Mixer Override field.";
+            yield return PyralisRuntimeValidationIssue.Required("No AudioMixer found. Assign one in the Settings Profile or use the Mixer Override field.");
     }
     [Header("Profile")]
     [SerializeField, Tooltip("Provides AudioMixer, default volumes, and deadzone values. Required for clean defaults.")]

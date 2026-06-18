@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Rpg;
 using NeonBlack.Gameplay.Features.Composition;
@@ -64,13 +64,13 @@ namespace NeonBlack.Gameplay.Features.Rpg.UI
             panelRoot.SetActive(false);
         }
 
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (route == PlayerPanelRoute.None)
-                yield return "`RpgPanelRoutePresenter` should use a concrete panel route.";
+                yield return PyralisRuntimeValidationIssue.Required("`RpgPanelRoutePresenter` should use a concrete panel route.");
 
             if (panelRoot == null)
-                yield return "`RpgPanelRoutePresenter` should reference Panel Root, or live directly on the panel root GameObject.";
+                yield return PyralisRuntimeValidationIssue.Required("`RpgPanelRoutePresenter` should reference Panel Root, or live directly on the panel root GameObject.");
         }
 
         private void Render(HubInteractionResult result)

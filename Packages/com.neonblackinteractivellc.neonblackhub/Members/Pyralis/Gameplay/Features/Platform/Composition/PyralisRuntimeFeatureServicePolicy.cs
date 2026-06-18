@@ -38,7 +38,7 @@ namespace NeonBlack.Gameplay.Core.Runtime
         public bool UsesScoringServices { get; }
         public bool UsesFeedbackServices { get; }
 
-        public PyralisRuntimeFeatureServicePolicy WithCompatibilityEvidence(
+        public PyralisRuntimeFeatureServicePolicy WithLoadedSceneEvidence(
             bool usesCombatServices,
             bool usesEnemyServices,
             bool usesRpgServices,
@@ -111,22 +111,22 @@ namespace NeonBlack.Gameplay.Core.Runtime
                 usesFeedback);
         }
 
-        public static PyralisRuntimeFeatureServicePolicy ResolveWithCompatibilityEvidence(SessionDefinition sessionDefinition)
+        public static PyralisRuntimeFeatureServicePolicy ResolveWithLoadedSceneEvidence(SessionDefinition sessionDefinition)
         {
-            return Resolve(sessionDefinition).WithCompatibilityEvidence(
-                HasCompatibilitySceneComponent<PawnCombatBehaviour>()
-                || HasCompatibilitySceneComponent<PawnCombatBehaviour2D>(),
-                HasCompatibilitySceneComponent<EnemyAI>()
-                || HasCompatibilitySceneComponent<BattleManager>(),
-                HasCompatibilitySceneComponentInNamespace("NeonBlack.Gameplay.Features.Rpg"),
-                HasCompatibilitySceneComponent<GameManager>()
-                || HasCompatibilitySceneComponentInNamespace("NeonBlack.Gameplay.Features.GameFlow"),
-                HasCompatibilitySceneComponent<ParticipantScoreService>()
-                || HasCompatibilitySceneComponent<LeaderboardManager>()
-                || HasCompatibilitySceneComponent<StillnessBonus2D>()
-                || HasCompatibilitySceneComponent<CollectibleFeedback2D>(),
-                HasCompatibilitySceneComponent<ParticipantFeedbackService>()
-                || HasCompatibilitySceneComponentInNamespace("NeonBlack.Gameplay.Features.Feedback"));
+            return Resolve(sessionDefinition).WithLoadedSceneEvidence(
+                HasLoadedSceneComponent<PawnCombatBehaviour>()
+                || HasLoadedSceneComponent<PawnCombatBehaviour2D>(),
+                HasLoadedSceneComponent<EnemyAI>()
+                || HasLoadedSceneComponent<BattleManager>(),
+                HasLoadedSceneComponentInNamespace("NeonBlack.Gameplay.Features.Rpg"),
+                HasLoadedSceneComponent<GameManager>()
+                || HasLoadedSceneComponentInNamespace("NeonBlack.Gameplay.Features.GameFlow"),
+                HasLoadedSceneComponent<ParticipantScoreService>()
+                || HasLoadedSceneComponent<LeaderboardManager>()
+                || HasLoadedSceneComponent<StillnessBonus2D>()
+                || HasLoadedSceneComponent<CollectibleFeedback2D>(),
+                HasLoadedSceneComponent<ParticipantFeedbackService>()
+                || HasLoadedSceneComponentInNamespace("NeonBlack.Gameplay.Features.Feedback"));
         }
 
         private static void AppendModuleSignals(
@@ -194,10 +194,9 @@ namespace NeonBlack.Gameplay.Core.Runtime
                 || contract.Capability.HasFlag(AuthoringCapability.Animation);
         }
 
-        private static bool HasCompatibilitySceneComponent<T>() where T : Component
+        private static bool HasLoadedSceneComponent<T>() where T : Component
         {
-            // Compatibility evidence keeps hand-authored existing scenes alive while feature contracts
-            // become the primary activation path. Do not treat these scans as new route truth.
+            // Loaded-scene evidence keeps visible scene-authored services active without creating a second route truth.
             return FindLoadedSceneComponent<T>() != null;
         }
 
@@ -224,10 +223,9 @@ namespace NeonBlack.Gameplay.Core.Runtime
             return null;
         }
 
-        private static bool HasCompatibilitySceneComponentInNamespace(string namespacePrefix)
+        private static bool HasLoadedSceneComponentInNamespace(string namespacePrefix)
         {
-            // Namespace scans are compatibility evidence for older scene-authored feature stacks.
-            // Prefer policy/contract activation for new feature services.
+            // Namespace scans are coarse scene evidence; contracts and authored definitions remain the primary route signal.
             if (string.IsNullOrWhiteSpace(namespacePrefix))
                 return false;
 

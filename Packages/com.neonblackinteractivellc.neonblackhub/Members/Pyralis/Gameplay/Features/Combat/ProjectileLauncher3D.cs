@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Features.Composition;
 using UnityEngine;
@@ -16,9 +16,9 @@ namespace NeonBlack.Gameplay.Features.Combat
     )]
     public sealed class ProjectileLauncher3D : ProjectileLauncherBase, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            if (hitMask == 0) yield return "Hit Mask is empty. No collisions will be detected.";
+            if (hitMask == 0) yield return PyralisRuntimeValidationIssue.Required("Hit Mask is empty. No collisions will be detected.");
         }
         [Header("Hitscan")]
         [SerializeField] private LayerMask hitMask = Physics.DefaultRaycastLayers;

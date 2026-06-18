@@ -33,11 +33,11 @@ public interface IGameplaySessionFlow
     NativeSetup = new[] 
     { 
         "Wire system references (Score, Hazards, Pickups, etc.).",
-        "For participant-spawned pawns, let the roster provide active controllers. Use Player Controllers only for standalone compatibility scenes."
+        "For participant-spawned pawns, let the roster provide active controllers. Use explicit Player Controllers only for intentionally standalone scene-authored tests."
     },
     FirstProof = "Start the game and verify the session initializes and transitions to the Playing state.",
     AssignmentFields = new[] { nameof(scoreManager), nameof(hazardSpawner), nameof(pickupSpawner), nameof(difficultyManager) },
-    ExpertAdvice = "The GameManager is the 2D arcade orchestrator. SessionStateService remains the normal IGameplayStateReader for movement/input/spawner activity. Prefer participant roster pawns for active players; use explicit Player Controllers only for hand-authored standalone compatibility scenes.",
+    ExpertAdvice = "The GameManager is the 2D arcade orchestrator. SessionStateService remains the normal IGameplayStateReader for movement/input/spawner activity. Prefer participant roster pawns for active players; use explicit Player Controllers only for intentionally standalone scene-authored tests.",
     DocumentationURL = "https://docs.neonblack.com/pyralis/gameflow")]
 [AddComponentMenu("NeonBlack/Gameplay/Game Flow/2D Game Manager")]
 [DefaultExecutionOrder(-20)]

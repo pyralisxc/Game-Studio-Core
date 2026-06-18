@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
@@ -27,10 +27,18 @@ namespace NeonBlack.Gameplay.Core.Navigation
     )]
 public class LevelData : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            if (string.IsNullOrWhiteSpace(sceneName)) yield return "Scene Name is required.";
-            if (string.IsNullOrWhiteSpace(displayName)) yield return "Display Name is required.";
+            if (string.IsNullOrWhiteSpace(sceneName))
+                yield return PyralisRuntimeValidationIssue.Required(
+                    "Scene Name is required.",
+                    nameof(sceneName),
+                    nameof(LevelData));
+            if (string.IsNullOrWhiteSpace(displayName))
+                yield return PyralisRuntimeValidationIssue.Required(
+                    "Display Name is required.",
+                    nameof(displayName),
+                    nameof(LevelData));
         }
 
         [Tooltip("Exact scene name as listed in File -> Build Settings. Must match perfectly.")]

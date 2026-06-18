@@ -1,8 +1,10 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Features.Combat;
 using UnityEngine;
+
+using NeonBlack.Gameplay.Core.Contracts;
 
 namespace NeonBlack.Gameplay.Features.Characters
 {
@@ -27,12 +29,12 @@ namespace NeonBlack.Gameplay.Features.Characters
         [SerializeField] private CombatSequenceDefinition aerialSequence;
         [SerializeField] private string aerialHitBoxZone = "Aerial";
 
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (attackCooldown < 0f)
-                yield return "Attack Cooldown cannot be negative.";
+                yield return PyralisRuntimeValidationIssue.Required("Attack Cooldown cannot be negative.");
             if (maxAerialAttacks < 0)
-                yield return "Max Aerial Attacks cannot be negative.";
+                yield return PyralisRuntimeValidationIssue.Required("Max Aerial Attacks cannot be negative.");
         }
 
         public void ApplyCombatProfile(PawnProfileApplicationContext context, PawnCombatProfile profile)

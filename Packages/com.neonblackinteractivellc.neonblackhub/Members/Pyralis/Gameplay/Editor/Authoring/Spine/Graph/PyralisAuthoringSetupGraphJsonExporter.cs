@@ -172,13 +172,7 @@ namespace NeonBlack.Gameplay.Editor
 
         private static RouteProofTraceSnapshot BuildRouteProofTraceSnapshot(PyralisAuthoringSetupGraph graph)
         {
-            PyralisAuthoringGraphNode proof = PyralisAuthoringSetupGraphProjection.FindCurrentProofNode(graph);
-            PyralisAuthoringRouteStepRow[] orderedSteps = PyralisAuthoringSetupGraphProjection.BuildRouteStepRows(graph).ToArray();
-            PyralisAuthoringRouteStepRow[] criticalPath = PyralisAuthoringSetupGraphProjection.BuildRouteCriticalPathRows(graph).ToArray();
-            PyralisAuthoringRouteStepRow[] proofEnhancers = PyralisAuthoringSetupGraphProjection.BuildRouteProofEnhancerRows(graph).ToArray();
-            PyralisAuthoringRouteStepRow[] canWait = PyralisAuthoringSetupGraphProjection.BuildRouteCanWaitRows(graph).ToArray();
-            PyralisAuthoringGraphConnectionRow[] proofBlockers = PyralisAuthoringSetupGraphProjection.BuildProofBlockerRows(graph).ToArray();
-            PyralisAuthoringGraphConnectionRow[] proofSupport = PyralisAuthoringSetupGraphProjection.BuildDirectProofSupportRows(graph).ToArray();
+            PyralisAuthoringRouteWorkingProjection route = PyralisAuthoringSetupGraphProjection.BuildRouteWorkingProjection(graph);
 
             return new RouteProofTraceSnapshot
             {
@@ -192,16 +186,17 @@ namespace NeonBlack.Gameplay.Editor
                 intentFocus = PyralisAuthoringSetupGraphProjection.BuildIntentFocusSummary(graph),
                 routeShape = PyralisAuthoringSetupGraphProjection.BuildRouteShapeSummary(graph),
                 proofPriority = PyralisAuthoringSetupGraphProjection.BuildFirstProofPrioritySummary(graph),
-                proof = proof != null ? BuildNode(proof) : null,
-                orderedSteps = orderedSteps.Select(BuildRouteStep).ToArray(),
-                criticalPath = criticalPath.Select(BuildRouteStep).ToArray(),
-                proofEnhancers = proofEnhancers.Select(BuildRouteStep).ToArray(),
-                canWait = canWait.Select(BuildRouteStep).ToArray(),
-                proofBlockers = proofBlockers.Select(BuildConnection).ToArray(),
-                proofSupport = proofSupport.Select(BuildConnection).ToArray(),
-                supportingContracts = BuildSupportingContracts(graph, orderedSteps, proofSupport),
-                graphSummary = BuildGraphSummary(graph, Array.Empty<PyralisSourceDependencyHygieneRecord>(), proofBlockers),
-                diagnosticQuestions = BuildTraceDiagnosticQuestions(graph, orderedSteps, criticalPath, proofEnhancers, canWait, proofBlockers, proofSupport)
+                proof = route.Proof != null ? BuildNode(route.Proof) : null,
+                currentAction = route.CurrentAction != null ? BuildRouteStep(route.CurrentAction) : null,
+                orderedSteps = route.OrderedSteps.Select(BuildRouteStep).ToArray(),
+                criticalPath = route.CriticalPath.Select(BuildRouteStep).ToArray(),
+                proofEnhancers = route.ProofEnhancers.Select(BuildRouteStep).ToArray(),
+                canWait = route.CanWait.Select(BuildRouteStep).ToArray(),
+                proofBlockers = route.ProofBlockers.Select(BuildConnection).ToArray(),
+                proofSupport = route.ProofSupport.Select(BuildConnection).ToArray(),
+                supportingContracts = BuildSupportingContracts(graph, route.OrderedSteps, route.ProofSupport),
+                graphSummary = BuildGraphSummary(graph, Array.Empty<PyralisSourceDependencyHygieneRecord>(), route.ProofBlockers),
+                diagnosticQuestions = BuildTraceDiagnosticQuestions(graph, route.CurrentAction, route.OrderedSteps, route.CriticalPath, route.ProofEnhancers, route.CanWait, route.ProofBlockers, route.ProofSupport)
             };
         }
 
@@ -300,6 +295,7 @@ namespace NeonBlack.Gameplay.Editor
 
         private static TraceDiagnosticQuestionSnapshot[] BuildTraceDiagnosticQuestions(
             PyralisAuthoringSetupGraph graph,
+            PyralisAuthoringRouteStepRow currentAction,
             IReadOnlyList<PyralisAuthoringRouteStepRow> orderedSteps,
             IReadOnlyList<PyralisAuthoringRouteStepRow> criticalPath,
             IReadOnlyList<PyralisAuthoringRouteStepRow> proofEnhancers,
@@ -312,9 +308,11 @@ namespace NeonBlack.Gameplay.Editor
                 new TraceDiagnosticQuestionSnapshot
                 {
                     question = "What is the next route action?",
-                    answer = orderedSteps != null && orderedSteps.Count > 0
-                        ? $"{orderedSteps[0].Label}: {FirstNonEmpty(orderedSteps[0].UnityActionLabel, orderedSteps[0].Message, orderedSteps[0].Reason)}"
-                        : "No ordered steps were generated. Check whether the active setup or intent-projected graph has a resolved setup context."
+                    answer = currentAction != null
+                        ? $"{currentAction.Label}: {FirstNonEmpty(currentAction.UnityActionLabel, currentAction.Message, currentAction.Reason)}"
+                        : orderedSteps != null && orderedSteps.Count > 0
+                            ? "Required setup is clear for the projected proof. Use the full fresh-scene path to review how the route is assembled, then attempt the first Play Mode proof."
+                            : "No ordered steps were generated. Check whether the active setup graph has a resolved setup context."
                 },
                 new TraceDiagnosticQuestionSnapshot
                 {
@@ -634,13 +632,13 @@ namespace NeonBlack.Gameplay.Editor
         private static bool IsCleanupFocus(PyralisSourceDependencyPressureKind pressureKind)
         {
             return pressureKind == PyralisSourceDependencyPressureKind.RuntimeOwnership
-                || pressureKind == PyralisSourceDependencyPressureKind.CompatibilitySurface;
+                || pressureKind == PyralisSourceDependencyPressureKind.DirectSceneQuerySurface;
         }
 
         private static bool IsActionablePressure(PyralisSourceDependencyPressureKind pressureKind)
         {
             return pressureKind == PyralisSourceDependencyPressureKind.RuntimeOwnership
-                || pressureKind == PyralisSourceDependencyPressureKind.CompatibilitySurface;
+                || pressureKind == PyralisSourceDependencyPressureKind.DirectSceneQuerySurface;
         }
 
         private static ContractPressureSnapshot[] BuildContractSourcePressure(PyralisAuthoringSetupGraph graph)
@@ -799,6 +797,7 @@ namespace NeonBlack.Gameplay.Editor
             public string routeShape;
             public string proofPriority;
             public NodeSnapshot proof;
+            public RouteStepSnapshot currentAction;
             public RouteStepSnapshot[] orderedSteps;
             public RouteStepSnapshot[] criticalPath;
             public RouteStepSnapshot[] proofEnhancers;

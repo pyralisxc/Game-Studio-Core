@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Features.Composition;
@@ -35,7 +35,7 @@ namespace NeonBlack.Gameplay.Features.Feedback.UI
             UpdateHealthUI();
         }
 
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             CachePanels();
 
@@ -43,7 +43,7 @@ namespace NeonBlack.Gameplay.Features.Feedback.UI
             bool hasPanelSurface = healthPanels != null && healthPanels.Length > 0;
 
             if (!hasDirectHudSurface && !hasPanelSurface)
-                yield return "`ParticipantHealthHudBinder` should reference a health label, fill image, or health panel.";
+                yield return PyralisRuntimeValidationIssue.Required("`ParticipantHealthHudBinder` should reference a health label, fill image, or health panel.");
         }
 
         private void CachePanels()

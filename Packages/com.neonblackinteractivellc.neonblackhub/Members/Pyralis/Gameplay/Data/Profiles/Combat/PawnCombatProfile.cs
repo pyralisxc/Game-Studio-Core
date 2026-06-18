@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Features.Combat;
 using UnityEngine;
@@ -22,10 +22,10 @@ namespace NeonBlack.Gameplay.Data.Profiles
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Pawn Combat Profile", fileName = "PawnCombatProfile", order = -20)]
     public class PawnCombatProfile : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            if (baseDamage < 0f) yield return "Base Damage cannot be negative.";
-            if (attackCooldown <= 0f) yield return "Attack Cooldown must be greater than zero.";
+            if (baseDamage < 0f) yield return PyralisRuntimeValidationIssue.Required("Base Damage cannot be negative.");
+            if (attackCooldown <= 0f) yield return PyralisRuntimeValidationIssue.Required("Attack Cooldown must be greater than zero.");
         }
 
         public bool enableCombat = true;

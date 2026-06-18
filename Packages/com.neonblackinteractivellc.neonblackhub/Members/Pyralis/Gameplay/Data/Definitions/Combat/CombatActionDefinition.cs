@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
@@ -18,11 +18,11 @@ namespace NeonBlack.Gameplay.Features.Combat
     [CreateAssetMenu(menuName = "NeonBlack/Combat/Combat Action Definition", fileName = "CombatActionDefinition")]
     public class CombatActionDefinition : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            if (comboStep < 1) yield return "Combo Step must be at least 1.";
-            if (comboWindow < 0f) yield return "Combo Window cannot be negative.";
-            if (weapon == null) yield return "No Weapon Data assigned. Attack may not have damage or range stats.";
+            if (comboStep < 1) yield return PyralisRuntimeValidationIssue.Required("Combo Step must be at least 1.");
+            if (comboWindow < 0f) yield return PyralisRuntimeValidationIssue.Required("Combo Window cannot be negative.");
+            if (weapon == null) yield return PyralisRuntimeValidationIssue.Required("No Weapon Data assigned. Attack may not have damage or range stats.");
         }
 
         public string displayName = "Combat Action";

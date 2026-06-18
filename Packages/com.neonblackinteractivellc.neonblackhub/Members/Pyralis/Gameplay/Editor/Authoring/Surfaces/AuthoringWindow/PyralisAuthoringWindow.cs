@@ -231,7 +231,7 @@ namespace NeonBlack.Gameplay.Editor
                     DrawGuideMode(
                         selection,
                         activeSetup,
-                        GetCachedIntentProjectedSetupGraph(activeSetup != null ? activeSetup : selection));
+                        GetCachedCurrentSetupGraph(activeSetup != null ? activeSetup : selection));
                     break;
                 case AuthoringWindowMode.Map:
                     PyralisAuthoringMapRenderer.Draw(activeSetup, selection, GetCachedCurrentSetupGraph(activeSetup));
@@ -329,7 +329,7 @@ namespace NeonBlack.Gameplay.Editor
         private void DrawOverviewMode(Object activeSetup, Object selection)
         {
             Object graphSource = activeSetup != null ? activeSetup : null;
-            PyralisAuthoringSetupGraph graph = GetCachedIntentProjectedSetupGraph(graphSource);
+            PyralisAuthoringSetupGraph graph = GetCachedCurrentSetupGraph(graphSource);
             PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(activeSetup, graph);
 
             EditorGUILayout.LabelField("Overview", EditorStyles.boldLabel);
@@ -341,7 +341,7 @@ namespace NeonBlack.Gameplay.Editor
 
             EditorGUILayout.Space(12f);
             PyralisAuthoringOverviewRenderer.DrawFirstProofCard(model, graph);
-            PyralisAuthoringOverviewRenderer.DrawLane("Do Now", "Only intent-required missing or blocked work appears here.", model.DoNow);
+            PyralisAuthoringOverviewRenderer.DrawLane("Do Now", "Only route-required missing or blocked work appears here.", model.DoNow);
             PyralisAuthoringOverviewRenderer.DrawLane("Proof Enhancers", "Useful before Play Mode when they make the first proof clearer.", model.DoSoon);
         }
 

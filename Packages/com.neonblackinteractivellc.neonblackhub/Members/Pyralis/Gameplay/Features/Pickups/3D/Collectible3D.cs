@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Runtime;
 using UnityEngine;
@@ -23,12 +23,12 @@ namespace NeonBlack.Gameplay.Features.Pickups
     [RequireComponent(typeof(Collider))]
     public class Collectible3D : MonoBehaviour, IPickupCollectible, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (GetComponent<Collider>() == null)
-                yield return "Collider is required for collection detection.";
+                yield return PyralisRuntimeValidationIssue.Required("Collider is required for collection detection.");
             else if (!GetComponent<Collider>().isTrigger)
-                yield return "Collider must be set to Is Trigger.";
+                yield return PyralisRuntimeValidationIssue.Required("Collider must be set to Is Trigger.");
         }
         public int FeedbackScoreValue => 1;
         [SerializeField] private float bobSpeed = 2f;

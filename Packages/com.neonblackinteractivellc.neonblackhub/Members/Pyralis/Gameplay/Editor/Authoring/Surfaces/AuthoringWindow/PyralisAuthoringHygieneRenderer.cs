@@ -123,7 +123,7 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             if (cleanupFocus.Count == 0)
-                EditorGUILayout.HelpBox("No urgent ownership or compatibility cleanup is currently surfaced. Review the watch list for large but expected scripts.", MessageType.Info);
+                EditorGUILayout.HelpBox("No urgent ownership or direct-scene query cleanup is currently surfaced. Review the watch list for large but expected scripts.", MessageType.Info);
 
             if (watchList.Count > 0)
             {
@@ -201,7 +201,7 @@ namespace NeonBlack.Gameplay.Editor
                 if (!string.IsNullOrWhiteSpace(record.ReviewHint))
                     PyralisAuthoringWindowText.DrawSemanticMiniLabel(record.ReviewHint);
                 if (record.PressureKind != PyralisSourceDependencyPressureKind.RuntimeOwnership
-                    && record.PressureKind != PyralisSourceDependencyPressureKind.CompatibilitySurface)
+                    && record.PressureKind != PyralisSourceDependencyPressureKind.DirectSceneQuerySurface)
                 {
                     PyralisAuthoringWindowText.DrawSemanticMiniLabel("Expected pressure: keep it visible for audit, but do not treat it as the next gameplay cleanup unless behavior or setup truth has drifted into this file.");
                 }
@@ -217,7 +217,7 @@ namespace NeonBlack.Gameplay.Editor
         private static bool IsCleanupFocus(PyralisSourceDependencyPressureKind pressureKind)
         {
             return pressureKind == PyralisSourceDependencyPressureKind.RuntimeOwnership
-                || pressureKind == PyralisSourceDependencyPressureKind.CompatibilitySurface;
+                || pressureKind == PyralisSourceDependencyPressureKind.DirectSceneQuerySurface;
         }
 
         private static void DrawPressureKindSummary()
@@ -250,7 +250,7 @@ namespace NeonBlack.Gameplay.Editor
                     continue;
 
                 if (record.PressureKind == PyralisSourceDependencyPressureKind.RuntimeOwnership
-                    || record.PressureKind == PyralisSourceDependencyPressureKind.CompatibilitySurface)
+                    || record.PressureKind == PyralisSourceDependencyPressureKind.DirectSceneQuerySurface)
                 {
                     count++;
                 }
@@ -272,7 +272,7 @@ namespace NeonBlack.Gameplay.Editor
                     continue;
 
                 if (record.PressureKind != PyralisSourceDependencyPressureKind.RuntimeOwnership
-                    && record.PressureKind != PyralisSourceDependencyPressureKind.CompatibilitySurface)
+                    && record.PressureKind != PyralisSourceDependencyPressureKind.DirectSceneQuerySurface)
                 {
                     count++;
                 }

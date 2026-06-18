@@ -2,7 +2,7 @@
 
 The spine is the infrastructure layer for Pyralis authoring. It resolves setup references, validates readiness, and compiles the graph used by the Authoring Window, inspectors, setup validation, graph projections, and docs.
 
-Keep this layer generic and stable. Human-facing fallback wording belongs in `../Grammar/`. UI drawing belongs in `../Surfaces/`.
+Keep this layer generic and stable. Human-facing generic wording belongs in `../Grammar/`. UI drawing belongs in `../Surfaces/`.
 
 The desired flow is:
 

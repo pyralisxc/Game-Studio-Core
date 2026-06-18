@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Actions;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
@@ -14,26 +14,26 @@ namespace NeonBlack.Gameplay.Data.Definitions
     [CreateAssetMenu(menuName = "NeonBlack/Definitions/Action Definition", fileName = "ActionDefinition", order = 60)]
     public class ActionDefinition : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (string.IsNullOrWhiteSpace(actionId))
-                yield return "Action id is required.";
+                yield return PyralisRuntimeValidationIssue.Required("Action id is required.");
 
             if (string.IsNullOrWhiteSpace(displayName))
-                yield return "Display name is required.";
+                yield return PyralisRuntimeValidationIssue.Required("Display name is required.");
 
             if (string.IsNullOrWhiteSpace(actionFamily))
-                yield return "Action family is required so tools can group related actions.";
+                yield return PyralisRuntimeValidationIssue.Required("Action family is required so tools can group related actions.");
 
             if (cooldown < 0f)
-                yield return "Cooldown cannot be negative.";
+                yield return PyralisRuntimeValidationIssue.Required("Cooldown cannot be negative.");
 
             if (resourceCost < 0)
-                yield return "Resource cost cannot be negative.";
+                yield return PyralisRuntimeValidationIssue.Required("Resource cost cannot be negative.");
 
             List<string> targetIssues = targetRule.GetValidationIssues();
             foreach (var issue in targetIssues)
-                yield return issue;
+                yield return PyralisRuntimeValidationIssue.Required(issue);
         }
 
         public string actionId = "action.new";

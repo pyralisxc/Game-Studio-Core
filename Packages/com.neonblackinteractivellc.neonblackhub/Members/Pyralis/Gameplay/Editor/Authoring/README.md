@@ -4,10 +4,10 @@ This folder is the editor-only authoring system for Pyralis. Keep it organized b
 
 ## Grammar
 
-`Grammar/` contains wording, labels, fallback proof families, capability vocabulary, intent vocabulary, and the aggregate grammar registry. It is not the operating model for setup readiness.
+`Grammar/` contains wording, labels, proof family templates, capability vocabulary, intent vocabulary, and the aggregate grammar registry. It is not the operating model for setup readiness.
 
-- `CapabilityVocabulary/`: broad fallback capability cards and labels.
-- `ProofVocabulary/`: broad fallback first-proof templates.
+- `CapabilityVocabulary/`: broad generic capability cards and labels.
+- `ProofVocabulary/`: broad generic first-proof templates.
 - `IntentVocabulary/`: route-intent vocabulary facts.
 - `Registry/`: the aggregate grammar/fact registry consumed by graph projections and audits.
 
@@ -43,4 +43,4 @@ Feature-owned editor scripts that teach setup, draw field guides, or validate a 
 
 ## Rule Of Thumb
 
-If a file compiles readiness or dependencies, put it in `Spine`. If it supplies reusable wording or fallback templates, put it in `Grammar`. If it renders the graph, put it in `Surfaces`. If it belongs to one gameplay capability, the feature should own it.
+If a file compiles readiness or dependencies, put it in `Spine`. If it supplies reusable wording or generic templates, put it in `Grammar`. If it renders the graph, put it in `Surfaces`. If it belongs to one gameplay capability, the feature should own it.

@@ -26,7 +26,7 @@ Avoid adding guide-only systems, hidden runtime auto-wiring, or duplicated setup
    - Keep input owned by `ParticipantDefinition`.
    - Keep physical pawn identity in explicit sibling components.
    - Keep optional capabilities in feature modules.
-   - Remove compatibility or fallback paths that hide missing authored setup.
+   - Remove duplicate or hidden paths that hide missing authored setup.
 
 3. **Authoring graph quality**
    - Intent filters graph guidance.

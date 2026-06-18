@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Core.Contracts;
@@ -28,29 +28,29 @@ namespace NeonBlack.Gameplay.Features.Hazards
     [DefaultExecutionOrder(-10)]
     public class HazardSpawner : MonoBehaviour, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (_hazardEntries == null || _hazardEntries.Length == 0)
-                yield return "Hazard Entries needs at least one entry.";
+                yield return PyralisRuntimeValidationIssue.Required("Hazard Entries needs at least one entry.");
             else
             {
                 for (int i = 0; i < _hazardEntries.Length; i++)
                 {
                     if (_hazardEntries[i].prefab == null)
-                        yield return $"Hazard Entry {i} needs a prefab.";
+                        yield return PyralisRuntimeValidationIssue.Required($"Hazard Entry {i} needs a prefab.");
                     if (_hazardEntries[i].weight <= 0)
-                        yield return $"Hazard Entry {i} weight must be greater than zero.";
+                        yield return PyralisRuntimeValidationIssue.Required($"Hazard Entry {i} weight must be greater than zero.");
                 }
             }
 
             if (_difficultyManager == null)
-                yield return "Difficulty Manager is unassigned. Fallback timing will be used.";
+                yield return PyralisRuntimeValidationIssue.Required("Difficulty Manager is unassigned. Fallback timing will be used.");
 
             if (_gameplayStateSource == null && _gameplayStateReader == null)
-                yield return "Gameplay state is not assigned yet. GameManager or the runtime scope normally supplies it; assign Gameplay State Source only for standalone spawner tests.";
+                yield return PyralisRuntimeValidationIssue.Required("Gameplay state is not assigned yet. GameManager or the runtime scope normally supplies it; assign Gameplay State Source only for standalone spawner tests.");
 
             if (_cameraBoundsProvider == null)
-                yield return "Camera bounds are not assigned yet. Assign GameplaySessionBootstrap.cameraRigController so the runtime can supply visible camera bounds.";
+                yield return PyralisRuntimeValidationIssue.Required("Camera bounds are not assigned yet. Assign GameplaySessionBootstrap.cameraRigController so the runtime can supply visible camera bounds.");
         }
         [System.Serializable]
         public class HazardEntry

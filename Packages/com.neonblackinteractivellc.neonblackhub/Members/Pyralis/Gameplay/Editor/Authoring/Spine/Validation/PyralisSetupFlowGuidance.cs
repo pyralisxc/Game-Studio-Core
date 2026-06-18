@@ -290,7 +290,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                         "Inspect",
                         PyralisAuthoringActionSurface.Inspector,
                         "the object or asset named by the readiness issue",
-                        "clear required scene/prefab readiness issues before entering Play Mode; use Hygiene for the detailed graph list and Inspector Add Component or object picker for the named handoff",
+                        "clear required scene/prefab readiness issues before entering Play Mode; use Map for scene/setup repair and Inspector Add Component or object picker for the named handoff",
                         "Play Mode is only testing a fully wired proof path");
                 default:
                     return null;

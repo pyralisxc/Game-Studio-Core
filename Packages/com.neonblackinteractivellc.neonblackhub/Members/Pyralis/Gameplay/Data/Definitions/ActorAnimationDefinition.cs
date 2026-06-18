@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using NeonBlack.Gameplay.Core.Contracts;
@@ -18,10 +18,10 @@ namespace NeonBlack.Gameplay.Data.Definitions
     [CreateAssetMenu(menuName = "NeonBlack/Definitions/Actor Animation Definition", fileName = "ActorAnimationDefinition", order = 70)]
     public class ActorAnimationDefinition : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (!supportsSprite2D && !supportsBillboard2_5D && !supportsRigged3D)
-                yield return "At least one presentation mode should be supported.";
+                yield return PyralisRuntimeValidationIssue.Required("At least one presentation mode should be supported.");
         }
 
         public string displayName = "Gameplay Actor Animation";

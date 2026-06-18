@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Features.Combat;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
@@ -20,10 +20,10 @@ namespace NeonBlack.Gameplay.Data.Profiles
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Enemy Combat Profile", fileName = "EnemyCombatProfile")]
     public class EnemyCombatProfile : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (attackSequence == null || attackSequence.Length == 0)
-                yield return "Attack Sequence is empty. Enemy will not be able to attack.";
+                yield return PyralisRuntimeValidationIssue.Required("Attack Sequence is empty. Enemy will not be able to attack.");
         }
 
         public EnemyAttack[] attackSequence;

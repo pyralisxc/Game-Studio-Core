@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Characters;
@@ -33,12 +33,12 @@ namespace NeonBlack.Gameplay.Features.Pickups
 [AddComponentMenu("NeonBlack/Gameplay/Pickups/Collectible Spawner 2D")]
 public class CollectibleSpawner2D : MonoBehaviour, IPickupSpawnSurface, IPickupBurstSpawnSurface, IRuntimeValidationProvider
 {
-    public IEnumerable<string> GetRuntimeValidationIssues()
+    public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
     {
-        if (_crumbPrefab == null) yield return "Crumb Prefab is unassigned.";
-        if (_poolSize < _initialCrumbCount) yield return "Pool Size is smaller than Initial Crumb Count.";
-        if (_cameraBoundsProvider == null) yield return "Camera bounds are not assigned yet. Assign GameplaySessionBootstrap.cameraRigController so the runtime can supply visible camera bounds.";
-        if (_gameplayStateSource == null && _gameplayStateReader == null) yield return "Gameplay state is not assigned yet. GameManager or the runtime scope normally supplies it; assign Gameplay State Source only for standalone spawner tests.";
+        if (_crumbPrefab == null) yield return PyralisRuntimeValidationIssue.Required("Crumb Prefab is unassigned.");
+        if (_poolSize < _initialCrumbCount) yield return PyralisRuntimeValidationIssue.Required("Pool Size is smaller than Initial Crumb Count.");
+        if (_cameraBoundsProvider == null) yield return PyralisRuntimeValidationIssue.Required("Camera bounds are not assigned yet. Assign GameplaySessionBootstrap.cameraRigController so the runtime can supply visible camera bounds.");
+        if (_gameplayStateSource == null && _gameplayStateReader == null) yield return PyralisRuntimeValidationIssue.Required("Gameplay state is not assigned yet. GameManager or the runtime scope normally supplies it; assign Gameplay State Source only for standalone spawner tests.");
     }
     [Header("Collectible Prefab")]
     [SerializeField, Tooltip("The collectible prefab (must have Collectible2D component).")]

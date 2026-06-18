@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
 using NeonBlack.Gameplay.Core.Contracts;
@@ -19,9 +19,9 @@ namespace NeonBlack.Gameplay.Data.Profiles
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Settings Profile", fileName = "SettingsProfile", order = -10)]
     public class SettingsProfile : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            if (mixer == null) yield return "Audio Mixer is missing.";
+            if (mixer == null) yield return PyralisRuntimeValidationIssue.Required("Audio Mixer is missing.");
         }
 
         public AudioMixer mixer;

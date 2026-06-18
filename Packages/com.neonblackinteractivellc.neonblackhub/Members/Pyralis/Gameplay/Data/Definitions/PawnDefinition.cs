@@ -1,4 +1,4 @@
-using NeonBlack.Gameplay.Data.Profiles;
+﻿using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Features.Combat;
 using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Core.Contracts;
@@ -27,9 +27,9 @@ namespace NeonBlack.Gameplay.Data.Definitions
     {
         private const string ActorAnimationDriverTypeFullName = "NeonBlack.Gameplay.Presentation.Animation.ActorAnimationDriver";
 
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            return GetValidationIssues();
+            return PyralisRuntimeValidationIssueUtility.RequiredFrom(GetValidationIssues());
         }
 
         public GameObject pawnPrefab;
@@ -99,10 +99,10 @@ namespace NeonBlack.Gameplay.Data.Definitions
                 if (behaviours[i] is not IRuntimeValidationProvider provider)
                     continue;
 
-                foreach (string issue in provider.GetRuntimeValidationIssues())
+                foreach (PyralisRuntimeValidationIssue issue in provider.GetRuntimeValidationIssues())
                 {
-                    if (!string.IsNullOrWhiteSpace(issue))
-                        issues.Add($"Pawn Prefab `{pawnPrefab.name}`: {issue}");
+                    if (issue != null && !string.IsNullOrWhiteSpace(issue.Message))
+                        issues.Add($"Pawn Prefab `{pawnPrefab.name}`: {issue.Message}");
                 }
             }
         }

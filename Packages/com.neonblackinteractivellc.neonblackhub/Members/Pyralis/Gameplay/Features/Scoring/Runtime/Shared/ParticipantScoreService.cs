@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Characters;
 using UnityEngine;
@@ -33,10 +33,10 @@ namespace NeonBlack.Gameplay.Features.Scoring
     {
         private static int _activeInstanceCount;
 
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (_activeInstanceCount > 1)
-                yield return "Multiple ParticipantScoreService instances found. Only one global scoring service should be active.";
+                yield return PyralisRuntimeValidationIssue.Required("Multiple ParticipantScoreService instances found. Only one global scoring service should be active.");
         }
         // PlayerPrefs keys.
         public const string HighScorePointsKey   = "HighScore_Points";

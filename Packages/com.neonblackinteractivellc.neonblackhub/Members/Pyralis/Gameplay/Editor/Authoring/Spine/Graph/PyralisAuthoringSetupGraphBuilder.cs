@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Core.Contracts;
@@ -608,31 +608,31 @@ namespace NeonBlack.Gameplay.Editor
                 if (dependencyNode.SourceObject is not IRuntimeValidationProvider provider)
                     continue;
 
-                IEnumerable<string> issues = provider.GetRuntimeValidationIssues();
+                IEnumerable<PyralisRuntimeValidationIssue> issues = provider.GetRuntimeValidationIssues();
                 if (issues == null)
                     continue;
 
-                foreach (string issue in issues)
+                foreach (PyralisRuntimeValidationIssue issue in issues)
                 {
-                    if (string.IsNullOrWhiteSpace(issue))
+                    if (issue == null || string.IsNullOrWhiteSpace(issue.Message))
                         continue;
 
-                    string nodeId = BuildRuntimeValidationNodeId(dependencyNode, issue);
+                    string nodeId = BuildRuntimeValidationNodeId(dependencyNode, issue.Message);
                     AddNode(nodes, new PyralisAuthoringGraphNode(
                         nodeId,
                         dependencyNode.Label + " Setup",
                         PyralisAuthoringGraphNodeKind.ValidationEvidence,
                         PyralisAuthoringGraphSourceKind.RuntimeValidation,
-                        PyralisAuthoringGraphEvidenceState.Missing,
-                        guidance: issue,
+                        ConvertRuntimeValidationSeverity(issue.Severity),
+                        guidance: issue.Message,
                         nativeSetup: new[] { BuildRuntimeValidationNativeSetup(dependencyNode, issue) },
-                        assignmentFields: !string.IsNullOrWhiteSpace(dependencyNode.SourceFieldPath) ? new[] { dependencyNode.SourceFieldPath } : Array.Empty<string>(),
-                        blockingReason: issue,
+                        assignmentFields: BuildRuntimeValidationAssignmentFields(dependencyNode, issue),
+                        blockingReason: issue.Severity == PyralisRuntimeValidationSeverity.Required ? issue.Message : string.Empty,
                         nativeAction: BuildRuntimeValidationNativeAction(dependencyNode, issue),
                         sourceObject: dependencyNode.SourceObject,
                         sourceOrigin: PyralisAuthoringGraphSourceOrigin.RuntimeEvidence,
-                        workIntent: PyralisAuthoringGraphWorkIntent.RequiredSetup,
-                        issueSeverity: PyralisAuthoringIssueSeverity.Required));
+                        workIntent: ConvertRuntimeValidationWorkIntent(issue.Severity),
+                        issueSeverity: ConvertRuntimeValidationIssueSeverity(issue.Severity)));
 
                     string anchorNodeId = ResolveDependencyAnchorNodeId(dependencyNode);
                     AddEdge(edges, anchorNodeId, nodeId, PyralisAuthoringGraphEdgeKind.RelatesTo, "runtime validation");
@@ -657,28 +657,94 @@ namespace NeonBlack.Gameplay.Editor
             return "runtimevalidation." + NormalizeId(anchor) + "." + ComputeStableHash(issue);
         }
 
-        private static string BuildRuntimeValidationNativeSetup(PyralisSetupDependencyNode dependencyNode, string issue)
+        private static string BuildRuntimeValidationNativeSetup(
+            PyralisSetupDependencyNode dependencyNode,
+            PyralisRuntimeValidationIssue issue)
         {
-            string target = dependencyNode != null && dependencyNode.SourceObject != null
+            string target = FirstNonEmpty(
+                issue?.TargetLabel,
+                dependencyNode != null && dependencyNode.SourceObject != null
                 ? dependencyNode.SourceObject.GetType().Name
-                : "the selected setup asset";
-            return "Open " + target + " in the Inspector and resolve this validation issue: " + issue;
+                : "the selected setup asset");
+            if (!string.IsNullOrWhiteSpace(issue?.NativeAction))
+                return issue.NativeAction;
+
+            return "Open " + target + " in the Inspector and resolve this validation issue: " + issue?.Message;
         }
 
-        private static PyralisAuthoringNativeAction BuildRuntimeValidationNativeAction(PyralisSetupDependencyNode dependencyNode, string issue)
+        private static string[] BuildRuntimeValidationAssignmentFields(
+            PyralisSetupDependencyNode dependencyNode,
+            PyralisRuntimeValidationIssue issue)
         {
-            string target = dependencyNode != null && dependencyNode.SourceObject != null
+            string field = FirstNonEmpty(issue?.FieldPath, dependencyNode?.SourceFieldPath);
+            return !string.IsNullOrWhiteSpace(field) ? new[] { field } : Array.Empty<string>();
+        }
+
+        private static PyralisAuthoringNativeAction BuildRuntimeValidationNativeAction(
+            PyralisSetupDependencyNode dependencyNode,
+            PyralisRuntimeValidationIssue issue)
+        {
+            string target = FirstNonEmpty(
+                issue?.TargetLabel,
+                dependencyNode != null && dependencyNode.SourceObject != null
                 ? dependencyNode.SourceObject.GetType().Name
-                : "selected setup asset";
-            string field = !string.IsNullOrWhiteSpace(dependencyNode?.SourceFieldPath)
-                ? dependencyNode.SourceFieldPath
-                : "the field named by the validation issue";
+                : "selected setup asset");
+            string field = FirstNonEmpty(
+                issue?.FieldPath,
+                dependencyNode?.SourceFieldPath,
+                "the Inspector field or component named by the validation message");
+            string success = FirstNonEmpty(
+                issue?.SuccessCheck,
+                "the issue is gone from Map and the Inspector");
             return new PyralisAuthoringNativeAction(
                 "Inspect",
                 PyralisAuthoringActionSurface.Inspector,
                 target,
                 field,
-                "the validation issue is gone from Hygiene and Guide");
+                success);
+        }
+
+        private static PyralisAuthoringGraphEvidenceState ConvertRuntimeValidationSeverity(PyralisRuntimeValidationSeverity severity)
+        {
+            switch (severity)
+            {
+                case PyralisRuntimeValidationSeverity.Info:
+                    return PyralisAuthoringGraphEvidenceState.Optional;
+                case PyralisRuntimeValidationSeverity.Optional:
+                    return PyralisAuthoringGraphEvidenceState.Optional;
+                case PyralisRuntimeValidationSeverity.Recommended:
+                    return PyralisAuthoringGraphEvidenceState.CandidateDetected;
+                default:
+                    return PyralisAuthoringGraphEvidenceState.Missing;
+            }
+        }
+
+        private static PyralisAuthoringGraphWorkIntent ConvertRuntimeValidationWorkIntent(PyralisRuntimeValidationSeverity severity)
+        {
+            switch (severity)
+            {
+                case PyralisRuntimeValidationSeverity.Info:
+                    return PyralisAuthoringGraphWorkIntent.Reference;
+                case PyralisRuntimeValidationSeverity.Optional:
+                    return PyralisAuthoringGraphWorkIntent.Optional;
+                case PyralisRuntimeValidationSeverity.Recommended:
+                    return PyralisAuthoringGraphWorkIntent.ProofEnhancer;
+                default:
+                    return PyralisAuthoringGraphWorkIntent.RequiredSetup;
+            }
+        }
+
+        private static PyralisAuthoringIssueSeverity ConvertRuntimeValidationIssueSeverity(PyralisRuntimeValidationSeverity severity)
+        {
+            switch (severity)
+            {
+                case PyralisRuntimeValidationSeverity.Required:
+                    return PyralisAuthoringIssueSeverity.Required;
+                case PyralisRuntimeValidationSeverity.Recommended:
+                    return PyralisAuthoringIssueSeverity.Recommended;
+                default:
+                    return PyralisAuthoringIssueSeverity.Info;
+            }
         }
 
         private static string ResolveDependencyAnchorNodeId(PyralisSetupDependencyNode dependencyNode)

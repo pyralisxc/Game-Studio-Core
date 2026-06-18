@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Presentation.Visuals;
@@ -23,16 +23,16 @@ namespace NeonBlack.Gameplay.Presentation.Animation
 [AddComponentMenu("NeonBlack/Gameplay/Animation/Actor Animation Driver")]
     public class ActorAnimationDriver : MonoBehaviour, IActorAnimationController, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (animator == null && GetComponentInChildren<Animator>(true) == null)
-                yield return "Animator is empty and no child Animator was found.";
+                yield return PyralisRuntimeValidationIssue.Required("Animator is empty and no child Animator was found.");
             if (presentationProfile == null)
-                yield return "Presentation Profile is empty.";
+                yield return PyralisRuntimeValidationIssue.Required("Presentation Profile is empty.");
             if (animationProfile == null)
-                yield return "Animation Profile is empty.";
+                yield return PyralisRuntimeValidationIssue.Required("Animation Profile is empty.");
             if (presentationProfile != null && presentationProfile.presentationMode == ActorPresentationMode.Billboard2_5D && cameraOverride == null)
-                yield return "Camera Override is empty for Billboard2_5D presentation.";
+                yield return PyralisRuntimeValidationIssue.Required("Camera Override is empty for Billboard2_5D presentation.");
         }
         [Header("Scene References")]
         [SerializeField] private Animator animator;

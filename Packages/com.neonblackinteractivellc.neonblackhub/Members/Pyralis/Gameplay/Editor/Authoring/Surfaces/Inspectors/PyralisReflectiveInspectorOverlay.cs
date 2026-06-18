@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Editor.Inspectors;
@@ -79,7 +79,8 @@ namespace NeonBlack.Gameplay.Editor
             {
                 foreach (var issue in provider.GetRuntimeValidationIssues())
                 {
-                    warnings.Add(issue);
+                    if (issue != null && !string.IsNullOrWhiteSpace(issue.Message))
+                        warnings.Add(issue.Message);
                 }
             }
 

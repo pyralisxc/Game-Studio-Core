@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
@@ -19,10 +19,10 @@ namespace NeonBlack.Gameplay.Data.Profiles
 [CreateAssetMenu(menuName = "NeonBlack/Profiles/Pawn Traversal Profile", fileName = "PawnTraversalProfile", order = -50)]
     public class PawnTraversalProfile : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            if (allowJump && jumpHeight <= 0f) yield return "Jump is allowed but Jump Height is <= 0.";
-            if (allowDodge && dodgeDistance <= 0f) yield return "Dodge is allowed but Dodge Distance is <= 0.";
+            if (allowJump && jumpHeight <= 0f) yield return PyralisRuntimeValidationIssue.Required("Jump is allowed but Jump Height is <= 0.");
+            if (allowDodge && dodgeDistance <= 0f) yield return PyralisRuntimeValidationIssue.Required("Dodge is allowed but Dodge Distance is <= 0.");
         }
 
         public bool allowJump = true;

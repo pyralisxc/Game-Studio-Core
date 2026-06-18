@@ -121,7 +121,7 @@ namespace NeonBlack.Gameplay.Core.Runtime
             ParticipantQueryUtility.Initialize(_participantRosterService, _participantRosterService);
             _sessionOwnershipService = ResolveOrCreateSessionOwnershipService(useNetcodeServices);
             _participantAuthorityService = ResolveOrCreateParticipantAuthorityService(useNetcodeServices);
-            _featureServicePolicy = PyralisRuntimeFeatureServicePolicy.ResolveWithCompatibilityEvidence(sessionDefinition);
+            _featureServicePolicy = PyralisRuntimeFeatureServicePolicy.ResolveWithLoadedSceneEvidence(sessionDefinition);
             _isConfigured = true;
         }
 

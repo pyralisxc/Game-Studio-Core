@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Rpg;
 using NeonBlack.Gameplay.Core.Contracts;
@@ -152,21 +152,21 @@ namespace NeonBlack.Gameplay.Features.Rpg.UI
             return true;
         }
 
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             ResolveReferences();
 
             if (routePresenter == null)
-                yield return "`RpgQuestBoardPanelPresenter` should reference the QuestBoard route presenter or live below one.";
+                yield return PyralisRuntimeValidationIssue.Required("`RpgQuestBoardPanelPresenter` should reference the QuestBoard route presenter or live below one.");
 
             if ((quests == null || quests.Length == 0) && (_runtimeQuests == null || _runtimeQuests.Length == 0))
-                yield return "`RpgQuestBoardPanelPresenter` should reference at least one Quest Definition.";
+                yield return PyralisRuntimeValidationIssue.Required("`RpgQuestBoardPanelPresenter` should reference at least one Quest Definition.");
 
             if (boardLabel == null && selectedQuestLabel == null)
-                yield return "`RpgQuestBoardPanelPresenter` should reference a board or selected quest label.";
+                yield return PyralisRuntimeValidationIssue.Required("`RpgQuestBoardPanelPresenter` should reference a board or selected quest label.");
 
             if (acceptButton == null)
-                yield return "`RpgQuestBoardPanelPresenter` can show quests without Accept Button, but players need a button or input bridge calling StartSelectedQuest().";
+                yield return PyralisRuntimeValidationIssue.Required("`RpgQuestBoardPanelPresenter` can show quests without Accept Button, but players need a button or input bridge calling StartSelectedQuest().");
         }
 
         private void HandlePanelOpened(HubInteractionResult result)

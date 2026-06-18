@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
@@ -15,17 +15,17 @@ namespace NeonBlack.Gameplay.Features.Combat
     [CreateAssetMenu(menuName = "NeonBlack/Combat/Weapon Data", fileName = "NewWeapon")]
     public class WeaponData : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            if (string.IsNullOrWhiteSpace(weaponName)) yield return "Weapon Name is required.";
-            if (damage < 0f) yield return "Damage cannot be negative.";
-            if (attackCooldown <= 0f) yield return "Attack Cooldown must be greater than zero.";
+            if (string.IsNullOrWhiteSpace(weaponName)) yield return PyralisRuntimeValidationIssue.Required("Weapon Name is required.");
+            if (damage < 0f) yield return PyralisRuntimeValidationIssue.Required("Damage cannot be negative.");
+            if (attackCooldown <= 0f) yield return PyralisRuntimeValidationIssue.Required("Attack Cooldown must be greater than zero.");
             
             if ((weaponType == WeaponType.Ranged || weaponType == WeaponType.Thrown) && projectileDefinition == null)
-                yield return "Ranged/thrown weapons require a Projectile Definition.";
+                yield return PyralisRuntimeValidationIssue.Required("Ranged/thrown weapons require a Projectile Definition.");
             
             if (weaponType == WeaponType.Melee && string.IsNullOrWhiteSpace(hitBoxZone))
-                yield return "Melee weapons should name the actor Hit Box Zone they use.";
+                yield return PyralisRuntimeValidationIssue.Required("Melee weapons should name the actor Hit Box Zone they use.");
         }
 
         [Header("Identity")]

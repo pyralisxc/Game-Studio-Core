@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Features.Combat;
 using NeonBlack.Gameplay.Features.Hazards;
@@ -17,10 +17,10 @@ namespace NeonBlack.Gameplay.Data.Profiles
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Hazard Impact Profile", fileName = "HazardImpactProfile")]
     public class HazardImpactProfile : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            if (string.IsNullOrWhiteSpace(effectId)) yield return "Effect Id is required.";
-            if (tickInterval <= 0f) yield return "Tick Interval must be greater than zero.";
+            if (string.IsNullOrWhiteSpace(effectId)) yield return PyralisRuntimeValidationIssue.Required("Effect Id is required.");
+            if (tickInterval <= 0f) yield return PyralisRuntimeValidationIssue.Required("Tick Interval must be greater than zero.");
         }
 
         public string effectId = "hazard.impact";

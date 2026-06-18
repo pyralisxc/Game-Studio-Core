@@ -1,4 +1,4 @@
-using NeonBlack.Gameplay.Core.Rules.TurnPhase;
+﻿using NeonBlack.Gameplay.Core.Rules.TurnPhase;
 using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
 using UnityEngine;
@@ -17,9 +17,9 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
     [CreateAssetMenu(menuName = "NeonBlack/Rules/Turn Order Definition", fileName = "TurnOrderDefinition", order = -70)]
     public class TurnOrderDefinition : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            return GetValidationIssues();
+            return PyralisRuntimeValidationIssueUtility.RequiredFrom(GetValidationIssues());
         }
 
         public string turnOrderId = "turn.default";

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Features.Composition;
 using TMPro;
@@ -42,10 +42,10 @@ namespace NeonBlack.Gameplay.Features.Feedback.UI
             _timer = duration > 0f ? duration : defaultDisplayTime;
         }
 
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (label == null)
-                yield return "`ParticipantTimedTextPanel` should reference a TextMeshProUGUI label.";
+                yield return PyralisRuntimeValidationIssue.Required("`ParticipantTimedTextPanel` should reference a TextMeshProUGUI label.");
         }
     }
 }

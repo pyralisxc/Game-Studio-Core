@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Features.Characters;
 using UnityEngine;
@@ -35,10 +35,10 @@ namespace NeonBlack.Gameplay.Features.Scoring
     [AddComponentMenu("NeonBlack/Gameplay/Features/Scoring/Stillness Bonus 2D")]
     public class StillnessBonus2D : MonoBehaviour, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            if (_collectiblesPerBonus <= 0) yield return "Collectibles Per Bonus must be positive.";
-            if (_stillnessInterval <= 0f) yield return "Stillness Interval must be greater than zero.";
+            if (_collectiblesPerBonus <= 0) yield return PyralisRuntimeValidationIssue.Required("Collectibles Per Bonus must be positive.");
+            if (_stillnessInterval <= 0f) yield return PyralisRuntimeValidationIssue.Required("Stillness Interval must be greater than zero.");
         }
         [Header("Reward Settings")]
         [SerializeField, Tooltip("Points added to the score each time the stillness interval completes.")]

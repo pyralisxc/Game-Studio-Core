@@ -108,10 +108,10 @@ Keep the implementation split by responsibility:
 | `PyralisAuthoringWindow` | UI shell, active setup state, selection, and mode coordination |
 | `PyralisAuthoringRouteDescriptor` | route facts inferred from authored setup, graph vocabulary, and selected context |
 | `PyralisAuthoringOverviewModel` | Overview read model for graph-projected lanes, first proof text, and Play Mode checklist |
-| `PyralisAuthoringCapabilityDescriptorRegistry` | reflected capability descriptors built from contracts first and fallback vocabulary second |
-| `PyralisCapabilityVocabulary` | fallback capability labels, summaries, and native setup wording indexed by capability and runtime lane |
-| `PyralisProofFamilyVocabulary` | generic fallback proof family templates |
-| `PyralisAuthoringIntentAdvisor` | pre-setup/fallback read model that ranks route-intent and graph-compatible vocabulary from selected world/playfield, control shape, lane, and goals |
+| `PyralisAuthoringCapabilityDescriptorRegistry` | reflected capability descriptors built from contracts first and grammar vocabulary second |
+| `PyralisCapabilityVocabulary` | generic capability labels, summaries, and native setup wording indexed by capability and runtime lane |
+| `PyralisProofFamilyVocabulary` | generic proof family templates |
+| `PyralisAuthoringIntentAdvisor` | pre-setup read model that ranks route-intent and graph-compatible vocabulary from selected world/playfield, control shape, lane, and goals |
 | `PyralisAuthoringSetupGraph` | read-only resolved graph of setup nodes, edges, evidence, proof targets, selected context, and source contracts |
 | `PyralisAuthoringSetupGraphProjection` | Map, Overview, Guide, Hygiene, reflective-contract, and selected-context projection rows derived from the resolved setup graph |
 | `PyralisAuthoringSceneSurfaceGuidance` | scene-surface labels, route relevance, next-fix text, expected evidence, and success text |
@@ -142,7 +142,7 @@ Gameplay code / feature code
   -> serialized asset references
   -> open-scene evidence
   -> validation evidence
-  -> grammar and fallback wording
+  -> grammar wording
       -> resolved setup graph
           -> Overview
           -> Intent
@@ -161,8 +161,10 @@ Gameplay code / feature code
 | Dependency tree | setup/reference structure: bootstrap, session, mode, setup route, participants, pawns, prefabs, profiles, feature modules | UI labels or route guidance text |
 | Scene evidence | bootstrap-scoped scene components and candidate surfaces visible in the open scene | proof results or broad scene-quality policy |
 | Validators | readiness, blockers, missing references, invalid combinations, severity, native action targets | persistent feature meaning or grammar wording |
-| Grammar/vocabulary | labels, summaries, generic proof templates, fallback language, native Unity surface names | feature-specific setup truth or route decisions |
+| Grammar/vocabulary | labels, summaries, generic proof templates, native Unity surface names | feature-specific setup truth or route decisions |
 | Resolved setup graph | compiled readiness, proof targets, nodes, edges, evidence, selected context, source provenance | raw scanning or user-facing drawing details |
+
+Runtime validation providers must emit `PyralisRuntimeValidationIssue` records, not free-form setup prose. Use reflection and the dependency tree for object references, serialized fields, required components, implemented interfaces, and assignment paths whenever code structure can prove them. Use runtime validation providers only for semantic rules that reflection cannot infer, such as "this numeric value cannot be negative," "this action row is required for this route," or "this feature profile must match the selected module contract." Each issue should carry the affected field, target label, native action, severity, and success check when known so Overview, Guide, Map, Route Proof Trace, and Inspector handoffs all read the same graph evidence.
 | UI tabs | projection, ranking, filtering, navigation, explanation | route truth, validation truth, or feature truth |
 
 The intended developer workflow is:
@@ -182,14 +184,14 @@ This refactor is complete when cleanup work stops finding new operating models a
 
 Lock-in requires:
 
-- Map, Overview, Guide, Hygiene, Facts, selected context, and Inspector handoffs read graph projections instead of direct legacy route/fact/proof models.
+- Map, Overview, Guide, Hygiene, Facts, selected context, and Inspector handoffs read graph projections instead of parallel route/fact/proof models.
 - Intent behaves as a graph and capability filter, not a recipe or preset system.
 - Feature-specific setup guidance lives in contracts or reflected feature metadata.
-- Grammar/vocabulary contains fallback wording and studio-wide Unity/Pyralis language only.
+- Grammar/vocabulary contains generic wording and studio-wide Unity/Pyralis language only.
 - Scene evidence is collected through shared evidence models before reaching setup flow, graph evidence, or scene-surface rows.
 - Validators preserve severity, affected object, affected field/component, native action, and success criteria when they feed graph evidence.
-- Proof nodes are generated from contracts, dependency evidence, and validators first; proof vocabulary supplies generic fallback wording.
-- Legacy or migration-only files are either archived with removal criteria or deleted after graph-backed parity is proven.
+- Proof nodes are generated from contracts, dependency evidence, and validators first; proof vocabulary supplies only generic wording.
+- Migration-only files should be archived with removal criteria or deleted once graph-backed parity is proven.
 
 Use this test for every cleanup candidate:
 
@@ -305,7 +307,7 @@ Recommended setup should not all land in the same visual priority. Use work inte
 
 The Capability Vocabulary is a guide-only discovery layer inside the Authoring Window. It lets users browse Pyralis-supported setup surfaces by capability and runtime lane without turning the window into a scene generator or preset system.
 
-The vocabulary should use one canonical card model, not separate hardcoded trees. A card is indexed by capability tags such as movement, combat, projectiles, camera, UI/HUD, scoring, interaction, NPCs/enemies, tabletop, and networking, and by runtime-lane tags such as `Sprite2D`, `Billboard2_5D`, `Rigged3D`, tabletop/no-pawn, UI/menu, camera/cursor, and networked. Both browse modes render the same cards so fallback wording does not drift.
+The vocabulary should use one canonical card model, not separate hardcoded trees. A card is indexed by capability tags such as movement, combat, projectiles, camera, UI/HUD, scoring, interaction, NPCs/enemies, tabletop, and networking, and by runtime-lane tags such as `Sprite2D`, `Billboard2_5D`, `Rigged3D`, tabletop/no-pawn, UI/menu, camera/cursor, and networked. Both browse modes render the same cards so generic wording does not drift.
 
 Each card should answer:
 
@@ -319,7 +321,7 @@ Each card should answer:
 - first proof
 - common next capabilities
 
-Capability vocabulary cards are fallback wording. The graph-facing capability surface is `PyralisAuthoringCapabilityDescriptorRegistry`, which prefers contracts and reflection before filling generic labels and summaries from vocabulary. Feature-specific setup truth should move into feature contracts and reflected dependency evidence rather than new hardcoded card prose.
+Capability vocabulary cards are generic wording. The graph-facing capability surface is `PyralisAuthoringCapabilityDescriptorRegistry`, which prefers contracts and reflection before filling generic labels and summaries from vocabulary. Feature-specific setup truth should move into feature contracts and reflected dependency evidence rather than new hardcoded card prose.
 
 The vocabulary must stay guide-only. It may select, ping, explain, or copy checklist text, but it must not create or assign assets, add components, or treat generated scaffolding as validation evidence. Users should still use native Unity surfaces: Project window asset creation, Hierarchy object creation, Inspector Add Component, Inspector field assignment, object picker, customization through serialized fields, and Play Mode proof.
 
@@ -339,7 +341,7 @@ Intent should stay studio-wide:
 - explain what the toggles imply without creating assets or choosing design taste
 - hand off to Project, Hierarchy, Inspector, Prefab, Input, Animation, UI, and Play Mode surfaces only when the route has enough declared intent
 
-Intent is not the whole setup flow and not the proof itself. It names the project-wide world/control/capability shape so Overview and Guide can focus the next route proof with clearer context. Map, Hygiene, Facts, and native Unity Inspectors still read what the current setup actually proves.
+Intent is not the whole setup flow and not the proof itself. It names the project-wide world/control/capability shape so the developer knows what to wire next. Once setup exists, Overview, Guide, Map, Hygiene, Facts, and native Unity Inspectors read what the current setup graph actually proves. Do not let Intent create a hidden alternate route that makes Overview disagree with Map.
 
 ### Overview
 
@@ -352,9 +354,11 @@ Overview is the daily home base. It should show:
 - concise readiness summary
 - first playable proof target
 
+Overview reads the same current setup graph as Map, then renders the first few cards from the shared route working projection. It should feel like the compact cockpit for the current setup: one best next action, up to three `Do Now` cards, proof enhancers, and the first proof target. It should not separately scan graph nodes or maintain its own route ranking.
+
 Organize progress into three lanes:
 
-- `Do Now`: intent-required missing or blocked work only.
+- `Do Now`: route-required missing or blocked work only.
 - `Proof Enhancers`: setup recommended by the selected intent that can make the first proof easier to read but should not block it once `Do Now` is clear.
 - `Optional Capabilities`: optional next capabilities, polish, advanced systems, and nice-to-have proof.
 
@@ -384,7 +388,7 @@ Guide explains the current Unity selection without losing the active setup story
 - what edits belong in the Inspector
 - what to check after editing
 
-Guide should not repeat the whole setup manual. If it starts explaining the entire route, that content belongs in Overview, Map, or docs.
+Guide uses the same route working projection as Overview and Route Proof Trace, but expands the cards instead of showing only the top few. It can show the full fresh-scene path, selected-object context, and reflective contracts. It should not maintain its own route ordering or proof-bucket logic.
 
 ### Map
 
@@ -398,7 +402,9 @@ Map is the current scene/setup reality map. Each row should show:
 
 Map should teach what currently exists and what concrete Unity setup is missing. It can read graph evidence, but it presents scene and setup issues rather than graph integrity.
 
-Map may offer a compact read-only Graph JSON Snapshot button for human and agent diagnostics. That snapshot must serialize the current setup lens only: current authored route analysis, graph nodes, graph edges, setup map rows, map connections, scene surfaces, and concrete scene/setup issues. It must not include Hygiene-only sections, must not become a second setup model, and must not pretend Intent-selected desired work already exists in the scene. Intent-projected route snapshots belong to Overview/Guide if they are needed later. The export action writes the current tab view into `Editor/Authoring/TempGraphs` so issue reports and agent handoffs have one predictable diagnostic folder while generated JSON remains ignored.
+Map rows should only inherit evidence that belongs to that row. Broad graph edges can relate `Gameplay Root` to scene surfaces, services, and setup cards, but a missing Canvas, pickup, hazard, or other scene surface must not demote the `Gameplay Root`, `Session Definition`, or `Game Mode` row. Put scene-surface failures under `Scene Surfaces` and `sceneSetupIssues`; put root/session/mode/pawn/input assignment failures on their matching setup rows.
+
+Map may offer a compact read-only Graph JSON Snapshot button for human and agent diagnostics. That snapshot must serialize the current setup lens only: current authored route analysis, graph nodes, graph edges, setup map rows, map connections, scene surfaces, and concrete scene/setup issues. It must not include Hygiene-only sections, must not become a second setup model, and must not pretend Intent-selected desired work already exists in the scene. The export action writes the current tab view into `Editor/Authoring/TempGraphs` so issue reports and agent handoffs have one predictable diagnostic folder while generated JSON remains ignored.
 
 ### Hygiene
 
@@ -411,19 +417,19 @@ Hygiene should be graph integrity, not a second scene checklist. Evidence cards 
 - blocker/proof relationship when known
 - graph finding and source detail
 
-**Redundant System Detection:** Hygiene is responsible for detecting "Legacy vs New" system conflicts. When a new Feature Module is present (e.g., Combat Feature), the validator should flag legacy components (e.g., `PawnCombatBehaviour`) as redundant and guide the user to remove them. This prevents "systems on top of systems" and maintains a concise codebase.
+**Duplicate Owner Detection:** Hygiene is responsible for detecting competing ownership paths. When two components or feature modules claim the same runtime responsibility, the validator should flag the duplicate owner and guide the user to keep the canonical path. This prevents "systems on top of systems" and maintains a concise codebase.
 
 Hygiene can mention source detail, but concrete Unity repair and inspection actions belong in Map or the Inspector. This keeps Hygiene useful for developers auditing the resolved graph without making it compete with the beginner setup flow.
 
-Hygiene may offer the same compact read-only Graph JSON Snapshot button as Map, with the view marked as `Hygiene`, so developers and agents can inspect graph summary, Hygiene sections/rows, proof blockers, source-origin counts, dependency pressure summaries, cleanup focus, watch-list pressure, top dependency-pressure records, and contract source pressure outside the Unity UI without scraping visible text. It should not include Map-only setup rows. Hygiene remains useful before a setup route exists: graph-specific sections may be empty, but dependency pressure and source audit data should still export. Contract inventory that has not been route-evaluated should be labeled as inventory, not as actionable graph failure. The shared export action should keep Map and Hygiene on one implementation while writing the current tab's graph view separately.
+Hygiene may offer the same compact read-only Graph JSON Snapshot button as Map, with the view marked as `Hygiene`, so developers and agents can inspect graph summary, Hygiene sections/rows, proof blockers, source-origin counts, dependency pressure summaries, cleanup focus, watch-list pressure, top dependency-pressure records, and contract source pressure outside the Unity UI without scraping visible text. It should not include Map-only setup rows. Hygiene remains useful before a setup route exists: graph-specific sections may be empty, but dependency pressure and source audit data should still export. Contract inventory that has not been route-evaluated should be labeled as inventory, not as actionable graph failure. `hygieneRows` should stay focused on blocker and unvalidated-node rows; full inventory belongs in `hygieneSections` and `contractSourcePressure` so agents can inspect it without turning the primary audit into a wall of harmless contract cards. The shared export action should keep Map and Hygiene on one implementation while writing the current tab's graph view separately.
 
-Hygiene pressure kinds are not all cleanup commands. `RuntimeOwnership` and `CompatibilitySurface` are the default cleanup focus. `PawnCoordinator`, `PawnCapabilitySibling`, `LocalPresentationSurface`, `SceneZoneSurface`, `InputRoutingSurface`, `EnemyCapabilityModule`, `ActorFeatureContext`, `SceneCameraRig`, `AuthoredDataAsset`, `HazardRuntimeSurface`, `DomainUtility`, `FeatureModule`, `AuthoredRuntimeSurface`, `GameFlowRuntimeSurface`, `AcceptedComposition`, `ReferenceAssembly`, `EditorAudit`, `GrammarVocabulary`, and `ScannerImplementation` describe expected pressure shapes unless their review hint says they have crossed ownership boundaries. The UI should separate Cleanup Focus from Watch List so expected large scripts stay visible without reading as failures.
+Hygiene pressure kinds are not all cleanup commands. `RuntimeOwnership` and duplicate-owner pressure are the default cleanup focus. `PawnCoordinator`, `PawnCapabilitySibling`, `LocalPresentationSurface`, `SceneZoneSurface`, `InputRoutingSurface`, `EnemyCapabilityModule`, `ActorFeatureContext`, `SceneCameraRig`, `AuthoredDataAsset`, `HazardRuntimeSurface`, `DomainUtility`, `FeatureModule`, `AuthoredRuntimeSurface`, `GameFlowRuntimeSurface`, `AcceptedComposition`, `ReferenceAssembly`, `EditorAudit`, `GrammarVocabulary`, and `ScannerImplementation` describe expected pressure shapes unless their review hint says they have crossed ownership boundaries. The UI should separate Cleanup Focus from Watch List so expected large scripts stay visible without reading as failures.
 
 ### Route Proof Trace Export
 
 Guide and Hygiene may export a compact **Route Proof Trace** JSON packet. This is an editor-only, read-only diagnostic view of the current proof route, not a preset, generator, setup model, or replacement for Map/Hygiene snapshots. Map exports only its current setup snapshot and should not offer Route Proof Trace.
 
-The trace should serialize the intent-projected **fresh-scene setup-card path**: current route, intent focus, first proof priority, proof node, ordered setup cards, proof blockers, direct proof context, supporting contracts, source owners, assignment fields, native setup actions, graph summary, and diagnostic questions for humans or agents. The ordered cards should approximate the path a user would follow from an empty scene to the selected first proof: Gameplay Root, visible Lifetime Scope, Session Definition, Game Mode, route capabilities, participants, input, pawn definition, pawn prefab/runtime validation, proof enhancers when helpful, then the Play Mode proof target.
+The trace should serialize the current setup graph's **fresh-scene setup-card path**: current route, intent focus when present as context, first proof priority, proof node, current action, ordered setup cards, proof blockers, direct proof context, supporting contracts, source owners, assignment fields, native setup actions, graph summary, and diagnostic questions for humans or agents. The ordered cards should approximate the path a user would follow from an empty scene to the selected first proof: Gameplay Root, visible Lifetime Scope, Session Definition, Game Mode, route capabilities, participants, input, pawn definition, pawn prefab/runtime validation, proof enhancers when helpful, then the Play Mode proof target.
 
 The export separates route cards into three audit buckets:
 
@@ -431,9 +437,9 @@ The export separates route cards into three audit buckets:
 - `proofEnhancers`: useful cards such as camera framing, visual/collision tuning, or movement feel that make the first proof easier to judge without blocking required setup.
 - `canWait`: optional, candidate, off-route, or later-route vocabulary such as scoring, tabletop, settings, or playfield cards when they are not required by the selected proof.
 
-`orderedSteps` is the compact visible route: critical path, proof enhancers, then the final proof target. It should not include every optional contract or broad route vocabulary item.
+`orderedSteps` is the compact visible route: critical path, proof enhancers, then the final proof target. `currentAction` is the first missing or blocked route step to do now; it is intentionally separate from `orderedSteps[0]`, because `orderedSteps[0]` may be a ready foundation/context card in the full from-scratch path. The trace should not include every optional contract or broad route vocabulary item. Overview, Guide, and Route Proof Trace must all consume the same route working projection so the cockpit, expanded guide, and JSON audit cannot drift apart.
 
-The trace must not become a broad contract-support graph. Contracts can appear as proof context, but the ordered route path should come first from setup-flow evidence, runtime validation evidence, dependency-tree gaps, and fallback setup-chain nodes. It should also avoid promoting broad selected-but-later capabilities such as networking or procedural generation as direct setup cards for a local movement proof. The trace exists to answer: "What cards would Overview/Guide show, in what order, if the user had to build this proof from scratch?"
+The trace must not become a broad contract-support graph. Contracts can appear as proof context, but the ordered route path should come first from setup-flow evidence, runtime validation evidence, dependency-tree gaps, and setup-chain nodes. It should also avoid promoting broad selected-but-later capabilities such as networking or procedural generation as direct setup cards for a local movement proof. The trace exists to answer: "What cards would Overview/Guide show, in what order, if the user had to build this proof from scratch?"
 
 If the trace is wrong, fix the upstream owner: gameplay contract meaning, dependency-tree reflection, validator evidence, graph projection, or generic grammar wording. Do not hardcode special trace text to make one proof look right.
 
@@ -481,7 +487,7 @@ Overview should show a first playable proof target rendered from graph proof nod
 - proof chain for hybrid routes
 - work to defer until after the proof
 
-Route identity comes from `PyralisSetupRouteAnalysis` and the reflected dependency tree. Proof nodes are selected by `PyralisAuthoringSetupGraphBuilder` from contract/descriptor proof targets first, then `PyralisProofFamilyVocabulary` supplies generic fallback wording. A pawn + projectile + networking setup still starts with local movement while graph edges show that projectile resolution and network ownership are intentionally next.
+Route identity comes from `PyralisSetupRouteAnalysis` and the reflected dependency tree. Proof nodes are selected by `PyralisAuthoringSetupGraphBuilder` from contract/descriptor proof targets first, then `PyralisProofFamilyVocabulary` supplies generic wording. A pawn + projectile + networking setup still starts with local movement while graph edges show that projectile resolution and network ownership are intentionally next.
 
 Examples:
 
@@ -587,7 +593,7 @@ Expected result:
 
 ### Phase 6: Proof Loop Guidance
 
-Add first-proof recommendations through contracts, dependency-tree evidence, validators, and graph proof nodes. Use `PyralisProofFamilyVocabulary` only for generic fallback proof wording.
+Add first-proof recommendations through contracts, dependency-tree evidence, validators, and graph proof nodes. Use `PyralisProofFamilyVocabulary` only for generic proof wording.
 
 Expected result:
 

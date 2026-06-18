@@ -1,4 +1,4 @@
-using NeonBlack.Gameplay.Core.Contracts;
+﻿using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Presentation.Visuals;
@@ -147,7 +147,7 @@ namespace NeonBlack.Gameplay.Features.Hazards
             SpawnPopup(_profile.exitPopupText, _profile.exitPopupColor);
         }
 
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (_profile == null)
                 yield break;
@@ -157,7 +157,7 @@ namespace NeonBlack.Gameplay.Features.Hazards
                 || _profile.flashOnBounce && _profile.bounceFlashPreset != null)
                 && spriteFlasher == null)
             {
-                yield return "`HazardFeedbackRuntime` needs a SpriteFlasher when flash presets are authored in the HazardFeedbackProfile.";
+                yield return PyralisRuntimeValidationIssue.Required("`HazardFeedbackRuntime` needs a SpriteFlasher when flash presets are authored in the HazardFeedbackProfile.");
             }
         }
 

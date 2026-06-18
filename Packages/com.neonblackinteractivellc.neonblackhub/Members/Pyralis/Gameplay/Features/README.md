@@ -19,4 +19,4 @@ Feature folders are organized by gameplay responsibility first, then by runtime 
 - `Spawning` owns spawn/respawn timing, lives, countdown, and revive feedback; pawn identity and instantiation stay with `ParticipantSpawnService`.
 - `Platform` owns cross-feature runtime composition state, not gameplay-specific defaults. Its lifetime scope registers the core spine unconditionally, then registers combat, enemy, RPG, game-flow, scoring, and feedback service groups only when route metadata, feature modules, reflected contracts, or loaded scene components provide evidence that the route uses them.
 
-When touching a feature branch, prefer making its source of truth obvious over adding compatibility glue.
+When touching a feature branch, prefer making its source of truth obvious over adding duplicate glue.

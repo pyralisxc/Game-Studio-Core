@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Features.Characters;
 using NeonBlack.Gameplay.Core.Contracts;
@@ -411,10 +411,10 @@ public partial class Hazard : MonoBehaviour, IRuntimeValidationProvider
 
         if (_feedbackRuntime is IRuntimeValidationProvider provider)
         {
-            foreach (string issue in provider.GetRuntimeValidationIssues())
+            foreach (PyralisRuntimeValidationIssue issue in provider.GetRuntimeValidationIssues())
             {
-                if (!string.IsNullOrWhiteSpace(issue))
-                    Debug.LogWarning($"[Hazard] '{name}': {issue}", this);
+                if (issue != null && !string.IsNullOrWhiteSpace(issue.Message))
+                    Debug.LogWarning($"[Hazard] '{name}': {issue.Message}", this);
             }
         }
     }

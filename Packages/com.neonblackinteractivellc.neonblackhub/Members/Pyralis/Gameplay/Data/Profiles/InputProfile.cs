@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -134,7 +134,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Input Profile", fileName = "InputProfile", order = -90)]
     public class InputProfile : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             List<string> issues = new List<string>();
 
@@ -157,7 +157,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
             if (!supportsGamepad && !supportsKeyboardMouse && !touchFriendly)
                 issues.Add("At least one input surface should be supported for player-owned input.");
 
-            return issues;
+            return PyralisRuntimeValidationIssueUtility.RequiredFrom(issues);
         }
 
         private void AddBindingIssues(List<string> issues)
@@ -214,7 +214,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
 
         [Tooltip("Primary input action asset used by the ParticipantDefinition that owns player, seat, hand, cursor, faction, or pawn input.")]
         public InputActionAsset actions;
-        [Tooltip("Default action map name expected by shared and compatibility input bridges.")]
+        [Tooltip("Default action map name expected by shared input readers and participant-owned PlayerInput routes.")]
         public string primaryActionMap = "Player";
 
         [Header("Gameplay Actions")]

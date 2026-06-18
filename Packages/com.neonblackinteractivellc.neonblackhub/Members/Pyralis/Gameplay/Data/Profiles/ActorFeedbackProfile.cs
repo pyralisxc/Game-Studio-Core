@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using NeonBlack.Gameplay.Core.Contracts;
 
@@ -16,10 +16,10 @@ namespace NeonBlack.Gameplay.Data.Profiles
 [CreateAssetMenu(menuName = "NeonBlack/Profiles/Actor Feedback Profile", fileName = "ActorFeedbackProfile")]
     public class ActorFeedbackProfile : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (!publishDamageEvents && !publishHealingEvents && !publishDeathEvents && !publishStatusEvents && !publishScoreEvents)
-                yield return "All feedback events are disabled. This profile will produce no output.";
+                yield return PyralisRuntimeValidationIssue.Required("All feedback events are disabled. This profile will produce no output.");
         }
 
         public bool publishDamageEvents = true;

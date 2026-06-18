@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
@@ -19,10 +19,10 @@ namespace NeonBlack.Gameplay.Features.Combat
     [CreateAssetMenu(menuName = "NeonBlack/Combat/Combat Sequence Definition", fileName = "CombatSequenceDefinition")]
     public class CombatSequenceDefinition : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<string> GetRuntimeValidationIssues()
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (actions == null || actions.Length == 0)
-                yield return "No actions assigned to this sequence.";
+                yield return PyralisRuntimeValidationIssue.Required("No actions assigned to this sequence.");
         }
 
         public string displayName = "Combat Sequence";
