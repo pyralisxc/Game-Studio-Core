@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using NeonBlack.Gameplay.Data.Profiles;
 
 namespace NeonBlack.Gameplay.Features.Characters
 {
@@ -17,7 +18,7 @@ namespace NeonBlack.Gameplay.Features.Characters
                     yield return "Dash Cooldown must be greater than zero when dash is enabled.";
             }
 
-            if (jumpEnabled)
+            if (EffectiveMovementStyle == Pawn2DMovementStyle.SideViewGravity && jumpEnabled)
             {
                 if (jumpVelocity <= 0f)
                     yield return "Jump Velocity must be greater than zero when side-view jump is enabled.";

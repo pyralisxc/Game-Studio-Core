@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d346be63ac5b734dbc0b3e19a88fbd4, type: 3}
   m_Name: PlayfieldProfile
   m_EditorClassIdentifier: NeonBlack.Gameplay.Data::NeonBlack.Gameplay.Data.Profiles.PlayfieldProfile
-  movementMode: 0
-  clampToBounds: 0
+  movementMode: 1
+  clampToBounds: 1
   minBounds: {x: -8, y: -4}
   maxBounds: {x: 8, y: 4}
   allowScreenWrap: 0

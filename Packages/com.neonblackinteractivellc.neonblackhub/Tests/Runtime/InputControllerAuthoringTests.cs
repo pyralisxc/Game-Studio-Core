@@ -69,10 +69,14 @@ namespace NeonBlack.Gameplay.Tests.Runtime
             PawnMovementProfile profile = ScriptableObject.CreateInstance<PawnMovementProfile>();
             try
             {
+                profile.movementStyle = Pawn2DMovementStyle.TopDownNoGravity;
                 profile.allow2DJump = false;
                 Assert.That(profile.Effective2DMovementStyle, Is.EqualTo(Pawn2DMovementStyle.TopDownNoGravity));
 
                 profile.allow2DJump = true;
+                Assert.That(profile.Effective2DMovementStyle, Is.EqualTo(Pawn2DMovementStyle.TopDownNoGravity));
+
+                profile.movementStyle = Pawn2DMovementStyle.SideViewGravity;
                 Assert.That(profile.Effective2DMovementStyle, Is.EqualTo(Pawn2DMovementStyle.SideViewGravity));
             }
             finally

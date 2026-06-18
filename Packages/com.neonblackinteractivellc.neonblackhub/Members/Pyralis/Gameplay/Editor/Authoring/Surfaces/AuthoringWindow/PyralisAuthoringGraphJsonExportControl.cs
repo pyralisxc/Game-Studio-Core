@@ -11,8 +11,24 @@ namespace NeonBlack.Gameplay.Editor
 
         public static void Draw(string viewName, PyralisAuthoringSetupGraph graph)
         {
+            Draw(viewName, graph, null);
+        }
+
+        public static void DrawRouteProofTrace(PyralisAuthoringSetupGraph graph)
+        {
+            using (new EditorGUILayout.HorizontalScope(GUILayout.MaxWidth(115f)))
+            using (new EditorGUI.DisabledScope(graph == null))
+            {
+                GUIContent traceContent = BuildTraceContent();
+                if (GUILayout.Button(traceContent, GUILayout.Width(105f)))
+                    ExportRouteProofTrace(graph);
+            }
+        }
+
+        public static void Draw(string viewName, PyralisAuthoringSetupGraph graph, PyralisAuthoringSetupGraph routeProofTraceGraph)
+        {
             bool canExport = graph != null || IsHygiene(viewName);
-            using (new EditorGUILayout.HorizontalScope(GUILayout.MaxWidth(210f)))
+            using (new EditorGUILayout.HorizontalScope(GUILayout.MaxWidth(330f)))
             {
                 using (new EditorGUI.DisabledScope(!canExport))
                 {
@@ -21,6 +37,13 @@ namespace NeonBlack.Gameplay.Editor
                         BuildTooltip(viewName));
                     if (GUILayout.Button(content, GUILayout.Width(105f)))
                         Export(viewName, graph);
+                }
+
+                using (new EditorGUI.DisabledScope(routeProofTraceGraph == null))
+                {
+                    GUIContent traceContent = BuildTraceContent();
+                    if (GUILayout.Button(traceContent, GUILayout.Width(105f)))
+                        ExportRouteProofTrace(routeProofTraceGraph);
                 }
             }
         }
@@ -51,6 +74,23 @@ namespace NeonBlack.Gameplay.Editor
             File.WriteAllText(path, json, new UTF8Encoding(false));
         }
 
+        private static void ExportRouteProofTrace(PyralisAuthoringSetupGraph graph)
+        {
+            if (graph == null)
+                return;
+
+            Directory.CreateDirectory(TempGraphFolder);
+            string safeRouteName = MakeFileSafe(graph.RouteName);
+            string path = Path.Combine(TempGraphFolder, $"Pyralis_{safeRouteName}_RouteProofTrace.json");
+            string json = PyralisAuthoringSetupGraphJsonExporter.ToRouteProofTraceJson(graph);
+            File.WriteAllText(path, json, new UTF8Encoding(false));
+            EditorApplication.delayCall += () =>
+            {
+                AssetDatabase.Refresh();
+                EditorUtility.RevealInFinder(TempGraphFolder);
+            };
+        }
+
         private static string BuildTooltip(string viewName)
         {
             if (IsHygiene(viewName))
@@ -59,6 +99,13 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             return $"Write this {viewName} graph snapshot to {TempGraphFolder}. Map exports current setup reality only, not the Intent-projected desired route.";
+        }
+
+        private static GUIContent BuildTraceContent()
+        {
+            return new GUIContent(
+                "Export Trace",
+                "Write a Route Proof Trace JSON. This exports the ordered fresh-scene setup-card path toward the selected first proof, plus blockers, proof context, source owners, and route evidence for humans and agents.");
         }
 
         private static string MakeFileSafe(string value)

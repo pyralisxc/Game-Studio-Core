@@ -25,6 +25,12 @@ namespace NeonBlack.Gameplay.Editor
             return JsonUtility.ToJson(snapshot, true);
         }
 
+        public static string ToRouteProofTraceJson(PyralisAuthoringSetupGraph graph)
+        {
+            RouteProofTraceSnapshot snapshot = BuildRouteProofTraceSnapshot(graph);
+            return JsonUtility.ToJson(snapshot, true);
+        }
+
         public static string ToJson(PyralisAuthoringSetupGraph graph, string view)
         {
             return string.Equals(view, "Hygiene", StringComparison.OrdinalIgnoreCase)
@@ -149,6 +155,9 @@ namespace NeonBlack.Gameplay.Editor
                 cleanupFocus = BuildCleanupFocus(safeDependencyRecords)
                     .Select(BuildDependencyPressure)
                     .ToArray(),
+                watchList = BuildWatchList(safeDependencyRecords)
+                    .Select(BuildDependencyPressure)
+                    .ToArray(),
                 dependencyPressure = safeDependencyRecords
                     .Where(record => record != null && record.Risk != PyralisSourceDependencyRisk.Low)
                     .OrderBy(record => PyralisSourceDependencyHygieneScanner.GetCleanupPriority(record.PressureKind))
@@ -161,6 +170,206 @@ namespace NeonBlack.Gameplay.Editor
             };
         }
 
+        private static RouteProofTraceSnapshot BuildRouteProofTraceSnapshot(PyralisAuthoringSetupGraph graph)
+        {
+            PyralisAuthoringGraphNode proof = PyralisAuthoringSetupGraphProjection.FindCurrentProofNode(graph);
+            PyralisAuthoringRouteStepRow[] orderedSteps = PyralisAuthoringSetupGraphProjection.BuildRouteStepRows(graph).ToArray();
+            PyralisAuthoringRouteStepRow[] criticalPath = PyralisAuthoringSetupGraphProjection.BuildRouteCriticalPathRows(graph).ToArray();
+            PyralisAuthoringRouteStepRow[] proofEnhancers = PyralisAuthoringSetupGraphProjection.BuildRouteProofEnhancerRows(graph).ToArray();
+            PyralisAuthoringRouteStepRow[] canWait = PyralisAuthoringSetupGraphProjection.BuildRouteCanWaitRows(graph).ToArray();
+            PyralisAuthoringGraphConnectionRow[] proofBlockers = PyralisAuthoringSetupGraphProjection.BuildProofBlockerRows(graph).ToArray();
+            PyralisAuthoringGraphConnectionRow[] proofSupport = PyralisAuthoringSetupGraphProjection.BuildDirectProofSupportRows(graph).ToArray();
+
+            return new RouteProofTraceSnapshot
+            {
+                schema = "pyralis.authoring.routeProofTrace.v1",
+                purpose = "Developer-facing Route Proof Trace. Previews the ordered setup cards a fresh scene should follow to reach the selected first proof, including definitions, participants, pawns, prefabs, required validation cards, proof enhancers, and the final Play Mode proof. This is documentation/debug evidence, not a preset or scene generator.",
+                view = "RouteProofTrace",
+                routeName = graph != null ? graph.RouteName : "No setup route selected",
+                exportedAtUtc = DateTime.UtcNow.ToString("o"),
+                source = BuildSourceInfo(graph?.Source),
+                currentRoute = BuildCurrentRoute(graph?.RouteAnalysis),
+                intentFocus = PyralisAuthoringSetupGraphProjection.BuildIntentFocusSummary(graph),
+                routeShape = PyralisAuthoringSetupGraphProjection.BuildRouteShapeSummary(graph),
+                proofPriority = PyralisAuthoringSetupGraphProjection.BuildFirstProofPrioritySummary(graph),
+                proof = proof != null ? BuildNode(proof) : null,
+                orderedSteps = orderedSteps.Select(BuildRouteStep).ToArray(),
+                criticalPath = criticalPath.Select(BuildRouteStep).ToArray(),
+                proofEnhancers = proofEnhancers.Select(BuildRouteStep).ToArray(),
+                canWait = canWait.Select(BuildRouteStep).ToArray(),
+                proofBlockers = proofBlockers.Select(BuildConnection).ToArray(),
+                proofSupport = proofSupport.Select(BuildConnection).ToArray(),
+                supportingContracts = BuildSupportingContracts(graph, orderedSteps, proofSupport),
+                graphSummary = BuildGraphSummary(graph, Array.Empty<PyralisSourceDependencyHygieneRecord>(), proofBlockers),
+                diagnosticQuestions = BuildTraceDiagnosticQuestions(graph, orderedSteps, criticalPath, proofEnhancers, canWait, proofBlockers, proofSupport)
+            };
+        }
+
+        private static RouteStepSnapshot BuildRouteStep(PyralisAuthoringRouteStepRow row)
+        {
+            PyralisAuthoringGraphNode node = row?.Node;
+            return new RouteStepSnapshot
+            {
+                sequence = row != null ? row.Sequence : 0,
+                nodeId = row?.StableId ?? string.Empty,
+                label = row?.Label ?? string.Empty,
+                phase = row?.PhaseLabel ?? string.Empty,
+                role = row?.RoleLabel ?? string.Empty,
+                evidenceState = row != null ? row.EvidenceState.ToString() : PyralisAuthoringGraphEvidenceState.Unknown.ToString(),
+                sourceKind = node != null ? node.SourceKind.ToString() : string.Empty,
+                sourceOrigin = row != null ? row.SourceOrigin.ToString() : string.Empty,
+                workIntent = node != null ? node.WorkIntent.ToString() : string.Empty,
+                issueSeverity = node != null ? node.IssueSeverity.ToString() : string.Empty,
+                reason = row?.Reason ?? string.Empty,
+                message = row?.Message ?? string.Empty,
+                owner = BuildRouteStepOwner(row),
+                unityAction = row?.UnityActionLabel ?? string.Empty,
+                nativeAction = node != null ? BuildNativeAction(node.NativeAction) : null,
+                assignmentFields = row?.AssignmentFields ?? Array.Empty<string>(),
+                nativeSetup = row?.NativeSetup ?? Array.Empty<string>(),
+                customizationMoments = row?.CustomizationMoments ?? Array.Empty<string>(),
+                proofTargetId = node != null ? node.ProofTargetId : string.Empty,
+                edge = row?.Edge != null ? BuildEdge(row.Edge) : null,
+                sourceObject = BuildSourceInfo(node?.SourceObject)
+            };
+        }
+
+        private static string BuildRouteStepOwner(PyralisAuthoringRouteStepRow row)
+        {
+            PyralisAuthoringGraphNode node = row?.Node;
+            if (node == null)
+                return string.Empty;
+
+            if (node.NativeAction.HasValue)
+            {
+                PyralisAuthoringNativeAction action = node.NativeAction.Value;
+                string target = !string.IsNullOrWhiteSpace(action.Target) ? action.Target : action.Surface.ToString();
+                return !string.IsNullOrWhiteSpace(action.FieldOrComponent)
+                    ? $"{target}.{action.FieldOrComponent}"
+                    : target;
+            }
+
+            if (node.AssignmentFields != null && node.AssignmentFields.Length > 0)
+                return node.AssignmentFields[0];
+
+            if (node.SourceContract != null && !string.IsNullOrWhiteSpace(node.SourceContract.SetupNodeId))
+                return node.SourceContract.SetupNodeId;
+
+            if (node.SourceObject != null)
+                return $"{node.SourceObject.name} ({node.SourceObject.GetType().Name})";
+
+            return node.StableId;
+        }
+
+        private static ContractPressureSnapshot[] BuildSupportingContracts(
+            PyralisAuthoringSetupGraph graph,
+            IReadOnlyList<PyralisAuthoringRouteStepRow> orderedSteps,
+            IReadOnlyList<PyralisAuthoringGraphConnectionRow> proofSupport)
+        {
+            if (graph == null)
+                return Array.Empty<ContractPressureSnapshot>();
+
+            HashSet<string> contractNodeIds = new HashSet<string>(StringComparer.Ordinal);
+            if (orderedSteps != null)
+            {
+                for (int i = 0; i < orderedSteps.Count; i++)
+                {
+                    PyralisAuthoringGraphNode node = orderedSteps[i]?.Node;
+                    if (node != null && (node.Kind == PyralisAuthoringGraphNodeKind.Contract || node.SourceContract != null))
+                        contractNodeIds.Add(node.StableId);
+                }
+            }
+
+            if (proofSupport != null)
+            {
+                for (int i = 0; i < proofSupport.Count; i++)
+                {
+                    PyralisAuthoringGraphNode node = proofSupport[i]?.From;
+                    if (node != null && (node.Kind == PyralisAuthoringGraphNodeKind.Contract || node.SourceContract != null))
+                        contractNodeIds.Add(node.StableId);
+                }
+            }
+
+            return graph.Nodes
+                .Where(node => node != null
+                    && contractNodeIds.Contains(node.StableId)
+                    && (node.Kind == PyralisAuthoringGraphNodeKind.Contract || node.SourceContract != null))
+                .Select(BuildContractPressure)
+                .ToArray();
+        }
+
+        private static TraceDiagnosticQuestionSnapshot[] BuildTraceDiagnosticQuestions(
+            PyralisAuthoringSetupGraph graph,
+            IReadOnlyList<PyralisAuthoringRouteStepRow> orderedSteps,
+            IReadOnlyList<PyralisAuthoringRouteStepRow> criticalPath,
+            IReadOnlyList<PyralisAuthoringRouteStepRow> proofEnhancers,
+            IReadOnlyList<PyralisAuthoringRouteStepRow> canWait,
+            IReadOnlyList<PyralisAuthoringGraphConnectionRow> proofBlockers,
+            IReadOnlyList<PyralisAuthoringGraphConnectionRow> proofSupport)
+        {
+            List<TraceDiagnosticQuestionSnapshot> questions = new List<TraceDiagnosticQuestionSnapshot>
+            {
+                new TraceDiagnosticQuestionSnapshot
+                {
+                    question = "What is the next route action?",
+                    answer = orderedSteps != null && orderedSteps.Count > 0
+                        ? $"{orderedSteps[0].Label}: {FirstNonEmpty(orderedSteps[0].UnityActionLabel, orderedSteps[0].Message, orderedSteps[0].Reason)}"
+                        : "No ordered steps were generated. Check whether the active setup or intent-projected graph has a resolved setup context."
+                },
+                new TraceDiagnosticQuestionSnapshot
+                {
+                    question = "What blocks the first proof?",
+                    answer = proofBlockers != null && proofBlockers.Count > 0
+                        ? string.Join("; ", proofBlockers.Take(6).Select(row => row.ToLabel))
+                        : "No proof blocker links are present in the current graph."
+                },
+                new TraceDiagnosticQuestionSnapshot
+                {
+                    question = "What is the full fresh-scene card path?",
+                    answer = criticalPath != null && criticalPath.Count > 0
+                        ? string.Join(" -> ", criticalPath.Select(row => row.Label).Concat(new[] { PyralisAuthoringSetupGraphProjection.GetOverviewFirstProofLabel(graph) }))
+                        : "No setup-card path is present yet. Check setup-flow evidence, runtime validation evidence, and proof target resolution."
+                },
+                new TraceDiagnosticQuestionSnapshot
+                {
+                    question = "What can wait until after this proof?",
+                    answer = canWait != null && canWait.Count > 0
+                        ? string.Join("; ", canWait.Take(8).Select(row => row.Label))
+                        : "No can-wait setup cards were projected for this proof route."
+                },
+                new TraceDiagnosticQuestionSnapshot
+                {
+                    question = "Which proof enhancers are useful but not blockers?",
+                    answer = proofEnhancers != null && proofEnhancers.Count > 0
+                        ? string.Join("; ", proofEnhancers.Take(6).Select(row => row.Label))
+                        : "No proof enhancers were projected for this route."
+                },
+                new TraceDiagnosticQuestionSnapshot
+                {
+                    question = "Which contracts are proof context rather than route cards?",
+                    answer = proofSupport != null && proofSupport.Count > 0
+                        ? string.Join("; ", proofSupport.Take(8).Select(row => row.FromLabel))
+                        : "No direct proof-support contracts are present yet. The ordered setup cards should still come from setup-flow and validation evidence."
+                },
+                new TraceDiagnosticQuestionSnapshot
+                {
+                    question = "Where should incorrect guidance be fixed?",
+                    answer = "Fix the source that emitted the step: contract meaning, dependency reflection, setup-flow validation, scene-readiness validation, or graph projection. Do not hardcode a one-off Guide/Hygiene sentence."
+                }
+            };
+
+            if (graph == null || graph.Source == null)
+            {
+                questions.Add(new TraceDiagnosticQuestionSnapshot
+                {
+                    question = "Why is the route empty?",
+                    answer = "No active setup source was resolved. Select or pin a Bootstrap, SessionDefinition, GameModeDefinition, ParticipantDefinition, PawnDefinition, or FeatureModuleDefinition."
+                });
+            }
+
+            return questions.ToArray();
+        }
+
         private static PyralisSourceDependencyHygieneRecord[] BuildCleanupFocus(
             IReadOnlyList<PyralisSourceDependencyHygieneRecord> dependencyRecords)
         {
@@ -171,6 +380,23 @@ namespace NeonBlack.Gameplay.Editor
                 .Where(record => record != null
                     && record.Risk != PyralisSourceDependencyRisk.Low
                     && IsCleanupFocus(record.PressureKind))
+                .OrderBy(record => PyralisSourceDependencyHygieneScanner.GetCleanupPriority(record.PressureKind))
+                .ThenByDescending(record => record.RiskScore)
+                .ThenBy(record => record.FileName, StringComparer.Ordinal)
+                .Take(16)
+                .ToArray();
+        }
+
+        private static PyralisSourceDependencyHygieneRecord[] BuildWatchList(
+            IReadOnlyList<PyralisSourceDependencyHygieneRecord> dependencyRecords)
+        {
+            if (dependencyRecords == null)
+                return Array.Empty<PyralisSourceDependencyHygieneRecord>();
+
+            return dependencyRecords
+                .Where(record => record != null
+                    && record.Risk != PyralisSourceDependencyRisk.Low
+                    && !IsCleanupFocus(record.PressureKind))
                 .OrderBy(record => PyralisSourceDependencyHygieneScanner.GetCleanupPriority(record.PressureKind))
                 .ThenByDescending(record => record.RiskScore)
                 .ThenBy(record => record.FileName, StringComparer.Ordinal)
@@ -193,7 +419,9 @@ namespace NeonBlack.Gameplay.Editor
                 totalPressureRecordCount = pressureRecords.Length,
                 exportedTopRecordCount = Math.Min(32, pressureRecords.Length),
                 exportedCleanupFocusCount = Math.Min(16, CountCleanupFocusRecords(pressureRecords)),
+                exportedWatchListCount = Math.Min(16, CountWatchListRecords(pressureRecords)),
                 actionablePressureRecordCount = CountActionablePressureRecords(pressureRecords),
+                acceptedPressureRecordCount = CountWatchListRecords(pressureRecords),
                 expectedPressureRecordCount = Math.Max(0, pressureRecords.Length - CountActionablePressureRecords(pressureRecords)),
                 omittedRecordCount = Math.Max(0, pressureRecords.Length - 32),
                 highestRiskScore = pressureRecords.Length > 0 ? pressureRecords[0].RiskScore : 0,
@@ -387,6 +615,22 @@ namespace NeonBlack.Gameplay.Editor
             return count;
         }
 
+        private static int CountWatchListRecords(IReadOnlyList<PyralisSourceDependencyHygieneRecord> records)
+        {
+            if (records == null)
+                return 0;
+
+            int count = 0;
+            for (int i = 0; i < records.Count; i++)
+            {
+                PyralisSourceDependencyHygieneRecord record = records[i];
+                if (record != null && record.Risk != PyralisSourceDependencyRisk.Low && !IsCleanupFocus(record.PressureKind))
+                    count++;
+            }
+
+            return count;
+        }
+
         private static bool IsCleanupFocus(PyralisSourceDependencyPressureKind pressureKind)
         {
             return pressureKind == PyralisSourceDependencyPressureKind.RuntimeOwnership
@@ -484,6 +728,20 @@ namespace NeonBlack.Gameplay.Editor
             return string.IsNullOrWhiteSpace(value) ? "Unknown" : value;
         }
 
+        private static string FirstNonEmpty(params string[] values)
+        {
+            if (values == null)
+                return string.Empty;
+
+            for (int i = 0; i < values.Length; i++)
+            {
+                if (!string.IsNullOrWhiteSpace(values[i]))
+                    return values[i];
+            }
+
+            return string.Empty;
+        }
+
         private static NativeActionSnapshot BuildNativeAction(PyralisAuthoringNativeAction? nativeAction)
         {
             if (!nativeAction.HasValue)
@@ -525,6 +783,64 @@ namespace NeonBlack.Gameplay.Editor
             {
                 return string.Empty;
             }
+        }
+
+        [Serializable]
+        private sealed class RouteProofTraceSnapshot
+        {
+            public string schema;
+            public string purpose;
+            public string view;
+            public string routeName;
+            public string exportedAtUtc;
+            public SourceSnapshot source;
+            public CurrentRouteSnapshot currentRoute;
+            public string intentFocus;
+            public string routeShape;
+            public string proofPriority;
+            public NodeSnapshot proof;
+            public RouteStepSnapshot[] orderedSteps;
+            public RouteStepSnapshot[] criticalPath;
+            public RouteStepSnapshot[] proofEnhancers;
+            public RouteStepSnapshot[] canWait;
+            public ConnectionSnapshot[] proofBlockers;
+            public ConnectionSnapshot[] proofSupport;
+            public ContractPressureSnapshot[] supportingContracts;
+            public GraphSummarySnapshot graphSummary;
+            public TraceDiagnosticQuestionSnapshot[] diagnosticQuestions;
+        }
+
+        [Serializable]
+        private sealed class RouteStepSnapshot
+        {
+            public int sequence;
+            public string nodeId;
+            public string label;
+            public string phase;
+            public string role;
+            public string evidenceState;
+            public string sourceKind;
+            public string sourceOrigin;
+            public string workIntent;
+            public string issueSeverity;
+            public string reason;
+            public string message;
+            public string owner;
+            public string unityAction;
+            public NativeActionSnapshot nativeAction;
+            public string[] assignmentFields;
+            public string[] nativeSetup;
+            public string[] customizationMoments;
+            public string proofTargetId;
+            public EdgeSnapshot edge;
+            public SourceSnapshot sourceObject;
+        }
+
+        [Serializable]
+        private sealed class TraceDiagnosticQuestionSnapshot
+        {
+            public string question;
+            public string answer;
         }
 
         [Serializable]
@@ -592,6 +908,7 @@ namespace NeonBlack.Gameplay.Editor
             public CountSnapshot[] evidenceStateCounts;
             public DependencyPressureSummarySnapshot dependencyPressureSummary;
             public DependencyPressureSnapshot[] cleanupFocus;
+            public DependencyPressureSnapshot[] watchList;
             public DependencyPressureSnapshot[] dependencyPressure;
             public ContractPressureSnapshot[] contractSourcePressure;
         }
@@ -731,7 +1048,9 @@ namespace NeonBlack.Gameplay.Editor
             public int totalPressureRecordCount;
             public int exportedTopRecordCount;
             public int exportedCleanupFocusCount;
+            public int exportedWatchListCount;
             public int actionablePressureRecordCount;
+            public int acceptedPressureRecordCount;
             public int expectedPressureRecordCount;
             public int omittedRecordCount;
             public int highestRiskScore;

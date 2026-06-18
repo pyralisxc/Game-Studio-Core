@@ -19,7 +19,8 @@ MonoBehaviour:
   allowLateJoin: 1
   sharedCameraByDefault: 1
   allowSplitScreen: 0
-  maxParticipants: 4
-  defaultGameMode: {fileID: 0}
+  maxParticipants: 1
+  defaultGameMode: {fileID: 11400000, guid: 3d126fa498e4bee4a93c30b8eb7bdfd6, type: 2}
   settingsProfile: {fileID: 0}
-  defaultParticipants: []
+  defaultParticipants:
+  - {fileID: 11400000, guid: 60268aeb3c6656345aa9ebdba20d9183, type: 2}

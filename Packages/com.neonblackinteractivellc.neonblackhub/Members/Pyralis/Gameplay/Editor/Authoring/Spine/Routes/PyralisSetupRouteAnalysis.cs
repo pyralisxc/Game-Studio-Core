@@ -126,7 +126,10 @@ namespace NeonBlack.Gameplay.Editor
         public static PyralisSetupRouteAnalysis Build(GameModeDefinition mode, SessionDefinition session = null)
         {
             PyralisSetupDependencyTree dependencyTree = PyralisSetupDependencyTree.Build(session != null ? session : mode);
-            return BuildResolved(dependencyTree, mode);
+            GameModeDefinition assignedMode = session != null && session.defaultGameMode != mode
+                ? null
+                : mode;
+            return BuildResolved(dependencyTree, assignedMode);
         }
 
         public static PyralisSetupRouteAnalysis Build(UnityEngine.Object source)
@@ -492,8 +495,11 @@ namespace NeonBlack.Gameplay.Editor
             IReadOnlyList<ParticipantDefinition> reflectedParticipants,
             ParticipantDefinition standaloneParticipant)
         {
-            if (session == null || session.defaultParticipants == null || session.defaultParticipants.Length == 0)
+            if (session == null)
                 return standaloneParticipant != null || HasAnyParticipant(reflectedParticipants);
+
+            if (session.defaultParticipants == null || session.defaultParticipants.Length == 0)
+                return false;
 
             for (int i = 0; i < session.defaultParticipants.Length; i++)
             {
@@ -509,11 +515,16 @@ namespace NeonBlack.Gameplay.Editor
             IReadOnlyList<ParticipantDefinition> reflectedParticipants,
             PawnDefinition standalonePawn)
         {
-            if (standalonePawn != null)
-                return true;
+            if (session == null)
+            {
+                if (standalonePawn != null)
+                    return true;
 
-            if (session == null || session.defaultParticipants == null)
                 return HasAnyReflectedDefaultPawn(reflectedParticipants);
+            }
+
+            if (session.defaultParticipants == null || session.defaultParticipants.Length == 0)
+                return false;
 
             for (int i = 0; i < session.defaultParticipants.Length; i++)
             {
@@ -532,7 +543,7 @@ namespace NeonBlack.Gameplay.Editor
             PawnDefinition standalonePawn,
             out PyralisParticipantPawnIssueKind issueKind)
         {
-            if (session == null || session.defaultParticipants == null || session.defaultParticipants.Length == 0)
+            if (session == null)
             {
                 if (standaloneParticipant != null)
                     return GetParticipantPawnIssue(new[] { standaloneParticipant }, out issueKind);
@@ -549,6 +560,18 @@ namespace NeonBlack.Gameplay.Editor
                 }
 
                 issueKind = PyralisParticipantPawnIssueKind.MissingParticipants;
+                return "Assign default participants before checking pawn readiness.";
+            }
+
+            if (session.defaultParticipants == null || session.defaultParticipants.Length == 0)
+            {
+                issueKind = PyralisParticipantPawnIssueKind.MissingParticipants;
+                if (standaloneParticipant != null)
+                    return $"Assign ParticipantDefinition `{standaloneParticipant.name}` to SessionDefinition.defaultParticipants before Play Mode can spawn a pawn.";
+
+                if (HasAnyParticipant(reflectedParticipants))
+                    return "Assign the reflected ParticipantDefinition to SessionDefinition.defaultParticipants before Play Mode can spawn a pawn.";
+
                 return "Assign default participants before checking pawn readiness.";
             }
 

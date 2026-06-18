@@ -21,6 +21,7 @@ namespace NeonBlack.Gameplay.Editor
             AddIfPresent(issues, GetPawnPrefabRotationIssue(pawn));
             AddIfPresent(issues, GetPawnPrefabSpriteScaleIssue(pawn));
             AddIfPresent(issues, GetPawnPrefabInputAdapterIssue(pawn));
+            AddIfPresent(issues, GetTopDownJumpFeatureIssue(pawn));
             return issues;
         }
 
@@ -36,7 +37,7 @@ namespace NeonBlack.Gameplay.Editor
                 return null;
 
             return body != null && Mathf.Abs(body.gravityScale) > 0.001f
-                ? "Rigidbody2D gravity is non-zero on a top-down/no-gravity Pawn2DMovementComponent prefab. This lane uses a Kinematic Rigidbody2D moved by script, so set Rigidbody2D > Gravity Scale to 0, or enable 2D side-view jump on the PawnMovementProfile when this pawn should use a Dynamic Rigidbody2D with gravity."
+                ? "Rigidbody2D gravity is non-zero on a top-down/no-gravity Pawn2DMovementComponent prefab. This lane uses a Kinematic Rigidbody2D moved by script, so set Rigidbody2D > Gravity Scale to 0, or set PawnMovementProfile > Movement Style to SideViewGravity when this pawn should use a Dynamic Rigidbody2D with gravity."
                 : null;
         }
 
@@ -82,6 +83,22 @@ namespace NeonBlack.Gameplay.Editor
             return null;
         }
 
+        private static string GetTopDownJumpFeatureIssue(PawnDefinition pawn)
+        {
+            PawnMovementProfile profile = pawn != null ? pawn.movementProfile : null;
+            if (profile == null
+                || profile.Effective2DMovementStyle != Pawn2DMovementStyle.TopDownNoGravity
+                || !profile.allow2DJump)
+            {
+                return null;
+            }
+
+            if (HasFeatureModule(pawn, "actor.traversal.topdown-hop"))
+                return null;
+
+            return "Top-down/no-gravity Jump is enabled, but no TopDownHop feature module is assigned to PawnDefinition.featureModules. Add a FeatureModuleDefinition with module id `actor.traversal.topdown-hop` when Jump should lift the visual child, or turn off Allow 2D Jump when this pawn has no top-down hop action.";
+        }
+
         private static bool TryGet2DPawnPrefabParts(
             PawnDefinition pawn,
             out GameObject prefab,
@@ -100,6 +117,21 @@ namespace NeonBlack.Gameplay.Editor
         {
             if (!string.IsNullOrWhiteSpace(issue))
                 issues.Add(issue);
+        }
+
+        private static bool HasFeatureModule(PawnDefinition pawn, string moduleId)
+        {
+            if (pawn == null || pawn.featureModules == null || string.IsNullOrWhiteSpace(moduleId))
+                return false;
+
+            for (int i = 0; i < pawn.featureModules.Length; i++)
+            {
+                FeatureModuleDefinition module = pawn.featureModules[i];
+                if (module != null && string.Equals(module.moduleId, moduleId, System.StringComparison.Ordinal))
+                    return true;
+            }
+
+            return false;
         }
 
         private static float GetSerializedFloat(Object target, string propertyName, float fallback)

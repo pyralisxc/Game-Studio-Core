@@ -1,3 +1,4 @@
+using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Features.Input;
 using UnityEngine;
 
@@ -22,14 +23,18 @@ namespace NeonBlack.Gameplay.Features.Characters
         [SerializeField, Tooltip("Optional gameplay state reader. When empty, the scene orchestrator should configure this component before play.")]
         private MonoBehaviour gameplayStateSource;
 
+        [Header("Movement - 2D Style")]
+        [SerializeField, Tooltip("TopDownNoGravity keeps the Rigidbody2D kinematic and moves on the map plane. SideViewGravity uses Dynamic Rigidbody2D gravity for platformer-style movement.")]
+        private Pawn2DMovementStyle movementStyle = Pawn2DMovementStyle.TopDownNoGravity;
+
         [Header("Dash")]
         [SerializeField] private bool dashEnabled = true;
         [SerializeField] private float dashSpeed = 12f;
         [SerializeField, Range(0.05f, 0.5f)] private float dashDuration = 0.15f;
         [SerializeField, Range(0.1f, 3f)] private float dashCooldown = 0.8f;
 
-        [Header("Side View Jump")]
-        [SerializeField, Tooltip("Enable for side-view/platformer 2D pawns. Off means top-down/no-gravity movement with a Kinematic Rigidbody2D; on means side-view gravity with a Dynamic Rigidbody2D.")]
+        [Header("Jump")]
+        [SerializeField, Tooltip("Allows the built-in side-view jump fallback when Movement Style is SideViewGravity. Top-down visual hops should be handled by a TopDownHop feature module consuming the Jump action.")]
         private bool jumpEnabled = false;
         [SerializeField, Tooltip("Initial upward velocity applied when Jump is requested while grounded.")]
         private float jumpVelocity = 8f;

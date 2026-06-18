@@ -339,13 +339,13 @@ namespace NeonBlack.Gameplay.Editor
 
             List<PyralisAuthoringSetupGraphRow> rows = new List<PyralisAuthoringSetupGraphRow>
             {
-                Row(graph, "Scene Root", "bootstrap.root", "Scene object that starts the session."),
-                Row(graph, "Session", "session.definition", "Asset that names game rules and participants."),
-                Row(graph, "Game Rules", "mode.definition", "Ruleset that owns rule-level defaults and feature modules."),
+                Row(graph, "Gameplay Root", "bootstrap.root", "Scene object that starts the session."),
+                Row(graph, "Session Definition", "session.definition", "Asset that names game rules and participants."),
+                Row(graph, "Game Mode", "mode.definition", "Ruleset that owns rule-level defaults and feature modules."),
                 BuildCapabilitiesRow(graph),
-                Row(graph, "Route Shape", "route.shape", "Participant ownership shape compiled from route evidence."),
+                Row(graph, "Control Shape", "route.shape", "Participant ownership shape compiled from route evidence."),
                 Row(graph, "Participants", "participant.default", "Assign at least one default participant."),
-                Row(graph, "Pawn / No Pawn", "pawn.definition", "Pawn-backed routes need a ParticipantDefinition.defaultPawn.", isOptional: IsNodeOptional(graph, "pawn.definition")),
+                Row(graph, "Pawn Setup", "pawn.definition", "Pawn-backed routes need a ParticipantDefinition.defaultPawn.", isOptional: IsNodeOptional(graph, "pawn.definition")),
                 Row(graph, "Scene Surfaces", "scene.surfaces", "Route-recommended scene surface evidence is present or not needed yet.")
             };
 
@@ -359,14 +359,14 @@ namespace NeonBlack.Gameplay.Editor
 
             return new[]
             {
-                Row(graph, "Scene Root", "bootstrap.root"),
-                Row(graph, "Session", "session.definition"),
-                Row(graph, "Game Rules", "mode.definition"),
+                Row(graph, "Gameplay Root", "bootstrap.root"),
+                Row(graph, "Session Definition", "session.definition"),
+                Row(graph, "Game Mode", "mode.definition"),
                 BuildCapabilitiesRow(graph),
-                Row(graph, "Route Shape", "route.shape", isOptional: IsNodeOptional(graph, "route.shape")),
+                Row(graph, "Control Shape", "route.shape", isOptional: IsNodeOptional(graph, "route.shape")),
                 Row(graph, "Players / Seats", "participant.default"),
-                Row(graph, "Pawn / No Pawn", "pawn.definition", isOptional: IsNodeOptional(graph, "pawn.definition")),
-                Row(graph, "Scene Roots", "scene.surfaces", isOptional: true)
+                Row(graph, "Pawn Setup", "pawn.definition", isOptional: IsNodeOptional(graph, "pawn.definition")),
+                Row(graph, "Scene Surfaces", "scene.surfaces", isOptional: true)
             };
         }
 
@@ -480,6 +480,22 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             return rows.ToArray();
+        }
+
+        public static IReadOnlyList<PyralisAuthoringGraphConnectionRow> BuildDirectProofSupportRows(PyralisAuthoringSetupGraph graph)
+        {
+            if (graph == null)
+                return Array.Empty<PyralisAuthoringGraphConnectionRow>();
+
+            return BuildProofSupportRows(graph)
+                .Where(row => row != null
+                    && row.Edge != null
+                    && row.Edge.Kind != PyralisAuthoringGraphEdgeKind.BlockedBy
+                    && IsRouteProofStepNode(row.From)
+                    && IsDirectProofSupport(graph, row))
+                .OrderBy(row => GetDirectProofSupportRank(row.From))
+                .ThenBy(row => row.FromLabel, StringComparer.Ordinal)
+                .ToArray();
         }
 
         public static IReadOnlyList<PyralisAuthoringGraphConnectionRow> BuildProofBlockerRows(PyralisAuthoringSetupGraph graph)
@@ -613,33 +629,10 @@ namespace NeonBlack.Gameplay.Editor
 
             List<PyralisAuthoringRouteStepRow> rows = new List<PyralisAuthoringRouteStepRow>();
             HashSet<string> added = new HashSet<string>(StringComparer.Ordinal);
-            int sequence = 1;
+            AddExistingRouteSteps(rows, added, BuildRouteCriticalPathRows(graph));
+            int sequence = rows.Count + 1;
 
-            PyralisAuthoringGraphNode currentStep = FindFirstUnresolvedSetupFlowNode(graph)
-                ?? FindFirstUnresolvedNode(graph);
-            AddRouteStep(
-                rows,
-                added,
-                currentStep,
-                ref sequence,
-                GetPhase(currentStep),
-                PyralisAuthoringRouteStepRole.DoThisFirst,
-                "This is the first setup item the graph says to handle.");
-
-            IReadOnlyList<PyralisAuthoringGraphConnectionRow> proofBlockers = BuildProofBlockerRows(graph);
-            for (int i = 0; i < proofBlockers.Count; i++)
-            {
-                PyralisAuthoringGraphConnectionRow row = proofBlockers[i];
-                AddRouteStep(
-                    rows,
-                    added,
-                    row?.To,
-                    ref sequence,
-                    GetPhase(row?.To),
-                    PyralisAuthoringRouteStepRole.BlocksProof,
-                    "This must be cleared before the first proof is believable.",
-                    row?.Edge);
-            }
+            AddProofEnhancerRouteSteps(graph, rows, added, ref sequence);
 
             PyralisAuthoringGraphNode proof = FindCurrentProofNode(graph);
             AddRouteStep(
@@ -649,30 +642,290 @@ namespace NeonBlack.Gameplay.Editor
                 ref sequence,
                 PyralisAuthoringRouteStepPhase.FirstProof,
                 PyralisAuthoringRouteStepRole.ProofTarget,
-                "This is the smallest Play Mode proof compiled from the current route.");
+                "This is the Play Mode proof reached after the ordered setup cards above are clear.");
 
-            IReadOnlyList<PyralisAuthoringGraphConnectionRow> proofRows = BuildProofSupportRows(graph);
-            for (int i = 0; i < proofRows.Count; i++)
+            return rows.ToArray();
+        }
+
+        public static IReadOnlyList<PyralisAuthoringRouteStepRow> BuildRouteCriticalPathRows(PyralisAuthoringSetupGraph graph)
+        {
+            if (!HasResolvedSetupContext(graph))
+                return Array.Empty<PyralisAuthoringRouteStepRow>();
+
+            List<PyralisAuthoringRouteStepRow> rows = new List<PyralisAuthoringRouteStepRow>();
+            HashSet<string> added = new HashSet<string>(StringComparer.Ordinal);
+            int sequence = 1;
+            PyralisAuthoringGraphNode currentStep = FindFirstUnresolvedRouteProofNode(graph);
+
+            AddCoreRouteContextSteps(graph, rows, added, currentStep, ref sequence);
+            AddSetupFlowRouteSteps(graph, rows, added, currentStep, ref sequence);
+            AddRuntimeValidationRouteSteps(graph, rows, added, currentStep, ref sequence);
+            return rows.ToArray();
+        }
+
+        public static IReadOnlyList<PyralisAuthoringRouteStepRow> BuildRouteProofEnhancerRows(PyralisAuthoringSetupGraph graph)
+        {
+            if (!HasResolvedSetupContext(graph))
+                return Array.Empty<PyralisAuthoringRouteStepRow>();
+
+            List<PyralisAuthoringRouteStepRow> rows = new List<PyralisAuthoringRouteStepRow>();
+            HashSet<string> added = new HashSet<string>(StringComparer.Ordinal);
+            int sequence = 1;
+            AddProofEnhancerRouteSteps(graph, rows, added, ref sequence);
+            return rows.ToArray();
+        }
+
+        public static IReadOnlyList<PyralisAuthoringRouteStepRow> BuildRouteCanWaitRows(PyralisAuthoringSetupGraph graph)
+        {
+            if (!HasResolvedSetupContext(graph))
+                return Array.Empty<PyralisAuthoringRouteStepRow>();
+
+            List<PyralisAuthoringRouteStepRow> rows = new List<PyralisAuthoringRouteStepRow>();
+            HashSet<string> added = new HashSet<string>(StringComparer.Ordinal);
+            int sequence = 1;
+            PyralisAuthoringGraphNode[] canWaitNodes = graph.Nodes
+                .Where(node => node != null
+                    && node.Kind == PyralisAuthoringGraphNodeKind.ValidationEvidence
+                    && IsCanWaitRouteSetupCard(node))
+                .OrderBy(GetRouteSetupCardRank)
+                .ThenBy(node => node.Label, StringComparer.Ordinal)
+                .ToArray();
+
+            for (int i = 0; i < canWaitNodes.Length; i++)
             {
-                PyralisAuthoringGraphConnectionRow proofRow = proofRows[i];
-                if (proofRow == null || proofRow.Edge == null || proofRow.Edge.Kind == PyralisAuthoringGraphEdgeKind.BlockedBy)
-                    continue;
-
+                PyralisAuthoringGraphNode node = canWaitNodes[i];
                 AddRouteStep(
                     rows,
                     added,
-                    proofRow.From,
+                    node,
                     ref sequence,
-                    GetPhase(proofRow.From),
-                    PyralisAuthoringRouteStepRole.SupportsProof,
-                    proofRow.Edge.Kind == PyralisAuthoringGraphEdgeKind.Recommends
-                        ? "This reflected contract contributes guidance to the first proof."
-                        : "This selected capability supports the first proof.",
-                    proofRow.Edge);
+                    GetPhase(node),
+                    PyralisAuthoringRouteStepRole.CanWait,
+                    "This card is useful vocabulary for the route, but it is not part of the first proof's critical path.");
             }
 
-            AddRouteContextRows(graph, rows, added, ref sequence);
             return rows.ToArray();
+        }
+
+        private static void AddSetupFlowRouteSteps(
+            PyralisAuthoringSetupGraph graph,
+            List<PyralisAuthoringRouteStepRow> rows,
+            HashSet<string> added,
+            PyralisAuthoringGraphNode currentStep,
+            ref int sequence)
+        {
+            if (graph == null)
+                return;
+
+            PyralisAuthoringGraphNode[] setupFlowNodes = graph.Nodes
+                .Where(node => node != null
+                    && node.Kind == PyralisAuthoringGraphNodeKind.ValidationEvidence
+                    && node.SourceKind == PyralisAuthoringGraphSourceKind.SetupFlow
+                    && IsCriticalRouteSetupCard(node))
+                .OrderBy(GetRouteSetupCardRank)
+                .ThenBy(node => node.Label, StringComparer.Ordinal)
+                .ToArray();
+
+            for (int i = 0; i < setupFlowNodes.Length; i++)
+            {
+                PyralisAuthoringGraphNode node = setupFlowNodes[i];
+                AddRouteStep(
+                    rows,
+                    added,
+                    node,
+                    ref sequence,
+                    GetPhase(node),
+                    GetRouteSetupCardRole(node, currentStep),
+                    GetRouteSetupCardReason(node, currentStep));
+            }
+        }
+
+        private static void AddCoreRouteContextSteps(
+            PyralisAuthoringSetupGraph graph,
+            List<PyralisAuthoringRouteStepRow> rows,
+            HashSet<string> added,
+            PyralisAuthoringGraphNode currentStep,
+            ref int sequence)
+        {
+            AddRouteStepById(graph, rows, added, "bootstrap.root", currentStep, ref sequence);
+            AddRouteStepById(graph, rows, added, "route.shape", currentStep, ref sequence);
+            AddRouteStepById(graph, rows, added, "route.participant-input-profile", currentStep, ref sequence);
+        }
+
+        private static void AddRuntimeValidationRouteSteps(
+            PyralisAuthoringSetupGraph graph,
+            List<PyralisAuthoringRouteStepRow> rows,
+            HashSet<string> added,
+            PyralisAuthoringGraphNode currentStep,
+            ref int sequence)
+        {
+            if (graph == null)
+                return;
+
+            PyralisAuthoringGraphNode[] runtimeNodes = graph.Nodes
+                .Where(node => node != null
+                    && node.Kind == PyralisAuthoringGraphNodeKind.ValidationEvidence
+                    && node.SourceKind == PyralisAuthoringGraphSourceKind.RuntimeValidation
+                    && IsCriticalRouteSetupCard(node))
+                .OrderBy(GetRouteSetupCardRank)
+                .ThenBy(node => node.Label, StringComparer.Ordinal)
+                .ToArray();
+
+            for (int i = 0; i < runtimeNodes.Length; i++)
+            {
+                PyralisAuthoringGraphNode node = runtimeNodes[i];
+                AddRouteStep(
+                    rows,
+                    added,
+                    node,
+                    ref sequence,
+                    GetPhase(node),
+                    GetRouteSetupCardRole(node, currentStep),
+                    GetRouteSetupCardReason(node, currentStep));
+            }
+        }
+
+        private static void AddProofEnhancerRouteSteps(
+            PyralisAuthoringSetupGraph graph,
+            List<PyralisAuthoringRouteStepRow> rows,
+            HashSet<string> added,
+            ref int sequence)
+        {
+            if (graph == null)
+                return;
+
+            PyralisAuthoringGraphNode[] enhancerNodes = graph.Nodes
+                .Where(node => node != null
+                    && node.Kind == PyralisAuthoringGraphNodeKind.ValidationEvidence
+                    && node.WorkIntent == PyralisAuthoringGraphWorkIntent.ProofEnhancer
+                    && node.EvidenceState == PyralisAuthoringGraphEvidenceState.CandidateDetected)
+                .OrderBy(GetRouteSetupCardRank)
+                .ThenBy(node => node.Label, StringComparer.Ordinal)
+                .Take(4)
+                .ToArray();
+
+            for (int i = 0; i < enhancerNodes.Length; i++)
+            {
+                PyralisAuthoringGraphNode node = enhancerNodes[i];
+                AddRouteStep(
+                    rows,
+                    added,
+                    node,
+                    ref sequence,
+                    GetPhase(node),
+                    PyralisAuthoringRouteStepRole.CanWait,
+                    "This proof enhancer can make the first Play Mode check clearer, but it should not block the route proof.");
+            }
+        }
+
+        private static void AddRouteStepById(
+            PyralisAuthoringSetupGraph graph,
+            List<PyralisAuthoringRouteStepRow> rows,
+            HashSet<string> added,
+            string stableId,
+            PyralisAuthoringGraphNode currentStep,
+            ref int sequence)
+        {
+            if (graph == null || string.IsNullOrWhiteSpace(stableId))
+                return;
+
+            if (!graph.TryFindNode(stableId, out PyralisAuthoringGraphNode node))
+                return;
+
+            AddRouteStep(
+                rows,
+                added,
+                node,
+                ref sequence,
+                GetPhase(node),
+                GetRouteSetupCardRole(node, currentStep),
+                GetRouteSetupCardReason(node, currentStep));
+        }
+
+        private static void AddExistingRouteSteps(
+            List<PyralisAuthoringRouteStepRow> rows,
+            HashSet<string> added,
+            IReadOnlyList<PyralisAuthoringRouteStepRow> sourceRows)
+        {
+            if (rows == null || added == null || sourceRows == null)
+                return;
+
+            for (int i = 0; i < sourceRows.Count; i++)
+            {
+                PyralisAuthoringRouteStepRow row = sourceRows[i];
+                if (row == null || row.Node == null || string.IsNullOrWhiteSpace(row.StableId))
+                    continue;
+
+                if (!added.Add(row.StableId))
+                    continue;
+
+                rows.Add(new PyralisAuthoringRouteStepRow(
+                    row.Node,
+                    rows.Count + 1,
+                    row.Phase,
+                    row.Role,
+                    row.Reason,
+                    row.Edge));
+            }
+        }
+
+        private static PyralisAuthoringGraphNode FindFirstUnresolvedRouteProofNode(PyralisAuthoringSetupGraph graph)
+        {
+            if (graph == null)
+                return null;
+
+            PyralisAuthoringGraphNode node = FindFirstUnresolvedSetupFlowNode(graph);
+            if (IsRouteProofStepNode(node))
+                return node;
+
+            node = FindFirstUnresolvedRouteProofNode(graph, PyralisAuthoringGraphNodeKind.SetupChain);
+            if (node != null)
+                return node;
+
+            node = FindFirstUnresolvedRouteProofNode(graph, PyralisAuthoringGraphNodeKind.UnitySurfaceRequirement);
+            if (node != null)
+                return node;
+
+            node = FindFirstUnresolvedRouteProofNode(graph, PyralisAuthoringGraphNodeKind.RouteShape);
+            if (node != null)
+                return node;
+
+            return FindFirstUnresolvedRouteProofNode(graph, PyralisAuthoringGraphNodeKind.ValidationEvidence);
+        }
+
+        private static PyralisAuthoringGraphNode FindFirstUnresolvedRouteProofNode(
+            PyralisAuthoringSetupGraph graph,
+            PyralisAuthoringGraphNodeKind kind)
+        {
+            IReadOnlyList<PyralisAuthoringGraphNode> nodes = graph.FindNodes(kind);
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                PyralisAuthoringGraphNode node = nodes[i];
+                if (!IsRouteProofStepNode(node))
+                    continue;
+
+                if (node.EvidenceState == PyralisAuthoringGraphEvidenceState.Blocked
+                    || node.EvidenceState == PyralisAuthoringGraphEvidenceState.Missing)
+                {
+                    return node;
+                }
+            }
+
+            return null;
+        }
+
+        private static bool IsRouteProofStepNode(PyralisAuthoringGraphNode node)
+        {
+            if (node == null)
+                return false;
+
+            if (node.Kind == PyralisAuthoringGraphNodeKind.SceneSurface
+                || node.SourceKind == PyralisAuthoringGraphSourceKind.SceneReadiness)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         private static void AddRouteContextRows(
@@ -693,23 +946,6 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringRouteStepRole.RouteContext,
                 "This is the participant ownership shape compiled from intent, reflected setup, and route evidence.");
 
-            IReadOnlyList<PyralisAuthoringGraphNode> capabilityNodes = graph.FindNodes(PyralisAuthoringGraphNodeKind.Capability);
-            for (int i = 0; i < capabilityNodes.Count; i++)
-            {
-                PyralisAuthoringGraphNode node = capabilityNodes[i];
-                if (node == null || string.Equals(node.StableId, "capability.selected", StringComparison.Ordinal))
-                    continue;
-
-                AddRouteStep(
-                    rows,
-                    added,
-                    node,
-                    ref sequence,
-                    PyralisAuthoringRouteStepPhase.Capability,
-                    PyralisAuthoringRouteStepRole.RouteContext,
-                    "This selected capability is part of the active setup route.");
-            }
-
             PyralisAuthoringGraphNode proof = FindCurrentProofNode(graph);
             IReadOnlyList<PyralisAuthoringGraphNode> contractNodes = graph.FindNodes(PyralisAuthoringGraphNodeKind.Contract);
             for (int i = 0; i < contractNodes.Count; i++)
@@ -725,6 +961,9 @@ namespace NeonBlack.Gameplay.Editor
                     continue;
                 }
 
+                if (!IsDirectProofNode(graph, node, proof.StableId))
+                    continue;
+
                 AddRouteStep(
                     rows,
                     added,
@@ -734,6 +973,147 @@ namespace NeonBlack.Gameplay.Editor
                     PyralisAuthoringRouteStepRole.RouteContext,
                     "This reflected contract matches the first proof target.");
             }
+        }
+
+        private static bool IsCriticalRouteSetupCard(PyralisAuthoringGraphNode node)
+        {
+            if (node == null)
+                return false;
+
+            if (IsCanWaitRouteSetupCard(node))
+                return false;
+
+            if (node.EvidenceState == PyralisAuthoringGraphEvidenceState.CandidateDetected)
+                return false;
+
+            string id = node.StableId ?? string.Empty;
+            if (id.Contains("setup-gameplay-root"))
+                return false;
+
+            return node.WorkIntent == PyralisAuthoringGraphWorkIntent.RequiredSetup
+                || node.EvidenceState == PyralisAuthoringGraphEvidenceState.Blocked
+                || node.EvidenceState == PyralisAuthoringGraphEvidenceState.Missing;
+        }
+
+        private static bool IsCanWaitRouteSetupCard(PyralisAuthoringGraphNode node)
+        {
+            if (node == null)
+                return false;
+
+            if (node.EvidenceState == PyralisAuthoringGraphEvidenceState.Optional)
+                return true;
+
+            if (node.WorkIntent == PyralisAuthoringGraphWorkIntent.Optional
+                || node.WorkIntent == PyralisAuthoringGraphWorkIntent.FeatureCard)
+            {
+                return true;
+            }
+
+            if (node.WorkIntent == PyralisAuthoringGraphWorkIntent.ProofEnhancer)
+                return false;
+
+            string id = node.StableId ?? string.Empty;
+            string label = node.Label ?? string.Empty;
+            string combined = id + " " + label;
+            if (ContainsIgnoreCase(combined, "scoring")
+                || ContainsIgnoreCase(combined, "score")
+                || ContainsIgnoreCase(combined, "tabletop")
+                || ContainsIgnoreCase(combined, "settings")
+                || ContainsIgnoreCase(combined, "playfield"))
+            {
+                return node.EvidenceState != PyralisAuthoringGraphEvidenceState.Missing
+                    && node.EvidenceState != PyralisAuthoringGraphEvidenceState.Blocked;
+            }
+
+            return node.EvidenceState == PyralisAuthoringGraphEvidenceState.CandidateDetected
+                && node.SourceKind == PyralisAuthoringGraphSourceKind.SetupFlow;
+        }
+
+        private static PyralisAuthoringRouteStepRole GetRouteSetupCardRole(
+            PyralisAuthoringGraphNode node,
+            PyralisAuthoringGraphNode currentStep)
+        {
+            if (node == null)
+                return PyralisAuthoringRouteStepRole.RouteContext;
+
+            if (currentStep != null && string.Equals(node.StableId, currentStep.StableId, StringComparison.Ordinal))
+                return PyralisAuthoringRouteStepRole.DoThisFirst;
+
+            if (node.EvidenceState == PyralisAuthoringGraphEvidenceState.Blocked
+                || node.EvidenceState == PyralisAuthoringGraphEvidenceState.Missing)
+            {
+                return PyralisAuthoringRouteStepRole.BlocksProof;
+            }
+
+            if (node.WorkIntent == PyralisAuthoringGraphWorkIntent.ProofEnhancer
+                || node.WorkIntent == PyralisAuthoringGraphWorkIntent.Optional
+                || node.WorkIntent == PyralisAuthoringGraphWorkIntent.FeatureCard)
+            {
+                return PyralisAuthoringRouteStepRole.CanWait;
+            }
+
+            return PyralisAuthoringRouteStepRole.RouteContext;
+        }
+
+        private static string GetRouteSetupCardReason(
+            PyralisAuthoringGraphNode node,
+            PyralisAuthoringGraphNode currentStep)
+        {
+            if (node == null)
+                return "This setup card belongs to the selected proof route.";
+
+            if (currentStep != null && string.Equals(node.StableId, currentStep.StableId, StringComparison.Ordinal))
+                return "This is the next setup card to clear on the fresh-scene path.";
+
+            if (node.EvidenceState == PyralisAuthoringGraphEvidenceState.Blocked
+                || node.EvidenceState == PyralisAuthoringGraphEvidenceState.Missing)
+            {
+                return "This setup card must be cleared before the first proof is believable.";
+            }
+
+            if (node.WorkIntent == PyralisAuthoringGraphWorkIntent.ProofEnhancer
+                || node.EvidenceState == PyralisAuthoringGraphEvidenceState.CandidateDetected)
+            {
+                return "This card can make the first proof easier to judge, but it can wait until required setup is clear.";
+            }
+
+            return "This setup card is already satisfied on the route toward the first proof.";
+        }
+
+        private static int GetRouteSetupCardRank(PyralisAuthoringGraphNode node)
+        {
+            string key = ((node?.StableId ?? string.Empty) + " " + (node?.Label ?? string.Empty)).ToLowerInvariant();
+
+            if (key.Contains("bootstrap") || key.Contains("gameplay root") || key.Contains("lifetime scope"))
+                return 0;
+            if (key.Contains("session"))
+                return 10;
+            if (key.Contains("game mode") || key.Contains("gamemode") || key.Contains("rules"))
+                return 20;
+            if (key.Contains("capabilit") || key.Contains("route"))
+                return 30;
+            if (key.Contains("participant") && !key.Contains("pawn"))
+                return 40;
+            if (key.Contains("input") || key.Contains("player input"))
+                return 50;
+            if (key.Contains("pawn") || key.Contains("prefab"))
+                return 60;
+            if (key.Contains("spawn"))
+                return 70;
+            if (key.Contains("camera"))
+                return 80;
+            if (key.Contains("presentation") || key.Contains("animation") || key.Contains("visual"))
+                return 90;
+            if (key.Contains("movement") || key.Contains("physics") || key.Contains("collision"))
+                return 100;
+            if (key.Contains("scene") || key.Contains("readiness"))
+                return 110;
+            if (key.Contains("hud") || key.Contains("ui"))
+                return 120;
+            if (key.Contains("settings"))
+                return 130;
+
+            return 200;
         }
 
         private static void AddRouteStep(
@@ -753,6 +1133,242 @@ namespace NeonBlack.Gameplay.Editor
                 return;
 
             rows.Add(new PyralisAuthoringRouteStepRow(node, sequence++, phase, role, reason, edge));
+        }
+
+        private static bool IsDirectProofSupport(PyralisAuthoringSetupGraph graph, PyralisAuthoringGraphConnectionRow row)
+        {
+            PyralisAuthoringGraphNode node = row?.From;
+            PyralisAuthoringGraphNode proof = row?.To != null && row.To.Kind == PyralisAuthoringGraphNodeKind.Proof
+                ? row.To
+                : FindCurrentProofNode(graph);
+            if (node == null || proof == null)
+                return false;
+
+            return IsDirectProofNode(graph, node, proof.StableId);
+        }
+
+        private static bool IsDirectProofNode(PyralisAuthoringSetupGraph graph, PyralisAuthoringGraphNode node, string proofTargetId)
+        {
+            if (node == null || string.IsNullOrWhiteSpace(proofTargetId))
+                return false;
+
+            if (node.Kind == PyralisAuthoringGraphNodeKind.Capability)
+                return IsDirectProofCapability(proofTargetId, node.CapabilityFamily);
+
+            if (node.Kind != PyralisAuthoringGraphNodeKind.Contract && node.SourceContract == null)
+                return false;
+
+            if (!string.Equals(node.ProofTargetId, proofTargetId, StringComparison.Ordinal))
+                return false;
+
+            if (IsPresentationLaneMismatch(graph, node))
+                return false;
+
+            return IsDirectProofCapability(proofTargetId, node.CapabilityFamily)
+                || IsDirectProofCapability(proofTargetId, node.AuthoringCapability)
+                || IsMovementProofContractName(proofTargetId, node.StableId, node.Label);
+        }
+
+        private static bool IsDirectProofCapability(string proofTargetId, RuntimeCapabilityFamily family)
+        {
+            if (string.Equals(proofTargetId, "proof.1p-pawn-movement", StringComparison.Ordinal))
+            {
+                return family == RuntimeCapabilityFamily.PlatformCore
+                    || family == RuntimeCapabilityFamily.CharacterPawnGameplay
+                    || family == RuntimeCapabilityFamily.AnimationPresentation
+                    || family == RuntimeCapabilityFamily.CameraInput;
+            }
+
+            if (string.Equals(proofTargetId, "proof.board-card-action", StringComparison.Ordinal))
+            {
+                return family == RuntimeCapabilityFamily.PlatformCore
+                    || family == RuntimeCapabilityFamily.BoardCardTabletop
+                    || family == RuntimeCapabilityFamily.ActionTargeting
+                    || family == RuntimeCapabilityFamily.CameraInput
+                    || family == RuntimeCapabilityFamily.ScoringObjectives;
+            }
+
+            if (string.Equals(proofTargetId, "proof.action-selection", StringComparison.Ordinal))
+            {
+                return family == RuntimeCapabilityFamily.PlatformCore
+                    || family == RuntimeCapabilityFamily.ActionTargeting
+                    || family == RuntimeCapabilityFamily.CameraInput
+                    || family == RuntimeCapabilityFamily.BoardCardTabletop;
+            }
+
+            if (string.Equals(proofTargetId, "proof.npc-enemy-behavior", StringComparison.Ordinal))
+            {
+                return family == RuntimeCapabilityFamily.PlatformCore
+                    || family == RuntimeCapabilityFamily.CharacterPawnGameplay
+                    || family == RuntimeCapabilityFamily.Combat
+                    || family == RuntimeCapabilityFamily.AnimationPresentation;
+            }
+
+            if (string.Equals(proofTargetId, "proof.ui-hud-menu", StringComparison.Ordinal))
+            {
+                return family == RuntimeCapabilityFamily.PlatformCore
+                    || family == RuntimeCapabilityFamily.ScoringObjectives
+                    || family == RuntimeCapabilityFamily.ActionTargeting;
+            }
+
+            if (string.Equals(proofTargetId, "proof.generated-content", StringComparison.Ordinal))
+            {
+                return family == RuntimeCapabilityFamily.PlatformCore
+                    || family == RuntimeCapabilityFamily.ProceduralGeneration;
+            }
+
+            if (string.Equals(proofTargetId, "proof.network-join", StringComparison.Ordinal))
+            {
+                return family == RuntimeCapabilityFamily.PlatformCore
+                    || family == RuntimeCapabilityFamily.Networking;
+            }
+
+            return family == RuntimeCapabilityFamily.PlatformCore
+                || family == RuntimeCapabilityFamily.Custom;
+        }
+
+        private static bool IsDirectProofCapability(string proofTargetId, AuthoringCapability capability)
+        {
+            if (capability == AuthoringCapability.None)
+                return false;
+
+            if (string.Equals(proofTargetId, "proof.1p-pawn-movement", StringComparison.Ordinal))
+            {
+                AuthoringCapability direct = AuthoringCapability.Setup
+                    | AuthoringCapability.Session
+                    | AuthoringCapability.Participants
+                    | AuthoringCapability.Input
+                    | AuthoringCapability.Movement
+                    | AuthoringCapability.KineticMotor2D
+                    | AuthoringCapability.KineticMotor3D
+                    | AuthoringCapability.Traversal
+                    | AuthoringCapability.Animation
+                    | AuthoringCapability.Camera;
+                return (capability & direct) != 0;
+            }
+
+            return true;
+        }
+
+        private static int GetDirectProofSupportRank(PyralisAuthoringGraphNode node)
+        {
+            if (node == null)
+                return 100;
+
+            return node.Kind switch
+            {
+                PyralisAuthoringGraphNodeKind.Capability when node.CapabilityFamily == RuntimeCapabilityFamily.PlatformCore => 0,
+                PyralisAuthoringGraphNodeKind.Capability when node.CapabilityFamily == RuntimeCapabilityFamily.CharacterPawnGameplay => 1,
+                PyralisAuthoringGraphNodeKind.Contract when IsMovementOrInputLabel(node) => 2,
+                PyralisAuthoringGraphNodeKind.Contract when IsPresentationLabel(node) => 3,
+                PyralisAuthoringGraphNodeKind.Capability when node.CapabilityFamily == RuntimeCapabilityFamily.AnimationPresentation => 4,
+                PyralisAuthoringGraphNodeKind.Capability when node.CapabilityFamily == RuntimeCapabilityFamily.CameraInput => 5,
+                PyralisAuthoringGraphNodeKind.Capability => 8,
+                _ => 10
+            };
+        }
+
+        private static bool IsPresentationLaneMismatch(PyralisAuthoringSetupGraph graph, PyralisAuthoringGraphNode node)
+        {
+            string stableId = node?.StableId ?? string.Empty;
+            string label = node?.Label ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(stableId) && string.IsNullOrWhiteSpace(label))
+                return false;
+
+            RuntimeCapabilityLaneTag lane = ResolvePresentationLane(graph);
+            if (lane == RuntimeCapabilityLaneTag.Sprite2D)
+                return ContainsIgnoreCase(stableId, "3d") || ContainsIgnoreCase(label, "3d");
+
+            if (lane == RuntimeCapabilityLaneTag.ThirdPerson3D)
+                return ContainsIgnoreCase(stableId, "2d") || ContainsIgnoreCase(label, "2d");
+
+            return false;
+        }
+
+        private static RuntimeCapabilityLaneTag ResolvePresentationLane(PyralisAuthoringSetupGraph graph)
+        {
+            GameObject pawnPrefab = graph?.RouteAnalysis?.Pawn != null ? graph.RouteAnalysis.Pawn.pawnPrefab : null;
+            if (pawnPrefab != null)
+            {
+                if (pawnPrefab.GetComponentInChildren<NeonBlack.Gameplay.Features.Characters.Pawn2DMovementComponent>(true) != null
+                    || pawnPrefab.GetComponentInChildren<NeonBlack.Gameplay.Features.Characters.Pawn2DPresentationComponent>(true) != null
+                    || pawnPrefab.GetComponentInChildren<Rigidbody2D>(true) != null)
+                {
+                    return RuntimeCapabilityLaneTag.Sprite2D;
+                }
+
+                if (pawnPrefab.GetComponentInChildren<Pawn3DMovementComponent>(true) != null
+                    || pawnPrefab.GetComponentInChildren<Pawn3DPresentationComponent>(true) != null
+                    || pawnPrefab.GetComponentInChildren<CharacterController>(true) != null)
+                {
+                    return RuntimeCapabilityLaneTag.ThirdPerson3D;
+                }
+            }
+
+            if (graph?.RouteAnalysis?.RouteFacts == null)
+                return RuntimeCapabilityLaneTag.Mixed;
+
+            for (int i = 0; i < graph.RouteAnalysis.RouteFacts.Length; i++)
+            {
+                string label = graph.RouteAnalysis.RouteFacts[i]?.Label ?? string.Empty;
+                if (ContainsIgnoreCase(label, "2d"))
+                    return RuntimeCapabilityLaneTag.Sprite2D;
+                if (ContainsIgnoreCase(label, "3d"))
+                    return RuntimeCapabilityLaneTag.ThirdPerson3D;
+            }
+
+            return RuntimeCapabilityLaneTag.Mixed;
+        }
+
+        private static bool IsMovementProofContractName(string proofTargetId, string stableId, string label)
+        {
+            if (!string.Equals(proofTargetId, "proof.1p-pawn-movement", StringComparison.Ordinal))
+                return false;
+
+            string combined = (stableId ?? string.Empty) + " " + (label ?? string.Empty);
+            if (ContainsIgnoreCase(combined, "combat")
+                || ContainsIgnoreCase(combined, "projectile")
+                || ContainsIgnoreCase(combined, "pickup")
+                || ContainsIgnoreCase(combined, "status")
+                || ContainsIgnoreCase(combined, "network"))
+            {
+                return false;
+            }
+
+            return ContainsIgnoreCase(combined, "movement")
+                || ContainsIgnoreCase(combined, "motor")
+                || ContainsIgnoreCase(combined, "input")
+                || ContainsIgnoreCase(combined, "pawn")
+                || ContainsIgnoreCase(combined, "presentation")
+                || ContainsIgnoreCase(combined, "animation")
+                || ContainsIgnoreCase(combined, "camera")
+                || ContainsIgnoreCase(combined, "traversal")
+                || ContainsIgnoreCase(combined, "hop");
+        }
+
+        private static bool IsMovementOrInputLabel(PyralisAuthoringGraphNode node)
+        {
+            string combined = (node?.StableId ?? string.Empty) + " " + (node?.Label ?? string.Empty);
+            return ContainsIgnoreCase(combined, "movement")
+                || ContainsIgnoreCase(combined, "motor")
+                || ContainsIgnoreCase(combined, "input")
+                || ContainsIgnoreCase(combined, "traversal")
+                || ContainsIgnoreCase(combined, "hop");
+        }
+
+        private static bool IsPresentationLabel(PyralisAuthoringGraphNode node)
+        {
+            string combined = (node?.StableId ?? string.Empty) + " " + (node?.Label ?? string.Empty);
+            return ContainsIgnoreCase(combined, "presentation")
+                || ContainsIgnoreCase(combined, "animation")
+                || ContainsIgnoreCase(combined, "camera");
+        }
+
+        private static bool ContainsIgnoreCase(string source, string value)
+        {
+            return !string.IsNullOrWhiteSpace(source)
+                && !string.IsNullOrWhiteSpace(value)
+                && source.IndexOf(value, StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
         private static PyralisAuthoringRouteStepPhase GetPhase(PyralisAuthoringGraphNode node)
@@ -1212,7 +1828,7 @@ namespace NeonBlack.Gameplay.Editor
 
         public static string GetOverviewFirstProofChainSummary(PyralisAuthoringSetupGraph graph)
         {
-            IReadOnlyList<PyralisAuthoringGraphConnectionRow> rows = BuildProofSupportRows(graph);
+            IReadOnlyList<PyralisAuthoringGraphConnectionRow> rows = BuildDirectProofSupportRows(graph);
             if (rows.Count == 0)
                 return "Route proof chain: setup route -> active proof target.";
 

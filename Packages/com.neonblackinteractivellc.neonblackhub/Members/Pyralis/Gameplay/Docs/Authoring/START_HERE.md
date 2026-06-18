@@ -114,6 +114,7 @@ Use the visible Authoring Window summary for route progress, first proof, setup-
 7. Add only the required proof objects:
    - pawn routes: one `Spawn Point` transform and assign it to `Spawn Points`
    - input route for the route (`InputProfile` on participant; keep `Player Input Manager` empty unless you need local join)
+   - animation route for animated pawns (`PawnAnimationProfile` on the `PawnDefinition`, plus an `Animator` on the pawn root or visual child)
    - no-pawn routes: control-surface objects for camera/cursor/menu/board/action selection instead of pawn spawn points
    - keep bootstrap and pawn prefab in the same test scene so input/service routing stays local
    - optional `Camera Aspect` bounds object if you want a visible camera boundary check in the same run
@@ -133,6 +134,7 @@ Think of it this way: `GameplaySessionBootstrap` is the first runtime object. `S
   - `GameplaySessionBootstrap -> SessionDefinition -> GameModeDefinition -> participants/pawns/feature modules/contracts`;
   - one default participant with `Input Profile` and `Default Pawn`;
   - one pawn prefab with `PawnRoot`, `Motor2D` + `Motor2DInputAdapter` + `Pawn2DMovementComponent` + `Pawn2DPresentationComponent` (or 2.5D/3D equivalent);
+  - one pawn visual `Animator` if animation is part of the proof; `PawnDefinition.animationProfile` supplies the runtime signal bindings.
   - the pawn prefab inspected in Prefab Mode or Inspector so every required component/reference is understood and editable. The guided proof should treat the prefab as user-owned setup, not a hidden generated answer;
   - one `PawnDefinition.pawnPrefab`;
   - one `GameplaySessionBootstrap.SpawnPoints` transform;

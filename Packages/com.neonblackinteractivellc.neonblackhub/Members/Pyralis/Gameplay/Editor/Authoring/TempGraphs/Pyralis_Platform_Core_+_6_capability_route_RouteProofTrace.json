@@ -1,0 +1,1830 @@
+{
+    "schema": "pyralis.authoring.routeProofTrace.v1",
+    "purpose": "Developer-facing Route Proof Trace. Previews the ordered setup cards a fresh scene should follow to reach the selected first proof, including definitions, participants, pawns, prefabs, required validation cards, proof enhancers, and the final Play Mode proof. This is documentation/debug evidence, not a preset or scene generator.",
+    "view": "RouteProofTrace",
+    "routeName": "Platform Core + 6 capability route",
+    "exportedAtUtc": "2026-06-18T00:32:23.9036852Z",
+    "source": {
+        "name": "Game root",
+        "type": "NeonBlack.Gameplay.Characters.GameplaySessionBootstrap",
+        "assetPath": "",
+        "globalObjectId": "GlobalObjectId_V1-2-f7b9a11beaf36ca4e8636e8cfd08e3ac-994912178-0"
+    },
+    "currentRoute": {
+        "routeName": "Platform Core + 6 capability route",
+        "hasSelectedCapabilities": true,
+        "requiresPawn": true,
+        "hasParticipants": true,
+        "hasAnyDefaultPawn": true,
+        "participantPawnIssue": "",
+        "participantPawnIssueKind": "None",
+        "capabilityFamilies": [
+            "PlatformCore",
+            "CharacterPawnGameplay",
+            "AnimationPresentation",
+            "ActionTargeting",
+            "CameraInput",
+            "ProceduralGeneration",
+            "Networking"
+        ],
+        "routeFacts": [
+            {
+                "capability": "PlatformCore",
+                "label": "Platform Core",
+                "family": "PlatformCore",
+                "primaryProofCandidate": true
+            },
+            {
+                "capability": "PawnAction",
+                "label": "Character / Pawn Gameplay",
+                "family": "CharacterPawnGameplay",
+                "primaryProofCandidate": true
+            },
+            {
+                "capability": "AnimationPresentation",
+                "label": "Animation / Presentation",
+                "family": "AnimationPresentation",
+                "primaryProofCandidate": true
+            },
+            {
+                "capability": "ActionSelection",
+                "label": "Action Targeting",
+                "family": "ActionTargeting",
+                "primaryProofCandidate": true
+            },
+            {
+                "capability": "CameraCursor",
+                "label": "Camera / Cursor",
+                "family": "CameraInput",
+                "primaryProofCandidate": true
+            },
+            {
+                "capability": "Procedural",
+                "label": "Procedural Generation",
+                "family": "ProceduralGeneration",
+                "primaryProofCandidate": false
+            },
+            {
+                "capability": "Networking",
+                "label": "Networking",
+                "family": "Networking",
+                "primaryProofCandidate": true
+            }
+        ],
+        "session": {
+            "name": "SessionDefinition",
+            "type": "NeonBlack.Gameplay.Data.Definitions.SessionDefinition",
+            "assetPath": "Assets/Scenes/Proofs/Pyralis_2D_Brawler_Proof_020/Definitions/SessionDefinition.asset",
+            "globalObjectId": "GlobalObjectId_V1-3-5945282eafd4770419395c56d53cd885-11400000-0"
+        },
+        "mode": {
+            "name": "GameModeDefinition",
+            "type": "NeonBlack.Gameplay.Data.Definitions.GameModeDefinition",
+            "assetPath": "Assets/Scenes/Proofs/Pyralis_2D_Brawler_Proof_020/Definitions/GameModeDefinition.asset",
+            "globalObjectId": "GlobalObjectId_V1-3-3d126fa498e4bee4a93c30b8eb7bdfd6-11400000-0"
+        },
+        "participant": {
+            "name": "ParticipantDefinition",
+            "type": "NeonBlack.Gameplay.Data.Definitions.ParticipantDefinition",
+            "assetPath": "Assets/Scenes/Proofs/Pyralis_2D_Brawler_Proof_020/Prefabs/pawn/ParticipantDefinition.asset",
+            "globalObjectId": "GlobalObjectId_V1-3-60268aeb3c6656345aa9ebdba20d9183-11400000-0"
+        },
+        "pawn": {
+            "name": "PawnDefinition",
+            "type": "NeonBlack.Gameplay.Data.Definitions.PawnDefinition",
+            "assetPath": "Assets/Scenes/Proofs/Pyralis_2D_Brawler_Proof_020/Prefabs/pawn/PawnDefinition.asset",
+            "globalObjectId": "GlobalObjectId_V1-3-c601b46040e854f4c87eca2063bd1a5f-11400000-0"
+        }
+    },
+    "intentFocus": "Platform Core + 6 capability route: pawn movement/control, animation/presentation, selection/action targeting, camera/framing, environment/procedural, networking",
+    "routeShape": "Participant With Pawn: This intent is pawn-backed. The participant owns a PawnDefinition, the PawnDefinition owns the prefab, and participant input is the preferred control profile.",
+    "proofPriority": "1P Pawn Movement Proof: blockers are clear enough for a narrow Play Mode test.",
+    "proof": {
+        "id": "proof.1p-pawn-movement",
+        "label": "1P Pawn Movement Proof",
+        "kind": "Proof",
+        "sourceKind": "ProofVocabulary",
+        "sourceOrigin": "GrammarFallback",
+        "evidenceState": "CandidateDetected",
+        "workIntent": "ProofEnhancer",
+        "issueSeverity": "Recommended",
+        "capabilityFamily": "PlatformCore",
+        "authoringCapability": "None",
+        "proofTargetId": "proof.1p-pawn-movement",
+        "guidance": "One participant spawns one pawn, the selected InputProfile reaches a pawn input module, movement is visibly responsive, and the Game view follows the runtime shared camera focus.",
+        "blockingReason": "One participant spawns one pawn, the selected InputProfile reaches a pawn input module, movement is visibly responsive, and the Game view follows the runtime shared camera focus.",
+        "nativeSetup": [
+            "Test in Play Mode on the active pawn-backed route, use press Play after the selected intent's Do Now setup is clear; move the pawn through the mapped input path and watch the Game view, then confirm one pawn spawns at the assigned spawn point, visibly moves through its selected 2D, 2.5D, or 3D lane, and the Game view follows the runtime GameplaySharedCameraFocus driven by that pawn.",
+            "Add in Inspector on selected GameObject, use Add Component -> NeonBlack/Gameplay/Traversal/Top Down Hop Feature Runtime, then confirm the component is added to the Inspector.",
+            "Create in Project on contract NativeSetup fallback, use create TopDownHopProfile, then confirm the referenced item exists in the chosen project folder.",
+            "Create in Project on contract NativeSetup fallback, use create FeatureModuleDefinition, then confirm the referenced item exists in the chosen project folder.",
+            "Assign in Inspector on Feature module setup, use assign runtime prefab with TopDownHopFeatureRuntime, then confirm the value is assigned in the authored definition.",
+            "Assign in Inspector on Feature module setup, use assign profile asset, then confirm the value is assigned in the authored definition.",
+            "Assign in Inspector on Feature module setup, use add module to PawnDefinition.featureModules, then confirm the value is assigned in the authored definition.",
+            "Bind in Inspector on Action binding, use bind Jump in InputProfile, then confirm the action role is connected in the authored action graph.",
+            "Add in Inspector on selected GameObject, use Add Component -> NeonBlack/Gameplay/3D/Pawn 3D Presentation Component, then confirm the component is added to the Inspector.",
+            "Inspect in Inspector on contract NativeSetup fallback, use Attach to a Pawn with ActorAnimationDriver., then confirm the setup step is captured and verified in the editor.",
+            "Inspect in Inspector on contract NativeSetup fallback, use Ensure Animator parameters match signal names., then confirm the setup step is captured and verified in the editor.",
+            "Add in Inspector on selected GameObject, use Add Component -> NeonBlack/Gameplay/Characters/2D/Pawn 2D Movement Component, then confirm the component is added to the Inspector.",
+            "Assign in Inspector on Feature module setup, use Add Rigidbody2D and Collider2D., then confirm the value is assigned in the authored definition.",
+            "Inspect in Inspector on contract NativeSetup fallback, use Keep on the same root as Motor2D., then confirm the setup step is captured and verified in the editor.",
+            "Inspect in Inspector on contract NativeSetup fallback, use Set Movement Style to SideViewGravity only for platformer-style gravity and ground checks., then confirm the setup step is captured and verified in the editor.",
+            "Create in Project on Top Down Hop Profile, use Create -> NeonBlack/Profiles/Top Down Hop Profile, then confirm the asset exists in the project.",
+            "Inspect in Inspector on contract NativeSetup fallback, use Implement interface in a movement component, then confirm the setup step is captured and verified in the editor.",
+            "Add in Inspector on selected GameObject, use Add Component -> NeonBlack/Gameplay/3D/Pawn 3D Movement Component, then confirm the component is added to the Inspector.",
+            "Inspect in Inspector on contract NativeSetup fallback, use Attach to a Pawn root with CharacterController., then confirm the setup step is captured and verified in the editor.",
+            "Assign in Inspector on Feature module setup, use Assign Ground Layer mask., then confirm the value is assigned in the authored definition."
+        ],
+        "assignmentFields": [
+            "FeatureModuleDefinition.moduleId",
+            "FeatureModuleDefinition.runtimePrefab",
+            "FeatureModuleDefinition.profileAsset",
+            "PawnDefinition.featureModules",
+            "InputProfile.gameplayActions",
+            "showDebugHUD",
+            "movementStyle",
+            "moveSpeed",
+            "dashEnabled",
+            "dashSpeed",
+            "dashCooldown",
+            "jumpEnabled",
+            "jumpVelocity",
+            "groundLayer",
+            "inputZones",
+            "actionRole",
+            "duration",
+            "height",
+            "cooldown",
+            "MoveSpeed",
+            "IsGrounded",
+            "movementMode",
+            "walkSpeed",
+            "jumpHeight"
+        ],
+        "customizationMoments": [
+            "Animator signal mapping",
+            "Billboard presentation",
+            "debug HUD visibility"
+        ],
+        "nativeAction": {
+            "verb": "",
+            "surface": "",
+            "target": "",
+            "fieldOrComponent": "",
+            "successCheck": "",
+            "guidance": ""
+        },
+        "sourceObject": {
+            "name": "",
+            "type": "",
+            "assetPath": "",
+            "globalObjectId": ""
+        }
+    },
+    "orderedSteps": [
+        {
+            "sequence": 1,
+            "nodeId": "bootstrap.root",
+            "label": "Gameplay Root",
+            "phase": "Foundation",
+            "role": "Route Context",
+            "evidenceState": "Ready",
+            "sourceKind": "SetupFlow",
+            "sourceOrigin": "SpineGrammar",
+            "workIntent": "Reference",
+            "issueSeverity": "Info",
+            "reason": "This setup card is already satisfied on the route toward the first proof.",
+            "message": "GameplaySessionBootstrap is the active setup root.",
+            "owner": "Game root (GameplaySessionBootstrap)",
+            "unityAction": "Hierarchy -> Create Empty -> name it Gameplay Root; Inspector -> Add Component -> GameplaySessionBootstrap",
+            "nativeAction": {
+                "verb": "",
+                "surface": "",
+                "target": "",
+                "fieldOrComponent": "",
+                "successCheck": "",
+                "guidance": ""
+            },
+            "assignmentFields": [],
+            "nativeSetup": [
+                "Hierarchy -> Create Empty -> name it Gameplay Root; Inspector -> Add Component -> GameplaySessionBootstrap"
+            ],
+            "customizationMoments": [],
+            "proofTargetId": "",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "Game root",
+                "type": "NeonBlack.Gameplay.Characters.GameplaySessionBootstrap",
+                "assetPath": "",
+                "globalObjectId": "GlobalObjectId_V1-2-f7b9a11beaf36ca4e8636e8cfd08e3ac-994912178-0"
+            }
+        },
+        {
+            "sequence": 2,
+            "nodeId": "session.definition",
+            "label": "Session Definition",
+            "phase": "Setup Chain",
+            "role": "Route Context",
+            "evidenceState": "Ready",
+            "sourceKind": "SetupFlow",
+            "sourceOrigin": "UserAuthoredSetup",
+            "workIntent": "Reference",
+            "issueSeverity": "Info",
+            "reason": "This setup card is already satisfied on the route toward the first proof.",
+            "message": "",
+            "owner": "SessionDefinition (SessionDefinition)",
+            "unityAction": "",
+            "nativeAction": {
+                "verb": "",
+                "surface": "",
+                "target": "",
+                "fieldOrComponent": "",
+                "successCheck": "",
+                "guidance": ""
+            },
+            "assignmentFields": [],
+            "nativeSetup": [],
+            "customizationMoments": [],
+            "proofTargetId": "",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "SessionDefinition",
+                "type": "NeonBlack.Gameplay.Data.Definitions.SessionDefinition",
+                "assetPath": "Assets/Scenes/Proofs/Pyralis_2D_Brawler_Proof_020/Definitions/SessionDefinition.asset",
+                "globalObjectId": "GlobalObjectId_V1-3-5945282eafd4770419395c56d53cd885-11400000-0"
+            }
+        },
+        {
+            "sequence": 3,
+            "nodeId": "mode.definition",
+            "label": "Game Mode Definition",
+            "phase": "Setup Chain",
+            "role": "Route Context",
+            "evidenceState": "Ready",
+            "sourceKind": "SetupFlow",
+            "sourceOrigin": "UserAuthoredSetup",
+            "workIntent": "Reference",
+            "issueSeverity": "Info",
+            "reason": "This setup card is already satisfied on the route toward the first proof.",
+            "message": "",
+            "owner": "GameModeDefinition (GameModeDefinition)",
+            "unityAction": "",
+            "nativeAction": {
+                "verb": "",
+                "surface": "",
+                "target": "",
+                "fieldOrComponent": "",
+                "successCheck": "",
+                "guidance": ""
+            },
+            "assignmentFields": [],
+            "nativeSetup": [],
+            "customizationMoments": [],
+            "proofTargetId": "",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "GameModeDefinition",
+                "type": "NeonBlack.Gameplay.Data.Definitions.GameModeDefinition",
+                "assetPath": "Assets/Scenes/Proofs/Pyralis_2D_Brawler_Proof_020/Definitions/GameModeDefinition.asset",
+                "globalObjectId": "GlobalObjectId_V1-3-3d126fa498e4bee4a93c30b8eb7bdfd6-11400000-0"
+            }
+        },
+        {
+            "sequence": 4,
+            "nodeId": "capability.selected",
+            "label": "Capabilities",
+            "phase": "Capability",
+            "role": "Route Context",
+            "evidenceState": "Ready",
+            "sourceKind": "AuthoringContract",
+            "sourceOrigin": "Reflection",
+            "workIntent": "Reference",
+            "issueSeverity": "Info",
+            "reason": "This setup card is already satisfied on the route toward the first proof.",
+            "message": "Platform Core + 6 capability route",
+            "owner": "GameModeDefinition (GameModeDefinition)",
+            "unityAction": "",
+            "nativeAction": {
+                "verb": "",
+                "surface": "",
+                "target": "",
+                "fieldOrComponent": "",
+                "successCheck": "",
+                "guidance": ""
+            },
+            "assignmentFields": [],
+            "nativeSetup": [],
+            "customizationMoments": [],
+            "proofTargetId": "",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "GameModeDefinition",
+                "type": "NeonBlack.Gameplay.Data.Definitions.GameModeDefinition",
+                "assetPath": "Assets/Scenes/Proofs/Pyralis_2D_Brawler_Proof_020/Definitions/GameModeDefinition.asset",
+                "globalObjectId": "GlobalObjectId_V1-3-3d126fa498e4bee4a93c30b8eb7bdfd6-11400000-0"
+            }
+        },
+        {
+            "sequence": 5,
+            "nodeId": "route.shape",
+            "label": "Participant With Pawn",
+            "phase": "Setup Chain",
+            "role": "Route Context",
+            "evidenceState": "Ready",
+            "sourceKind": "SetupFlow",
+            "sourceOrigin": "SpineGrammar",
+            "workIntent": "Reference",
+            "issueSeverity": "Info",
+            "reason": "This setup card is already satisfied on the route toward the first proof.",
+            "message": "This intent is pawn-backed. The participant owns a PawnDefinition, the PawnDefinition owns the prefab, and participant input is the preferred control profile.",
+            "owner": "SessionDefinition.defaultParticipants",
+            "unityAction": "",
+            "nativeAction": {
+                "verb": "",
+                "surface": "",
+                "target": "",
+                "fieldOrComponent": "",
+                "successCheck": "",
+                "guidance": ""
+            },
+            "assignmentFields": [
+                "SessionDefinition.defaultParticipants",
+                "ParticipantDefinition.defaultPawn",
+                "ParticipantDefinition.inputProfile",
+                "PawnDefinition.pawnPrefab"
+            ],
+            "nativeSetup": [],
+            "customizationMoments": [],
+            "proofTargetId": "",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "SessionDefinition",
+                "type": "NeonBlack.Gameplay.Data.Definitions.SessionDefinition",
+                "assetPath": "Assets/Scenes/Proofs/Pyralis_2D_Brawler_Proof_020/Definitions/SessionDefinition.asset",
+                "globalObjectId": "GlobalObjectId_V1-3-5945282eafd4770419395c56d53cd885-11400000-0"
+            }
+        },
+        {
+            "sequence": 6,
+            "nodeId": "participant.default",
+            "label": "Participants",
+            "phase": "Setup Chain",
+            "role": "Route Context",
+            "evidenceState": "Ready",
+            "sourceKind": "SetupFlow",
+            "sourceOrigin": "UserAuthoredSetup",
+            "workIntent": "Reference",
+            "issueSeverity": "Info",
+            "reason": "This setup card is already satisfied on the route toward the first proof.",
+            "message": "Players, seats, hands, factions, or command owners are assigned.",
+            "owner": "SessionDefinition.defaultParticipants",
+            "unityAction": "",
+            "nativeAction": {
+                "verb": "",
+                "surface": "",
+                "target": "",
+                "fieldOrComponent": "",
+                "successCheck": "",
+                "guidance": ""
+            },
+            "assignmentFields": [
+                "SessionDefinition.defaultParticipants"
+            ],
+            "nativeSetup": [],
+            "customizationMoments": [],
+            "proofTargetId": "",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "ParticipantDefinition",
+                "type": "NeonBlack.Gameplay.Data.Definitions.ParticipantDefinition",
+                "assetPath": "Assets/Scenes/Proofs/Pyralis_2D_Brawler_Proof_020/Prefabs/pawn/ParticipantDefinition.asset",
+                "globalObjectId": "GlobalObjectId_V1-3-60268aeb3c6656345aa9ebdba20d9183-11400000-0"
+            }
+        },
+        {
+            "sequence": 7,
+            "nodeId": "pawn.definition",
+            "label": "Pawn Definition",
+            "phase": "Scene Evidence",
+            "role": "Route Context",
+            "evidenceState": "Ready",
+            "sourceKind": "SetupFlow",
+            "sourceOrigin": "UserAuthoredSetup",
+            "workIntent": "Reference",
+            "issueSeverity": "Info",
+            "reason": "This setup card is already satisfied on the route toward the first proof.",
+            "message": "Pawn-backed route has participant pawn setup.",
+            "owner": "ParticipantDefinition.defaultPawn",
+            "unityAction": "",
+            "nativeAction": {
+                "verb": "",
+                "surface": "",
+                "target": "",
+                "fieldOrComponent": "",
+                "successCheck": "",
+                "guidance": ""
+            },
+            "assignmentFields": [
+                "ParticipantDefinition.defaultPawn"
+            ],
+            "nativeSetup": [],
+            "customizationMoments": [],
+            "proofTargetId": "",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "PawnDefinition",
+                "type": "NeonBlack.Gameplay.Data.Definitions.PawnDefinition",
+                "assetPath": "Assets/Scenes/Proofs/Pyralis_2D_Brawler_Proof_020/Prefabs/pawn/PawnDefinition.asset",
+                "globalObjectId": "GlobalObjectId_V1-3-c601b46040e854f4c87eca2063bd1a5f-11400000-0"
+            }
+        },
+        {
+            "sequence": 8,
+            "nodeId": "setupflow.setup-gameplay-root",
+            "label": "Gameplay Root",
+            "phase": "Validation",
+            "role": "Route Context",
+            "evidenceState": "Ready",
+            "sourceKind": "SetupFlow",
+            "sourceOrigin": "RuntimeEvidence",
+            "workIntent": "RequiredSetup",
+            "issueSeverity": "Info",
+            "reason": "This setup card is already satisfied on the route toward the first proof.",
+            "message": "Selected object has GameplaySessionBootstrap.",
+            "owner": "Game root (GameplaySessionBootstrap)",
+            "unityAction": "",
+            "nativeAction": {
+                "verb": "",
+                "surface": "",
+                "target": "",
+                "fieldOrComponent": "",
+                "successCheck": "",
+                "guidance": ""
+            },
+            "assignmentFields": [],
+            "nativeSetup": [],
+            "customizationMoments": [],
+            "proofTargetId": "",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "Game root",
+                "type": "NeonBlack.Gameplay.Characters.GameplaySessionBootstrap",
+                "assetPath": "",
+                "globalObjectId": "GlobalObjectId_V1-2-f7b9a11beaf36ca4e8636e8cfd08e3ac-994912178-0"
+            }
+        },
+        {
+            "sequence": 9,
+            "nodeId": "setupflow.setup-visible-lifetime-scope",
+            "label": "Visible Lifetime Scope",
+            "phase": "Validation",
+            "role": "Route Context",
+            "evidenceState": "Ready",
+            "sourceKind": "SetupFlow",
+            "sourceOrigin": "RuntimeEvidence",
+            "workIntent": "RequiredSetup",
+            "issueSeverity": "Info",
+            "reason": "This setup card is already satisfied on the route toward the first proof.",
+            "message": "PyralisGameplayLifetimeScope is visible on this root.",
+            "owner": "Gameplay Root.Add Component -> PyralisGameplayLifetimeScope",
+            "unityAction": "Add in Inspector on Gameplay Root, use Add Component -> PyralisGameplayLifetimeScope, then confirm the composition root is visible before Play Mode.",
+            "nativeAction": {
+                "verb": "Add",
+                "surface": "Inspector",
+                "target": "Gameplay Root",
+                "fieldOrComponent": "Add Component -> PyralisGameplayLifetimeScope",
+                "successCheck": "the composition root is visible before Play Mode",
+                "guidance": "Add in Inspector on Gameplay Root, use Add Component -> PyralisGameplayLifetimeScope, then confirm the composition root is visible before Play Mode."
+            },
+            "assignmentFields": [],
+            "nativeSetup": [
+                "Add - Gameplay Root - Add Component -> PyralisGameplayLifetimeScope - the composition root is visible before Play Mode"
+            ],
+            "customizationMoments": [],
+            "proofTargetId": "",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "Game root",
+                "type": "NeonBlack.Gameplay.Core.Runtime.PyralisGameplayLifetimeScope",
+                "assetPath": "",
+                "globalObjectId": "GlobalObjectId_V1-2-f7b9a11beaf36ca4e8636e8cfd08e3ac-994912180-0"
+            }
+        },
+        {
+            "sequence": 10,
+            "nodeId": "setupflow.setup-assign-session-definition",
+            "label": "Assign Session Definition",
+            "phase": "Validation",
+            "role": "Route Context",
+            "evidenceState": "Ready",
+            "sourceKind": "SetupFlow",
+            "sourceOrigin": "RuntimeEvidence",
+            "workIntent": "RequiredSetup",
+            "issueSeverity": "Info",
+            "reason": "This setup card is already satisfied on the route toward the first proof.",
+            "message": "Bootstrap can read a SessionDefinition.",
+            "owner": "SessionDefinition.Create -> NeonBlack -> Definitions -> Session Definition; assign it to GameplaySessionBootstrap.sessionDefinition",
+            "unityAction": "Create in Project on SessionDefinition, use Create -> NeonBlack -> Definitions -> Session Definition; assign it to GameplaySessionBootstrap.sessionDefinition, then confirm the Session row is ready.",
+            "nativeAction": {
+                "verb": "Create",
+                "surface": "ProjectWindow",
+                "target": "SessionDefinition",
+                "fieldOrComponent": "Create -> NeonBlack -> Definitions -> Session Definition; assign it to GameplaySessionBootstrap.sessionDefinition",
+                "successCheck": "the Session row is ready",
+                "guidance": "Create in Project on SessionDefinition, use Create -> NeonBlack -> Definitions -> Session Definition; assign it to GameplaySessionBootstrap.sessionDefinition, then confirm the Session row is ready."
+            },
+            "assignmentFields": [],
+            "nativeSetup": [
+                "Create - SessionDefinition - Create -> NeonBlack -> Definitions -> Session Definition; assign it to GameplaySessionBootstrap.sessionDefinition - the Session row is ready"
+            ],
+            "customizationMoments": [],
+            "proofTargetId": "",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "SessionDefinition",
+                "type": "NeonBlack.Gameplay.Data.Definitions.SessionDefinition",
+                "assetPath": "Assets/Scenes/Proofs/Pyralis_2D_Brawler_Proof_020/Definitions/SessionDefinition.asset",
+                "globalObjectId": "GlobalObjectId_V1-3-5945282eafd4770419395c56d53cd885-11400000-0"
+            }
+        },
+        {
+            "sequence": 11,
+            "nodeId": "setupflow.setup-assign-default-game-mode",
+            "label": "Assign Default Game Mode",
+            "phase": "Validation",
+            "role": "Route Context",
+            "evidenceState": "Ready",
+            "sourceKind": "SetupFlow",
+            "sourceOrigin": "RuntimeEvidence",
+            "workIntent": "RequiredSetup",
+            "issueSeverity": "Info",
+            "reason": "This setup card is already satisfied on the route toward the first proof.",
+            "message": "Session has a default GameModeDefinition.",
+            "owner": "GameModeDefinition.Create -> NeonBlack -> Definitions -> Game Mode Definition; assign it to SessionDefinition.defaultGameMode",
+            "unityAction": "Create in Project on GameModeDefinition, use Create -> NeonBlack -> Definitions -> Game Mode Definition; assign it to SessionDefinition.defaultGameMode, then confirm the Game Mode row is ready.",
+            "nativeAction": {
+                "verb": "Create",
+                "surface": "ProjectWindow",
+                "target": "GameModeDefinition",
+                "fieldOrComponent": "Create -> NeonBlack -> Definitions -> Game Mode Definition; assign it to SessionDefinition.defaultGameMode",
+                "successCheck": "the Game Mode row is ready",
+                "guidance": "Create in Project on GameModeDefinition, use Create -> NeonBlack -> Definitions -> Game Mode Definition; assign it to SessionDefinition.defaultGameMode, then confirm the Game Mode row is ready."
+            },
+            "assignmentFields": [],
+            "nativeSetup": [
+                "Create - GameModeDefinition - Create -> NeonBlack -> Definitions -> Game Mode Definition; assign it to SessionDefinition.defaultGameMode - the Game Mode row is ready"
+            ],
+            "customizationMoments": [],
+            "proofTargetId": "",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "GameModeDefinition",
+                "type": "NeonBlack.Gameplay.Data.Definitions.GameModeDefinition",
+                "assetPath": "Assets/Scenes/Proofs/Pyralis_2D_Brawler_Proof_020/Definitions/GameModeDefinition.asset",
+                "globalObjectId": "GlobalObjectId_V1-3-3d126fa498e4bee4a93c30b8eb7bdfd6-11400000-0"
+            }
+        },
+        {
+            "sequence": 12,
+            "nodeId": "setupflow.setup-enable-scoring-route",
+            "label": "Enable Scoring Route",
+            "phase": "Validation",
+            "role": "Route Context",
+            "evidenceState": "Optional",
+            "sourceKind": "SetupFlow",
+            "sourceOrigin": "RuntimeEvidence",
+            "workIntent": "RequiredSetup",
+            "issueSeverity": "Optional",
+            "reason": "This setup card is already satisfied on the route toward the first proof.",
+            "message": "Scoring can stay disabled for this setup route.",
+            "owner": "GameModeDefinition.Enable Score when the selected capability pattern expects score, objectives, timers, resources, or result tracking",
+            "unityAction": "Enable in Inspector on GameModeDefinition, use Enable Score when the selected capability pattern expects score, objectives, timers, resources, or result tracking, then confirm the scoring route is declared before services or HUD try to display it.",
+            "nativeAction": {
+                "verb": "Enable",
+                "surface": "Inspector",
+                "target": "GameModeDefinition",
+                "fieldOrComponent": "Enable Score when the selected capability pattern expects score, objectives, timers, resources, or result tracking",
+                "successCheck": "the scoring route is declared before services or HUD try to display it",
+                "guidance": "Enable in Inspector on GameModeDefinition, use Enable Score when the selected capability pattern expects score, objectives, timers, resources, or result tracking, then confirm the scoring route is declared before services or HUD try to display it."
+            },
+            "assignmentFields": [],
+            "nativeSetup": [
+                "Enable - GameModeDefinition - Enable Score when the selected capability pattern expects score, objectives, timers, resources, or result tracking - the scoring route is declared before services or HUD try to display it"
+            ],
+            "customizationMoments": [],
+            "proofTargetId": "",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "GameModeDefinition",
+                "type": "NeonBlack.Gameplay.Data.Definitions.GameModeDefinition",
+                "assetPath": "Assets/Scenes/Proofs/Pyralis_2D_Brawler_Proof_020/Definitions/GameModeDefinition.asset",
+                "globalObjectId": "GlobalObjectId_V1-3-3d126fa498e4bee4a93c30b8eb7bdfd6-11400000-0"
+            }
+        },
+        {
+            "sequence": 13,
+            "nodeId": "setupflow.setup-resolve-route-capabilities",
+            "label": "Resolve Route Capabilities",
+            "phase": "Validation",
+            "role": "Route Context",
+            "evidenceState": "Ready",
+            "sourceKind": "SetupFlow",
+            "sourceOrigin": "RuntimeEvidence",
+            "workIntent": "RequiredSetup",
+            "issueSeverity": "Info",
+            "reason": "This setup card is already satisfied on the route toward the first proof.",
+            "message": "The graph reflected route capabilities from authored gameplay setup, feature modules, participants, mode flags, or contracts.",
+            "owner": "Intent.set DNA axioms, choose the presentation lane, toggle the capability ingredients that describe the route, then create or wire the matching SessionDefinition, GameModeDefinition, participants, pawns, feature modules, board/turn assets, and scene objects so the graph can reflect them",
+            "unityAction": "Choose and wire in Authoring on Intent, use set DNA axioms, choose the presentation lane, toggle the capability ingredients that describe the route, then create or wire the matching SessionDefinition, GameModeDefinition, participants, pawns, feature modules, board/turn assets, and scene objects so the graph can reflect them, then confirm route capabilities are reflected from real setup.",
+            "nativeAction": {
+                "verb": "Choose and wire",
+                "surface": "AuthoringWindow",
+                "target": "Intent",
+                "fieldOrComponent": "set DNA axioms, choose the presentation lane, toggle the capability ingredients that describe the route, then create or wire the matching SessionDefinition, GameModeDefinition, participants, pawns, feature modules, board/turn assets, and scene objects so the graph can reflect them",
+                "successCheck": "route capabilities are reflected from real setup",
+                "guidance": "Choose and wire in Authoring on Intent, use set DNA axioms, choose the presentation lane, toggle the capability ingredients that describe the route, then create or wire the matching SessionDefinition, GameModeDefinition, participants, pawns, feature modules, board/turn assets, and scene objects so the graph can reflect them, then confirm route capabilities are reflected from real setup."
+            },
+            "assignmentFields": [],
+            "nativeSetup": [
+                "Choose and wire - Intent - set DNA axioms, choose the presentation lane, toggle the capability ingredients that describe the route, then create or wire the matching SessionDefinition, GameModeDefinition, participants, pawns, feature modules, board/turn assets, and scene objects so the graph can reflect them - route capabilities are reflected from real setup"
+            ],
+            "customizationMoments": [],
+            "proofTargetId": "",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "GameModeDefinition",
+                "type": "NeonBlack.Gameplay.Data.Definitions.GameModeDefinition",
+                "assetPath": "Assets/Scenes/Proofs/Pyralis_2D_Brawler_Proof_020/Definitions/GameModeDefinition.asset",
+                "globalObjectId": "GlobalObjectId_V1-3-3d126fa498e4bee4a93c30b8eb7bdfd6-11400000-0"
+            }
+        },
+        {
+            "sequence": 14,
+            "nodeId": "setupflow.setup-assign-default-participants",
+            "label": "Assign Default Participants",
+            "phase": "Validation",
+            "role": "Route Context",
+            "evidenceState": "Ready",
+            "sourceKind": "SetupFlow",
+            "sourceOrigin": "RuntimeEvidence",
+            "workIntent": "RequiredSetup",
+            "issueSeverity": "Info",
+            "reason": "This setup card is already satisfied on the route toward the first proof.",
+            "message": "Session has default participants.",
+            "owner": "ParticipantDefinition.Create -> NeonBlack -> Definitions -> Participant Definition; configure seat/player meaning, then assign it to SessionDefinition.defaultParticipants",
+            "unityAction": "Create in Project on ParticipantDefinition, use Create -> NeonBlack -> Definitions -> Participant Definition; configure seat/player meaning, then assign it to SessionDefinition.defaultParticipants, then confirm Players / Seats is ready.",
+            "nativeAction": {
+                "verb": "Create",
+                "surface": "ProjectWindow",
+                "target": "ParticipantDefinition",
+                "fieldOrComponent": "Create -> NeonBlack -> Definitions -> Participant Definition; configure seat/player meaning, then assign it to SessionDefinition.defaultParticipants",
+                "successCheck": "Players / Seats is ready",
+                "guidance": "Create in Project on ParticipantDefinition, use Create -> NeonBlack -> Definitions -> Participant Definition; configure seat/player meaning, then assign it to SessionDefinition.defaultParticipants, then confirm Players / Seats is ready."
+            },
+            "assignmentFields": [],
+            "nativeSetup": [
+                "Create - ParticipantDefinition - Create -> NeonBlack -> Definitions -> Participant Definition; configure seat/player meaning, then assign it to SessionDefinition.defaultParticipants - Players / Seats is ready"
+            ],
+            "customizationMoments": [],
+            "proofTargetId": "",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "SessionDefinition",
+                "type": "NeonBlack.Gameplay.Data.Definitions.SessionDefinition",
+                "assetPath": "Assets/Scenes/Proofs/Pyralis_2D_Brawler_Proof_020/Definitions/SessionDefinition.asset",
+                "globalObjectId": "GlobalObjectId_V1-3-5945282eafd4770419395c56d53cd885-11400000-0"
+            }
+        },
+        {
+            "sequence": 15,
+            "nodeId": "setupflow.setup-assign-input-profile",
+            "label": "Assign Input Profile",
+            "phase": "Validation",
+            "role": "Route Context",
+            "evidenceState": "Ready",
+            "sourceKind": "SetupFlow",
+            "sourceOrigin": "RuntimeEvidence",
+            "workIntent": "RequiredSetup",
+            "issueSeverity": "Info",
+            "reason": "This setup card is already satisfied on the route toward the first proof.",
+            "message": "A participant InputProfile is assigned. Pawn/input readers can now bind control signals.",
+            "owner": "ParticipantDefinition.assign or create InputProfile in inputProfile; assign Actions, keep or confirm Primary Action Map as Player, then scroll to Input Actions Sync and click Sync Action Names From Asset before customizing gameplay action rows",
+            "unityAction": "Create or assign in Inspector on ParticipantDefinition, use assign or create InputProfile in inputProfile; assign Actions, keep or confirm Primary Action Map as Player, then scroll to Input Actions Sync and click Sync Action Names From Asset before customizing gameplay action rows, then confirm InputProfile actions can reach the pawn input module.",
+            "nativeAction": {
+                "verb": "Create or assign",
+                "surface": "Inspector",
+                "target": "ParticipantDefinition",
+                "fieldOrComponent": "assign or create InputProfile in inputProfile; assign Actions, keep or confirm Primary Action Map as Player, then scroll to Input Actions Sync and click Sync Action Names From Asset before customizing gameplay action rows",
+                "successCheck": "InputProfile actions can reach the pawn input module",
+                "guidance": "Create or assign in Inspector on ParticipantDefinition, use assign or create InputProfile in inputProfile; assign Actions, keep or confirm Primary Action Map as Player, then scroll to Input Actions Sync and click Sync Action Names From Asset before customizing gameplay action rows, then confirm InputProfile actions can reach the pawn input module."
+            },
+            "assignmentFields": [],
+            "nativeSetup": [
+                "Create or assign - ParticipantDefinition - assign or create InputProfile in inputProfile; assign Actions, keep or confirm Primary Action Map as Player, then scroll to Input Actions Sync and click Sync Action Names From Asset before customizing gameplay action rows - InputProfile actions can reach the pawn input module"
+            ],
+            "customizationMoments": [],
+            "proofTargetId": "",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "ParticipantDefinition",
+                "type": "NeonBlack.Gameplay.Data.Definitions.ParticipantDefinition",
+                "assetPath": "Assets/Scenes/Proofs/Pyralis_2D_Brawler_Proof_020/Prefabs/pawn/ParticipantDefinition.asset",
+                "globalObjectId": "GlobalObjectId_V1-3-60268aeb3c6656345aa9ebdba20d9183-11400000-0"
+            }
+        },
+        {
+            "sequence": 16,
+            "nodeId": "setupflow.setup-assign-player-input-manager",
+            "label": "Assign Player Input Manager",
+            "phase": "Validation",
+            "role": "Route Context",
+            "evidenceState": "Ready",
+            "sourceKind": "SetupFlow",
+            "sourceOrigin": "RuntimeEvidence",
+            "workIntent": "RequiredSetup",
+            "issueSeverity": "Info",
+            "reason": "This setup card is already satisfied on the route toward the first proof.",
+            "message": "PlayerInputManager is assigned.",
+            "owner": "Game root (PlayerInputManager)",
+            "unityAction": "",
+            "nativeAction": {
+                "verb": "",
+                "surface": "",
+                "target": "",
+                "fieldOrComponent": "",
+                "successCheck": "",
+                "guidance": ""
+            },
+            "assignmentFields": [],
+            "nativeSetup": [],
+            "customizationMoments": [],
+            "proofTargetId": "",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "Game root",
+                "type": "UnityEngine.InputSystem.PlayerInputManager",
+                "assetPath": "",
+                "globalObjectId": "GlobalObjectId_V1-2-f7b9a11beaf36ca4e8636e8cfd08e3ac-994912181-0"
+            }
+        },
+        {
+            "sequence": 17,
+            "nodeId": "setupflow.setup-assign-participant-pawn",
+            "label": "Assign Participant Pawn",
+            "phase": "Validation",
+            "role": "Route Context",
+            "evidenceState": "Ready",
+            "sourceKind": "SetupFlow",
+            "sourceOrigin": "RuntimeEvidence",
+            "workIntent": "RequiredSetup",
+            "issueSeverity": "Info",
+            "reason": "This setup card is already satisfied on the route toward the first proof.",
+            "message": "At least one default participant has a pawn.",
+            "owner": "the participant, PawnDefinition, or pawn prefab.the field or component named by the validation message",
+            "unityAction": "Inspect in Inspector on the participant, PawnDefinition, or pawn prefab, use the field or component named by the validation message, then confirm Assign Participant Pawn is ready.",
+            "nativeAction": {
+                "verb": "Inspect",
+                "surface": "Inspector",
+                "target": "the participant, PawnDefinition, or pawn prefab",
+                "fieldOrComponent": "the field or component named by the validation message",
+                "successCheck": "Assign Participant Pawn is ready",
+                "guidance": "Inspect in Inspector on the participant, PawnDefinition, or pawn prefab, use the field or component named by the validation message, then confirm Assign Participant Pawn is ready."
+            },
+            "assignmentFields": [],
+            "nativeSetup": [
+                "Inspect - the participant, PawnDefinition, or pawn prefab - the field or component named by the validation message - Assign Participant Pawn is ready"
+            ],
+            "customizationMoments": [],
+            "proofTargetId": "",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "SessionDefinition",
+                "type": "NeonBlack.Gameplay.Data.Definitions.SessionDefinition",
+                "assetPath": "Assets/Scenes/Proofs/Pyralis_2D_Brawler_Proof_020/Definitions/SessionDefinition.asset",
+                "globalObjectId": "GlobalObjectId_V1-3-5945282eafd4770419395c56d53cd885-11400000-0"
+            }
+        },
+        {
+            "sequence": 18,
+            "nodeId": "setupflow.setup-assign-spawn-points",
+            "label": "Assign Spawn Points",
+            "phase": "Validation",
+            "role": "Route Context",
+            "evidenceState": "Ready",
+            "sourceKind": "SetupFlow",
+            "sourceOrigin": "RuntimeEvidence",
+            "workIntent": "RequiredSetup",
+            "issueSeverity": "Info",
+            "reason": "This setup card is already satisfied on the route toward the first proof.",
+            "message": "Spawn points are assigned for pawn-backed participants.",
+            "owner": "Gameplay Root or a Playfield Root.create or select a scene object; create and position SpawnPoint_1, then assign it to GameplaySessionBootstrap.spawnPoints",
+            "unityAction": "Create or select in Hierarchy on Gameplay Root or a Playfield Root, use create or select a scene object; create and position SpawnPoint_1, then assign it to GameplaySessionBootstrap.spawnPoints, then confirm the pawn route has one spawn point per default participant.",
+            "nativeAction": {
+                "verb": "Create or select",
+                "surface": "Hierarchy",
+                "target": "Gameplay Root or a Playfield Root",
+                "fieldOrComponent": "create or select a scene object; create and position SpawnPoint_1, then assign it to GameplaySessionBootstrap.spawnPoints",
+                "successCheck": "the pawn route has one spawn point per default participant",
+                "guidance": "Create or select in Hierarchy on Gameplay Root or a Playfield Root, use create or select a scene object; create and position SpawnPoint_1, then assign it to GameplaySessionBootstrap.spawnPoints, then confirm the pawn route has one spawn point per default participant."
+            },
+            "assignmentFields": [],
+            "nativeSetup": [
+                "Create or select - Gameplay Root or a Playfield Root - create or select a scene object; create and position SpawnPoint_1, then assign it to GameplaySessionBootstrap.spawnPoints - the pawn route has one spawn point per default participant"
+            ],
+            "customizationMoments": [],
+            "proofTargetId": "",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "Game root",
+                "type": "NeonBlack.Gameplay.Characters.GameplaySessionBootstrap",
+                "assetPath": "",
+                "globalObjectId": "GlobalObjectId_V1-2-f7b9a11beaf36ca4e8636e8cfd08e3ac-994912178-0"
+            }
+        },
+        {
+            "sequence": 19,
+            "nodeId": "setupflow.setup-scene-prefab-readiness",
+            "label": "Scene And Prefab Readiness",
+            "phase": "Validation",
+            "role": "Route Context",
+            "evidenceState": "Ready",
+            "sourceKind": "SetupFlow",
+            "sourceOrigin": "RuntimeEvidence",
+            "workIntent": "RequiredSetup",
+            "issueSeverity": "Info",
+            "reason": "This setup card is already satisfied on the route toward the first proof.",
+            "message": "Scene and prefab readiness checks are clear. Play Mode can now test the proof instead of revealing missing setup.",
+            "owner": "the object or asset named by the readiness issue.clear required scene/prefab readiness issues before entering Play Mode; use Hygiene for the detailed graph list and Inspector Add Component or object picker for the named handoff",
+            "unityAction": "Inspect in Inspector on the object or asset named by the readiness issue, use clear required scene/prefab readiness issues before entering Play Mode; use Hygiene for the detailed graph list and Inspector Add Component or object picker for the named handoff, then confirm Play Mode is only testing a fully wired proof path.",
+            "nativeAction": {
+                "verb": "Inspect",
+                "surface": "Inspector",
+                "target": "the object or asset named by the readiness issue",
+                "fieldOrComponent": "clear required scene/prefab readiness issues before entering Play Mode; use Hygiene for the detailed graph list and Inspector Add Component or object picker for the named handoff",
+                "successCheck": "Play Mode is only testing a fully wired proof path",
+                "guidance": "Inspect in Inspector on the object or asset named by the readiness issue, use clear required scene/prefab readiness issues before entering Play Mode; use Hygiene for the detailed graph list and Inspector Add Component or object picker for the named handoff, then confirm Play Mode is only testing a fully wired proof path."
+            },
+            "assignmentFields": [],
+            "nativeSetup": [
+                "Inspect - the object or asset named by the readiness issue - clear required scene/prefab readiness issues before entering Play Mode; use Hygiene for the detailed graph list and Inspector Add Component or object picker for the named handoff - Play Mode is only testing a fully wired proof path"
+            ],
+            "customizationMoments": [],
+            "proofTargetId": "",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "SessionDefinition",
+                "type": "NeonBlack.Gameplay.Data.Definitions.SessionDefinition",
+                "assetPath": "Assets/Scenes/Proofs/Pyralis_2D_Brawler_Proof_020/Definitions/SessionDefinition.asset",
+                "globalObjectId": "GlobalObjectId_V1-3-5945282eafd4770419395c56d53cd885-11400000-0"
+            }
+        },
+        {
+            "sequence": 20,
+            "nodeId": "setupflow.setup-assign-camera-bounds-service",
+            "label": "Assign Camera Bounds Service",
+            "phase": "Validation",
+            "role": "Route Context",
+            "evidenceState": "Ready",
+            "sourceKind": "SetupFlow",
+            "sourceOrigin": "RuntimeEvidence",
+            "workIntent": "RequiredSetup",
+            "issueSeverity": "Info",
+            "reason": "This setup card is already satisfied on the route toward the first proof.",
+            "message": "Scene has an ICameraBoundsProvider for the selected camera/playfield proof.",
+            "owner": "GameplaySessionBootstrap.the same CinemachineCameraRigController in GameplaySessionBootstrap > Camera Rig Controller; camera-aware runtime systems consume that single camera bounds provider",
+            "unityAction": "Assign in Inspector on GameplaySessionBootstrap, use the same CinemachineCameraRigController in GameplaySessionBootstrap > Camera Rig Controller; camera-aware runtime systems consume that single camera bounds provider, then confirm camera-aware spawners, hazards, pickups, and framing can read visible bounds; pawn movement uses PlayfieldProfile unless camera-visible bounds are explicitly enabled on the pawn.",
+            "nativeAction": {
+                "verb": "Assign",
+                "surface": "Inspector",
+                "target": "GameplaySessionBootstrap",
+                "fieldOrComponent": "the same CinemachineCameraRigController in GameplaySessionBootstrap > Camera Rig Controller; camera-aware runtime systems consume that single camera bounds provider",
+                "successCheck": "camera-aware spawners, hazards, pickups, and framing can read visible bounds; pawn movement uses PlayfieldProfile unless camera-visible bounds are explicitly enabled on the pawn",
+                "guidance": "Assign in Inspector on GameplaySessionBootstrap, use the same CinemachineCameraRigController in GameplaySessionBootstrap > Camera Rig Controller; camera-aware runtime systems consume that single camera bounds provider, then confirm camera-aware spawners, hazards, pickups, and framing can read visible bounds; pawn movement uses PlayfieldProfile unless camera-visible bounds are explicitly enabled on the pawn."
+            },
+            "assignmentFields": [],
+            "nativeSetup": [
+                "Assign - GameplaySessionBootstrap - the same CinemachineCameraRigController in GameplaySessionBootstrap > Camera Rig Controller; camera-aware runtime systems consume that single camera bounds provider - camera-aware spawners, hazards, pickups, and framing can read visible bounds; pawn movement uses PlayfieldProfile unless camera-visible bounds are explicitly enabled on the pawn"
+            ],
+            "customizationMoments": [],
+            "proofTargetId": "",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "camera root",
+                "type": "NeonBlack.Gameplay.Presentation.Camera.CinemachineCameraRigController",
+                "assetPath": "",
+                "globalObjectId": "GlobalObjectId_V1-2-f7b9a11beaf36ca4e8636e8cfd08e3ac-1798137194-0"
+            }
+        },
+        {
+            "sequence": 21,
+            "nodeId": "setupflow.setup-assign-camera-rig",
+            "label": "Assign Camera Rig",
+            "phase": "Validation",
+            "role": "Route Context",
+            "evidenceState": "Ready",
+            "sourceKind": "SetupFlow",
+            "sourceOrigin": "RuntimeEvidence",
+            "workIntent": "RequiredSetup",
+            "issueSeverity": "Info",
+            "reason": "This setup card is already satisfied on the route toward the first proof.",
+            "message": "Camera rig is assigned for the pawn movement proof. This route uses a 3D, 2.5D, or non-orthographic pawn lane, so 2D orthographic bounds are not required before Play Mode.",
+            "owner": "Camera Root.keep or create exactly one enabled physical Unity Camera for the shared proof, usually the default Main Camera; right-click -> Create Empty, name it Camera Root; add CinemachineCameraRigController; create GameObject -> Cinemachine -> Cinemachine Camera under Camera Root or elsewhere if assigned explicitly; Unity usually adds Cinemachine Brain to the physical Main Camera when this first Cinemachine Camera is created; assign that Cinemachine Camera as Shared Camera Behaviour; verify the physical Main Camera keeps the MainCamera tag and Cinemachine Brain, then assign it as Target Camera; disable or remove accidental extra physical Camera objects only when they were created by mistake; keep intentional overlay, split-screen, minimap, or render-texture cameras; then drag the Camera Root object into GameplaySessionBootstrap > Camera Rig Controller",
+            "unityAction": "Create or assign in Hierarchy on Camera Root, use keep or create exactly one enabled physical Unity Camera for the shared proof, usually the default Main Camera; right-click -> Create Empty, name it Camera Root; add CinemachineCameraRigController; create GameObject -> Cinemachine -> Cinemachine Camera under Camera Root or elsewhere if assigned explicitly; Unity usually adds Cinemachine Brain to the physical Main Camera when this first Cinemachine Camera is created; assign that Cinemachine Camera as Shared Camera Behaviour; verify the physical Main Camera keeps the MainCamera tag and Cinemachine Brain, then assign it as Target Camera; disable or remove accidental extra physical Camera objects only when they were created by mistake; keep intentional overlay, split-screen, minimap, or render-texture cameras; then drag the Camera Root object into GameplaySessionBootstrap > Camera Rig Controller, then confirm the Pyralis camera route is the single camera setup path.",
+            "nativeAction": {
+                "verb": "Create or assign",
+                "surface": "Hierarchy",
+                "target": "Camera Root",
+                "fieldOrComponent": "keep or create exactly one enabled physical Unity Camera for the shared proof, usually the default Main Camera; right-click -> Create Empty, name it Camera Root; add CinemachineCameraRigController; create GameObject -> Cinemachine -> Cinemachine Camera under Camera Root or elsewhere if assigned explicitly; Unity usually adds Cinemachine Brain to the physical Main Camera when this first Cinemachine Camera is created; assign that Cinemachine Camera as Shared Camera Behaviour; verify the physical Main Camera keeps the MainCamera tag and Cinemachine Brain, then assign it as Target Camera; disable or remove accidental extra physical Camera objects only when they were created by mistake; keep intentional overlay, split-screen, minimap, or render-texture cameras; then drag the Camera Root object into GameplaySessionBootstrap > Camera Rig Controller",
+                "successCheck": "the Pyralis camera route is the single camera setup path",
+                "guidance": "Create or assign in Hierarchy on Camera Root, use keep or create exactly one enabled physical Unity Camera for the shared proof, usually the default Main Camera; right-click -> Create Empty, name it Camera Root; add CinemachineCameraRigController; create GameObject -> Cinemachine -> Cinemachine Camera under Camera Root or elsewhere if assigned explicitly; Unity usually adds Cinemachine Brain to the physical Main Camera when this first Cinemachine Camera is created; assign that Cinemachine Camera as Shared Camera Behaviour; verify the physical Main Camera keeps the MainCamera tag and Cinemachine Brain, then assign it as Target Camera; disable or remove accidental extra physical Camera objects only when they were created by mistake; keep intentional overlay, split-screen, minimap, or render-texture cameras; then drag the Camera Root object into GameplaySessionBootstrap > Camera Rig Controller, then confirm the Pyralis camera route is the single camera setup path."
+            },
+            "assignmentFields": [],
+            "nativeSetup": [
+                "Create or assign - Camera Root - keep or create exactly one enabled physical Unity Camera for the shared proof, usually the default Main Camera; right-click -> Create Empty, name it Camera Root; add CinemachineCameraRigController; create GameObject -> Cinemachine -> Cinemachine Camera under Camera Root or elsewhere if assigned explicitly; Unity usually adds Cinemachine Brain to the physical Main Camera when this first Cinemachine Camera is created; assign that Cinemachine Camera as Shared Camera Behaviour; verify the physical Main Camera keeps the MainCamera tag and Cinemachine Brain, then assign it as Target Camera; disable or remove accidental extra physical Camera objects only when they were created by mistake; keep intentional overlay, split-screen, minimap, or render-texture cameras; then drag the Camera Root object into GameplaySessionBootstrap > Camera Rig Controller - the Pyralis camera route is the single camera setup path"
+            ],
+            "customizationMoments": [],
+            "proofTargetId": "",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "camera root",
+                "type": "NeonBlack.Gameplay.Presentation.Camera.CinemachineCameraRigController",
+                "assetPath": "",
+                "globalObjectId": "GlobalObjectId_V1-2-f7b9a11beaf36ca4e8636e8cfd08e3ac-1798137194-0"
+            }
+        },
+        {
+            "sequence": 22,
+            "nodeId": "setupflow.setup-first-scene-defaults",
+            "label": "First-Scene Defaults",
+            "phase": "Validation",
+            "role": "Route Context",
+            "evidenceState": "Ready",
+            "sourceKind": "SetupFlow",
+            "sourceOrigin": "RuntimeEvidence",
+            "workIntent": "RequiredSetup",
+            "issueSeverity": "Info",
+            "reason": "This setup card is already satisfied on the route toward the first proof.",
+            "message": "Bootstrap startup ownership and loaded-scene injection are ready for a first proof.",
+            "owner": "GameplaySessionBootstrap.bootstrap startup ownership and Inject Loaded Scenes On Build",
+            "unityAction": "Configure in Inspector on GameplaySessionBootstrap, use bootstrap startup ownership and Inject Loaded Scenes On Build, then confirm first-scene runtime services are owned predictably.",
+            "nativeAction": {
+                "verb": "Configure",
+                "surface": "Inspector",
+                "target": "GameplaySessionBootstrap",
+                "fieldOrComponent": "bootstrap startup ownership and Inject Loaded Scenes On Build",
+                "successCheck": "first-scene runtime services are owned predictably",
+                "guidance": "Configure in Inspector on GameplaySessionBootstrap, use bootstrap startup ownership and Inject Loaded Scenes On Build, then confirm first-scene runtime services are owned predictably."
+            },
+            "assignmentFields": [],
+            "nativeSetup": [
+                "Configure - GameplaySessionBootstrap - bootstrap startup ownership and Inject Loaded Scenes On Build - first-scene runtime services are owned predictably"
+            ],
+            "customizationMoments": [],
+            "proofTargetId": "",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "Game root",
+                "type": "NeonBlack.Gameplay.Characters.GameplaySessionBootstrap",
+                "assetPath": "",
+                "globalObjectId": "GlobalObjectId_V1-2-f7b9a11beaf36ca4e8636e8cfd08e3ac-994912178-0"
+            }
+        },
+        {
+            "sequence": 23,
+            "nodeId": "setupflow.setup-assign-settings-manager",
+            "label": "Assign Settings Manager",
+            "phase": "Validation",
+            "role": "Route Context",
+            "evidenceState": "CandidateDetected",
+            "sourceKind": "SetupFlow",
+            "sourceOrigin": "RuntimeEvidence",
+            "workIntent": "RequiredSetup",
+            "issueSeverity": "Recommended",
+            "reason": "This card can make the first proof easier to judge, but it can wait until required setup is clear.",
+            "message": "A SettingsManager is recommended for managing audio volume, deadzones, and control swaps.",
+            "owner": "Gameplay Root or a persistent Shell object.create or select a scene object and add SettingsManager; name it Settings Manager and assign a SettingsProfile asset",
+            "unityAction": "Create or select in Hierarchy on Gameplay Root or a persistent Shell object, use create or select a scene object and add SettingsManager; name it Settings Manager and assign a SettingsProfile asset, then confirm global volume and control settings are persistent and accessible.",
+            "nativeAction": {
+                "verb": "Create or select",
+                "surface": "Hierarchy",
+                "target": "Gameplay Root or a persistent Shell object",
+                "fieldOrComponent": "create or select a scene object and add SettingsManager; name it Settings Manager and assign a SettingsProfile asset",
+                "successCheck": "global volume and control settings are persistent and accessible",
+                "guidance": "Create or select in Hierarchy on Gameplay Root or a persistent Shell object, use create or select a scene object and add SettingsManager; name it Settings Manager and assign a SettingsProfile asset, then confirm global volume and control settings are persistent and accessible."
+            },
+            "assignmentFields": [],
+            "nativeSetup": [
+                "Create or select - Gameplay Root or a persistent Shell object - create or select a scene object and add SettingsManager; name it Settings Manager and assign a SettingsProfile asset - global volume and control settings are persistent and accessible"
+            ],
+            "customizationMoments": [],
+            "proofTargetId": "",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "",
+                "type": "",
+                "assetPath": "",
+                "globalObjectId": ""
+            }
+        },
+        {
+            "sequence": 24,
+            "nodeId": "setupflow.setup-assign-gameplay-state-service",
+            "label": "Assign Gameplay State Service",
+            "phase": "Validation",
+            "role": "Route Context",
+            "evidenceState": "Ready",
+            "sourceKind": "SetupFlow",
+            "sourceOrigin": "RuntimeEvidence",
+            "workIntent": "RequiredSetup",
+            "issueSeverity": "Info",
+            "reason": "This setup card is already satisfied on the route toward the first proof.",
+            "message": "Scene has an IGameplayStateReader for active/dead/game-over aware systems.",
+            "owner": "Game root (SessionStateService)",
+            "unityAction": "",
+            "nativeAction": {
+                "verb": "",
+                "surface": "",
+                "target": "",
+                "fieldOrComponent": "",
+                "successCheck": "",
+                "guidance": ""
+            },
+            "assignmentFields": [],
+            "nativeSetup": [],
+            "customizationMoments": [],
+            "proofTargetId": "",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "Game root",
+                "type": "NeonBlack.Gameplay.Characters.SessionStateService",
+                "assetPath": "",
+                "globalObjectId": "GlobalObjectId_V1-2-f7b9a11beaf36ca4e8636e8cfd08e3ac-994912185-0"
+            }
+        },
+        {
+            "sequence": 25,
+            "nodeId": "setupflow.setup-assign-playfield-profile",
+            "label": "Assign Playfield Profile",
+            "phase": "Validation",
+            "role": "Route Context",
+            "evidenceState": "CandidateDetected",
+            "sourceKind": "SetupFlow",
+            "sourceOrigin": "RuntimeEvidence",
+            "workIntent": "RequiredSetup",
+            "issueSeverity": "Recommended",
+            "reason": "This card can make the first proof easier to judge, but it can wait until required setup is clear.",
+            "message": "Add a playfield profile when this setup needs bounds, board spaces, lanes, zones, or generated areas. Put the authored playfield reference on GameModeDefinition > Playfield Profile, then create matching scene anchors or presenters under a Playfield Root.",
+            "owner": "GameModeDefinition.assign or create PlayfieldProfile in playfieldProfile; create one from NeonBlack -> Profiles -> Playfield Profile when needed; tune bounds and lane rules after assignment",
+            "unityAction": "Create or assign in Inspector on GameModeDefinition, use assign or create PlayfieldProfile in playfieldProfile; create one from NeonBlack -> Profiles -> Playfield Profile when needed; tune bounds and lane rules after assignment, then confirm the route has authored world bounds instead of relying on scene defaults.",
+            "nativeAction": {
+                "verb": "Create or assign",
+                "surface": "Inspector",
+                "target": "GameModeDefinition",
+                "fieldOrComponent": "assign or create PlayfieldProfile in playfieldProfile; create one from NeonBlack -> Profiles -> Playfield Profile when needed; tune bounds and lane rules after assignment",
+                "successCheck": "the route has authored world bounds instead of relying on scene defaults",
+                "guidance": "Create or assign in Inspector on GameModeDefinition, use assign or create PlayfieldProfile in playfieldProfile; create one from NeonBlack -> Profiles -> Playfield Profile when needed; tune bounds and lane rules after assignment, then confirm the route has authored world bounds instead of relying on scene defaults."
+            },
+            "assignmentFields": [],
+            "nativeSetup": [
+                "Create or assign - GameModeDefinition - assign or create PlayfieldProfile in playfieldProfile; create one from NeonBlack -> Profiles -> Playfield Profile when needed; tune bounds and lane rules after assignment - the route has authored world bounds instead of relying on scene defaults"
+            ],
+            "customizationMoments": [],
+            "proofTargetId": "",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "",
+                "type": "",
+                "assetPath": "",
+                "globalObjectId": ""
+            }
+        },
+        {
+            "sequence": 26,
+            "nodeId": "setupflow.setup-assign-score-service",
+            "label": "Assign Score Service",
+            "phase": "Validation",
+            "role": "Route Context",
+            "evidenceState": "Optional",
+            "sourceKind": "SetupFlow",
+            "sourceOrigin": "RuntimeEvidence",
+            "workIntent": "RequiredSetup",
+            "issueSeverity": "Optional",
+            "reason": "This setup card is already satisfied on the route toward the first proof.",
+            "message": "Score service is optional for this setup route.",
+            "owner": "Gameplay Root or a Score Services child.right-click -> Create Empty, name it Score Service, add ParticipantScoreService or another ISessionScoreService, then keep it in the same scene as the bootstrap",
+            "unityAction": "Create or assign in Hierarchy on Gameplay Root or a Score Services child, use right-click -> Create Empty, name it Score Service, add ParticipantScoreService or another ISessionScoreService, then keep it in the same scene as the bootstrap, then confirm the scoring route has a concrete service object.",
+            "nativeAction": {
+                "verb": "Create or assign",
+                "surface": "Hierarchy",
+                "target": "Gameplay Root or a Score Services child",
+                "fieldOrComponent": "right-click -> Create Empty, name it Score Service, add ParticipantScoreService or another ISessionScoreService, then keep it in the same scene as the bootstrap",
+                "successCheck": "the scoring route has a concrete service object",
+                "guidance": "Create or assign in Hierarchy on Gameplay Root or a Score Services child, use right-click -> Create Empty, name it Score Service, add ParticipantScoreService or another ISessionScoreService, then keep it in the same scene as the bootstrap, then confirm the scoring route has a concrete service object."
+            },
+            "assignmentFields": [],
+            "nativeSetup": [
+                "Create or assign - Gameplay Root or a Score Services child - right-click -> Create Empty, name it Score Service, add ParticipantScoreService or another ISessionScoreService, then keep it in the same scene as the bootstrap - the scoring route has a concrete service object"
+            ],
+            "customizationMoments": [],
+            "proofTargetId": "",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "",
+                "type": "",
+                "assetPath": "",
+                "globalObjectId": ""
+            }
+        },
+        {
+            "sequence": 27,
+            "nodeId": "setupflow.setup-tabletop-selection-surface",
+            "label": "Assign Tabletop Selection Surface",
+            "phase": "Validation",
+            "role": "Route Context",
+            "evidenceState": "Optional",
+            "sourceKind": "SetupFlow",
+            "sourceOrigin": "RuntimeEvidence",
+            "workIntent": "RequiredSetup",
+            "issueSeverity": "Optional",
+            "reason": "This setup card is already satisfied on the route toward the first proof.",
+            "message": "Tabletop selection/input surfaces are optional for this setup route.",
+            "owner": "a project-owned board, card, cursor, or action-selection GameObject.Add Component -> TabletopBoardGridPresenter for a generic board proof, assign Board Definition, Move Policy Definition, and Turn Order Definition, then optionally add TabletopTurnStatusPresenter to a TextMeshPro label so the first Play Mode pass shows the active seat",
+            "unityAction": "Add in Inspector on a project-owned board, card, cursor, or action-selection GameObject, use Add Component -> TabletopBoardGridPresenter for a generic board proof, assign Board Definition, Move Policy Definition, and Turn Order Definition, then optionally add TabletopTurnStatusPresenter to a TextMeshPro label so the first Play Mode pass shows the active seat, then confirm one selectable tabletop surface can resolve a proof action in Play Mode.",
+            "nativeAction": {
+                "verb": "Add",
+                "surface": "Inspector",
+                "target": "a project-owned board, card, cursor, or action-selection GameObject",
+                "fieldOrComponent": "Add Component -> TabletopBoardGridPresenter for a generic board proof, assign Board Definition, Move Policy Definition, and Turn Order Definition, then optionally add TabletopTurnStatusPresenter to a TextMeshPro label so the first Play Mode pass shows the active seat",
+                "successCheck": "one selectable tabletop surface can resolve a proof action in Play Mode",
+                "guidance": "Add in Inspector on a project-owned board, card, cursor, or action-selection GameObject, use Add Component -> TabletopBoardGridPresenter for a generic board proof, assign Board Definition, Move Policy Definition, and Turn Order Definition, then optionally add TabletopTurnStatusPresenter to a TextMeshPro label so the first Play Mode pass shows the active seat, then confirm one selectable tabletop surface can resolve a proof action in Play Mode."
+            },
+            "assignmentFields": [],
+            "nativeSetup": [
+                "Add - a project-owned board, card, cursor, or action-selection GameObject - Add Component -> TabletopBoardGridPresenter for a generic board proof, assign Board Definition, Move Policy Definition, and Turn Order Definition, then optionally add TabletopTurnStatusPresenter to a TextMeshPro label so the first Play Mode pass shows the active seat - one selectable tabletop surface can resolve a proof action in Play Mode"
+            ],
+            "customizationMoments": [],
+            "proofTargetId": "",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "GameModeDefinition",
+                "type": "NeonBlack.Gameplay.Data.Definitions.GameModeDefinition",
+                "assetPath": "Assets/Scenes/Proofs/Pyralis_2D_Brawler_Proof_020/Definitions/GameModeDefinition.asset",
+                "globalObjectId": "GlobalObjectId_V1-3-3d126fa498e4bee4a93c30b8eb7bdfd6-11400000-0"
+            }
+        },
+        {
+            "sequence": 28,
+            "nodeId": "setupflow.setup-runtime-service-ownership",
+            "label": "Runtime Service Ownership",
+            "phase": "Validation",
+            "role": "Route Context",
+            "evidenceState": "Ready",
+            "sourceKind": "SetupFlow",
+            "sourceOrigin": "RuntimeEvidence",
+            "workIntent": "RequiredSetup",
+            "issueSeverity": "Info",
+            "reason": "This setup card is already satisfied on the route toward the first proof.",
+            "message": "Core runtime services are authored and ready for PyralisGameplayLifetimeScope registration.",
+            "owner": "Gameplay Root.SessionStateService, ParticipantRosterService, ParticipantSpawnService, and ParticipantInputRouter as child components or Bootstrap override fields",
+            "unityAction": "Add or assign in Inspector on Gameplay Root, use SessionStateService, ParticipantRosterService, ParticipantSpawnService, and ParticipantInputRouter as child components or Bootstrap override fields, then confirm Runtime Service Ownership is ready and no core service is runtime-created.",
+            "nativeAction": {
+                "verb": "Add or assign",
+                "surface": "Inspector",
+                "target": "Gameplay Root",
+                "fieldOrComponent": "SessionStateService, ParticipantRosterService, ParticipantSpawnService, and ParticipantInputRouter as child components or Bootstrap override fields",
+                "successCheck": "Runtime Service Ownership is ready and no core service is runtime-created",
+                "guidance": "Add or assign in Inspector on Gameplay Root, use SessionStateService, ParticipantRosterService, ParticipantSpawnService, and ParticipantInputRouter as child components or Bootstrap override fields, then confirm Runtime Service Ownership is ready and no core service is runtime-created."
+            },
+            "assignmentFields": [],
+            "nativeSetup": [
+                "Add or assign - Gameplay Root - SessionStateService, ParticipantRosterService, ParticipantSpawnService, and ParticipantInputRouter as child components or Bootstrap override fields - Runtime Service Ownership is ready and no core service is runtime-created"
+            ],
+            "customizationMoments": [],
+            "proofTargetId": "",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "Game root",
+                "type": "NeonBlack.Gameplay.Characters.GameplaySessionBootstrap",
+                "assetPath": "",
+                "globalObjectId": "GlobalObjectId_V1-2-f7b9a11beaf36ca4e8636e8cfd08e3ac-994912178-0"
+            }
+        },
+        {
+            "sequence": 29,
+            "nodeId": "setupflow.setup-tabletop-runtime-contract",
+            "label": "Tabletop Runtime Contract",
+            "phase": "Validation",
+            "role": "Route Context",
+            "evidenceState": "Optional",
+            "sourceKind": "SetupFlow",
+            "sourceOrigin": "RuntimeEvidence",
+            "workIntent": "RequiredSetup",
+            "issueSeverity": "Optional",
+            "reason": "This setup card is already satisfied on the route toward the first proof.",
+            "message": "Tabletop runtime contract is optional for this setup route.",
+            "owner": "the opened proof setup folder.create Board Definition, Board Piece Definition, Board Move Policy Definition, and Turn Order Definition assets in a project-owned setup folder; use generic tokens, cards, tiles, or imported marker prefabs for BoardPieceDefinition > Visual Prefab; then assign the board and turn assets to the GameModeDefinition or the scene board presenter fields",
+            "unityAction": "Create and assign in Project on the opened proof setup folder, use create Board Definition, Board Piece Definition, Board Move Policy Definition, and Turn Order Definition assets in a project-owned setup folder; use generic tokens, cards, tiles, or imported marker prefabs for BoardPieceDefinition > Visual Prefab; then assign the board and turn assets to the GameModeDefinition or the scene board presenter fields, then confirm the no-pawn tabletop route has authored board state, pieces, movement policy, and turn order.",
+            "nativeAction": {
+                "verb": "Create and assign",
+                "surface": "ProjectWindow",
+                "target": "the opened proof setup folder",
+                "fieldOrComponent": "create Board Definition, Board Piece Definition, Board Move Policy Definition, and Turn Order Definition assets in a project-owned setup folder; use generic tokens, cards, tiles, or imported marker prefabs for BoardPieceDefinition > Visual Prefab; then assign the board and turn assets to the GameModeDefinition or the scene board presenter fields",
+                "successCheck": "the no-pawn tabletop route has authored board state, pieces, movement policy, and turn order",
+                "guidance": "Create and assign in Project on the opened proof setup folder, use create Board Definition, Board Piece Definition, Board Move Policy Definition, and Turn Order Definition assets in a project-owned setup folder; use generic tokens, cards, tiles, or imported marker prefabs for BoardPieceDefinition > Visual Prefab; then assign the board and turn assets to the GameModeDefinition or the scene board presenter fields, then confirm the no-pawn tabletop route has authored board state, pieces, movement policy, and turn order."
+            },
+            "assignmentFields": [],
+            "nativeSetup": [
+                "Create and assign - the opened proof setup folder - create Board Definition, Board Piece Definition, Board Move Policy Definition, and Turn Order Definition assets in a project-owned setup folder; use generic tokens, cards, tiles, or imported marker prefabs for BoardPieceDefinition > Visual Prefab; then assign the board and turn assets to the GameModeDefinition or the scene board presenter fields - the no-pawn tabletop route has authored board state, pieces, movement policy, and turn order"
+            ],
+            "customizationMoments": [],
+            "proofTargetId": "",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "GameModeDefinition",
+                "type": "NeonBlack.Gameplay.Data.Definitions.GameModeDefinition",
+                "assetPath": "Assets/Scenes/Proofs/Pyralis_2D_Brawler_Proof_020/Definitions/GameModeDefinition.asset",
+                "globalObjectId": "GlobalObjectId_V1-3-3d126fa498e4bee4a93c30b8eb7bdfd6-11400000-0"
+            }
+        },
+        {
+            "sequence": 30,
+            "nodeId": "setupflow.setup-tune-movement-and-input-feel",
+            "label": "Tune Movement And Input Feel",
+            "phase": "Validation",
+            "role": "Can Wait",
+            "evidenceState": "CandidateDetected",
+            "sourceKind": "SetupFlow",
+            "sourceOrigin": "RuntimeEvidence",
+            "workIntent": "ProofEnhancer",
+            "issueSeverity": "Recommended",
+            "reason": "This proof enhancer can make the first Play Mode check clearer, but it should not block the route proof.",
+            "message": "Before judging Play Mode, inspect the PawnMovementProfile, effective InputProfile, and installed FeatureModuleDefinition assets. Use PawnMovementProfile > Movement Style = TopDownNoGravity for free X/Y movement, add a top-down hop feature when Jump should lift the visual while staying map-plane grounded, or set Movement Style = SideViewGravity when Jump should drive Rigidbody2D vertical motion. The InputProfile maps Unity Input Actions into semantic roles; the pawn prefab still needs an input module such as Motor2DInputAdapter to dispatch those roles.",
+            "owner": "PawnMovementProfile and effective InputProfile.movement speed, acceleration, jump/dash feel, gameplay action names, action map, and device assumptions",
+            "unityAction": "Customize in Inspector on PawnMovementProfile and effective InputProfile, use movement speed, acceleration, jump/dash feel, gameplay action names, action map, and device assumptions, then confirm input and movement feel intentional instead of starter-default.",
+            "nativeAction": {
+                "verb": "Customize",
+                "surface": "Inspector",
+                "target": "PawnMovementProfile and effective InputProfile",
+                "fieldOrComponent": "movement speed, acceleration, jump/dash feel, gameplay action names, action map, and device assumptions",
+                "successCheck": "input and movement feel intentional instead of starter-default",
+                "guidance": "Customize in Inspector on PawnMovementProfile and effective InputProfile, use movement speed, acceleration, jump/dash feel, gameplay action names, action map, and device assumptions, then confirm input and movement feel intentional instead of starter-default."
+            },
+            "assignmentFields": [],
+            "nativeSetup": [
+                "Customize - PawnMovementProfile and effective InputProfile - movement speed, acceleration, jump/dash feel, gameplay action names, action map, and device assumptions - input and movement feel intentional instead of starter-default"
+            ],
+            "customizationMoments": [],
+            "proofTargetId": "",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "PawnMovementProfile",
+                "type": "NeonBlack.Gameplay.Data.Profiles.PawnMovementProfile",
+                "assetPath": "Assets/Scenes/Proofs/Pyralis_2D_Brawler_Proof_020/Prefabs/pawn/PawnMovementProfile.asset",
+                "globalObjectId": "GlobalObjectId_V1-3-af2125f30fa908c4b8196194a659b327-11400000-0"
+            }
+        },
+        {
+            "sequence": 31,
+            "nodeId": "setupflow.setup-tune-pawn-visuals-and-collision",
+            "label": "Tune Pawn Visuals And Collision",
+            "phase": "Validation",
+            "role": "Can Wait",
+            "evidenceState": "CandidateDetected",
+            "sourceKind": "SetupFlow",
+            "sourceOrigin": "RuntimeEvidence",
+            "workIntent": "ProofEnhancer",
+            "issueSeverity": "Recommended",
+            "reason": "This proof enhancer can make the first Play Mode check clearer, but it should not block the route proof.",
+            "message": "Before judging Play Mode, open the pawn prefab and check the obvious Unity-owned fit: SpriteRenderer/art placement, visual child offset, Collider2D or Collider shape/size, Rigidbody2D settings, sorting, and whether the pivot matches the intended feet/body position.",
+            "owner": "the pawn prefab.SpriteRenderer/art placement, visual child offset, Collider2D shape/size, Rigidbody2D settings, sorting, and pivot/feet alignment",
+            "unityAction": "Customize in Inspector on the pawn prefab, use SpriteRenderer/art placement, visual child offset, Collider2D shape/size, Rigidbody2D settings, sorting, and pivot/feet alignment, then confirm the spawned pawn looks and collides like the intended actor.",
+            "nativeAction": {
+                "verb": "Customize",
+                "surface": "Inspector",
+                "target": "the pawn prefab",
+                "fieldOrComponent": "SpriteRenderer/art placement, visual child offset, Collider2D shape/size, Rigidbody2D settings, sorting, and pivot/feet alignment",
+                "successCheck": "the spawned pawn looks and collides like the intended actor",
+                "guidance": "Customize in Inspector on the pawn prefab, use SpriteRenderer/art placement, visual child offset, Collider2D shape/size, Rigidbody2D settings, sorting, and pivot/feet alignment, then confirm the spawned pawn looks and collides like the intended actor."
+            },
+            "assignmentFields": [],
+            "nativeSetup": [
+                "Customize - the pawn prefab - SpriteRenderer/art placement, visual child offset, Collider2D shape/size, Rigidbody2D settings, sorting, and pivot/feet alignment - the spawned pawn looks and collides like the intended actor"
+            ],
+            "customizationMoments": [],
+            "proofTargetId": "",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "pawn",
+                "type": "UnityEngine.GameObject",
+                "assetPath": "Assets/Scenes/Proofs/Pyralis_2D_Brawler_Proof_020/Prefabs/pawn/pawn.prefab",
+                "globalObjectId": "GlobalObjectId_V1-1-909d3158089e56640b6dd175bb7614c4-3767303912352580699-0"
+            }
+        },
+        {
+            "sequence": 32,
+            "nodeId": "setupflow.setup-tune-camera-framing",
+            "label": "Tune Camera Framing",
+            "phase": "Validation",
+            "role": "Can Wait",
+            "evidenceState": "CandidateDetected",
+            "sourceKind": "SetupFlow",
+            "sourceOrigin": "RuntimeEvidence",
+            "workIntent": "ProofEnhancer",
+            "issueSeverity": "Recommended",
+            "reason": "This proof enhancer can make the first Play Mode check clearer, but it should not block the route proof.",
+            "message": "Before judging Play Mode, select Camera Root and CameraRigProfile and tune framing for the scene: physical Target Camera assignment, MainCamera tag/Brain on that physical camera, orthographic size, 2D Bounds Framing minimum visible area, Follow Damping (0 means no lag), Follow Offset, View Euler Angles for pitch/yaw/roll, and how much room the player needs around the pawn. In orthographic mode, CameraRigProfile > Orthographic Size controls zoom only until Camera Root > Enforce Minimum Visible Area 2D raises it to fit the authored min world size. Keep Use Profile Transform on for profile-driven framing, or turn it off when you want direct Cinemachine transform authoring. In Play Mode, Cinemachine follows a runtime GameplaySharedCameraFocus driven from participants; prove follow by moving the pawn, then verifying the Game view follows that shared focus.",
+            "owner": "Camera Root, CameraRigProfile, and the Cinemachine camera.for 2D proofs set CameraRigProfile projection values or Target Camera Projection to Orthographic; tune Orthographic Size for zoom, but check Camera Root > 2D Bounds Framing because Enforce Minimum Visible Area 2D can raise the effective size; tune Follow Damping (0 means no lag), Follow Offset, and View Euler Angles for pitch/yaw/roll; disable Use Profile Transform only when you want to hand-place and hand-rotate the Cinemachine camera directly",
+            "unityAction": "Customize in Inspector on Camera Root, CameraRigProfile, and the Cinemachine camera, use for 2D proofs set CameraRigProfile projection values or Target Camera Projection to Orthographic; tune Orthographic Size for zoom, but check Camera Root > 2D Bounds Framing because Enforce Minimum Visible Area 2D can raise the effective size; tune Follow Damping (0 means no lag), Follow Offset, and View Euler Angles for pitch/yaw/roll; disable Use Profile Transform only when you want to hand-place and hand-rotate the Cinemachine camera directly, then confirm the first proof is judged through the right camera setup.",
+            "nativeAction": {
+                "verb": "Customize",
+                "surface": "Inspector",
+                "target": "Camera Root, CameraRigProfile, and the Cinemachine camera",
+                "fieldOrComponent": "for 2D proofs set CameraRigProfile projection values or Target Camera Projection to Orthographic; tune Orthographic Size for zoom, but check Camera Root > 2D Bounds Framing because Enforce Minimum Visible Area 2D can raise the effective size; tune Follow Damping (0 means no lag), Follow Offset, and View Euler Angles for pitch/yaw/roll; disable Use Profile Transform only when you want to hand-place and hand-rotate the Cinemachine camera directly",
+                "successCheck": "the first proof is judged through the right camera setup",
+                "guidance": "Customize in Inspector on Camera Root, CameraRigProfile, and the Cinemachine camera, use for 2D proofs set CameraRigProfile projection values or Target Camera Projection to Orthographic; tune Orthographic Size for zoom, but check Camera Root > 2D Bounds Framing because Enforce Minimum Visible Area 2D can raise the effective size; tune Follow Damping (0 means no lag), Follow Offset, and View Euler Angles for pitch/yaw/roll; disable Use Profile Transform only when you want to hand-place and hand-rotate the Cinemachine camera directly, then confirm the first proof is judged through the right camera setup."
+            },
+            "assignmentFields": [],
+            "nativeSetup": [
+                "Customize - Camera Root, CameraRigProfile, and the Cinemachine camera - for 2D proofs set CameraRigProfile projection values or Target Camera Projection to Orthographic; tune Orthographic Size for zoom, but check Camera Root > 2D Bounds Framing because Enforce Minimum Visible Area 2D can raise the effective size; tune Follow Damping (0 means no lag), Follow Offset, and View Euler Angles for pitch/yaw/roll; disable Use Profile Transform only when you want to hand-place and hand-rotate the Cinemachine camera directly - the first proof is judged through the right camera setup"
+            ],
+            "customizationMoments": [],
+            "proofTargetId": "",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "camera root",
+                "type": "NeonBlack.Gameplay.Presentation.Camera.CinemachineCameraRigController",
+                "assetPath": "",
+                "globalObjectId": "GlobalObjectId_V1-2-f7b9a11beaf36ca4e8636e8cfd08e3ac-1798137194-0"
+            }
+        },
+        {
+            "sequence": 33,
+            "nodeId": "proof.1p-pawn-movement",
+            "label": "1P Pawn Movement Proof",
+            "phase": "First Proof",
+            "role": "Proof Target",
+            "evidenceState": "CandidateDetected",
+            "sourceKind": "ProofVocabulary",
+            "sourceOrigin": "GrammarFallback",
+            "workIntent": "ProofEnhancer",
+            "issueSeverity": "Recommended",
+            "reason": "This is the Play Mode proof reached after the ordered setup cards above are clear.",
+            "message": "One participant spawns one pawn, the selected InputProfile reaches a pawn input module, movement is visibly responsive, and the Game view follows the runtime shared camera focus.",
+            "owner": "FeatureModuleDefinition.moduleId",
+            "unityAction": "Test in Play Mode on the active pawn-backed route, use press Play after the selected intent's Do Now setup is clear; move the pawn through the mapped input path and watch the Game view, then confirm one pawn spawns at the assigned spawn point, visibly moves through its selected 2D, 2.5D, or 3D lane, and the Game view follows the runtime GameplaySharedCameraFocus driven by that pawn.",
+            "nativeAction": {
+                "verb": "",
+                "surface": "",
+                "target": "",
+                "fieldOrComponent": "",
+                "successCheck": "",
+                "guidance": ""
+            },
+            "assignmentFields": [
+                "FeatureModuleDefinition.moduleId",
+                "FeatureModuleDefinition.runtimePrefab",
+                "FeatureModuleDefinition.profileAsset",
+                "PawnDefinition.featureModules",
+                "InputProfile.gameplayActions",
+                "showDebugHUD",
+                "movementStyle",
+                "moveSpeed",
+                "dashEnabled",
+                "dashSpeed",
+                "dashCooldown",
+                "jumpEnabled",
+                "jumpVelocity",
+                "groundLayer",
+                "inputZones",
+                "actionRole",
+                "duration",
+                "height",
+                "cooldown",
+                "MoveSpeed",
+                "IsGrounded",
+                "movementMode",
+                "walkSpeed",
+                "jumpHeight"
+            ],
+            "nativeSetup": [
+                "Test in Play Mode on the active pawn-backed route, use press Play after the selected intent's Do Now setup is clear; move the pawn through the mapped input path and watch the Game view, then confirm one pawn spawns at the assigned spawn point, visibly moves through its selected 2D, 2.5D, or 3D lane, and the Game view follows the runtime GameplaySharedCameraFocus driven by that pawn.",
+                "Add in Inspector on selected GameObject, use Add Component -> NeonBlack/Gameplay/Traversal/Top Down Hop Feature Runtime, then confirm the component is added to the Inspector.",
+                "Create in Project on contract NativeSetup fallback, use create TopDownHopProfile, then confirm the referenced item exists in the chosen project folder.",
+                "Create in Project on contract NativeSetup fallback, use create FeatureModuleDefinition, then confirm the referenced item exists in the chosen project folder.",
+                "Assign in Inspector on Feature module setup, use assign runtime prefab with TopDownHopFeatureRuntime, then confirm the value is assigned in the authored definition.",
+                "Assign in Inspector on Feature module setup, use assign profile asset, then confirm the value is assigned in the authored definition.",
+                "Assign in Inspector on Feature module setup, use add module to PawnDefinition.featureModules, then confirm the value is assigned in the authored definition.",
+                "Bind in Inspector on Action binding, use bind Jump in InputProfile, then confirm the action role is connected in the authored action graph.",
+                "Add in Inspector on selected GameObject, use Add Component -> NeonBlack/Gameplay/3D/Pawn 3D Presentation Component, then confirm the component is added to the Inspector.",
+                "Inspect in Inspector on contract NativeSetup fallback, use Attach to a Pawn with ActorAnimationDriver., then confirm the setup step is captured and verified in the editor.",
+                "Inspect in Inspector on contract NativeSetup fallback, use Ensure Animator parameters match signal names., then confirm the setup step is captured and verified in the editor.",
+                "Add in Inspector on selected GameObject, use Add Component -> NeonBlack/Gameplay/Characters/2D/Pawn 2D Movement Component, then confirm the component is added to the Inspector.",
+                "Assign in Inspector on Feature module setup, use Add Rigidbody2D and Collider2D., then confirm the value is assigned in the authored definition.",
+                "Inspect in Inspector on contract NativeSetup fallback, use Keep on the same root as Motor2D., then confirm the setup step is captured and verified in the editor.",
+                "Inspect in Inspector on contract NativeSetup fallback, use Set Movement Style to SideViewGravity only for platformer-style gravity and ground checks., then confirm the setup step is captured and verified in the editor.",
+                "Create in Project on Top Down Hop Profile, use Create -> NeonBlack/Profiles/Top Down Hop Profile, then confirm the asset exists in the project.",
+                "Inspect in Inspector on contract NativeSetup fallback, use Implement interface in a movement component, then confirm the setup step is captured and verified in the editor.",
+                "Add in Inspector on selected GameObject, use Add Component -> NeonBlack/Gameplay/3D/Pawn 3D Movement Component, then confirm the component is added to the Inspector.",
+                "Inspect in Inspector on contract NativeSetup fallback, use Attach to a Pawn root with CharacterController., then confirm the setup step is captured and verified in the editor.",
+                "Assign in Inspector on Feature module setup, use Assign Ground Layer mask., then confirm the value is assigned in the authored definition."
+            ],
+            "customizationMoments": [
+                "Animator signal mapping",
+                "Billboard presentation",
+                "debug HUD visibility"
+            ],
+            "proofTargetId": "proof.1p-pawn-movement",
+            "edge": {
+                "from": "",
+                "to": "",
+                "kind": "",
+                "label": ""
+            },
+            "sourceObject": {
+                "name": "",
+                "type": "",
+                "assetPath": "",
+                "globalObjectId": ""
+            }
+        }
+    ],
+    "proofBlockers": [],
+    "proofSupport": [
+        {
+            "fromNodeId": "capability.platformcore",
+            "toNodeId": "proof.1p-pawn-movement",
+            "from": "Platform Core",
+            "to": "1P Pawn Movement Proof",
+            "relationship": "supports proof",
+            "detail": "supports proof"
+        },
+        {
+            "fromNodeId": "capability.characterpawngameplay",
+            "toNodeId": "proof.1p-pawn-movement",
+            "from": "Character / Pawn Gameplay",
+            "to": "1P Pawn Movement Proof",
+            "relationship": "supports proof",
+            "detail": "supports proof"
+        },
+        {
+            "fromNodeId": "contract.feature.NeonBlack.Gameplay.Characters.IMovementModule",
+            "toNodeId": "proof.1p-pawn-movement",
+            "from": "Movement Module",
+            "to": "1P Pawn Movement Proof",
+            "relationship": "recommends",
+            "detail": "proof guidance"
+        },
+        {
+            "fromNodeId": "contract.feature.NeonBlack.Gameplay.Features.Characters.Pawn2DMovementComponent",
+            "toNodeId": "proof.1p-pawn-movement",
+            "from": "Pawn2 D Movement Component",
+            "to": "1P Pawn Movement Proof",
+            "relationship": "recommends",
+            "detail": "proof guidance"
+        },
+        {
+            "fromNodeId": "contract.feature.NeonBlack.Gameplay.Characters.Pawn3DMovementComponent",
+            "toNodeId": "proof.1p-pawn-movement",
+            "from": "Pawn3 D Movement Component",
+            "to": "1P Pawn Movement Proof",
+            "relationship": "recommends",
+            "detail": "proof guidance"
+        },
+        {
+            "fromNodeId": "contract.feature.actor.traversal.topdown-hop",
+            "toNodeId": "proof.1p-pawn-movement",
+            "from": "Top Down Hop Feature Runtime",
+            "to": "1P Pawn Movement Proof",
+            "relationship": "recommends",
+            "detail": "proof guidance"
+        },
+        {
+            "fromNodeId": "contract.feature.NeonBlack.Gameplay.Data.Profiles.TopDownHopProfile",
+            "toNodeId": "proof.1p-pawn-movement",
+            "from": "Top Down Hop Profile",
+            "to": "1P Pawn Movement Proof",
+            "relationship": "recommends",
+            "detail": "proof guidance"
+        },
+        {
+            "fromNodeId": "contract.feature.NeonBlack.Gameplay.Characters.Pawn3DPresentationComponent",
+            "toNodeId": "proof.1p-pawn-movement",
+            "from": "Pawn3 D Presentation Component",
+            "to": "1P Pawn Movement Proof",
+            "relationship": "recommends",
+            "detail": "proof guidance"
+        },
+        {
+            "fromNodeId": "capability.animationpresentation",
+            "toNodeId": "proof.1p-pawn-movement",
+            "from": "Animation / Presentation",
+            "to": "1P Pawn Movement Proof",
+            "relationship": "supports proof",
+            "detail": "supports proof"
+        },
+        {
+            "fromNodeId": "capability.camerainput",
+            "toNodeId": "proof.1p-pawn-movement",
+            "from": "Camera / Cursor",
+            "to": "1P Pawn Movement Proof",
+            "relationship": "supports proof",
+            "detail": "supports proof"
+        }
+    ],
+    "supportingContracts": [
+        {
+            "nodeId": "contract.feature.actor.traversal.topdown-hop",
+            "label": "Top Down Hop Feature Runtime",
+            "sourceOrigin": "Contract",
+            "evidenceState": "Unknown",
+            "stableId": "feature.actor.traversal.topdown-hop",
+            "displayName": "Top Down Hop Feature Runtime",
+            "category": "Traversal",
+            "moduleId": "actor.traversal.topdown-hop",
+            "setupNodeId": "",
+            "capability": "Traversal",
+            "confidence": "Explicit",
+            "sourceType": "NeonBlack.Gameplay.Features.Traversal.TopDownHopFeatureRuntime",
+            "assignmentFieldCount": 5,
+            "customizationMomentCount": 0,
+            "nativeSetupCount": 6
+        },
+        {
+            "nodeId": "contract.feature.NeonBlack.Gameplay.Characters.Pawn3DPresentationComponent",
+            "label": "Pawn3 D Presentation Component",
+            "sourceOrigin": "Contract",
+            "evidenceState": "Unknown",
+            "stableId": "feature.NeonBlack.Gameplay.Characters.Pawn3DPresentationComponent",
+            "displayName": "Pawn3 D Presentation Component",
+            "category": "Animation",
+            "moduleId": "",
+            "setupNodeId": "",
+            "capability": "Animation",
+            "confidence": "Explicit",
+            "sourceType": "NeonBlack.Gameplay.Characters.Pawn3DPresentationComponent",
+            "assignmentFieldCount": 1,
+            "customizationMomentCount": 3,
+            "nativeSetupCount": 2
+        },
+        {
+            "nodeId": "contract.feature.NeonBlack.Gameplay.Features.Characters.Pawn2DMovementComponent",
+            "label": "Pawn2 D Movement Component",
+            "sourceOrigin": "Contract",
+            "evidenceState": "Unknown",
+            "stableId": "feature.NeonBlack.Gameplay.Features.Characters.Pawn2DMovementComponent",
+            "displayName": "Pawn2 D Movement Component",
+            "category": "Movement",
+            "moduleId": "",
+            "setupNodeId": "",
+            "capability": "Movement",
+            "confidence": "Explicit",
+            "sourceType": "NeonBlack.Gameplay.Features.Characters.Pawn2DMovementComponent",
+            "assignmentFieldCount": 9,
+            "customizationMomentCount": 0,
+            "nativeSetupCount": 3
+        },
+        {
+            "nodeId": "contract.feature.NeonBlack.Gameplay.Data.Profiles.TopDownHopProfile",
+            "label": "Top Down Hop Profile",
+            "sourceOrigin": "Contract",
+            "evidenceState": "Unknown",
+            "stableId": "feature.NeonBlack.Gameplay.Data.Profiles.TopDownHopProfile",
+            "displayName": "Top Down Hop Profile",
+            "category": "Movement, Traversal",
+            "moduleId": "",
+            "setupNodeId": "",
+            "capability": "Movement, Traversal",
+            "confidence": "Explicit",
+            "sourceType": "NeonBlack.Gameplay.Data.Profiles.TopDownHopProfile",
+            "assignmentFieldCount": 4,
+            "customizationMomentCount": 0,
+            "nativeSetupCount": 0
+        },
+        {
+            "nodeId": "contract.feature.NeonBlack.Gameplay.Characters.IMovementModule",
+            "label": "Movement Module",
+            "sourceOrigin": "Contract",
+            "evidenceState": "Unknown",
+            "stableId": "feature.NeonBlack.Gameplay.Characters.IMovementModule",
+            "displayName": "Movement Module",
+            "category": "Movement",
+            "moduleId": "",
+            "setupNodeId": "",
+            "capability": "Movement",
+            "confidence": "Explicit",
+            "sourceType": "NeonBlack.Gameplay.Characters.IMovementModule",
+            "assignmentFieldCount": 2,
+            "customizationMomentCount": 0,
+            "nativeSetupCount": 1
+        },
+        {
+            "nodeId": "contract.feature.NeonBlack.Gameplay.Characters.Pawn3DMovementComponent",
+            "label": "Pawn3 D Movement Component",
+            "sourceOrigin": "Contract",
+            "evidenceState": "Unknown",
+            "stableId": "feature.NeonBlack.Gameplay.Characters.Pawn3DMovementComponent",
+            "displayName": "Pawn3 D Movement Component",
+            "category": "Movement",
+            "moduleId": "",
+            "setupNodeId": "",
+            "capability": "Movement",
+            "confidence": "Explicit",
+            "sourceType": "NeonBlack.Gameplay.Characters.Pawn3DMovementComponent",
+            "assignmentFieldCount": 4,
+            "customizationMomentCount": 0,
+            "nativeSetupCount": 2
+        }
+    ],
+    "graphSummary": {
+        "nodeCount": 277,
+        "edgeCount": 200,
+        "unknownNodeCount": 188,
+        "missingNodeCount": 4,
+        "blockedNodeCount": 0,
+        "proofBlockerCount": 0,
+        "dependencyPressureCount": 0,
+        "contractNodeCount": 228
+    },
+    "diagnosticQuestions": [
+        {
+            "question": "What is the next route action?",
+            "answer": "Gameplay Root: Hierarchy -> Create Empty -> name it Gameplay Root; Inspector -> Add Component -> GameplaySessionBootstrap"
+        },
+        {
+            "question": "What blocks the first proof?",
+            "answer": "No proof blocker links are present in the current graph."
+        },
+        {
+            "question": "What is the full fresh-scene card path?",
+            "answer": "Gameplay Root -> Session Definition -> Game Mode Definition -> Capabilities -> Participant With Pawn -> Participants -> Pawn Definition -> Gameplay Root -> Visible Lifetime Scope -> Assign Session Definition -> Assign Default Game Mode -> Enable Scoring Route"
+        },
+        {
+            "question": "Which contracts are proof context rather than route cards?",
+            "answer": "Platform Core; Character / Pawn Gameplay; Movement Module; Pawn2 D Movement Component; Pawn3 D Movement Component; Top Down Hop Feature Runtime; Top Down Hop Profile; Pawn3 D Presentation Component"
+        },
+        {
+            "question": "Where should incorrect guidance be fixed?",
+            "answer": "Fix the source that emitted the step: contract meaning, dependency reflection, setup-flow validation, scene-readiness validation, or graph projection. Do not hardcode a one-off Guide/Hygiene sentence."
+        }
+    ]
+}

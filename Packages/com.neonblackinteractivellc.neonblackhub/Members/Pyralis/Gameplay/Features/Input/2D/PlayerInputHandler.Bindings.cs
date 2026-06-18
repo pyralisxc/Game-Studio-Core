@@ -91,8 +91,13 @@ namespace NeonBlack.Gameplay.Features.Input
 
         public void ApplyInputProfile(PawnProfileApplicationContext context, InputProfile inputProfile)
         {
+            _receivedParticipantInputProfile = true;
+
             if (inputProfile == null)
+            {
+                ReportMissingInputActionsIfNeeded();
                 return;
+            }
 
             _controller ??= GetComponent<Motor2D>();
             _playerInput ??= GetComponent<PlayerInput>();
@@ -162,8 +167,20 @@ namespace NeonBlack.Gameplay.Features.Input
             if (_inputActions != null || _loggedMissingInputActions)
                 return;
 
+            if (ShouldWaitForParticipantInputProfile())
+                return;
+
             _loggedMissingInputActions = true;
             Debug.LogWarning("[PlayerInputHandler] No InputActionAsset is assigned yet. For participant-spawned pawns, assign Actions on the controlling ParticipantDefinition InputProfile; direct scene pawns can assign Actions on PlayerInput.", this);
+        }
+
+        private bool ShouldWaitForParticipantInputProfile()
+        {
+            if (_receivedParticipantInputProfile)
+                return false;
+
+            PawnRoot pawnRoot = GetComponentInParent<PawnRoot>();
+            return pawnRoot != null && pawnRoot.Participant == null;
         }
     }
 }

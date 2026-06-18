@@ -38,6 +38,8 @@ The Authoring Window has six tabs:
 
 Map owns concrete Unity scene and Inspector setup issues. Hygiene owns code/graph health. Guide and Overview should be shaped by Intent. Facts should remain read-only evidence and vocabulary.
 
+Map and Hygiene export tab-specific JSON snapshots for diagnostics. Map exports current setup reality only. Guide and Hygiene can also export a Route Proof Trace that follows the intent-projected proof path: ordered steps, blockers, direct proof support, source owners, contracts, and diagnostic questions. Route Proof Trace deliberately excludes scene-surface and scene-readiness repair work, and it does not promote broad later capabilities as direct support for a small first proof. Hygiene separates actionable Cleanup Focus from Watch List pressure so large expected scripts remain visible without reading as failures. These exports are read-only evidence for humans and agents; incorrect output should be fixed in contracts, dependency reflection, validators, graph projection, or grammar rather than patched in the export.
+
 ## Current Health
 
 The codebase is in a solid consolidation phase. The authoring graph is carrying real setup guidance, and the runtime setup path is increasingly understandable from contracts, dependency reflection, and validators.

@@ -220,13 +220,13 @@ GameplaySessionBootstrap
 The user-facing Map chain is:
 
 ```text
-Scene Root
--> Session
--> Game Rules
+Gameplay Root
+-> Session Definition
+-> Game Mode
 -> Setup Route
 -> Capabilities
 -> Participants
--> Pawn / No Pawn
+-> Pawn Setup
 -> Scene Surfaces
 ```
 
@@ -415,9 +415,27 @@ Hygiene should be graph integrity, not a second scene checklist. Evidence cards 
 
 Hygiene can mention source detail, but concrete Unity repair and inspection actions belong in Map or the Inspector. This keeps Hygiene useful for developers auditing the resolved graph without making it compete with the beginner setup flow.
 
-Hygiene may offer the same compact read-only Graph JSON Snapshot button as Map, with the view marked as `Hygiene`, so developers and agents can inspect graph summary, Hygiene sections/rows, proof blockers, source-origin counts, dependency pressure summaries, top dependency-pressure records, and contract source pressure outside the Unity UI without scraping visible text. It should not include Map-only setup rows. Hygiene remains useful before a setup route exists: graph-specific sections may be empty, but dependency pressure and source audit data should still export. Contract inventory that has not been route-evaluated should be labeled as inventory, not as actionable graph failure. The shared export action should keep Map and Hygiene on one implementation while writing the current tab's graph view separately.
+Hygiene may offer the same compact read-only Graph JSON Snapshot button as Map, with the view marked as `Hygiene`, so developers and agents can inspect graph summary, Hygiene sections/rows, proof blockers, source-origin counts, dependency pressure summaries, cleanup focus, watch-list pressure, top dependency-pressure records, and contract source pressure outside the Unity UI without scraping visible text. It should not include Map-only setup rows. Hygiene remains useful before a setup route exists: graph-specific sections may be empty, but dependency pressure and source audit data should still export. Contract inventory that has not been route-evaluated should be labeled as inventory, not as actionable graph failure. The shared export action should keep Map and Hygiene on one implementation while writing the current tab's graph view separately.
 
-Hygiene pressure kinds are not all cleanup commands. `RuntimeOwnership` and `CompatibilitySurface` are the default cleanup focus. `PawnCoordinator`, `PawnCapabilitySibling`, `LocalPresentationSurface`, `SceneZoneSurface`, `InputRoutingSurface`, `EnemyCapabilityModule`, `ActorFeatureContext`, `SceneCameraRig`, `AuthoredDataAsset`, `HazardRuntimeSurface`, `DomainUtility`, `FeatureModule`, `AuthoredRuntimeSurface`, `GameFlowRuntimeSurface`, `AcceptedComposition`, `ReferenceAssembly`, `EditorAudit`, `GrammarVocabulary`, and `ScannerImplementation` describe expected pressure shapes unless their review hint says they have crossed ownership boundaries.
+Hygiene pressure kinds are not all cleanup commands. `RuntimeOwnership` and `CompatibilitySurface` are the default cleanup focus. `PawnCoordinator`, `PawnCapabilitySibling`, `LocalPresentationSurface`, `SceneZoneSurface`, `InputRoutingSurface`, `EnemyCapabilityModule`, `ActorFeatureContext`, `SceneCameraRig`, `AuthoredDataAsset`, `HazardRuntimeSurface`, `DomainUtility`, `FeatureModule`, `AuthoredRuntimeSurface`, `GameFlowRuntimeSurface`, `AcceptedComposition`, `ReferenceAssembly`, `EditorAudit`, `GrammarVocabulary`, and `ScannerImplementation` describe expected pressure shapes unless their review hint says they have crossed ownership boundaries. The UI should separate Cleanup Focus from Watch List so expected large scripts stay visible without reading as failures.
+
+### Route Proof Trace Export
+
+Guide and Hygiene may export a compact **Route Proof Trace** JSON packet. This is an editor-only, read-only diagnostic view of the current proof route, not a preset, generator, setup model, or replacement for Map/Hygiene snapshots. Map exports only its current setup snapshot and should not offer Route Proof Trace.
+
+The trace should serialize the intent-projected **fresh-scene setup-card path**: current route, intent focus, first proof priority, proof node, ordered setup cards, proof blockers, direct proof context, supporting contracts, source owners, assignment fields, native setup actions, graph summary, and diagnostic questions for humans or agents. The ordered cards should approximate the path a user would follow from an empty scene to the selected first proof: Gameplay Root, visible Lifetime Scope, Session Definition, Game Mode, route capabilities, participants, input, pawn definition, pawn prefab/runtime validation, proof enhancers when helpful, then the Play Mode proof target.
+
+The export separates route cards into three audit buckets:
+
+- `criticalPath`: required setup cards that must be clear before the selected first proof is believable. Lifetime Scope belongs here because scene composition is real setup, not optional polish.
+- `proofEnhancers`: useful cards such as camera framing, visual/collision tuning, or movement feel that make the first proof easier to judge without blocking required setup.
+- `canWait`: optional, candidate, off-route, or later-route vocabulary such as scoring, tabletop, settings, or playfield cards when they are not required by the selected proof.
+
+`orderedSteps` is the compact visible route: critical path, proof enhancers, then the final proof target. It should not include every optional contract or broad route vocabulary item.
+
+The trace must not become a broad contract-support graph. Contracts can appear as proof context, but the ordered route path should come first from setup-flow evidence, runtime validation evidence, dependency-tree gaps, and fallback setup-chain nodes. It should also avoid promoting broad selected-but-later capabilities such as networking or procedural generation as direct setup cards for a local movement proof. The trace exists to answer: "What cards would Overview/Guide show, in what order, if the user had to build this proof from scratch?"
+
+If the trace is wrong, fix the upstream owner: gameplay contract meaning, dependency-tree reflection, validator evidence, graph projection, or generic grammar wording. Do not hardcode special trace text to make one proof look right.
 
 ### Native Creation Workflow
 

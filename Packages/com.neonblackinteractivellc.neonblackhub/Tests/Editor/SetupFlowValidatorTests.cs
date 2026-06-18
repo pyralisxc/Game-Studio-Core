@@ -916,6 +916,7 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
 
             try
             {
+                movementProfile.movementStyle = Pawn2DMovementStyle.SideViewGravity;
                 movementProfile.allow2DJump = true;
                 Rigidbody2D body = root.AddComponent<Rigidbody2D>();
                 body.gravityScale = 3f;
@@ -933,6 +934,72 @@ Assert.That(brawler.RelatedStableIds, Does.Contain("capability.combat-projectile
             finally
             {
                 Object.DestroyImmediate(root);
+                Object.DestroyImmediate(movementProfile);
+                Object.DestroyImmediate(pawn);
+            }
+        }
+
+        [Test]
+        public void PyralisPawnPrefabReadinessAnalysis_TopDownJumpRequiresHopFeature()
+        {
+            PawnDefinition pawn = ScriptableObject.CreateInstance<PawnDefinition>();
+            PawnMovementProfile movementProfile = ScriptableObject.CreateInstance<PawnMovementProfile>();
+            GameObject root = new GameObject("Top Down Jump Pawn");
+
+            try
+            {
+                movementProfile.movementStyle = Pawn2DMovementStyle.TopDownNoGravity;
+                movementProfile.allow2DJump = true;
+                Rigidbody2D body = root.AddComponent<Rigidbody2D>();
+                body.gravityScale = 0f;
+                body.constraints = RigidbodyConstraints2D.FreezeRotation;
+                root.AddComponent<PolygonCollider2D>();
+                root.AddComponent<Pawn2DMovementComponent>();
+                pawn.pawnPrefab = root;
+                pawn.movementProfile = movementProfile;
+
+                List<string> issues = PyralisPawnPrefabReadinessAnalysis.BuildIssues(pawn);
+
+                Assert.That(issues.Any(issue => issue.Contains("TopDownHop feature module")), Is.True);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+                Object.DestroyImmediate(movementProfile);
+                Object.DestroyImmediate(pawn);
+            }
+        }
+
+        [Test]
+        public void PyralisPawnPrefabReadinessAnalysis_TopDownHopFeatureSatisfiesTopDownJump()
+        {
+            PawnDefinition pawn = ScriptableObject.CreateInstance<PawnDefinition>();
+            PawnMovementProfile movementProfile = ScriptableObject.CreateInstance<PawnMovementProfile>();
+            FeatureModuleDefinition hopFeature = ScriptableObject.CreateInstance<FeatureModuleDefinition>();
+            GameObject root = new GameObject("Top Down Hop Pawn");
+
+            try
+            {
+                movementProfile.movementStyle = Pawn2DMovementStyle.TopDownNoGravity;
+                movementProfile.allow2DJump = true;
+                hopFeature.moduleId = "actor.traversal.topdown-hop";
+                Rigidbody2D body = root.AddComponent<Rigidbody2D>();
+                body.gravityScale = 0f;
+                body.constraints = RigidbodyConstraints2D.FreezeRotation;
+                root.AddComponent<PolygonCollider2D>();
+                root.AddComponent<Pawn2DMovementComponent>();
+                pawn.pawnPrefab = root;
+                pawn.movementProfile = movementProfile;
+                pawn.featureModules = new[] { hopFeature };
+
+                List<string> issues = PyralisPawnPrefabReadinessAnalysis.BuildIssues(pawn);
+
+                Assert.That(issues.Any(issue => issue.Contains("TopDownHop feature module")), Is.False);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+                Object.DestroyImmediate(hopFeature);
                 Object.DestroyImmediate(movementProfile);
                 Object.DestroyImmediate(pawn);
             }

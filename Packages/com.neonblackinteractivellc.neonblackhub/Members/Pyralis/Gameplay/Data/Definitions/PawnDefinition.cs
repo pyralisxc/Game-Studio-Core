@@ -25,6 +25,8 @@ namespace NeonBlack.Gameplay.Data.Definitions
     [CreateAssetMenu(menuName = "NeonBlack/Definitions/Pawn Definition", fileName = "PawnDefinition", order = 30)]
     public class PawnDefinition : ScriptableObject, IRuntimeValidationProvider
     {
+        private const string ActorAnimationDriverTypeFullName = "NeonBlack.Gameplay.Presentation.Animation.ActorAnimationDriver";
+
         public IEnumerable<string> GetRuntimeValidationIssues()
         {
             return GetValidationIssues();
@@ -77,7 +79,68 @@ namespace NeonBlack.Gameplay.Data.Definitions
                 }
             }
 
+            if (pawnPrefab != null)
+                AppendPawnPrefabValidationProviderIssues(pawnPrefab, issues);
+
             return issues;
+        }
+
+        private void AppendPawnPrefabValidationProviderIssues(GameObject pawnPrefab, List<string> issues)
+        {
+            MonoBehaviour[] behaviours = pawnPrefab.GetComponentsInChildren<MonoBehaviour>(true);
+            for (int i = 0; i < behaviours.Length; i++)
+            {
+                if (IsActorAnimationDriver(behaviours[i]))
+                {
+                    AppendActorAnimationDriverIssues(pawnPrefab, behaviours[i], issues);
+                    continue;
+                }
+
+                if (behaviours[i] is not IRuntimeValidationProvider provider)
+                    continue;
+
+                foreach (string issue in provider.GetRuntimeValidationIssues())
+                {
+                    if (!string.IsNullOrWhiteSpace(issue))
+                        issues.Add($"Pawn Prefab `{pawnPrefab.name}`: {issue}");
+                }
+            }
+        }
+
+        private void AppendActorAnimationDriverIssues(GameObject pawnPrefab, MonoBehaviour animationDriver, List<string> issues)
+        {
+            if (animationDriver == null)
+                return;
+
+            bool hasAnimator = GetObjectProperty<Animator>(animationDriver, "Animator") != null
+                || animationDriver.GetComponentInChildren<Animator>(true) != null;
+            bool hasPresentationProfile = presentationProfile != null
+                || GetObjectProperty<PawnPresentationProfile>(animationDriver, "PresentationProfile") != null;
+            bool hasAnimationProfile = animationProfile != null
+                || GetObjectProperty<PawnAnimationProfile>(animationDriver, "AnimationProfile") != null;
+
+            if (!hasAnimator)
+                issues.Add($"Pawn Prefab `{pawnPrefab.name}`: Add an Animator to the pawn root or visual child so ActorAnimationDriver can drive animation signals.");
+
+            if (!hasPresentationProfile)
+                issues.Add($"Pawn Prefab `{pawnPrefab.name}`: Assign PawnDefinition.presentationProfile for participant-spawned pawns, or ActorAnimationDriver.presentationProfile for direct scene actors.");
+
+            if (!hasAnimationProfile)
+                issues.Add($"Pawn Prefab `{pawnPrefab.name}`: Assign PawnDefinition.animationProfile so the spawned pawn can apply animation signal bindings.");
+        }
+
+        private static bool IsActorAnimationDriver(MonoBehaviour behaviour)
+        {
+            return behaviour != null && behaviour.GetType().FullName == ActorAnimationDriverTypeFullName;
+        }
+
+        private static T GetObjectProperty<T>(object instance, string propertyName) where T : Object
+        {
+            if (instance == null || string.IsNullOrWhiteSpace(propertyName))
+                return null;
+
+            System.Reflection.PropertyInfo property = instance.GetType().GetProperty(propertyName);
+            return property != null ? property.GetValue(instance) as T : null;
         }
     }
 }

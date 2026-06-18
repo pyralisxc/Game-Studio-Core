@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 731da92980c191340b2b7f66f754b612, type: 3}
   m_Name: PawnMovementProfile
   m_EditorClassIdentifier: NeonBlack.Gameplay.Data::NeonBlack.Gameplay.Data.Profiles.PawnMovementProfile
-  movementMode: 0
+  movementMode: 1
   walkSpeed: 5
   sprintSpeed: 10
   crouchSpeed: 2.5
@@ -23,10 +23,11 @@ MonoBehaviour:
   allowDepthMovement: 1
   allowScreenWrap: 0
   depthSpeedMultiplier: 0.6
-  allow2DDash: 1
+  movementStyle: 0
+  allow2DDash: 0
   dashSpeed: 12
   dashDuration: 0.15
   dashCooldown: 0.8
-  allow2DJump: 0
+  allow2DJump: 1
   jumpVelocity2D: 8
   gravityScale2D: 3

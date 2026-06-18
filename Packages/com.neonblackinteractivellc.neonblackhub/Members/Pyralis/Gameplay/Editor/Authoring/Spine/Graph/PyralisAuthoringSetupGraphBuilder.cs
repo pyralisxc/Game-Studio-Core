@@ -150,7 +150,7 @@ namespace NeonBlack.Gameplay.Editor
 
             AddNode(nodes, new PyralisAuthoringGraphNode(
                 "pawn.definition",
-                requiresPawn ? "Pawn Definition" : "Pawn / No Pawn",
+                requiresPawn ? "Pawn Definition" : "No Pawn Needed",
                 PyralisAuthoringGraphNodeKind.UnitySurfaceRequirement,
                 PyralisAuthoringGraphSourceKind.SetupFlow,
                 pawnReady ? PyralisAuthoringGraphEvidenceState.Ready : PyralisAuthoringGraphEvidenceState.Missing,

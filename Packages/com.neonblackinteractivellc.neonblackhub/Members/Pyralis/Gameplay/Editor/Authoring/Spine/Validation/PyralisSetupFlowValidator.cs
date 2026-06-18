@@ -898,7 +898,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             if (pawn == null)
                 return "Tune movement and input after a ParticipantDefinition references a PawnDefinition.";
 
-            return "Before judging Play Mode, inspect the PawnMovementProfile, effective InputProfile, and installed FeatureModuleDefinition assets. Use top-down 2D defaults for free X/Y movement, add a top-down hop feature when Jump should lift the visual while staying map-plane grounded, or use side-view 2D settings when Jump should drive Rigidbody2D vertical motion. The InputProfile maps Unity Input Actions into semantic roles; the pawn prefab still needs an input module such as Motor2DInputAdapter to dispatch those roles.";
+            return "Before judging Play Mode, inspect the PawnMovementProfile, effective InputProfile, and installed FeatureModuleDefinition assets. Use PawnMovementProfile > Movement Style = TopDownNoGravity for free X/Y movement, add a top-down hop feature when Jump should lift the visual while staying map-plane grounded, or set Movement Style = SideViewGravity when Jump should drive Rigidbody2D vertical motion. The InputProfile maps Unity Input Actions into semantic roles; the pawn prefab still needs an input module such as Motor2DInputAdapter to dispatch those roles.";
         }
 
         private static bool HasUsable2DCameraBounds(CinemachineCameraRigController rig, GameModeDefinition mode)

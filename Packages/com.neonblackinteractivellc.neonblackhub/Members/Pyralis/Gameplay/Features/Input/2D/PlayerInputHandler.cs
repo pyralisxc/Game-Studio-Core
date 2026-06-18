@@ -99,6 +99,7 @@ public partial class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver,
     private RectTransform       _dashZone; // assigned by ApplySettings; right zone by default
     private bool                _loggedMissingGameplayState;
     private bool                _loggedMissingInputActions;
+    private bool                _receivedParticipantInputProfile;
     private InputProfile        _inputProfile;
 
     // Unity Lifecycle

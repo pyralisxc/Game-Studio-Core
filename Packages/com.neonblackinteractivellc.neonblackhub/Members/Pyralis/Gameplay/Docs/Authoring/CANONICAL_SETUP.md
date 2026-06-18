@@ -99,7 +99,7 @@ Before wiring scenes or prefabs, use the Authoring Window and asset Inspectors t
 - turn/menu games include action or targeting capabilities
 - validation issues are resolved or intentionally deferred
 
-Assign `GameModeDefinition` to `SessionDefinition.defaultGameMode`, then fill the mode fields, participants, pawns, feature modules, profiles, and grammar vocabulary and reflected contracts that the route needs so validation can surface setup problems early.
+Assign `GameModeDefinition` to `SessionDefinition.defaultGameMode`, then assign each player, AI, seat, hand, faction, or command owner to `SessionDefinition.defaultParticipants`. Loose assets can help the Authoring Window keep context while you wire the route, but they are not runtime-ready until the session references them. After the session owns the mode and participants, fill pawns, feature modules, profiles, and reflected contracts that the route needs so validation can surface setup problems early.
 
 ## 3. Participant And Pawn Wiring
 
@@ -158,7 +158,9 @@ For a beginner 2D movement proof, the clean prefab route is:
 
 `Motor2D` is the shared 2D pawn motor surface. Movement, presentation, and input live in focused sibling components so the stack stays inspectable and profile-driven.
 
-`PawnMovementProfile.Effective2DMovementStyle` decides the Rigidbody2D controller mode for this stack. Top-down/no-gravity movement uses a Kinematic Rigidbody2D moved by script on X/Y. Side-view/gravity movement uses a Dynamic Rigidbody2D for gravity, vertical jump, and ground checks. Keep both routes on the same beginner-facing pawn stack until a game route needs specialized presenter or movement-driver scripts.
+`PawnMovementProfile.movementStyle` decides the Rigidbody2D controller mode for this stack. Top-down/no-gravity movement uses a Kinematic Rigidbody2D moved by script on X/Y. Side-view/gravity movement uses a Dynamic Rigidbody2D for gravity, vertical jump, and ground checks. `allow2DJump` only enables the built-in side-view jump fallback; top-down/no-gravity hops should use a `TopDownHopFeatureRuntime` feature module that lifts a visual child while the pawn root stays on the map plane.
+
+For a top-down/no-gravity visual hop, create a `TopDownHopProfile`, create a `FeatureModuleDefinition` with module id `actor.traversal.topdown-hop`, create or assign a runtime prefab whose root has `TopDownHopFeatureRuntime`, assign the profile to `FeatureModuleDefinition.profileAsset`, assign the runtime prefab to `FeatureModuleDefinition.runtimePrefab`, then add that feature module to `PawnDefinition.featureModules`.
 
 The 2D input stack reads movement, dash/jump, attack, secondary attack, interact, and block action names from the effective `InputProfile`. This lets project Input Actions keep custom names while Pyralis still knows which gameplay role each action fills.
 

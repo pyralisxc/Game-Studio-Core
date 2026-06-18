@@ -1151,6 +1151,7 @@ namespace NeonBlack.Gameplay.Features.Enemies.Editor.Inspectors
                         "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Platform/Session/NoRoutePressure.cs",
                         "using NeonBlack.Gameplay.Features.Input; using NeonBlack.Gameplay.Features.Combat; class NoRoutePressure { }")
                 });
+            string routeProofTraceJson = PyralisAuthoringSetupGraphJsonExporter.ToRouteProofTraceJson(graph);
 
             Assert.That(mapJson, Does.Contain("pyralis.authoring.mapSnapshot.v1"));
             Assert.That(mapJson, Does.Contain("\"view\": \"Map\""));
@@ -1173,6 +1174,7 @@ namespace NeonBlack.Gameplay.Features.Enemies.Editor.Inspectors
             Assert.That(hygieneJson, Does.Contain("\"dependencyPressureSummary\""));
             Assert.That(hygieneJson, Does.Contain("\"pressureKindCounts\""));
             Assert.That(hygieneJson, Does.Contain("\"cleanupFocus\""));
+            Assert.That(hygieneJson, Does.Contain("\"watchList\""));
             Assert.That(hygieneJson, Does.Contain("\"dependencyPressure\""));
             Assert.That(hygieneJson, Does.Contain("\"pressureKind\""));
             Assert.That(hygieneJson, Does.Contain("\"reviewHint\""));
@@ -1188,6 +1190,124 @@ namespace NeonBlack.Gameplay.Features.Enemies.Editor.Inspectors
             Assert.That(noRouteHygieneJson, Does.Contain("\"dependencyPressure\""));
             Assert.That(noRouteHygieneJson, Does.Contain("\"nodeCount\": 0"));
             Assert.That(noRouteHygieneJson, Does.Not.Contain("\"mapRows\""));
+
+            Assert.That(routeProofTraceJson, Does.Contain("pyralis.authoring.routeProofTrace.v1"));
+            Assert.That(routeProofTraceJson, Does.Contain("\"view\": \"RouteProofTrace\""));
+            Assert.That(routeProofTraceJson, Does.Contain("\"proof\""));
+            Assert.That(routeProofTraceJson, Does.Contain("\"orderedSteps\""));
+            Assert.That(routeProofTraceJson, Does.Contain("\"criticalPath\""));
+            Assert.That(routeProofTraceJson, Does.Contain("\"proofEnhancers\""));
+            Assert.That(routeProofTraceJson, Does.Contain("\"canWait\""));
+            Assert.That(routeProofTraceJson, Does.Contain("\"proofBlockers\""));
+            Assert.That(routeProofTraceJson, Does.Contain("\"proofSupport\""));
+            Assert.That(routeProofTraceJson, Does.Contain("\"diagnosticQuestions\""));
+            Assert.That(routeProofTraceJson, Does.Contain("setup.session"));
+            Assert.That(routeProofTraceJson, Does.Not.Contain("validation.input-profile"));
+            Assert.That(routeProofTraceJson, Does.Not.Contain("\"mapRows\""));
+            Assert.That(routeProofTraceJson, Does.Not.Contain("\"hygieneSections\""));
+        }
+
+        [Test]
+        public void SetupGraphProjection_FocusedProofSupportDoesNotPromoteLaterCapabilities()
+        {
+            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
+            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
+            ParticipantDefinition participant = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            session.defaultGameMode = mode;
+            session.defaultParticipants = new[] { participant };
+
+            PyralisAuthoringIntentSelection intent = new PyralisAuthoringIntentSelection(
+                RuntimeCapabilityLaneTag.Sprite2D,
+                AuthoringCapability.Movement
+                    | AuthoringCapability.Input
+                    | AuthoringCapability.Camera
+                    | AuthoringCapability.Animation
+                    | AuthoringCapability.Networking
+                    | AuthoringCapability.Environment,
+                AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone | AuthoringWorldAxiom.Realtime);
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(session, intent);
+            IReadOnlyList<PyralisAuthoringGraphConnectionRow> allProofSupport =
+                PyralisAuthoringSetupGraphProjection.BuildProofSupportRows(graph);
+            IReadOnlyList<PyralisAuthoringGraphConnectionRow> directProofSupport =
+                PyralisAuthoringSetupGraphProjection.BuildDirectProofSupportRows(graph);
+            string routeTraceJson = PyralisAuthoringSetupGraphJsonExporter.ToRouteProofTraceJson(graph);
+
+            Assert.That(allProofSupport.Any(row => row.From?.CapabilityFamily == RuntimeCapabilityFamily.Networking), Is.True);
+            Assert.That(directProofSupport.Any(row => row.From?.CapabilityFamily == RuntimeCapabilityFamily.Networking), Is.False);
+            Assert.That(directProofSupport.Any(row => row.From?.CapabilityFamily == RuntimeCapabilityFamily.ProceduralGeneration), Is.False);
+            Assert.That(directProofSupport.Any(row => row.From?.CapabilityFamily == RuntimeCapabilityFamily.CharacterPawnGameplay), Is.True);
+            Assert.That(routeTraceJson, Does.Not.Contain("\"from\": \"Networking\""));
+            Assert.That(routeTraceJson, Does.Not.Contain("\"from\": \"Procedural Generation\""));
+
+            Object.DestroyImmediate(participant);
+            Object.DestroyImmediate(mode);
+            Object.DestroyImmediate(session);
+        }
+
+        [Test]
+        public void SetupGraphProjection_RouteProofTraceSeparatesRequiredEnhancerAndCanWaitCards()
+        {
+            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
+            PyralisAuthoringGraphNode lifetimeScope = new PyralisAuthoringGraphNode(
+                "setupflow.setup-visible-lifetime-scope",
+                "Visible Lifetime Scope",
+                PyralisAuthoringGraphNodeKind.ValidationEvidence,
+                PyralisAuthoringGraphSourceKind.SetupFlow,
+                PyralisAuthoringGraphEvidenceState.Missing,
+                workIntent: PyralisAuthoringGraphWorkIntent.RequiredSetup);
+            PyralisAuthoringGraphNode scoring = new PyralisAuthoringGraphNode(
+                "setupflow.setup-enable-scoring-route",
+                "Enable Scoring Route",
+                PyralisAuthoringGraphNodeKind.ValidationEvidence,
+                PyralisAuthoringGraphSourceKind.SetupFlow,
+                PyralisAuthoringGraphEvidenceState.Optional,
+                workIntent: PyralisAuthoringGraphWorkIntent.Optional);
+            PyralisAuthoringGraphNode settings = new PyralisAuthoringGraphNode(
+                "setupflow.setup-assign-settings-manager",
+                "Assign Settings Manager",
+                PyralisAuthoringGraphNodeKind.ValidationEvidence,
+                PyralisAuthoringGraphSourceKind.SetupFlow,
+                PyralisAuthoringGraphEvidenceState.CandidateDetected);
+            PyralisAuthoringGraphNode cameraEnhancer = new PyralisAuthoringGraphNode(
+                "setupflow.setup-tune-camera-framing",
+                "Tune Camera Framing",
+                PyralisAuthoringGraphNodeKind.ValidationEvidence,
+                PyralisAuthoringGraphSourceKind.SetupFlow,
+                PyralisAuthoringGraphEvidenceState.CandidateDetected,
+                workIntent: PyralisAuthoringGraphWorkIntent.ProofEnhancer);
+            PyralisAuthoringGraphNode proof = new PyralisAuthoringGraphNode(
+                "proof.1p-pawn-movement",
+                "1P Pawn Movement Proof",
+                PyralisAuthoringGraphNodeKind.Proof,
+                PyralisAuthoringGraphSourceKind.ProofVocabulary,
+                PyralisAuthoringGraphEvidenceState.Missing);
+            PyralisAuthoringSetupGraph graph = new PyralisAuthoringSetupGraph(
+                session,
+                null,
+                new[] { lifetimeScope, scoring, settings, cameraEnhancer, proof },
+                System.Array.Empty<PyralisAuthoringGraphEdge>());
+
+            IReadOnlyList<PyralisAuthoringRouteStepRow> criticalPath = PyralisAuthoringSetupGraphProjection.BuildRouteCriticalPathRows(graph);
+            IReadOnlyList<PyralisAuthoringRouteStepRow> proofEnhancers = PyralisAuthoringSetupGraphProjection.BuildRouteProofEnhancerRows(graph);
+            IReadOnlyList<PyralisAuthoringRouteStepRow> canWait = PyralisAuthoringSetupGraphProjection.BuildRouteCanWaitRows(graph);
+            IReadOnlyList<PyralisAuthoringRouteStepRow> orderedSteps = PyralisAuthoringSetupGraphProjection.BuildRouteStepRows(graph);
+            string routeTraceJson = PyralisAuthoringSetupGraphJsonExporter.ToRouteProofTraceJson(graph);
+
+            Assert.That(criticalPath.Select(row => row.Label), Does.Contain("Visible Lifetime Scope"));
+            Assert.That(criticalPath.Select(row => row.Label), Does.Not.Contain("Enable Scoring Route"));
+            Assert.That(proofEnhancers.Select(row => row.Label), Does.Contain("Tune Camera Framing"));
+            Assert.That(canWait.Select(row => row.Label), Does.Contain("Enable Scoring Route"));
+            Assert.That(canWait.Select(row => row.Label), Does.Contain("Assign Settings Manager"));
+            Assert.That(orderedSteps.Select(row => row.Label), Does.Contain("Visible Lifetime Scope"));
+            Assert.That(orderedSteps.Select(row => row.Label), Does.Contain("Tune Camera Framing"));
+            Assert.That(orderedSteps.Select(row => row.Label), Does.Not.Contain("Enable Scoring Route"));
+            Assert.That(orderedSteps.Last().StableId, Is.EqualTo("proof.1p-pawn-movement"));
+            Assert.That(routeTraceJson, Does.Contain("\"criticalPath\""));
+            Assert.That(routeTraceJson, Does.Contain("\"proofEnhancers\""));
+            Assert.That(routeTraceJson, Does.Contain("\"canWait\""));
+
+            Object.DestroyImmediate(session);
         }
 
         [Test]
@@ -1463,7 +1583,7 @@ namespace NeonBlack.Gameplay.Features.Enemies.Editor.Inspectors
                 && edge.Kind == PyralisAuthoringGraphEdgeKind.BlockedBy
                 && edge.ToNodeId.StartsWith("runtimevalidation.", System.StringComparison.Ordinal)), Is.True);
             Assert.That(PyralisAuthoringSetupGraphProjection.BuildSetupMapRows(graph)
-                .Any(row => row.Label == "Pawn / No Pawn" && row.IsMissing && row.Message.Contains("pawn prefab")), Is.True);
+                .Any(row => row.Label == "Pawn Setup" && row.IsMissing && row.Message.Contains("pawn prefab")), Is.True);
 
             Object.DestroyImmediate(pawn);
             Object.DestroyImmediate(participant);
@@ -1528,13 +1648,15 @@ namespace NeonBlack.Gameplay.Features.Enemies.Editor.Inspectors
                 .Any(row => row.To != null && row.To.StableId == "pawn.definition"), Is.True);
             IReadOnlyList<PyralisAuthoringRouteStepRow> routeSteps = PyralisAuthoringSetupGraphProjection.BuildRouteStepRows(graph);
             Assert.That(routeSteps.Count, Is.GreaterThanOrEqualTo(2));
-            Assert.That(routeSteps[0].Role, Is.EqualTo(PyralisAuthoringRouteStepRole.DoThisFirst));
+            Assert.That(routeSteps[0].Phase, Is.EqualTo(PyralisAuthoringRouteStepPhase.Foundation));
             Assert.That(routeSteps.Any(row => row.StableId == "route.shape"
                 && (row.Role == PyralisAuthoringRouteStepRole.BlocksProof || row.Role == PyralisAuthoringRouteStepRole.RouteContext)), Is.True);
             Assert.That(routeSteps.Any(row => row.StableId == "pawn.definition"
                 && (row.Role == PyralisAuthoringRouteStepRole.DoThisFirst || row.Role == PyralisAuthoringRouteStepRole.BlocksProof)), Is.True);
             Assert.That(routeSteps.Any(row => row.StableId == "proof.1p-pawn-movement"
                 && row.Role == PyralisAuthoringRouteStepRole.ProofTarget), Is.True);
+            Assert.That(routeSteps.Last().StableId, Is.EqualTo("proof.1p-pawn-movement"));
+            Assert.That(routeSteps.Select(row => row.StableId).ToArray(), Does.Contain("route.participant-input-profile"));
             Assert.That(PyralisAuthoringSetupGraphProjection.BuildRouteShapeSummary(graph), Does.Contain("Participant With Pawn"));
 
             Object.DestroyImmediate(participant);
@@ -1741,6 +1863,38 @@ namespace NeonBlack.Gameplay.Features.Enemies.Editor.Inspectors
                 .Any(node => node.CapabilityFamily != RuntimeCapabilityFamily.PlatformCore), Is.False);
             Assert.That(PyralisAuthoringSetupGraphProjection.BuildIntentFocusSummary(graph), Does.Contain("setup foundation only"));
             Assert.That(PyralisAuthoringSetupGraphProjection.BuildRouteShapeSummary(graph), Does.Contain("Setup Foundation"));
+
+            Object.DestroyImmediate(mode);
+            Object.DestroyImmediate(session);
+        }
+
+        [Test]
+        public void SetupGraph_IntentPawnRoute_DoesNotSatisfySessionParticipants()
+        {
+            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
+            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
+            session.defaultGameMode = mode;
+
+            PyralisAuthoringIntentSelection intent = new PyralisAuthoringIntentSelection(
+                RuntimeCapabilityLaneTag.Sprite2D,
+                AuthoringCapability.Movement | AuthoringCapability.Input | AuthoringCapability.Participants,
+                AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.Realtime);
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(session, intent);
+            string mapJson = PyralisAuthoringSetupGraphJsonExporter.ToMapJson(graph);
+
+            Assert.That(mapJson, Does.Contain("\"requiresPawn\": true"));
+            Assert.That(mapJson, Does.Contain("\"hasParticipants\": false"));
+            Assert.That(mapJson, Does.Contain("\"hasAnyDefaultPawn\": false"));
+            Assert.That(mapJson, Does.Contain("\"participantPawnIssueKind\": \"MissingParticipants\""));
+            Assert.That(graph.TryFindNode("participant.default", out PyralisAuthoringGraphNode participantsNode), Is.True);
+            Assert.That(participantsNode.EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.Missing));
+            Assert.That(graph.TryFindNode("pawn.definition", out PyralisAuthoringGraphNode pawnNode), Is.True);
+            Assert.That(pawnNode.EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.Missing));
+
+            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(session, graph);
+            Assert.That(model.ReadyToPressPlay, Is.False);
+            Assert.That(model.DoNow.Select(issue => issue.Label), Does.Contain("Assign Default Participants"));
 
             Object.DestroyImmediate(mode);
             Object.DestroyImmediate(session);

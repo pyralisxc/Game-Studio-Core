@@ -51,8 +51,10 @@ Pawn animation is data-driven and Unity-authored:
 1. `PawnDefinition` points to presentation and animation assets.
 2. `PawnPresentationProfile` declares whether the pawn is 2D, 2.5D, or rigged 3D.
 3. `PawnAnimationProfile` maps gameplay signals to Animator behavior.
-4. `ActorAnimationDriver` applies those mappings at runtime.
+4. `ActorAnimationDriver` applies those mappings at runtime after `PawnRoot` receives the participant-owned pawn setup.
 5. movement, combat, and traversal systems emit shared animation signals instead of owning Animator logic directly.
+
+For participant-spawned pawns, profile fields belong on `PawnDefinition`; prefab components should carry the Unity-native objects they own, such as the visual `Animator`. Component profile fields are for direct scene actors or advanced overrides.
 
 ## Recommended reading
 

@@ -8,6 +8,7 @@ using NeonBlack.Gameplay.Features.Hazards;
 using NeonBlack.Gameplay.Features.Feedback;
 using NeonBlack.Gameplay.Features.Feedback.UI;
 using NeonBlack.Gameplay.Features.Composition;
+using NeonBlack.Gameplay.Features.Traversal;
 using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Editor;
 using NeonBlack.Gameplay.Editor.Inspectors;
@@ -667,7 +668,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             definition.profileAsset = ScriptableObject.CreateInstance<TopDownHopProfile>();
             definition.supportedPresentationModes = new[] { ActorPresentationMode.Sprite2D, ActorPresentationMode.Billboard2_5D };
             definition.runtimePrefab = new GameObject("TopDownHopRuntime");
-            definition.runtimePrefab.AddComponent<TestGameplayActionFeatureRuntime>();
+            definition.runtimePrefab.AddComponent<TopDownHopFeatureRuntime>();
 
             System.Collections.Generic.List<string> issues = definition.GetValidationIssues();
             issues.AddRange(PyralisFeatureModuleContractValidator.GetValidationIssues(definition));
@@ -695,6 +696,66 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(issues.Exists(issue => issue.Contains("TopDownHopProfile")), Is.True);
             Assert.That(issues.Exists(issue => issue.Contains("Rigged3D actors should use the 3D traversal jump path")), Is.True);
             Assert.That(issues.Exists(issue => issue.Contains("IActorGameplayActionReceiver")), Is.True);
+
+            Object.DestroyImmediate(definition.runtimePrefab);
+            Object.DestroyImmediate(definition.profileAsset);
+            Object.DestroyImmediate(definition);
+        }
+
+        [Test]
+        public void FeatureModuleDefinition_GetValidationIssues_UsesContractSpecificRuntimeGuidance()
+        {
+            FeatureModuleDefinition definition = ScriptableObject.CreateInstance<FeatureModuleDefinition>();
+            definition.moduleId = "actor.traversal.topdown-hop";
+            definition.authoringCategory = "Traversal";
+            definition.runtimePrefab = new GameObject("WrongRuntimePrefab");
+
+            System.Collections.Generic.List<string> issues = definition.GetValidationIssues();
+
+            Assert.That(issues.Exists(issue => issue.Contains("TopDownHopFeatureRuntime")), Is.True);
+            Assert.That(issues.Exists(issue => issue.Contains("TopDownHopProfile")), Is.True);
+
+            Object.DestroyImmediate(definition.runtimePrefab);
+            Object.DestroyImmediate(definition);
+        }
+
+        [Test]
+        public void FeatureModuleDefinition_GetValidationIssues_DoesNotLeakWrongPrefabValidation()
+        {
+            FeatureModuleDefinition definition = ScriptableObject.CreateInstance<FeatureModuleDefinition>();
+            definition.moduleId = "actor.traversal.topdown-hop";
+            definition.authoringCategory = "Traversal";
+            definition.profileAsset = ScriptableObject.CreateInstance<TopDownHopProfile>();
+            definition.runtimePrefab = new GameObject("PawnPrefabUsedAsFeatureRuntime");
+            definition.runtimePrefab.AddComponent<ActorAnimationDriver>();
+
+            System.Collections.Generic.List<string> issues = definition.GetValidationIssues();
+
+            Assert.That(issues.Exists(issue => issue.Contains("expected feature runtime prefab")), Is.True);
+            Assert.That(issues.Exists(issue => issue.Contains("TopDownHopFeatureRuntime")), Is.True);
+            Assert.That(issues.Exists(issue => issue.Contains("Animation Profile is empty")), Is.False);
+
+            Object.DestroyImmediate(definition.runtimePrefab);
+            Object.DestroyImmediate(definition.profileAsset);
+            Object.DestroyImmediate(definition);
+        }
+
+        [Test]
+        public void FeatureModuleDefinition_GetValidationIssues_RequiresContractRuntimeOnPrefabRoot()
+        {
+            FeatureModuleDefinition definition = ScriptableObject.CreateInstance<FeatureModuleDefinition>();
+            definition.moduleId = "actor.traversal.topdown-hop";
+            definition.authoringCategory = "Traversal";
+            definition.profileAsset = ScriptableObject.CreateInstance<TopDownHopProfile>();
+            definition.runtimePrefab = new GameObject("PawnPrefabWithNestedFeatureRuntime");
+            GameObject featureRuntimeChild = new GameObject("TopDownHopFeatureRuntime");
+            featureRuntimeChild.transform.SetParent(definition.runtimePrefab.transform);
+            featureRuntimeChild.AddComponent<TopDownHopFeatureRuntime>();
+
+            System.Collections.Generic.List<string> issues = definition.GetValidationIssues();
+
+            Assert.That(issues.Exists(issue => issue.Contains("expected feature runtime prefab")), Is.True);
+            Assert.That(issues.Exists(issue => issue.Contains("root has `TopDownHopFeatureRuntime`")), Is.True);
 
             Object.DestroyImmediate(definition.runtimePrefab);
             Object.DestroyImmediate(definition.profileAsset);
@@ -897,7 +958,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
 
         [Test]
-        public void FeatureModuleDefinition_GetActorCompatibilityIssues_FlagsHudPresenterWithoutPresentationSurface()
+        public void FeatureModuleDefinition_GetActorCompatibilityIssues_DoesNotRunUnownedPawnValidationProviders()
         {
             FeatureModuleDefinition definition = ScriptableObject.CreateInstance<FeatureModuleDefinition>();
             definition.moduleId = "actor.feedback";
@@ -908,10 +969,82 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             System.Collections.Generic.List<string> issues = definition.GetActorCompatibilityIssues(actor, ActorPresentationMode.Sprite2D);
 
-            Assert.That(issues.Exists(issue => issue.Contains("ParticipantFeedbackHudPresenter")), Is.True);
+            Assert.That(issues.Exists(issue => issue.Contains("ParticipantFeedbackHudPresenter")), Is.False);
 
             Object.DestroyImmediate(actor);
             Object.DestroyImmediate(definition);
+        }
+
+        [Test]
+        public void PawnDefinition_GetValidationIssues_SeparatesFeatureAndPawnPrefabValidation()
+        {
+            FeatureModuleDefinition module = ScriptableObject.CreateInstance<FeatureModuleDefinition>();
+            module.moduleId = "actor.traversal.topdown-hop";
+            module.authoringCategory = "Traversal";
+            module.profileAsset = ScriptableObject.CreateInstance<TopDownHopProfile>();
+            module.runtimePrefab = new GameObject("PawnPrefabUsedAsFeatureRuntime");
+            module.runtimePrefab.AddComponent<ActorAnimationDriver>();
+
+            PawnDefinition pawn = ScriptableObject.CreateInstance<PawnDefinition>();
+            pawn.pawnPrefab = new GameObject("Pawn");
+            pawn.pawnPrefab.AddComponent<ActorAnimationDriver>();
+            pawn.presentationProfile = ScriptableObject.CreateInstance<PawnPresentationProfile>();
+            pawn.presentationProfile.presentationMode = ActorPresentationMode.Sprite2D;
+            pawn.featureModules = new[] { module };
+
+            System.Collections.Generic.List<string> issues = pawn.GetValidationIssues();
+
+            Assert.That(issues.Exists(issue => issue.Contains("Feature `actor.traversal.topdown-hop`: Runtime Prefab `PawnPrefabUsedAsFeatureRuntime` is not the expected feature runtime prefab")), Is.True);
+            Assert.That(issues.Exists(issue => issue.Contains("Feature `actor.traversal.topdown-hop`: Animation Profile is empty")), Is.False);
+            Assert.That(issues.Exists(issue => issue.Contains("Pawn Prefab `Pawn`: Assign PawnDefinition.animationProfile")), Is.True);
+
+            Object.DestroyImmediate(pawn.pawnPrefab);
+            Object.DestroyImmediate(pawn.presentationProfile);
+            Object.DestroyImmediate(pawn);
+            Object.DestroyImmediate(module.runtimePrefab);
+            Object.DestroyImmediate(module.profileAsset);
+            Object.DestroyImmediate(module);
+        }
+
+        [Test]
+        public void PawnDefinition_GetValidationIssues_UsesPawnOwnedAnimationProfileBeforeDriverField()
+        {
+            PawnDefinition pawn = ScriptableObject.CreateInstance<PawnDefinition>();
+            pawn.pawnPrefab = new GameObject("Pawn");
+            pawn.pawnPrefab.AddComponent<ActorAnimationDriver>();
+            pawn.presentationProfile = ScriptableObject.CreateInstance<PawnPresentationProfile>();
+            pawn.animationProfile = ScriptableObject.CreateInstance<PawnAnimationProfile>();
+
+            System.Collections.Generic.List<string> issues = pawn.GetValidationIssues();
+
+            Assert.That(issues.Exists(issue => issue.Contains("Animation Profile is empty")), Is.False);
+            Assert.That(issues.Exists(issue => issue.Contains("Assign PawnDefinition.animationProfile")), Is.False);
+            Assert.That(issues.Exists(issue => issue.Contains("Add an Animator")), Is.True);
+
+            Object.DestroyImmediate(pawn.animationProfile);
+            Object.DestroyImmediate(pawn.presentationProfile);
+            Object.DestroyImmediate(pawn.pawnPrefab);
+            Object.DestroyImmediate(pawn);
+        }
+
+        [Test]
+        public void PawnDefinition_GetValidationIssues_ClearsAnimationDriverWhenPawnDefinitionOwnsProfilesAndPrefabHasAnimator()
+        {
+            PawnDefinition pawn = ScriptableObject.CreateInstance<PawnDefinition>();
+            pawn.pawnPrefab = new GameObject("Pawn");
+            pawn.pawnPrefab.AddComponent<ActorAnimationDriver>();
+            pawn.pawnPrefab.AddComponent<Animator>();
+            pawn.presentationProfile = ScriptableObject.CreateInstance<PawnPresentationProfile>();
+            pawn.animationProfile = ScriptableObject.CreateInstance<PawnAnimationProfile>();
+
+            System.Collections.Generic.List<string> issues = pawn.GetValidationIssues();
+
+            Assert.That(issues.Exists(issue => issue.Contains("Pawn Prefab `Pawn`:")), Is.False);
+
+            Object.DestroyImmediate(pawn.animationProfile);
+            Object.DestroyImmediate(pawn.presentationProfile);
+            Object.DestroyImmediate(pawn.pawnPrefab);
+            Object.DestroyImmediate(pawn);
         }
 
         private sealed class TestGameplayActionFeatureRuntime : MonoBehaviour, IFeatureModuleRuntime, IActorGameplayActionReceiver

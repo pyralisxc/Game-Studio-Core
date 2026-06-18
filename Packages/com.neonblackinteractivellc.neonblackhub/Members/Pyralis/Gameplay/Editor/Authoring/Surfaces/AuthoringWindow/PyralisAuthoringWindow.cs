@@ -237,7 +237,10 @@ namespace NeonBlack.Gameplay.Editor
                     PyralisAuthoringMapRenderer.Draw(activeSetup, selection, GetCachedCurrentSetupGraph(activeSetup));
                     break;
                 case AuthoringWindowMode.Hygiene:
-                    PyralisAuthoringHygieneRenderer.Draw(activeSetup, GetCachedCurrentSetupGraph(activeSetup));
+                    PyralisAuthoringHygieneRenderer.Draw(
+                        activeSetup,
+                        GetCachedCurrentSetupGraph(activeSetup),
+                        GetCachedIntentProjectedSetupGraph(activeSetup));
                     break;
                 case AuthoringWindowMode.Facts:
                     PyralisAuthoringFactExplorerRenderer.Draw(activeSetup, GetCachedCurrentSetupGraph(activeSetup));

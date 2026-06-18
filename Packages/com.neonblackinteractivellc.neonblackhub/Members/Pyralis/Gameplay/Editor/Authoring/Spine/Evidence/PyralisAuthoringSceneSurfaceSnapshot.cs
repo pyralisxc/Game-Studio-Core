@@ -146,7 +146,7 @@ namespace NeonBlack.Gameplay.Editor
             return profile != null
                 && profile.movementMode == MovementMode.TwoD
                 && profile.use2DPhysics
-                && profile.allow2DJump;
+                && profile.Effective2DMovementStyle == Pawn2DMovementStyle.SideViewGravity;
         }
 
         private static PawnMovementProfile GetFirstPawnMovementProfile(GameplaySessionBootstrap bootstrap)

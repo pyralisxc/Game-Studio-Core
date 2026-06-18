@@ -155,7 +155,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                     return PyralisAuthoringNativeActionFactory.CreateAssetAction(
                         "GameModeDefinition",
                         "NeonBlack -> Definitions -> Game Mode Definition",
-                        "the Game Rules row is ready",
+                        "the Game Mode row is ready",
                         "assign it to SessionDefinition.defaultGameMode");
                 case PyralisSetupFlowStepId.ResolveRouteCapabilities:
                     return new PyralisAuthoringNativeAction(

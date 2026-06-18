@@ -131,6 +131,10 @@ GameObject:
   - component: {fileID: 994912178}
   - component: {fileID: 994912180}
   - component: {fileID: 994912181}
+  - component: {fileID: 994912185}
+  - component: {fileID: 994912184}
+  - component: {fileID: 994912183}
+  - component: {fileID: 994912182}
   m_Layer: 0
   m_Name: Game root
   m_TagString: Untagged
@@ -161,8 +165,7 @@ MonoBehaviour:
   participantSpawnService: {fileID: 0}
   participantInputRouter: {fileID: 0}
   cameraRigController: {fileID: 1798137194}
-  cameraBoundsSource: {fileID: 0}
-  sceneLoader: {fileID: 0}
+  sceneNavigatorSource: {fileID: 0}
   timeManager: {fileID: 0}
   cameraShake: {fileID: 0}
 --- !u!4 &994912179
@@ -233,7 +236,7 @@ MonoBehaviour:
       m_SingletonActionBindings: []
       m_Flags: 0
     m_Reference: {fileID: 0}
-  m_PlayerPrefab: {fileID: 5770674878491380326, guid: bc6353adc7a94974882a3f302edb06f9, type: 3}
+  m_PlayerPrefab: {fileID: 5297926070730875190, guid: 5deb39e90c9d876479ad4e228fc87dc1, type: 3}
   m_SplitScreen: 0
   m_MaintainAspectRatioInSplitScreen: 0
   m_FixedNumberOfSplitScreens: -1
@@ -243,6 +246,67 @@ MonoBehaviour:
     y: 0
     width: 1
     height: 1
+--- !u!114 &994912182
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 994912177}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ef02dc42e9de5e489c9119da17d46f4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: NeonBlack.Gameplay::NeonBlack.Gameplay.Features.Input.ParticipantInputRouter
+  sessionDefinition: {fileID: 11400000, guid: 5945282eafd4770419395c56d53cd885, type: 2}
+  rosterService: {fileID: 994912184}
+  playerInputManager: {fileID: 994912181}
+  autoRegisterDefaultParticipantsWithoutPlayerInput: 1
+--- !u!114 &994912183
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 994912177}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d6b28406a5ac7f41bb5a6c5b12b0b86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: NeonBlack.Gameplay.Characters::NeonBlack.Gameplay.Characters.ParticipantSpawnService
+  rosterService: {fileID: 994912184}
+  sessionStateService: {fileID: 994912185}
+  spawnPoints:
+  - {fileID: 2109554958}
+  spawnOnRegister: 1
+  replaceExistingPawn: 1
+--- !u!114 &994912184
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 994912177}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2174c8854afa2a748b5d2d9a42ffc36d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: NeonBlack.Gameplay.Characters::NeonBlack.Gameplay.Characters.ParticipantRosterService
+  sessionDefinition: {fileID: 11400000, guid: 5945282eafd4770419395c56d53cd885, type: 2}
+--- !u!114 &994912185
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 994912177}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33c668be6aa1a194f8c3fdb0f48923c3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: NeonBlack.Gameplay.Characters::NeonBlack.Gameplay.Characters.SessionStateService
+  sessionDefinition: {fileID: 11400000, guid: 5945282eafd4770419395c56d53cd885, type: 2}
+  autoStartGameplay: 1
 --- !u!1 &1236800913
 GameObject:
   m_ObjectHideFlags: 0
@@ -445,8 +509,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: NeonBlack.Gameplay.Presentation::NeonBlack.Gameplay.Presentation.Camera.CinemachineCameraRigController
   cameraRigProfile: {fileID: 11400000, guid: 7d1bbacbc9a5991428d5d382be3369a4, type: 2}
-  playfieldProfile: {fileID: 0}
-  participantRoster: {fileID: 0}
+  playfieldProfile: {fileID: 11400000, guid: 0cfdbf6453515d24da3fab5a5ff44a99, type: 2}
+  participantRoster: {fileID: 994912184}
   sharedCameraBehaviour: {fileID: 1798137194}
   splitScreenCameraBehaviours: []
   targetCamera: {fileID: 1831847742}
@@ -535,7 +599,7 @@ Camera:
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60.000004
-  orthographic: 1
+  orthographic: 0
   orthographic size: 5
   m_Depth: -1
   m_CullingMask:

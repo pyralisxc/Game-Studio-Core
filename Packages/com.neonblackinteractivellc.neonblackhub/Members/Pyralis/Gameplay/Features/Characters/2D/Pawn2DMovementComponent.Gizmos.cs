@@ -1,3 +1,4 @@
+using NeonBlack.Gameplay.Data.Profiles;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Features.Characters
@@ -21,7 +22,7 @@ namespace NeonBlack.Gameplay.Features.Characters
             UnityEditor.Handles.color = new Color(1f, 0.6f, 0f, 0.6f);
             UnityEditor.Handles.DrawWireDisc(centre, Vector3.back, total);
 
-            if (jumpEnabled)
+            if (EffectiveMovementStyle == Pawn2DMovementStyle.SideViewGravity && jumpEnabled)
             {
                 Vector3 groundCheck = transform.position + (Vector3)groundCheckOffset;
                 UnityEditor.Handles.color = isGrounded

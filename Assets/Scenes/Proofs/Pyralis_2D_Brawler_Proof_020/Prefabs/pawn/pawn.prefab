@@ -18,6 +18,7 @@ GameObject:
   - component: {fileID: 3053711339621444909}
   - component: {fileID: 6946668155382231834}
   - component: {fileID: 6550157738476029122}
+  - component: {fileID: -541318800914890521}
   m_Layer: 0
   m_Name: pawn
   m_TagString: Untagged
@@ -155,14 +156,13 @@ MonoBehaviour:
   showBoundsGizmo: 1
   screenWrap: 0
   useCameraVisibleBoundsForMovement: 0
-  targetCamera: {fileID: 0}
-  cameraBoundsSource: {fileID: 0}
   gameplayStateSource: {fileID: 0}
-  dashEnabled: 1
+  movementStyle: 0
+  dashEnabled: 0
   dashSpeed: 12
   dashDuration: 0.15
   dashCooldown: 0.8
-  jumpEnabled: 0
+  jumpEnabled: 1
   jumpVelocity: 8
   gravityScale: 3
   maxFallSpeed: 20
@@ -191,8 +191,8 @@ MonoBehaviour:
   billboardFacing: {fileID: 0}
   cameraOverride: {fileID: 0}
   shadowDriver: {fileID: 0}
-  presentationProfile: {fileID: 0}
-  animationProfile: {fileID: 0}
+  presentationProfile: {fileID: 11400000, guid: 13cc7c90de9aa9346934cda190c2a97e, type: 2}
+  animationProfile: {fileID: 11400000, guid: c059018e1b865cf479d3f16fd1f8cddc, type: 2}
 --- !u!114 &-271934536063370450
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -209,10 +209,10 @@ MonoBehaviour:
   spriteDefaultFacesRight: 1
   movingTint: {r: 1, g: 1, b: 1, a: 1}
   idleTint: {r: 1, g: 1, b: 1, a: 1}
-  squashStretchEnabled: 1
+  squashStretchEnabled: 0
   stretchAmount: 1.15
   squashSnapSpeed: 10
-  tiltEnabled: 1
+  tiltEnabled: 0
   maxTiltAngle: 12
   tiltSpeed: 200
   animator: {fileID: 0}
@@ -277,6 +277,20 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &-541318800914890521
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3767303912352580699}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88380ab212782d44c8c82dd173940cfe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: NeonBlack.Gameplay.Feature.Traversal::NeonBlack.Gameplay.Features.Traversal.TopDownHopFeatureRuntime
+  hopProfile: {fileID: 0}
+  visualTransform: {fileID: 4215407318343825413}
 --- !u!1 &8350590558532264954
 GameObject:
   m_ObjectHideFlags: 0

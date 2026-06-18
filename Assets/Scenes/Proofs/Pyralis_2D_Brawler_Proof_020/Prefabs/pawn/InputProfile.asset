@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e8b5945ff5429fb48bf2ed0589e1b429, type: 3}
   m_Name: InputProfile
   m_EditorClassIdentifier: NeonBlack.Gameplay.Data::NeonBlack.Gameplay.Data.Profiles.InputProfile
-  actions: {fileID: 0}
+  actions: {fileID: -944628639613478452, guid: a4cb356bdd48bde46b3ef55a6843253c, type: 3}
   primaryActionMap: Player
   actionBindings:
   - role: 0
@@ -41,6 +41,48 @@ MonoBehaviour:
     actionMap: 
     actionName: Interact
     valueType: 0
+    requiredForGameplay: 0
+    animationSignalKey: 
+  - role: 5
+    customKey: 
+    actionMap: 
+    actionName: Kick
+    valueType: 0
+    requiredForGameplay: 0
+    animationSignalKey: 
+  - role: 7
+    customKey: 
+    actionMap: 
+    actionName: Block
+    valueType: 0
+    requiredForGameplay: 0
+    animationSignalKey: 
+  - role: 8
+    customKey: 
+    actionMap: 
+    actionName: Sprint
+    valueType: 0
+    requiredForGameplay: 0
+    animationSignalKey: 
+  - role: 9
+    customKey: 
+    actionMap: 
+    actionName: Crouch
+    valueType: 0
+    requiredForGameplay: 0
+    animationSignalKey: 
+  - role: 12
+    customKey: 
+    actionMap: 
+    actionName: Roll
+    valueType: 0
+    requiredForGameplay: 0
+    animationSignalKey: 
+  - role: 13
+    customKey: 
+    actionMap: 
+    actionName: LookAround
+    valueType: 1
     requiredForGameplay: 0
     animationSignalKey: 
   preferredControlSchemes: []

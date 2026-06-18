@@ -142,16 +142,22 @@ namespace NeonBlack.Gameplay.Data.Definitions
                     issues.Add("ServerAuthoritative modules should require server execution.");
             }
 
+            ResolvedAuthoringContract contract = ResolvedAuthoringContractRegistry.FindByModuleId(moduleId);
+
             if (runtimePrefab == null)
-                issues.Add("Runtime Prefab is required for a feature module definition.");
+                issues.Add(GetMissingRuntimePrefabMessage(contract));
             else
             {
-                if (runtimePrefab.GetComponentsInChildren<MonoBehaviour>(true).Length == 0
-                    || !HasFeatureRuntime(runtimePrefab))
-                    issues.Add("Runtime Prefab must contain at least one component that implements IFeatureModuleRuntime.");
+                bool hasFeatureRuntime = HasFeatureRuntime(runtimePrefab);
+                bool matchesContractRuntime = AppendContractRuntimePrefabIssues(runtimePrefab, contract, issues);
+                if (runtimePrefab.GetComponentsInChildren<MonoBehaviour>(true).Length == 0 || !hasFeatureRuntime)
+                    issues.Add(GetRuntimePrefabMissingRuntimeMessage(contract));
 
-                AppendRuntimeValidationProviderIssues(runtimePrefab, issues);
+                if (hasFeatureRuntime && matchesContractRuntime)
+                    AppendRuntimeValidationProviderIssues(runtimePrefab, issues);
             }
+
+            AppendContractProfileIssue(contract, issues);
 
             return issues;
         }
@@ -207,10 +213,6 @@ namespace NeonBlack.Gameplay.Data.Definitions
                 }
             }
 
-            // Support for generic IRuntimeValidationProvider components on the actor root.
-            // This allows modules to perform custom actor-specific validation without hardcoding logic here.
-            AppendActorValidationProviderIssues(actorRoot, issues);
-
             return issues;
         }
 
@@ -227,6 +229,89 @@ namespace NeonBlack.Gameplay.Data.Definitions
             for (int i = 0; i < behaviours.Length; i++)
             {
                 if (ImplementsTypeName(behaviours[i], FeatureRuntimeInterfaceName))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private string GetMissingRuntimePrefabMessage(ResolvedAuthoringContract contract)
+        {
+            if (contract != null && contract.SourceType != null)
+                return $"Runtime Prefab is required. Create or assign a prefab with `{contract.SourceType.Name}` on its root, then assign it to FeatureModuleDefinition.runtimePrefab.";
+
+            return "Runtime Prefab is required for a feature module definition. Create or assign a prefab with a component that implements IFeatureModuleRuntime.";
+        }
+
+        private string GetRuntimePrefabMissingRuntimeMessage(ResolvedAuthoringContract contract)
+        {
+            if (contract != null && contract.SourceType != null)
+                return $"Runtime Prefab must contain `{contract.SourceType.Name}` or another component that implements IFeatureModuleRuntime for module `{moduleId}`. Create an empty prefab, add `{contract.SourceType.Name}`, then assign that prefab to FeatureModuleDefinition.runtimePrefab.";
+
+            return "Runtime Prefab must contain at least one component that implements IFeatureModuleRuntime. Add the runtime component for this module to the prefab root.";
+        }
+
+        private void AppendContractProfileIssue(ResolvedAuthoringContract contract, List<string> issues)
+        {
+            if (contract == null || contract.RequiredProfileType == null)
+                return;
+
+            if (profileAsset == null)
+            {
+                issues.Add($"Profile Asset is required. Create or assign `{contract.RequiredProfileType.Name}` to FeatureModuleDefinition.profileAsset for module `{moduleId}`.");
+                return;
+            }
+
+            if (!contract.RequiredProfileType.IsInstanceOfType(profileAsset))
+                issues.Add($"Profile Asset must be `{contract.RequiredProfileType.Name}` for module `{moduleId}`.");
+        }
+
+        private bool AppendContractRuntimePrefabIssues(GameObject prefab, ResolvedAuthoringContract contract, List<string> issues)
+        {
+            if (prefab == null || contract == null)
+                return true;
+
+            if (contract.SourceType != null
+                && typeof(MonoBehaviour).IsAssignableFrom(contract.SourceType)
+                && !HasComponentOfTypeOnRoot(prefab, contract.SourceType.FullName))
+            {
+                issues.Add($"Runtime Prefab `{prefab.name}` is not the expected feature runtime prefab for module `{moduleId}`. Create or assign a prefab whose root has `{contract.SourceType.Name}`; do not assign the pawn prefab here unless it intentionally contains that feature runtime component.");
+                return false;
+            }
+
+            if (contract.RequiredRuntimeInterfaceNames == null)
+                return true;
+
+            bool ready = true;
+
+            for (int i = 0; i < contract.RequiredRuntimeInterfaceNames.Length; i++)
+            {
+                string interfaceName = contract.RequiredRuntimeInterfaceNames[i];
+                if (string.IsNullOrWhiteSpace(interfaceName))
+                    continue;
+
+                if (!HasComponentImplementing(prefab, interfaceName))
+                {
+                    issues.Add($"Runtime Prefab should expose `{GetShortTypeName(interfaceName)}` for module `{contract.ModuleId}`.");
+                    ready = false;
+                }
+            }
+
+            return ready;
+        }
+
+        private static bool HasComponentOfTypeOnRoot(GameObject target, string fullTypeName)
+        {
+            if (target == null)
+                return false;
+
+            Component[] components = target.GetComponents<Component>();
+            for (int i = 0; i < components.Length; i++)
+            {
+                if (components[i] == null)
+                    continue;
+
+                if (string.Equals(components[i].GetType().FullName, fullTypeName, StringComparison.Ordinal))
                     return true;
             }
 
@@ -284,22 +369,6 @@ namespace NeonBlack.Gameplay.Data.Definitions
         private static void AppendRuntimeValidationProviderIssues(GameObject prefab, List<string> issues)
         {
             MonoBehaviour[] behaviours = prefab.GetComponentsInChildren<MonoBehaviour>(true);
-            for (int i = 0; i < behaviours.Length; i++)
-            {
-                if (behaviours[i] is not IRuntimeValidationProvider provider)
-                    continue;
-
-                foreach (string issue in provider.GetRuntimeValidationIssues())
-                {
-                    if (!string.IsNullOrWhiteSpace(issue))
-                        issues.Add(issue);
-                }
-            }
-        }
-
-        private static void AppendActorValidationProviderIssues(GameObject actorRoot, List<string> issues)
-        {
-            MonoBehaviour[] behaviours = actorRoot.GetComponentsInChildren<MonoBehaviour>(true);
             for (int i = 0; i < behaviours.Length; i++)
             {
                 if (behaviours[i] is not IRuntimeValidationProvider provider)

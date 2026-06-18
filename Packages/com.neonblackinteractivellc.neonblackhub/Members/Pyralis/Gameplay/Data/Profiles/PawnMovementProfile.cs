@@ -19,7 +19,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Priority = AuthoringPriority.AuxiliaryDefault,
         Lane = "Movement",
         Relevance = "Defines the movement feel, speed, acceleration, and damping for a pawn archetype.",
-        AssignmentFields = new[] { nameof(walkSpeed), nameof(acceleration), nameof(dashSpeed), nameof(movementMode), nameof(useCharacterController) },
+        AssignmentFields = new[] { nameof(walkSpeed), nameof(acceleration), nameof(dashSpeed), nameof(movementMode), nameof(movementStyle), nameof(useCharacterController) },
         FirstProof = "Move the pawn in play mode and verify speed feel.",
         ExpertAdvice = "The movement profile is your 'steering wheel'. It defines the responsiveness and agility of your actor. For 2D games, set 'Use 2D Physics' to enable Rigidbody2D interaction.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/movement",
@@ -46,6 +46,10 @@ namespace NeonBlack.Gameplay.Data.Profiles
         public bool allowScreenWrap = false;
         public float depthSpeedMultiplier = 0.6f;
 
+        [Header("2D Movement Style")]
+        [Tooltip("TopDownNoGravity keeps the pawn body kinematic and moves on the map plane. SideViewGravity uses a Dynamic Rigidbody2D for platformer-style gravity and vertical jump.")]
+        public Pawn2DMovementStyle movementStyle = Pawn2DMovementStyle.TopDownNoGravity;
+
         [Header("2D Dash")]
         [Tooltip("Whether 2D pawn movement can dash when a runtime input source or script calls TryDash. The InputProfile still decides which hardware action, if any, triggers it.")]
         public bool allow2DDash = true;
@@ -53,16 +57,15 @@ namespace NeonBlack.Gameplay.Data.Profiles
         [Range(0.05f, 0.5f)] public float dashDuration = 0.15f;
         [Range(0.1f, 3f)] public float dashCooldown = 0.8f;
 
-        [Header("2D Side View Jump")]
-        [Tooltip("Enable for side-view/platformer 2D pawns that should use a Dynamic Rigidbody2D with gravity. Leave off for top-down/no-gravity 2D pawns that use a Kinematic Rigidbody2D moved by script.")]
+        [Header("2D Jump")]
+        [Tooltip("Allows the built-in side-view jump fallback when Movement Style is SideViewGravity. Top-down/no-gravity visual hops should use a TopDownHop feature module that consumes the Jump action before this fallback.")]
         public bool allow2DJump = false;
         [Tooltip("Initial upward velocity applied when a grounded 2D side-view pawn jumps.")]
         public float jumpVelocity2D = 8f;
         [Tooltip("Gravity scale applied to Rigidbody2D while 2D side-view jump is enabled.")]
         public float gravityScale2D = 3f;
 
-        public Pawn2DMovementStyle Effective2DMovementStyle =>
-            allow2DJump ? Pawn2DMovementStyle.SideViewGravity : Pawn2DMovementStyle.TopDownNoGravity;
+        public Pawn2DMovementStyle Effective2DMovementStyle => movementStyle;
 
         public void Sanitize()
         {

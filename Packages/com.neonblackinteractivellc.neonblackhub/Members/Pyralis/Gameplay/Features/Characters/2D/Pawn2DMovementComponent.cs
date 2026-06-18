@@ -18,12 +18,12 @@ namespace NeonBlack.Gameplay.Features.Characters
         { 
             "Add Rigidbody2D and Collider2D.",
             "Keep on the same root as Motor2D.",
-            "Configure LayerMasks for ground check if Jump is enabled."
+            "Set Movement Style to SideViewGravity only for platformer-style gravity and ground checks."
         },
-        AssignmentFields = new[] { nameof(moveSpeed), nameof(dashEnabled), nameof(dashSpeed), nameof(dashCooldown), nameof(jumpEnabled), nameof(jumpVelocity), nameof(groundLayer), nameof(inputZones) },
+        AssignmentFields = new[] { nameof(movementStyle), nameof(moveSpeed), nameof(dashEnabled), nameof(dashSpeed), nameof(dashCooldown), nameof(jumpEnabled), nameof(jumpVelocity), nameof(groundLayer), nameof(inputZones) },
         FirstProofTargetId = "proof.1p-pawn-movement",
-        FirstProof = "Pawn responds to input in the scene. Use the Scene View to verify the Ground Check raycast (if side-view) is hitting the correct layer.",
-        ExpertAdvice = "Top-down/no-gravity route: leave Jump Enabled off; this component configures Rigidbody2D as Kinematic and Move drives X/Y. Side-view/gravity route: enable Jump; this component configures Rigidbody2D as Dynamic and lets gravity own vertical motion. Leave camera-visible movement bounds off unless the camera view itself is the legal play area."
+        FirstProof = "Pawn responds to input in the scene. For top-down routes, verify Move drives X/Y on the map plane; for side-view routes, verify the ground check hits the correct layer.",
+        ExpertAdvice = "Top-down/no-gravity route: keep Movement Style as TopDownNoGravity so Rigidbody2D stays Kinematic and Move drives X/Y. If Jump should visually hop without physics gravity, install a TopDownHop feature module that consumes the Jump action. Side-view/gravity route: set Movement Style to SideViewGravity and enable Jump for Dynamic Rigidbody2D vertical motion. Leave camera-visible movement bounds off unless the camera view itself is the legal play area."
     )]
 [AddComponentMenu("NeonBlack/Gameplay/Characters/2D/Pawn 2D Movement Component")]
     [RequireComponent(typeof(Rigidbody2D))]
@@ -63,11 +63,10 @@ namespace NeonBlack.Gameplay.Features.Characters
         public float DashCooldownRemaining => Mathf.Max(0f, model.State.DashCooldownTimer);
         public bool IsActionLocked => combatActionLocked || statusActionLocked || reactionLockTimer > 0f;
         public float MoveSpeed => moveSpeed * statusMoveSpeedMultiplier;
-        public bool IsGrounded => !jumpEnabled || isGrounded;
+        public bool IsGrounded => EffectiveMovementStyle != Pawn2DMovementStyle.SideViewGravity || isGrounded;
         public bool MovementEnabled => movementEnabled;
         public bool JumpEnabled => jumpEnabled;
-        public Pawn2DMovementStyle EffectiveMovementStyle =>
-            jumpEnabled ? Pawn2DMovementStyle.SideViewGravity : Pawn2DMovementStyle.TopDownNoGravity;
+        public Pawn2DMovementStyle EffectiveMovementStyle => movementStyle;
         public bool RuntimeGrounded => isGrounded;
         public bool RuntimeJumpQueued => jumpQueued;
         public Object RuntimeGameplayStateSource => gameplayStateReader as Object;
@@ -253,6 +252,7 @@ namespace NeonBlack.Gameplay.Features.Characters
             dashSpeed = profile.dashSpeed;
             dashDuration = profile.dashDuration;
             dashCooldown = profile.dashCooldown;
+            movementStyle = profile.Effective2DMovementStyle;
             jumpEnabled = profile.allow2DJump;
             jumpVelocity = profile.jumpVelocity2D;
             gravityScale = profile.gravityScale2D;
