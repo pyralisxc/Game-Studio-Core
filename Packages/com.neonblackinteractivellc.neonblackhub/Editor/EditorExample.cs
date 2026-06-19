@@ -12,6 +12,6 @@ namespace Neonblackinteractivellc.Neonblackhub.Editor
     internal static class NeonBlackHubEditorPackage
     {
         internal const string PackageId = "com.neonblackinteractivellc.neonblackhub";
-        internal const string Version   = "0.2.8";
+        internal const string Version   = "0.2.9";
     }
 }

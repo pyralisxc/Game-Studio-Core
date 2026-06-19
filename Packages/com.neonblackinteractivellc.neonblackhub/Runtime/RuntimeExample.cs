@@ -13,6 +13,6 @@ namespace Neonblackinteractivellc.Neonblackhub
     internal static class NeonBlackHubPackage
     {
         internal const string PackageId = "com.neonblackinteractivellc.neonblackhub";
-        internal const string Version   = "0.2.8";
+        internal const string Version   = "0.2.9";
     }
 }

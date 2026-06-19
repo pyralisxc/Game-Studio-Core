@@ -4,6 +4,14 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.2.9] - 2026-06-18
+
+### Changed
+- Pyralis authoring now leans further on reflected capability descriptors, graph projections, and route proof traces so Intent, Overview, Guide, Map, Hygiene, and Facts keep clearer ownership boundaries.
+- Camera follow and pawn spawning use explicit participant-pawn assignment and `PawnCameraTarget` sockets instead of treating camera bounds as proof of camera follow readiness.
+- Package docs and diagnostics were consolidated: route capability vocabulary moved into the authoring model, stale temp graph snapshots were removed, and Hygiene exports now separate cleanup focus from expected watch-list pressure.
+- Package validation, marker scripts, and handoff documentation now agree on the `0.2.9` package metadata.
+
 ## [0.2.8] - 2026-06-14
 
 ### Changed
