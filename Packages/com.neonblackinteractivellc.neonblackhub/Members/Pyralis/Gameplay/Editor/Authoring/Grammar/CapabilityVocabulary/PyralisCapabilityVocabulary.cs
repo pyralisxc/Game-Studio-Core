@@ -273,14 +273,14 @@ namespace NeonBlack.Gameplay.Editor
                 "Use this when the first proof is a visible 2D player, NPC, or AI actor body moving in the world.",
                 new[] { "ParticipantDefinition", "PawnDefinition" },
                 new[] { "InputProfile", "PawnMovementProfile", "PawnPresentationProfile" },
-                new[] { "GameplaySessionBootstrap", "PyralisGameplayLifetimeScope", "one Spawn Point Transform" },
+                new[] { "GameplaySessionBootstrap", "PyralisGameplayLifetimeScope", "ParticipantSpawnService with one Spawn Point Transform" },
                 new[] { "PawnRoot", "Motor2D", "Motor2DInputAdapter", "Pawn2DMovementComponent", "Pawn2DPresentationComponent" },
                 new[]
                 {
                     "SessionDefinition.defaultParticipants -> ParticipantDefinition",
                     "ParticipantDefinition.defaultPawn -> PawnDefinition",
                     "PawnDefinition.pawnPrefab -> pawn prefab",
-                    "GameplaySessionBootstrap.spawnPoints -> scene spawn Transform"
+                    "ParticipantSpawnService.spawnPoints -> scene spawn Transform"
                 },
                 new[]
                 {
@@ -326,7 +326,7 @@ namespace NeonBlack.Gameplay.Editor
                 "Use this when the first proof is a 3D brawler, arena actor, action RPG body, local co-op pawn, or billboard character moving through lane depth.",
                 new[] { "ParticipantDefinition", "PawnDefinition" },
                 new[] { "InputProfile", "PawnMovementProfile", "PawnTraversalProfile", "PawnPresentationProfile", "PawnAnimationProfile" },
-                new[] { "GameplaySessionBootstrap", "PyralisGameplayLifetimeScope", "one Spawn Point Transform per starting participant", "PlayerInputManager when local join is part of the proof" },
+                new[] { "GameplaySessionBootstrap", "PyralisGameplayLifetimeScope", "ParticipantSpawnService with one Spawn Point Transform per starting participant", "PlayerInputManager when local join is part of the proof" },
                 new[] { "PawnRoot", "CharacterController", "Motor3D", "Pawn3DInputModule", "Pawn3DMovementComponent", "Pawn3DTraversalComponent", "Pawn3DPresentationComponent", "ActorAnimationDriver", "HealthComponent", "KnockbackReceiver" },
                 new[]
                 {
@@ -335,7 +335,7 @@ namespace NeonBlack.Gameplay.Editor
                     "PawnDefinition.pawnPrefab -> 3D pawn prefab",
                     "PawnDefinition.presentationProfile -> Billboard2_5D or ThirdPerson3D presentation",
                     "PawnDefinition.animationProfile -> PawnAnimationProfile",
-                    "GameplaySessionBootstrap.spawnPoints -> one scene spawn Transform per starting seat",
+                    "ParticipantSpawnService.spawnPoints -> one scene spawn Transform per starting seat",
                     "GameplaySessionBootstrap.playerInputManager -> PlayerInputManager only for local join"
                 },
                 new[]

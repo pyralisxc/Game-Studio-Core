@@ -280,7 +280,14 @@ namespace NeonBlack.Gameplay.Editor
                 return 0;
 
             SerializedObject serializedBootstrap = new SerializedObject(bootstrap);
-            SerializedProperty spawnPoints = serializedBootstrap.FindProperty("spawnPoints");
+            ParticipantSpawnService spawnService = GetObjectReference<ParticipantSpawnService>(serializedBootstrap, "participantSpawnService");
+            if (spawnService == null)
+                spawnService = bootstrap.GetComponentInChildren<ParticipantSpawnService>(true);
+            if (spawnService == null)
+                return 0;
+
+            SerializedObject serializedSpawnService = new SerializedObject(spawnService);
+            SerializedProperty spawnPoints = serializedSpawnService.FindProperty("spawnPoints");
             if (spawnPoints == null || !spawnPoints.isArray)
                 return 0;
 
@@ -301,6 +308,11 @@ namespace NeonBlack.Gameplay.Editor
 
             SerializedObject serializedBootstrap = new SerializedObject(bootstrap);
             return serializedBootstrap.FindProperty("cameraRigController")?.objectReferenceValue != null ? 1 : 0;
+        }
+
+        private static T GetObjectReference<T>(SerializedObject serializedObject, string propertyName) where T : Object
+        {
+            return serializedObject.FindProperty(propertyName)?.objectReferenceValue as T;
         }
 
         private static bool IsInBootstrapScene(GameplaySessionBootstrap bootstrap, Component component)

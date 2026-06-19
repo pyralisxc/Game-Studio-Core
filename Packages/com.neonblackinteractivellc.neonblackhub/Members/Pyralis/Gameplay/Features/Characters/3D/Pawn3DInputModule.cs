@@ -318,8 +318,9 @@ namespace NeonBlack.Gameplay.Features.Characters
             _playerInput ??= GetComponent<PlayerInput>();
             profile.Sanitize();
             _inputProfile = profile;
-            if (profile.actions != null)
-                SetInputActions(profile.actions);
+            InputActionAsset runtimeActions = ResolveAsset();
+            if (runtimeActions != null)
+                SetInputActions(runtimeActions);
 
             ParticipantInputProfileUtility.ApplyToPlayerInput(_playerInput, profile);
             BindActions();

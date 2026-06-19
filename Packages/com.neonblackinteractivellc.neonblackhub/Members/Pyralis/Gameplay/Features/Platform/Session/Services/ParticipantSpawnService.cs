@@ -8,20 +8,17 @@ using VContainer.Unity;
 namespace NeonBlack.Gameplay.Characters
 {
     /// <summary>
-    /// Spawns and assigns pawns for registered participants using authored PawnDefinitions.
-    /// </summary>
-    /// <summary>
-    /// Service for spawning participants into the scene at designated spawn points.
+    /// Spawns and assigns pawns for registered participants using authored PawnDefinitions and service-owned spawn points.
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Setup | AuthoringCapability.Session,
-        Relevance = "Orchestrates participant spawning at designated spawn points during session initialization.",
+        Relevance = "Single owner for participant pawn spawning. It resolves each ParticipantDefinition default pawn, places it at authored spawn points, and reports pawn assignment through the roster.",
         Axioms = AuthoringWorldAxiom.None,
         RequiredInterfaces = new[] { typeof(IGameService) },
         AssignmentFields = new[] { nameof(rosterService), nameof(sessionStateService), nameof(spawnPoints) },
-        FirstProof = "Register a participant and verify their pawn is spawned at the correct spawn point.",
-        NativeSetup = new[] { "Add to GameplaySessionBootstrap child.", "Assign Spawn Point transforms." },
-        ExpertAdvice = "Spawns pawns based on ParticipantDefinitions. If your game doesn't use physical pawns (e.g., pure UI or Card games), you can leave Spawn Points empty or disable 'Spawn On Register'.",
+        FirstProof = "Register a participant and confirm ParticipantSpawnService creates or reuses the pawn, attaches it to the roster, and places it at the expected spawn point.",
+        NativeSetup = new[] { "Add as a child service under GameplaySessionBootstrap.", "Assign Spawn Points on ParticipantSpawnService for pawn-backed routes." },
+        ExpertAdvice = "Keep spawn points here, not on GameplaySessionBootstrap. Non-pawn routes can leave spawn points empty and disable Spawn On Register.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/participants"
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Setup/Participant Spawn Service")]
@@ -33,8 +30,8 @@ namespace NeonBlack.Gameplay.Characters
                 yield return PyralisRuntimeValidationIssue.Required("Roster Service is empty. This is expected when GameplaySessionBootstrap injects it at runtime.");
             if (sessionStateService == null)
                 yield return PyralisRuntimeValidationIssue.Required("Session State Service is empty. This is expected when GameplaySessionBootstrap injects it at runtime.");
-            if (spawnPoints == null || spawnPoints.Length == 0)
-                yield return PyralisRuntimeValidationIssue.Required("Spawn Points is empty. Add spawn points for pawn-backed games.");
+            if (spawnOnRegister && (spawnPoints == null || spawnPoints.Length == 0))
+                yield return PyralisRuntimeValidationIssue.Required("Spawn Points is empty. Assign spawn points on ParticipantSpawnService for pawn-backed routes, or disable Spawn On Register for non-pawn routes.");
         }
         [SerializeField] private ParticipantRosterService rosterService;
         [SerializeField] private SessionStateService sessionStateService;
@@ -55,7 +52,7 @@ namespace NeonBlack.Gameplay.Characters
         }
 
         private void Start()
-{
+        {
             Initialize();
         }
 
@@ -102,11 +99,6 @@ namespace NeonBlack.Gameplay.Characters
         public void SetSessionStateService(SessionStateService service)
         {
             sessionStateService = service;
-        }
-
-        public void SetSpawnPoints(Transform[] points)
-        {
-            spawnPoints = points;
         }
 
         public void SetCameraBoundsProvider(ICameraBoundsProvider provider)

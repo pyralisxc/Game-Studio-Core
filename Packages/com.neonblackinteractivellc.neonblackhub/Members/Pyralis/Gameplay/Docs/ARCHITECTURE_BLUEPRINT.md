@@ -118,6 +118,8 @@ For the 2D stack, `Motor2D` is the shared 2D pawn motor surface. Focused ownersh
 - authored scene services such as scene loading, time, camera shake, settings, and camera rig when present
 - ownership and authority services
 
+`GameplaySessionBootstrap` starts and hands off the session; it does not own participant spawn points. `ParticipantSpawnService` owns participant pawn placement, including its `Spawn Points` array and `Spawn On Register` policy.
+
 Feature services are not core by default. Combat, enemy, RPG, game-flow, scoring, and feedback services register when the authored route asks for them through `GameModeDefinition`, participant pawns, resolved feature contracts, or actual loaded scene components.
 
 Feature-specific service lists should not expand the composition root. `PyralisGameplayLifetimeScope` owns the visible service graph entrypoint; `PyralisRuntimeFeatureServicePolicy` owns route and loaded-scene activation evidence; the platform feature-service installer owns common registration mechanics; and feature installers such as RPG's runtime composition installer own concrete feature lists when a domain is broad enough to justify its own local seam. This keeps the lifetime scope readable without creating a second setup path.

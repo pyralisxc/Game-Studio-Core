@@ -24,7 +24,7 @@ namespace NeonBlack.Gameplay.Features.Input
             if (playerInput == null || profile == null)
                 return;
 
-            if (profile.actions != null && playerInput.actions != profile.actions)
+            if (playerInput.actions == null && profile.actions != null)
                 playerInput.actions = profile.actions;
 
             if (playerInput.actions == null)

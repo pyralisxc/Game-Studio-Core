@@ -44,12 +44,12 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             SerializedObject serializedBootstrap = new SerializedObject(bootstrap);
             SessionDefinition session = GetObjectReference<SessionDefinition>(serializedBootstrap, "sessionDefinition");
             bool injectLoadedScenesOnBuild = GetBool(serializedBootstrap, "injectLoadedScenesOnBuild");
-            int spawnPointCount = GetArraySize(serializedBootstrap, "spawnPoints");
+            ParticipantSpawnService participantSpawnService = GetParticipantSpawnService(bootstrap, serializedBootstrap);
+            int spawnPointCount = CountSpawnPoints(participantSpawnService);
             CinemachineCameraRigController cameraRig = GetObjectReference<CinemachineCameraRigController>(serializedBootstrap, "cameraRigController");
             bool hasCameraRig = cameraRig != null;
             PlayerInputManager playerInputManager = GetObjectReference<PlayerInputManager>(serializedBootstrap, "playerInputManager");
             bool hasPlayerInputManager = playerInputManager != null;
-            bool hasUsablePlayerInputManager = !hasPlayerInputManager || playerInputManager.playerPrefab != null;
             bool hasLifetimeScope = bootstrap.GetComponent<PyralisGameplayLifetimeScope>() != null;
 
             PyralisSetupRouteAnalysis route = PyralisSetupRouteAnalysis.Build(session);
@@ -60,6 +60,9 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             bool requiresPawn = route.RequiresPawn;
             bool hasParticipants = route.HasParticipants;
             int assignedParticipantCount = CountAssignedParticipants(session);
+            bool localMultiplayerRoute = route.LikelyUsesInputManager();
+            string playerInputManagerIssue = GetPlayerInputManagerIssue(playerInputManager, localMultiplayerRoute);
+            bool hasUsablePlayerInputManager = string.IsNullOrWhiteSpace(playerInputManagerIssue);
             bool hasParticipantPawn = route.HasAnyDefaultPawn;
             string participantPawnIssue = route.ParticipantPawnIssue;
             PawnDefinition firstPawn = GetFirstPawnDefinition(session);
@@ -210,8 +213,8 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
 
             steps.Add(new PyralisSetupFlowStep(
                 "Assign Player Input Manager",
-                GetPlayerInputManagerStatus(setupRouteReady, route.LikelyUsesInputManager(), hasPlayerInputManager, hasUsablePlayerInputManager),
-                GetPlayerInputMessage(setupRouteReady, route.LikelyUsesInputManager(), hasPlayerInputManager, hasUsablePlayerInputManager),
+                GetPlayerInputManagerStatus(setupRouteReady, localMultiplayerRoute, hasPlayerInputManager, hasUsablePlayerInputManager),
+                GetPlayerInputMessage(setupRouteReady, localMultiplayerRoute, hasPlayerInputManager, hasUsablePlayerInputManager, playerInputManagerIssue, assignedParticipantCount),
                 playerInputManager,
                 stepId: PyralisSetupFlowStepId.AssignPlayerInputManager));
 
@@ -823,7 +826,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                     : "Spawn points can stay empty for no-pawn board/card/menu/camera routes.";
 
             if (spawnPointCount <= 0)
-                return "Selected setup requires pawns. Add spawn point transforms to the bootstrap.";
+                return "Selected setup requires pawns. Add spawn point transforms to ParticipantSpawnService.";
 
             int requiredSpawnPoints = Math.Max(1, assignedParticipantCount);
             if (spawnPointCount < requiredSpawnPoints)
@@ -926,22 +929,59 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             bool setupReady,
             bool recommended,
             bool hasPlayerInputManager,
-            bool hasUsablePlayerInputManager)
+            bool hasUsablePlayerInputManager,
+            string playerInputManagerIssue,
+            int assignedParticipantCount)
         {
             if (!setupReady)
                 return "Choose setup capabilities before deciding local join wiring.";
 
-            if (hasPlayerInputManager && !hasUsablePlayerInputManager)
-                return "Configure PlayerInputManager > Player Prefab before Play Mode, or disable local join for this proof. Unity PlayerInputManager logs runtime errors when join is enabled without a Player Prefab; use a dedicated PlayerInput prefab for local join, not the spawned pawn prefab unless that prefab is intentionally the input-join prefab.";
+            if (!string.IsNullOrWhiteSpace(playerInputManagerIssue))
+                return playerInputManagerIssue;
 
             if (!recommended)
                 return hasPlayerInputManager
                     ? "PlayerInputManager is assigned."
-                    : "PlayerInputManager is optional for single-player, AI-only, menu-only, and no-join prototypes. Add it only when multiple local players can join.";
+                    : "PlayerInputManager is optional for single-player, AI-only, menu-only, and no-join prototypes. Add it when the session has multiple local player participants.";
 
             return hasPlayerInputManager
-                ? "PlayerInputManager is assigned for local join, and ParticipantInputRouter will subscribe to join/leave events."
-                : "Selected setup looks like multi-participant local join. For a 1P proof, select/open the SessionDefinition asset and set Max Participants to 1. For local join, create an Input Root, add Unity PlayerInputManager, assign a dedicated PlayerInput prefab, configure Join Behavior/Input Actions, then drag the component into Bootstrap > Player Input Manager.";
+                ? $"PlayerInputManager is assigned for {assignedParticipantCount} local participants, and ParticipantInputRouter will subscribe to join/leave events."
+                : $"Selected setup has {assignedParticipantCount} local pawn participants. For local co-op, create an Input Root, add Unity PlayerInputManager, assign a player prefab that contains PlayerInput and PawnRoot, configure Join Behavior/Input Actions, then drag the component into Bootstrap > Player Input Manager.";
+        }
+
+        private static string GetPlayerInputManagerIssue(PlayerInputManager playerInputManager, bool localMultiplayerRoute)
+        {
+            if (playerInputManager == null)
+                return localMultiplayerRoute
+                    ? "Selected setup has multiple local pawn participants. Add Unity PlayerInputManager and assign a player prefab with PlayerInput and PawnRoot so each controller owns one pawn."
+                    : string.Empty;
+
+            if (playerInputManager.playerPrefab == null)
+                return "Configure PlayerInputManager > Player Prefab before Play Mode. Unity PlayerInputManager logs runtime errors when join is enabled without a Player Prefab.";
+
+            GameObject playerPrefab = playerInputManager.playerPrefab;
+            if (playerPrefab.GetComponent<PlayerInput>() == null)
+                return "PlayerInputManager.playerPrefab must contain a PlayerInput component so Unity can pair each controller with one participant.";
+
+            if (!PrefabContainsPawnInitializer(playerPrefab))
+                return "PlayerInputManager.playerPrefab should be the pawn prefab, or contain PawnRoot/IPawnParticipantInitializer, so the joined PlayerInput controls that participant's pawn instead of a shared action asset.";
+
+            return string.Empty;
+        }
+
+        private static bool PrefabContainsPawnInitializer(GameObject prefab)
+        {
+            if (prefab == null)
+                return false;
+
+            MonoBehaviour[] behaviours = prefab.GetComponentsInChildren<MonoBehaviour>(true);
+            for (int i = 0; i < behaviours.Length; i++)
+            {
+                if (behaviours[i] is IPawnParticipantInitializer)
+                    return true;
+            }
+
+            return false;
         }
 
         private static string GetPlayfieldMessage(bool setupReady, bool recommended, bool ready)
@@ -1147,6 +1187,35 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
         {
             SerializedProperty property = serializedObject.FindProperty(propertyName);
             return property != null && property.isArray ? property.arraySize : 0;
+        }
+
+        private static ParticipantSpawnService GetParticipantSpawnService(GameplaySessionBootstrap bootstrap, SerializedObject serializedBootstrap)
+        {
+            ParticipantSpawnService service = GetObjectReference<ParticipantSpawnService>(serializedBootstrap, "participantSpawnService");
+            if (service != null || bootstrap == null)
+                return service;
+
+            return bootstrap.GetComponentInChildren<ParticipantSpawnService>(true);
+        }
+
+        private static int CountSpawnPoints(ParticipantSpawnService service)
+        {
+            if (service == null)
+                return 0;
+
+            SerializedObject serializedService = new SerializedObject(service);
+            SerializedProperty spawnPoints = serializedService.FindProperty("spawnPoints");
+            if (spawnPoints == null || !spawnPoints.isArray)
+                return 0;
+
+            int count = 0;
+            for (int i = 0; i < spawnPoints.arraySize; i++)
+            {
+                if (spawnPoints.GetArrayElementAtIndex(i).objectReferenceValue != null)
+                    count++;
+            }
+
+            return count;
         }
 
         private static bool HasTabletopRuntimeContract(GameModeDefinition mode, TabletopBoardGridPresenter presenter, out Object reference)

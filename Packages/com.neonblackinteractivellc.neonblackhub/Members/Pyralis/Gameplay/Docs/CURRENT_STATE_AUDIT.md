@@ -26,7 +26,9 @@ The current Unity-native ownership rule is:
 - Scenes own scene-scale direction and services.
 - Authoring projects graph truth instead of creating presets or duplicating setup systems.
 
-`ParticipantDefinition.inputProfile` is the authored input owner. A pawn receives input through its pawn input/movement modules; the input asset is not split across competing setup locations. Camera follow is no longer treated as camera-bounds readiness: participant pawn assignment exposes the body, pawn prefabs may expose `PawnCameraTarget`, and the scene-owned Cinemachine rig routes the selected focus into Cinemachine.
+`ParticipantDefinition.inputProfile` is the authored input owner. A pawn receives input through its pawn input/movement modules; the input asset is not split across competing setup locations. For local multiplayer, Unity `PlayerInput` owns the runtime action instance paired to each controller, and `InputProfile.actions` is only the template/naming source. Camera follow is no longer treated as camera-bounds readiness: participant pawn assignment exposes the body, pawn prefabs may expose `PawnCameraTarget`, and the scene-owned Cinemachine rig routes the selected focus into Cinemachine.
+
+`ParticipantSpawnService` is the single owner for participant pawn placement. `GameplaySessionBootstrap` owns session startup and visible service handoff; it does not store spawn points. Pawn-backed routes assign `ParticipantSpawnService.spawnPoints`; no-pawn routes can leave them empty and disable `Spawn On Register`.
 
 ## Current Authoring State
 

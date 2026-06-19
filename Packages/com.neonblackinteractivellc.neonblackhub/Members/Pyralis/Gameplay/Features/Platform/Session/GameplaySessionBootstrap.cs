@@ -21,18 +21,18 @@ namespace NeonBlack.Gameplay.Characters
         Capability = AuthoringCapability.Setup,
         Priority = AuthoringPriority.Primary,
         SetupNodeId = "bootstrap.root",
-        Relevance = "Primary entry point for gameplay sessions; orchestrates participant spawn, camera setup, and core services.",
+        Relevance = "Primary entry point for gameplay sessions; wires the authored session, visible runtime services, input join, and camera setup.",
         Axioms = AuthoringWorldAxiom.None,
         NativeSetup = new[]
         {
             "Add GameplaySessionBootstrap to the first scene of your game.",
             "Assign a SessionDefinition asset.",
-            "Wire spawn points for participants.",
+            "Author core runtime service components under the Gameplay Root or assign explicit overrides.",
             "Configure camera rig controller and core service references."
         },
-        AssignmentFields = new[] { nameof(sessionDefinition), nameof(spawnPoints), nameof(cameraRigController), nameof(playerInputManager) },
-        FirstProof = "Enter Play Mode and confirm the session initializes. Verify participant pawns spawn at designated points and the camera frames the action correctly.",
-        ExpertAdvice = "The Bootstrap is the Unity-facing session entry point. Add the core runtime service components under the Gameplay Root or assign explicit override fields so the LifetimeScope can register authored scene objects instead of creating hidden services.",
+        AssignmentFields = new[] { nameof(sessionDefinition), nameof(cameraRigController), nameof(playerInputManager) },
+        FirstProof = "Enter Play Mode and confirm the session initializes, core services run, and the camera frames the active route.",
+        ExpertAdvice = "The Bootstrap is the Unity-facing session entry point. Add the core runtime service components under the Gameplay Root or assign explicit override fields so the LifetimeScope can register authored scene objects instead of creating hidden services. ParticipantSpawnService owns pawn spawn points.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/bootstrap"
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Setup/Gameplay Session Bootstrap")]
@@ -47,7 +47,6 @@ namespace NeonBlack.Gameplay.Characters
         [SerializeField] private bool injectLoadedScenesOnBuild = true;
 
         [Header("Participants")]
-        [SerializeField] private Transform[] spawnPoints;
         [SerializeField] private PlayerInputManager playerInputManager;
         [SerializeField] private SessionStateService sessionStateService;
         [SerializeField] private ParticipantRosterService participantRosterService;
@@ -78,7 +77,6 @@ namespace NeonBlack.Gameplay.Characters
             lifetimeScope.InjectLoadedScenesOnBuild = injectLoadedScenesOnBuild;
             lifetimeScope.ConfigureRuntime(
                 sessionDefinition,
-                spawnPoints,
                 playerInputManager,
                 sceneNavigatorSource,
                 timeManager,

@@ -184,7 +184,14 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                         "Gameplay Root or a Playfield Root",
                         string.Empty,
                         "the pawn route has one spawn point per default participant",
-                        "create and position SpawnPoint_1, then assign it to GameplaySessionBootstrap.spawnPoints");
+                        "create and position SpawnPoint_1, then assign it to ParticipantSpawnService.spawnPoints");
+                case PyralisSetupFlowStepId.AssignPlayerInputManager:
+                    return new PyralisAuthoringNativeAction(
+                        "Create or assign",
+                        PyralisAuthoringActionSurface.Hierarchy,
+                        "Input Root",
+                        "create an Input Root, add Unity PlayerInputManager, set Join Behavior for your proof, assign Input Actions, then set Player Prefab to the same pawn prefab shape used by the participant route: it must contain PlayerInput and PawnRoot/IPawnParticipantInitializer so each controller owns one spawned participant pawn. Drag the PlayerInputManager component into GameplaySessionBootstrap > Player Input Manager.",
+                        "each local controller is paired to one PlayerInput, one participant, and one pawn");
                 case PyralisSetupFlowStepId.AssignCameraRig:
                     return new PyralisAuthoringNativeAction(
                         "Create or assign",

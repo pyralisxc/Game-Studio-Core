@@ -229,8 +229,13 @@ namespace NeonBlack.Gameplay.Editor
         {
             return Session != null
                 && Session.networkMode == GameplayNetworkMode.LocalOnly
-                && Session.GetEffectiveMaxParticipants() > 1
+                && CountAssignedParticipants(Session) > 1
                 && UsesPawnGameplay();
+        }
+
+        public int LocalParticipantCount()
+        {
+            return Session != null ? CountAssignedParticipants(Session) : HasParticipants ? 1 : 0;
         }
 
         public bool UsesPlayfield()
@@ -403,6 +408,21 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             return false;
+        }
+
+        private static int CountAssignedParticipants(SessionDefinition session)
+        {
+            if (session == null || session.defaultParticipants == null)
+                return 0;
+
+            int count = 0;
+            for (int i = 0; i < session.defaultParticipants.Length; i++)
+            {
+                if (session.defaultParticipants[i] != null)
+                    count++;
+            }
+
+            return count;
         }
 
         private static bool ContainsFamily(RuntimeCapabilityFamily[] families, RuntimeCapabilityFamily family)

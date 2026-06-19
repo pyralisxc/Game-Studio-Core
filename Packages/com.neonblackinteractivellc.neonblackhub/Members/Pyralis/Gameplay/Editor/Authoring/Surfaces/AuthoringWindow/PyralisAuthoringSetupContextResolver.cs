@@ -262,18 +262,37 @@ namespace NeonBlack.Gameplay.Editor
             if (selectedTransform == null)
                 return null;
 
-            foreach (GameplaySessionBootstrap bootstrap in Object.FindObjectsByType<GameplaySessionBootstrap>(FindObjectsInactive.Include))
+            foreach (ParticipantSpawnService spawnService in Object.FindObjectsByType<ParticipantSpawnService>(FindObjectsInactive.Include))
             {
-                SerializedObject serializedBootstrap = new SerializedObject(bootstrap);
-                SerializedProperty spawnPoints = serializedBootstrap.FindProperty("spawnPoints");
+                SerializedObject serializedSpawnService = new SerializedObject(spawnService);
+                SerializedProperty spawnPoints = serializedSpawnService.FindProperty("spawnPoints");
                 if (spawnPoints == null || !spawnPoints.isArray)
                     continue;
 
                 for (int i = 0; i < spawnPoints.arraySize; i++)
                 {
                     if (spawnPoints.GetArrayElementAtIndex(i).objectReferenceValue == selectedTransform)
-                        return bootstrap;
+                        return GetBootstrapForSpawnService(spawnService);
                 }
+            }
+
+            return null;
+        }
+
+        private static GameplaySessionBootstrap GetBootstrapForSpawnService(ParticipantSpawnService spawnService)
+        {
+            if (spawnService == null)
+                return null;
+
+            GameplaySessionBootstrap bootstrap = spawnService.GetComponentInParent<GameplaySessionBootstrap>(true);
+            if (bootstrap != null)
+                return bootstrap;
+
+            foreach (GameplaySessionBootstrap candidate in Object.FindObjectsByType<GameplaySessionBootstrap>(FindObjectsInactive.Include))
+            {
+                SerializedObject serializedBootstrap = new SerializedObject(candidate);
+                if (serializedBootstrap.FindProperty("participantSpawnService")?.objectReferenceValue == spawnService)
+                    return candidate;
             }
 
             return null;

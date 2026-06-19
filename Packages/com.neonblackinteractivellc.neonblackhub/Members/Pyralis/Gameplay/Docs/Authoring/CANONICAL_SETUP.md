@@ -30,7 +30,7 @@ For the movement-first proof pass, stop after these links:
 
 - `GameplaySessionBootstrap` with `Session Definition`
 - at least one pawn-backed participant path (`ParticipantDefinition` + `PawnDefinition` + prefab)
-- `Spawn Points` with at least one transform
+- `ParticipantSpawnService` with at least one `Spawn Points` transform
 - a known input route for that participant (`ParticipantDefinition.inputProfile` or local join flow)
 - a Cinemachine-backed `Camera Root` assigned to `GameplaySessionBootstrap > Camera Rig Controller` for camera framing, with `CameraRigProfile.focusMode` choosing pawn, group, playfield, explicit scene target, or manual Cinemachine focus
 - authored core runtime services listed above
@@ -42,10 +42,14 @@ On `GameplaySessionBootstrap`, assign:
 - `Session Definition` - your `SessionDefinition` asset
 - `Dont Destroy On Load` - on for persistent bootstrap scenes, off for isolated test scenes
 - `Inject Loaded Scenes On Build` - on unless you have a custom injection flow
-- `Spawn Points` - optional Transforms where pawn-backed participants should appear
 - `Player Input Manager` - optional, only when using local join or Unity Input System player joining
 - `Camera Rig Controller` - optional, assign the `Camera Root` when using Pyralis camera focus routing, shared/split participant cameras, playfield cameras, or camera-aware visible bounds
 - `Camera Rig Controller` is the single normal camera-bounds entry for systems that explicitly need visible-area data. Pawn camera follow comes from `CameraRigProfile.focusMode` plus `PawnCameraTarget` or the pawn root fallback.
+
+On `ParticipantSpawnService`, assign:
+
+- `Spawn Points` - optional Transforms where pawn-backed participants should appear; leave empty and disable `Spawn On Register` for no-pawn routes
+- `Spawn On Register` - on for normal pawn-backed first proofs, off when participants control board seats, cameras, UI, cursors, or other non-pawn surfaces
 
 The runtime does not create missing service GameObjects. Map/Scene Readiness should point out any missing core service and tell you which child object or Bootstrap override field to author.
 
@@ -54,7 +58,7 @@ Create additional root objects only when the selected route capabilities need th
 | Root object | Attach | Use when |
 |---|---|---|
 | `Camera Root` | `CinemachineCameraRigController` plus your Cinemachine camera component, `CameraRigProfile`, Target Camera assignment, and Cinemachine Brain verified on the physical Target Camera. The normal route keeps or creates one physical Unity Camera, usually the default Main Camera, and adds separate Cinemachine Camera GameObjects that control it. Unity usually adds the Brain when you create a Cinemachine Camera; add it manually only if missing. Choose `CameraRigProfile.focusMode`: Participant Group for shared pawn cameras, Participant Pawns for per-participant cameras, Playfield Center for board/menu views, Explicit Scene Target for authored anchors, or Manual Cinemachine when the scene owns Follow/LookAt directly. For pawn-follow routes, add `PawnCameraTarget` to the pawn prefab when the follow/look-at socket should be explicit; otherwise the pawn root is the fallback. For 2D movement or bounded views, the physical Target Camera or assigned CameraRigProfile should be orthographic. | The setup uses shared camera, split screen, camera/cursor control, board view, camera profiles, or 2D visible camera bounds |
-| `Input Root` | Unity `PlayerInputManager` | The setup supports multiple local players joining during play |
+| `Input Root` | Unity `PlayerInputManager` with a player prefab containing `PlayerInput` and `PawnRoot`/`IPawnParticipantInitializer` | The setup supports multiple local players joining during play |
 | `UI Root` | Canvas, EventSystem, UI presenters such as `UIManager`, HUD binders, board/card/action presenters, or menu screens | The setup has HUD, menus, cards, board UI, turn UI, action selection, prompts, or settings UI |
 | `Settings Root` | `SettingsManager` | The setup needs reusable volume, deadzone, fullscreen, or settings persistence |
 | `Scene Flow Root` | `SceneFader` | The setup uses fade transitions or central scene loading from menus |
@@ -100,6 +104,8 @@ Before wiring scenes or prefabs, use the Authoring Window and asset Inspectors t
 - validation issues are resolved or intentionally deferred
 
 Assign `GameModeDefinition` to `SessionDefinition.defaultGameMode`, then assign each player, AI, seat, hand, faction, or command owner to `SessionDefinition.defaultParticipants`. Loose assets can help the Authoring Window keep context while you wire the route, but they are not runtime-ready until the session references them. After the session owns the mode and participants, fill pawns, feature modules, profiles, and reflected contracts that the route needs so validation can surface setup problems early.
+
+Player count is inferred from the session route. A single assigned pawn participant can run as a lightweight auto-join proof without `PlayerInputManager`. Multiple assigned local pawn participants mean local co-op: use `PlayerInputManager`, set `Player Prefab` to the pawn prefab shape for that route, and let Unity pair each controller to its own `PlayerInput` action instance.
 
 ## 3. Participant And Pawn Wiring
 

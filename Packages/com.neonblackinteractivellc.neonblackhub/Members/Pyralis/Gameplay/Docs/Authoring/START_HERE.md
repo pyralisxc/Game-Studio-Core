@@ -112,7 +112,7 @@ Use the visible Authoring Window summary for route progress, first proof, setup-
    - for pawn routes: one `Default Pawn` and one `PawnDefinition`
    - keep the standard bootstrap-owned service path enabled for this first proof so gameplay-state services are created automatically.
 7. Add only the required proof objects:
-   - pawn routes: one `Spawn Point` transform and assign it to `Spawn Points`
+   - pawn routes: one `Spawn Point` transform and assign it to `ParticipantSpawnService > Spawn Points`
    - input route for the route (`InputProfile` on participant; keep `Player Input Manager` empty unless you need local join)
    - animation route for animated pawns (`PawnAnimationProfile` on the `PawnDefinition`, plus an `Animator` on the pawn root or visual child)
    - no-pawn routes: control-surface objects for camera/cursor/menu/board/action selection instead of pawn spawn points
@@ -137,7 +137,7 @@ Think of it this way: `GameplaySessionBootstrap` is the first runtime object. `S
   - one pawn visual `Animator` if animation is part of the proof; `PawnDefinition.animationProfile` supplies the runtime signal bindings.
   - the pawn prefab inspected in Prefab Mode or Inspector so every required component/reference is understood and editable. The guided proof should treat the prefab as user-owned setup, not a hidden generated answer;
   - one `PawnDefinition.pawnPrefab`;
-  - one `GameplaySessionBootstrap.SpawnPoints` transform;
+  - one `ParticipantSpawnService.SpawnPoints` transform;
   - the standard bootstrap-owned service path on.
 - Optional for this pass:
   - HUD, scoring, combat, hazards, scene flow, pickups, projectiles, networking, local join.
@@ -203,7 +203,6 @@ Attach using the Inspector Add Component search:
 On `GameplaySessionBootstrap`, assign the `SessionDefinition` you just wired. Then assign only the scene references your setup actually uses:
 
 - `Session Definition`
-- `Spawn Points` only if pawns spawn into the scene
 - `Player Input Manager` only for local player joining
 - `Camera Rig Controller` only if using the shared Pyralis camera flow
 
@@ -218,6 +217,8 @@ Under `Gameplay Root`, create or assign the authored core runtime services that 
 - `ParticipantSpawnService`
 - `ParticipantInputRouter`
 
+On `ParticipantSpawnService`, assign `Spawn Points` only if pawns spawn into the scene. This service is the single owner for participant pawn placement.
+
 The runtime does not create missing service GameObjects. If one is absent, Overview/Map should tell you which Unity object or Bootstrap override field to author.
 
 After assigning the `SessionDefinition`, keep the `GameplaySessionBootstrap` selected and work down the **Setup Flow** list. Fix the selected intent's Do Now items first. Treat recommended items as proof enhancers, not universal requirements. Optional items can stay empty until the selected intent needs them.
@@ -226,7 +227,7 @@ For the first route proof, treat these as Do Now only when the selected intent a
 
 - `Session Definition`
 - one participant with required input profile for that route
-- pawn routes: one participant with `Default Pawn` and one `Spawn Point`
+- pawn routes: one participant with `Default Pawn` and one `Spawn Point` assigned on `ParticipantSpawnService`
 - no-pawn routes: required control-surface assets (camera/cursor/menu/board/action)
 - authored core runtime services for the standard bootstrap-owned service path
 
@@ -245,7 +246,7 @@ Only add what matches the active route.
 | Root object | Add this when... | Common components |
 |---|---|---|
 | `Camera Root` | the game has a camera rig, cursor, board view, follow camera, split screen, or 2D visible bounds | `CinemachineCameraRigController` plus `CameraRigProfile`, GameObject -> Cinemachine -> Cinemachine Camera assigned as Shared Camera Behaviour, physical Main Camera assigned as Target Camera, and Cinemachine Brain verified on that physical Main Camera. Choose `CameraRigProfile.focusMode`: Participant Group for shared pawn cameras, Participant Pawns for per-participant cameras, Playfield Center for board/menu views, Explicit Scene Target for authored anchors, or Manual Cinemachine when you want to assign Follow/LookAt directly on the Cinemachine camera. The normal route keeps or creates one real Unity Camera, usually the default Main Camera; do not delete it unless you intentionally replace it with another single physical render camera. For pawn-follow routes, add `PawnCameraTarget` to the pawn prefab when the camera should follow a visible socket; otherwise Pyralis uses the pawn root fallback. For 2D movement or bounded views, set Main Camera > Camera > Projection to Orthographic or use an orthographic `CameraRigProfile`. |
-| `Input Root` | multiple local players can join during play | Unity `PlayerInputManager`, project input prefab only if you own one |
+| `Input Root` | multiple local players can join during play | Unity `PlayerInputManager` with a player prefab containing `PlayerInput` and `PawnRoot` |
 | `UI Root` | the game has HUD, menus, board UI, card UI, turn UI, action buttons, prompts, or settings screens | Canvas, EventSystem, `ParticipantHealthHudBinder`, `ParticipantFeedbackHudPresenter`, `UIManager`, menu/settings presenters |
 | `Playfield Root` | the game has bounds, board spaces, card zones, encounter zones, pickups, hazards, or generated chunks | placed anchors, zones, spawners |
 | `Scoring Root` | the game tracks score, timers, victory points, resources, or round results | `ParticipantScoreService` |

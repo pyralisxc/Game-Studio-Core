@@ -286,7 +286,9 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             AppendReferencedHierarchyIssue(GetObjectReference<Object>(serializedBootstrap, "sceneNavigatorSource"), "Scene navigator", inspectedRoots, requiredIssues);
             AppendReferencedHierarchyIssue(GetObjectReference<Object>(serializedBootstrap, "timeManager"), "Time manager", inspectedRoots, requiredIssues);
             AppendReferencedHierarchyIssue(GetObjectReference<Object>(serializedBootstrap, "cameraShake"), "Camera shake", inspectedRoots, requiredIssues);
-            AppendArrayReferenceIssues(serializedBootstrap, "spawnPoints", "Spawn point", inspectedRoots, requiredIssues);
+            ParticipantSpawnService spawnService = GetParticipantSpawnService(bootstrap, serializedBootstrap);
+            if (spawnService != null)
+                AppendArrayReferenceIssues(new SerializedObject(spawnService), "spawnPoints", "Spawn point", inspectedRoots, requiredIssues);
 
             UnityEngine.SceneManagement.Scene scene = bootstrap.gameObject.scene;
             AppendCameraAndAudioIssues(scene, inspectedRoots, requiredIssues, recommendedIssues);
@@ -377,7 +379,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
 
             if (playerInputManager.playerPrefab == null)
             {
-                requiredIssues.Add("Bootstrap has a PlayerInputManager assigned, but PlayerInputManager > Player Prefab is empty. Clear Bootstrap > Player Input Manager for single-player auto-join, or assign a dedicated PlayerInput prefab for local join.");
+                requiredIssues.Add("Bootstrap has a PlayerInputManager assigned, but PlayerInputManager > Player Prefab is empty. Clear Bootstrap > Player Input Manager for single-player auto-join, or assign a player prefab with PlayerInput and PawnRoot for local join.");
                 return;
             }
 
@@ -390,6 +392,24 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
 
             if (playerInput.actions == null)
                 requiredIssues.Add($"PlayerInputManager prefab `{playerInputManager.playerPrefab.name}` has PlayerInput but no Actions asset. Assign the same Input Actions asset used by the controlling InputProfile.");
+
+            if (!PrefabContainsPawnInitializer(playerInputManager.playerPrefab))
+                requiredIssues.Add($"PlayerInputManager prefab `{playerInputManager.playerPrefab.name}` should contain PawnRoot/IPawnParticipantInitializer so the joined PlayerInput controls that participant's pawn instead of a shared action asset.");
+        }
+
+        private static bool PrefabContainsPawnInitializer(GameObject prefab)
+        {
+            if (prefab == null)
+                return false;
+
+            MonoBehaviour[] behaviours = prefab.GetComponentsInChildren<MonoBehaviour>(true);
+            for (int i = 0; i < behaviours.Length; i++)
+            {
+                if (behaviours[i] is IPawnParticipantInitializer)
+                    return true;
+            }
+
+            return false;
         }
 
         private static void AppendCameraAndAudioIssues(
@@ -1126,6 +1146,15 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
         private static T GetObjectReference<T>(SerializedObject serializedObject, string propertyName) where T : Object
         {
             return serializedObject.FindProperty(propertyName)?.objectReferenceValue as T;
+        }
+
+        private static ParticipantSpawnService GetParticipantSpawnService(GameplaySessionBootstrap bootstrap, SerializedObject serializedBootstrap)
+        {
+            ParticipantSpawnService service = GetObjectReference<ParticipantSpawnService>(serializedBootstrap, "participantSpawnService");
+            if (service != null || bootstrap == null)
+                return service;
+
+            return bootstrap.GetComponentInChildren<ParticipantSpawnService>(true);
         }
     }
 }

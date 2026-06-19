@@ -62,7 +62,6 @@ namespace NeonBlack.Gameplay.Core.Runtime
 
         public void ConfigureRuntime(
             SessionDefinition sessionDefinition,
-            Transform[] spawnPoints,
             PlayerInputManager playerInputManager,
             MonoBehaviour sceneNavigatorSource,
             TimeManager timeManager,
@@ -101,7 +100,6 @@ namespace NeonBlack.Gameplay.Core.Runtime
             {
                 _participantSpawnService.SetRosterService(_participantRosterService);
                 _participantSpawnService.SetSessionStateService(_sessionStateService);
-                _participantSpawnService.SetSpawnPoints(spawnPoints);
                 _participantSpawnService.SetCameraBoundsProvider(cameraRigController);
                 _participantSpawnService.SetPlayfieldBoundsProvider(sessionDefinition?.defaultGameMode?.playfieldProfile);
             }

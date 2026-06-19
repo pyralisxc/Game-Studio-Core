@@ -1,8 +1,10 @@
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Characters;
+using NeonBlack.Gameplay.Features.Input;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace NeonBlack.Gameplay.Tests.Runtime
 {
@@ -289,6 +291,30 @@ namespace NeonBlack.Gameplay.Tests.Runtime
             Object.DestroyImmediate(rosterGo);
             Object.DestroyImmediate(session);
             Object.DestroyImmediate(participantDefinition);
+        }
+
+        [Test]
+        public void ParticipantInputProfileUtility_ApplyToPlayerInput_PreservesJoinedRuntimeActions()
+        {
+            GameObject playerGo = new GameObject("Joined Player");
+            PlayerInput playerInput = playerGo.AddComponent<PlayerInput>();
+            InputActionAsset joinedRuntimeActions = ScriptableObject.CreateInstance<InputActionAsset>();
+            joinedRuntimeActions.AddActionMap("Player");
+            InputActionAsset profileTemplateActions = ScriptableObject.CreateInstance<InputActionAsset>();
+            profileTemplateActions.AddActionMap("Player");
+            InputProfile profile = ScriptableObject.CreateInstance<InputProfile>();
+            profile.actions = profileTemplateActions;
+            profile.primaryActionMap = "Player";
+            playerInput.actions = joinedRuntimeActions;
+
+            ParticipantInputProfileUtility.ApplyToPlayerInput(playerInput, profile);
+
+            Assert.That(playerInput.actions, Is.EqualTo(joinedRuntimeActions));
+
+            Object.DestroyImmediate(playerGo);
+            Object.DestroyImmediate(joinedRuntimeActions);
+            Object.DestroyImmediate(profileTemplateActions);
+            Object.DestroyImmediate(profile);
         }
     }
 }

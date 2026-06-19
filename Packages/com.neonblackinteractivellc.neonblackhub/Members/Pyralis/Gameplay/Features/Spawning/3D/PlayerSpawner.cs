@@ -205,7 +205,6 @@ namespace NeonBlack.Gameplay.Features.Spawning
             }
             else
             {
-                participantSpawnService.SetSpawnPoints(spawnPoints);
                 GameObject pawn = participantSpawnService.SpawnParticipantPawn(participant);
                 if (pawn != null)
                 {

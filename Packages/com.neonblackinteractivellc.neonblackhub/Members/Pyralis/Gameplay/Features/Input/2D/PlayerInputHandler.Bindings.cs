@@ -25,7 +25,7 @@ namespace NeonBlack.Gameplay.Features.Input
 
             _inputActions = inputActions;
             _inputProfile = inputProfile;
-            if (_playerInput != null && _playerInput.actions != inputActions)
+            if (_playerInput != null && _playerInput.actions == null)
                 _playerInput.actions = inputActions;
 
             if (!BindActions())
@@ -103,8 +103,9 @@ namespace NeonBlack.Gameplay.Features.Input
             _playerInput ??= GetComponent<PlayerInput>();
             inputProfile.Sanitize();
             _inputProfile = inputProfile;
-            if (inputProfile.actions != null)
-                SetInputActions(inputProfile.actions, inputProfile);
+            InputActionAsset runtimeActions = ResolveRuntimeInputActions(inputProfile);
+            if (runtimeActions != null)
+                SetInputActions(runtimeActions, inputProfile);
             else if (_inputActions != null)
                 BindActions();
             else
@@ -114,6 +115,19 @@ namespace NeonBlack.Gameplay.Features.Input
             _gamepadEnabled = inputProfile.supportsGamepad;
             _editorKeyboardInput = inputProfile.supportsKeyboardMouse;
             _joystickEnabled = inputProfile.touchFriendly;
+        }
+
+        private InputActionAsset ResolveRuntimeInputActions(InputProfile inputProfile)
+        {
+            _playerInput ??= GetComponent<PlayerInput>();
+
+            if (_playerInput != null && _playerInput.actions != null)
+                return _playerInput.actions;
+
+            if (_inputActions != null)
+                return _inputActions;
+
+            return inputProfile != null ? inputProfile.actions : null;
         }
 
         private bool BindActions()
