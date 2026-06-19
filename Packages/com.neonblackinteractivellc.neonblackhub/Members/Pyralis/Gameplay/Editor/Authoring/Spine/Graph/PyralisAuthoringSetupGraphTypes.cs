@@ -28,7 +28,8 @@ namespace NeonBlack.Gameplay.Editor
         SetupFlow,
         RuntimeValidation,
         SceneReadiness,
-        ProofVocabulary
+        ProofVocabulary,
+        Reflection
     }
 
     public enum PyralisAuthoringGraphSourceOrigin
@@ -150,6 +151,7 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringGraphSourceKind.SetupFlow => PyralisAuthoringGraphSourceOrigin.RuntimeEvidence,
                 PyralisAuthoringGraphSourceKind.RuntimeValidation => PyralisAuthoringGraphSourceOrigin.RuntimeEvidence,
                 PyralisAuthoringGraphSourceKind.SceneReadiness => PyralisAuthoringGraphSourceOrigin.RuntimeEvidence,
+                PyralisAuthoringGraphSourceKind.Reflection => PyralisAuthoringGraphSourceOrigin.Reflection,
                 PyralisAuthoringGraphSourceKind.CapabilityVocabulary => PyralisAuthoringGraphSourceOrigin.SpineGrammar,
                 PyralisAuthoringGraphSourceKind.GrammarRegistry => PyralisAuthoringGraphSourceOrigin.SpineGrammar,
                 PyralisAuthoringGraphSourceKind.ProofVocabulary => PyralisAuthoringGraphSourceOrigin.GrammarFallback,

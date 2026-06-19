@@ -22,16 +22,22 @@ namespace NeonBlack.Gameplay.Editor
 
     public sealed class PyralisAuthoringIntentSelection
     {
-        public PyralisAuthoringIntentSelection(RuntimeCapabilityLaneTag lane, AuthoringCapability capabilities, AuthoringWorldAxiom axioms)
+        public PyralisAuthoringIntentSelection(
+            RuntimeCapabilityLaneTag lane,
+            AuthoringCapability capabilities,
+            AuthoringWorldAxiom axioms,
+            string[] descriptorIds = null)
         {
             Lane = lane;
             Capabilities = capabilities;
             Axioms = axioms;
+            DescriptorIds = descriptorIds ?? Array.Empty<string>();
         }
 
         public RuntimeCapabilityLaneTag Lane { get; }
         public AuthoringCapability Capabilities { get; }
         public AuthoringWorldAxiom Axioms { get; }
+        public string[] DescriptorIds { get; }
     }
 
     public sealed class PyralisAuthoringIntentRow
@@ -63,21 +69,18 @@ namespace NeonBlack.Gameplay.Editor
             string summary,
             IReadOnlyList<PyralisAuthoringIntentRow> recommendations,
             IReadOnlyList<PyralisAuthoringIntentRow> cautions,
-            IReadOnlyList<PyralisAuthoringFact> matchingIntents,
-            IReadOnlyList<PyralisAuthoringIssue> hygieneIssues = null)
+            IReadOnlyList<PyralisAuthoringFact> matchingIntents)
         {
             Summary = summary ?? string.Empty;
             Recommendations = recommendations ?? Array.Empty<PyralisAuthoringIntentRow>();
             Cautions = cautions ?? Array.Empty<PyralisAuthoringIntentRow>();
             MatchingIntents = matchingIntents ?? Array.Empty<PyralisAuthoringFact>();
-            HygieneIssues = hygieneIssues ?? Array.Empty<PyralisAuthoringIssue>();
         }
 
         public string Summary { get; }
         public IReadOnlyList<PyralisAuthoringIntentRow> Recommendations { get; }
         public IReadOnlyList<PyralisAuthoringIntentRow> Cautions { get; }
         public IReadOnlyList<PyralisAuthoringFact> MatchingIntents { get; }
-        public IReadOnlyList<PyralisAuthoringIssue> HygieneIssues { get; }
     }
 
     public static class PyralisAuthoringGuidance
@@ -152,166 +155,11 @@ namespace NeonBlack.Gameplay.Editor
             SortRows(recommendations);
             SortRows(cautions);
 
-            List<PyralisAuthoringIssue> hygieneIssues = ValidateHygiene(selection, facts, recommendations);
-
             return new PyralisAuthoringIntentModel(
                 BuildSummary(selection, matchingIntents),
                 recommendations,
                 cautions,
-                matchingIntents,
-                hygieneIssues);
-        }
-
-        private static List<PyralisAuthoringIssue> ValidateHygiene(
-            PyralisAuthoringIntentSelection selection,
-            IReadOnlyList<PyralisAuthoringFact> allFacts,
-            List<PyralisAuthoringIntentRow> recommendations)
-        {
-            List<PyralisAuthoringIssue> issues = new List<PyralisAuthoringIssue>();
-
-            // 1. Check for Missing Primary Providers for selected capabilities
-            foreach (AuthoringCapability cap in AuthoringCapabilityRegistry.GetAllIndividualCapabilities())
-            {
-                if ((selection.Capabilities & cap) == 0) continue;
-
-                bool hasProvider = recommendations.Any(r => (r.Fact.Capability & cap) != 0);
-                if (!hasProvider)
-                {
-                    issues.Add(new PyralisAuthoringIssue(
-                        "HYG001",
-                        PyralisAuthoringIssueSeverity.Required,
-                        cap.ToString(),
-                        PyralisAuthoringEvidenceState.Missing,
-                        "Project",
-                        "Spine",
-                        null,
-                        $"Capability '{AuthoringCapabilityRegistry.GetDisplayName(cap)}' is selected but no providing scripts were discovered in the project. {AuthoringCapabilityRegistry.GetHygieneAdvice(cap)}"));
-                }
-            }
-
-            // 2. Conflict Checks (Capability overlap)
-            var capGroups = recommendations
-                .Where(r => r.Fact.Capability != AuthoringCapability.None)
-                .GroupBy(r => r.Fact.Capability);
-
-            foreach (var group in capGroups)
-            {
-                var list = group.ToList();
-
-                // DNA-Aware filtering: Resolve 2D vs 3D logic clashes automatically
-                if (selection.Axioms != AuthoringWorldAxiom.None)
-                {
-                    // Filter out candidates that explicitly contradict the current selection DNA
-                    list = list.Where(r => !IsAxiomContradiction(selection.Axioms, r.Fact.Axioms)).ToList();
-                    
-                    // If we have specialized candidates (matching Axioms) and universal ones (Axioms == None),
-                    // prioritize the specialized ones to clear universal noise from the conflict check.
-                    var matchingAxioms = list.Where(r => r.Fact.Axioms != AuthoringWorldAxiom.None).ToList();
-                    if (matchingAxioms.Count > 0)
-                        list = matchingAxioms;
-                }
-
-                if (list.Count <= 1) continue;
-
-                int topWeight = list.Max(f => f.Fact.Priority);
-                var masterProviders = list.Where(f => f.Fact.Priority == topWeight).ToList();
-
-                // Only throw bugs if two or more classes are marked as Primary (100) within the same DNA context
-                if (masterProviders.Count > 1 && topWeight == (int)AuthoringPriority.Primary)
-                {
-                    // If we have multiple Primary providers, check for Specialized Multi-tenancy (e.g. 2D vs 3D)
-                    // We only flag a conflict if they are compatible with each other (can coexist in the same DNA context)
-                    var actualConflicts = new List<PyralisAuthoringIntentRow>();
-                    for (int i = 0; i < masterProviders.Count; i++)
-                    {
-                        bool hasCompatiblePartner = false;
-                        for (int j = 0; j < masterProviders.Count; j++)
-                        {
-                            if (i == j) continue;
-
-                            // Two facts only conflict if they are the same layer (Kind) AND compatible Axioms
-                            if (masterProviders[i].Fact.Kind == masterProviders[j].Fact.Kind &&
-                                !IsAxiomContradiction(masterProviders[i].Fact.Axioms, masterProviders[j].Fact.Axioms))
-                            {
-                                hasCompatiblePartner = true;
-                                break;
-                            }
-}
-
-                        if (hasCompatiblePartner)
-                            actualConflicts.Add(masterProviders[i]);
-                    }
-
-                    if (actualConflicts.Count > 1)
-                    {
-                        issues.Add(new PyralisAuthoringIssue(
-                            "HYG002",
-                            PyralisAuthoringIssueSeverity.Bug,
-                            group.Key.ToString(),
-                            PyralisAuthoringEvidenceState.Conflict,
-                            "Code", "Duplication", null,
-                            $"Conflict: Multiple primary candidates for '{group.Key}' are compatible with the same DNA: {string.Join(", ", actualConflicts.Select(p => p.Fact.DisplayName))}. Demote others to AuxiliaryDefault."));
-                    }
-                }
-}
-
-            // 3. Check for Deprecated Contracts and Documentation Hygiene
-            foreach (var rec in recommendations)
-            {
-                if (rec.Fact.Priority >= (int)AuthoringPriority.Deprecated)
-                {
-                    issues.Add(new PyralisAuthoringIssue(
-                        "HYG006",
-                        PyralisAuthoringIssueSeverity.Warning,
-                        rec.Fact.DisplayName,
-                        PyralisAuthoringEvidenceState.Deprecated,
-                        "Lifecycle",
-                        "Expiration",
-                        null,
-                        $"DEPRECATED: Component '{rec.Fact.DisplayName}' is deprecated and scheduled for removal. {rec.Fact.ExpertAdvice}"));
-                }
-
-                if (string.IsNullOrEmpty(rec.Fact.Summary) || rec.Fact.Summary == rec.Fact.DisplayName)
-                {
-                    issues.Add(new PyralisAuthoringIssue(
-                        "HYG003",
-                        PyralisAuthoringIssueSeverity.Optional,
-                        rec.Fact.DisplayName,
-                        PyralisAuthoringEvidenceState.CandidateDetected,
-                        "Documentation",
-                        "Content",
-                        null,
-                        $"Contract '{rec.Fact.DisplayName}' is missing a meaningful Summary. Update the [AuthoringContract] attribute with 'Relevance' or 'Summary' text."));
-                }
-
-                if (string.IsNullOrEmpty(rec.Fact.DocumentationURL))
-                {
-                    issues.Add(new PyralisAuthoringIssue(
-                        "HYG004",
-                        PyralisAuthoringIssueSeverity.Info,
-                        rec.Fact.DisplayName,
-                        PyralisAuthoringEvidenceState.CandidateDetected,
-                        "Documentation",
-                        "Source",
-                        null,
-                        $"Contract '{rec.Fact.DisplayName}' has no Documentation URL. Consider adding a link to the technical wiki in [AuthoringContract]."));
-                }
-
-                if (string.IsNullOrEmpty(rec.Fact.ExpertAdvice))
-                {
-                    issues.Add(new PyralisAuthoringIssue(
-                        "HYG005",
-                        PyralisAuthoringIssueSeverity.Recommended,
-                        rec.Fact.DisplayName,
-                        PyralisAuthoringEvidenceState.Missing,
-                        "Authoring",
-                        "Content",
-                        null,
-                        $"Contract '{rec.Fact.DisplayName}' is missing Expert Advice. Provide a pro-tip in the [AuthoringContract] to help developers use this feature effectively."));
-                }
-            }
-
-            return issues;
+                matchingIntents);
         }
 
         private static List<PyralisAuthoringFact> FindMatchingIntentFacts(PyralisAuthoringIntentSelection selection, IReadOnlyList<PyralisAuthoringFact> facts)

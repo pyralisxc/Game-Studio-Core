@@ -1,5 +1,6 @@
 using NeonBlack.Gameplay.Features.Combat;
 using NeonBlack.Gameplay.Features.Composition;
+using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Presentation.Animation;
 using UnityEngine;
 
@@ -10,11 +11,22 @@ namespace NeonBlack.Gameplay.Characters
         private void InstallFeatureModules()
         {
             _runtime ??= PawnRootRuntimeReferences.Capture(gameObject);
-            ActorFeatureHost featureHost = _runtime.EnsureFeatureHost();
+            FeatureModuleDefinition[] definitions = pawnDefinition != null ? pawnDefinition.featureModules : null;
+            if (definitions == null || definitions.Length == 0)
+                return;
+
+            ActorFeatureHost featureHost = _runtime.FeatureHost;
+            if (featureHost == null)
+            {
+                Debug.LogWarning(
+                    $"PawnRoot `{name}` has feature modules assigned through PawnDefinition `{pawnDefinition.name}`, but the pawn prefab is missing ActorFeatureHost. Add ActorFeatureHost to the pawn root so optional features are explicit in the prefab.",
+                    this);
+                return;
+            }
 
             featureHost.InitializeFeatures(
                 new FeatureHostInitializationContext(BuildFeatureContext(), _resolver),
-                pawnDefinition != null ? pawnDefinition.featureModules : null);
+                definitions);
         }
 
         private ActorFeatureContext BuildFeatureContext()

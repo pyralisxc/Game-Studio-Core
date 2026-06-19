@@ -32,7 +32,7 @@ For the movement-first proof pass, stop after these links:
 - at least one pawn-backed participant path (`ParticipantDefinition` + `PawnDefinition` + prefab)
 - `Spawn Points` with at least one transform
 - a known input route for that participant (`ParticipantDefinition.inputProfile` or local join flow)
-- a Cinemachine-backed `Camera Root` assigned to `GameplaySessionBootstrap > Camera Rig Controller` for camera framing and visible camera bounds
+- a Cinemachine-backed `Camera Root` assigned to `GameplaySessionBootstrap > Camera Rig Controller` for camera framing, with `CameraRigProfile.focusMode` choosing pawn, group, playfield, explicit scene target, or manual Cinemachine focus
 - authored core runtime services listed above
 
 Delay scoring, HUD, combat, scene-flow, pickup/hazard, and network extras until movement proof is confirmed in Play mode.
@@ -44,8 +44,8 @@ On `GameplaySessionBootstrap`, assign:
 - `Inject Loaded Scenes On Build` - on unless you have a custom injection flow
 - `Spawn Points` - optional Transforms where pawn-backed participants should appear
 - `Player Input Manager` - optional, only when using local join or Unity Input System player joining
-- `Camera Rig Controller` - optional, assign the `Camera Root` when using Pyralis camera control or camera-aware visible bounds
-- `Camera Rig Controller` is the single normal camera-bounds entry. Camera-aware runtime systems consume the assigned `CinemachineCameraRigController` as their `ICameraBoundsProvider`.
+- `Camera Rig Controller` - optional, assign the `Camera Root` when using Pyralis camera focus routing, shared/split participant cameras, playfield cameras, or camera-aware visible bounds
+- `Camera Rig Controller` is the single normal camera-bounds entry for systems that explicitly need visible-area data. Pawn camera follow comes from `CameraRigProfile.focusMode` plus `PawnCameraTarget` or the pawn root fallback.
 
 The runtime does not create missing service GameObjects. Map/Scene Readiness should point out any missing core service and tell you which child object or Bootstrap override field to author.
 
@@ -53,7 +53,7 @@ Create additional root objects only when the selected route capabilities need th
 
 | Root object | Attach | Use when |
 |---|---|---|
-| `Camera Root` | `CinemachineCameraRigController` plus your Cinemachine camera component, `CameraRigProfile`, Target Camera assignment, and Cinemachine Brain verified on the physical Target Camera. The normal route keeps or creates one physical Unity Camera, usually the default Main Camera, and adds separate Cinemachine Camera GameObjects that control it. Unity usually adds the Brain when you create a Cinemachine Camera; add it manually only if missing. For 2D movement or bounded views, the physical Target Camera or assigned CameraRigProfile must be orthographic. | The setup uses shared camera, split screen, camera/cursor control, board view, camera profiles, or 2D visible camera bounds |
+| `Camera Root` | `CinemachineCameraRigController` plus your Cinemachine camera component, `CameraRigProfile`, Target Camera assignment, and Cinemachine Brain verified on the physical Target Camera. The normal route keeps or creates one physical Unity Camera, usually the default Main Camera, and adds separate Cinemachine Camera GameObjects that control it. Unity usually adds the Brain when you create a Cinemachine Camera; add it manually only if missing. Choose `CameraRigProfile.focusMode`: Participant Group for shared pawn cameras, Participant Pawns for per-participant cameras, Playfield Center for board/menu views, Explicit Scene Target for authored anchors, or Manual Cinemachine when the scene owns Follow/LookAt directly. For pawn-follow routes, add `PawnCameraTarget` to the pawn prefab when the follow/look-at socket should be explicit; otherwise the pawn root is the fallback. For 2D movement or bounded views, the physical Target Camera or assigned CameraRigProfile should be orthographic. | The setup uses shared camera, split screen, camera/cursor control, board view, camera profiles, or 2D visible camera bounds |
 | `Input Root` | Unity `PlayerInputManager` | The setup supports multiple local players joining during play |
 | `UI Root` | Canvas, EventSystem, UI presenters such as `UIManager`, HUD binders, board/card/action presenters, or menu screens | The setup has HUD, menus, cards, board UI, turn UI, action selection, prompts, or settings UI |
 | `Settings Root` | `SettingsManager` | The setup needs reusable volume, deadzone, fullscreen, or settings persistence |
@@ -180,13 +180,14 @@ The 3D input stack also reads action names from the effective `InputProfile`, in
 
 ## 5. Feature Modules
 
-Feature modules are authored through `FeatureModuleDefinition` and installed through `PawnDefinition.featureModules`.
+Feature modules are authored through `FeatureModuleDefinition`. Pawn abilities are installed through `PawnDefinition.featureModules`; enemy abilities are installed through `EnemyFeatureProfile.featureModules`. Any actor prefab with enabled feature modules should include `ActorFeatureHost` on the actor root so optional capabilities are visible in the prefab instead of repaired at runtime.
 
 Important rules:
 
 - every reusable feature module should provide an explicit `[AuthoringContract]` on the owning feature type
 - `ResolvedAuthoringContractRegistry` discovers contracts reflectively; do not add central hardcoded module-id registries
-- the contract must declare required profile type, dependency interfaces, physical Unity component placement requirements, supported lanes, unsupported lanes, action roles, native setup actions, assignment fields, customization moments, developer first-proof guidance, and `SetupNodeId` when the contract enriches a stable resolved setup graph node
+- the contract should declare feature meaning, semantic capability path, role tags, supported/unsupported lanes, action roles, native setup meaning, customization moments, developer first-proof guidance, and `SetupNodeId` when the contract enriches a stable resolved setup graph node
+- do not duplicate structure that reflection can already infer, including implemented interfaces, `[RequireComponent]` dependencies, serialized fields, `CreateAssetMenu`, `AddComponentMenu`, profile asset types, prefab components, and dependency order
 - every declared `FirstProofTargetId` must resolve to a graph proof node; route-proof grammar may provide generic wording, but contract metadata and graph proof edges own the compiled proof relationship
 - every feature module must declare network intent
 - runtime prefabs must expose the required feature runtime interfaces, while actor roots, scene roots, UI roots, and other authored objects must expose only the physical component requirements declared for that placement
@@ -281,7 +282,7 @@ HUD is now split into:
 
 1. `Docs/Authoring/START_HERE.md`
 2. `Docs/Authoring/AUTHORING_MODEL.md`
-3. `Docs/Authoring/ROUTE_CAPABILITY_COOKBOOK.md` when choosing capability filters
+3. `Docs/Authoring/AUTHORING_MODEL.md` when choosing capability filters
 4. `Docs/Authoring/AUTHORING_BLUEPRINT.md` when changing Authoring Window behavior
 5. `Docs/ARCHITECTURE_BLUEPRINT.md` when changing runtime ownership or folderbase architecture
 

@@ -560,7 +560,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 return PyralisSetupFlowStepStatus.Blocked;
 
             if (proofRequiresCameraRig)
-                return ready && usable2DBounds ? PyralisSetupFlowStepStatus.Ready : PyralisSetupFlowStepStatus.Missing;
+                return ready ? PyralisSetupFlowStepStatus.Ready : PyralisSetupFlowStepStatus.Missing;
 
             if (!recommended)
                 return ready ? PyralisSetupFlowStepStatus.Ready : PyralisSetupFlowStepStatus.Optional;
@@ -840,14 +840,14 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             if (proofRequiresCameraRig)
             {
                 if (!ready)
-                    return "Pawn movement needs camera bounds before the first Play Mode proof. Keep or create one physical Unity Camera, usually the default Main Camera; do not delete it for the normal Cinemachine route. Create Camera Root, add CinemachineCameraRigController, create or choose a separate Cinemachine Camera for Shared Camera Behaviour, verify the physical Main Camera is tagged MainCamera with Cinemachine Brain, assign that physical camera as Target Camera, then drag Camera Root from Hierarchy into Bootstrap > Camera Rig Controller.";
+                    return "Pawn movement needs a scene camera route before the first Play Mode proof. Keep or create one physical Unity Camera, usually the default Main Camera; do not delete it for the normal Cinemachine route. Create Camera Root, add CinemachineCameraRigController, create or choose a separate Cinemachine Camera for Shared Camera Behaviour, verify the physical Main Camera is tagged MainCamera with Cinemachine Brain, assign that physical camera as Target Camera, then drag Camera Root from Hierarchy into Bootstrap > Camera Rig Controller.";
 
                 if (!requires2DBounds)
-                    return "Camera rig is assigned for the pawn movement proof. This route uses a 3D, 2.5D, or non-orthographic pawn lane, so 2D orthographic bounds are not required before Play Mode.";
+                    return "Camera rig is assigned for the pawn movement proof. Cinemachine follows the camera focus mode selected by CameraRigProfile; add PawnCameraTarget to the pawn prefab when the follow/look-at socket should be explicit.";
 
                 return usable2DBounds
-                    ? "Camera rig is assigned with usable 2D bounds for the pawn movement proof."
-                    : "Camera rig is assigned, but the 2D movement proof still needs orthographic bounds. Select Camera Root and assign an orthographic CameraRigProfile, or select the physical Target Camera and set Camera > Projection to Orthographic. If using a profile, also assign it to GameModeDefinition > Camera Rig Profile.";
+                    ? "Camera rig is assigned with an orthographic 2D framing path. Cinemachine follow still comes from CameraRigProfile focus mode and the resolved pawn/playfield target."
+                    : "Camera rig is assigned. Before judging 2D camera feel, select Camera Root and assign an orthographic CameraRigProfile, or select the physical Target Camera and set Camera > Projection to Orthographic. If using a profile, also assign it to GameModeDefinition > Camera Rig Profile.";
             }
 
             if (!recommended)
@@ -869,7 +869,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 return "Camera framing can wait until this route uses a pawn, camera, cursor, board view, playfield, or follow camera.";
 
             return hasCameraRig
-                ? "Before judging Play Mode, select Camera Root and CameraRigProfile and tune framing for the scene: physical Target Camera assignment, MainCamera tag/Brain on that physical camera, orthographic size, 2D Bounds Framing minimum visible area, Follow Damping (0 means no lag), Follow Offset, View Euler Angles for pitch/yaw/roll, and how much room the player needs around the pawn. In orthographic mode, CameraRigProfile > Orthographic Size controls zoom only until Camera Root > Enforce Minimum Visible Area 2D raises it to fit the authored min world size. Keep Use Profile Transform on for profile-driven framing, or turn it off when you want direct Cinemachine transform authoring. In Play Mode, Cinemachine follows a runtime GameplaySharedCameraFocus driven from participants; prove follow by moving the pawn, then verifying the Game view follows that shared focus."
+                ? "Before judging Play Mode, select Camera Root and CameraRigProfile. Choose Focus Mode first: Participant Group for a shared pawn camera, Participant Pawns for per-participant cameras, Playfield Center for board/menu/playfield views, Explicit Scene Target for a scene anchor, or Manual Cinemachine when you want to wire Follow/LookAt directly. Then tune physical Target Camera assignment, MainCamera tag/Brain, orthographic size, 2D Bounds Framing minimum visible area, Follow Damping, Follow Offset, View Euler Angles, and player room around the target. Add PawnCameraTarget to the pawn prefab when the camera should follow a visible socket instead of the pawn root fallback."
                 : "Tune camera framing after the Camera Root exists. The Authoring Window should keep this visible so the proof is judged against the intended view, not a default camera accident.";
         }
 
@@ -1012,8 +1012,8 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 return ready ? "Camera bounds provider is present." : "Camera bounds provider is optional until the selected intent uses framing, camera-aware spawning, hazards, pickups, or bounded playfield behavior.";
 
             return ready
-                ? "Scene has an ICameraBoundsProvider for the selected camera/playfield proof."
-                : "Selected intent includes camera or bounds behavior. Assign CinemachineCameraRigController to GameplaySessionBootstrap > Camera Rig Controller; camera-aware runtime systems consume that single camera bounds provider.";
+                ? "Scene has an ICameraBoundsProvider for camera-aware runtime systems. This does not by itself prove camera follow; follow comes from CameraRigProfile focus mode and the resolved target."
+                : "Selected intent includes camera-aware bounds behavior. Assign CinemachineCameraRigController to GameplaySessionBootstrap > Camera Rig Controller when spawners, pickups, hazards, or screen-edge movement need visible camera bounds. Pawn camera follow is handled separately by CameraRigProfile focus mode.";
         }
 
         private static string GetScoreServiceMessage(bool setupReady, bool required, bool ready)

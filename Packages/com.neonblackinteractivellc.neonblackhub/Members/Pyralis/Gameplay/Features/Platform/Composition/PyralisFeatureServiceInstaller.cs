@@ -6,6 +6,7 @@ using NeonBlack.Gameplay.Features.Feedback;
 using NeonBlack.Gameplay.Features.GameFlow;
 using NeonBlack.Gameplay.Features.Rpg.Runtime;
 using NeonBlack.Gameplay.Features.Scoring;
+using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using VContainer;
@@ -35,16 +36,16 @@ namespace NeonBlack.Gameplay.Core.Runtime
             {
                 RegisterGameFlowServices(
                     builder,
-                    FindLoadedSceneComponent<GameManager>() ?? FindServiceInHierarchy<GameManager>(scopeRoot));
+                    PyralisLoadedSceneComponentSearch.Find<GameManager>() ?? FindServiceInHierarchy<GameManager>(scopeRoot));
             }
 
             if (featureServices.UsesScoringServices)
             {
                 RegisterScoringServices(
                     builder,
-                    FindLoadedSceneComponent<ParticipantScoreService>()
+                    PyralisLoadedSceneComponentSearch.Find<ParticipantScoreService>()
                     ?? FindServiceInHierarchy<ParticipantScoreService>(scopeRoot),
-                    FindLoadedSceneComponent<LeaderboardManager>()
+                    PyralisLoadedSceneComponentSearch.Find<LeaderboardManager>()
                     ?? FindServiceInHierarchy<LeaderboardManager>(scopeRoot));
             }
 
@@ -52,7 +53,7 @@ namespace NeonBlack.Gameplay.Core.Runtime
             {
                 RegisterFeedbackServices(
                     builder,
-                    FindLoadedSceneComponent<ParticipantFeedbackService>()
+                    PyralisLoadedSceneComponentSearch.Find<ParticipantFeedbackService>()
                     ?? FindServiceInHierarchy<ParticipantFeedbackService>(scopeRoot));
             }
         }
@@ -110,8 +111,11 @@ namespace NeonBlack.Gameplay.Core.Runtime
         {
             return scopeRoot != null ? scopeRoot.GetComponentInChildren<T>(true) : null;
         }
+    }
 
-        private static T FindLoadedSceneComponent<T>() where T : Component
+    internal static class PyralisLoadedSceneComponentSearch
+    {
+        public static T Find<T>() where T : Component
         {
             for (int sceneIndex = 0; sceneIndex < SceneManager.sceneCount; sceneIndex++)
             {
@@ -132,6 +136,46 @@ namespace NeonBlack.Gameplay.Core.Runtime
             }
 
             return null;
+        }
+
+        public static bool ContainsComponent<T>() where T : Component
+        {
+            return Find<T>() != null;
+        }
+
+        public static bool ContainsComponentInNamespace(string namespacePrefix)
+        {
+            if (string.IsNullOrWhiteSpace(namespacePrefix))
+                return false;
+
+            for (int sceneIndex = 0; sceneIndex < SceneManager.sceneCount; sceneIndex++)
+            {
+                Scene scene = SceneManager.GetSceneAt(sceneIndex);
+                if (!scene.isLoaded)
+                    continue;
+
+                GameObject[] roots = scene.GetRootGameObjects();
+                for (int rootIndex = 0; rootIndex < roots.Length; rootIndex++)
+                {
+                    GameObject root = roots[rootIndex];
+                    if (root == null)
+                        continue;
+
+                    MonoBehaviour[] behaviours = root.GetComponentsInChildren<MonoBehaviour>(true);
+                    for (int i = 0; i < behaviours.Length; i++)
+                    {
+                        Type type = behaviours[i] != null ? behaviours[i].GetType() : null;
+                        if (type != null
+                            && type.Namespace != null
+                            && type.Namespace.StartsWith(namespacePrefix, StringComparison.Ordinal))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
         }
     }
 }

@@ -1,4 +1,5 @@
 using NeonBlack.Gameplay.Core.Contracts;
+using System;
 using System.Collections.Generic;
 
 namespace NeonBlack.Gameplay.Editor
@@ -382,4 +383,216 @@ namespace NeonBlack.Gameplay.Editor
             };
         }
     }
+
+public readonly struct PyralisAuthoringAxiomGroup
+    {
+        public PyralisAuthoringAxiomGroup(string displayName, AuthoringWorldAxiom mask, params AuthoringWorldAxiom[] options)
+        {
+            DisplayName = displayName ?? string.Empty;
+            Mask = mask;
+            Options = options ?? Array.Empty<AuthoringWorldAxiom>();
+        }
+
+        public string DisplayName { get; }
+        public AuthoringWorldAxiom Mask { get; }
+        public AuthoringWorldAxiom[] Options { get; }
+    }
+
+    internal static class PyralisAuthoringVocabulary
+    {
+        private static readonly PyralisAuthoringAxiomGroup[] AxiomGroups =
+        {
+            new PyralisAuthoringAxiomGroup(
+                "Dimensionality",
+                AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.Dimensions3D,
+                AuthoringWorldAxiom.Dimensions2D,
+                AuthoringWorldAxiom.Dimensions3D),
+            new PyralisAuthoringAxiomGroup(
+                "Physics Gravity",
+                AuthoringWorldAxiom.GravityVertical | AuthoringWorldAxiom.GravityRadial | AuthoringWorldAxiom.GravityNone,
+                AuthoringWorldAxiom.GravityVertical,
+                AuthoringWorldAxiom.GravityRadial,
+                AuthoringWorldAxiom.GravityNone),
+            new PyralisAuthoringAxiomGroup(
+                "Sequence Timeline",
+                AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.TurnBased,
+                AuthoringWorldAxiom.Realtime,
+                AuthoringWorldAxiom.TurnBased),
+            new PyralisAuthoringAxiomGroup(
+                "Spatial Topology",
+                AuthoringWorldAxiom.BoundedSpace | AuthoringWorldAxiom.WrappedSpace | AuthoringWorldAxiom.InfiniteSpace,
+                AuthoringWorldAxiom.BoundedSpace,
+                AuthoringWorldAxiom.WrappedSpace,
+                AuthoringWorldAxiom.InfiniteSpace),
+            new PyralisAuthoringAxiomGroup(
+                "Networking",
+                AuthoringWorldAxiom.Networked,
+                AuthoringWorldAxiom.Networked)
+        };
+
+        private static readonly Dictionary<AuthoringWorldAxiom, AxiomMetadata> AxiomMetadataByValue =
+            new Dictionary<AuthoringWorldAxiom, AxiomMetadata>
+            {
+                { AuthoringWorldAxiom.Dimensions2D, new AxiomMetadata("2D Logic", "The world logic operates in a flat 2D plane (XY or XZ).") },
+                { AuthoringWorldAxiom.Dimensions3D, new AxiomMetadata("3D Logic", "The world logic operates in a full 3D coordinate space (XYZ).") },
+                { AuthoringWorldAxiom.GravityVertical, new AxiomMetadata("Vertical Gravity", "Standard downward gravity vector affecting mechanics.") },
+                { AuthoringWorldAxiom.GravityNone, new AxiomMetadata("Zero Gravity", "No inherent gravity vector; movement mechanics are unconstrained.") },
+                { AuthoringWorldAxiom.GravityRadial, new AxiomMetadata("Radial Gravity", "Gravity pulls toward a specific point or center in the world.") },
+                { AuthoringWorldAxiom.Realtime, new AxiomMetadata("Real-time Sequence", "Continuous time flow; mechanical actions resolve immediately.") },
+                { AuthoringWorldAxiom.TurnBased, new AxiomMetadata("Turn-based Sequence", "Discrete time steps; mechanics are phased or queued.") },
+                { AuthoringWorldAxiom.BoundedSpace, new AxiomMetadata("Bounded Topology", "The physical world has explicit limits or walls.") },
+                { AuthoringWorldAxiom.WrappedSpace, new AxiomMetadata("Wrapped Topology", "Mechanically, moving past one edge teleports to the opposite edge.") },
+                { AuthoringWorldAxiom.InfiniteSpace, new AxiomMetadata("Infinite Topology", "The physical world has no inherent mechanical bounds or limits.") },
+                { AuthoringWorldAxiom.Networked, new AxiomMetadata("Networked", "Game state and mechanics are replicated across a network.") }
+            };
+
+        private static readonly Dictionary<AuthoringCapability, CapabilityMetadata> CapabilityMetadataByValue =
+            new Dictionary<AuthoringCapability, CapabilityMetadata>
+            {
+                { AuthoringCapability.Setup, new CapabilityMetadata("Setup", "Foundational scene and bootstrap configuration.") },
+                { AuthoringCapability.Session, new CapabilityMetadata("Session", "High-level session orchestration and network authority.") },
+                { AuthoringCapability.Rules, new CapabilityMetadata("Rules", "Game-mode specific rulesets, win/loss conditions, and timers.") },
+                { AuthoringCapability.Participants, new CapabilityMetadata("Participants", "Player seats, AI slots, and input ownership.") },
+                { AuthoringCapability.Scoring, new CapabilityMetadata("Scoring", "Points, resources, leaderboards, and objective tracking.") },
+                { AuthoringCapability.Input, new CapabilityMetadata("Input", "Human and AI control schemes and event routing.") },
+                { AuthoringCapability.UI, new CapabilityMetadata("UI", "User interface, menus, and HUD presentation.") },
+                { AuthoringCapability.Movement, new CapabilityMetadata("Movement", "General movement archetype and intent definitions.") },
+                { AuthoringCapability.KineticMotor2D, new CapabilityMetadata("2D Kinetic Motor", "Low-level 2D physical motor implementation.") },
+                { AuthoringCapability.KineticMotor3D, new CapabilityMetadata("3D Kinetic Motor", "Low-level 3D motor implementation.") },
+                { AuthoringCapability.Steering2D, new CapabilityMetadata("2D Steering", "Pathfinding and navigation for 2D actors.") },
+                { AuthoringCapability.Steering3D, new CapabilityMetadata("3D Steering", "Pathfinding and navigation for 3D actors.") },
+                { AuthoringCapability.Traversal, new CapabilityMetadata("Traversal", "World interaction features like ledge-climb, ladders, and jumping.") },
+                { AuthoringCapability.Combat, new CapabilityMetadata("Combat", "General combat systems and weapon logic.") },
+                { AuthoringCapability.CombatState, new CapabilityMetadata("Combat State", "Health, damage tracking, and actor life-cycle state.") },
+                { AuthoringCapability.CombatSensors, new CapabilityMetadata("Hit Detection", "Hitboxes, hurtboxes, overlap checks, and collision-based combat events.") },
+                { AuthoringCapability.MeleeFlow, new CapabilityMetadata("Melee Flow", "Attack sequencing, combos, and melee state management.") },
+                { AuthoringCapability.RangedFlow, new CapabilityMetadata("Ranged Flow", "Projectile sequencing, reloading, and targeting logic.") },
+                { AuthoringCapability.TacticsAggressive, new CapabilityMetadata("Aggressive Tactics", "AI decision trees for charging, flanking, and attacking.") },
+                { AuthoringCapability.TacticsDefensive, new CapabilityMetadata("Defensive Tactics", "AI decision trees for guarding, retreating, and kiting.") },
+                { AuthoringCapability.Animation, new CapabilityMetadata("Animation", "Visual state machines and skeletal deformation.") },
+                { AuthoringCapability.VFX, new CapabilityMetadata("VFX", "Particle systems, post-processing, and shader effects.") },
+                { AuthoringCapability.Tabletop, new CapabilityMetadata("Tabletop", "Board game logic, piece management, and move policies.") },
+                { AuthoringCapability.Grid, new CapabilityMetadata("Grid", "Coordinate systems, cell properties, and spatial queries.") },
+                { AuthoringCapability.TurnBased, new CapabilityMetadata("Turn Based", "Phase management, action queues, and initiative.") },
+                { AuthoringCapability.Stats, new CapabilityMetadata("Stats", "Attributes, modifiers, and character progression systems.") },
+                { AuthoringCapability.Inventory, new CapabilityMetadata("Inventory", "Item storage, equipment, and resource management.") },
+                { AuthoringCapability.Dialogue, new CapabilityMetadata("Dialogue", "Narrative flow, branching conversations, and event nodes.") },
+                { AuthoringCapability.Puzzle, new CapabilityMetadata("Puzzle", "Logic gates, triggers, and state-based world interactions.") },
+                { AuthoringCapability.Rpg, new CapabilityMetadata("RPG", "General role-playing systems.") },
+                { AuthoringCapability.Quests, new CapabilityMetadata("Quests", "Quest tracking, objective management, and reward systems.") },
+                { AuthoringCapability.Vendors, new CapabilityMetadata("Vendors", "Shop logic, trading interfaces, and currency exchange.", "https://docs.neonblack.com/pyralis/vendors") },
+                { AuthoringCapability.SkillTree, new CapabilityMetadata("Skill Tree", "Abilities, unlock paths, and specialized talent trees.") },
+                { AuthoringCapability.Progression, new CapabilityMetadata("Progression", "Experience points, leveling, and milestone tracking.") },
+                { AuthoringCapability.Camera, new CapabilityMetadata("Camera", "Framing, following, and world containment boundaries.") },
+                { AuthoringCapability.Environment, new CapabilityMetadata("Environment", "World geometry, lighting, and static decoration.") },
+                { AuthoringCapability.Audio, new CapabilityMetadata("Audio", "Soundscapes, spatial audio, and music management.") },
+                { AuthoringCapability.Networking, new CapabilityMetadata("Networking", "State synchronization, authority, and multiplayer connectivity.") }
+            };
+
+        public static IReadOnlyList<PyralisAuthoringAxiomGroup> GetAxiomGroups()
+        {
+            return AxiomGroups;
+        }
+
+        public static bool HasCompleteCoreAxioms(AuthoringWorldAxiom axioms)
+        {
+            for (int i = 0; i < AxiomGroups.Length; i++)
+            {
+                PyralisAuthoringAxiomGroup group = AxiomGroups[i];
+                if (group.Mask == AuthoringWorldAxiom.Networked)
+                    continue;
+
+                if ((axioms & group.Mask) == 0)
+                    return false;
+            }
+
+            return true;
+        }
+
+        public static string GetAxiomDisplayName(AuthoringWorldAxiom axiom)
+        {
+            if (axiom == AuthoringWorldAxiom.None)
+                return "General";
+
+            return AxiomMetadataByValue.TryGetValue(axiom, out AxiomMetadata meta)
+                ? meta.DisplayName
+                : axiom.ToString();
+        }
+
+        public static string GetAxiomTooltip(AuthoringWorldAxiom axiom)
+        {
+            return AxiomMetadataByValue.TryGetValue(axiom, out AxiomMetadata meta)
+                ? meta.Tooltip
+                : "A reflective world axiom.";
+        }
+
+        public static string GetCapabilityDisplayName(AuthoringCapability capability)
+        {
+            if (capability == AuthoringCapability.None)
+                return "General";
+
+            return CapabilityMetadataByValue.TryGetValue(capability, out CapabilityMetadata meta)
+                ? meta.DisplayName
+                : AuthoringCapabilityRegistry.PrettifyTypeName(capability.ToString());
+        }
+
+        public static string GetCapabilityTooltip(AuthoringCapability capability)
+        {
+            return CapabilityMetadataByValue.TryGetValue(capability, out CapabilityMetadata meta)
+                ? meta.Tooltip
+                : "A reflective engine capability.";
+        }
+
+        public static string GetCapabilityDocumentationUrl(AuthoringCapability capability)
+        {
+            return CapabilityMetadataByValue.TryGetValue(capability, out CapabilityMetadata meta)
+                ? meta.DocumentationUrl
+                : string.Empty;
+        }
+
+        public static string GetCapabilityExpertAdvice(AuthoringCapability capability)
+        {
+            return CapabilityMetadataByValue.TryGetValue(capability, out CapabilityMetadata meta)
+                ? meta.ExpertAdvice
+                : string.Empty;
+        }
+
+        public static string GetCapabilityHygieneAdvice(AuthoringCapability capability)
+        {
+            return CapabilityMetadataByValue.TryGetValue(capability, out CapabilityMetadata meta) && !string.IsNullOrWhiteSpace(meta.HygieneAdvice)
+                ? meta.HygieneAdvice
+                : $"Ensure your scripts are tagged with [AuthoringContract(Capability = AuthoringCapability.{capability})].";
+        }
+
+        private readonly struct AxiomMetadata
+        {
+            public AxiomMetadata(string displayName, string tooltip)
+            {
+                DisplayName = displayName;
+                Tooltip = tooltip;
+            }
+
+            public string DisplayName { get; }
+            public string Tooltip { get; }
+        }
+
+        private readonly struct CapabilityMetadata
+        {
+            public CapabilityMetadata(string displayName, string tooltip, string documentationUrl = "", string expertAdvice = "", string hygieneAdvice = "")
+            {
+                DisplayName = displayName;
+                Tooltip = tooltip;
+                DocumentationUrl = documentationUrl;
+                ExpertAdvice = expertAdvice;
+                HygieneAdvice = hygieneAdvice;
+            }
+
+            public string DisplayName { get; }
+            public string Tooltip { get; }
+            public string DocumentationUrl { get; }
+            public string ExpertAdvice { get; }
+            public string HygieneAdvice { get; }
+        }
+    }
+
 }

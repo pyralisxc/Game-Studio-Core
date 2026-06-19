@@ -51,6 +51,12 @@ namespace NeonBlack.Gameplay.Core.Contracts
         public string SetupNodeId { get; set; }
 
         /// <summary>
+        /// Stable semantic path used by Intent and graph projections for hierarchical capability selection.
+        /// Example: "Movement/Traversal/FakeGravityJump". Keep labels/tooltips in editor grammar.
+        /// </summary>
+        public string CapabilityPath { get; set; }
+
+        /// <summary>
         /// The presentation lane this contract belongs to (e.g., "Sprite2D", "Rigged3D").
         /// </summary>
         public string Lane { get; set; }
@@ -139,6 +145,18 @@ namespace NeonBlack.Gameplay.Core.Contracts
         /// Roles or tags consumed by this contract (e.g., "MainCamera", "PlayerPawn").
         /// </summary>
         public string[] ConsumedRoles { get; set; }
+
+        /// <summary>
+        /// Stable semantic role tags used by reflection and Intent projection.
+        /// Use these for non-UI meaning that cannot be inferred from fields or interfaces.
+        /// </summary>
+        public string[] RoleTags { get; set; }
+
+        /// <summary>
+        /// Whether this contract should appear as a directly selectable Intent ingredient.
+        /// Defaults to true; set false for helper contracts that only enrich graph evidence.
+        /// </summary>
+        public bool SelectableIntent { get; set; } = true;
 
         /// <summary>
         /// Native setup steps or components that this contract provides.

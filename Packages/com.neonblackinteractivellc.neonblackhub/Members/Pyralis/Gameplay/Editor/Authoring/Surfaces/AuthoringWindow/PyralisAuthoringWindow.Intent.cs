@@ -107,10 +107,10 @@ namespace NeonBlack.Gameplay.Editor
         {
             if (container == null) return;
 
-            IReadOnlyList<AuthoringWorldAxiomGroup> groups = AuthoringWorldAxiomRegistry.GetIntentGroups();
+            IReadOnlyList<PyralisAuthoringAxiomGroup> groups = PyralisAuthoringVocabulary.GetAxiomGroups();
             for (int i = 0; i < groups.Count; i++)
             {
-                AuthoringWorldAxiomGroup group = groups[i];
+                PyralisAuthoringAxiomGroup group = groups[i];
                 AddAxiomDropdown(container, group.DisplayName, group.Mask, group.Options);
             }
         }
@@ -123,14 +123,14 @@ namespace NeonBlack.Gameplay.Editor
 
             for (int i = 0; i < options.Length; i++)
             {
-                choices.Add(AuthoringWorldAxiomRegistry.GetDisplayName(options[i]));
+                choices.Add(PyralisAuthoringVocabulary.GetAxiomDisplayName(options[i]));
                 if (current == options[i])
                     selectedIndex = i + 1;
             }
 
             var dropdown = new DropdownField(label, choices, selectedIndex);
             dropdown.tooltip = selectedIndex > 0
-                ? AuthoringWorldAxiomRegistry.GetTooltip(options[selectedIndex - 1])
+                ? PyralisAuthoringVocabulary.GetAxiomTooltip(options[selectedIndex - 1])
                 : "No mechanical axiom selected for this category.";
 
             dropdown.RegisterValueChangedCallback(evt =>
@@ -141,7 +141,7 @@ namespace NeonBlack.Gameplay.Editor
                 {
                     AuthoringWorldAxiom selected = options[index - 1];
                     _intentAxioms |= selected;
-                    dropdown.tooltip = AuthoringWorldAxiomRegistry.GetTooltip(selected);
+                    dropdown.tooltip = PyralisAuthoringVocabulary.GetAxiomTooltip(selected);
                 }
                 else
                 {
@@ -202,7 +202,8 @@ namespace NeonBlack.Gameplay.Editor
             grid.AddToClassList("capability-grid");
             container.Add(grid);
 
-            Dictionary<string, List<AuthoringCapability>> groups = BuildIntentCapabilityGroups();
+            Dictionary<string, List<PyralisAuthoringCapabilityDescriptor>> groups = BuildIntentDescriptorGroups();
+            HashSet<string> selectedIds = new HashSet<string>(GetSelectedIntentDescriptorIds(), StringComparer.Ordinal);
             foreach (var group in groups)
             {
                 var foldout = new Foldout
@@ -218,16 +219,18 @@ namespace NeonBlack.Gameplay.Editor
                     SetCapabilityGroupFoldout(key, evt.newValue);
                 });
 
-                foreach (AuthoringCapability cap in group.Value)
+                foreach (PyralisAuthoringCapabilityDescriptor descriptor in group.Value)
                 {
-                    var toggle = new Toggle(AuthoringCapabilityRegistry.GetDisplayName(cap));
-                    toggle.name = "cap_" + cap.ToString();
-                    toggle.value = (_intentCapabilities & cap) != 0;
-                    toggle.tooltip = GetIntentCapabilityTooltip(cap);
+                    if (descriptor == null)
+                        continue;
+
+                    var toggle = new Toggle(GetIntentDescriptorLabel(descriptor));
+                    toggle.name = "cap_" + descriptor.StableId.Replace('.', '_').Replace('/', '_');
+                    toggle.value = selectedIds.Contains(descriptor.StableId);
+                    toggle.tooltip = GetIntentDescriptorTooltip(descriptor);
                     toggle.RegisterValueChangedCallback(evt =>
                     {
-                        if (evt.newValue) _intentCapabilities |= cap;
-                        else _intentCapabilities &= ~cap;
+                        UpdateSelectedIntentDescriptor(descriptor.StableId, evt.newValue);
                         MarkIntentSetupChangesPending();
                         InvalidateAuthoringCache();
                         UpdateAdvisor(rootVisualElement);
@@ -238,105 +241,126 @@ namespace NeonBlack.Gameplay.Editor
             }
         }
 
-        private Dictionary<string, List<AuthoringCapability>> BuildIntentCapabilityGroups()
+        private Dictionary<string, List<PyralisAuthoringCapabilityDescriptor>> BuildIntentDescriptorGroups()
         {
-            Dictionary<string, List<AuthoringCapability>> groups = new Dictionary<string, List<AuthoringCapability>>();
-            foreach (AuthoringCapability capability in AuthoringCapabilityRegistry.GetAllIndividualCapabilities())
+            Dictionary<string, List<PyralisAuthoringCapabilityDescriptor>> groups =
+                new Dictionary<string, List<PyralisAuthoringCapabilityDescriptor>>(StringComparer.Ordinal);
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors =
+                PyralisAuthoringCapabilityDescriptorRegistry.BuildIntentDescriptors(_intentLane, _intentAxioms);
+
+            for (int i = 0; i < descriptors.Count; i++)
             {
-                if (!ShouldShowIntentCapability(capability))
+                PyralisAuthoringCapabilityDescriptor descriptor = descriptors[i];
+                if (descriptor == null)
                     continue;
 
-                string group = GetIntentCapabilityGroup(capability);
-
-                if (!groups.TryGetValue(group, out List<AuthoringCapability> capabilities))
+                string group = GetIntentDescriptorGroup(descriptor);
+                if (!groups.TryGetValue(group, out List<PyralisAuthoringCapabilityDescriptor> groupDescriptors))
                 {
-                    capabilities = new List<AuthoringCapability>();
-                    groups.Add(group, capabilities);
+                    groupDescriptors = new List<PyralisAuthoringCapabilityDescriptor>();
+                    groups.Add(group, groupDescriptors);
                 }
 
-                capabilities.Add(capability);
+                groupDescriptors.Add(descriptor);
             }
 
-            foreach (List<AuthoringCapability> capabilities in groups.Values)
-                capabilities.Sort((left, right) => GetCapabilitySortIndex(left).CompareTo(GetCapabilitySortIndex(right)));
+            foreach (List<PyralisAuthoringCapabilityDescriptor> groupDescriptors in groups.Values)
+            {
+                groupDescriptors.Sort((left, right) =>
+                {
+                    int orderCompare = left.SortOrder.CompareTo(right.SortOrder);
+                    return orderCompare != 0
+                        ? orderCompare
+                        : string.Compare(left.DisplayName, right.DisplayName, StringComparison.Ordinal);
+                });
+            }
 
             return groups;
         }
 
-        private bool ShouldShowIntentCapability(AuthoringCapability capability)
+        private static string GetIntentDescriptorGroup(PyralisAuthoringCapabilityDescriptor descriptor)
         {
-            return capability != AuthoringCapability.None;
-        }
+            if (descriptor == null)
+                return "Shared Ingredients";
 
-        private static string GetIntentCapabilityGroup(AuthoringCapability capability)
-        {
-            switch (capability)
+            if (!string.IsNullOrWhiteSpace(descriptor.CapabilityPath))
             {
-                case AuthoringCapability.Setup:
-                case AuthoringCapability.Session:
-                case AuthoringCapability.Rules:
-                case AuthoringCapability.Participants:
-                case AuthoringCapability.Scoring:
-                case AuthoringCapability.Input:
-                case AuthoringCapability.UI:
-                    return "Core Setup";
-
-                case AuthoringCapability.Movement:
-                case AuthoringCapability.KineticMotor2D:
-                case AuthoringCapability.KineticMotor3D:
-                case AuthoringCapability.Steering2D:
-                case AuthoringCapability.Steering3D:
-                case AuthoringCapability.Traversal:
-                case AuthoringCapability.Combat:
-                case AuthoringCapability.CombatState:
-                case AuthoringCapability.CombatSensors:
-                case AuthoringCapability.MeleeFlow:
-                case AuthoringCapability.RangedFlow:
-                case AuthoringCapability.TacticsAggressive:
-                case AuthoringCapability.TacticsDefensive:
-                case AuthoringCapability.Animation:
-                case AuthoringCapability.VFX:
-                    return "Actor & Action";
-
-                case AuthoringCapability.Tabletop:
-                case AuthoringCapability.Grid:
-                case AuthoringCapability.TurnBased:
-                    return "Strategy & Board";
-
-                case AuthoringCapability.Stats:
-                case AuthoringCapability.Inventory:
-                case AuthoringCapability.Dialogue:
-                case AuthoringCapability.Puzzle:
-                case AuthoringCapability.Rpg:
-                case AuthoringCapability.Quests:
-                case AuthoringCapability.Vendors:
-                case AuthoringCapability.SkillTree:
-                case AuthoringCapability.Progression:
-                    return "RPG & Narrative";
-
-                case AuthoringCapability.Camera:
-                case AuthoringCapability.Environment:
-                case AuthoringCapability.Audio:
-                case AuthoringCapability.Networking:
-                    return "World & Meta";
-
-                default:
-                    return "Shared Ingredients";
-            }
-        }
-
-        private int GetCapabilitySortIndex(AuthoringCapability capability)
-        {
-            int index = 0;
-            foreach (AuthoringCapability candidate in AuthoringCapabilityRegistry.GetAllIndividualCapabilities())
-            {
-                if (candidate == capability)
-                    return index;
-
-                index++;
+                string[] parts = descriptor.CapabilityPath.Split('/');
+                if (parts.Length > 1 && !string.IsNullOrWhiteSpace(parts[0]))
+                    return parts[0].Trim();
             }
 
-            return int.MaxValue;
+            return string.IsNullOrWhiteSpace(descriptor.Group) ? "Shared Ingredients" : descriptor.Group;
+        }
+
+        private static string GetIntentDescriptorLabel(PyralisAuthoringCapabilityDescriptor descriptor)
+        {
+            if (descriptor == null)
+                return "Unknown";
+
+            if (string.IsNullOrWhiteSpace(descriptor.CapabilityPath))
+                return descriptor.DisplayName;
+
+            string[] parts = descriptor.CapabilityPath.Split('/');
+            if (parts.Length <= 1)
+                return descriptor.DisplayName;
+
+            List<string> labels = new List<string>();
+            for (int i = 1; i < parts.Length; i++)
+            {
+                if (!string.IsNullOrWhiteSpace(parts[i]))
+                    labels.Add(parts[i].Trim());
+            }
+
+            return labels.Count > 0
+                ? string.Join(" / ", labels)
+                : descriptor.DisplayName;
+        }
+
+        private string GetIntentDescriptorTooltip(PyralisAuthoringCapabilityDescriptor descriptor)
+        {
+            if (descriptor == null)
+                return string.Empty;
+
+            string baseTooltip = PyralisAuthoringVocabulary.GetCapabilityTooltip(descriptor.Capability);
+            if (!string.IsNullOrWhiteSpace(descriptor.Summary))
+                return baseTooltip + "\n\nGraph match: " + descriptor.DisplayName + "\n" + descriptor.Summary;
+
+            return baseTooltip + "\n\nGraph match: " + descriptor.DisplayName + ".";
+        }
+
+        private string[] GetSelectedIntentDescriptorIds()
+        {
+            if (string.IsNullOrWhiteSpace(_intentDescriptorIdsValue))
+                return Array.Empty<string>();
+
+            string[] values = _intentDescriptorIdsValue.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+            List<string> cleaned = new List<string>();
+            for (int i = 0; i < values.Length; i++)
+            {
+                string value = values[i]?.Trim();
+                if (!string.IsNullOrWhiteSpace(value) && !cleaned.Contains(value))
+                    cleaned.Add(value);
+            }
+
+            return cleaned.ToArray();
+        }
+
+        private void UpdateSelectedIntentDescriptor(string descriptorId, bool selected)
+        {
+            if (string.IsNullOrWhiteSpace(descriptorId))
+                return;
+
+            HashSet<string> ids = new HashSet<string>(GetSelectedIntentDescriptorIds(), StringComparer.Ordinal);
+            if (selected)
+                ids.Add(descriptorId);
+            else
+                ids.Remove(descriptorId);
+
+            List<string> ordered = new List<string>(ids);
+            ordered.Sort(StringComparer.Ordinal);
+            _intentDescriptorIdsValue = string.Join(";", ordered);
+            _intentCapabilities = PyralisAuthoringCapabilityDescriptorRegistry.BuildCapabilitiesForDescriptors(ordered);
         }
 
         private bool GetCapabilityGroupFoldout(string group)
@@ -350,25 +374,6 @@ namespace NeonBlack.Gameplay.Editor
         {
             if (!string.IsNullOrWhiteSpace(group))
                 _capabilityGroupFoldouts[group] = value;
-        }
-
-        private string GetIntentCapabilityTooltip(AuthoringCapability capability)
-        {
-            string baseTooltip = AuthoringCapabilityRegistry.GetTooltip(capability);
-            PyralisAuthoringCapabilityDescriptor descriptor =
-                PyralisAuthoringCapabilityDescriptorRegistry.FindBestForCapability(capability, _intentLane, _intentAxioms);
-            if (descriptor != null)
-            {
-                string matched = string.IsNullOrWhiteSpace(descriptor.DisplayName)
-                    ? descriptor.Family.ToString()
-                    : descriptor.DisplayName;
-                if (!string.IsNullOrWhiteSpace(descriptor.Summary))
-                    return baseTooltip + "\n\nBest graph match: " + matched + "\n" + descriptor.Summary;
-
-                return baseTooltip + "\n\nBest graph match: " + matched + ".";
-            }
-
-            return baseTooltip;
         }
 
         private void FilterCapabilities(VisualElement container, string filter)
@@ -436,7 +441,7 @@ namespace NeonBlack.Gameplay.Editor
 
         private bool HasCompleteCoreAxioms()
         {
-            return AuthoringWorldAxiomRegistry.HasCompleteCoreAxioms(_intentAxioms);
+            return PyralisAuthoringVocabulary.HasCompleteCoreAxioms(_intentAxioms);
         }
 
         private void MarkIntentSetupChangesPending()

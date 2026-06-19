@@ -38,17 +38,17 @@ namespace NeonBlack.Gameplay.Editor
             foreach (AuthoringCapability cap in AuthoringCapabilityRegistry.GetAllIndividualCapabilities())
             {
                 if (cap == AuthoringCapability.None) continue;
-                
+
                 IReadOnlyList<PyralisAuthoringFact> facts =
                     PyralisAuthoringSetupGraphProjection.BuildRuntimeCapabilityFactsForCapability(null, cap);
 
                 if (facts.Count > 0)
                 {
                     DrawRuntimeCapabilityGroup(
-                        AuthoringCapabilityRegistry.GetDisplayName(cap), 
-                        "Capability", 
-                        facts, 
-                        AuthoringCapabilityRegistry.GetTooltip(cap));
+                        PyralisAuthoringVocabulary.GetCapabilityDisplayName(cap),
+                        "Capability",
+                        facts,
+                        PyralisAuthoringVocabulary.GetCapabilityTooltip(cap));
                 }
             }
         }
@@ -136,7 +136,7 @@ namespace NeonBlack.Gameplay.Editor
                 string laneName = laneContext.Value.ToString();
                 if (fact.IsExplicitlyUnsupported(laneName))
                     return "Explicitly unsupported for this lane";
-                
+
                 if (!fact.HasLane(laneName))
                     return "Available in Pyralis, but not explicitly relevant to this lane";
             }

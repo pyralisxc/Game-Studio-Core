@@ -295,7 +295,7 @@ namespace NeonBlack.Gameplay.Editor
             foreach (AuthoringCapability capability in AuthoringCapabilityRegistry.GetAllIndividualCapabilities())
             {
                 if ((contract.Capability & capability) != 0)
-                    AddGoalTag(tags, AuthoringCapabilityRegistry.GetDisplayName(capability));
+                    AddGoalTag(tags, PyralisAuthoringVocabulary.GetCapabilityDisplayName(capability));
             }
 
             AddGoalTag(tags, contract.AuthoringCategory);

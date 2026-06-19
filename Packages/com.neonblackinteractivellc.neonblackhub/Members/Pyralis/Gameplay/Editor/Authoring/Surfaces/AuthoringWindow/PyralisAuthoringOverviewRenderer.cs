@@ -14,18 +14,18 @@ namespace NeonBlack.Gameplay.Editor
             if (model == null)
                 return;
 
-            EditorGUILayout.LabelField("Next Unity Action", EditorStyles.miniBoldLabel);
+            EditorGUILayout.LabelField("Do This Next", EditorStyles.miniBoldLabel);
             PyralisAuthoringCurrentStepGraphRow currentStep = PyralisAuthoringSetupGraphProjection.BuildCurrentStepRow(graph);
             string guidance = currentStep != null && !string.IsNullOrWhiteSpace(currentStep.Message)
                 ? currentStep.Message
                 : model.FirstProofGuidance;
             PyralisAuthoringWindowText.DrawSemanticHelpBox(guidance, MessageType.Info);
+            PyralisAuthoringWindowPrimitives.DrawMiniField("Intent Focus", PyralisAuthoringSetupGraphProjection.BuildRouteShapeSummary(graph), "Intent filters Overview and Guide. Map still shows current scene/setup reality.");
             if (currentStep != null && !string.IsNullOrWhiteSpace(currentStep.RouteName))
                 PyralisAuthoringWindowPrimitives.DrawMiniField("Route", currentStep.RouteName);
             PyralisAuthoringWindowPrimitives.DrawMiniField("Next", currentStep != null && !string.IsNullOrWhiteSpace(currentStep.Label) ? currentStep.Label : model.BestNextAction);
             if (currentStep != null && currentStep.NativeAction.HasValue)
                 PyralisAuthoringSurfaceBeacon.DrawNativeAction(currentStep.NativeAction.Value, currentStep.NativeAction.Value.ToGuidanceSentence());
-            PyralisAuthoringWindowPrimitives.DrawMiniField("Proof Status", GetFlowTestStatus(model));
         }
 
         public static void DrawActionButtons(PyralisAuthoringOverviewModel model, Action openIntent, Action openGuide, Action openMap)
@@ -110,11 +110,11 @@ namespace NeonBlack.Gameplay.Editor
             EditorGUILayout.Space(4f);
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                EditorGUILayout.LabelField("First Playable Proof", proofNode != null ? proofNode.Label : model.FirstProofLabel, EditorStyles.miniBoldLabel);
-                PyralisAuthoringWindowPrimitives.DrawMiniField("Setup Surface", GetFirstValue(proofNode?.NativeSetup, model.FirstProofSetupSurface));
+                EditorGUILayout.LabelField("First Proof After Do Now", proofNode != null ? proofNode.Label : model.FirstProofLabel, EditorStyles.miniBoldLabel);
+                PyralisAuthoringWindowPrimitives.DrawMiniField("When To Test", GetFlowTestStatus(model));
+                PyralisAuthoringWindowPrimitives.DrawMiniField("Play Mode Action", GetFirstValue(proofNode?.NativeSetup, model.FirstProofSetupSurface));
                 PyralisAuthoringWindowPrimitives.DrawMiniField("Success Looks Like", !string.IsNullOrWhiteSpace(proofNode?.BlockingReason) ? proofNode.BlockingReason : model.FirstProofSuccessCriteria);
-                PyralisAuthoringWindowPrimitives.DrawMiniField("Route Chain", model.FirstProofChainSummary);
-                PyralisAuthoringWindowPrimitives.DrawMiniField("Defer Until After Proof", model.FirstProofDeferUntilAfter);
+                PyralisAuthoringWindowPrimitives.DrawMiniField("Do Later", model.FirstProofDeferUntilAfter);
             }
         }
 
@@ -226,7 +226,7 @@ namespace NeonBlack.Gameplay.Editor
             switch (title)
             {
                 case "Do Now":
-                    return "No blockers in this lane.";
+                    return "No required blockers for the current Intent route.";
                 case "Proof Enhancers":
                     return "No route-specific proof helpers are asking for attention right now.";
                 case "Optional Features":

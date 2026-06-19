@@ -4,12 +4,10 @@
   <Project Path="NeonBlack.Gameplay.Feature.Combat.csproj" />
   <Project Path="UnityEngine.TestRunner.csproj" />
   <Project Path="NeonBlack.Gameplay.Core.csproj" />
-  <Project Path="NeonBlack.Gameplay.Editor.Tests.csproj" />
   <Project Path="VContainer.csproj" />
   <Project Path="NeonBlack.Gameplay.Editor.csproj" />
   <Project Path="UnityEditor.TestRunner.csproj" />
   <Project Path="NeonBlack.Gameplay.Data.csproj" />
-  <Project Path="NeonBlack.Gameplay.Tests.csproj" />
   <Project Path="NeonBlack.Gameplay.csproj" />
   <Project Path="Unity.PerformanceTesting.csproj" />
   <Project Path="NeonBlack.Gameplay.Characters.csproj" />
@@ -32,6 +30,8 @@
   <Project Path="NeonBlack.Gameplay.Feature.Scoring.csproj" />
   <Project Path="NeonBlack.Gameplay.Feature.Feedback.csproj" />
   <Project Path="NeonBlack.Gameplay.Feature.Traversal.csproj" />
+  <Project Path="NeonBlack.Gameplay.Tests.csproj" />
+  <Project Path="NeonBlack.Gameplay.Editor.Tests.csproj" />
   <Project Path="NeonBlack.Gameplay.Feature.Traversal.Editor.csproj" />
   <Project Path="Unity.InternalAPIEngineBridge.004.csproj" />
   <Project Path="NeonBlack.Gameplay.Feature.Interaction.csproj" />

@@ -33,6 +33,7 @@ Desktop.ini
 # Studio tools backups and generated markers
 .studio-tools-backups/
 _please_delete.txt
+Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Editor/Authoring/TempGraphs/
 
 # Ignore local settings
 .vscode/

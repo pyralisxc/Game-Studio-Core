@@ -12,10 +12,12 @@ namespace NeonBlack.Gameplay.Data.Definitions
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Movement | AuthoringCapability.Combat, 
+        CapabilityPath = "Character / Pawn Gameplay/Pawn Definition",
         Priority = AuthoringPriority.Primary,
         SetupNodeId = "pawn.definition",
         Lane = "Entity",
         Relevance = "Core definition for a controllable entity, linking its prefab to movement, combat, and animation profiles.",
+        RoleTags = new[] { "PawnDefinition", "PawnPrefab", "ActorBody" },
         AssignmentFields = new[] { nameof(pawnPrefab), nameof(movementProfile), nameof(combatProfile), nameof(animationProfile), nameof(featureModules) },
         NativeSetup = new[] { "PawnRoot" },
         FirstProof = "Assign this Pawn Definition to a Participant Definition or a Spawner in the scene.",

@@ -13,7 +13,7 @@ namespace NeonBlack.Gameplay.Editor
         {
             EditorGUILayout.LabelField("Setup Map", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox("Use Map for scene and setup reality: selected context, authored links, scene surfaces, missing fields, and object wiring. Intent does not change this view; Hygiene owns graph integrity and developer audits.", MessageType.Info);
-            PyralisAuthoringGraphJsonExportControl.Draw("Map", graph);
+            PyralisAuthoringGraphJsonExportControl.DrawMapSnapshot(graph);
             DrawActiveAndSelectedContext(activeSetup, selection);
             DrawYouAreHereChain(graph);
             DrawSceneSurfaceSnapshot(graph);

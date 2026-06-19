@@ -115,11 +115,13 @@ namespace NeonBlack.Gameplay.Data.Profiles
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Input,
+        CapabilityPath = "Core Setup/Input/Participant Input Profile",
         Priority = AuthoringPriority.AuxiliaryDefault,
         Lane = "Input",
         Relevance = "Maps participant-owned gameplay actions (Move, Jump, Interact) to Unity Input System actions.",
         Axioms = AuthoringWorldAxiom.None,
         ProfileType = typeof(InputProfile),
+        RoleTags = new[] { "ParticipantInput", "InputProfile", "InputActions" },
         AssignmentFields = new[] { nameof(actions), nameof(actionBindings), nameof(primaryActionMap) },
         FirstProof = "Verify that input actions mapped in this profile correctly drive character movement and actions.",
         ExpertAdvice = "InputProfile is assigned from ParticipantDefinition.inputProfile. The participant owns who is controlling the route; pawn input modules only consume the resolved profile.",

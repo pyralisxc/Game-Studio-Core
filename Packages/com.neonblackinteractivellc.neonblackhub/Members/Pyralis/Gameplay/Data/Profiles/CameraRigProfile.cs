@@ -9,12 +9,14 @@ namespace NeonBlack.Gameplay.Data.Profiles
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Camera, 
+        CapabilityPath = "World & Meta/Camera/Camera Rig Profile",
         Priority = AuthoringPriority.AuxiliaryDefault,
         Lane = "Camera",
         Relevance = "Project-window creation path for camera framing, follow, zoom, and 2D orthographic route choices.",
-        AssignmentFields = new[] { nameof(presentationMode), nameof(useCinemachine), nameof(followOffset), nameof(orthographic), nameof(minZoom), nameof(maxZoom) },
-        FirstProof = "Verify the camera follows the focus object at the specified offset.",
-        ExpertAdvice = "CameraRigProfile defines how the world is seen. For 2D games, check 'Orthographic'. Use 'Follow Offset' to position the camera relative to the pawn or group focus.",
+        RoleTags = new[] { "CameraProfile", "ParticipantFollow", "PlayfieldView" },
+        AssignmentFields = new[] { nameof(presentationMode), nameof(focusMode), nameof(useCinemachine), nameof(followOffset), nameof(orthographic), nameof(minZoom), nameof(maxZoom) },
+        FirstProof = "Verify Cinemachine follows the profile's selected focus target at the specified framing.",
+        ExpertAdvice = "CameraRigProfile chooses the focus route and framing; Cinemachine composes the actual view. For 2D games, check Orthographic. Use Participant Group for shared pawn cameras, Participant Pawns for split-screen/per-participant cameras, Playfield Center for board/menu views, Explicit Scene Target for authored anchors, and Manual Cinemachine when the scene owns Follow/LookAt directly.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/camera"
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Camera Rig Profile", fileName = "CameraRigProfile", order = -70)]
@@ -32,7 +34,18 @@ namespace NeonBlack.Gameplay.Data.Profiles
             SplitScreen
         }
 
+        public enum CameraFocusMode
+        {
+            ManualCinemachine,
+            ParticipantPawns,
+            ParticipantGroup,
+            PlayfieldCenter,
+            ExplicitSceneTarget
+        }
+
         public CameraPresentationMode presentationMode = CameraPresentationMode.Shared;
+        [Tooltip("Chooses which gameplay target Pyralis routes into Cinemachine. Manual Cinemachine leaves Follow/LookAt untouched.")]
+        public CameraFocusMode focusMode = CameraFocusMode.ParticipantGroup;
         public bool useCinemachine = true;
         public bool orthographic = false;
         public bool lockToPlayfield = true;

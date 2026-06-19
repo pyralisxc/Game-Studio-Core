@@ -11,9 +11,11 @@ namespace NeonBlack.Gameplay.Features.Input
 /// </summary>
 [AuthoringContract(
     Capability = AuthoringCapability.Input | AuthoringCapability.Movement, 
+    CapabilityPath = "Core Setup/Input/2D Motor Input Adapter",
     Relevance = "Primary input module for 2D characters. Translates participant input into Motor2D movement.",
     Axioms = AuthoringWorldAxiom.Dimensions2D,
     RequiredComponents = new[] { typeof(Motor2D) },
+    RoleTags = new[] { "ParticipantInputConsumer", "Motor2DInput", "PawnInputAdapter" },
     FirstProof = "Verify that player input moves the pawn in 2D space and respects the active InputProfile."
 )]
 [AddComponentMenu("NeonBlack/Gameplay/Input/2D Motor Input Adapter")]

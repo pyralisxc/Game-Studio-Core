@@ -11,7 +11,6 @@ This folder intentionally stays small. Active docs describe current truth only; 
 - `Authoring/AUTHORING_BLUEPRINT.md` - Authoring Window behavior, tab ownership, graph projection, and hygiene rules.
 - `Authoring/AUTHORING_MODEL.md` - asset/profile/runtime relationship map.
 - `Authoring/CANONICAL_SETUP.md` - technical setup-chain contract.
-- `Authoring/ROUTE_CAPABILITY_COOKBOOK.md` - compact route-capability vocabulary reference.
 
 ## Maintenance Rule
 

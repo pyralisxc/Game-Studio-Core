@@ -35,6 +35,7 @@ namespace NeonBlack.Gameplay.Editor
         [SerializeField] private RuntimeCapabilityLaneTag _intentLane = RuntimeCapabilityLaneTag.Sprite2D;
         [SerializeField] private AuthoringWorldAxiom _intentAxioms = AuthoringWorldAxiom.None;
         [SerializeField] private long _intentCapabilitiesValue = 0;
+        [SerializeField] private string _intentDescriptorIdsValue = "";
         private AuthoringCapability _intentCapabilities 
         { 
             get => (AuthoringCapability)_intentCapabilitiesValue; 
@@ -231,7 +232,7 @@ namespace NeonBlack.Gameplay.Editor
                     DrawGuideMode(
                         selection,
                         activeSetup,
-                        GetCachedCurrentSetupGraph(activeSetup != null ? activeSetup : selection));
+                        GetCachedIntentProjectedSetupGraph(activeSetup != null ? activeSetup : selection));
                     break;
                 case AuthoringWindowMode.Map:
                     PyralisAuthoringMapRenderer.Draw(activeSetup, selection, GetCachedCurrentSetupGraph(activeSetup));
@@ -239,8 +240,7 @@ namespace NeonBlack.Gameplay.Editor
                 case AuthoringWindowMode.Hygiene:
                     PyralisAuthoringHygieneRenderer.Draw(
                         activeSetup,
-                        GetCachedCurrentSetupGraph(activeSetup),
-                        GetCachedIntentProjectedSetupGraph(activeSetup));
+                        GetCachedCurrentSetupGraph(activeSetup));
                     break;
                 case AuthoringWindowMode.Facts:
                     PyralisAuthoringFactExplorerRenderer.Draw(activeSetup, GetCachedCurrentSetupGraph(activeSetup));
@@ -329,7 +329,7 @@ namespace NeonBlack.Gameplay.Editor
         private void DrawOverviewMode(Object activeSetup, Object selection)
         {
             Object graphSource = activeSetup != null ? activeSetup : null;
-            PyralisAuthoringSetupGraph graph = GetCachedCurrentSetupGraph(graphSource);
+            PyralisAuthoringSetupGraph graph = GetCachedIntentProjectedSetupGraph(graphSource);
             PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(activeSetup, graph);
 
             EditorGUILayout.LabelField("Overview", EditorStyles.boldLabel);
@@ -340,9 +340,9 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             EditorGUILayout.Space(12f);
-            PyralisAuthoringOverviewRenderer.DrawFirstProofCard(model, graph);
             PyralisAuthoringOverviewRenderer.DrawLane("Do Now", "Only route-required missing or blocked work appears here.", model.DoNow);
             PyralisAuthoringOverviewRenderer.DrawLane("Proof Enhancers", "Useful before Play Mode when they make the first proof clearer.", model.DoSoon);
+            PyralisAuthoringOverviewRenderer.DrawFirstProofCard(model, graph);
         }
 
         private void OpenIntentFromOverview()
@@ -365,7 +365,7 @@ namespace NeonBlack.Gameplay.Editor
 
         private PyralisAuthoringIntentModel GetCachedIntentModel()
         {
-            string key = $"{_intentLane}_{_intentAxioms}_{_intentCapabilities}_{_authoringCacheVersion}";
+            string key = $"{_intentLane}_{_intentAxioms}_{_intentCapabilities}_{_intentDescriptorIdsValue}_{_authoringCacheVersion}";
             if (_cachedIntentModelKey == key && _cachedIntentModel != null)
                 return _cachedIntentModel;
 
@@ -377,7 +377,11 @@ namespace NeonBlack.Gameplay.Editor
 
         private PyralisAuthoringIntentSelection GetCurrentIntentSelection()
         {
-            return new PyralisAuthoringIntentSelection(_intentLane, _intentCapabilities, _intentAxioms);
+            return new PyralisAuthoringIntentSelection(
+                _intentLane,
+                _intentCapabilities,
+                _intentAxioms,
+                GetSelectedIntentDescriptorIds());
         }
 
         private PyralisAuthoringSetupGraph GetCachedCurrentSetupGraph(Object graphSource)
@@ -415,6 +419,7 @@ namespace NeonBlack.Gameplay.Editor
                 + _intentLane
                 + ":" + _intentAxioms
                 + ":" + _intentCapabilities
+                + ":" + _intentDescriptorIdsValue
                 + ":" + _authoringCacheVersion;
         }
 

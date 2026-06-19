@@ -27,6 +27,9 @@ namespace NeonBlack.Gameplay.Editor
             string[] customizationMoments,
             PyralisAuthoringNativeAction[] nativeActions,
             PyralisAuthoringGraphSourceOrigin sourceOrigin,
+            string capabilityPath = null,
+            string[] roleTags = null,
+            bool selectableIntent = true,
             PyralisAuthoringFact sourceFact = null)
         {
             StableId = stableId ?? string.Empty;
@@ -47,6 +50,9 @@ namespace NeonBlack.Gameplay.Editor
             CustomizationMoments = customizationMoments ?? Array.Empty<string>();
             NativeActions = nativeActions ?? Array.Empty<PyralisAuthoringNativeAction>();
             SourceOrigin = sourceOrigin;
+            CapabilityPath = capabilityPath ?? string.Empty;
+            RoleTags = roleTags ?? Array.Empty<string>();
+            SelectableIntent = selectableIntent;
             SourceFact = sourceFact;
         }
 
@@ -68,6 +74,9 @@ namespace NeonBlack.Gameplay.Editor
         public string[] CustomizationMoments { get; }
         public PyralisAuthoringNativeAction[] NativeActions { get; }
         public PyralisAuthoringGraphSourceOrigin SourceOrigin { get; }
+        public string CapabilityPath { get; }
+        public string[] RoleTags { get; }
+        public bool SelectableIntent { get; }
         public PyralisAuthoringFact SourceFact { get; }
 
         public bool Matches(AuthoringCapability capabilities, RuntimeCapabilityLaneTag lane, AuthoringWorldAxiom axioms)
@@ -161,6 +170,63 @@ namespace NeonBlack.Gameplay.Editor
                 AddDistinct(families, inferredFamilies[i]);
 
             return families.ToArray();
+        }
+
+        public static RuntimeCapabilityFamily[] BuildRuntimeFamiliesForDescriptors(
+            IReadOnlyList<string> descriptorIds,
+            RuntimeCapabilityLaneTag lane,
+            AuthoringWorldAxiom axioms)
+        {
+            if (descriptorIds == null || descriptorIds.Count == 0)
+                return Array.Empty<RuntimeCapabilityFamily>();
+
+            HashSet<string> selected = new HashSet<string>(descriptorIds, StringComparer.Ordinal);
+            List<RuntimeCapabilityFamily> families = new List<RuntimeCapabilityFamily>();
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors = All;
+            for (int i = 0; i < descriptors.Count; i++)
+            {
+                PyralisAuthoringCapabilityDescriptor descriptor = descriptors[i];
+                if (descriptor == null || !selected.Contains(descriptor.StableId))
+                    continue;
+
+                if (descriptor.Matches(descriptor.Capability, lane, axioms))
+                    AddDistinct(families, descriptor.Family);
+            }
+
+            return families.ToArray();
+        }
+
+        public static AuthoringCapability BuildCapabilitiesForDescriptors(IReadOnlyList<string> descriptorIds)
+        {
+            if (descriptorIds == null || descriptorIds.Count == 0)
+                return AuthoringCapability.None;
+
+            HashSet<string> selected = new HashSet<string>(descriptorIds, StringComparer.Ordinal);
+            AuthoringCapability capabilities = AuthoringCapability.None;
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors = All;
+            for (int i = 0; i < descriptors.Count; i++)
+            {
+                PyralisAuthoringCapabilityDescriptor descriptor = descriptors[i];
+                if (descriptor != null && selected.Contains(descriptor.StableId))
+                    capabilities |= descriptor.Capability;
+            }
+
+            return capabilities;
+        }
+
+        public static IReadOnlyList<PyralisAuthoringCapabilityDescriptor> BuildIntentDescriptors(
+            RuntimeCapabilityLaneTag lane,
+            AuthoringWorldAxiom axioms)
+        {
+            return All
+                .Where(descriptor => descriptor != null
+                    && descriptor.SelectableIntent
+                    && descriptor.Capability != AuthoringCapability.None
+                    && descriptor.Matches(descriptor.Capability, lane, axioms))
+                .OrderBy(descriptor => descriptor.Group, StringComparer.Ordinal)
+                .ThenBy(descriptor => descriptor.SortOrder)
+                .ThenBy(descriptor => descriptor.DisplayName, StringComparer.Ordinal)
+                .ToArray();
         }
 
         public static PyralisAuthoringCapabilityDescriptor FindPrimaryByFamily(RuntimeCapabilityFamily family)
@@ -261,7 +327,7 @@ namespace NeonBlack.Gameplay.Editor
         {
             int count = 0;
             AuthoringWorldAxiom overlap = descriptorAxioms & selectedAxioms;
-            IReadOnlyList<AuthoringWorldAxiomGroup> groups = AuthoringWorldAxiomRegistry.GetIntentGroups();
+            IReadOnlyList<PyralisAuthoringAxiomGroup> groups = PyralisAuthoringVocabulary.GetAxiomGroups();
             for (int groupIndex = 0; groupIndex < groups.Count; groupIndex++)
             {
                 AuthoringWorldAxiom[] options = groups[groupIndex].Options;
@@ -383,6 +449,13 @@ namespace NeonBlack.Gameplay.Editor
             return false;
         }
 
+        private static bool Contains(string value, string expected)
+        {
+            return !string.IsNullOrWhiteSpace(value)
+                && !string.IsNullOrWhiteSpace(expected)
+                && value.IndexOf(expected, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
         private static IReadOnlyList<PyralisAuthoringCapabilityDescriptor> BuildDescriptors()
         {
             List<PyralisAuthoringCapabilityDescriptor> descriptors = new List<PyralisAuthoringCapabilityDescriptor>();
@@ -406,11 +479,11 @@ namespace NeonBlack.Gameplay.Editor
                 {
                     RuntimeCapabilityFamily family = families[familyIndex];
                     AddOrMerge(descriptors, new PyralisAuthoringCapabilityDescriptor(
-                        "capability." + NormalizeId(family.ToString()),
-                        GetFamilyDisplayName(family),
+                        contract.StableId,
+                        FirstNonEmpty(GetContractDisplayName(contract), GetFamilyDisplayName(family)),
                         family,
                         contract.Capability,
-                        GetGroup(contract),
+                        GetDescriptorGroup(contract),
                         GetSortOrder(contract.Capability),
                         FirstNonEmpty(contract.Relevance, contract.DisplayName),
                         contract.Relevance,
@@ -423,7 +496,10 @@ namespace NeonBlack.Gameplay.Editor
                         contract.AssignmentFields,
                         contract.CustomizationMoments,
                         BuildNativeActions(contract),
-                        GetContractSourceOrigin(contract)));
+                        GetContractSourceOrigin(contract),
+                        capabilityPath: BuildCapabilityPath(contract, family),
+                        roleTags: BuildRoleTags(contract, family),
+                        selectableIntent: contract.SelectableIntent && IsIntentSelectableContract(contract)));
                 }
             }
         }
@@ -460,7 +536,10 @@ namespace NeonBlack.Gameplay.Editor
                     fact.CustomizationMoments,
                     fact.NativeActions,
                     PyralisAuthoringGraphSourceOrigin.SpineGrammar,
-                    fact));
+                    capabilityPath: GetFallbackCapabilityPath(card, fact),
+                    roleTags: fact.GoalTags,
+                    selectableIntent: true,
+                    sourceFact: fact));
             }
         }
 
@@ -472,7 +551,7 @@ namespace NeonBlack.Gameplay.Editor
             for (int i = 0; i < descriptors.Count; i++)
             {
                 PyralisAuthoringCapabilityDescriptor current = descriptors[i];
-                if (current == null || current.Family != incoming.Family)
+                if (current == null || !string.Equals(current.StableId, incoming.StableId, StringComparison.Ordinal))
                     continue;
 
                 descriptors[i] = Merge(current, incoming);
@@ -517,6 +596,9 @@ namespace NeonBlack.Gameplay.Editor
                 MergeDistinct(current.CustomizationMoments, incoming.CustomizationMoments),
                 MergeDistinct(current.NativeActions, incoming.NativeActions),
                 currentIsContract ? current.SourceOrigin : incoming.SourceOrigin,
+                FirstNonEmpty(current.CapabilityPath, incoming.CapabilityPath),
+                MergeDistinct(current.RoleTags, incoming.RoleTags),
+                current.SelectableIntent || incoming.SelectableIntent,
                 current.SourceFact ?? incoming.SourceFact);
         }
 
@@ -543,6 +625,9 @@ namespace NeonBlack.Gameplay.Editor
                 contractDescriptor.CustomizationMoments,
                 contractDescriptor.NativeActions,
                 contractDescriptor.SourceOrigin,
+                FirstNonEmpty(contractDescriptor.CapabilityPath, fallbackDescriptor.CapabilityPath),
+                MergeDistinct(contractDescriptor.RoleTags, fallbackDescriptor.RoleTags),
+                contractDescriptor.SelectableIntent || fallbackDescriptor.SelectableIntent,
                 contractDescriptor.SourceFact);
         }
 
@@ -639,6 +724,282 @@ namespace NeonBlack.Gameplay.Editor
             return FirstNonEmpty(contract.AuthoringCategory, FirstNonEmpty(contract.AuthoringLane, GetFallbackGroup(contract.Capability)));
         }
 
+        private static string GetDescriptorGroup(ResolvedAuthoringContract contract)
+        {
+            if (contract == null)
+                return "General";
+
+            if (!string.IsNullOrWhiteSpace(contract.CapabilityPath))
+            {
+                string[] parts = contract.CapabilityPath.Split('/');
+                if (parts.Length > 0 && !string.IsNullOrWhiteSpace(parts[0]))
+                    return AuthoringCapabilityRegistry.PrettifyTypeName(parts[0].Trim());
+            }
+
+            return GetGroup(contract);
+        }
+
+        private static string GetContractDisplayName(ResolvedAuthoringContract contract)
+        {
+            if (contract == null)
+                return string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(contract.CapabilityPath))
+            {
+                string[] parts = contract.CapabilityPath.Split('/');
+                for (int i = parts.Length - 1; i >= 0; i--)
+                {
+                    if (!string.IsNullOrWhiteSpace(parts[i]))
+                        return AuthoringCapabilityRegistry.PrettifyTypeName(parts[i].Trim());
+                }
+            }
+
+            return contract.DisplayName;
+        }
+
+        private static string BuildCapabilityPath(ResolvedAuthoringContract contract, RuntimeCapabilityFamily family)
+        {
+            if (contract == null)
+                return string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(contract.CapabilityPath))
+                return contract.CapabilityPath;
+
+            string domainPath = BuildDomainPath(contract, family);
+            string leaf = BuildContractPathLeaf(contract, family);
+
+            return domainPath + "/" + leaf;
+        }
+
+        private static string BuildDomainPath(ResolvedAuthoringContract contract, RuntimeCapabilityFamily family)
+        {
+            string sourceName = contract.SourceType != null ? contract.SourceType.FullName ?? string.Empty : string.Empty;
+            string category = FirstNonEmpty(contract.AuthoringCategory, contract.AuthoringLane);
+
+            if (Contains(sourceName, ".Networking."))
+                return "Networking";
+            if (Contains(sourceName, ".Data.Definitions.Rpg.") || Contains(sourceName, ".Core.Rpg.") || Contains(sourceName, ".Features.Rpg."))
+                return "RPG & Narrative/" + GetRpgSubdomain(contract);
+            if (Contains(sourceName, ".Data.Definitions.Rules.") || Contains(sourceName, ".Core.Rules.Board.") || Contains(sourceName, ".Features.Tabletop."))
+                return "Strategy & Board/" + GetBoardSubdomain(contract);
+            if (Contains(sourceName, ".Data.Definitions.Combat.") || Contains(sourceName, ".Data.Profiles.Combat.") || Contains(sourceName, ".Features.Combat."))
+                return "Combat/" + GetCombatSubdomain(contract);
+            if (Contains(sourceName, ".Features.Enemies."))
+                return "NPC & AI/" + GetEnemySubdomain(contract);
+            if (Contains(sourceName, ".Features.Traversal."))
+                return "Movement/Traversal";
+            if (Contains(sourceName, ".Features.Input.") || Contains(sourceName, ".Core.Input"))
+                return "Core Setup/Input";
+            if (Contains(sourceName, ".Features.Characters.2D.") || Contains(sourceName, ".Features.Characters.Runtime.Shared.Movement.2D."))
+                return HasAnyCapability(contract.Capability, AuthoringCapability.Combat, AuthoringCapability.CombatState, AuthoringCapability.CombatSensors)
+                    ? "Combat/2D Pawn"
+                    : "Movement/2D";
+            if (Contains(sourceName, ".Features.Characters.3D.") || Contains(sourceName, ".Features.Characters.Runtime.Shared.Components.3D.") || Contains(sourceName, ".Features.Characters.Runtime.Shared.Movement.3D."))
+                return HasAnyCapability(contract.Capability, AuthoringCapability.Combat, AuthoringCapability.CombatState, AuthoringCapability.CombatSensors)
+                    ? "Combat/3D Pawn"
+                    : "Movement/3D";
+            if (Contains(sourceName, ".Features.Characters.Runtime.Shared.Components."))
+                return "Character / Pawn Gameplay/Shared Components";
+            if (Contains(sourceName, ".Features.Characters.Runtime.Shared.Contracts."))
+                return "Character / Pawn Gameplay/Runtime Contracts";
+            if (Contains(sourceName, ".Features.Characters."))
+                return HasAnyCapability(contract.Capability, AuthoringCapability.Combat, AuthoringCapability.CombatState, AuthoringCapability.CombatSensors)
+                    ? "Combat/Pawn Modules"
+                    : "Character / Pawn Gameplay/Pawn Modules";
+            if (Contains(sourceName, ".Presentation.Camera."))
+                return "World & Meta/Camera";
+            if (Contains(sourceName, ".Presentation.Animation."))
+                return "Presentation/Animation";
+            if (Contains(sourceName, ".Presentation.Visuals."))
+                return "Presentation/Visuals";
+            if (Contains(sourceName, ".Features.Feedback."))
+                return "Presentation/Feedback";
+            if (Contains(sourceName, ".Features.Pickups."))
+                return "Interaction/Pickups";
+            if (Contains(sourceName, ".Features.Interaction."))
+                return "Interaction/Actor Interaction";
+            if (Contains(sourceName, ".Features.Hazards."))
+                return "World & Meta/Hazards";
+            if (Contains(sourceName, ".Features.Scoring."))
+                return "Scoring";
+            if (Contains(sourceName, ".Features.Settings."))
+                return "Core Setup/Settings";
+            if (Contains(sourceName, ".Features.Platform.") || Contains(sourceName, ".Core.Local") || Contains(sourceName, ".Data.Definitions.Session") || Contains(sourceName, ".Data.Definitions.GameMode") || Contains(sourceName, ".Data.Config."))
+                return "Core Setup/Platform";
+            if (Contains(sourceName, ".Core.Navigation."))
+                return "Core Setup/Scenes & Menus";
+            if (Contains(sourceName, ".Core.Actions.") || Contains(sourceName, ".Data.Definitions.Actions."))
+                return "Core Setup/Actions";
+            if (Contains(sourceName, ".Data.Profiles."))
+                return GetProfileDomain(contract, category, family);
+            if (Contains(sourceName, ".Data.Definitions."))
+                return GetDefinitionDomain(contract, category, family);
+
+            return GetFallbackGroup(contract.Capability);
+        }
+
+        private static string BuildContractPathLeaf(ResolvedAuthoringContract contract, RuntimeCapabilityFamily family)
+        {
+            string leaf = !string.IsNullOrWhiteSpace(contract.DisplayName)
+                ? contract.DisplayName
+                : contract.SourceType != null
+                    ? contract.SourceType.Name
+                    : !string.IsNullOrWhiteSpace(contract.ModuleId)
+                        ? contract.ModuleId
+                        : family.ToString();
+
+            return NormalizePathSegment(leaf);
+        }
+
+        private static string[] BuildRoleTags(ResolvedAuthoringContract contract, RuntimeCapabilityFamily family)
+        {
+            List<string> tags = new List<string>();
+            AddRangeDistinct(tags, contract.RoleTags);
+
+            if (contract.SourceType != null)
+            {
+                AddDistinct(tags, contract.SourceType.Name);
+                if (contract.SourceType.IsInterface)
+                    AddDistinct(tags, "InterfaceContract");
+                if (typeof(UnityEngine.ScriptableObject).IsAssignableFrom(contract.SourceType))
+                    AddDistinct(tags, "ScriptableObject");
+                if (typeof(UnityEngine.MonoBehaviour).IsAssignableFrom(contract.SourceType))
+                    AddDistinct(tags, "SceneComponent");
+            }
+
+            AddDistinct(tags, family.ToString());
+            AddDistinct(tags, contract.AuthoringLane);
+            AddDistinct(tags, contract.AuthoringCategory);
+            AddDistinct(tags, GetFallbackGroup(contract.Capability));
+
+            if (contract.RequiredProfileType != null)
+                AddDistinct(tags, contract.RequiredProfileType.Name);
+            if (!string.IsNullOrWhiteSpace(contract.SetupNodeId))
+                AddDistinct(tags, contract.SetupNodeId);
+            if (!string.IsNullOrWhiteSpace(contract.ModuleId))
+                AddDistinct(tags, contract.ModuleId);
+
+            return tags.ToArray();
+        }
+
+        private static bool IsIntentSelectableContract(ResolvedAuthoringContract contract)
+        {
+            if (contract == null || contract.SourceType == null)
+                return true;
+
+            Type type = contract.SourceType;
+            if (type.IsInterface || type.IsAbstract)
+                return false;
+
+            string sourceName = type.FullName ?? string.Empty;
+            if (Contains(sourceName, ".Runtime.Shared.Contracts."))
+                return false;
+            if (Contains(sourceName, ".Core.ContractInterfaces."))
+                return false;
+            if (Contains(sourceName, ".Tests."))
+                return false;
+
+            return true;
+        }
+
+        private static string GetRpgSubdomain(ResolvedAuthoringContract contract)
+        {
+            string name = contract.SourceType != null ? contract.SourceType.Name : contract.DisplayName;
+            if (Contains(name, "Dialogue")) return "Dialogue";
+            if (Contains(name, "Quest")) return "Quests";
+            if (Contains(name, "Vendor")) return "Vendors";
+            if (Contains(name, "Skill")) return "Skill Tree";
+            if (Contains(name, "Progress")) return "Progression";
+            if (Contains(name, "Inventory") || Contains(name, "Item") || Contains(name, "Equipment")) return "Inventory";
+            if (Contains(name, "Npc")) return "NPC";
+            return "RPG";
+        }
+
+        private static string GetBoardSubdomain(ResolvedAuthoringContract contract)
+        {
+            string name = contract.SourceType != null ? contract.SourceType.Name : contract.DisplayName;
+            if (Contains(name, "Turn") || Contains(name, "Phase")) return "Turn Based";
+            if (Contains(name, "Board") || Contains(name, "Grid")) return "Board & Grid";
+            if (Contains(name, "Piece")) return "Board Pieces";
+            return "Rules";
+        }
+
+        private static string GetCombatSubdomain(ResolvedAuthoringContract contract)
+        {
+            AuthoringCapability capability = contract.Capability;
+            string name = contract.SourceType != null ? contract.SourceType.Name : contract.DisplayName;
+            if (HasAnyCapability(capability, AuthoringCapability.CombatSensors) || Contains(name, "HitBox") || Contains(name, "Detection"))
+                return "Sensors";
+            if (HasAnyCapability(capability, AuthoringCapability.CombatState) || Contains(name, "Health") || Contains(name, "Status"))
+                return "State";
+            if (HasAnyCapability(capability, AuthoringCapability.RangedFlow) || Contains(name, "Projectile") || Contains(name, "Fire"))
+                return "Ranged";
+            if (HasAnyCapability(capability, AuthoringCapability.MeleeFlow) || Contains(name, "Weapon") || Contains(name, "Sequence"))
+                return "Melee";
+            return "Core";
+        }
+
+        private static string GetEnemySubdomain(ResolvedAuthoringContract contract)
+        {
+            string name = contract.SourceType != null ? contract.SourceType.Name : contract.DisplayName;
+            if (Contains(name, "Movement")) return "Movement";
+            if (Contains(name, "Detection")) return "Detection";
+            if (Contains(name, "Combat")) return "Combat";
+            if (Contains(name, "Animation")) return "Animation";
+            if (Contains(name, "Ambient")) return "Ambient";
+            return "Enemy Runtime";
+        }
+
+        private static string GetProfileDomain(ResolvedAuthoringContract contract, string category, RuntimeCapabilityFamily family)
+        {
+            string name = contract.SourceType != null ? contract.SourceType.Name : contract.DisplayName;
+            if (Contains(name, "Input")) return "Core Setup/Input";
+            if (Contains(name, "Camera")) return "World & Meta/Camera";
+            if (Contains(name, "Movement")) return "Movement/Profiles";
+            if (Contains(name, "Traversal") || Contains(name, "Hop")) return "Movement/Traversal";
+            if (Contains(name, "Animation")) return "Presentation/Animation";
+            if (Contains(name, "Presentation") || Contains(name, "Feedback")) return "Presentation/Profiles";
+            if (Contains(name, "Combat") || Contains(name, "Status") || Contains(name, "Reaction")) return "Combat/Profiles";
+            if (Contains(name, "Enemy")) return "NPC & AI/Profiles";
+            if (Contains(name, "Hazard")) return "World & Meta/Hazards";
+            if (Contains(name, "Pickup") || Contains(name, "Interaction")) return "Interaction/Profiles";
+            if (Contains(name, "Playfield")) return "World & Meta/Playfield";
+            if (Contains(name, "Settings")) return "Core Setup/Settings";
+            return GetFamilyDisplayName(family);
+        }
+
+        private static string GetDefinitionDomain(ResolvedAuthoringContract contract, string category, RuntimeCapabilityFamily family)
+        {
+            string name = contract.SourceType != null ? contract.SourceType.Name : contract.DisplayName;
+            if (Contains(name, "Session") || Contains(name, "GameMode") || Contains(name, "Participant"))
+                return "Core Setup/Definitions";
+            if (Contains(name, "Pawn"))
+                return "Character / Pawn Gameplay/Definitions";
+            return GetFamilyDisplayName(family) + "/Definitions";
+        }
+
+        private static string GetFallbackCapabilityPath(PyralisCapabilityVocabularyCard card, PyralisAuthoringFact fact)
+        {
+            string group = GetFallbackGroup(fact != null ? fact.Capability : AuthoringCapability.None);
+            if (card != null && !string.IsNullOrWhiteSpace(card.DisplayName))
+                return group + "/" + NormalizePathSegment(card.DisplayName);
+
+            return fact != null && !string.IsNullOrWhiteSpace(fact.DisplayName)
+                ? group + "/" + NormalizePathSegment(fact.DisplayName)
+                : string.Empty;
+        }
+
+        private static string NormalizePathSegment(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return "General";
+
+            string normalized = value.Replace('.', '/').Replace('-', ' ').Replace('_', ' ');
+            string[] parts = normalized.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+            string last = parts.Length > 0 ? parts[parts.Length - 1] : normalized;
+            return AuthoringCapabilityRegistry.PrettifyTypeName(last.Trim());
+        }
+
         private static string GetGroup(PyralisAuthoringFact fact)
         {
             if (fact == null)
@@ -656,12 +1017,12 @@ namespace NeonBlack.Gameplay.Editor
         private static string GetFallbackGroup(AuthoringCapability capability)
         {
             if (HasAnyCapability(capability, AuthoringCapability.Setup, AuthoringCapability.Session, AuthoringCapability.Rules, AuthoringCapability.Participants, AuthoringCapability.Scoring, AuthoringCapability.Input, AuthoringCapability.UI, AuthoringCapability.Audio))
-                return "Core";
+                return "Core Setup";
             if (HasAnyCapability(capability, AuthoringCapability.Movement, AuthoringCapability.KineticMotor2D, AuthoringCapability.KineticMotor3D, AuthoringCapability.Steering2D, AuthoringCapability.Steering3D, AuthoringCapability.Traversal, AuthoringCapability.Combat, AuthoringCapability.CombatState, AuthoringCapability.CombatSensors, AuthoringCapability.MeleeFlow, AuthoringCapability.RangedFlow, AuthoringCapability.TacticsAggressive, AuthoringCapability.TacticsDefensive, AuthoringCapability.Animation, AuthoringCapability.VFX))
-                return "Actor";
+                return "Actor & Action";
             if (HasAnyCapability(capability, AuthoringCapability.Stats, AuthoringCapability.Inventory, AuthoringCapability.Dialogue, AuthoringCapability.Quests, AuthoringCapability.Vendors, AuthoringCapability.SkillTree, AuthoringCapability.Progression, AuthoringCapability.Tabletop, AuthoringCapability.Grid))
-                return "Progression";
-            return "World";
+                return "RPG & Narrative";
+            return "World & Meta";
         }
 
         private static int GetSortOrder(AuthoringCapability capability)
@@ -684,7 +1045,7 @@ namespace NeonBlack.Gameplay.Editor
             foreach (AuthoringCapability individual in AuthoringCapabilityRegistry.GetAllIndividualCapabilities())
             {
                 if ((capability & individual) != 0)
-                    AddDistinct(tags, AuthoringCapabilityRegistry.GetDisplayName(individual));
+                    AddDistinct(tags, PyralisAuthoringVocabulary.GetCapabilityDisplayName(individual));
             }
 
             AddRangeDistinct(tags, additional);

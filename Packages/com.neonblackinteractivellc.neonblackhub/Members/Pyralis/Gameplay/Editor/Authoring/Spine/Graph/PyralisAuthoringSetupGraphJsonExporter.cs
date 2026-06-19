@@ -40,6 +40,16 @@ namespace NeonBlack.Gameplay.Editor
 
         private static MapSnapshot BuildMapSnapshot(PyralisAuthoringSetupGraph graph)
         {
+            MapRowSnapshot[] mapRows = PyralisAuthoringSetupGraphProjection.BuildSetupMapRows(graph)
+                .Select(BuildMapRow)
+                .ToArray();
+            ConnectionSnapshot[] mapConnections = PyralisAuthoringSetupGraphProjection.BuildMapConnectionRows(graph)
+                .Select(BuildConnection)
+                .ToArray();
+            MapIssueSnapshot[] sceneSetupIssues = PyralisAuthoringSetupGraphProjection.BuildMapSceneSetupIssueRows(graph)
+                .Select(BuildMapIssue)
+                .ToArray();
+
             return new MapSnapshot
             {
                 schema = "pyralis.authoring.mapSnapshot.v1",
@@ -48,27 +58,24 @@ namespace NeonBlack.Gameplay.Editor
                 routeName = graph != null ? graph.RouteName : "No setup route selected",
                 exportedAtUtc = DateTime.UtcNow.ToString("o"),
                 source = BuildSourceInfo(graph?.Source),
+                summary = BuildMapSummary(graph, mapRows, sceneSetupIssues),
                 currentRoute = BuildCurrentRoute(graph?.RouteAnalysis),
                 nodeCount = graph?.Nodes.Count ?? 0,
                 edgeCount = graph?.Edges.Count ?? 0,
                 nodes = graph?.Nodes.Select(BuildNode).ToArray() ?? Array.Empty<NodeSnapshot>(),
                 edges = graph?.Edges.Select(BuildEdge).ToArray() ?? Array.Empty<EdgeSnapshot>(),
-                mapRows = PyralisAuthoringSetupGraphProjection.BuildSetupMapRows(graph)
-                    .Select(BuildMapRow)
-                    .ToArray(),
-                mapConnections = PyralisAuthoringSetupGraphProjection.BuildMapConnectionRows(graph)
-                    .Select(BuildConnection)
-                    .ToArray(),
+                mapRows = mapRows,
+                mapConnections = mapConnections,
                 sceneSurfaces = PyralisAuthoringSetupGraphProjection.FindSceneSurfaceNodes(graph)
                     .Select(BuildNode)
                     .ToArray(),
-                sceneSetupIssues = PyralisAuthoringSetupGraphProjection.BuildMapSceneSetupIssueRows(graph)
-                    .Select(BuildMapIssue)
-                    .ToArray()
+                sceneSetupIssues = sceneSetupIssues
             };
         }
 
-        private static CurrentRouteSnapshot BuildCurrentRoute(PyralisSetupRouteAnalysis route)
+        private static CurrentRouteSnapshot BuildCurrentRoute(
+            PyralisSetupRouteAnalysis route,
+            PyralisAuthoringRouteWorkingProjection routeProjection = null)
         {
             if (route == null)
             {
@@ -90,6 +97,15 @@ namespace NeonBlack.Gameplay.Editor
                 };
             }
 
+            string participantPawnIssue = route.ParticipantPawnIssue ?? string.Empty;
+            if (routeProjection != null && route.ParticipantPawnIssueKind != PyralisParticipantPawnIssueKind.None)
+            {
+                PyralisAuthoringRouteStepRow pawnStep = routeProjection.CriticalPath
+                    .FirstOrDefault(row => row != null && string.Equals(row.StableId, "pawn.definition", StringComparison.Ordinal));
+                if (pawnStep != null && !string.IsNullOrWhiteSpace(pawnStep.Message))
+                    participantPawnIssue = pawnStep.Message;
+            }
+
             return new CurrentRouteSnapshot
             {
                 routeName = route.RouteName,
@@ -97,7 +113,7 @@ namespace NeonBlack.Gameplay.Editor
                 requiresPawn = route.RequiresPawn,
                 hasParticipants = route.HasParticipants,
                 hasAnyDefaultPawn = route.HasAnyDefaultPawn,
-                participantPawnIssue = route.ParticipantPawnIssue ?? string.Empty,
+                participantPawnIssue = participantPawnIssue,
                 participantPawnIssueKind = route.ParticipantPawnIssueKind.ToString(),
                 capabilityFamilies = (route.CapabilityFamilies ?? Array.Empty<RuntimeCapabilityFamily>())
                     .Select(family => family.ToString())
@@ -130,17 +146,18 @@ namespace NeonBlack.Gameplay.Editor
             IReadOnlyList<PyralisSourceDependencyHygieneRecord> safeDependencyRecords =
                 dependencyRecords ?? Array.Empty<PyralisSourceDependencyHygieneRecord>();
             PyralisAuthoringGraphConnectionRow[] proofBlockers =
-                PyralisAuthoringSetupGraphProjection.BuildProofBlockerRows(graph).ToArray();
+                PyralisAuthoringSetupGraphProjection.BuildHygieneProofBlockerConnectionRows(graph).ToArray();
 
             return new HygieneSnapshot
             {
-                schema = "pyralis.authoring.hygieneSnapshot.v1",
-                purpose = "Read-only Hygiene tab snapshot. Describes graph integrity, blocker evidence, source origins, dependency pressure, and contract source pressure.",
+                schema = "pyralis.authoring.hygieneSnapshot.v2",
+                purpose = "Read-only Hygiene tab snapshot. Describes graph integrity, source origins, dependency pressure, and contract source pressure. Scene/setup repair issues belong to Map; route setup ordering belongs to Route Proof Trace.",
                 view = "Hygiene",
-                routeName = graph != null ? graph.RouteName : "No setup route selected",
                 exportedAtUtc = DateTime.UtcNow.ToString("o"),
                 source = BuildSourceInfo(graph?.Source),
+                graphContext = BuildHygieneGraphContext(graph),
                 graphSummary = BuildGraphSummary(graph, safeDependencyRecords, proofBlockers),
+                summary = BuildHygieneSummary(graph, safeDependencyRecords, proofBlockers),
                 hygieneSections = PyralisAuthoringSetupGraphProjection.BuildHygieneSections(graph)
                     .Select(BuildHygieneSection)
                     .ToArray(),
@@ -173,6 +190,12 @@ namespace NeonBlack.Gameplay.Editor
         private static RouteProofTraceSnapshot BuildRouteProofTraceSnapshot(PyralisAuthoringSetupGraph graph)
         {
             PyralisAuthoringRouteWorkingProjection route = PyralisAuthoringSetupGraphProjection.BuildRouteWorkingProjection(graph);
+            RouteStepSnapshot[] orderedSteps = route.OrderedSteps.Select(BuildRouteStep).ToArray();
+            RouteStepSnapshot[] criticalPath = route.CriticalPath.Select(BuildRouteStep).ToArray();
+            RouteStepSnapshot[] proofEnhancers = route.ProofEnhancers.Select(BuildRouteStep).ToArray();
+            RouteStepSnapshot[] canWait = route.CanWait.Select(BuildRouteStep).ToArray();
+            ConnectionSnapshot[] proofBlockers = route.ProofBlockers.Select(BuildConnection).ToArray();
+            ConnectionSnapshot[] proofSupport = route.ProofSupport.Select(BuildConnection).ToArray();
 
             return new RouteProofTraceSnapshot
             {
@@ -182,21 +205,125 @@ namespace NeonBlack.Gameplay.Editor
                 routeName = graph != null ? graph.RouteName : "No setup route selected",
                 exportedAtUtc = DateTime.UtcNow.ToString("o"),
                 source = BuildSourceInfo(graph?.Source),
-                currentRoute = BuildCurrentRoute(graph?.RouteAnalysis),
+                summary = BuildRouteTraceSummary(graph, route),
+                currentRoute = BuildCurrentRoute(graph?.RouteAnalysis, route),
                 intentFocus = PyralisAuthoringSetupGraphProjection.BuildIntentFocusSummary(graph),
                 routeShape = PyralisAuthoringSetupGraphProjection.BuildRouteShapeSummary(graph),
                 proofPriority = PyralisAuthoringSetupGraphProjection.BuildFirstProofPrioritySummary(graph),
                 proof = route.Proof != null ? BuildNode(route.Proof) : null,
                 currentAction = route.CurrentAction != null ? BuildRouteStep(route.CurrentAction) : null,
-                orderedSteps = route.OrderedSteps.Select(BuildRouteStep).ToArray(),
-                criticalPath = route.CriticalPath.Select(BuildRouteStep).ToArray(),
-                proofEnhancers = route.ProofEnhancers.Select(BuildRouteStep).ToArray(),
-                canWait = route.CanWait.Select(BuildRouteStep).ToArray(),
-                proofBlockers = route.ProofBlockers.Select(BuildConnection).ToArray(),
-                proofSupport = route.ProofSupport.Select(BuildConnection).ToArray(),
+                orderedSteps = orderedSteps,
+                criticalPath = criticalPath,
+                proofEnhancers = proofEnhancers,
+                canWait = canWait,
+                proofBlockers = proofBlockers,
+                proofSupport = proofSupport,
                 supportingContracts = BuildSupportingContracts(graph, route.OrderedSteps, route.ProofSupport),
                 graphSummary = BuildGraphSummary(graph, Array.Empty<PyralisSourceDependencyHygieneRecord>(), route.ProofBlockers),
                 diagnosticQuestions = BuildTraceDiagnosticQuestions(graph, route.CurrentAction, route.OrderedSteps, route.CriticalPath, route.ProofEnhancers, route.CanWait, route.ProofBlockers, route.ProofSupport)
+            };
+        }
+
+        private static ExportSummarySnapshot BuildMapSummary(
+            PyralisAuthoringSetupGraph graph,
+            IReadOnlyList<MapRowSnapshot> mapRows,
+            IReadOnlyList<MapIssueSnapshot> sceneSetupIssues)
+        {
+            return new ExportSummarySnapshot
+            {
+                routeName = graph != null ? graph.RouteName : "No setup route selected",
+                currentActionLabel = string.Empty,
+                currentActionNodeId = string.Empty,
+                readyForFirstProof = false,
+                nodeCount = graph?.Nodes.Count ?? 0,
+                edgeCount = graph?.Edges.Count ?? 0,
+                mapRowCount = mapRows?.Count ?? 0,
+                readyMapRowCount = mapRows?.Count(row => row != null && row.isReady) ?? 0,
+                missingMapRowCount = mapRows?.Count(row => row != null && row.isMissing) ?? 0,
+                sceneSetupIssueCount = sceneSetupIssues?.Count ?? 0,
+                hygieneRowCount = 0,
+                cleanupFocusCount = 0,
+                watchListCount = 0,
+                criticalPathCount = 0,
+                proofEnhancerCount = 0,
+                proofBlockerCount = 0,
+                proofSupportCount = 0
+            };
+        }
+
+        private static HygieneSummarySnapshot BuildHygieneSummary(
+            PyralisAuthoringSetupGraph graph,
+            IReadOnlyList<PyralisSourceDependencyHygieneRecord> dependencyRecords,
+            IReadOnlyList<PyralisAuthoringGraphConnectionRow> proofBlockers)
+        {
+            PyralisSourceDependencyHygieneRecord[] pressureRecords = dependencyRecords == null
+                ? Array.Empty<PyralisSourceDependencyHygieneRecord>()
+                : dependencyRecords.Where(record => record != null && record.Risk != PyralisSourceDependencyRisk.Low).ToArray();
+
+            return new HygieneSummarySnapshot
+            {
+                scanScope = "Package source plus resolved setup graph when available",
+                graphContextName = graph != null ? graph.RouteName : "No active setup graph",
+                hasGraphContext = graph != null,
+                nodeCount = graph?.Nodes.Count ?? 0,
+                edgeCount = graph?.Edges.Count ?? 0,
+                hygieneRowCount = PyralisAuthoringSetupGraphProjection.BuildHygieneDetailRows(graph).Count,
+                cleanupFocusCount = CountCleanupFocusRecords(pressureRecords),
+                watchListCount = CountWatchListRecords(pressureRecords),
+                exportedCleanupFocusCount = Math.Min(16, CountCleanupFocusRecords(pressureRecords)),
+                exportedWatchListCount = Math.Min(16, CountWatchListRecords(pressureRecords)),
+                omittedDependencyPressureCount = Math.Max(0, pressureRecords.Length - 32),
+                proofBlockerCount = proofBlockers?.Count ?? 0,
+                dependencyPressureCount = pressureRecords.Length,
+                contractSourcePressureCount = BuildContractSourcePressure(graph).Length
+            };
+        }
+
+        private static HygieneGraphContextSnapshot BuildHygieneGraphContext(PyralisAuthoringSetupGraph graph)
+        {
+            if (graph == null)
+            {
+                return new HygieneGraphContextSnapshot
+                {
+                    hasGraph = false,
+                    graphName = "No active setup graph",
+                    source = null,
+                    note = "Hygiene can still export package dependency pressure without an active setup graph."
+                };
+            }
+
+            return new HygieneGraphContextSnapshot
+            {
+                hasGraph = true,
+                graphName = graph.RouteName,
+                source = BuildSourceInfo(graph.Source),
+                note = "Passive context only. Hygiene does not own route setup ordering or scene repair actions."
+            };
+        }
+
+        private static ExportSummarySnapshot BuildRouteTraceSummary(
+            PyralisAuthoringSetupGraph graph,
+            PyralisAuthoringRouteWorkingProjection route)
+        {
+            return new ExportSummarySnapshot
+            {
+                routeName = graph != null ? graph.RouteName : "No setup route selected",
+                currentActionLabel = route?.CurrentAction != null ? route.CurrentAction.Label : string.Empty,
+                currentActionNodeId = route?.CurrentAction != null ? route.CurrentAction.StableId : string.Empty,
+                readyForFirstProof = route != null && route.ReadyForFirstProof,
+                nodeCount = graph?.Nodes.Count ?? 0,
+                edgeCount = graph?.Edges.Count ?? 0,
+                mapRowCount = 0,
+                readyMapRowCount = 0,
+                missingMapRowCount = 0,
+                sceneSetupIssueCount = 0,
+                hygieneRowCount = 0,
+                cleanupFocusCount = 0,
+                watchListCount = 0,
+                criticalPathCount = route?.CriticalPath.Count ?? 0,
+                proofEnhancerCount = route?.ProofEnhancers.Count ?? 0,
+                proofBlockerCount = route?.ProofBlockers.Count ?? 0,
+                proofSupportCount = route?.ProofSupport.Count ?? 0
             };
         }
 
@@ -219,7 +346,7 @@ namespace NeonBlack.Gameplay.Editor
                 message = row?.Message ?? string.Empty,
                 owner = BuildRouteStepOwner(row),
                 unityAction = row?.UnityActionLabel ?? string.Empty,
-                nativeAction = node != null ? BuildNativeAction(node.NativeAction) : null,
+                nativeAction = row != null ? BuildNativeAction(row.NativeAction) : null,
                 assignmentFields = row?.AssignmentFields ?? Array.Empty<string>(),
                 nativeSetup = row?.NativeSetup ?? Array.Empty<string>(),
                 customizationMoments = row?.CustomizationMoments ?? Array.Empty<string>(),
@@ -235,9 +362,9 @@ namespace NeonBlack.Gameplay.Editor
             if (node == null)
                 return string.Empty;
 
-            if (node.NativeAction.HasValue)
+            if (row != null && row.NativeAction.HasValue)
             {
-                PyralisAuthoringNativeAction action = node.NativeAction.Value;
+                PyralisAuthoringNativeAction action = row.NativeAction.Value;
                 string target = !string.IsNullOrWhiteSpace(action.Target) ? action.Target : action.Surface.ToString();
                 return !string.IsNullOrWhiteSpace(action.FieldOrComponent)
                     ? $"{target}.{action.FieldOrComponent}"
@@ -792,6 +919,7 @@ namespace NeonBlack.Gameplay.Editor
             public string routeName;
             public string exportedAtUtc;
             public SourceSnapshot source;
+            public ExportSummarySnapshot summary;
             public CurrentRouteSnapshot currentRoute;
             public string intentFocus;
             public string routeShape;
@@ -851,6 +979,7 @@ namespace NeonBlack.Gameplay.Editor
             public string routeName;
             public string exportedAtUtc;
             public SourceSnapshot source;
+            public ExportSummarySnapshot summary;
             public CurrentRouteSnapshot currentRoute;
             public int nodeCount;
             public int edgeCount;
@@ -895,10 +1024,11 @@ namespace NeonBlack.Gameplay.Editor
             public string schema;
             public string purpose;
             public string view;
-            public string routeName;
             public string exportedAtUtc;
             public SourceSnapshot source;
+            public HygieneGraphContextSnapshot graphContext;
             public GraphSummarySnapshot graphSummary;
+            public HygieneSummarySnapshot summary;
             public HygieneSectionSnapshot[] hygieneSections;
             public HygieneRowSnapshot[] hygieneRows;
             public ConnectionSnapshot[] proofBlockers;
@@ -913,6 +1043,15 @@ namespace NeonBlack.Gameplay.Editor
         }
 
         [Serializable]
+        private sealed class HygieneGraphContextSnapshot
+        {
+            public bool hasGraph;
+            public string graphName;
+            public SourceSnapshot source;
+            public string note;
+        }
+
+        [Serializable]
         private sealed class GraphSummarySnapshot
         {
             public int nodeCount;
@@ -923,6 +1062,47 @@ namespace NeonBlack.Gameplay.Editor
             public int proofBlockerCount;
             public int dependencyPressureCount;
             public int contractNodeCount;
+        }
+
+        [Serializable]
+        private sealed class ExportSummarySnapshot
+        {
+            public string routeName;
+            public string currentActionLabel;
+            public string currentActionNodeId;
+            public bool readyForFirstProof;
+            public int nodeCount;
+            public int edgeCount;
+            public int mapRowCount;
+            public int readyMapRowCount;
+            public int missingMapRowCount;
+            public int sceneSetupIssueCount;
+            public int hygieneRowCount;
+            public int cleanupFocusCount;
+            public int watchListCount;
+            public int criticalPathCount;
+            public int proofEnhancerCount;
+            public int proofBlockerCount;
+            public int proofSupportCount;
+        }
+
+        [Serializable]
+        private sealed class HygieneSummarySnapshot
+        {
+            public string scanScope;
+            public string graphContextName;
+            public bool hasGraphContext;
+            public int nodeCount;
+            public int edgeCount;
+            public int hygieneRowCount;
+            public int cleanupFocusCount;
+            public int watchListCount;
+            public int exportedCleanupFocusCount;
+            public int exportedWatchListCount;
+            public int omittedDependencyPressureCount;
+            public int proofBlockerCount;
+            public int dependencyPressureCount;
+            public int contractSourcePressureCount;
         }
 
         [Serializable]

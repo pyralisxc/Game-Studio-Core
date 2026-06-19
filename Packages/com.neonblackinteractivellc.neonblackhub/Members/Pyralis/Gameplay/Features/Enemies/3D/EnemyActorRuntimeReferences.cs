@@ -70,14 +70,6 @@ namespace NeonBlack.Gameplay.Features.Enemies
                 owner.GetComponentInChildren<SpriteRenderer>());
         }
 
-        public ActorFeatureHost EnsureFeatureHost()
-        {
-            if (FeatureHost == null && _owner != null)
-                FeatureHost = _owner.AddComponent<ActorFeatureHost>();
-
-            return FeatureHost;
-        }
-
         public void ConfigureBillboard(
             Transform ownerTransform,
             Transform visualRoot,

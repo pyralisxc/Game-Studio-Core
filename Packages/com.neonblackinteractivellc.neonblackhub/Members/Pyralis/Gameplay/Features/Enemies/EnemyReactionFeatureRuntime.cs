@@ -23,7 +23,7 @@ namespace NeonBlack.Gameplay.Features.Enemies
             "create FeatureModuleDefinition",
             "assign runtime prefab with EnemyReactionFeatureRuntime",
             "assign profile asset",
-            "add module to PawnDefinition.featureModules"
+            "add module to EnemyFeatureProfile.featureModules"
         },
         CustomizationMoments = new[]
         {

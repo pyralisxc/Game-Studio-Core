@@ -11,15 +11,15 @@ namespace NeonBlack.Gameplay.Editor
         private static readonly Dictionary<string, bool> GraphAuditFoldouts = new Dictionary<string, bool>();
         private static IReadOnlyList<PyralisSourceDependencyHygieneRecord> _dependencyRecords;
 
-        public static void Draw(Object activeSetup, PyralisAuthoringSetupGraph graph, PyralisAuthoringSetupGraph routeProofTraceGraph = null)
+        public static void Draw(Object activeSetup, PyralisAuthoringSetupGraph graph)
         {
             EditorGUILayout.LabelField("Hygiene", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox("Use Hygiene as the programmer audit surface: graph integrity, proof links, dependency pressure, source origins, and stable node ids. Map owns concrete scene and Inspector setup issues.", MessageType.Info);
-            PyralisAuthoringGraphJsonExportControl.Draw("Hygiene", graph, routeProofTraceGraph ?? graph);
+            PyralisAuthoringGraphJsonExportControl.DrawHygieneSnapshot(graph);
 
             if (activeSetup == null)
             {
-                EditorGUILayout.HelpBox("Select a Bootstrap, Session, Game Mode, Participant, Pawn, or Feature Module asset so Hygiene can inspect its resolved setup graph.", MessageType.Info);
+                EditorGUILayout.HelpBox("No active setup graph is selected. Hygiene can still scan package dependency pressure; select a setup asset only when you want graph-integrity context for that setup.", MessageType.Info);
                 DrawSourceDependencyHygiene();
                 return;
             }
@@ -27,9 +27,9 @@ namespace NeonBlack.Gameplay.Editor
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 EditorGUILayout.LabelField("Active Setup", activeSetup.name);
-                EditorGUILayout.LabelField("Route", graph != null ? graph.RouteName : "No graph");
+                EditorGUILayout.LabelField("Graph Context", graph != null ? graph.RouteName : "No graph");
                 EditorGUILayout.LabelField("Graph Size", graph != null ? $"{graph.Nodes.Count} nodes, {graph.Edges.Count} edges" : "No graph", EditorStyles.wordWrappedLabel);
-                PyralisAuthoringWindowText.DrawSemanticMiniLabel("Scene-specific repair actions are shown in Map. Hygiene stays focused on code and graph health.");
+                PyralisAuthoringWindowText.DrawSemanticMiniLabel("Passive graph context only. Scene repair is shown in Map; route setup ordering is shown in Guide.");
             }
 
             DrawGraphAuditDashboard(graph);

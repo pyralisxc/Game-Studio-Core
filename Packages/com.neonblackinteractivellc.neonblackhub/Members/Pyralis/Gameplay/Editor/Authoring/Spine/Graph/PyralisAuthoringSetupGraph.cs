@@ -14,10 +14,12 @@ namespace NeonBlack.Gameplay.Editor
             UnityEngine.Object source,
             PyralisSetupRouteAnalysis routeAnalysis,
             IEnumerable<PyralisAuthoringGraphNode> nodes,
-            IEnumerable<PyralisAuthoringGraphEdge> edges)
+            IEnumerable<PyralisAuthoringGraphEdge> edges,
+            PyralisAuthoringIntentSelection intentSelection = null)
         {
             Source = source;
             RouteAnalysis = routeAnalysis;
+            IntentSelection = intentSelection;
             RouteName = routeAnalysis != null && !string.IsNullOrWhiteSpace(routeAnalysis.RouteName)
                 ? routeAnalysis.RouteName
                 : "No setup route selected";
@@ -39,6 +41,7 @@ namespace NeonBlack.Gameplay.Editor
 
         public UnityEngine.Object Source { get; }
         internal PyralisSetupRouteAnalysis RouteAnalysis { get; }
+        internal PyralisAuthoringIntentSelection IntentSelection { get; }
         public string RouteName { get; }
         public IReadOnlyList<PyralisAuthoringGraphNode> Nodes => _nodes;
         public IReadOnlyList<PyralisAuthoringGraphEdge> Edges => _edges;

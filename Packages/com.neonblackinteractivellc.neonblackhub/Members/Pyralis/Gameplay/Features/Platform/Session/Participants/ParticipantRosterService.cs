@@ -10,16 +10,16 @@ using VContainer;
 namespace NeonBlack.Gameplay.Characters
 {
     /// <summary>
-    /// Authoritative local/runtime roster of participants. Also exposes the primary
-    /// participant through IPlayerProvider for narrow single-player query surfaces.
+    /// Authoritative runtime roster of participants. Also exposes a default
+    /// participant through IPlayerProvider for systems that need a single focus handle.
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Session,
-        Relevance = "Authoritative local roster of participants. Exposes the primary participant for narrow single-player query surfaces.",
+        Relevance = "Authoritative runtime roster of participants. Exposes a default participant handle only for systems that need a single focus handle.",
         AssignmentFields = new[] { nameof(sessionDefinition) },
         FirstProof = "Enter Play Mode and spawn a pawn. Verify the 'Participants' list reflects the character.",
         NativeSetup = new[] { "Add to GameplaySessionBootstrap child." },
-        ExpertAdvice = "Source of truth for all active participants. Bridges Unity's PlayerInput system to the Pyralis 'Participant' model. Use it to iterate over players or find specific client authority.",
+        ExpertAdvice = "Source of truth for all active participants. Bridges Unity's PlayerInput system to the Pyralis participant model. Use the roster for participant iteration and authority-aware lookup instead of assuming player one.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/participants"
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Setup/Participant Roster Service")]
@@ -40,6 +40,8 @@ namespace NeonBlack.Gameplay.Characters
 
         public event Action<ParticipantHandle> ParticipantRegistered;
         public event Action<ParticipantHandle> ParticipantRemoved;
+        public event Action<ParticipantHandle, GameObject> ParticipantPawnAssigned;
+        public event Action<ParticipantHandle, GameObject> ParticipantPawnCleared;
 
         public void Initialize() { }
         public void Shutdown() { }
@@ -103,6 +105,7 @@ namespace NeonBlack.Gameplay.Characters
                     continue;
 
                 ParticipantHandle removed = _participants[i];
+                ClearPawn(removed);
                 _participants.RemoveAt(i);
                 ParticipantRemoved?.Invoke(removed);
                 return true;
@@ -118,9 +121,32 @@ namespace NeonBlack.Gameplay.Characters
 
             bool removed = _participants.Remove(participant);
             if (removed)
+            {
+                ClearPawn(participant);
                 ParticipantRemoved?.Invoke(participant);
+            }
 
             return removed;
+        }
+
+        public void AttachPawn(ParticipantHandle participant, GameObject pawn)
+        {
+            if (participant == null)
+                return;
+
+            participant.AttachPawn(pawn);
+            if (pawn != null)
+                ParticipantPawnAssigned?.Invoke(participant, pawn);
+        }
+
+        public void ClearPawn(ParticipantHandle participant)
+        {
+            if (participant == null || participant.PawnInstance == null)
+                return;
+
+            GameObject pawn = participant.PawnInstance;
+            participant.ClearPawn();
+            ParticipantPawnCleared?.Invoke(participant, pawn);
         }
 
         public bool TryGetPrimaryParticipant(out ParticipantHandle participant)

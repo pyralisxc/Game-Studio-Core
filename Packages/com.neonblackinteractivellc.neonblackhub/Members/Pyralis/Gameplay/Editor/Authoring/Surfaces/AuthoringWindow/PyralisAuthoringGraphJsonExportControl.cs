@@ -9,42 +9,48 @@ namespace NeonBlack.Gameplay.Editor
     {
         private const string TempGraphFolder = "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Editor/Authoring/TempGraphs";
 
-        public static void Draw(string viewName, PyralisAuthoringSetupGraph graph)
+        public static void DrawMapSnapshot(PyralisAuthoringSetupGraph graph)
         {
-            Draw(viewName, graph, null);
+            DrawSnapshot("Map", "Export Map JSON", graph);
         }
 
         public static void DrawRouteProofTrace(PyralisAuthoringSetupGraph graph)
         {
-            using (new EditorGUILayout.HorizontalScope(GUILayout.MaxWidth(115f)))
-            using (new EditorGUI.DisabledScope(graph == null))
+            DrawRouteProofTraceButton(graph, "Export Route Trace");
+        }
+
+        public static void DrawHygieneSnapshot(PyralisAuthoringSetupGraph graph)
+        {
+            DrawSnapshot("Hygiene", "Export Hygiene JSON", graph);
+        }
+
+        private static void DrawSnapshot(string viewName, string label, PyralisAuthoringSetupGraph graph)
+        {
+            using (new EditorGUILayout.HorizontalScope())
             {
-                GUIContent traceContent = BuildTraceContent();
-                if (GUILayout.Button(traceContent, GUILayout.Width(105f)))
-                    ExportRouteProofTrace(graph);
+                DrawSnapshotButton(viewName, label, graph);
+                GUILayout.FlexibleSpace();
             }
         }
 
-        public static void Draw(string viewName, PyralisAuthoringSetupGraph graph, PyralisAuthoringSetupGraph routeProofTraceGraph)
+        private static void DrawSnapshotButton(string viewName, string label, PyralisAuthoringSetupGraph graph)
         {
             bool canExport = graph != null || IsHygiene(viewName);
-            using (new EditorGUILayout.HorizontalScope(GUILayout.MaxWidth(330f)))
+            using (new EditorGUI.DisabledScope(!canExport))
             {
-                using (new EditorGUI.DisabledScope(!canExport))
-                {
-                    GUIContent content = new GUIContent(
-                        "Export JSON",
-                        BuildTooltip(viewName));
-                    if (GUILayout.Button(content, GUILayout.Width(105f)))
-                        Export(viewName, graph);
-                }
+                GUIContent content = new GUIContent(label, BuildTooltip(viewName));
+                if (GUILayout.Button(content, GUILayout.Width(142f)))
+                    Export(viewName, graph);
+            }
+        }
 
-                using (new EditorGUI.DisabledScope(routeProofTraceGraph == null))
-                {
-                    GUIContent traceContent = BuildTraceContent();
-                    if (GUILayout.Button(traceContent, GUILayout.Width(105f)))
-                        ExportRouteProofTrace(routeProofTraceGraph);
-                }
+        private static void DrawRouteProofTraceButton(PyralisAuthoringSetupGraph graph, string label)
+        {
+            using (new EditorGUI.DisabledScope(graph == null))
+            {
+                GUIContent traceContent = BuildTraceContent(label);
+                if (GUILayout.Button(traceContent, GUILayout.Width(142f)))
+                    ExportRouteProofTrace(graph);
             }
         }
 
@@ -95,16 +101,16 @@ namespace NeonBlack.Gameplay.Editor
         {
             if (IsHygiene(viewName))
             {
-                return $"Write this {viewName} snapshot to {TempGraphFolder}. Hygiene can export dependency pressure even when no setup route is active; graph-specific sections stay empty until a route exists.";
+                return $"Write the Hygiene graph audit to {TempGraphFolder}. Includes graph health, dependency pressure, cleanup focus, watch-list pressure, and contract-source pressure.";
             }
 
-            return $"Write this {viewName} graph snapshot to {TempGraphFolder}. Map exports current setup reality only, not the Intent-projected desired route.";
+            return $"Write the Map setup snapshot to {TempGraphFolder}. Map exports current setup reality only, not the Intent-projected desired route or Hygiene audit.";
         }
 
-        private static GUIContent BuildTraceContent()
+        private static GUIContent BuildTraceContent(string label)
         {
             return new GUIContent(
-                "Export Trace",
+                label,
                 "Write a Route Proof Trace JSON. This exports the ordered fresh-scene setup-card path toward the selected first proof, plus blockers, proof context, source owners, and route evidence for humans and agents.");
         }
 

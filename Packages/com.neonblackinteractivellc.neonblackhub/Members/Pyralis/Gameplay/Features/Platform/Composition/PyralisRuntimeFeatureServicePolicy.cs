@@ -7,9 +7,7 @@ using NeonBlack.Gameplay.Features.Feedback;
 using NeonBlack.Gameplay.Features.GameFlow;
 using NeonBlack.Gameplay.Features.Pickups;
 using NeonBlack.Gameplay.Features.Scoring;
-using System;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace NeonBlack.Gameplay.Core.Runtime
 {
@@ -114,19 +112,19 @@ namespace NeonBlack.Gameplay.Core.Runtime
         public static PyralisRuntimeFeatureServicePolicy ResolveWithLoadedSceneEvidence(SessionDefinition sessionDefinition)
         {
             return Resolve(sessionDefinition).WithLoadedSceneEvidence(
-                HasLoadedSceneComponent<PawnCombatBehaviour>()
-                || HasLoadedSceneComponent<PawnCombatBehaviour2D>(),
-                HasLoadedSceneComponent<EnemyAI>()
-                || HasLoadedSceneComponent<BattleManager>(),
-                HasLoadedSceneComponentInNamespace("NeonBlack.Gameplay.Features.Rpg"),
-                HasLoadedSceneComponent<GameManager>()
-                || HasLoadedSceneComponentInNamespace("NeonBlack.Gameplay.Features.GameFlow"),
-                HasLoadedSceneComponent<ParticipantScoreService>()
-                || HasLoadedSceneComponent<LeaderboardManager>()
-                || HasLoadedSceneComponent<StillnessBonus2D>()
-                || HasLoadedSceneComponent<CollectibleFeedback2D>(),
-                HasLoadedSceneComponent<ParticipantFeedbackService>()
-                || HasLoadedSceneComponentInNamespace("NeonBlack.Gameplay.Features.Feedback"));
+                PyralisLoadedSceneComponentSearch.ContainsComponent<PawnCombatBehaviour>()
+                || PyralisLoadedSceneComponentSearch.ContainsComponent<PawnCombatBehaviour2D>(),
+                PyralisLoadedSceneComponentSearch.ContainsComponent<EnemyAI>()
+                || PyralisLoadedSceneComponentSearch.ContainsComponent<BattleManager>(),
+                PyralisLoadedSceneComponentSearch.ContainsComponentInNamespace("NeonBlack.Gameplay.Features.Rpg"),
+                PyralisLoadedSceneComponentSearch.ContainsComponent<GameManager>()
+                || PyralisLoadedSceneComponentSearch.ContainsComponentInNamespace("NeonBlack.Gameplay.Features.GameFlow"),
+                PyralisLoadedSceneComponentSearch.ContainsComponent<ParticipantScoreService>()
+                || PyralisLoadedSceneComponentSearch.ContainsComponent<LeaderboardManager>()
+                || PyralisLoadedSceneComponentSearch.ContainsComponent<StillnessBonus2D>()
+                || PyralisLoadedSceneComponentSearch.ContainsComponent<CollectibleFeedback2D>(),
+                PyralisLoadedSceneComponentSearch.ContainsComponent<ParticipantFeedbackService>()
+                || PyralisLoadedSceneComponentSearch.ContainsComponentInNamespace("NeonBlack.Gameplay.Features.Feedback"));
         }
 
         private static void AppendModuleSignals(
@@ -194,69 +192,5 @@ namespace NeonBlack.Gameplay.Core.Runtime
                 || contract.Capability.HasFlag(AuthoringCapability.Animation);
         }
 
-        private static bool HasLoadedSceneComponent<T>() where T : Component
-        {
-            // Loaded-scene evidence keeps visible scene-authored services active without creating a second route truth.
-            return FindLoadedSceneComponent<T>() != null;
-        }
-
-        private static T FindLoadedSceneComponent<T>() where T : Component
-        {
-            for (int sceneIndex = 0; sceneIndex < SceneManager.sceneCount; sceneIndex++)
-            {
-                Scene scene = SceneManager.GetSceneAt(sceneIndex);
-                if (!scene.isLoaded)
-                    continue;
-
-                GameObject[] roots = scene.GetRootGameObjects();
-                for (int rootIndex = 0; rootIndex < roots.Length; rootIndex++)
-                {
-                    if (roots[rootIndex] == null)
-                        continue;
-
-                    T component = roots[rootIndex].GetComponentInChildren<T>(true);
-                    if (component != null)
-                        return component;
-                }
-            }
-
-            return null;
-        }
-
-        private static bool HasLoadedSceneComponentInNamespace(string namespacePrefix)
-        {
-            // Namespace scans are coarse scene evidence; contracts and authored definitions remain the primary route signal.
-            if (string.IsNullOrWhiteSpace(namespacePrefix))
-                return false;
-
-            for (int sceneIndex = 0; sceneIndex < SceneManager.sceneCount; sceneIndex++)
-            {
-                Scene scene = SceneManager.GetSceneAt(sceneIndex);
-                if (!scene.isLoaded)
-                    continue;
-
-                GameObject[] roots = scene.GetRootGameObjects();
-                for (int rootIndex = 0; rootIndex < roots.Length; rootIndex++)
-                {
-                    GameObject root = roots[rootIndex];
-                    if (root == null)
-                        continue;
-
-                    MonoBehaviour[] behaviours = root.GetComponentsInChildren<MonoBehaviour>(true);
-                    for (int i = 0; i < behaviours.Length; i++)
-                    {
-                        Type type = behaviours[i] != null ? behaviours[i].GetType() : null;
-                        if (type != null
-                            && type.Namespace != null
-                            && type.Namespace.StartsWith(namespacePrefix, StringComparison.Ordinal))
-                        {
-                            return true;
-                        }
-                    }
-                }
-            }
-
-            return false;
-        }
     }
 }

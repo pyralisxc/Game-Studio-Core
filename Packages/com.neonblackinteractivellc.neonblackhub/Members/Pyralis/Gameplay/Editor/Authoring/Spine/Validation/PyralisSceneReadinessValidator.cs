@@ -6,6 +6,7 @@ using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Features.Input;
 using NeonBlack.Gameplay.Features.Combat;
+using NeonBlack.Gameplay.Features.Composition;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -731,6 +732,9 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 else if (!HasEnabledComponentImplementing<PawnRoot>(prefab))
                     requiredIssues.Add($"Participant slot {participantSlot} pawn prefab `{prefab.name}` has PawnRoot disabled or on an inactive child. Enable PawnRoot on the prefab root before Play Mode.");
 
+                if (HasEnabledFeatureModules(pawn) && prefab.GetComponent<ActorFeatureHost>() == null)
+                    requiredIssues.Add($"Participant slot {participantSlot} pawn prefab `{prefab.name}` has enabled feature modules in PawnDefinition.featureModules, but the prefab root is missing ActorFeatureHost. Add ActorFeatureHost to the pawn root so optional feature modules are installed explicitly.");
+
                 if (!HasComponentImplementing<IPawnMotor>(prefab))
                     requiredIssues.Add($"Participant slot {participantSlot} pawn prefab `{prefab.name}` is missing a lane motor component implementing IPawnMotor.");
                 else if (!HasEnabledComponentImplementing<IPawnMotor>(prefab))
@@ -752,6 +756,21 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
 
             AppendFeatureModuleIssues(pawn, inspectedObjects, requiredIssues);
             AppendCombatProjectileIssues(pawn, inspectedObjects, requiredIssues, recommendedIssues);
+        }
+
+        private static bool HasEnabledFeatureModules(PawnDefinition pawn)
+        {
+            if (pawn == null || pawn.featureModules == null)
+                return false;
+
+            for (int i = 0; i < pawn.featureModules.Length; i++)
+            {
+                FeatureModuleDefinition module = pawn.featureModules[i];
+                if (module != null && module.enabledByDefault)
+                    return true;
+            }
+
+            return false;
         }
 
         private static void AppendPrefabSpriteRendererIssues(int participantSlot, GameObject prefab, List<string> requiredIssues)

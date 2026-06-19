@@ -130,14 +130,14 @@ namespace NeonBlack.Gameplay.Characters
                     return participant.PawnInstance;
 
                 DestroyPawnInstance(participant.PawnInstance);
-                participant.ClearPawn();
+                ClearParticipantPawn(participant);
             }
 
             GameObject joinedPawnInstance = TryResolveJoinedPawnInstance(participant);
             if (joinedPawnInstance != null)
             {
                 joinedPawnInstance.transform.position = ResolveSpawnPosition(participant.SeatIndex);
-                participant.AttachPawn(joinedPawnInstance);
+                AttachParticipantPawn(participant, joinedPawnInstance);
                 InitializePawnInstance(joinedPawnInstance, participant);
                 return joinedPawnInstance;
             }
@@ -146,7 +146,7 @@ namespace NeonBlack.Gameplay.Characters
             GameObject instance = _resolver != null 
                 ? _resolver.Instantiate(participant.PawnDefinition.pawnPrefab, spawnPosition, Quaternion.identity)
                 : Instantiate(participant.PawnDefinition.pawnPrefab, spawnPosition, Quaternion.identity);
-            participant.AttachPawn(instance);
+            AttachParticipantPawn(participant, instance);
             InitializePawnInstance(instance, participant);
 
             return instance;
@@ -212,7 +212,23 @@ namespace NeonBlack.Gameplay.Characters
                 return;
 
             DestroyPawnInstance(participant.PawnInstance);
-            participant.ClearPawn();
+            ClearParticipantPawn(participant);
+        }
+
+        private void AttachParticipantPawn(ParticipantHandle participant, GameObject instance)
+        {
+            if (rosterService != null)
+                rosterService.AttachPawn(participant, instance);
+            else
+                participant.AttachPawn(instance);
+        }
+
+        private void ClearParticipantPawn(ParticipantHandle participant)
+        {
+            if (rosterService != null)
+                rosterService.ClearPawn(participant);
+            else
+                participant.ClearPawn();
         }
 
         private Vector3 ResolveSpawnPosition(int seatIndex)

@@ -46,6 +46,9 @@ namespace NeonBlack.Gameplay.Core.Contracts
             string expertAdvice = null,
             string moduleId = null,
             string setupNodeId = null,
+            string capabilityPath = null,
+            string[] roleTags = null,
+            bool selectableIntent = true,
             string authoringLane = null,
             string relevance = null,
             string manualPath = null)
@@ -78,6 +81,9 @@ namespace NeonBlack.Gameplay.Core.Contracts
             ExpertAdvice = expertAdvice ?? string.Empty;
             ModuleId = moduleId ?? string.Empty;
             SetupNodeId = setupNodeId ?? string.Empty;
+            CapabilityPath = capabilityPath ?? string.Empty;
+            RoleTags = roleTags ?? Array.Empty<string>();
+            SelectableIntent = selectableIntent;
             AuthoringLane = authoringLane ?? string.Empty;
             Relevance = relevance ?? string.Empty;
             ManualPath = manualPath ?? string.Empty;
@@ -88,6 +94,9 @@ namespace NeonBlack.Gameplay.Core.Contracts
         public string AuthoringCategory { get; }
         public string ModuleId { get; }
         public string SetupNodeId { get; }
+        public string CapabilityPath { get; }
+        public string[] RoleTags { get; }
+        public bool SelectableIntent { get; }
         public string AuthoringLane { get; }
         public Type RequiredProfileType { get; }
         public string[] RequiredRuntimeInterfaceNames { get; }

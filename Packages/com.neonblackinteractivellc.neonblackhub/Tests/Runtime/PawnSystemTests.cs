@@ -213,5 +213,82 @@ namespace NeonBlack.Gameplay.Tests.Runtime
 
             Object.DestroyImmediate(go);
         }
+
+        [Test]
+        public void PawnCameraTarget_WithEmptyFields_FallsBackToOwnTransform()
+        {
+            GameObject go = new GameObject("Pawn");
+            PawnCameraTarget target = go.AddComponent<PawnCameraTarget>();
+
+            Assert.That(target.FollowTarget, Is.EqualTo(go.transform));
+            Assert.That(target.LookAtTarget, Is.EqualTo(go.transform));
+
+            Object.DestroyImmediate(go);
+        }
+
+        [Test]
+        public void ParticipantRoster_AttachPawn_StoresPawnAndRaisesAssignmentEvent()
+        {
+            GameObject rosterGo = new GameObject("Roster");
+            ParticipantRosterService roster = rosterGo.AddComponent<ParticipantRosterService>();
+            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
+            ParticipantDefinition participantDefinition = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            session.defaultParticipants = new[] { participantDefinition };
+            roster.SetSessionDefinition(session);
+            ParticipantHandle participant = roster.RegisterParticipant(null, participantDefinition, 0);
+            GameObject pawn = new GameObject("Pawn");
+            ParticipantHandle assignedParticipant = null;
+            GameObject assignedPawn = null;
+
+            roster.ParticipantPawnAssigned += (handle, instance) =>
+            {
+                assignedParticipant = handle;
+                assignedPawn = instance;
+            };
+
+            roster.AttachPawn(participant, pawn);
+
+            Assert.That(participant.PawnInstance, Is.EqualTo(pawn));
+            Assert.That(assignedParticipant, Is.EqualTo(participant));
+            Assert.That(assignedPawn, Is.EqualTo(pawn));
+
+            Object.DestroyImmediate(pawn);
+            Object.DestroyImmediate(rosterGo);
+            Object.DestroyImmediate(session);
+            Object.DestroyImmediate(participantDefinition);
+        }
+
+        [Test]
+        public void ParticipantRoster_ClearPawn_ClearsPawnAndRaisesClearedEvent()
+        {
+            GameObject rosterGo = new GameObject("Roster");
+            ParticipantRosterService roster = rosterGo.AddComponent<ParticipantRosterService>();
+            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
+            ParticipantDefinition participantDefinition = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            session.defaultParticipants = new[] { participantDefinition };
+            roster.SetSessionDefinition(session);
+            ParticipantHandle participant = roster.RegisterParticipant(null, participantDefinition, 0);
+            GameObject pawn = new GameObject("Pawn");
+            roster.AttachPawn(participant, pawn);
+            ParticipantHandle clearedParticipant = null;
+            GameObject clearedPawn = null;
+
+            roster.ParticipantPawnCleared += (handle, instance) =>
+            {
+                clearedParticipant = handle;
+                clearedPawn = instance;
+            };
+
+            roster.ClearPawn(participant);
+
+            Assert.That(participant.PawnInstance, Is.Null);
+            Assert.That(clearedParticipant, Is.EqualTo(participant));
+            Assert.That(clearedPawn, Is.EqualTo(pawn));
+
+            Object.DestroyImmediate(pawn);
+            Object.DestroyImmediate(rosterGo);
+            Object.DestroyImmediate(session);
+            Object.DestroyImmediate(participantDefinition);
+        }
     }
 }

@@ -12,8 +12,8 @@ namespace NeonBlack.Gameplay.Core.Runtime
         Axioms = AuthoringWorldAxiom.None,
         RequiredInterfaces = new[] { typeof(ISessionOwnershipService) },
         FirstProof = "Start a local session and verify the server-authoritative flag is false.",
-        NativeSetup = new[] { "Add to Scene Service Registry or Bootstrap." },
-        ExpertAdvice = "Enforces that the local machine owns the game world. Use this for single-player or local split-screen prototypes. It effectively bypasses network synchronization checks.",
+        NativeSetup = new[] { "Register through the scene/session composition root when offline session ownership is needed." },
+        ExpertAdvice = "Enforces that the local machine owns the game world for offline and local split-screen routes. Use a networked ownership service when synchronization authority belongs to an online backend.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/session"
     )]
 public sealed class LocalSessionOwnershipService : ISessionOwnershipService

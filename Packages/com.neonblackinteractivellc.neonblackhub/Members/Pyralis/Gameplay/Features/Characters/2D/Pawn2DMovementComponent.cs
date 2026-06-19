@@ -11,9 +11,11 @@ namespace NeonBlack.Gameplay.Features.Characters
 {
     [AuthoringContract(
         Capability = AuthoringCapability.Movement, 
+        CapabilityPath = "Movement/2D/Movement Component",
         PriorityValueOverride = 50,
         Relevance = "Tunable 2D movement module supporting top-down and side-view modes. PlayfieldProfile owns normal movement bounds; camera-visible bounds are an explicit arcade option.",
         Axioms = AuthoringWorldAxiom.Dimensions2D,
+        RoleTags = new[] { "Movement2D", "TopDownNoGravity", "SideViewGravity" },
         NativeSetup = new[] 
         { 
             "Add Rigidbody2D and Collider2D.",

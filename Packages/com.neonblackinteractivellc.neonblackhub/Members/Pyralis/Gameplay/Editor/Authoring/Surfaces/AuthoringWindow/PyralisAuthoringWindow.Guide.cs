@@ -87,28 +87,28 @@ namespace NeonBlack.Gameplay.Editor
 
         private void DrawCurrentIntentGuide(PyralisAuthoringSetupGraph graph)
         {
-            EditorGUILayout.LabelField("Route Guide", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Intent Route Checklist", EditorStyles.boldLabel);
             PyralisAuthoringGraphJsonExportControl.DrawRouteProofTrace(graph);
 
             PyralisAuthoringRouteWorkingProjection route = PyralisAuthoringSetupGraphProjection.BuildRouteWorkingProjection(graph);
             if (route.OrderedSteps.Count > 0)
             {
                 PyralisAuthoringWindowText.DrawSemanticHelpBox(
-                    "Follow this graph-derived setup-card path from a fresh scene toward the first playable proof. Intent helps choose what to wire, then the current setup graph, setup-flow evidence, and validation decide the ordered Unity actions.",
+                    "Guide expands Overview. Intent chooses the route focus; the graph orders the setup steps. Clear the first missing step, then return here for the full path toward the first proof.",
                     MessageType.Info);
                 DrawRouteStepRows(route.OrderedSteps);
                 return;
             }
 
             PyralisAuthoringWindowText.DrawSemanticHelpBox(
-                "Guide renders the resolved setup graph. Open Intent to filter route capabilities, then create or wire gameplay assets so Guide can show the graph-backed route path.",
+                "Guide needs an Intent focus and enough authored setup to build a route checklist. Start in Intent, then express the durable setup through Unity assets and scene objects.",
                 MessageType.Info);
 
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 PyralisAuthoringWindowPrimitives.DrawMiniField("Next Surface", "Intent");
-                PyralisAuthoringWindowPrimitives.DrawMiniField("Route Contract", "Use Intent as the graph filter, then express durable setup through SessionDefinition, GameModeDefinition, participants, pawns, feature modules, scene objects, and contracts.");
-                PyralisAuthoringWindowPrimitives.DrawMiniField("After That", "Return to Guide for graph-ranked setup nodes, proof support, and reflective contracts.");
+                PyralisAuthoringWindowPrimitives.DrawMiniField("Route Contract", "Intent filters Overview and Guide. Map stays focused on what currently exists in the scene.");
+                PyralisAuthoringWindowPrimitives.DrawMiniField("After That", "Create or wire SessionDefinition, GameModeDefinition, participants, pawns, feature modules, and scene objects so the graph can order the next steps.");
             }
         }
 
@@ -139,8 +139,8 @@ namespace NeonBlack.Gameplay.Editor
                 }
 
                 SetFoldout(IntentRowFoldouts, foldoutKey, expanded);
-                PyralisAuthoringWindowPrimitives.DrawMiniField("Path", $"{row.PhaseLabel} / {row.RoleLabel}", "Route phase and role are derived from graph nodes and edges.");
-                PyralisAuthoringWindowPrimitives.DrawMiniField("Why", row.Reason, "Why this graph step appears in the route path.");
+                PyralisAuthoringWindowPrimitives.DrawMiniField("Path", $"{row.PhaseLabel} / {row.RoleLabel}", "Where this step sits in the Intent-filtered route checklist.");
+                PyralisAuthoringWindowPrimitives.DrawMiniField("Why", row.Reason, "Why this step appears before the first proof.");
                 if (!string.IsNullOrWhiteSpace(row.UnityActionLabel))
                     PyralisAuthoringWindowPrimitives.DrawMiniField("Unity Action", row.UnityActionLabel, "Where to do this in Unity.");
 

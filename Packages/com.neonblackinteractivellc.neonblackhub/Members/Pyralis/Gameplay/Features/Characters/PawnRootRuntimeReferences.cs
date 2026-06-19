@@ -39,14 +39,6 @@ namespace NeonBlack.Gameplay.Characters
                 owner != null ? owner.GetComponent<KnockbackReceiver>() : null);
         }
 
-        public ActorFeatureHost EnsureFeatureHost()
-        {
-            if (FeatureHost == null && _owner != null)
-                FeatureHost = _owner.AddComponent<ActorFeatureHost>();
-
-            return FeatureHost;
-        }
-
         public MonoBehaviour[] GetProfileReceivers()
         {
             return _owner != null

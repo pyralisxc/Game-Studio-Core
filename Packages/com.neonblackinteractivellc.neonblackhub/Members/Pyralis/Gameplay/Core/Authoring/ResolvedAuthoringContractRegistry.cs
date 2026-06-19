@@ -261,6 +261,9 @@ namespace NeonBlack.Gameplay.Core.Contracts
                 expertAdvice: contract.ExpertAdvice,
                 moduleId: contract.ModuleId,
                 setupNodeId: contract.SetupNodeId,
+                capabilityPath: contract.CapabilityPath,
+                roleTags: contract.RoleTags,
+                selectableIntent: contract.SelectableIntent,
                 authoringLane: contract.AuthoringLane,
                 relevance: contract.Relevance,
                 manualPath: contract.ManualPath);
@@ -352,6 +355,9 @@ namespace NeonBlack.Gameplay.Core.Contracts
                 expertAdvice: attr.ExpertAdvice,
                 moduleId: attr.ModuleId,
                 setupNodeId: attr.SetupNodeId,
+                capabilityPath: attr.CapabilityPath,
+                roleTags: attr.RoleTags,
+                selectableIntent: attr.SelectableIntent,
                 authoringLane: attr.Lane,
                 relevance: attr.Relevance,
                 manualPath: attr.ManualPath
@@ -507,6 +513,9 @@ namespace NeonBlack.Gameplay.Core.Contracts
                 expertAdvice: FirstNonEmpty(current.ExpertAdvice, incoming.ExpertAdvice),
                 moduleId: FirstNonEmpty(current.ModuleId, incoming.ModuleId),
                 setupNodeId: FirstNonEmpty(current.SetupNodeId, incoming.SetupNodeId),
+                capabilityPath: FirstNonEmpty(current.CapabilityPath, incoming.CapabilityPath),
+                roleTags: MergeDistinct(current.RoleTags, incoming.RoleTags),
+                selectableIntent: current.SelectableIntent || incoming.SelectableIntent,
                 authoringLane: FirstNonEmpty(current.AuthoringLane, incoming.AuthoringLane),
                 relevance: FirstNonEmpty(current.Relevance, incoming.Relevance),
                 manualPath: FirstNonEmpty(current.ManualPath, incoming.ManualPath));

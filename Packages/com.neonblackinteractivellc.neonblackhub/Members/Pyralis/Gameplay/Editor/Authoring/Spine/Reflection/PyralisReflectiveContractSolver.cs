@@ -287,7 +287,7 @@ namespace NeonBlack.Gameplay.Editor
 
         private static bool CapabilityMatchesRouteFacts(AuthoringCapability capability, PyralisSetupRouteAnalysis route)
         {
-            string label = AuthoringCapabilityRegistry.GetDisplayName(capability);
+            string label = PyralisAuthoringVocabulary.GetCapabilityDisplayName(capability);
             foreach (var fact in route.RouteFacts)
             {
                 if (fact == null || string.IsNullOrWhiteSpace(fact.Label))

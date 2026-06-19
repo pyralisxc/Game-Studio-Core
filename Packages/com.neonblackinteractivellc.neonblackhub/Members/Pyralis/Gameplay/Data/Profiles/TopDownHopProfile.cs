@@ -9,7 +9,10 @@ namespace NeonBlack.Gameplay.Data.Profiles
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Movement | AuthoringCapability.Traversal,
-        Relevance = "Tuning asset for top-down 'visual' hops (Z-axis simulation).",
+        CapabilityPath = "Movement/Traversal/FakeGravityJump",
+        Axioms = AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone | AuthoringWorldAxiom.Realtime,
+        Relevance = "Tuning asset for fake-gravity visual jumps where the pawn sprite or visual child arcs without changing collider position.",
+        RoleTags = new[] { "VisualHop", "FakeGravityJump", "JumpProfile" },
         AssignmentFields = new[] { nameof(actionRole), nameof(duration), nameof(height), nameof(cooldown) },
         FirstProof = "Perform a hop in a top-down scene and verify the shadow stays on the ground while the sprite arcs up.",
         ExpertAdvice = "This is a purely visual/presentation hop. It does not change the physical collider height. Best used for 'Jump' actions in isometric RPGs.",

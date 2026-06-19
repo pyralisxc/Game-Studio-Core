@@ -12,9 +12,9 @@ namespace NeonBlack.Gameplay.Core.Runtime
         Relevance = "Provides the local-only authority model for participants.",
         Axioms = AuthoringWorldAxiom.None,
         RequiredInterfaces = new[] { typeof(IParticipantAuthorityService) },
-        FirstProof = "Verify that IsLocalParticipant returns true in a single-player session.",
-        NativeSetup = new[] { "Add to Scene Service Registry or Bootstrap." },
-        ExpertAdvice = "The Local Authority service is a 'dumb' pass-through for same-machine play. It identifies all inputs as local. Use the Networked variant for online multiplayer projects.",
+        FirstProof = "Verify that local participants are treated as locally controlled in an offline or same-machine session.",
+        NativeSetup = new[] { "Register through the scene/session composition root when an offline authority service is needed." },
+        ExpertAdvice = "The Local Authority service is a pass-through for offline and same-machine play. It identifies participant input as local. Use a networked authority service when ownership comes from an online backend.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/authority"
     )]
 public sealed class LocalParticipantAuthorityService : IParticipantAuthorityService

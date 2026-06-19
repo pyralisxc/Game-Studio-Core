@@ -383,11 +383,11 @@ Defines:
 
 Defines:
 
-- follow style,
-- composition,
+- focus mode,
+- framing,
 - zoom behavior,
 - shake tuning,
-- multi-target behavior,
+- participant group or per-participant target routing,
 - split or shared camera preferences.
 
 ### InputProfile
@@ -443,6 +443,16 @@ Ownership shorthand:
 
 `ParticipantDefinition.inputProfile` is the authored input source of truth. `ParticipantInputRouter` may observe Unity `PlayerInput` join/leave events and apply that profile to live `PlayerInput` instances, but it should not become a second input policy owner. Camera setup follows the same split: scene-owned Cinemachine rig/controller/profile assets own framing, while pawns expose targets or sockets and zones request profile transitions.
 
+Camera ownership follows the same Unity-native rule:
+
+- participants own view identity and assigned pawns,
+- pawns expose `PawnCameraTarget` follow/look-at sockets when the pawn route needs explicit camera focus,
+- `CameraRigProfile.focusMode` chooses Participant Group, Participant Pawns, Playfield Center, Explicit Scene Target, or Manual Cinemachine,
+- `CinemachineCameraRigController` routes the selected target into Cinemachine,
+- Cinemachine owns composition, damping, blend, follow, and look-at behavior.
+
+Spawn services bind pawns to participants; they do not configure Cinemachine. Camera bounds are a separate service for visible-area-aware spawning, pickups, hazards, generated content, or screen-edge movement. Bounds do not prove that the camera can follow a pawn.
+
 Current implementation note:
 
 - the direct 2D and 3D pawn stacks are the supported authoring path.
@@ -461,7 +471,8 @@ Do not treat movement bounds as a camera-only concern.
 Preferred split:
 
 - `PlayfieldProfile` owns playable-space rules,
-- `CameraRigProfile` owns framing and follow,
+- `CameraRigProfile` owns focus mode and framing,
+- `PawnCameraTarget` owns pawn follow/look-at sockets,
 - the camera may read playfield data when useful to keep the view inside the authored world,
 - movement modules read playfield data directly for legal movement bounds,
 - camera-visible bounds constrain pawn movement only when a pawn explicitly opts into screen-edge behavior.

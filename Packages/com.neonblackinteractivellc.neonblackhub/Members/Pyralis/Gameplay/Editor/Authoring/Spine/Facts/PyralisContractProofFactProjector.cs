@@ -189,7 +189,7 @@ namespace NeonBlack.Gameplay.Editor
                 : contract.FirstProofTargetId;
             string category = !string.IsNullOrWhiteSpace(contract.AuthoringCategory)
                 ? contract.AuthoringCategory
-                : AuthoringCapabilityRegistry.GetDisplayName(contract.Capability);
+                : PyralisAuthoringVocabulary.GetCapabilityDisplayName(contract.Capability);
             string routeRelevance = !string.IsNullOrWhiteSpace(contract.Relevance)
                 ? contract.Relevance
                 : "Feature-owned authoring contract proof target.";
@@ -231,7 +231,7 @@ namespace NeonBlack.Gameplay.Editor
             foreach (AuthoringCapability capability in AuthoringCapabilityRegistry.GetAllIndividualCapabilities())
             {
                 if ((contract.Capability & capability) != 0)
-                    tags.Add(AuthoringCapabilityRegistry.GetDisplayName(capability));
+                    tags.Add(PyralisAuthoringVocabulary.GetCapabilityDisplayName(capability));
             }
 
             if (!string.IsNullOrWhiteSpace(contract.AuthoringCategory) && !tags.Contains(contract.AuthoringCategory))

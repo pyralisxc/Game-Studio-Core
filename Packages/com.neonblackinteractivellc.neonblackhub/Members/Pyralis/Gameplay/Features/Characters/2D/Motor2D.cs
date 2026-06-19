@@ -12,11 +12,13 @@ namespace NeonBlack.Gameplay.Features.Characters
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.KineticMotor2D,
+        CapabilityPath = "Movement/2D/Kinetic Motor",
         Priority = AuthoringPriority.Primary,
 Lane = "Sprite2D",
         Relevance = "Canonical 2D pawn motor; coordinates movement, animations, and reactions.",
         Axioms = AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.Realtime,
         RequiredComponents = new[] { typeof(Pawn2DMovementComponent), typeof(Pawn2DPresentationComponent) },
+        RoleTags = new[] { "Motor2D", "PawnRoot", "PhysicalIdentity" },
         NativeSetup = new[]
         {
             "Attach Motor2D to the 2D pawn root.",
