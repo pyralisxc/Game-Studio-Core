@@ -120,6 +120,8 @@ Keep the implementation split by responsibility:
 
 Add route facts, issue meaning, and setup analysis to these focused model/report classes before adding more drawing logic to the window.
 
+The window surface is UI Toolkit-only for non-Intent tabs. `PyralisAuthoringWindow` owns the tab shell, active setup cache, selection, and mode switching. Tab-specific projection packets are built in `PyralisAuthoringSetupGraphProjection`, rendered through the shared UI Toolkit tab renderer, and exported by the same export control. Do not add new IMGUI tab renderers or tab-local data discovery paths.
+
 The active guidance pipeline is:
 
 ```text
@@ -132,6 +134,8 @@ Gameplay code and authored assets
 Do not store the same route advice separately in multiple windows, inspectors, validators, or docs. If code structure proves it, reflect it. If humans need meaning, put it in a contract. If readiness changes, project it through graph evidence. If wording is generic, put it in Grammar/Vocabulary and let visible surfaces render from graph projections.
 
 Contracts may declare `CapabilityPath`, `RoleTags`, and `SelectableIntent` when reflection needs stable semantic grouping for Intent, Guide, Route Proof Trace, or Facts. These fields are routing meaning, not setup prose. Prefer them over hardcoded Intent categories, but do not use them to restate interfaces, required components, serialized fields, or dependency order that reflection can already discover.
+
+Intent may also declare a desired participant route shape, such as solo local or two local players. Treat this as a graph filter for planning the Guide/Overview route before setup exists. It should never apply a preset or mutate scene content. Concrete participant counts, join policy, spawn policy, and missing fields still come from `SessionDefinition`, `ParticipantDefinition`, `ParticipantInputRouter`, `PlayerInputManager`, `ParticipantSpawnService`, dependency reflection, and validators once the user authors the setup. Route analysis should keep authored participant count, desired Intent participant count, and effective route count distinct; Guide can explain mismatches, while Map remains honest about the current authored setup.
 
 Missing serialized setup references should enter the graph as reflected `AssignmentField` evidence before setup-flow prose gets a chance to describe the same gap. For example, an empty `ParticipantDefinition.inputProfile`, `PawnDefinition.pawnPrefab`, `PawnDefinition.movementProfile`, or `GameModeDefinition.cameraRigProfile` should produce a graph node that names the owner type, field, expected asset/component type, native Inspector action, severity, and proof relevance. Setup-flow guidance is still useful for broader route milestones and semantic rules, but it should not duplicate field-level assignment cards that reflection can already prove.
 
@@ -175,11 +179,12 @@ Gameplay code / feature code
 | Validators | readiness, blockers, missing references, invalid combinations, severity, native action targets | persistent feature meaning or grammar wording |
 | Grammar/vocabulary | labels, summaries, generic proof templates, native Unity surface names | feature-specific setup truth or route decisions |
 | Resolved setup graph | compiled readiness, proof targets, nodes, edges, evidence, selected context, source provenance | raw scanning or user-facing drawing details |
-
-Runtime validation providers must emit `PyralisRuntimeValidationIssue` records, not free-form setup prose. Use reflection and the dependency tree for object references, serialized fields, required components, implemented interfaces, and assignment paths whenever code structure can prove them. Use runtime validation providers only for semantic rules that reflection cannot infer, such as "this numeric value cannot be negative," "this action row is required for this route," or "this feature profile must match the selected module contract." Each issue should carry the affected field, target label, native action, severity, and success check when known so Overview, Guide, Map, Route Proof Trace, and Inspector handoffs all read the same graph evidence.
+| Tab projections | view-specific packets for Overview, Guide, Map, Hygiene, and Facts | new route truth, validation truth, or export-only truth |
 | UI tabs | projection, ranking, filtering, navigation, explanation | route truth, validation truth, or feature truth |
 
-JSON exports mirror the same projections the tabs render. Map export should describe current setup reality; Hygiene export should describe graph/code audit pressure with only passive graph context; Route Proof Trace export should describe the Guide route from current action through proof. Do not add separate export-only truth. If an export is wrong, fix the shared graph, projection, validator, contract, or grammar source that produced it.
+Runtime validation providers must emit `PyralisRuntimeValidationIssue` records, not free-form setup prose. Use reflection and the dependency tree for object references, serialized fields, required components, implemented interfaces, and assignment paths whenever code structure can prove them. Use runtime validation providers only for semantic rules that reflection cannot infer, such as "this numeric value cannot be negative," "this action row is required for this route," or "this feature profile must match the selected module contract." Each issue should carry the affected field, target label, native action, severity, and success check when known so Overview, Guide, Map, Route Proof Trace, and Inspector handoffs all read the same graph evidence.
+
+JSON exports mirror the same projections the tabs render. Intent export should describe route steering only; Map export should describe current setup reality; Hygiene export should describe graph/code audit pressure with only passive graph context; Guide's Route Proof Trace export should describe the Guide route from current action through proof; Facts export should describe the compiled dictionary/cookbook and provenance. Do not add separate export-only truth. If an export is wrong, fix the shared graph, projection, validator, contract, or grammar source that produced it.
 
 The intended developer workflow is:
 
@@ -422,6 +427,10 @@ Map rows should only inherit evidence that belongs to that row. Broad graph edge
 
 Map may offer a compact read-only **Export Map JSON** button for human and agent diagnostics. That snapshot must serialize the current setup lens only: current authored route analysis, graph nodes, graph edges, setup map rows, map connections, scene surfaces, and concrete scene/setup issues. It must not include Hygiene-only sections, must not become a second setup model, and must not pretend Intent-selected desired work already exists in the scene. The export action writes the current tab view into `Editor/Authoring/TempGraphs` so issue reports and agent handoffs have one predictable diagnostic folder while generated JSON remains ignored.
 
+### Intent Export
+
+Intent may offer a compact read-only **Export Intent JSON** button. This snapshot serializes the steering lens only: DNA axioms, presentation lane, participant route, selected capability descriptor ids, reflected descriptor groups/subgroups, advisor summary, recommendations, cautions, and matching intent facts. It must not include Map setup rows, Hygiene audit rows, scene repair issues, or generated setup content. Intent export exists so humans and agents can inspect what the creator asked the route to focus on before judging whether Guide and Overview are honoring that focus.
+
 ### Hygiene
 
 Hygiene should be graph integrity, not a second scene checklist. Evidence cards should include:
@@ -456,6 +465,10 @@ The export separates route cards into three audit buckets:
 `orderedSteps` is the compact visible route: critical path, proof enhancers, then the final proof target. `currentAction` is the first missing or blocked route step to do now; it is intentionally separate from `orderedSteps[0]`, because `orderedSteps[0]` may be a ready foundation/context card in the full from-scratch path. The trace should not include every optional contract or broad route vocabulary item. Overview, Guide, and Route Proof Trace must all consume the same route working projection so the cockpit, expanded guide, and JSON audit cannot drift apart.
 
 The trace must not become a broad contract-support graph. Contracts can appear as proof context, but the ordered route path should come first from setup-chain nodes, dependency-tree gaps, setup-flow evidence, prefab-readiness evidence, and runtime validation evidence. Scene-surface repair lists stay in Map, but pawn/prefab readiness blockers may appear in Guide/Trace when they translate into a concrete Unity component or field the route requires. The trace should also avoid promoting broad selected-but-later capabilities such as networking or procedural generation as direct setup cards for a local movement proof. The trace exists to answer: "What cards would Overview/Guide show, in what order, if the user had to build this proof from scratch?"
+
+### Facts Export
+
+Facts may offer a compact read-only **Export Facts JSON** button. This snapshot serializes the dictionary lens only: fact counts, source/confidence/capability counts, reflected contract coverage, proof support coverage, and cookbook fact rows. It should help humans and agents audit vocabulary, contract provenance, and missing coverage without turning Facts into setup guidance. Concrete repair work remains Map/Guide; code and graph pressure remains Hygiene.
 
 If the trace is wrong, fix the upstream owner: gameplay contract meaning, dependency-tree reflection, validator evidence, graph projection, or generic grammar wording. Do not hardcode special trace text to make one proof look right.
 
@@ -547,7 +560,7 @@ Use this as the product gate for every game lane. A route is not done just becau
 Use these products and patterns as guidance, not as things to copy directly:
 
 - Unity ScriptableObject authoring: keep durable design intent in assets.
-- Unity UI Toolkit editor windows: long-term fit for a persistent dashboard.
+- Unity UI Toolkit editor windows: the active Authoring Window surface pattern.
 - Odin Inspector: polished validation and field-adjacent editor ergonomics.
 - Game Creator and Adventure Creator: coherent game-creation workflows with safe defaults.
 - PlayMaker and Unreal Blueprints: visible state, immediate feedback, and clear next executable steps.
@@ -618,16 +631,16 @@ Expected result:
 
 ### Phase 7: Window Architecture Hardening
 
-Shrink `PyralisAuthoringWindow` toward a UI shell and mode coordinator.
+Keep `PyralisAuthoringWindow` as a UI Toolkit shell and mode coordinator.
 
-Move behavior into focused drawers, presenters, analyzers, detectors, and action handlers.
+Move new behavior into graph projections, validators, analyzers, detectors, vocabulary, or action handlers before adding tab renderer logic.
 
 Expected result:
 
 - lower maintenance cost
 - easier route additions
 - better test coverage
-- a future UI Toolkit migration becomes mechanical rather than conceptual
+- tab UI, JSON export, and projection output stay aligned
 
 ## Maintenance Rules
 

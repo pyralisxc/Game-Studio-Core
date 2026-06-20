@@ -157,6 +157,13 @@ namespace NeonBlack.Gameplay.Features.Input
             if (sessionDefinition == null || sessionDefinition.defaultParticipants == null)
                 return;
 
+            if (playerInputManager != null && CountAutoJoinDefaultParticipants() > 1)
+            {
+                Debug.LogWarning("[ParticipantInputRouter] Multiple default participants are marked Auto Join while PlayerInputManager is assigned. Skipping automatic registration so Unity PlayerInputManager can pair each controller with one participant.", this);
+                _autoRegisteredDefaults = true;
+                return;
+            }
+
             for (int i = 0; i < sessionDefinition.defaultParticipants.Length; i++)
             {
                 ParticipantDefinition definition = sessionDefinition.defaultParticipants[i];
@@ -168,6 +175,22 @@ namespace NeonBlack.Gameplay.Features.Input
             }
 
             _autoRegisteredDefaults = true;
+        }
+
+        private int CountAutoJoinDefaultParticipants()
+        {
+            if (sessionDefinition == null || sessionDefinition.defaultParticipants == null)
+                return 0;
+
+            int count = 0;
+            for (int i = 0; i < sessionDefinition.defaultParticipants.Length; i++)
+            {
+                ParticipantDefinition definition = sessionDefinition.defaultParticipants[i];
+                if (definition != null && definition.autoJoin)
+                    count++;
+            }
+
+            return count;
         }
 
         private void SubscribeToPlayerInputManager()

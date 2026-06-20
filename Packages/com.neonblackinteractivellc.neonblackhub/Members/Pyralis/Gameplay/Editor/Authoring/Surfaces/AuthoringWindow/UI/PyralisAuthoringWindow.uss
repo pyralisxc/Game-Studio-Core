@@ -91,6 +91,18 @@ This was created with the help of Assistant, a Unity Artificial Intelligence pro
     flex-wrap: wrap;
 }
 
+.capability-group-foldout {
+    width: 31%;
+    min-width: 260px;
+    margin-bottom: var(--spacing-md);
+    margin-right: var(--spacing-md);
+}
+
+.capability-subgroup-foldout {
+    margin-left: var(--spacing-md);
+    margin-top: var(--spacing-xs);
+}
+
 .capability-group {
     width: 48%;
     margin-bottom: var(--spacing-md);
@@ -132,4 +144,105 @@ This was created with the help of Assistant, a Unity Artificial Intelligence pro
 
 .intent-card-summary {
     white-space: normal;
+}
+
+.authoring-page {
+    flex-grow: 1;
+    padding: var(--spacing-md);
+}
+
+.authoring-title {
+    -unity-font-style: bold;
+    font-size: 13px;
+    margin-bottom: var(--spacing-md);
+}
+
+.authoring-section {
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-md);
+    border-width: 1px;
+    border-color: var(--unity-colors-border-standard);
+    background-color: var(--unity-colors-window-background);
+}
+
+.authoring-section-title {
+    -unity-font-style: bold;
+    margin-bottom: var(--spacing-sm);
+}
+
+.authoring-help {
+    white-space: normal;
+    opacity: 0.78;
+    margin-bottom: var(--spacing-sm);
+}
+
+.authoring-mini {
+    white-space: normal;
+    font-size: 11px;
+    opacity: 0.82;
+    margin-top: var(--spacing-xs);
+}
+
+.authoring-card {
+    margin-top: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    border-width: 1px;
+    border-color: var(--unity-colors-border-standard);
+    background-color: var(--unity-colors-box-background);
+}
+
+.authoring-card-header {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--spacing-xs);
+}
+
+.authoring-card-title {
+    -unity-font-style: bold;
+    flex-grow: 1;
+    white-space: normal;
+}
+
+.authoring-card-status {
+    opacity: 0.78;
+    margin-left: var(--spacing-md);
+}
+
+.authoring-field-row {
+    flex-direction: row;
+    margin-top: var(--spacing-xs);
+}
+
+.authoring-field-label {
+    width: 150px;
+    opacity: 0.78;
+}
+
+.authoring-field-value {
+    flex-grow: 1;
+    white-space: normal;
+}
+
+.authoring-list {
+    margin-top: var(--spacing-sm);
+}
+
+.authoring-list-title {
+    -unity-font-style: bold;
+    opacity: 0.82;
+}
+
+.authoring-action-row {
+    flex-direction: row;
+    margin-top: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.authoring-button {
+    margin-right: var(--spacing-sm);
+    min-width: 118px;
+}
+
+.authoring-foldout {
+    margin-top: var(--spacing-sm);
 }

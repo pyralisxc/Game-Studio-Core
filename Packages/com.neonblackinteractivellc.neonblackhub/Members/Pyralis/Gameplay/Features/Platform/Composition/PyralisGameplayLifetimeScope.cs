@@ -117,8 +117,8 @@ namespace NeonBlack.Gameplay.Core.Runtime
             }
 
             ParticipantQueryUtility.Initialize(_participantRosterService, _participantRosterService);
-            _sessionOwnershipService = ResolveOrCreateSessionOwnershipService(useNetcodeServices);
-            _participantAuthorityService = ResolveOrCreateParticipantAuthorityService(useNetcodeServices);
+            _sessionOwnershipService = ResolveSessionOwnershipService(useNetcodeServices);
+            _participantAuthorityService = ResolveParticipantAuthorityService(useNetcodeServices);
             _featureServicePolicy = PyralisRuntimeFeatureServicePolicy.ResolveWithLoadedSceneEvidence(sessionDefinition);
             _isConfigured = true;
         }
@@ -296,7 +296,7 @@ namespace NeonBlack.Gameplay.Core.Runtime
             return string.Equals(existing.GetType().FullName, preferredFullName, StringComparison.Ordinal);
         }
 
-        private static ISessionOwnershipService ResolveOrCreateSessionOwnershipService(bool useNetcodeServices)
+        private static ISessionOwnershipService ResolveSessionOwnershipService(bool useNetcodeServices)
         {
             if (useNetcodeServices && TryCreateServiceInstance(NetworkedSessionOwnershipServiceTypeName, out ISessionOwnershipService networkedService))
                 return networkedService;
@@ -304,7 +304,7 @@ namespace NeonBlack.Gameplay.Core.Runtime
             return new LocalSessionOwnershipService();
         }
 
-        private static IParticipantAuthorityService ResolveOrCreateParticipantAuthorityService(bool useNetcodeServices)
+        private static IParticipantAuthorityService ResolveParticipantAuthorityService(bool useNetcodeServices)
         {
             if (useNetcodeServices && TryCreateServiceInstance(NetworkedParticipantAuthorityServiceTypeName, out IParticipantAuthorityService networkedService))
                 return networkedService;

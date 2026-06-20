@@ -39,6 +39,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
         AssignDefaultParticipants,
         AssignParticipantPawn,
         AssignInputProfile,
+        ResolveParticipantJoinPolicy,
         AssignSpawnPoints,
         AssignCameraRig,
         AssignPlayerInputManager,

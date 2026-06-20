@@ -24,14 +24,15 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             AddSetupFact(facts, PyralisSetupFlowStepId.AssignDefaultGameMode, "Assign Default Game Mode", "Create or assign the game-rules asset for the session.", "Core setup chain");
             AddSetupFact(facts, PyralisSetupFlowStepId.ResolveRouteCapabilities, "Resolve Route Capabilities", "Reflect capability families from intent, contracts, serialized gameplay references, feature modules, participants, pawns, and scene evidence.", "Capability setup");
             AddSetupFact(facts, PyralisSetupFlowStepId.AssignDefaultParticipants, "Assign Default Participants", "Create or assign participant definitions for players, seats, factions, or command owners.", "Participant setup");
-            AddSetupFact(facts, PyralisSetupFlowStepId.AssignParticipantPawn, "Assign Participant Pawn", "Assign a PawnDefinition and prefab only when the selected route is pawn-backed.", "Pawn-backed movement route", new[] { "capability.2d-pawn-movement", "capability.3d-pawn-movement", "proof.1p-pawn-movement" });
-            AddSetupFact(facts, PyralisSetupFlowStepId.AssignInputProfile, "Assign Input Profile", "Assign input mapping when participant input drives pawn movement or actions.", "Pawn-backed movement route", new[] { "capability.2d-pawn-movement", "capability.3d-pawn-movement", "proof.1p-pawn-movement" });
-            AddSetupFact(facts, PyralisSetupFlowStepId.AssignSpawnPoints, "Assign Spawn Points", "Place spawn Transforms so pawn-backed participants can enter the scene predictably.", "Pawn-backed movement route", new[] { "capability.2d-pawn-movement", "capability.3d-pawn-movement", "proof.1p-pawn-movement" });
-            AddSetupFact(facts, PyralisSetupFlowStepId.AssignCameraRig, "Assign Camera Rig", "Create or assign a camera rig that can frame the first proof.", "Camera and first-proof visibility", new[] { "capability.camera-follow-bounds", "capability.2d-pawn-movement", "capability.3d-pawn-movement", "proof.1p-pawn-movement" });
-            AddSetupFact(facts, PyralisSetupFlowStepId.AssignPlayerInputManager, "Assign Player Input Manager", "Use PlayerInputManager only when local join or explicit multi-player input ownership is part of the proof.", "Input and local join");
+            AddSetupFact(facts, PyralisSetupFlowStepId.AssignParticipantPawn, "Assign Participant Pawn", "Assign a PawnDefinition and prefab only when the selected route is pawn-backed.", "Pawn-backed movement route", PawnProofLinks("capability.2d-pawn-movement", "capability.3d-pawn-movement"));
+            AddSetupFact(facts, PyralisSetupFlowStepId.AssignInputProfile, "Assign Input Profile", "Assign input mapping when participant input drives pawn movement or actions.", "Pawn-backed movement route", PawnProofLinks("capability.2d-pawn-movement", "capability.3d-pawn-movement"));
+            AddSetupFact(facts, PyralisSetupFlowStepId.ResolveParticipantJoinPolicy, "Resolve Participant Join Policy", "Choose whether participants auto-start, join through Unity PlayerInputManager, or wait for network/manual authority.", "Input and local join", PawnProofLinks());
+            AddSetupFact(facts, PyralisSetupFlowStepId.AssignSpawnPoints, "Assign Spawn Points", "Place spawn Transforms so pawn-backed participants can enter the scene predictably.", "Pawn-backed movement route", PawnProofLinks("capability.2d-pawn-movement", "capability.3d-pawn-movement"));
+            AddSetupFact(facts, PyralisSetupFlowStepId.AssignCameraRig, "Assign Camera Rig", "Create or assign a camera rig that can frame the first proof.", "Camera and first-proof visibility", PawnProofLinks("capability.camera-follow-bounds", "capability.2d-pawn-movement", "capability.3d-pawn-movement"));
+            AddSetupFact(facts, PyralisSetupFlowStepId.AssignPlayerInputManager, "Assign Player Input Manager", "Use PlayerInputManager only when local join or explicit multi-player input ownership is part of the proof.", "Input and local join", PawnProofLinks());
             AddSetupFact(facts, PyralisSetupFlowStepId.TuneCameraFraming, "Tune Camera Framing", "Customize camera framing and bounds for the selected route.", "Camera and first-proof visibility", new[] { "capability.camera-follow-bounds" });
-            AddSetupFact(facts, PyralisSetupFlowStepId.TunePawnVisualsAndCollision, "Tune Pawn Visuals And Collision", "Customize sprite/model, collider or CharacterController fit, pivot, sorting, billboard/rigged presentation, and visible pawn presentation.", "Pawn-backed movement route", new[] { "capability.2d-pawn-movement", "capability.3d-pawn-movement", "proof.1p-pawn-movement" });
-            AddSetupFact(facts, PyralisSetupFlowStepId.TuneMovementAndInputFeel, "Tune Movement And Input Feel", "Customize movement profile, CharacterController or Rigidbody feel, and input names so the proof feels intentional.", "Pawn-backed movement route", new[] { "capability.2d-pawn-movement", "capability.3d-pawn-movement", "proof.1p-pawn-movement" });
+            AddSetupFact(facts, PyralisSetupFlowStepId.TunePawnVisualsAndCollision, "Tune Pawn Visuals And Collision", "Customize sprite/model, collider or CharacterController fit, pivot, sorting, billboard/rigged presentation, and visible pawn presentation.", "Pawn-backed movement route", PawnProofLinks("capability.2d-pawn-movement", "capability.3d-pawn-movement"));
+            AddSetupFact(facts, PyralisSetupFlowStepId.TuneMovementAndInputFeel, "Tune Movement And Input Feel", "Customize movement profile, CharacterController or Rigidbody feel, and input names so the proof feels intentional.", "Pawn-backed movement route", PawnProofLinks("capability.2d-pawn-movement", "capability.3d-pawn-movement"));
             AddSetupFact(facts, PyralisSetupFlowStepId.AssignPlayfieldProfile, "Assign Playfield Profile", "Create or assign authored playfield bounds and lane rules when the route needs them.", "World and camera support");
             AddSetupFact(facts, PyralisSetupFlowStepId.EnableScoringRoute, "Enable Scoring Route", "Declare score or objective ownership before UI or services try to display it.", "Scoring route", new[] { "capability.ui-scoring-feedback" });
             AddSetupFact(facts, PyralisSetupFlowStepId.AssignGameplayStateService, "Assign Gameplay State Service", "Assign a scene or composition service when gameplay state is route-owned.", "State route");
@@ -42,8 +43,18 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             AddSetupFact(facts, PyralisSetupFlowStepId.TabletopRuntimeContract, "Tabletop Runtime Contract", "Use board, piece, move-policy, turn-order, and action data without requiring pawn fields.", "Tabletop/no-pawn route", new[] { "capability.interaction-action-selection", "proof.board-card-action" });
             AddSetupFact(facts, PyralisSetupFlowStepId.TabletopSelectionSurface, "Assign Tabletop Selection Surface", "Create or assign the board, card, cursor, or action-selection surface that makes one no-pawn proof selectable in Play Mode.", "Tabletop/no-pawn route", new[] { "capability.interaction-action-selection", "proof.board-card-action" });
             AddSetupFact(facts, PyralisSetupFlowStepId.AssignSettingsManager, "Assign Settings Manager", "Create or assign a SettingsManager to handle global volume, deadzones, and control swaps.", "Game Shell and UX");
-            AddSetupFact(facts, PyralisSetupFlowStepId.SceneAndPrefabReadiness, "Scene And Prefab Readiness", "Block Play Mode proof guidance until required scene objects, prefab modules, and inspector handoffs are clear.", "First-proof gate", new[] { "proof.1p-pawn-movement" });
+            AddSetupFact(facts, PyralisSetupFlowStepId.SceneAndPrefabReadiness, "Scene And Prefab Readiness", "Block Play Mode proof guidance until required scene objects, prefab modules, and inspector handoffs are clear.", "First-proof gate", PawnProofLinks());
             return facts;
+        }
+
+        private static string[] PawnProofLinks(params string[] additionalLinks)
+        {
+            List<string> links = new List<string>();
+            if (additionalLinks != null)
+                links.AddRange(additionalLinks);
+            links.Add("proof.1p-pawn-movement");
+            links.Add("proof.local-pawn-join");
+            return links.ToArray();
         }
 
         private static void AddSetupFact(
@@ -85,6 +96,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 case PyralisSetupFlowStepId.ResolveRouteCapabilities:
                 case PyralisSetupFlowStepId.AssignDefaultParticipants:
                 case PyralisSetupFlowStepId.AssignParticipantPawn:
+                case PyralisSetupFlowStepId.ResolveParticipantJoinPolicy:
                 case PyralisSetupFlowStepId.AssignSpawnPoints:
                     return PyralisSetupFlowWorkIntent.Foundation;
                 case PyralisSetupFlowStepId.AddHudOrMenuSurface:
@@ -114,6 +126,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 case PyralisSetupFlowStepId.AssignDefaultParticipants: return "setup.assign-default-participants";
                 case PyralisSetupFlowStepId.AssignParticipantPawn: return "setup.assign-participant-pawn";
                 case PyralisSetupFlowStepId.AssignInputProfile: return "setup.assign-input-profile";
+                case PyralisSetupFlowStepId.ResolveParticipantJoinPolicy: return "setup.resolve-participant-join-policy";
                 case PyralisSetupFlowStepId.AssignSpawnPoints: return "setup.assign-spawn-points";
                 case PyralisSetupFlowStepId.AssignCameraRig: return "setup.assign-camera-rig";
                 case PyralisSetupFlowStepId.AssignPlayerInputManager: return "setup.assign-player-input-manager";
@@ -179,6 +192,13 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                         "InputProfile",
                         "assign Actions, keep or confirm Primary Action Map as Player, then scroll to Input Actions Sync and click Sync Action Names From Asset before customizing gameplay action rows",
                         "InputProfile actions can reach the pawn input module");
+                case PyralisSetupFlowStepId.ResolveParticipantJoinPolicy:
+                    return new PyralisAuthoringNativeAction(
+                        "Review",
+                        PyralisAuthoringActionSurface.Inspector,
+                        "ParticipantInputRouter",
+                        "autoRegisterDefaultParticipantsWithoutPlayerInput",
+                        "local join routes wait for Unity PlayerInputManager joins instead of auto-registering every default participant before controllers join");
                 case PyralisSetupFlowStepId.AssignSpawnPoints:
                     return PyralisAuthoringNativeActionFactory.CreateSceneObjectAction(
                         "Gameplay Root or a Playfield Root",

@@ -31,11 +31,114 @@ namespace NeonBlack.Gameplay.Editor
             return JsonUtility.ToJson(snapshot, true);
         }
 
+        public static string ToIntentJson(
+            PyralisAuthoringIntentSelection selection,
+            PyralisAuthoringIntentModel model,
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors)
+        {
+            IntentSnapshot snapshot = BuildIntentSnapshot(selection, model, descriptors);
+            return JsonUtility.ToJson(snapshot, true);
+        }
+
+        public static string ToFactsJson(PyralisAuthoringSetupGraph graph)
+        {
+            FactsSnapshot snapshot = BuildFactsSnapshot(graph);
+            return JsonUtility.ToJson(snapshot, true);
+        }
+
         public static string ToJson(PyralisAuthoringSetupGraph graph, string view)
         {
-            return string.Equals(view, "Hygiene", StringComparison.OrdinalIgnoreCase)
-                ? ToHygieneJson(graph, Array.Empty<PyralisSourceDependencyHygieneRecord>())
-                : ToMapJson(graph);
+            if (string.Equals(view, "Hygiene", StringComparison.OrdinalIgnoreCase))
+                return ToHygieneJson(graph, Array.Empty<PyralisSourceDependencyHygieneRecord>());
+
+            if (string.Equals(view, "Facts", StringComparison.OrdinalIgnoreCase))
+                return ToFactsJson(graph);
+
+            return ToMapJson(graph);
+        }
+
+        private static IntentSnapshot BuildIntentSnapshot(
+            PyralisAuthoringIntentSelection selection,
+            PyralisAuthoringIntentModel model,
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors)
+        {
+            selection ??= new PyralisAuthoringIntentSelection(
+                RuntimeCapabilityLaneTag.Sprite2D,
+                AuthoringCapability.None,
+                AuthoringWorldAxiom.None);
+            model ??= PyralisAuthoringSetupGraphProjection.BuildIntentModel(selection);
+            descriptors ??= Array.Empty<PyralisAuthoringCapabilityDescriptor>();
+
+            string[] selectedIds = selection.DescriptorIds ?? Array.Empty<string>();
+            return new IntentSnapshot
+            {
+                schema = "pyralis.authoring.intentSnapshot.v1",
+                purpose = "Read-only Intent tab snapshot. Describes current route steering only: DNA axioms, presentation lane, participant route, selected capability descriptors, available descriptor groups, and advisor rows. It does not describe scene/setup reality.",
+                view = "Intent",
+                exportedAtUtc = DateTime.UtcNow.ToString("o"),
+                selection = new IntentSelectionSnapshot
+                {
+                    lane = selection.Lane.ToString(),
+                    axioms = selection.Axioms.ToString(),
+                    capabilities = selection.Capabilities.ToString(),
+                    participantRoute = selection.ParticipantRoute.ToString(),
+                    selectedDescriptorIds = selectedIds
+                },
+                summary = new IntentSummarySnapshot
+                {
+                    descriptorCount = descriptors.Count,
+                    selectableDescriptorCount = descriptors.Count(descriptor => descriptor != null && descriptor.SelectableIntent),
+                    selectedDescriptorCount = selectedIds.Length,
+                    recommendationCount = model.Recommendations.Count,
+                    cautionCount = model.Cautions.Count,
+                    matchingIntentCount = model.MatchingIntents.Count
+                },
+                routeShapePreview = PyralisAuthoringSetupGraphProjection.BuildRouteShapeSummary(selection),
+                advisorSummary = model.Summary,
+                descriptorGroups = BuildIntentDescriptorGroups(descriptors, selectedIds),
+                selectedDescriptors = descriptors
+                    .Where(descriptor => descriptor != null && selectedIds.Contains(descriptor.StableId))
+                    .Select(BuildIntentDescriptor)
+                    .ToArray(),
+                recommendations = model.Recommendations.Select(BuildIntentRow).ToArray(),
+                cautions = model.Cautions.Select(BuildIntentRow).ToArray(),
+                matchingIntents = model.MatchingIntents.Select(BuildFact).ToArray()
+            };
+        }
+
+        private static FactsSnapshot BuildFactsSnapshot(PyralisAuthoringSetupGraph graph)
+        {
+            IReadOnlyList<PyralisAuthoringFact> facts = PyralisAuthoringSetupGraphProjection.BuildCookbookFacts(graph)
+                ?? Array.Empty<PyralisAuthoringFact>();
+            IReadOnlyList<PyralisAuthoringReflectiveContractGraphRow> contractRows =
+                PyralisAuthoringSetupGraphProjection.BuildReflectiveContractRows(graph);
+            IReadOnlyList<PyralisAuthoringGraphConnectionRow> proofRows =
+                PyralisAuthoringSetupGraphProjection.BuildProofSupportRows(graph);
+
+            return new FactsSnapshot
+            {
+                schema = "pyralis.authoring.factsSnapshot.v1",
+                purpose = "Read-only Facts tab snapshot. Describes the compiled dictionary/cookbook: vocabulary facts, reflected contracts, proof templates, source provenance, and graph coverage. Setup actions belong to Guide/Map.",
+                view = "Facts",
+                routeName = graph != null ? graph.RouteName : "No setup route selected",
+                exportedAtUtc = DateTime.UtcNow.ToString("o"),
+                source = BuildSourceInfo(graph?.Source),
+                summary = new FactsSummarySnapshot
+                {
+                    factCount = facts.Count,
+                    graphNodeCount = graph?.Nodes.Count ?? 0,
+                    graphEdgeCount = graph?.Edges.Count ?? 0,
+                    graphContractCount = contractRows.Count,
+                    proofSupportCount = proofRows.Count
+                },
+                factKindCounts = CountBy(facts, fact => fact.Kind.ToString()),
+                sourceKindCounts = CountBy(facts, fact => fact.SourceKind.ToString()),
+                confidenceCounts = CountBy(facts, fact => fact.Confidence.ToString()),
+                capabilityCounts = CountCapabilityFacts(facts),
+                graphContractCoverage = contractRows.Select(BuildReflectiveContract).ToArray(),
+                graphProofCoverage = proofRows.Select(BuildConnection).ToArray(),
+                facts = facts.Select(BuildFact).ToArray()
+            };
         }
 
         private static MapSnapshot BuildMapSnapshot(PyralisAuthoringSetupGraph graph)
@@ -88,6 +191,19 @@ namespace NeonBlack.Gameplay.Editor
                     hasAnyDefaultPawn = false,
                     participantPawnIssue = string.Empty,
                     participantPawnIssueKind = PyralisParticipantPawnIssueKind.None.ToString(),
+                    participantTopology = PyralisParticipantTopology.Unknown.ToString(),
+                    expectedJoinPolicy = PyralisParticipantJoinPolicy.Unknown.ToString(),
+                    spawnPolicy = PyralisParticipantSpawnPolicy.Unknown.ToString(),
+                    assignedParticipantCount = 0,
+                    authoredParticipantCount = 0,
+                    desiredParticipantCount = 0,
+                    autoJoinParticipantCount = 0,
+                    autoRegisterDefaultsWithoutPlayerInput = false,
+                    hasPlayerInputManager = false,
+                    spawnOnRegister = false,
+                    hasLocalJoinPolicyConflict = false,
+                    playerInputManagerIssue = string.Empty,
+                    participantSeats = Array.Empty<ParticipantSeatSnapshot>(),
                     capabilityFamilies = Array.Empty<string>(),
                     routeFacts = Array.Empty<RouteFactSnapshot>(),
                     session = null,
@@ -115,6 +231,21 @@ namespace NeonBlack.Gameplay.Editor
                 hasAnyDefaultPawn = route.HasAnyDefaultPawn,
                 participantPawnIssue = participantPawnIssue,
                 participantPawnIssueKind = route.ParticipantPawnIssueKind.ToString(),
+                participantTopology = route.ParticipantTopology.ToString(),
+                expectedJoinPolicy = route.ExpectedJoinPolicy.ToString(),
+                spawnPolicy = route.SpawnPolicy.ToString(),
+                assignedParticipantCount = route.AssignedParticipantCount,
+                authoredParticipantCount = route.AuthoredParticipantCount,
+                desiredParticipantCount = route.DesiredParticipantCount,
+                autoJoinParticipantCount = route.AutoJoinParticipantCount,
+                autoRegisterDefaultsWithoutPlayerInput = route.AutoRegisterDefaultsWithoutPlayerInput,
+                hasPlayerInputManager = route.HasPlayerInputManager,
+                spawnOnRegister = route.SpawnOnRegister,
+                hasLocalJoinPolicyConflict = route.HasLocalJoinPolicyConflict(),
+                playerInputManagerIssue = route.PlayerInputManagerIssue,
+                participantSeats = (route.ParticipantSeats ?? Array.Empty<PyralisParticipantSeatReadiness>())
+                    .Select(BuildParticipantSeat)
+                    .ToArray(),
                 capabilityFamilies = (route.CapabilityFamilies ?? Array.Empty<RuntimeCapabilityFamily>())
                     .Select(family => family.ToString())
                     .ToArray(),
@@ -136,6 +267,33 @@ namespace NeonBlack.Gameplay.Editor
                 label = fact.Label,
                 family = fact.Family.ToString(),
                 primaryProofCandidate = fact.PrimaryProofCandidate
+            };
+        }
+
+        private static ParticipantSeatSnapshot BuildParticipantSeat(PyralisParticipantSeatReadiness seat)
+        {
+            if (seat == null)
+                return null;
+
+            return new ParticipantSeatSnapshot
+            {
+                slotIndex = seat.SlotIndex,
+                seatIndex = seat.SeatIndex,
+                displayName = seat.DisplayName,
+                requiresPawn = seat.RequiresPawn,
+                hasParticipant = seat.HasParticipant,
+                hasInputProfile = seat.HasInputProfile,
+                hasPawnDefinition = seat.HasPawnDefinition,
+                hasPawnPrefab = seat.HasPawnPrefab,
+                isInputReady = seat.IsInputReady,
+                isPawnReady = seat.IsPawnReady,
+                isReady = seat.IsReady,
+                inputIssue = seat.InputIssue,
+                pawnIssue = seat.PawnIssue,
+                pawnIssueKind = seat.PawnIssueKind.ToString(),
+                participant = BuildSourceInfo(seat.Participant),
+                pawn = BuildSourceInfo(seat.Pawn),
+                inputProfile = BuildSourceInfo(seat.InputProfile)
             };
         }
 
@@ -802,6 +960,210 @@ namespace NeonBlack.Gameplay.Editor
             };
         }
 
+        private static IntentDescriptorGroupSnapshot[] BuildIntentDescriptorGroups(
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors,
+            IReadOnlyList<string> selectedIds)
+        {
+            if (descriptors == null || descriptors.Count == 0)
+                return Array.Empty<IntentDescriptorGroupSnapshot>();
+
+            HashSet<string> selected = new HashSet<string>(selectedIds ?? Array.Empty<string>(), StringComparer.Ordinal);
+            return descriptors
+                .Where(descriptor => descriptor != null)
+                .GroupBy(descriptor => FirstNonEmpty(GetCapabilityPathPart(descriptor.CapabilityPath, 0), descriptor.Group, "General"))
+                .OrderBy(group => group.Key, StringComparer.Ordinal)
+                .Select(group => new IntentDescriptorGroupSnapshot
+                {
+                    group = group.Key,
+                    descriptorCount = group.Count(),
+                    selectedCount = group.Count(descriptor => selected.Contains(descriptor.StableId)),
+                    subgroups = group
+                        .GroupBy(descriptor => FirstNonEmpty(GetCapabilityPathPart(descriptor.CapabilityPath, 1), descriptor.Group, "General"))
+                        .OrderBy(subgroup => subgroup.Key, StringComparer.Ordinal)
+                        .Select(subgroup => new IntentDescriptorSubgroupSnapshot
+                        {
+                            subgroup = subgroup.Key,
+                            descriptorCount = subgroup.Count(),
+                            selectedCount = subgroup.Count(descriptor => selected.Contains(descriptor.StableId)),
+                            descriptors = subgroup
+                                .OrderBy(descriptor => descriptor.SortOrder)
+                                .ThenBy(descriptor => descriptor.DisplayName, StringComparer.Ordinal)
+                                .Select(descriptor => BuildIntentDescriptor(descriptor, selected.Contains(descriptor.StableId)))
+                                .ToArray()
+                        })
+                        .ToArray()
+                })
+                .ToArray();
+        }
+
+        private static IntentDescriptorSnapshot BuildIntentDescriptor(PyralisAuthoringCapabilityDescriptor descriptor)
+        {
+            return BuildIntentDescriptor(descriptor, false);
+        }
+
+        private static IntentDescriptorSnapshot BuildIntentDescriptor(
+            PyralisAuthoringCapabilityDescriptor descriptor,
+            bool selected)
+        {
+            if (descriptor == null)
+                return null;
+
+            return new IntentDescriptorSnapshot
+            {
+                stableId = descriptor.StableId,
+                displayName = descriptor.DisplayName,
+                group = descriptor.Group,
+                family = descriptor.Family.ToString(),
+                capability = descriptor.Capability.ToString(),
+                capabilityPath = descriptor.CapabilityPath,
+                pathGroup = GetCapabilityPathPart(descriptor.CapabilityPath, 0),
+                pathSubgroup = GetCapabilityPathPart(descriptor.CapabilityPath, 1),
+                leafLabel = FirstNonEmpty(GetCapabilityPathPart(descriptor.CapabilityPath, 2), descriptor.DisplayName),
+                sortOrder = descriptor.SortOrder,
+                selectableIntent = descriptor.SelectableIntent,
+                selected = selected,
+                sourceOrigin = descriptor.SourceOrigin.ToString(),
+                axioms = descriptor.Axioms.ToString(),
+                proofTargetId = descriptor.ProofTargetId,
+                summary = descriptor.Summary,
+                routeRelevance = descriptor.RouteRelevance,
+                goalTags = descriptor.GoalTags,
+                laneTags = descriptor.LaneTags,
+                unsupportedLaneTags = descriptor.UnsupportedLaneTags,
+                roleTags = descriptor.RoleTags,
+                requiredSetup = descriptor.RequiredSetup,
+                assignmentFields = descriptor.AssignmentFields,
+                customizationMoments = descriptor.CustomizationMoments,
+                nativeActions = descriptor.NativeActions.Select(action => BuildNativeAction(action)).ToArray(),
+                sourceFact = BuildFact(descriptor.SourceFact)
+            };
+        }
+
+        private static IntentRowSnapshot BuildIntentRow(PyralisAuthoringIntentRow row)
+        {
+            if (row == null)
+                return null;
+
+            return new IntentRowSnapshot
+            {
+                score = row.Score,
+                state = row.State.ToString(),
+                tier = row.Tier.ToString(),
+                reason = row.Reason,
+                fact = BuildFact(row.Fact)
+            };
+        }
+
+        private static FactSnapshot BuildFact(PyralisAuthoringFact fact)
+        {
+            if (fact == null)
+                return null;
+
+            return new FactSnapshot
+            {
+                stableId = fact.StableId,
+                displayName = fact.DisplayName,
+                kind = fact.Kind.ToString(),
+                sourceKind = fact.SourceKind.ToString(),
+                confidence = fact.Confidence.ToString(),
+                capability = fact.Capability.ToString(),
+                axioms = fact.Axioms.ToString(),
+                priority = fact.Priority,
+                priorityValueOverride = fact.PriorityValueOverride,
+                summary = fact.Summary,
+                routeRelevance = fact.RouteRelevance,
+                firstProof = fact.FirstProof,
+                workIntent = fact.WorkIntent,
+                goalTags = fact.GoalTags,
+                laneTags = fact.LaneTags,
+                unsupportedLaneTags = fact.UnsupportedLaneTags,
+                requiredDefinitions = fact.RequiredDefinitions,
+                requiredProfiles = fact.RequiredProfiles,
+                requiredSceneComponents = fact.RequiredSceneComponents,
+                requiredUnitySurfaces = fact.RequiredUnitySurfaces,
+                assignmentFields = fact.AssignmentFields,
+                customizationMoments = fact.CustomizationMoments,
+                canWait = fact.CanWait,
+                nativeActions = fact.NativeActions.Select(action => BuildNativeAction(action)).ToArray(),
+                relatedStableIds = fact.RelatedStableIds,
+                deprecatedInVersion = fact.DeprecatedInVersion,
+                removableInVersion = fact.RemovableInVersion,
+                documentationURL = fact.DocumentationURL,
+                expertAdvice = fact.ExpertAdvice
+            };
+        }
+
+        private static ReflectiveContractSnapshot BuildReflectiveContract(PyralisAuthoringReflectiveContractGraphRow row)
+        {
+            if (row == null)
+                return null;
+
+            ResolvedAuthoringContract contract = row.Contract;
+            return new ReflectiveContractSnapshot
+            {
+                nodeId = row.Node != null ? row.Node.StableId : string.Empty,
+                label = row.Label,
+                evidenceState = row.EvidenceState.ToString(),
+                message = row.Message,
+                stableId = contract != null ? contract.StableId : string.Empty,
+                displayName = contract != null ? contract.DisplayName : string.Empty,
+                category = contract != null ? contract.AuthoringCategory : string.Empty,
+                moduleId = contract != null ? contract.ModuleId : string.Empty,
+                setupNodeId = contract != null ? contract.SetupNodeId : string.Empty,
+                sourceType = contract?.SourceType != null ? contract.SourceType.FullName : string.Empty,
+                capability = contract != null ? contract.Capability.ToString() : string.Empty,
+                axioms = contract != null ? contract.Axioms.ToString() : string.Empty,
+                capabilityPath = contract != null ? contract.CapabilityPath : string.Empty,
+                selectableIntent = contract?.SelectableIntent ?? false,
+                authoringLane = contract != null ? contract.AuthoringLane : string.Empty,
+                relevance = contract != null ? contract.Relevance : string.Empty,
+                requiredProfileType = contract?.RequiredProfileType != null ? contract.RequiredProfileType.FullName : string.Empty,
+                requiredRuntimeInterfaceNames = contract != null ? contract.RequiredRuntimeInterfaceNames : Array.Empty<string>(),
+                requiredComponentNames = contract != null ? contract.RequiredComponentNames : Array.Empty<string>(),
+                assignmentFields = contract != null ? contract.AssignmentFields : Array.Empty<string>(),
+                customizationMoments = contract != null ? contract.CustomizationMoments : Array.Empty<string>(),
+                nativeSetup = contract != null ? contract.NativeSetup : Array.Empty<string>(),
+                roleTags = contract != null ? contract.RoleTags : Array.Empty<string>(),
+                firstProofTargetId = contract != null ? contract.FirstProofTargetId : string.Empty,
+                firstProofGuidance = contract != null ? contract.FirstProofGuidance : string.Empty,
+                target = BuildSourceInfo(row.Target)
+            };
+        }
+
+        private static CountSnapshot[] CountCapabilityFacts(IEnumerable<PyralisAuthoringFact> facts)
+        {
+            return CountBy(
+                facts == null
+                    ? Array.Empty<PyralisAuthoringFact>()
+                    : facts.Where(fact => fact != null && fact.Capability != AuthoringCapability.None),
+                fact => fact.Capability.ToString());
+        }
+
+        private static CountSnapshot[] CountBy<T>(
+            IEnumerable<T> values,
+            Func<T, string> selector)
+        {
+            if (values == null)
+                return Array.Empty<CountSnapshot>();
+
+            return values
+                .Where(value => value != null)
+                .GroupBy(value => NormalizeCountLabel(selector(value)))
+                .OrderByDescending(group => group.Count())
+                .ThenBy(group => group.Key, StringComparer.Ordinal)
+                .Select(group => new CountSnapshot { label = group.Key, count = group.Count() })
+                .ToArray();
+        }
+
+        private static string GetCapabilityPathPart(string capabilityPath, int index)
+        {
+            if (string.IsNullOrWhiteSpace(capabilityPath) || index < 0)
+                return string.Empty;
+
+            string[] parts = capabilityPath.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+            return index < parts.Length ? parts[index].Trim() : string.Empty;
+        }
+
         private static CountSnapshot[] CountBy(
             IEnumerable<PyralisAuthoringGraphNode> nodes,
             Func<PyralisAuthoringGraphNode, string> selector)
@@ -1001,6 +1363,19 @@ namespace NeonBlack.Gameplay.Editor
             public bool hasAnyDefaultPawn;
             public string participantPawnIssue;
             public string participantPawnIssueKind;
+            public string participantTopology;
+            public string expectedJoinPolicy;
+            public string spawnPolicy;
+            public int assignedParticipantCount;
+            public int authoredParticipantCount;
+            public int desiredParticipantCount;
+            public int autoJoinParticipantCount;
+            public bool autoRegisterDefaultsWithoutPlayerInput;
+            public bool hasPlayerInputManager;
+            public bool spawnOnRegister;
+            public bool hasLocalJoinPolicyConflict;
+            public string playerInputManagerIssue;
+            public ParticipantSeatSnapshot[] participantSeats;
             public string[] capabilityFamilies;
             public RouteFactSnapshot[] routeFacts;
             public SourceSnapshot session;
@@ -1010,12 +1385,226 @@ namespace NeonBlack.Gameplay.Editor
         }
 
         [Serializable]
+        private sealed class ParticipantSeatSnapshot
+        {
+            public int slotIndex;
+            public int seatIndex;
+            public string displayName;
+            public bool requiresPawn;
+            public bool hasParticipant;
+            public bool hasInputProfile;
+            public bool hasPawnDefinition;
+            public bool hasPawnPrefab;
+            public bool isInputReady;
+            public bool isPawnReady;
+            public bool isReady;
+            public string inputIssue;
+            public string pawnIssue;
+            public string pawnIssueKind;
+            public SourceSnapshot participant;
+            public SourceSnapshot pawn;
+            public SourceSnapshot inputProfile;
+        }
+
+        [Serializable]
         private sealed class RouteFactSnapshot
         {
             public string capability;
             public string label;
             public string family;
             public bool primaryProofCandidate;
+        }
+
+        [Serializable]
+        private sealed class IntentSnapshot
+        {
+            public string schema;
+            public string purpose;
+            public string view;
+            public string exportedAtUtc;
+            public IntentSelectionSnapshot selection;
+            public IntentSummarySnapshot summary;
+            public string routeShapePreview;
+            public string advisorSummary;
+            public IntentDescriptorGroupSnapshot[] descriptorGroups;
+            public IntentDescriptorSnapshot[] selectedDescriptors;
+            public IntentRowSnapshot[] recommendations;
+            public IntentRowSnapshot[] cautions;
+            public FactSnapshot[] matchingIntents;
+        }
+
+        [Serializable]
+        private sealed class IntentSelectionSnapshot
+        {
+            public string lane;
+            public string axioms;
+            public string capabilities;
+            public string participantRoute;
+            public string[] selectedDescriptorIds;
+        }
+
+        [Serializable]
+        private sealed class IntentSummarySnapshot
+        {
+            public int descriptorCount;
+            public int selectableDescriptorCount;
+            public int selectedDescriptorCount;
+            public int recommendationCount;
+            public int cautionCount;
+            public int matchingIntentCount;
+        }
+
+        [Serializable]
+        private sealed class IntentDescriptorGroupSnapshot
+        {
+            public string group;
+            public int descriptorCount;
+            public int selectedCount;
+            public IntentDescriptorSubgroupSnapshot[] subgroups;
+        }
+
+        [Serializable]
+        private sealed class IntentDescriptorSubgroupSnapshot
+        {
+            public string subgroup;
+            public int descriptorCount;
+            public int selectedCount;
+            public IntentDescriptorSnapshot[] descriptors;
+        }
+
+        [Serializable]
+        private sealed class IntentDescriptorSnapshot
+        {
+            public string stableId;
+            public string displayName;
+            public string group;
+            public string family;
+            public string capability;
+            public string capabilityPath;
+            public string pathGroup;
+            public string pathSubgroup;
+            public string leafLabel;
+            public int sortOrder;
+            public bool selectableIntent;
+            public bool selected;
+            public string sourceOrigin;
+            public string axioms;
+            public string proofTargetId;
+            public string summary;
+            public string routeRelevance;
+            public string[] goalTags;
+            public string[] laneTags;
+            public string[] unsupportedLaneTags;
+            public string[] roleTags;
+            public string[] requiredSetup;
+            public string[] assignmentFields;
+            public string[] customizationMoments;
+            public NativeActionSnapshot[] nativeActions;
+            public FactSnapshot sourceFact;
+        }
+
+        [Serializable]
+        private sealed class IntentRowSnapshot
+        {
+            public int score;
+            public string state;
+            public string tier;
+            public string reason;
+            public FactSnapshot fact;
+        }
+
+        [Serializable]
+        private sealed class FactsSnapshot
+        {
+            public string schema;
+            public string purpose;
+            public string view;
+            public string routeName;
+            public string exportedAtUtc;
+            public SourceSnapshot source;
+            public FactsSummarySnapshot summary;
+            public CountSnapshot[] factKindCounts;
+            public CountSnapshot[] sourceKindCounts;
+            public CountSnapshot[] confidenceCounts;
+            public CountSnapshot[] capabilityCounts;
+            public ReflectiveContractSnapshot[] graphContractCoverage;
+            public ConnectionSnapshot[] graphProofCoverage;
+            public FactSnapshot[] facts;
+        }
+
+        [Serializable]
+        private sealed class FactsSummarySnapshot
+        {
+            public int factCount;
+            public int graphNodeCount;
+            public int graphEdgeCount;
+            public int graphContractCount;
+            public int proofSupportCount;
+        }
+
+        [Serializable]
+        private sealed class FactSnapshot
+        {
+            public string stableId;
+            public string displayName;
+            public string kind;
+            public string sourceKind;
+            public string confidence;
+            public string capability;
+            public string axioms;
+            public int priority;
+            public int priorityValueOverride;
+            public string summary;
+            public string routeRelevance;
+            public string firstProof;
+            public string workIntent;
+            public string[] goalTags;
+            public string[] laneTags;
+            public string[] unsupportedLaneTags;
+            public string[] requiredDefinitions;
+            public string[] requiredProfiles;
+            public string[] requiredSceneComponents;
+            public string[] requiredUnitySurfaces;
+            public string[] assignmentFields;
+            public string[] customizationMoments;
+            public string[] canWait;
+            public NativeActionSnapshot[] nativeActions;
+            public string[] relatedStableIds;
+            public string deprecatedInVersion;
+            public string removableInVersion;
+            public string documentationURL;
+            public string expertAdvice;
+        }
+
+        [Serializable]
+        private sealed class ReflectiveContractSnapshot
+        {
+            public string nodeId;
+            public string label;
+            public string evidenceState;
+            public string message;
+            public string stableId;
+            public string displayName;
+            public string category;
+            public string moduleId;
+            public string setupNodeId;
+            public string sourceType;
+            public string capability;
+            public string axioms;
+            public string capabilityPath;
+            public bool selectableIntent;
+            public string authoringLane;
+            public string relevance;
+            public string requiredProfileType;
+            public string[] requiredRuntimeInterfaceNames;
+            public string[] requiredComponentNames;
+            public string[] assignmentFields;
+            public string[] customizationMoments;
+            public string[] nativeSetup;
+            public string[] roleTags;
+            public string firstProofTargetId;
+            public string firstProofGuidance;
+            public SourceSnapshot target;
         }
 
         [Serializable]

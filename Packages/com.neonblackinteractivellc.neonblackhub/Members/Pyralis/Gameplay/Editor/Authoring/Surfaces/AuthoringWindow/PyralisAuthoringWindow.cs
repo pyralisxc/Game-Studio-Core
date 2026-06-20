@@ -34,6 +34,7 @@ namespace NeonBlack.Gameplay.Editor
         [SerializeField] private bool _emptySceneIntentStartApplied;
         [SerializeField] private RuntimeCapabilityLaneTag _intentLane = RuntimeCapabilityLaneTag.Sprite2D;
         [SerializeField] private AuthoringWorldAxiom _intentAxioms = AuthoringWorldAxiom.None;
+        [SerializeField] private PyralisIntentParticipantRoute _intentParticipantRoute = PyralisIntentParticipantRoute.InferFromSetup;
         [SerializeField] private long _intentCapabilitiesValue = 0;
         [SerializeField] private string _intentDescriptorIdsValue = "";
         private AuthoringCapability _intentCapabilities 
@@ -57,6 +58,7 @@ namespace NeonBlack.Gameplay.Editor
         private PyralisAuthoringSetupGraph _cachedCurrentSetupGraph;
         private string _cachedIntentProjectedSetupGraphKey;
         private PyralisAuthoringSetupGraph _cachedIntentProjectedSetupGraph;
+        private IReadOnlyList<PyralisSourceDependencyHygieneRecord> _hygieneDependencyRecords;
 
         private VisualElement _contentRoot;
 
@@ -146,25 +148,7 @@ namespace NeonBlack.Gameplay.Editor
             }
             else
             {
-                _contentRoot.Add(new IMGUIContainer(() =>
-                {
-                    // We use the same logic as the old OnGUI but skip the layout headers
-                    Object currentSelection = Selection.activeObject;
-                    Object currentSelectionSetup = PyralisAuthoringSetupContextResolver.GetSetupContext(currentSelection);
-                    Object currentSceneFallbackSetup = PyralisAuthoringSetupContextResolver.GetSceneFallbackSetup(currentSelection, currentSelectionSetup);
-                    Object currentActiveSetup = PyralisAuthoringSetupContextResolver.ResolveActiveSetup(currentSelection, currentSelectionSetup, currentSceneFallbackSetup, _pinnedActiveSetup, _lastActiveSetup);
-                    
-                    ref Vector2 scroll = ref GetCurrentScroll();
-                    scroll = EditorGUILayout.BeginScrollView(scroll);
-                    try
-                    {
-                        DrawModeContent(currentActiveSetup, currentSelection);
-                    }
-                    finally
-                    {
-                        EditorGUILayout.EndScrollView();
-                    }
-                }));
+                _contentRoot.Add(BuildModeContent(activeSetup, selection));
             }
         }
 
@@ -205,47 +189,51 @@ namespace NeonBlack.Gameplay.Editor
             rootVisualElement.Q<VisualElement>(tabName)?.AddToClassList("mode-tab--active");
         }
 
-        private ref Vector2 GetCurrentScroll()
-        {
-            switch (_mode)
-            {
-                case AuthoringWindowMode.Overview: return ref _overviewScroll;
-                case AuthoringWindowMode.Intent: return ref _intentScroll;
-                case AuthoringWindowMode.Map: return ref _mapScroll;
-                case AuthoringWindowMode.Hygiene: return ref _hygieneScroll;
-                case AuthoringWindowMode.Guide: return ref _guideScroll;
-                case AuthoringWindowMode.Facts: return ref _factsScroll;
-                default: return ref _overviewScroll;
-            }
-        }
-
-        private void DrawModeContent(Object activeSetup, Object selection)
+        private VisualElement BuildModeContent(Object activeSetup, Object selection)
         {
             switch (_mode)
             {
                 case AuthoringWindowMode.Overview:
-                    DrawOverviewMode(
-                        activeSetup,
-                        selection);
-                    break;
+                    return PyralisAuthoringTabRenderer.BuildOverview(
+                        PyralisAuthoringOverviewProjection.Build(activeSetup, GetCachedIntentProjectedSetupGraph(activeSetup)),
+                        OpenIntentFromOverview,
+                        OpenGuideFromOverview,
+                        OpenMapFromOverview);
                 case AuthoringWindowMode.Guide:
-                    DrawGuideMode(
+                    return PyralisAuthoringTabRenderer.BuildGuide(PyralisAuthoringGuideProjection.Build(
                         selection,
                         activeSetup,
-                        GetCachedIntentProjectedSetupGraph(activeSetup != null ? activeSetup : selection));
-                    break;
+                        GetCachedIntentProjectedSetupGraph(activeSetup != null ? activeSetup : selection)));
                 case AuthoringWindowMode.Map:
-                    PyralisAuthoringMapRenderer.Draw(activeSetup, selection, GetCachedCurrentSetupGraph(activeSetup));
-                    break;
-                case AuthoringWindowMode.Hygiene:
-                    PyralisAuthoringHygieneRenderer.Draw(
+                    return PyralisAuthoringTabRenderer.BuildMap(PyralisAuthoringMapProjection.Build(
                         activeSetup,
-                        GetCachedCurrentSetupGraph(activeSetup));
-                    break;
+                        selection,
+                        GetCachedCurrentSetupGraph(activeSetup)));
+                case AuthoringWindowMode.Hygiene:
+                    _hygieneDependencyRecords ??= PyralisSourceDependencyHygieneScanner.ScanPackage();
+                    return PyralisAuthoringTabRenderer.BuildHygiene(
+                        PyralisAuthoringHygieneProjection.Build(
+                            activeSetup,
+                            GetCachedCurrentSetupGraph(activeSetup),
+                            _hygieneDependencyRecords),
+                        RefreshHygieneDependencyAudit);
                 case AuthoringWindowMode.Facts:
-                    PyralisAuthoringFactExplorerRenderer.Draw(activeSetup, GetCachedCurrentSetupGraph(activeSetup));
-                    break;
+                    return PyralisAuthoringTabRenderer.BuildFacts(PyralisAuthoringFactsProjection.Build(
+                        activeSetup,
+                        GetCachedCurrentSetupGraph(activeSetup)));
+                default:
+                    return PyralisAuthoringTabRenderer.BuildOverview(
+                        PyralisAuthoringOverviewProjection.Build(activeSetup, GetCachedIntentProjectedSetupGraph(activeSetup)),
+                        OpenIntentFromOverview,
+                        OpenGuideFromOverview,
+                        OpenMapFromOverview);
             }
+        }
+
+        private void RefreshHygieneDependencyAudit()
+        {
+            _hygieneDependencyRecords = PyralisSourceDependencyHygieneScanner.ScanPackage();
+            RefreshActiveTab();
         }
 
         private Object ResolveCurrentActiveSetup(Object selection)
@@ -326,25 +314,6 @@ namespace NeonBlack.Gameplay.Editor
                 && sceneFallbackSetup == null;
         }
 
-        private void DrawOverviewMode(Object activeSetup, Object selection)
-        {
-            Object graphSource = activeSetup != null ? activeSetup : null;
-            PyralisAuthoringSetupGraph graph = GetCachedIntentProjectedSetupGraph(graphSource);
-            PyralisAuthoringOverviewModel model = PyralisAuthoringOverviewModel.Build(activeSetup, graph);
-
-            EditorGUILayout.LabelField("Overview", EditorStyles.boldLabel);
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
-            {
-                PyralisAuthoringOverviewRenderer.DrawGuidanceCard(model, graph);
-                PyralisAuthoringOverviewRenderer.DrawActionButtons(model, OpenIntentFromOverview, OpenGuideFromOverview, OpenMapFromOverview);
-            }
-
-            EditorGUILayout.Space(12f);
-            PyralisAuthoringOverviewRenderer.DrawLane("Do Now", "Only route-required missing or blocked work appears here.", model.DoNow);
-            PyralisAuthoringOverviewRenderer.DrawLane("Proof Enhancers", "Useful before Play Mode when they make the first proof clearer.", model.DoSoon);
-            PyralisAuthoringOverviewRenderer.DrawFirstProofCard(model, graph);
-        }
-
         private void OpenIntentFromOverview()
         {
             _intentScroll = Vector2.zero;
@@ -365,7 +334,7 @@ namespace NeonBlack.Gameplay.Editor
 
         private PyralisAuthoringIntentModel GetCachedIntentModel()
         {
-            string key = $"{_intentLane}_{_intentAxioms}_{_intentCapabilities}_{_intentDescriptorIdsValue}_{_authoringCacheVersion}";
+            string key = $"{_intentLane}_{_intentAxioms}_{_intentParticipantRoute}_{_intentCapabilities}_{_intentDescriptorIdsValue}_{_authoringCacheVersion}";
             if (_cachedIntentModelKey == key && _cachedIntentModel != null)
                 return _cachedIntentModel;
 
@@ -381,7 +350,8 @@ namespace NeonBlack.Gameplay.Editor
                 _intentLane,
                 _intentCapabilities,
                 _intentAxioms,
-                GetSelectedIntentDescriptorIds());
+                GetSelectedIntentDescriptorIds(),
+                _intentParticipantRoute);
         }
 
         private PyralisAuthoringSetupGraph GetCachedCurrentSetupGraph(Object graphSource)
@@ -418,6 +388,7 @@ namespace NeonBlack.Gameplay.Editor
                 + ":intent:"
                 + _intentLane
                 + ":" + _intentAxioms
+                + ":" + _intentParticipantRoute
                 + ":" + _intentCapabilities
                 + ":" + _intentDescriptorIdsValue
                 + ":" + _authoringCacheVersion;

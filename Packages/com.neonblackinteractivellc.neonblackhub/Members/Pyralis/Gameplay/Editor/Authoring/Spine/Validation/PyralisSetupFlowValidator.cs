@@ -52,7 +52,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             bool hasPlayerInputManager = playerInputManager != null;
             bool hasLifetimeScope = bootstrap.GetComponent<PyralisGameplayLifetimeScope>() != null;
 
-            PyralisSetupRouteAnalysis route = PyralisSetupRouteAnalysis.Build(session);
+            PyralisSetupRouteAnalysis route = PyralisSetupRouteAnalysis.Build(bootstrap);
             bool usesNetworkedCoreServices = session != null && session.networkMode != GameplayNetworkMode.LocalOnly;
             List<string> coreServiceIssues = BuildCoreServiceIssues(bootstrap, serializedBootstrap, usesNetworkedCoreServices);
             GameModeDefinition mode = route.Mode;
@@ -61,18 +61,22 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             bool hasParticipants = route.HasParticipants;
             int assignedParticipantCount = CountAssignedParticipants(session);
             bool localMultiplayerRoute = route.LikelyUsesInputManager();
-            string playerInputManagerIssue = GetPlayerInputManagerIssue(playerInputManager, localMultiplayerRoute);
+            string playerInputManagerIssue = localMultiplayerRoute
+                ? route.PlayerInputManagerIssue
+                : GetPlayerInputManagerIssue(playerInputManager, localMultiplayerRoute);
             bool hasUsablePlayerInputManager = string.IsNullOrWhiteSpace(playerInputManagerIssue);
             bool hasParticipantPawn = route.HasAnyDefaultPawn;
             string participantPawnIssue = route.ParticipantPawnIssue;
             PawnDefinition firstPawn = GetFirstPawnDefinition(session);
             bool hasParticipantInputProfile = HasAnyParticipantInputProfile(session);
-            string participantInputProfileIssue = GetParticipantInputIssue(session);
+            string participantInputProfileIssue = GetParticipantInputIssue(route);
             bool hasUsableParticipantInputProfile = hasParticipantInputProfile && string.IsNullOrWhiteSpace(participantInputProfileIssue);
             bool setupRouteReady = hasSelectedCapabilities;
             bool needsCameraRigForFirstProof = setupRouteReady && route.UsesPawnGameplay();
             bool needs2DCameraBounds = setupRouteReady && route.Requires2DCameraBounds();
             bool has2DCameraBounds = !needs2DCameraBounds || HasUsable2DCameraBounds(cameraRig, mode);
+            string cameraTopologyIssue = GetCameraTopologyIssue(cameraRig, route, assignedParticipantCount);
+            bool hasUsableCameraRig = hasCameraRig && string.IsNullOrWhiteSpace(cameraTopologyIssue);
             PyralisAuthoringSceneEvidence sceneEvidence = PyralisAuthoringSceneEvidence.Build(bootstrap);
             bool hasGameplayStateService = sceneEvidence.HasGameplayStateService;
             MonoBehaviour gameplayStateService = sceneEvidence.GameplayStateService as MonoBehaviour;
@@ -198,6 +202,15 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 stepId: PyralisSetupFlowStepId.AssignInputProfile));
 
             steps.Add(new PyralisSetupFlowStep(
+                "Resolve Participant Join Policy",
+                GetParticipantJoinPolicyStatus(setupRouteReady, route),
+                GetParticipantJoinPolicyMessage(setupRouteReady, route),
+                bootstrap.GetComponentInChildren<ParticipantInputRouter>(true) != null
+                    ? (Object)bootstrap.GetComponentInChildren<ParticipantInputRouter>(true)
+                    : bootstrap,
+                stepId: PyralisSetupFlowStepId.ResolveParticipantJoinPolicy));
+
+            steps.Add(new PyralisSetupFlowStep(
                 "Assign Spawn Points",
                 GetSpawnPointStatus(setupRouteReady, requiresPawn, spawnPointCount, assignedParticipantCount),
                 GetSpawnPointMessage(setupRouteReady, requiresPawn, spawnPointCount, assignedParticipantCount),
@@ -206,8 +219,8 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
 
             steps.Add(new PyralisSetupFlowStep(
                 "Assign Camera Rig",
-                GetCameraRigStatus(setupRouteReady, needsCameraRigForFirstProof, route.UsesCamera(), hasCameraRig, has2DCameraBounds),
-                GetCameraRigMessage(setupRouteReady, needsCameraRigForFirstProof, needs2DCameraBounds, route.UsesCamera(), hasCameraRig, has2DCameraBounds),
+                GetCameraRigStatus(setupRouteReady, needsCameraRigForFirstProof, route.UsesCamera(), hasUsableCameraRig, has2DCameraBounds),
+                GetCameraRigMessage(setupRouteReady, needsCameraRigForFirstProof, needs2DCameraBounds, route.UsesCamera(), hasCameraRig, has2DCameraBounds, cameraTopologyIssue),
                 cameraRig,
                 stepId: PyralisSetupFlowStepId.AssignCameraRig));
 
@@ -538,6 +551,22 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 : PyralisSetupFlowStepStatus.Missing;
         }
 
+        private static PyralisSetupFlowStepStatus GetParticipantJoinPolicyStatus(
+            bool setupReady,
+            PyralisSetupRouteAnalysis route)
+        {
+            if (!setupReady || route == null)
+                return PyralisSetupFlowStepStatus.Blocked;
+
+            if (!route.HasParticipants)
+                return PyralisSetupFlowStepStatus.Blocked;
+
+            if (route.HasLocalJoinPolicyConflict())
+                return PyralisSetupFlowStepStatus.Missing;
+
+            return PyralisSetupFlowStepStatus.Ready;
+        }
+
         private static PyralisSetupFlowStepStatus GetRecommendationStatus(bool setupReady, bool recommended, bool ready)
         {
             if (!setupReady)
@@ -687,6 +716,40 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             return "A participant InputProfile is assigned. Pawn/input readers can now bind control signals.";
         }
 
+        private static string GetParticipantJoinPolicyMessage(bool setupReady, PyralisSetupRouteAnalysis route)
+        {
+            if (!setupReady || route == null)
+                return "Choose setup capabilities before deciding participant join policy.";
+
+            if (!route.HasParticipants)
+                return "Assign default participants before deciding whether they auto-start, join locally, or wait for network/manual authority.";
+
+            if (route.HasLocalJoinPolicyConflict())
+            {
+                return $"This route looks like local join: {route.AssignedParticipantCount} local pawn participants are assigned, but ParticipantInputRouter is set to auto-register {route.AutoJoinParticipantCount} default participant(s) without PlayerInput. Disable auto-register defaults for local co-op so Unity PlayerInputManager joins create each participant/controller pair.";
+            }
+
+            switch (route.ParticipantTopology)
+            {
+                case PyralisParticipantTopology.LocalJoin:
+                    return route.HasPlayerInputManager
+                        ? $"Local join topology is selected for {route.AssignedParticipantCount} pawn participants. PlayerInputManager owns controller pairing; ParticipantSpawnService can spawn when each joined participant registers."
+                        : $"Local join topology is selected for {route.AssignedParticipantCount} pawn participants. Add Unity PlayerInputManager so each controller joins one participant instead of all participants auto-starting.";
+                case PyralisParticipantTopology.SoloLocal:
+                    return route.AutoRegisterDefaultsWithoutPlayerInput
+                        ? "Solo local topology can auto-register the default participant without PlayerInputManager. Use PlayerInputManager only if this proof should wait for a join button/device."
+                        : "Solo local topology is configured to wait for PlayerInput join or custom registration instead of auto-starting.";
+                case PyralisParticipantTopology.Networked:
+                    return "Networked topology should let the networking authority path register participants. Local PlayerInputManager is not the transport owner.";
+                case PyralisParticipantTopology.HybridLocalNetworked:
+                    return "Hybrid topology has multiple participants on a networked session. Keep local device pairing separate from network authority and validate both paths before Play Mode.";
+                case PyralisParticipantTopology.NoParticipants:
+                    return "No participants are assigned yet.";
+                default:
+                    return "Participant topology could not be inferred yet.";
+            }
+        }
+
         private static Object GetInputProfileReference(SessionDefinition session)
         {
             if (session == null)
@@ -744,8 +807,31 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             return null;
         }
 
-        private static string GetParticipantInputIssue(SessionDefinition session)
+        private static string GetParticipantInputIssue(PyralisSetupRouteAnalysis route)
         {
+            if (route != null && route.ParticipantSeats != null && route.ParticipantSeats.Length > 0)
+            {
+                for (int i = 0; i < route.ParticipantSeats.Length; i++)
+                {
+                    PyralisParticipantSeatReadiness seat = route.ParticipantSeats[i];
+                    if (seat == null || !seat.RequiresPawn)
+                        continue;
+
+                    if (!string.IsNullOrWhiteSpace(seat.InputIssue))
+                        return seat.InputIssue;
+
+                    if (seat.InputProfile == null)
+                        return $"Participant slot {seat.SlotIndex} needs ParticipantDefinition.inputProfile before trying movement in Play Mode.";
+
+                    string bindingIssue = GetInputProfileBindingIssue(seat.InputProfile);
+                    if (!string.IsNullOrWhiteSpace(bindingIssue))
+                        return $"Participant `{seat.DisplayName}` effective InputProfile `{seat.InputProfile.name}`: {bindingIssue}";
+                }
+
+                return string.Empty;
+            }
+
+            SessionDefinition session = route?.Session;
             if (session == null || session.defaultParticipants == null || session.defaultParticipants.Length == 0)
                 return "Assign default participants first.";
 
@@ -835,7 +921,14 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             return "Spawn points are assigned for pawn-backed participants.";
         }
 
-        private static string GetCameraRigMessage(bool setupReady, bool proofRequiresCameraRig, bool requires2DBounds, bool recommended, bool ready, bool usable2DBounds)
+        private static string GetCameraRigMessage(
+            bool setupReady,
+            bool proofRequiresCameraRig,
+            bool requires2DBounds,
+            bool recommended,
+            bool ready,
+            bool usable2DBounds,
+            string cameraTopologyIssue)
         {
             if (!setupReady)
                 return "Choose setup capabilities before deciding camera rig wiring.";
@@ -844,6 +937,9 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             {
                 if (!ready)
                     return "Pawn movement needs a scene camera route before the first Play Mode proof. Keep or create one physical Unity Camera, usually the default Main Camera; do not delete it for the normal Cinemachine route. Create Camera Root, add CinemachineCameraRigController, create or choose a separate Cinemachine Camera for Shared Camera Behaviour, verify the physical Main Camera is tagged MainCamera with Cinemachine Brain, assign that physical camera as Target Camera, then drag Camera Root from Hierarchy into Bootstrap > Camera Rig Controller.";
+
+                if (!string.IsNullOrWhiteSpace(cameraTopologyIssue))
+                    return cameraTopologyIssue;
 
                 if (!requires2DBounds)
                     return "Camera rig is assigned for the pawn movement proof. Cinemachine follows the camera focus mode selected by CameraRigProfile; add PawnCameraTarget to the pawn prefab when the follow/look-at socket should be explicit.";
@@ -857,6 +953,9 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 return ready
                     ? "Camera rig is assigned."
                     : "Camera rig is optional for this setup route. Add it later if the player controls a view, cursor, selector, board camera, or follow camera.";
+
+            if (!string.IsNullOrWhiteSpace(cameraTopologyIssue))
+                return cameraTopologyIssue;
 
             return ready
                 ? "Camera rig is assigned for camera/cursor flow."
@@ -923,6 +1022,71 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
 
             Camera childCamera = rig.GetComponentInChildren<Camera>(true);
             return childCamera != null && childCamera.orthographic;
+        }
+
+        private static string GetCameraTopologyIssue(
+            CinemachineCameraRigController rig,
+            PyralisSetupRouteAnalysis route,
+            int assignedParticipantCount)
+        {
+            if (rig == null || route == null || route.Mode == null || route.Mode.cameraRigProfile == null)
+                return string.Empty;
+
+            CameraRigProfile profile = route.Mode.cameraRigProfile;
+            SerializedObject serializedRig = new SerializedObject(rig);
+            Camera targetCamera = serializedRig.FindProperty("targetCamera")?.objectReferenceValue as Camera;
+            MonoBehaviour sharedCameraBehaviour = serializedRig.FindProperty("sharedCameraBehaviour")?.objectReferenceValue as MonoBehaviour;
+            Transform explicitFocusTarget = serializedRig.FindProperty("explicitFocusTarget")?.objectReferenceValue as Transform;
+            int splitScreenCameraCount = CountObjectReferences(serializedRig.FindProperty("splitScreenCameraBehaviours"));
+
+            if (targetCamera == null)
+                return "CameraRigController needs Target Camera assigned to the physical Unity Camera that has Cinemachine Brain.";
+
+            if (profile.focusMode == CameraRigProfile.CameraFocusMode.ManualCinemachine)
+                return string.Empty;
+
+            if (profile.focusMode == CameraRigProfile.CameraFocusMode.ExplicitSceneTarget && explicitFocusTarget == null)
+                return "CameraRigProfile uses Explicit Scene Target. Assign CinemachineCameraRigController.explicitFocusTarget to the scene anchor, menu, board, or cursor target the camera should frame.";
+
+            if (profile.presentationMode == CameraRigProfile.CameraPresentationMode.SplitScreen
+                || profile.focusMode == CameraRigProfile.CameraFocusMode.ParticipantPawns
+                    && route.ParticipantTopology == PyralisParticipantTopology.LocalJoin
+                    && assignedParticipantCount > 1)
+            {
+                int requiredCameras = Math.Max(1, assignedParticipantCount);
+                if (splitScreenCameraCount < requiredCameras)
+                {
+                    return $"CameraRigProfile is set up for participant pawn split/per-player focus, but CameraRigController has {splitScreenCameraCount} split-screen camera behaviour(s) for {requiredCameras} participant(s). Assign one Cinemachine camera per local participant, or switch CameraRigProfile to Shared + Participant Group for one shared camera.";
+                }
+            }
+
+            if (profile.focusMode == CameraRigProfile.CameraFocusMode.ParticipantGroup
+                || profile.focusMode == CameraRigProfile.CameraFocusMode.ParticipantPawns
+                || profile.focusMode == CameraRigProfile.CameraFocusMode.PlayfieldCenter)
+            {
+                if (sharedCameraBehaviour == null
+                    && profile.presentationMode == CameraRigProfile.CameraPresentationMode.Shared)
+                {
+                    return "CameraRigController needs Shared Camera Behaviour assigned to the Cinemachine Camera used by the shared route.";
+                }
+            }
+
+            return string.Empty;
+        }
+
+        private static int CountObjectReferences(SerializedProperty property)
+        {
+            if (property == null || !property.isArray)
+                return 0;
+
+            int count = 0;
+            for (int i = 0; i < property.arraySize; i++)
+            {
+                if (property.GetArrayElementAtIndex(i).objectReferenceValue != null)
+                    count++;
+            }
+
+            return count;
         }
 
         private static string GetPlayerInputMessage(

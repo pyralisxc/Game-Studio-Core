@@ -5,11 +5,14 @@ using NeonBlack.Gameplay.Core.Enums;
 namespace NeonBlack.Gameplay.Features.Enemies
 {
     public class EnemyDetectionService
-{
-        public Transform ResolvePlayerTarget(Transform targetOverride)
+    {
+        public Transform ResolvePlayerTarget(Transform owner, Transform targetOverride)
         {
             if (targetOverride != null)
                 return targetOverride;
+
+            if (owner != null && ParticipantQueryUtility.TryGetClosestParticipantTransform(owner.position, out Transform closestParticipant, out _))
+                return closestParticipant;
 
             if (ParticipantQueryUtility.TryResolvePlayerProvider(out var provider) && provider != null)
                 return provider.GetPlayerTransform();

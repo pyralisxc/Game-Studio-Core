@@ -47,6 +47,14 @@ NeonBlack Gameplay should be built for N participants.
 
 `1P` and `2P` are not special architectures. They are common configurations of the same participant model.
 
+Local multiplayer is participant topology, not networking. A local couch co-op proof uses Unity `PlayerInputManager` to pair devices to participants; a networked proof uses the networking authority path. Hybrid routes may use both, but the graph should keep these concerns separate:
+
+- `SessionDefinition.networkMode` describes transport and authority.
+- `ParticipantDefinition` describes seats/control owners.
+- `ParticipantInputRouter` describes whether defaults auto-register or wait for `PlayerInput` join.
+- `ParticipantSpawnService` describes whether pawns spawn when participants register or wait for manual/custom spawn.
+- The authoring graph compiles these into `SoloLocal`, `LocalJoin`, `Networked`, or `HybridLocalNetworked` evidence.
+
 ### 2. Shared Capability, Data-Driven Identity
 
 Shared systems should provide reusable capability.
@@ -78,6 +86,8 @@ The maintainable path is:
 - visible links from session, mode, participants, pawns, feature modules, scene evidence, grammar vocabulary, and reflected contracts,
 - validation messages near the fields that caused them,
 - feature-owned authoring contracts that feed setup guidance, validation, facts, and proof targets.
+
+Inspectors should stay tactical. They can show local field integrity, local validation messages, a handoff button into Pyralis Authoring, and asset-local utilities that operate on the inspected object. They should not become parallel route guides, preset pickers, first-proof cards, or hidden setup flows. If a user needs to understand where an object fits in the route, Authoring should explain it from the graph.
 
 ### 3.5. Feature Contracts Own Feature Setup Truth
 
@@ -120,11 +130,17 @@ For the 2D stack, `Motor2D` is the shared 2D pawn motor surface. Focused ownersh
 
 `GameplaySessionBootstrap` starts and hands off the session; it does not own participant spawn points. `ParticipantSpawnService` owns participant pawn placement, including its `Spawn Points` array and `Spawn On Register` policy.
 
+For solo local routes, `ParticipantInputRouter` may auto-register default participants without a `PlayerInputManager`. For local join routes, default participants act as seat templates and Unity `PlayerInputManager` should create the joined `PlayerInput` so each controller owns one participant and pawn. Leaving auto-register defaults enabled on a multi-participant local join route is a setup contradiction because every auto-join seat can spawn before devices join.
+
+The first proof should match that topology. Solo pawn routes prove one participant, one pawn, one input path. Local join pawn routes prove one joined `PlayerInput` per participant, one pawn per joined seat, isolated controller input, authored spawn points, and camera focus after pawn assignment. This proof choice is inferred from the authored session/input/spawn graph, not selected through a preset.
+
 Feature services are not core by default. Combat, enemy, RPG, game-flow, scoring, and feedback services register when the authored route asks for them through `GameModeDefinition`, participant pawns, resolved feature contracts, or actual loaded scene components.
 
 Feature-specific service lists should not expand the composition root. `PyralisGameplayLifetimeScope` owns the visible service graph entrypoint; `PyralisRuntimeFeatureServicePolicy` owns route and loaded-scene activation evidence; the platform feature-service installer owns common registration mechanics; and feature installers such as RPG's runtime composition installer own concrete feature lists when a domain is broad enough to justify its own local seam. This keeps the lifetime scope readable without creating a second setup path.
 
 **Strict Authoring Rule:** `GameplaySessionBootstrap` uses Unity's `RequireComponent` path to keep `PyralisGameplayLifetimeScope` visible, and runtime systems must not autospawn GameObjects or create presets to fix missing scene references. Missing core services stay null at runtime and log a clear error, while the Authoring Window and Map/Scene Readiness guide the user to manually add the missing objects in the scene. Hygiene can audit the graph pressure, but concrete scene repair belongs in Map. This keeps the scene hierarchy as the singular source of truth and prevents hidden systems-on-top-of-systems complexity.
+
+Runtime creation is allowed when it is gameplay output, not setup repair. Examples that may create objects at runtime include spawned participant pawns, projectiles, pooled effects, world-space popups, fade overlays, generated board/pickup views, and camera focus helper transforms. These objects are outputs of authored systems. Runtime code should not create missing session services, camera rigs, managers, profiles, setup assets, or scene roots to make a route appear configured.
 
 This keeps a movement proof from carrying RPG, enemy, combat, scoring, feedback, and arcade game-flow assumptions while preserving feature parity for scenes that actually use those systems.
 
@@ -544,7 +560,7 @@ Prefer:
 - `ScriptableObject` profiles for tuning, numbers, curves, effects, and presentation choices
 - prefabs for reusable runtime object composition
 - one bootstrap root per playable scene
-- custom inspectors that explain what to assign next
+- local inspectors that show field integrity and hand off route setup to Pyralis Authoring
 - validation that catches missing references before Play Mode
 
 Avoid:

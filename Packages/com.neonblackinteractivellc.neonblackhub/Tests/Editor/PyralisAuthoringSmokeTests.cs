@@ -90,6 +90,58 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
+        public void IntentProjection_SmokeParticipantRouteSteersGraphBeforeSetupExists()
+        {
+            PyralisAuthoringIntentSelection intent = new PyralisAuthoringIntentSelection(
+                RuntimeCapabilityLaneTag.Sprite2D,
+                AuthoringCapability.Movement | AuthoringCapability.Input | AuthoringCapability.Participants,
+                AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone | AuthoringWorldAxiom.Realtime,
+                participantRoute: PyralisIntentParticipantRoute.TwoLocalPlayers);
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(null, intent);
+            string mapJson = PyralisAuthoringSetupGraphJsonExporter.ToMapJson(graph);
+            string routeTraceJson = PyralisAuthoringSetupGraphJsonExporter.ToRouteProofTraceJson(graph);
+
+            Assert.That(mapJson, Does.Contain("\"participantTopology\": \"LocalJoin\""));
+            Assert.That(mapJson, Does.Contain("\"expectedJoinPolicy\": \"PlayerInputJoin\""));
+            Assert.That(mapJson, Does.Contain("\"assignedParticipantCount\": 2"));
+            Assert.That(mapJson, Does.Contain("\"authoredParticipantCount\": 0"));
+            Assert.That(mapJson, Does.Contain("\"desiredParticipantCount\": 2"));
+            Assert.That(mapJson, Does.Contain("\"participantSeats\""));
+            Assert.That(routeTraceJson, Does.Contain("\"proofTargetId\": \"proof.local-pawn-join\""));
+            Assert.That(routeTraceJson, Does.Contain("Local Co-op Pawn Join Proof"));
+        }
+
+        [Test]
+        public void IntentProjection_SmokePreservesAuthoredAndDesiredParticipantCounts()
+        {
+            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
+            session.defaultParticipants = new[]
+            {
+                ScriptableObject.CreateInstance<ParticipantDefinition>(),
+                ScriptableObject.CreateInstance<ParticipantDefinition>(),
+                ScriptableObject.CreateInstance<ParticipantDefinition>(),
+                ScriptableObject.CreateInstance<ParticipantDefinition>()
+            };
+
+            PyralisAuthoringIntentSelection intent = new PyralisAuthoringIntentSelection(
+                RuntimeCapabilityLaneTag.Sprite2D,
+                AuthoringCapability.Movement | AuthoringCapability.Input | AuthoringCapability.Participants,
+                AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone | AuthoringWorldAxiom.Realtime,
+                participantRoute: PyralisIntentParticipantRoute.TwoLocalPlayers);
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(session, intent);
+            string mapJson = PyralisAuthoringSetupGraphJsonExporter.ToMapJson(graph);
+            string routeTraceJson = PyralisAuthoringSetupGraphJsonExporter.ToRouteProofTraceJson(graph);
+
+            Assert.That(mapJson, Does.Contain("\"routeName\": \"Local Co-op Pawn route\""));
+            Assert.That(mapJson, Does.Contain("\"assignedParticipantCount\": 4"));
+            Assert.That(mapJson, Does.Contain("\"authoredParticipantCount\": 4"));
+            Assert.That(mapJson, Does.Contain("\"desiredParticipantCount\": 2"));
+            Assert.That(routeTraceJson, Does.Contain("4 authored in SessionDefinition, 2 requested by Intent"));
+        }
+
+        [Test]
         public void SceneReadiness_SmokeRequiresAuthoredFeatureHostForEnabledPawnModules()
         {
             GameObject root = new GameObject("Gameplay Root");
@@ -230,6 +282,16 @@ namespace NeonBlack.Gameplay.Tests.Editor
                         "using NeonBlack.Gameplay.Features.Input; using NeonBlack.Gameplay.Features.Combat; class NoRoutePressure { }")
                 });
             string routeProofTraceJson = PyralisAuthoringSetupGraphJsonExporter.ToRouteProofTraceJson(graph);
+            var intentSelection = new PyralisAuthoringIntentSelection(
+                RuntimeCapabilityLaneTag.Sprite2D,
+                AuthoringCapability.Movement | AuthoringCapability.Input,
+                AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone | AuthoringWorldAxiom.Realtime,
+                participantRoute: PyralisIntentParticipantRoute.TwoLocalPlayers);
+            string intentJson = PyralisAuthoringSetupGraphJsonExporter.ToIntentJson(
+                intentSelection,
+                PyralisAuthoringSetupGraphProjection.BuildIntentModel(intentSelection),
+                PyralisAuthoringCapabilityDescriptorRegistry.BuildIntentDescriptors(intentSelection.Lane, intentSelection.Axioms));
+            string factsJson = PyralisAuthoringSetupGraphJsonExporter.ToFactsJson(graph);
 
             Assert.That(mapJson, Does.Contain("pyralis.authoring.mapSnapshot.v1"));
             Assert.That(mapJson, Does.Contain("\"view\": \"Map\""));
@@ -298,6 +360,26 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(routeProofTraceJson, Does.Not.Contain("validation.input-profile"));
             Assert.That(routeProofTraceJson, Does.Not.Contain("\"mapRows\""));
             Assert.That(routeProofTraceJson, Does.Not.Contain("\"hygieneSections\""));
+
+            Assert.That(intentJson, Does.Contain("pyralis.authoring.intentSnapshot.v1"));
+            Assert.That(intentJson, Does.Contain("\"view\": \"Intent\""));
+            Assert.That(intentJson, Does.Contain("\"selection\""));
+            Assert.That(intentJson, Does.Contain("\"participantRoute\": \"TwoLocalPlayers\""));
+            Assert.That(intentJson, Does.Contain("\"descriptorGroups\""));
+            Assert.That(intentJson, Does.Contain("\"advisorSummary\""));
+            Assert.That(intentJson, Does.Contain("\"recommendations\""));
+            Assert.That(intentJson, Does.Not.Contain("\"mapRows\""));
+            Assert.That(intentJson, Does.Not.Contain("\"hygieneSections\""));
+
+            Assert.That(factsJson, Does.Contain("pyralis.authoring.factsSnapshot.v1"));
+            Assert.That(factsJson, Does.Contain("\"view\": \"Facts\""));
+            Assert.That(factsJson, Does.Contain("\"factKindCounts\""));
+            Assert.That(factsJson, Does.Contain("\"sourceKindCounts\""));
+            Assert.That(factsJson, Does.Contain("\"graphContractCoverage\""));
+            Assert.That(factsJson, Does.Contain("\"graphProofCoverage\""));
+            Assert.That(factsJson, Does.Contain("\"facts\""));
+            Assert.That(factsJson, Does.Not.Contain("\"mapRows\""));
+            Assert.That(factsJson, Does.Not.Contain("\"hygieneSections\""));
         }
 
         [Test]
@@ -327,7 +409,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
             PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(session, intent);
 
             Assert.That(graph.TryFindNode("route.participant-input-profile", out _), Is.False);
-            Assert.That(graph.TryFindNode("dependency.participant.input-profile", out PyralisAuthoringGraphNode inputNode), Is.True);
+            Assert.That(graph.TryFindNode("dependency.participant.input-profile", out _), Is.False);
+            Assert.That(graph.TryFindNode("participant.seat.0.input-profile", out PyralisAuthoringGraphNode inputNode), Is.True);
             Assert.That(inputNode.EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.Missing));
             Assert.That(inputNode.Kind, Is.EqualTo(PyralisAuthoringGraphNodeKind.AssignmentField));
             Assert.That(inputNode.SourceKind, Is.EqualTo(PyralisAuthoringGraphSourceKind.Reflection));
@@ -338,11 +421,11 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(string.Join(" ", inputNode.NativeSetup), Does.Not.Contain("add/remove Gameplay Action rows"));
             Assert.That(string.Join(" ", inputNode.NativeSetup), Does.Not.Contain("SessionDefinition or ParticipantDefinition"));
             Assert.That(PyralisAuthoringSetupGraphProjection.BuildRouteWorkingProjection(graph).CurrentAction.Node.StableId,
-                Is.EqualTo("dependency.participant.input-profile"));
+                Is.EqualTo("participant.seat.0.input-profile"));
             Assert.That(PyralisAuthoringSetupGraphProjection.BuildOverviewIssues(graph, session)
                 .Any(issue => issue.Label == "Assign Input Profile" && issue.Lane == PyralisAuthoringOverviewLane.DoNow), Is.True);
             Assert.That(PyralisAuthoringSetupGraphProjection.BuildRouteWorkingProjection(graph).CriticalPath
-                .Any(row => row.Node != null && row.Node.StableId == "dependency.participant.input-profile"), Is.True);
+                .Any(row => row.Node != null && row.Node.StableId == "participant.seat.0.input-profile"), Is.True);
             Assert.That(graph.TryFindNode("route.camera-focus", out PyralisAuthoringGraphNode cameraFocusNode), Is.True);
             Assert.That(cameraFocusNode.EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.CandidateDetected));
             Assert.That(cameraFocusNode.Guidance, Does.Contain("PawnCameraTarget"));
@@ -351,6 +434,256 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Object.DestroyImmediate(pawn);
             Object.DestroyImmediate(participant);
             Object.DestroyImmediate(cameraProfile);
+            Object.DestroyImmediate(mode);
+            Object.DestroyImmediate(session);
+        }
+
+        [Test]
+        public void SetupGraph_SmokeLocalJoinPolicyDetectsAutoRegisteredDefaultParticipants()
+        {
+            GameObject root = new GameObject("Gameplay Root");
+            GameplaySessionBootstrap bootstrap = root.AddComponent<GameplaySessionBootstrap>();
+            root.AddComponent<ParticipantInputRouter>();
+            root.AddComponent<ParticipantSpawnService>();
+
+            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
+            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
+            ParticipantDefinition participantOne = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            ParticipantDefinition participantTwo = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            InputProfile inputProfile = ScriptableObject.CreateInstance<InputProfile>();
+            PawnDefinition pawn = ScriptableObject.CreateInstance<PawnDefinition>();
+            GameObject prefab = new GameObject("Pawn Prefab");
+            prefab.AddComponent<PawnRoot>();
+            prefab.AddComponent<SmokePawnMotor>();
+            prefab.AddComponent<SmokePawnPresentation>();
+            prefab.AddComponent<SmokePawnInput>();
+            pawn.pawnPrefab = prefab;
+            participantOne.defaultPawn = pawn;
+            participantTwo.defaultPawn = pawn;
+            participantOne.inputProfile = inputProfile;
+            participantTwo.inputProfile = inputProfile;
+            session.defaultGameMode = mode;
+            session.defaultParticipants = new[] { participantOne, participantTwo };
+            SetPrivateField(bootstrap, "sessionDefinition", session);
+
+            PyralisAuthoringIntentSelection intent = new PyralisAuthoringIntentSelection(
+                RuntimeCapabilityLaneTag.Sprite2D,
+                AuthoringCapability.Movement | AuthoringCapability.Input,
+                AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.Realtime);
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap, intent);
+
+            Assert.That(graph.TryFindNode("route.participant-topology", out PyralisAuthoringGraphNode topologyNode), Is.True);
+            Assert.That(topologyNode.EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.Missing));
+            Assert.That(topologyNode.Guidance, Does.Contain("auto-register"));
+            Assert.That(PyralisAuthoringSetupGraphProjection.BuildSetupMapRows(graph)
+                .Any(row => row.Label == "Join Policy" && row.EffectiveEvidenceState == PyralisAuthoringGraphEvidenceState.Missing), Is.True);
+            PyralisAuthoringRouteWorkingProjection route = PyralisAuthoringSetupGraphProjection.BuildRouteWorkingProjection(graph);
+            Assert.That(route.CurrentAction?.Node?.StableId, Is.EqualTo("route.participant-topology"));
+            Assert.That(route.CriticalPath
+                .Any(row => row.Node != null && row.Node.StableId == "route.participant-topology"), Is.True);
+
+            string mapJson = PyralisAuthoringSetupGraphJsonExporter.ToMapJson(graph);
+            Assert.That(mapJson, Does.Contain("\"participantTopology\": \"LocalJoin\""));
+            Assert.That(mapJson, Does.Contain("\"expectedJoinPolicy\": \"PlayerInputJoin\""));
+            Assert.That(mapJson, Does.Contain("\"hasLocalJoinPolicyConflict\": true"));
+            string routeTraceJson = PyralisAuthoringSetupGraphJsonExporter.ToRouteProofTraceJson(graph);
+            Assert.That(routeTraceJson, Does.Contain("\"label\": \"Participant Join Policy\""));
+            Assert.That(routeTraceJson, Does.Contain("\"currentActionLabel\": \"Participant Join Policy\""));
+            Assert.That(routeTraceJson, Does.Contain("\"proofTargetId\": \"proof.local-pawn-join\""));
+            Assert.That(routeTraceJson, Does.Contain("Local Co-op Pawn Join Proof"));
+
+            Object.DestroyImmediate(prefab);
+            Object.DestroyImmediate(pawn);
+            Object.DestroyImmediate(inputProfile);
+            Object.DestroyImmediate(participantTwo);
+            Object.DestroyImmediate(participantOne);
+            Object.DestroyImmediate(mode);
+            Object.DestroyImmediate(session);
+            Object.DestroyImmediate(root);
+        }
+
+        [Test]
+        public void SetupGraph_SmokeLocalJoinPlayerPrefabMustContainPawnInitializer()
+        {
+            GameObject root = new GameObject("Gameplay Root");
+            GameplaySessionBootstrap bootstrap = root.AddComponent<GameplaySessionBootstrap>();
+            root.AddComponent<ParticipantInputRouter>();
+            root.AddComponent<ParticipantSpawnService>();
+            PlayerInputManager playerInputManager = root.AddComponent<PlayerInputManager>();
+            GameObject inputOnlyPrefab = new GameObject("Input Only Prefab");
+            inputOnlyPrefab.AddComponent<PlayerInput>();
+            playerInputManager.playerPrefab = inputOnlyPrefab;
+            SetPrivateField(bootstrap, "playerInputManager", playerInputManager);
+
+            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
+            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
+            ParticipantDefinition participantOne = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            ParticipantDefinition participantTwo = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            InputProfile inputProfile = ScriptableObject.CreateInstance<InputProfile>();
+            PawnDefinition pawn = ScriptableObject.CreateInstance<PawnDefinition>();
+            GameObject pawnPrefab = new GameObject("Pawn Prefab");
+            pawnPrefab.AddComponent<PawnRoot>();
+            pawnPrefab.AddComponent<SmokePawnMotor>();
+            pawnPrefab.AddComponent<SmokePawnPresentation>();
+            pawnPrefab.AddComponent<SmokePawnInput>();
+            pawn.pawnPrefab = pawnPrefab;
+            participantOne.defaultPawn = pawn;
+            participantTwo.defaultPawn = pawn;
+            participantOne.inputProfile = inputProfile;
+            participantTwo.inputProfile = inputProfile;
+            session.defaultGameMode = mode;
+            session.defaultParticipants = new[] { participantOne, participantTwo };
+            SetPrivateField(bootstrap, "sessionDefinition", session);
+            SetPrivateField(root.GetComponent<ParticipantInputRouter>(), "autoRegisterDefaultParticipantsWithoutPlayerInput", false);
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
+
+            Assert.That(PyralisSetupRouteAnalysis.Build(bootstrap).ParticipantTopology, Is.EqualTo(PyralisParticipantTopology.LocalJoin));
+            Assert.That(graph.TryFindNode("route.player-input-manager-prefab", out PyralisAuthoringGraphNode playerPrefabNode), Is.True);
+            Assert.That(playerPrefabNode.EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.Missing));
+            Assert.That(playerPrefabNode.Guidance, Does.Contain("PawnRoot/IPawnParticipantInitializer"));
+            Assert.That(playerPrefabNode.Guidance, Does.Contain("one action asset drive multiple pawns"));
+            Assert.That(PyralisAuthoringSetupGraphProjection.BuildRouteWorkingProjection(graph).CriticalPath
+                .Any(row => row.Node != null && row.Node.StableId == "route.player-input-manager-prefab"), Is.True);
+
+            Object.DestroyImmediate(pawnPrefab);
+            Object.DestroyImmediate(inputOnlyPrefab);
+            Object.DestroyImmediate(pawn);
+            Object.DestroyImmediate(inputProfile);
+            Object.DestroyImmediate(participantTwo);
+            Object.DestroyImmediate(participantOne);
+            Object.DestroyImmediate(mode);
+            Object.DestroyImmediate(session);
+            Object.DestroyImmediate(root);
+        }
+
+        [Test]
+        public void SetupFlow_SmokeLocalJoinUsesBootstrapPlayerInputManager()
+        {
+            GameObject root = new GameObject("Gameplay Root");
+            GameplaySessionBootstrap bootstrap = root.AddComponent<GameplaySessionBootstrap>();
+            ParticipantInputRouter inputRouter = root.AddComponent<ParticipantInputRouter>();
+            root.AddComponent<ParticipantSpawnService>();
+            PlayerInputManager playerInputManager = root.AddComponent<PlayerInputManager>();
+            SetPrivateField(bootstrap, "playerInputManager", playerInputManager);
+            SetPrivateField(inputRouter, "autoRegisterDefaultParticipantsWithoutPlayerInput", false);
+
+            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
+            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
+            ParticipantDefinition participantOne = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            ParticipantDefinition participantTwo = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            InputProfile inputProfile = ScriptableObject.CreateInstance<InputProfile>();
+            PawnDefinition pawn = ScriptableObject.CreateInstance<PawnDefinition>();
+            GameObject pawnPrefab = new GameObject("Joined Pawn Prefab");
+            pawnPrefab.AddComponent<PlayerInput>();
+            pawnPrefab.AddComponent<PawnRoot>();
+            pawnPrefab.AddComponent<SmokePawnMotor>();
+            pawnPrefab.AddComponent<SmokePawnPresentation>();
+            pawnPrefab.AddComponent<SmokePawnInput>();
+            playerInputManager.playerPrefab = pawnPrefab;
+            pawn.pawnPrefab = pawnPrefab;
+            participantOne.defaultPawn = pawn;
+            participantTwo.defaultPawn = pawn;
+            participantOne.inputProfile = inputProfile;
+            participantTwo.inputProfile = inputProfile;
+            session.defaultGameMode = mode;
+            session.defaultParticipants = new[] { participantOne, participantTwo };
+            SetPrivateField(bootstrap, "sessionDefinition", session);
+
+            PyralisSetupFlowReport report = PyralisSetupFlowValidator.BuildReport(bootstrap);
+            PyralisSetupFlowStep playerInputStep = report.GetStep(PyralisSetupFlowStepId.AssignPlayerInputManager);
+            PyralisSetupFlowStep joinPolicyStep = report.GetStep(PyralisSetupFlowStepId.ResolveParticipantJoinPolicy);
+
+            Assert.That(PyralisSetupRouteAnalysis.Build(bootstrap).HasPlayerInputManager, Is.True);
+            Assert.That(playerInputStep.Status, Is.EqualTo(PyralisSetupFlowStepStatus.Ready));
+            Assert.That(playerInputStep.Message, Does.Contain("PlayerInputManager is assigned"));
+            Assert.That(playerInputStep.Message, Does.Not.Contain("GameplaySessionBootstrap.playerInputManager assigned"));
+            Assert.That(joinPolicyStep.Status, Is.EqualTo(PyralisSetupFlowStepStatus.Ready));
+
+            Object.DestroyImmediate(pawnPrefab);
+            Object.DestroyImmediate(pawn);
+            Object.DestroyImmediate(inputProfile);
+            Object.DestroyImmediate(participantTwo);
+            Object.DestroyImmediate(participantOne);
+            Object.DestroyImmediate(mode);
+            Object.DestroyImmediate(session);
+            Object.DestroyImmediate(root);
+        }
+
+        [Test]
+        public void RouteProjection_SmokeLocalJoinPolicyConflictUsesSingleActionableCardWhenPlayerInputManagerExists()
+        {
+            GameObject root = new GameObject("Gameplay Root");
+            GameplaySessionBootstrap bootstrap = root.AddComponent<GameplaySessionBootstrap>();
+            root.AddComponent<ParticipantInputRouter>();
+            root.AddComponent<ParticipantSpawnService>();
+            PlayerInputManager playerInputManager = root.AddComponent<PlayerInputManager>();
+            SetPrivateField(bootstrap, "playerInputManager", playerInputManager);
+
+            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
+            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
+            ParticipantDefinition participantOne = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            ParticipantDefinition participantTwo = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            InputProfile inputProfile = ScriptableObject.CreateInstance<InputProfile>();
+            PawnDefinition pawn = ScriptableObject.CreateInstance<PawnDefinition>();
+            GameObject pawnPrefab = new GameObject("Joined Pawn Prefab");
+            pawnPrefab.AddComponent<PlayerInput>();
+            pawnPrefab.AddComponent<PawnRoot>();
+            pawnPrefab.AddComponent<SmokePawnMotor>();
+            pawnPrefab.AddComponent<SmokePawnPresentation>();
+            pawnPrefab.AddComponent<SmokePawnInput>();
+            playerInputManager.playerPrefab = pawnPrefab;
+            pawn.pawnPrefab = pawnPrefab;
+            participantOne.defaultPawn = pawn;
+            participantTwo.defaultPawn = pawn;
+            participantOne.inputProfile = inputProfile;
+            participantTwo.inputProfile = inputProfile;
+            session.defaultGameMode = mode;
+            session.defaultParticipants = new[] { participantOne, participantTwo };
+            SetPrivateField(bootstrap, "sessionDefinition", session);
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
+            PyralisAuthoringRouteWorkingProjection route = PyralisAuthoringSetupGraphProjection.BuildRouteWorkingProjection(graph);
+            IReadOnlyList<PyralisAuthoringGraphAuditRow> mapIssues = PyralisAuthoringSetupGraphProjection.BuildMapSceneSetupIssueRows(graph);
+            PyralisSetupRouteAnalysis routeAnalysis = PyralisSetupRouteAnalysis.Build(bootstrap);
+
+            Assert.That(routeAnalysis.HasPlayerInputManager, Is.True);
+            Assert.That(routeAnalysis.HasLocalJoinPolicyConflict(), Is.True);
+            Assert.That(route.CurrentAction?.Node?.StableId, Is.EqualTo("setup.resolve-participant-join-policy"));
+            Assert.That(route.CriticalPath.Any(row => row.Node != null && row.Node.StableId == "route.participant-topology"), Is.False);
+            Assert.That(route.CriticalPath.Any(row => row.Node != null && row.Node.StableId == "setup.resolve-participant-join-policy"), Is.True);
+            Assert.That(mapIssues.Any(row => row.NodeId == "route.participant-topology"), Is.False);
+            Assert.That(mapIssues.Any(row => row.NodeId == "setup.resolve-participant-join-policy"), Is.True);
+
+            Object.DestroyImmediate(pawnPrefab);
+            Object.DestroyImmediate(pawn);
+            Object.DestroyImmediate(inputProfile);
+            Object.DestroyImmediate(participantTwo);
+            Object.DestroyImmediate(participantOne);
+            Object.DestroyImmediate(mode);
+            Object.DestroyImmediate(session);
+            Object.DestroyImmediate(root);
+        }
+
+        [Test]
+        public void SetupRoute_SmokeMultiSeatLocalRouteInfersLocalJoinWithoutPawns()
+        {
+            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
+            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
+            ParticipantDefinition participantOne = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            ParticipantDefinition participantTwo = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            session.defaultGameMode = mode;
+            session.defaultParticipants = new[] { participantOne, participantTwo };
+
+            PyralisSetupRouteAnalysis route = PyralisSetupRouteAnalysis.Build(session);
+
+            Assert.That(route.RequiresPawn, Is.False);
+            Assert.That(route.ParticipantTopology, Is.EqualTo(PyralisParticipantTopology.LocalJoin));
+            Assert.That(route.ExpectedJoinPolicy, Is.EqualTo(PyralisParticipantJoinPolicy.PlayerInputJoin));
+
+            Object.DestroyImmediate(participantTwo);
+            Object.DestroyImmediate(participantOne);
             Object.DestroyImmediate(mode);
             Object.DestroyImmediate(session);
         }

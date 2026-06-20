@@ -9,6 +9,7 @@ The current source of truth is a shared gameplay stack built around:
 - authored `SessionDefinition`, `ParticipantDefinition`, `PawnDefinition`, and `GameModeDefinition`
 - participant-owned pawns through `PawnRoot`
 - participant-owned input through `ParticipantDefinition.inputProfile`
+- graph-inferred participant topology for solo local, local join, networked, and hybrid routes
 - pawn camera targets through `PawnCameraTarget`
 - scene-owned Cinemachine routing through `CameraRigProfile.focusMode`
 - explicit pawn sibling components for physical identity
@@ -30,6 +31,7 @@ Rigged 3D support is Animator-driven and intended for both `Generic` and `Humano
 - Siblings describe what a pawn **is**: root, motor, movement, presentation, input receiver, collider/rigidbody/controller, and core physical identity.
 - Features describe what a pawn **can do**: interaction, traversal extras, combat styles, pickups, feedback, status, and route-specific capabilities.
 - Participants describe who is **driving**: human, AI, network authority, seat, team, or non-pawn actor.
+- Participant topology describes how control enters the session: solo auto-start, Unity `PlayerInputManager` local join, network authority, or hybrid local/networked join.
 - Camera profiles describe what is **watched**: participant pawn socket, participant group, playfield center, explicit scene anchor, or manual Cinemachine.
 - Scenes own scene-scale direction: bootstrap, lifetime scope, camera rig, spawners, scene services, and proof-specific objects.
 - Authoring reads contracts/reflection/dependency evidence and projects the resolved graph; it does not create hidden presets or duplicate setup truth.

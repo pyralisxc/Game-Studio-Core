@@ -26,7 +26,9 @@ namespace NeonBlack.Gameplay.Editor
             AddSetupChainNodes(source, route, nodes, edges);
             AddCapabilityNodes(route, nodes, edges);
             AddRouteShapeNode(route, nodes, edges);
+            AddParticipantTopologyNode(route, nodes, edges);
             AddParticipantNodes(route, nodes, edges);
+            AddParticipantSeatNodes(route, nodes, edges);
             AddSceneSurfaceNodes(source, route, nodes, edges);
             string activeProofNodeId = AddProofNode(route, nodes, edges);
             AddContractNodes(nodes, edges, activeProofNodeId);
@@ -56,7 +58,7 @@ namespace NeonBlack.Gameplay.Editor
             else
                 route = PyralisSetupRouteAnalysis.Build(source);
 
-            return PyralisSetupRouteAnalysis.WithAdditionalCapabilityFamilies(route, focusedFamilies);
+            return PyralisSetupRouteAnalysis.WithIntentFocus(route, focusedFamilies, intentSelection);
         }
 
         private static RuntimeCapabilityFamily[] BuildIntentFocusedFamilies(PyralisAuthoringIntentSelection intentSelection)
@@ -232,6 +234,195 @@ namespace NeonBlack.Gameplay.Editor
             AddEdge(edges, "participant.default", "pawn.definition", PyralisAuthoringGraphEdgeKind.DependsOn, "pawn route");
         }
 
+        private static void AddParticipantSeatNodes(
+            PyralisSetupRouteAnalysis route,
+            List<PyralisAuthoringGraphNode> nodes,
+            List<PyralisAuthoringGraphEdge> edges)
+        {
+            if (route == null)
+                return;
+
+            for (int i = 0; i < route.ParticipantSeats.Length; i++)
+            {
+                PyralisParticipantSeatReadiness seat = route.ParticipantSeats[i];
+                if (seat == null)
+                    continue;
+
+                string seatNodeId = $"participant.seat.{seat.StableIdSuffix}";
+                PyralisAuthoringGraphEvidenceState seatState = seat.IsReady
+                    ? PyralisAuthoringGraphEvidenceState.Ready
+                    : PyralisAuthoringGraphEvidenceState.Missing;
+                AddNode(nodes, new PyralisAuthoringGraphNode(
+                    seatNodeId,
+                    $"{seat.DisplayName} Seat",
+                    PyralisAuthoringGraphNodeKind.SetupChain,
+                    PyralisAuthoringGraphSourceKind.SetupFlow,
+                    seatState,
+                    guidance: BuildParticipantSeatGuidance(seat),
+                    assignmentFields: new[] { $"SessionDefinition.defaultParticipants[{seat.SlotIndex}]" },
+                    blockingReason: seatState == PyralisAuthoringGraphEvidenceState.Ready
+                        ? string.Empty
+                        : BuildParticipantSeatGuidance(seat),
+                    nativeAction: seatState == PyralisAuthoringGraphEvidenceState.Ready
+                        ? null
+                        : new PyralisAuthoringNativeAction(
+                            "Inspect",
+                            PyralisAuthoringActionSurface.Inspector,
+                            "SessionDefinition",
+                            $"defaultParticipants[{seat.SlotIndex}]",
+                            "this participant slot has its authored participant, input, and pawn route ready"),
+                    sourceObject: seat.Participant,
+                    sourceOrigin: seat.HasParticipant
+                        ? PyralisAuthoringGraphSourceOrigin.UserAuthoredSetup
+                        : PyralisAuthoringGraphSourceOrigin.SpineGrammar,
+                    workIntent: seatState == PyralisAuthoringGraphEvidenceState.Ready
+                        ? PyralisAuthoringGraphWorkIntent.Reference
+                        : PyralisAuthoringGraphWorkIntent.RequiredSetup,
+                    issueSeverity: seatState == PyralisAuthoringGraphEvidenceState.Ready
+                        ? PyralisAuthoringIssueSeverity.Info
+                        : PyralisAuthoringIssueSeverity.Required));
+
+                AddEdge(edges, "participant.default", seatNodeId, PyralisAuthoringGraphEdgeKind.DependsOn, "participant seat");
+
+                if (route.RequiresPawn)
+                {
+                    AddParticipantSeatRequirementNode(
+                        nodes,
+                        edges,
+                        seat,
+                        seatNodeId,
+                        $"participant.seat.{seat.StableIdSuffix}.input-profile",
+                        "Assign Input Profile",
+                        seat.IsInputReady,
+                        string.IsNullOrWhiteSpace(seat.InputIssue)
+                            ? $"Participant `{seat.DisplayName}` has an InputProfile."
+                            : seat.InputIssue,
+                        "ParticipantDefinition.inputProfile",
+                        seat.Participant,
+                        "InputProfile");
+                    AddParticipantSeatRequirementNode(
+                        nodes,
+                        edges,
+                        seat,
+                        seatNodeId,
+                        $"participant.seat.{seat.StableIdSuffix}.pawn",
+                        "Assign Participant Pawn",
+                        seat.IsPawnReady,
+                        string.IsNullOrWhiteSpace(seat.PawnIssue)
+                            ? $"Participant `{seat.DisplayName}` has a ready PawnDefinition and pawn prefab."
+                            : seat.PawnIssue,
+                        "ParticipantDefinition.defaultPawn",
+                        seat.Pawn != null ? seat.Pawn : seat.Participant,
+                        "PawnDefinition");
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(route.PlayerInputManagerIssue))
+            {
+                AddNode(nodes, new PyralisAuthoringGraphNode(
+                    "route.player-input-manager-prefab",
+                    "Local Join Player Prefab",
+                    PyralisAuthoringGraphNodeKind.ValidationEvidence,
+                    PyralisAuthoringGraphSourceKind.SetupFlow,
+                    PyralisAuthoringGraphEvidenceState.Missing,
+                    guidance: route.PlayerInputManagerIssue,
+                    nativeSetup: new[]
+                    {
+                        "Create or select the local join pawn prefab.",
+                        "Add Unity PlayerInput to the prefab root.",
+                        "Add PawnRoot/IPawnParticipantInitializer to the same prefab shape so ParticipantSpawnService reuses the joined instance.",
+                        "Assign that prefab to PlayerInputManager.playerPrefab and GameplaySessionBootstrap.playerInputManager."
+                    },
+                    assignmentFields: new[] { "PlayerInputManager.playerPrefab", "GameplaySessionBootstrap.playerInputManager" },
+                    blockingReason: route.PlayerInputManagerIssue,
+                    nativeAction: new PyralisAuthoringNativeAction(
+                        "Assign",
+                        PyralisAuthoringActionSurface.Inspector,
+                        "PlayerInputManager",
+                        "playerPrefab",
+                        "joined PlayerInput prefab is the pawn shape that owns one participant"),
+                    sourceObject: route.Bootstrap,
+                    sourceOrigin: PyralisAuthoringGraphSourceOrigin.RuntimeEvidence,
+                    workIntent: PyralisAuthoringGraphWorkIntent.RequiredSetup,
+                    issueSeverity: PyralisAuthoringIssueSeverity.Required));
+
+                AddEdge(edges, "route.participant-topology", "route.player-input-manager-prefab", PyralisAuthoringGraphEdgeKind.DependsOn, "local join prefab");
+            }
+        }
+
+        private static void AddParticipantSeatRequirementNode(
+            List<PyralisAuthoringGraphNode> nodes,
+            List<PyralisAuthoringGraphEdge> edges,
+            PyralisParticipantSeatReadiness seat,
+            string seatNodeId,
+            string nodeId,
+            string label,
+            bool ready,
+            string guidance,
+            string assignmentField,
+            UnityEngine.Object sourceObject,
+            string expectedType)
+        {
+            PyralisAuthoringGraphEvidenceState state = ready
+                ? PyralisAuthoringGraphEvidenceState.Ready
+                : PyralisAuthoringGraphEvidenceState.Missing;
+            string fieldName = assignmentField;
+            int dotIndex = assignmentField.LastIndexOf('.');
+            if (dotIndex >= 0 && dotIndex < assignmentField.Length - 1)
+                fieldName = assignmentField.Substring(dotIndex + 1);
+
+            AddNode(nodes, new PyralisAuthoringGraphNode(
+                nodeId,
+                $"{label}: {seat.DisplayName}",
+                PyralisAuthoringGraphNodeKind.AssignmentField,
+                PyralisAuthoringGraphSourceKind.Reflection,
+                state,
+                guidance: guidance,
+                nativeSetup: ready
+                    ? Array.Empty<string>()
+                    : new[] { $"Inspector -> {assignmentField}; assign or create {expectedType} for {seat.DisplayName}." },
+                assignmentFields: new[] { assignmentField },
+                blockingReason: ready ? string.Empty : guidance,
+                nativeAction: ready
+                    ? null
+                    : new PyralisAuthoringNativeAction(
+                        "Create or assign",
+                        PyralisAuthoringActionSurface.Inspector,
+                        "ParticipantDefinition",
+                        fieldName,
+                        $"{assignmentField} references a {expectedType}"),
+                sourceObject: sourceObject,
+                sourceOrigin: sourceObject != null
+                    ? PyralisAuthoringGraphSourceOrigin.UserAuthoredSetup
+                    : PyralisAuthoringGraphSourceOrigin.Reflection,
+                workIntent: ready
+                    ? PyralisAuthoringGraphWorkIntent.Reference
+                    : PyralisAuthoringGraphWorkIntent.RequiredSetup,
+                issueSeverity: ready
+                    ? PyralisAuthoringIssueSeverity.Info
+                    : PyralisAuthoringIssueSeverity.Required));
+
+            AddEdge(edges, seatNodeId, nodeId, PyralisAuthoringGraphEdgeKind.DependsOn, "seat requirement");
+            AddEdge(edges, nodeId, "route.shape", PyralisAuthoringGraphEdgeKind.Satisfies, "route requirement");
+        }
+
+        private static string BuildParticipantSeatGuidance(PyralisParticipantSeatReadiness seat)
+        {
+            if (seat == null)
+                return string.Empty;
+
+            if (!seat.HasParticipant)
+                return $"Default participant slot {seat.SlotIndex} is empty. Assign a ParticipantDefinition before this seat can join, spawn, or receive input.";
+
+            if (seat.RequiresPawn && !seat.IsInputReady)
+                return seat.InputIssue;
+
+            if (seat.RequiresPawn && !seat.IsPawnReady)
+                return seat.PawnIssue;
+
+            return $"Participant `{seat.DisplayName}` is ready for seat {seat.SeatIndex}.";
+        }
+
         private static void AddReflectedDependencyEvidence(
             PyralisSetupRouteAnalysis route,
             List<PyralisAuthoringGraphNode> nodes,
@@ -283,7 +474,7 @@ namespace NeonBlack.Gameplay.Editor
                     PyralisAuthoringIssueSeverity.Required);
             }
 
-            if (route.RequiresPawn && participant != null && participant.defaultPawn == null)
+            if (route.RequiresPawn && route.ParticipantSeats.Length == 0 && participant != null && participant.defaultPawn == null)
             {
                 AddMissingReflectedReference(
                     nodes,
@@ -302,7 +493,7 @@ namespace NeonBlack.Gameplay.Editor
                     PyralisAuthoringIssueSeverity.Required);
             }
 
-            if (route.RequiresPawn && participant != null && participant.inputProfile == null)
+            if (route.RequiresPawn && route.ParticipantSeats.Length == 0 && participant != null && participant.inputProfile == null)
             {
                 AddMissingReflectedReference(
                     nodes,
@@ -621,6 +812,178 @@ namespace NeonBlack.Gameplay.Editor
                 AddEdge(edges, "route.shape", "pawn.definition", PyralisAuthoringGraphEdgeKind.DependsOn, "pawn-backed control surface");
         }
 
+        private static void AddParticipantTopologyNode(
+            PyralisSetupRouteAnalysis route,
+            List<PyralisAuthoringGraphNode> nodes,
+            List<PyralisAuthoringGraphEdge> edges)
+        {
+            if (route == null)
+                return;
+
+            PyralisAuthoringGraphEvidenceState state = GetParticipantTopologyEvidenceState(route);
+            PyralisAuthoringGraphWorkIntent workIntent = state == PyralisAuthoringGraphEvidenceState.Missing
+                || state == PyralisAuthoringGraphEvidenceState.Blocked
+                    ? PyralisAuthoringGraphWorkIntent.RequiredSetup
+                    : PyralisAuthoringGraphWorkIntent.Reference;
+            PyralisAuthoringIssueSeverity issueSeverity = state == PyralisAuthoringGraphEvidenceState.Missing
+                || state == PyralisAuthoringGraphEvidenceState.Blocked
+                    ? PyralisAuthoringIssueSeverity.Required
+                    : PyralisAuthoringIssueSeverity.Info;
+
+            AddNode(nodes, new PyralisAuthoringGraphNode(
+                "route.participant-topology",
+                "Participant Join Policy",
+                PyralisAuthoringGraphNodeKind.RouteShape,
+                PyralisAuthoringGraphSourceKind.SetupFlow,
+                state,
+                guidance: GetParticipantTopologyGuidance(route),
+                nativeSetup: BuildParticipantTopologyNativeSetup(route),
+                assignmentFields: BuildParticipantTopologyAssignmentFields(route),
+                blockingReason: route.HasLocalJoinPolicyConflict()
+                    ? "Local join should wait for Unity PlayerInputManager joins; auto-registering default participants can spawn every seat before controllers join."
+                    : string.Empty,
+                nativeAction: GetParticipantTopologyNativeAction(route),
+                sourceObject: route.Bootstrap != null ? route.Bootstrap : route.Session,
+                sourceOrigin: PyralisAuthoringGraphSourceOrigin.RuntimeEvidence,
+                workIntent: workIntent,
+                issueSeverity: issueSeverity));
+
+            AddEdge(edges, "route.shape", "route.participant-topology", PyralisAuthoringGraphEdgeKind.DependsOn, "participant topology");
+            AddEdge(edges, "participant.default", "route.participant-topology", PyralisAuthoringGraphEdgeKind.DependsOn, "participant seats");
+            AddEdge(edges, "route.participant-topology", "setup.assign-player-input-manager", PyralisAuthoringGraphEdgeKind.Recommends, "local join input owner");
+        }
+
+        private static PyralisAuthoringGraphEvidenceState GetParticipantTopologyEvidenceState(PyralisSetupRouteAnalysis route)
+        {
+            if (route == null || !route.HasParticipants)
+                return PyralisAuthoringGraphEvidenceState.Blocked;
+
+            return route.HasLocalJoinPolicyConflict()
+                ? PyralisAuthoringGraphEvidenceState.Missing
+                : PyralisAuthoringGraphEvidenceState.Ready;
+        }
+
+        private static string GetParticipantTopologyGuidance(PyralisSetupRouteAnalysis route)
+        {
+            if (route == null)
+                return "Participant topology is not resolved yet.";
+
+            string summary = $"Topology: {route.ParticipantTopology}. Expected join: {route.ExpectedJoinPolicy}. Spawn: {route.SpawnPolicy}. {GetParticipantCountSummary(route)} Auto-join seats: {route.AutoJoinParticipantCount}.";
+            if (route.HasLocalJoinPolicyConflict())
+            {
+                return summary + " This is a local join route, but ParticipantInputRouter can auto-register default participants without PlayerInput. Disable that policy so each Unity PlayerInput join owns one participant and pawn.";
+            }
+
+            if (route.ParticipantTopology == PyralisParticipantTopology.LocalJoin)
+            {
+                return summary + " Unity PlayerInputManager should own controller pairing; ParticipantSpawnService may spawn when each joined participant registers.";
+            }
+
+            if (route.ParticipantTopology == PyralisParticipantTopology.SoloLocal)
+            {
+                return summary + " Solo local routes can auto-register the default participant or deliberately wait for PlayerInput join.";
+            }
+
+            if (route.ParticipantTopology == PyralisParticipantTopology.Networked
+                || route.ParticipantTopology == PyralisParticipantTopology.HybridLocalNetworked)
+            {
+                return summary + " Networking is transport/authority; local device join remains a separate participant topology concern.";
+            }
+
+            return summary;
+        }
+
+        private static string GetParticipantCountSummary(PyralisSetupRouteAnalysis route)
+        {
+            if (route == null)
+                return "Participants: 0.";
+
+            if (route.DesiredParticipantCount > 0 && route.AuthoredParticipantCount > 0 && route.DesiredParticipantCount != route.AuthoredParticipantCount)
+            {
+                return $"Participants: {route.AssignedParticipantCount} effective ({route.AuthoredParticipantCount} authored in SessionDefinition, {route.DesiredParticipantCount} requested by Intent).";
+            }
+
+            if (route.DesiredParticipantCount > 0 && route.AuthoredParticipantCount == 0)
+                return $"Participants: {route.AssignedParticipantCount} previewed from Intent.";
+
+            return $"Participants: {route.AssignedParticipantCount} authored.";
+        }
+
+        private static string[] BuildParticipantTopologyNativeSetup(PyralisSetupRouteAnalysis route)
+        {
+            if (route == null)
+                return Array.Empty<string>();
+
+            if (route.HasLocalJoinPolicyConflict())
+            {
+                return new[]
+                {
+                    "Inspector -> ParticipantInputRouter -> disable Auto Register Default Participants Without Player Input for local co-op join routes.",
+                    "Inspector -> GameplaySessionBootstrap -> assign PlayerInputManager so Unity pairs each controller with one joined PlayerInput.",
+                    "Inspector -> ParticipantSpawnService -> keep Spawn On Register enabled if pawns should appear when each PlayerInput joins; disable it only for manual spawn flows."
+                };
+            }
+
+            if (route.ParticipantTopology == PyralisParticipantTopology.LocalJoin)
+            {
+                return new[]
+                {
+                    "Use Unity PlayerInputManager for local join.",
+                    "Set PlayerInputManager.playerPrefab to a prefab containing PlayerInput and PawnRoot/IPawnParticipantInitializer.",
+                    "Use ParticipantDefinition entries as seat templates; do not auto-register all seats before controller join."
+                };
+            }
+
+            return Array.Empty<string>();
+        }
+
+        private static string[] BuildParticipantTopologyAssignmentFields(PyralisSetupRouteAnalysis route)
+        {
+            if (route == null)
+                return Array.Empty<string>();
+
+            List<string> fields = new List<string>
+            {
+                "SessionDefinition.defaultParticipants",
+                "ParticipantDefinition.autoJoin",
+                "ParticipantInputRouter.autoRegisterDefaultParticipantsWithoutPlayerInput",
+                "ParticipantSpawnService.spawnOnRegister"
+            };
+
+            if (route.ParticipantTopology == PyralisParticipantTopology.LocalJoin)
+                fields.Add("GameplaySessionBootstrap.playerInputManager");
+
+            return fields.ToArray();
+        }
+
+        private static PyralisAuthoringNativeAction? GetParticipantTopologyNativeAction(PyralisSetupRouteAnalysis route)
+        {
+            if (route == null)
+                return null;
+
+            if (route.HasLocalJoinPolicyConflict())
+            {
+                return new PyralisAuthoringNativeAction(
+                    "Disable",
+                    PyralisAuthoringActionSurface.Inspector,
+                    "ParticipantInputRouter",
+                    "autoRegisterDefaultParticipantsWithoutPlayerInput",
+                    "local co-op waits for PlayerInputManager joins instead of auto-spawning every default participant");
+            }
+
+            if (route.ParticipantTopology == PyralisParticipantTopology.LocalJoin && !route.HasPlayerInputManager)
+            {
+                return new PyralisAuthoringNativeAction(
+                    "Create or assign",
+                    PyralisAuthoringActionSurface.Inspector,
+                    "GameplaySessionBootstrap",
+                    "playerInputManager",
+                    "Unity PlayerInputManager is assigned for local join");
+            }
+
+            return null;
+        }
+
         private static bool HasGameplayFocus(RuntimeCapabilityFamily[] families)
         {
             if (families == null)
@@ -821,7 +1184,8 @@ namespace NeonBlack.Gameplay.Editor
 
             string fallbackProofTargetId = PyralisProofFamilyVocabulary.GetFallbackProofTargetId(
                 families,
-                route.RequiresPawn);
+                route.RequiresPawn,
+                route.ParticipantTopology);
             if (!string.IsNullOrWhiteSpace(fallbackProofTargetId))
                 return fallbackProofTargetId;
 

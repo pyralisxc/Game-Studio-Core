@@ -93,12 +93,12 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
     public static class PyralisInspectorGuide
     {
         private const string AuthoringDocsRoot = "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/Authoring/";
-        private const string InspectorHandoffText = "Inspector edits this object. Pyralis Authoring owns route setup, next steps, and first proof guidance.";
+        private const string InspectorHandoffText = "Inspector owns local field edits. Pyralis Authoring owns route setup, next steps, and first proof guidance.";
 
         public static void DrawGuide(PyralisGuideContent content)
         {
             string title = string.IsNullOrWhiteSpace(content.Title) ? "Pyralis Authoring" : content.Title;
-            PyralisInspectorHandoff.DrawAuthoringButton(title, content.Summary);
+            PyralisInspectorHandoff.DrawAuthoringButton(title, null);
         }
 
         public static void DrawFieldGuide(string title, params PyralisGuideSection[] sections)

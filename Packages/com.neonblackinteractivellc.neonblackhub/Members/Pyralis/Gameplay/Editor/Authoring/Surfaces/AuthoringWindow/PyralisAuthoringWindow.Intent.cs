@@ -33,6 +33,13 @@ namespace NeonBlack.Gameplay.Editor
             laneContainer.Add(laneTitle);
             PopulateLanes(laneContainer);
 
+            var participantContainer = new VisualElement() { name = "participantIntentContainer" };
+            participantContainer.AddToClassList("section");
+            var participantTitle = new Label("PARTICIPANTS");
+            participantTitle.AddToClassList("section-title");
+            participantContainer.Add(participantTitle);
+            PopulateParticipantRoute(participantContainer);
+
             var capabilityContainer = new VisualElement() { name = "capabilityContainer" };
             capabilityContainer.AddToClassList("section");
             var capTitle = new Label("CAPABILITY INGREDIENTS");
@@ -80,14 +87,25 @@ namespace NeonBlack.Gameplay.Editor
             guideButton.tooltip = "Show the graph-filtered route guide for this intent without applying a preset.";
             var overviewButton = new Button(() => SwitchMode(AuthoringWindowMode.Overview)) { text = "Open Overview" };
             overviewButton.tooltip = "Return to the current setup route once a scene root or setup asset exists.";
+            var exportButton = new Button(() =>
+            {
+                PyralisAuthoringGraphJsonExportControl.ExportIntentSnapshot(
+                    GetCurrentIntentSelection(),
+                    GetCachedIntentModel(),
+                    PyralisAuthoringCapabilityDescriptorRegistry.BuildIntentDescriptors(_intentLane, _intentAxioms));
+            })
+            { text = "Export Intent JSON" };
+            exportButton.tooltip = "Write the Intent tab steering snapshot: DNA axioms, presentation lane, participant route, capability descriptors, selected ingredients, and advisor rows. It does not export scene/setup reality.";
             actionRow.Add(guideButton);
             actionRow.Add(overviewButton);
+            actionRow.Add(exportButton);
             advisorContainer.Add(actionRow);
 
             var sidebar = new VisualElement() { name = "sidebar" };
             sidebar.AddToClassList("intent-sidebar");
             sidebar.Add(axiomContainer);
             sidebar.Add(laneContainer);
+            sidebar.Add(participantContainer);
 
             var main = new VisualElement() { name = "main" };
             main.AddToClassList("intent-main");
@@ -184,6 +202,43 @@ namespace NeonBlack.Gameplay.Editor
             container.Add(dropdown);
         }
 
+        private void PopulateParticipantRoute(VisualElement container)
+        {
+            if (container == null)
+                return;
+
+            PyralisIntentParticipantRoute[] options =
+            {
+                PyralisIntentParticipantRoute.InferFromSetup,
+                PyralisIntentParticipantRoute.SoloLocal,
+                PyralisIntentParticipantRoute.TwoLocalPlayers,
+                PyralisIntentParticipantRoute.ThreeLocalPlayers,
+                PyralisIntentParticipantRoute.FourLocalPlayers,
+                PyralisIntentParticipantRoute.Networked,
+                PyralisIntentParticipantRoute.HybridLocalNetworked
+            };
+            List<string> choices = new List<string>();
+            int selectedIndex = 0;
+            for (int i = 0; i < options.Length; i++)
+            {
+                choices.Add(GetParticipantRouteDisplayName(options[i]));
+                if (_intentParticipantRoute == options[i])
+                    selectedIndex = i;
+            }
+
+            var dropdown = new DropdownField("Route Shape", choices, selectedIndex);
+            dropdown.tooltip = GetParticipantRouteTooltip(_intentParticipantRoute);
+            dropdown.RegisterValueChangedCallback(evt =>
+            {
+                _intentParticipantRoute = options[Math.Max(0, dropdown.index)];
+                dropdown.tooltip = GetParticipantRouteTooltip(_intentParticipantRoute);
+                MarkIntentSetupChangesPending();
+                InvalidateAuthoringCache();
+                UpdateAdvisor(rootVisualElement);
+            });
+            container.Add(dropdown);
+        }
+
         private void PopulateCapabilities(VisualElement container)
         {
             if (container == null) return;
@@ -219,25 +274,61 @@ namespace NeonBlack.Gameplay.Editor
                     SetCapabilityGroupFoldout(key, evt.newValue);
                 });
 
-                foreach (PyralisAuthoringCapabilityDescriptor descriptor in group.Value)
+                Dictionary<string, List<PyralisAuthoringCapabilityDescriptor>> subgroups =
+                    BuildIntentDescriptorSubgroups(group.Value);
+                foreach (var subgroup in subgroups)
                 {
-                    if (descriptor == null)
-                        continue;
-
-                    var toggle = new Toggle(GetIntentDescriptorLabel(descriptor));
-                    toggle.name = "cap_" + descriptor.StableId.Replace('.', '_').Replace('/', '_');
-                    toggle.value = selectedIds.Contains(descriptor.StableId);
-                    toggle.tooltip = GetIntentDescriptorTooltip(descriptor);
-                    toggle.RegisterValueChangedCallback(evt =>
+                    if (string.IsNullOrWhiteSpace(subgroup.Key))
                     {
-                        UpdateSelectedIntentDescriptor(descriptor.StableId, evt.newValue);
-                        MarkIntentSetupChangesPending();
-                        InvalidateAuthoringCache();
-                        UpdateAdvisor(rootVisualElement);
+                        AddIntentDescriptorToggles(foldout, subgroup.Value, selectedIds);
+                        continue;
+                    }
+
+                    var subgroupFoldout = new Foldout
+                    {
+                        text = subgroup.Key,
+                        value = GetCapabilityGroupFoldout(group.Key + "/" + subgroup.Key)
+                    };
+                    subgroupFoldout.AddToClassList("capability-subgroup-foldout");
+                    string subgroupKey = group.Key + "/" + subgroup.Key;
+                    subgroupFoldout.RegisterValueChangedCallback(evt =>
+                    {
+                        SetCapabilityGroupFoldout(subgroupKey, evt.newValue);
                     });
-                    foldout.Add(toggle);
+                    AddIntentDescriptorToggles(subgroupFoldout, subgroup.Value, selectedIds);
+                    foldout.Add(subgroupFoldout);
                 }
+
                 grid.Add(foldout);
+            }
+        }
+
+        private void AddIntentDescriptorToggles(
+            VisualElement parent,
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors,
+            HashSet<string> selectedIds)
+        {
+            if (parent == null || descriptors == null)
+                return;
+
+            for (int i = 0; i < descriptors.Count; i++)
+            {
+                PyralisAuthoringCapabilityDescriptor descriptor = descriptors[i];
+                if (descriptor == null)
+                    continue;
+
+                var toggle = new Toggle(GetIntentDescriptorLeafLabel(descriptor));
+                toggle.name = "cap_" + descriptor.StableId.Replace('.', '_').Replace('/', '_');
+                toggle.value = selectedIds.Contains(descriptor.StableId);
+                toggle.tooltip = GetIntentDescriptorTooltip(descriptor);
+                toggle.RegisterValueChangedCallback(evt =>
+                {
+                    UpdateSelectedIntentDescriptor(descriptor.StableId, evt.newValue);
+                    MarkIntentSetupChangesPending();
+                    InvalidateAuthoringCache();
+                    UpdateAdvisor(rootVisualElement);
+                });
+                parent.Add(toggle);
             }
         }
 
@@ -293,6 +384,44 @@ namespace NeonBlack.Gameplay.Editor
             return string.IsNullOrWhiteSpace(descriptor.Group) ? "Shared Ingredients" : descriptor.Group;
         }
 
+        private static Dictionary<string, List<PyralisAuthoringCapabilityDescriptor>> BuildIntentDescriptorSubgroups(
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors)
+        {
+            Dictionary<string, List<PyralisAuthoringCapabilityDescriptor>> subgroups =
+                new Dictionary<string, List<PyralisAuthoringCapabilityDescriptor>>(StringComparer.Ordinal);
+            if (descriptors == null)
+                return subgroups;
+
+            for (int i = 0; i < descriptors.Count; i++)
+            {
+                PyralisAuthoringCapabilityDescriptor descriptor = descriptors[i];
+                if (descriptor == null)
+                    continue;
+
+                string subgroup = GetIntentDescriptorSubgroup(descriptor);
+                if (!subgroups.TryGetValue(subgroup, out List<PyralisAuthoringCapabilityDescriptor> subgroupDescriptors))
+                {
+                    subgroupDescriptors = new List<PyralisAuthoringCapabilityDescriptor>();
+                    subgroups.Add(subgroup, subgroupDescriptors);
+                }
+
+                subgroupDescriptors.Add(descriptor);
+            }
+
+            return subgroups;
+        }
+
+        private static string GetIntentDescriptorSubgroup(PyralisAuthoringCapabilityDescriptor descriptor)
+        {
+            if (descriptor == null || string.IsNullOrWhiteSpace(descriptor.CapabilityPath))
+                return string.Empty;
+
+            string[] parts = descriptor.CapabilityPath.Split('/');
+            return parts.Length > 2 && !string.IsNullOrWhiteSpace(parts[1])
+                ? parts[1].Trim()
+                : string.Empty;
+        }
+
         private static string GetIntentDescriptorLabel(PyralisAuthoringCapabilityDescriptor descriptor)
         {
             if (descriptor == null)
@@ -315,6 +444,38 @@ namespace NeonBlack.Gameplay.Editor
             return labels.Count > 0
                 ? string.Join(" / ", labels)
                 : descriptor.DisplayName;
+        }
+
+        private static string GetIntentDescriptorLeafLabel(PyralisAuthoringCapabilityDescriptor descriptor)
+        {
+            if (descriptor == null)
+                return "Unknown";
+
+            if (string.IsNullOrWhiteSpace(descriptor.CapabilityPath))
+                return descriptor.DisplayName;
+
+            string[] parts = descriptor.CapabilityPath.Split('/');
+            if (parts.Length > 2 && !string.IsNullOrWhiteSpace(parts[2]))
+                return string.Join(" / ", GetNonEmptyPathParts(parts, 2));
+            if (parts.Length > 1 && !string.IsNullOrWhiteSpace(parts[1]))
+                return parts[1].Trim();
+
+            return descriptor.DisplayName;
+        }
+
+        private static string[] GetNonEmptyPathParts(string[] parts, int startIndex)
+        {
+            List<string> labels = new List<string>();
+            if (parts == null)
+                return labels.ToArray();
+
+            for (int i = startIndex; i < parts.Length; i++)
+            {
+                if (!string.IsNullOrWhiteSpace(parts[i]))
+                    labels.Add(parts[i].Trim());
+            }
+
+            return labels.ToArray();
         }
 
         private string GetIntentDescriptorTooltip(PyralisAuthoringCapabilityDescriptor descriptor)
@@ -376,6 +537,46 @@ namespace NeonBlack.Gameplay.Editor
                 _capabilityGroupFoldouts[group] = value;
         }
 
+        private static string GetParticipantRouteDisplayName(PyralisIntentParticipantRoute route)
+        {
+            switch (route)
+            {
+                case PyralisIntentParticipantRoute.SoloLocal:
+                    return "Solo Local";
+                case PyralisIntentParticipantRoute.TwoLocalPlayers:
+                    return "2 Local Players";
+                case PyralisIntentParticipantRoute.ThreeLocalPlayers:
+                    return "3 Local Players";
+                case PyralisIntentParticipantRoute.FourLocalPlayers:
+                    return "4 Local Players";
+                case PyralisIntentParticipantRoute.Networked:
+                    return "Networked";
+                case PyralisIntentParticipantRoute.HybridLocalNetworked:
+                    return "Hybrid Local + Network";
+                default:
+                    return "Infer From Setup";
+            }
+        }
+
+        private static string GetParticipantRouteTooltip(PyralisIntentParticipantRoute route)
+        {
+            switch (route)
+            {
+                case PyralisIntentParticipantRoute.SoloLocal:
+                    return "Preview a one-participant local route. Actual setup still comes from SessionDefinition and ParticipantDefinition.";
+                case PyralisIntentParticipantRoute.TwoLocalPlayers:
+                case PyralisIntentParticipantRoute.ThreeLocalPlayers:
+                case PyralisIntentParticipantRoute.FourLocalPlayers:
+                    return "Preview a local join route. Guide will expect ParticipantDefinition seats plus Unity PlayerInputManager pairing.";
+                case PyralisIntentParticipantRoute.Networked:
+                    return "Preview a network-authority route without assuming local PlayerInputManager pairing.";
+                case PyralisIntentParticipantRoute.HybridLocalNetworked:
+                    return "Preview a route that needs both local device pairing and network authority validation.";
+                default:
+                    return "Let the graph infer participant topology from the authored session, participants, input router, and spawn service.";
+            }
+        }
+
         private void FilterCapabilities(VisualElement container, string filter)
         {
             var grid = container.Q<VisualElement>("capabilityGridInternal");
@@ -389,22 +590,42 @@ namespace NeonBlack.Gameplay.Editor
                 if (element is not Foldout foldout)
                     continue;
 
-                int visibleToggles = 0;
-                foreach (VisualElement child in foldout.contentContainer.Children())
-                {
-                    if (child is not Toggle toggle)
-                        continue;
-
-                    bool matches = !hasFilter || toggle.label.ToLowerInvariant().Contains(filter);
-                    toggle.style.display = matches ? DisplayStyle.Flex : DisplayStyle.None;
-                    if (matches)
-                        visibleToggles++;
-                }
+                int visibleToggles = FilterCapabilityElement(foldout.contentContainer, filter, hasFilter);
 
                 foldout.style.display = visibleToggles > 0 || !hasFilter ? DisplayStyle.Flex : DisplayStyle.None;
                 if (hasFilter && visibleToggles > 0)
                     foldout.value = true;
             }
+        }
+
+        private static int FilterCapabilityElement(VisualElement parent, string filter, bool hasFilter)
+        {
+            if (parent == null)
+                return 0;
+
+            int visibleToggles = 0;
+            foreach (VisualElement child in parent.Children())
+            {
+                if (child is Toggle toggle)
+                {
+                    bool matches = !hasFilter || toggle.label.ToLowerInvariant().Contains(filter);
+                    toggle.style.display = matches ? DisplayStyle.Flex : DisplayStyle.None;
+                    if (matches)
+                        visibleToggles++;
+                    continue;
+                }
+
+                if (child is Foldout foldout)
+                {
+                    int nestedVisible = FilterCapabilityElement(foldout.contentContainer, filter, hasFilter);
+                    foldout.style.display = nestedVisible > 0 || !hasFilter ? DisplayStyle.Flex : DisplayStyle.None;
+                    if (hasFilter && nestedVisible > 0)
+                        foldout.value = true;
+                    visibleToggles += nestedVisible;
+                }
+            }
+
+            return visibleToggles;
         }
 
         private void UpdateAdvisor(VisualElement root)

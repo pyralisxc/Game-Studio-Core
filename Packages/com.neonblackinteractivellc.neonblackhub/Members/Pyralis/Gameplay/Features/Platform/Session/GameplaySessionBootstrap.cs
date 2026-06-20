@@ -111,44 +111,6 @@ namespace NeonBlack.Gameplay.Characters
             return lifetimeScope;
         }
 
-        [ContextMenu("Validate Gameplay Setup")]
-        private void ValidateSetup()
-        {
-            if (sessionDefinition == null)
-            {
-                Debug.LogError("[GameplaySessionBootstrap] CRITICAL: Session Definition is missing. The session cannot initialize.", this);
-                return;
-            }
-
-            // Core modularity checks
-            if (sessionDefinition.defaultGameMode == null)
-                Debug.LogWarning("[GameplaySessionBootstrap] Session Definition has no Default Game Mode. Ensure your game logic is handled by a custom Feature Module.", this);
-            
-            if (sessionDefinition.defaultParticipants == null || sessionDefinition.defaultParticipants.Length == 0)
-                Debug.LogWarning("[GameplaySessionBootstrap] Session Definition has no default participants. No actors will spawn automatically.", this);
-            
-            if (playerInputManager == null)
-                Debug.LogWarning("[GameplaySessionBootstrap] PlayerInputManager is missing. Local player join will not be automated.", this);
-            
-            if (cameraRigController == null)
-                Debug.LogWarning("[GameplaySessionBootstrap] CinemachineCameraRigController is missing. Dynamic camera framing will be disabled.", this);
-
-            // Check for potential service name collisions or missing authored services
-            CheckPersistentService<SessionStateService>("SessionStateService");
-            CheckPersistentService<ParticipantRosterService>("ParticipantRosterService");
-            CheckPersistentService<ParticipantSpawnService>("ParticipantSpawnService");
-            CheckPersistentService<ParticipantInputRouter>("ParticipantInputRouter");
-        }
-
-        private void CheckPersistentService<T>(string serviceName) where T : Component
-        {
-            Transform existing = transform.Find(serviceName);
-            if (existing == null)
-            {
-                Debug.LogWarning($"[GameplaySessionBootstrap] Core service '{serviceName}' is not authored under the Gameplay Root. Add a child GameObject named '{serviceName}' with {typeof(T).Name}, or assign the Bootstrap override field before Play Mode.", this);
-            }
-        }
-
         private void ConfigurePlayerInputManager()
         {
             if (playerInputManager == null || sessionDefinition == null)

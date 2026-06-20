@@ -55,7 +55,7 @@ namespace NeonBlack.Gameplay.Editor
                 : contract.DisplayName;
             PyralisInspectorHandoff.DrawAuthoringButton(
                 context,
-                "This object has a Pyralis authoring contract. Use the Authoring Window for route guidance and first proof readiness.");
+                "Local contract surface. Use Pyralis Authoring for route guidance and first proof readiness.");
         }
 
         public static void DrawValidationFooter(ResolvedAuthoringContract contract, Object target, SerializedObject serializedObject)

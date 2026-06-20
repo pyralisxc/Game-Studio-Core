@@ -2,8 +2,11 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
+using NeonBlack.Gameplay.Data.Profiles;
+using NeonBlack.Gameplay.Features.Input;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace NeonBlack.Gameplay.Editor
 {
@@ -52,9 +55,91 @@ namespace NeonBlack.Gameplay.Editor
         PawnValidation
     }
 
+    public enum PyralisParticipantTopology
+    {
+        Unknown,
+        NoParticipants,
+        SoloLocal,
+        LocalJoin,
+        Networked,
+        HybridLocalNetworked
+    }
+
+    public enum PyralisParticipantJoinPolicy
+    {
+        Unknown,
+        NoParticipants,
+        AutoRegisterDefaults,
+        PlayerInputJoin,
+        NetworkAuthority,
+        HybridPlayerInputAndNetwork
+    }
+
+    public enum PyralisParticipantSpawnPolicy
+    {
+        Unknown,
+        NoPawnSpawn,
+        SpawnOnRegister,
+        ManualSpawn
+    }
+
+    public sealed class PyralisParticipantSeatReadiness
+    {
+        public PyralisParticipantSeatReadiness(
+            int slotIndex,
+            int seatIndex,
+            ParticipantDefinition participant,
+            PawnDefinition pawn,
+            InputProfile inputProfile,
+            bool requiresPawn,
+            string inputIssue,
+            string pawnIssue,
+            PyralisParticipantPawnIssueKind pawnIssueKind)
+        {
+            SlotIndex = slotIndex;
+            SeatIndex = seatIndex;
+            Participant = participant;
+            Pawn = pawn;
+            InputProfile = inputProfile;
+            RequiresPawn = requiresPawn;
+            InputIssue = inputIssue ?? string.Empty;
+            PawnIssue = pawnIssue ?? string.Empty;
+            PawnIssueKind = pawnIssueKind;
+        }
+
+        public int SlotIndex { get; }
+        public int SeatIndex { get; }
+        public ParticipantDefinition Participant { get; }
+        public PawnDefinition Pawn { get; }
+        public InputProfile InputProfile { get; }
+        public bool RequiresPawn { get; }
+        public string InputIssue { get; }
+        public string PawnIssue { get; }
+        public PyralisParticipantPawnIssueKind PawnIssueKind { get; }
+        public bool HasParticipant => Participant != null;
+        public bool HasInputProfile => InputProfile != null;
+        public bool HasPawnDefinition => Pawn != null;
+        public bool HasPawnPrefab => Pawn != null && Pawn.pawnPrefab != null;
+        public bool IsInputReady => !RequiresPawn || HasInputProfile && string.IsNullOrWhiteSpace(InputIssue);
+        public bool IsPawnReady => !RequiresPawn || string.IsNullOrWhiteSpace(PawnIssue);
+        public bool IsReady => HasParticipant && IsInputReady && IsPawnReady;
+        public string StableIdSuffix => SlotIndex >= 0 ? SlotIndex.ToString() : "standalone";
+        public string DisplayName
+        {
+            get
+            {
+                if (Participant != null && !string.IsNullOrWhiteSpace(Participant.displayName))
+                    return Participant.displayName;
+
+                return SlotIndex >= 0 ? $"Participant Slot {SlotIndex}" : "Participant";
+            }
+        }
+    }
+
     public sealed class PyralisSetupRouteAnalysis
     {
         private PyralisSetupRouteAnalysis(
+            GameplaySessionBootstrap bootstrap,
             SessionDefinition session,
             GameModeDefinition mode,
             ParticipantDefinition participant,
@@ -65,8 +150,21 @@ namespace NeonBlack.Gameplay.Editor
             bool hasAnyDefaultPawn,
             string participantPawnIssue,
             PyralisParticipantPawnIssueKind participantPawnIssueKind,
-            PyralisAuthoringRouteFact[] routeFacts)
+            PyralisAuthoringRouteFact[] routeFacts,
+            PyralisParticipantTopology participantTopology,
+            PyralisParticipantJoinPolicy expectedJoinPolicy,
+            PyralisParticipantSpawnPolicy spawnPolicy,
+            int assignedParticipantCount,
+            int authoredParticipantCount,
+            int desiredParticipantCount,
+            int autoJoinParticipantCount,
+            bool autoRegisterDefaultsWithoutPlayerInput,
+            bool hasPlayerInputManager,
+            bool spawnOnRegister,
+            PyralisParticipantSeatReadiness[] participantSeats,
+            string playerInputManagerIssue)
         {
+            Bootstrap = bootstrap;
             Session = session;
             Mode = mode;
             Participant = participant;
@@ -79,8 +177,21 @@ namespace NeonBlack.Gameplay.Editor
             ParticipantPawnIssue = participantPawnIssue;
             ParticipantPawnIssueKind = participantPawnIssueKind;
             RouteFacts = routeFacts ?? System.Array.Empty<PyralisAuthoringRouteFact>();
+            ParticipantTopology = participantTopology;
+            ExpectedJoinPolicy = expectedJoinPolicy;
+            SpawnPolicy = spawnPolicy;
+            AssignedParticipantCount = assignedParticipantCount;
+            AuthoredParticipantCount = authoredParticipantCount;
+            DesiredParticipantCount = desiredParticipantCount;
+            AutoJoinParticipantCount = autoJoinParticipantCount;
+            AutoRegisterDefaultsWithoutPlayerInput = autoRegisterDefaultsWithoutPlayerInput;
+            HasPlayerInputManager = hasPlayerInputManager;
+            SpawnOnRegister = spawnOnRegister;
+            ParticipantSeats = participantSeats ?? System.Array.Empty<PyralisParticipantSeatReadiness>();
+            PlayerInputManagerIssue = playerInputManagerIssue ?? string.Empty;
         }
 
+        public GameplaySessionBootstrap Bootstrap { get; }
         public SessionDefinition Session { get; }
         public GameModeDefinition Mode { get; }
         public ParticipantDefinition Participant { get; }
@@ -93,6 +204,18 @@ namespace NeonBlack.Gameplay.Editor
         public string ParticipantPawnIssue { get; }
         public PyralisParticipantPawnIssueKind ParticipantPawnIssueKind { get; }
         public PyralisAuthoringRouteFact[] RouteFacts { get; }
+        public PyralisParticipantTopology ParticipantTopology { get; }
+        public PyralisParticipantJoinPolicy ExpectedJoinPolicy { get; }
+        public PyralisParticipantSpawnPolicy SpawnPolicy { get; }
+        public int AssignedParticipantCount { get; }
+        public int AuthoredParticipantCount { get; }
+        public int DesiredParticipantCount { get; }
+        public int AutoJoinParticipantCount { get; }
+        public bool AutoRegisterDefaultsWithoutPlayerInput { get; }
+        public bool HasPlayerInputManager { get; }
+        public bool SpawnOnRegister { get; }
+        public PyralisParticipantSeatReadiness[] ParticipantSeats { get; }
+        public string PlayerInputManagerIssue { get; }
         public PyralisAuthoringRouteFact PrimaryRouteFact => RouteFacts.Length > 0 ? RouteFacts[0] : null;
 
         public string RouteName
@@ -102,12 +225,22 @@ namespace NeonBlack.Gameplay.Editor
                 if (!HasSelectedCapabilities)
                     return "No setup route selected";
 
+                if (RequiresPawn && ParticipantTopology == PyralisParticipantTopology.LocalJoin)
+                    return "Local Co-op Pawn route";
+                if (RequiresPawn && ParticipantTopology == PyralisParticipantTopology.HybridLocalNetworked)
+                    return "Hybrid Local/Network Pawn route";
+                if (RequiresPawn && ParticipantTopology == PyralisParticipantTopology.Networked)
+                    return "Networked Pawn route";
+                if (RequiresPawn && ParticipantTopology == PyralisParticipantTopology.SoloLocal)
+                    return "1P Pawn route";
+
                 if (RouteFacts.Length == 0)
                     return RequiresPawn ? "Pawn-backed route" : "No-pawn-capable route";
 
+                PyralisAuthoringRouteFact primary = FindRouteNameFact(RouteFacts);
                 return RouteFacts.Length == 1
-                    ? $"{RouteFacts[0].Label} route"
-                    : $"{RouteFacts[0].Label} + {RouteFacts.Length - 1} capability route";
+                    ? $"{primary.Label} route"
+                    : $"{primary.Label} + {RouteFacts.Length - 1} capability route";
             }
         }
 
@@ -156,30 +289,87 @@ namespace NeonBlack.Gameplay.Editor
             PyralisSetupRouteAnalysis route,
             RuntimeCapabilityFamily[] additionalFamilies)
         {
+            return WithIntentFocus(route, additionalFamilies, null);
+        }
+
+        public static PyralisSetupRouteAnalysis WithIntentFocus(
+            PyralisSetupRouteAnalysis route,
+            RuntimeCapabilityFamily[] additionalFamilies,
+            PyralisAuthoringIntentSelection intentSelection)
+        {
             if (route == null)
                 route = BuildResolved(null, null);
-            if (additionalFamilies == null || additionalFamilies.Length == 0)
-                return route;
 
             List<RuntimeCapabilityFamily> families = new List<RuntimeCapabilityFamily>();
             for (int i = 0; i < route.CapabilityFamilies.Length; i++)
                 AddFamily(families, route.CapabilityFamilies[i]);
-            for (int i = 0; i < additionalFamilies.Length; i++)
-                AddFamily(families, additionalFamilies[i]);
+            if (additionalFamilies != null)
+            {
+                for (int i = 0; i < additionalFamilies.Length; i++)
+                    AddFamily(families, additionalFamilies[i]);
+            }
+
+            if (intentSelection == null
+                && families.Count == route.CapabilityFamilies.Length)
+            {
+                return route;
+            }
 
             RuntimeCapabilityFamily[] mergedFamilies = families.ToArray();
+            bool mergedRequiresPawn = ContainsFamily(mergedFamilies, RuntimeCapabilityFamily.CharacterPawnGameplay);
+            int desiredParticipantCount = GetIntentParticipantCount(intentSelection);
+            PyralisParticipantTopology desiredTopology = GetIntentParticipantTopology(intentSelection, route.Session?.networkMode ?? GameplayNetworkMode.LocalOnly);
+            int authoredParticipantCount = route.AuthoredParticipantCount > 0
+                ? route.AuthoredParticipantCount
+                : route.AssignedParticipantCount;
+            int assignedParticipantCount = System.Math.Max(authoredParticipantCount, desiredParticipantCount);
+            bool hasParticipants = route.HasParticipants || desiredParticipantCount > 0;
+            PyralisParticipantTopology topology = desiredTopology != PyralisParticipantTopology.Unknown
+                ? desiredTopology
+                : InferParticipantTopology(
+                    route.Session,
+                    mergedRequiresPawn,
+                    assignedParticipantCount,
+                    hasParticipants);
+            PyralisParticipantJoinPolicy joinPolicy = InferExpectedJoinPolicy(
+                topology,
+                route.AutoRegisterDefaultsWithoutPlayerInput);
+            PyralisParticipantSpawnPolicy spawnPolicy = InferSpawnPolicy(
+                mergedRequiresPawn,
+                route.SpawnOnRegister);
+            PyralisParticipantSeatReadiness[] participantSeats = BuildParticipantSeatReadiness(
+                route.Session,
+                null,
+                route.Participant,
+                route.Pawn,
+                mergedRequiresPawn,
+                assignedParticipantCount);
+            string playerInputManagerIssue = GetPlayerInputManagerIssue(route.Bootstrap, topology);
             return new PyralisSetupRouteAnalysis(
+                route.Bootstrap,
                 route.Session,
                 route.Mode,
                 route.Participant,
                 route.Pawn,
                 mergedFamilies,
-                ContainsFamily(mergedFamilies, RuntimeCapabilityFamily.CharacterPawnGameplay),
-                route.HasParticipants,
+                mergedRequiresPawn,
+                hasParticipants,
                 route.HasAnyDefaultPawn,
                 route.ParticipantPawnIssue,
                 route.ParticipantPawnIssueKind,
-                BuildRouteFacts(mergedFamilies));
+                BuildRouteFacts(mergedFamilies),
+                topology,
+                joinPolicy,
+                spawnPolicy,
+                assignedParticipantCount,
+                authoredParticipantCount,
+                desiredParticipantCount,
+                route.AutoJoinParticipantCount,
+                route.AutoRegisterDefaultsWithoutPlayerInput,
+                route.HasPlayerInputManager,
+                route.SpawnOnRegister,
+                participantSeats,
+                playerInputManagerIssue);
         }
 
         private static PyralisSetupRouteAnalysis BuildResolved(
@@ -187,6 +377,7 @@ namespace NeonBlack.Gameplay.Editor
             GameModeDefinition modeOverride = null)
         {
             SessionDefinition session = dependencyTree?.Session;
+            GameplaySessionBootstrap bootstrap = dependencyTree?.Bootstrap;
             GameModeDefinition mode = modeOverride != null ? modeOverride : dependencyTree?.Mode;
             ParticipantDefinition participant = dependencyTree?.FirstParticipant;
             PawnDefinition pawn = dependencyTree?.FirstPawn;
@@ -197,6 +388,9 @@ namespace NeonBlack.Gameplay.Editor
                 pawn);
             bool requiresPawn = ContainsFamily(capabilityFamilies, RuntimeCapabilityFamily.CharacterPawnGameplay);
             bool hasParticipants = CheckHasParticipants(session, dependencyTree?.Participants, participant);
+            int assignedParticipantCount = session != null ? CountAssignedParticipants(session) : hasParticipants ? 1 : 0;
+            int authoredParticipantCount = assignedParticipantCount;
+            int autoJoinParticipantCount = CountAutoJoinParticipants(session);
             bool hasAnyDefaultPawn = CheckHasAnyDefaultPawn(session, dependencyTree?.Participants, pawn);
             string participantPawnIssue = GetParticipantPawnIssue(
                 session,
@@ -205,8 +399,27 @@ namespace NeonBlack.Gameplay.Editor
                 pawn,
                 out PyralisParticipantPawnIssueKind participantPawnIssueKind);
             PyralisAuthoringRouteFact[] routeFacts = BuildRouteFacts(capabilityFamilies);
+            bool hasPlayerInputManager = ResolveHasPlayerInputManager(bootstrap);
+            bool autoRegisterDefaultsWithoutPlayerInput = GetAutoRegisterDefaultsWithoutPlayerInput(bootstrap);
+            bool spawnOnRegister = GetSpawnOnRegister(bootstrap);
+            PyralisParticipantTopology topology = InferParticipantTopology(
+                session,
+                requiresPawn,
+                assignedParticipantCount,
+                hasParticipants);
+            PyralisParticipantJoinPolicy joinPolicy = InferExpectedJoinPolicy(topology, autoRegisterDefaultsWithoutPlayerInput);
+            PyralisParticipantSpawnPolicy spawnPolicy = InferSpawnPolicy(requiresPawn, spawnOnRegister);
+            PyralisParticipantSeatReadiness[] participantSeats = BuildParticipantSeatReadiness(
+                session,
+                dependencyTree?.Participants,
+                participant,
+                pawn,
+                requiresPawn,
+                assignedParticipantCount);
+            string playerInputManagerIssue = GetPlayerInputManagerIssue(bootstrap, topology);
 
             return new PyralisSetupRouteAnalysis(
+                bootstrap,
                 session,
                 mode,
                 participant,
@@ -217,7 +430,19 @@ namespace NeonBlack.Gameplay.Editor
                 hasAnyDefaultPawn,
                 participantPawnIssue,
                 participantPawnIssueKind,
-                routeFacts);
+                routeFacts,
+                topology,
+                joinPolicy,
+                spawnPolicy,
+                assignedParticipantCount,
+                authoredParticipantCount,
+                0,
+                autoJoinParticipantCount,
+                autoRegisterDefaultsWithoutPlayerInput,
+                hasPlayerInputManager,
+                spawnOnRegister,
+                participantSeats,
+                playerInputManagerIssue);
         }
 
         public bool UsesCamera()
@@ -227,15 +452,19 @@ namespace NeonBlack.Gameplay.Editor
 
         public bool LikelyUsesInputManager()
         {
-            return Session != null
-                && Session.networkMode == GameplayNetworkMode.LocalOnly
-                && CountAssignedParticipants(Session) > 1
-                && UsesPawnGameplay();
+            return ParticipantTopology == PyralisParticipantTopology.LocalJoin;
         }
 
         public int LocalParticipantCount()
         {
-            return Session != null ? CountAssignedParticipants(Session) : HasParticipants ? 1 : 0;
+            return AssignedParticipantCount;
+        }
+
+        public bool HasLocalJoinPolicyConflict()
+        {
+            return ParticipantTopology == PyralisParticipantTopology.LocalJoin
+                && AutoRegisterDefaultsWithoutPlayerInput
+                && AutoJoinParticipantCount > 0;
         }
 
         public bool UsesPlayfield()
@@ -425,6 +654,180 @@ namespace NeonBlack.Gameplay.Editor
             return count;
         }
 
+        private static int CountAutoJoinParticipants(SessionDefinition session)
+        {
+            if (session == null || session.defaultParticipants == null)
+                return 0;
+
+            int count = 0;
+            for (int i = 0; i < session.defaultParticipants.Length; i++)
+            {
+                ParticipantDefinition participant = session.defaultParticipants[i];
+                if (participant != null && participant.autoJoin)
+                    count++;
+            }
+
+            return count;
+        }
+
+        private static PyralisParticipantTopology InferParticipantTopology(
+            SessionDefinition session,
+            bool requiresPawn,
+            int assignedParticipantCount,
+            bool hasParticipants)
+        {
+            if (!hasParticipants)
+                return PyralisParticipantTopology.NoParticipants;
+
+            if (session == null)
+                return assignedParticipantCount > 1
+                    ? PyralisParticipantTopology.LocalJoin
+                    : PyralisParticipantTopology.SoloLocal;
+
+            if (session.networkMode != GameplayNetworkMode.LocalOnly)
+            {
+                return assignedParticipantCount > 1
+                    ? PyralisParticipantTopology.HybridLocalNetworked
+                    : PyralisParticipantTopology.Networked;
+            }
+
+            if (assignedParticipantCount > 1)
+                return PyralisParticipantTopology.LocalJoin;
+
+            return PyralisParticipantTopology.SoloLocal;
+        }
+
+        private static int GetIntentParticipantCount(PyralisAuthoringIntentSelection selection)
+        {
+            if (selection == null)
+                return 0;
+
+            switch (selection.ParticipantRoute)
+            {
+                case PyralisIntentParticipantRoute.SoloLocal:
+                case PyralisIntentParticipantRoute.Networked:
+                    return 1;
+                case PyralisIntentParticipantRoute.TwoLocalPlayers:
+                case PyralisIntentParticipantRoute.HybridLocalNetworked:
+                    return 2;
+                case PyralisIntentParticipantRoute.ThreeLocalPlayers:
+                    return 3;
+                case PyralisIntentParticipantRoute.FourLocalPlayers:
+                    return 4;
+                default:
+                    return 0;
+            }
+        }
+
+        private static PyralisParticipantTopology GetIntentParticipantTopology(
+            PyralisAuthoringIntentSelection selection,
+            GameplayNetworkMode sessionNetworkMode)
+        {
+            if (selection == null)
+                return PyralisParticipantTopology.Unknown;
+
+            switch (selection.ParticipantRoute)
+            {
+                case PyralisIntentParticipantRoute.SoloLocal:
+                    return sessionNetworkMode == GameplayNetworkMode.LocalOnly
+                        ? PyralisParticipantTopology.SoloLocal
+                        : PyralisParticipantTopology.Networked;
+                case PyralisIntentParticipantRoute.TwoLocalPlayers:
+                case PyralisIntentParticipantRoute.ThreeLocalPlayers:
+                case PyralisIntentParticipantRoute.FourLocalPlayers:
+                    return sessionNetworkMode == GameplayNetworkMode.LocalOnly
+                        ? PyralisParticipantTopology.LocalJoin
+                        : PyralisParticipantTopology.HybridLocalNetworked;
+                case PyralisIntentParticipantRoute.Networked:
+                    return PyralisParticipantTopology.Networked;
+                case PyralisIntentParticipantRoute.HybridLocalNetworked:
+                    return PyralisParticipantTopology.HybridLocalNetworked;
+                default:
+                    return PyralisParticipantTopology.Unknown;
+            }
+        }
+
+        private static PyralisParticipantJoinPolicy InferExpectedJoinPolicy(
+            PyralisParticipantTopology topology,
+            bool autoRegisterDefaultsWithoutPlayerInput)
+        {
+            switch (topology)
+            {
+                case PyralisParticipantTopology.NoParticipants:
+                    return PyralisParticipantJoinPolicy.NoParticipants;
+                case PyralisParticipantTopology.LocalJoin:
+                    return PyralisParticipantJoinPolicy.PlayerInputJoin;
+                case PyralisParticipantTopology.Networked:
+                    return PyralisParticipantJoinPolicy.NetworkAuthority;
+                case PyralisParticipantTopology.HybridLocalNetworked:
+                    return PyralisParticipantJoinPolicy.HybridPlayerInputAndNetwork;
+                case PyralisParticipantTopology.SoloLocal:
+                    return autoRegisterDefaultsWithoutPlayerInput
+                        ? PyralisParticipantJoinPolicy.AutoRegisterDefaults
+                        : PyralisParticipantJoinPolicy.PlayerInputJoin;
+                default:
+                    return PyralisParticipantJoinPolicy.Unknown;
+            }
+        }
+
+        private static PyralisParticipantSpawnPolicy InferSpawnPolicy(bool requiresPawn, bool spawnOnRegister)
+        {
+            if (!requiresPawn)
+                return PyralisParticipantSpawnPolicy.NoPawnSpawn;
+
+            return spawnOnRegister
+                ? PyralisParticipantSpawnPolicy.SpawnOnRegister
+                : PyralisParticipantSpawnPolicy.ManualSpawn;
+        }
+
+        private static bool ResolveHasPlayerInputManager(GameplaySessionBootstrap bootstrap)
+        {
+            return GetObjectReference<PlayerInputManager>(bootstrap, "playerInputManager") != null;
+        }
+
+        private static bool GetAutoRegisterDefaultsWithoutPlayerInput(GameplaySessionBootstrap bootstrap)
+        {
+            ParticipantInputRouter router = bootstrap != null
+                ? bootstrap.GetComponentInChildren<ParticipantInputRouter>(true)
+                : null;
+            if (router == null)
+                return false;
+
+            return GetBool(router, "autoRegisterDefaultParticipantsWithoutPlayerInput");
+        }
+
+        private static bool GetSpawnOnRegister(GameplaySessionBootstrap bootstrap)
+        {
+            ParticipantSpawnService spawnService = bootstrap != null
+                ? bootstrap.GetComponentInChildren<ParticipantSpawnService>(true)
+                : null;
+            if (spawnService == null)
+                return true;
+
+            return GetBool(spawnService, "spawnOnRegister", true);
+        }
+
+        private static bool GetBool(UnityEngine.Object source, string propertyPath, bool fallback = false)
+        {
+            if (source == null)
+                return fallback;
+
+            SerializedObject serialized = new SerializedObject(source);
+            SerializedProperty property = serialized.FindProperty(propertyPath);
+            return property != null ? property.boolValue : fallback;
+        }
+
+        private static T GetObjectReference<T>(UnityEngine.Object source, string propertyPath)
+            where T : UnityEngine.Object
+        {
+            if (source == null || string.IsNullOrWhiteSpace(propertyPath))
+                return null;
+
+            SerializedObject serialized = new SerializedObject(source);
+            SerializedProperty property = serialized.FindProperty(propertyPath);
+            return property != null ? property.objectReferenceValue as T : null;
+        }
+
         private static bool ContainsFamily(RuntimeCapabilityFamily[] families, RuntimeCapabilityFamily family)
         {
             if (families == null)
@@ -462,6 +865,23 @@ namespace NeonBlack.Gameplay.Editor
                 bool primaryProofCandidate = descriptor != null && !string.IsNullOrWhiteSpace(descriptor.ProofTargetId);
                 facts.Add(new PyralisAuthoringRouteFact(capability, label, family, primaryProofCandidate));
             }
+        }
+
+        private static PyralisAuthoringRouteFact FindRouteNameFact(PyralisAuthoringRouteFact[] facts)
+        {
+            if (facts == null || facts.Length == 0)
+                return null;
+
+            for (int i = 0; i < facts.Length; i++)
+            {
+                if (facts[i] != null
+                    && facts[i].Family != RuntimeCapabilityFamily.PlatformCore)
+                {
+                    return facts[i];
+                }
+            }
+
+            return facts[0];
         }
 
         private static bool TryGetRouteCapability(
@@ -598,6 +1018,124 @@ namespace NeonBlack.Gameplay.Editor
             return GetParticipantPawnIssue(session.defaultParticipants, out issueKind);
         }
 
+        private static PyralisParticipantSeatReadiness[] BuildParticipantSeatReadiness(
+            SessionDefinition session,
+            IReadOnlyList<ParticipantDefinition> reflectedParticipants,
+            ParticipantDefinition standaloneParticipant,
+            PawnDefinition standalonePawn,
+            bool requiresPawn,
+            int desiredSeatCount = 0)
+        {
+            List<PyralisParticipantSeatReadiness> seats = new List<PyralisParticipantSeatReadiness>();
+
+            if (session != null && session.defaultParticipants != null && (session.defaultParticipants.Length > 0 || desiredSeatCount > 0))
+            {
+                int seatCount = System.Math.Max(session.defaultParticipants.Length, desiredSeatCount);
+                for (int i = 0; i < seatCount; i++)
+                {
+                    ParticipantDefinition participant = i < session.defaultParticipants.Length
+                        ? session.defaultParticipants[i]
+                        : null;
+                    seats.Add(BuildParticipantSeatReadiness(i, participant, requiresPawn));
+                }
+
+                return seats.ToArray();
+            }
+
+            if (standaloneParticipant != null)
+            {
+                seats.Add(BuildParticipantSeatReadiness(0, standaloneParticipant, requiresPawn));
+                return seats.ToArray();
+            }
+
+            if (HasAnyParticipant(reflectedParticipants))
+            {
+                for (int i = 0; i < reflectedParticipants.Count; i++)
+                {
+                    if (reflectedParticipants[i] != null)
+                        seats.Add(BuildParticipantSeatReadiness(i, reflectedParticipants[i], requiresPawn));
+                }
+
+                return seats.ToArray();
+            }
+
+            if (standalonePawn != null)
+            {
+                string pawnIssue = GetPawnIssue(standalonePawn, out PyralisParticipantPawnIssueKind pawnIssueKind);
+                seats.Add(new PyralisParticipantSeatReadiness(
+                    0,
+                    0,
+                    null,
+                    standalonePawn,
+                    null,
+                    requiresPawn,
+                    requiresPawn ? "Assign a ParticipantDefinition.inputProfile once this PawnDefinition is attached to a participant." : string.Empty,
+                    string.IsNullOrWhiteSpace(pawnIssue)
+                        ? "Assign this PawnDefinition to ParticipantDefinition.defaultPawn so a participant can spawn it."
+                        : pawnIssue,
+                    string.IsNullOrWhiteSpace(pawnIssue)
+                        ? PyralisParticipantPawnIssueKind.MissingParticipants
+                        : pawnIssueKind));
+            }
+
+            if (seats.Count == 0 && desiredSeatCount > 0)
+            {
+                for (int i = 0; i < desiredSeatCount; i++)
+                    seats.Add(BuildParticipantSeatReadiness(i, null, requiresPawn));
+            }
+
+            return seats.ToArray();
+        }
+
+        private static PyralisParticipantSeatReadiness BuildParticipantSeatReadiness(
+            int slotIndex,
+            ParticipantDefinition participant,
+            bool requiresPawn)
+        {
+            if (participant == null)
+            {
+                return new PyralisParticipantSeatReadiness(
+                    slotIndex,
+                    slotIndex,
+                    null,
+                    null,
+                    null,
+                    requiresPawn,
+                    requiresPawn ? $"Participant slot {slotIndex} is empty, so no InputProfile can be resolved." : string.Empty,
+                    $"Default participant slot {slotIndex} is empty.",
+                    PyralisParticipantPawnIssueKind.EmptyParticipantSlot);
+            }
+
+            PawnDefinition pawn = participant.defaultPawn;
+            InputProfile inputProfile = ParticipantInputProfileUtility.ResolveEffectiveInputProfile(participant);
+            string inputIssue = requiresPawn && inputProfile == null
+                ? $"Participant `{GetParticipantDisplayName(participant, slotIndex)}` needs ParticipantDefinition.inputProfile so its joined PlayerInput can drive only this participant's pawn."
+                : string.Empty;
+            PyralisParticipantPawnIssueKind pawnIssueKind = PyralisParticipantPawnIssueKind.None;
+            string pawnIssue = requiresPawn
+                ? GetPawnIssue(pawn, out pawnIssueKind)
+                : string.Empty;
+
+            return new PyralisParticipantSeatReadiness(
+                slotIndex,
+                participant.preferredSeatIndex >= 0 ? participant.preferredSeatIndex : slotIndex,
+                participant,
+                pawn,
+                inputProfile,
+                requiresPawn,
+                inputIssue,
+                pawnIssue,
+                requiresPawn ? pawnIssueKind : PyralisParticipantPawnIssueKind.None);
+        }
+
+        private static string GetParticipantDisplayName(ParticipantDefinition participant, int slotIndex)
+        {
+            if (participant != null && !string.IsNullOrWhiteSpace(participant.displayName))
+                return participant.displayName;
+
+            return $"Participant Slot {slotIndex}";
+        }
+
         private static string GetParticipantPawnIssue(
             IReadOnlyList<ParticipantDefinition> participants,
             out PyralisParticipantPawnIssueKind issueKind)
@@ -679,6 +1217,33 @@ namespace NeonBlack.Gameplay.Editor
 
             issueKind = PyralisParticipantPawnIssueKind.None;
             return null;
+        }
+
+        private static string GetPlayerInputManagerIssue(
+            GameplaySessionBootstrap bootstrap,
+            PyralisParticipantTopology topology)
+        {
+            if (topology != PyralisParticipantTopology.LocalJoin
+                && topology != PyralisParticipantTopology.HybridLocalNetworked)
+            {
+                return string.Empty;
+            }
+
+            PlayerInputManager playerInputManager = GetObjectReference<PlayerInputManager>(bootstrap, "playerInputManager");
+            if (playerInputManager == null)
+                return "Local join routes need GameplaySessionBootstrap.playerInputManager assigned so Unity can pair each controller with one participant.";
+
+            if (playerInputManager.playerPrefab == null)
+                return "PlayerInputManager.playerPrefab is empty. Assign the joined pawn prefab shape that contains PlayerInput and PawnRoot/IPawnParticipantInitializer.";
+
+            GameObject playerPrefab = playerInputManager.playerPrefab;
+            if (playerPrefab.GetComponent<PlayerInput>() == null)
+                return $"PlayerInputManager.playerPrefab `{playerPrefab.name}` needs a PlayerInput component so Unity can pair a device with this joined participant.";
+
+            if (!PrefabHasComponent<IPawnParticipantInitializer>(playerPrefab))
+                return $"PlayerInputManager.playerPrefab `{playerPrefab.name}` must contain PawnRoot/IPawnParticipantInitializer. Otherwise Unity joins an input object while ParticipantSpawnService instantiates a separate pawn, which can make one action asset drive multiple pawns.";
+
+            return string.Empty;
         }
 
         private static bool HasAnyParticipant(IReadOnlyList<ParticipantDefinition> participants)

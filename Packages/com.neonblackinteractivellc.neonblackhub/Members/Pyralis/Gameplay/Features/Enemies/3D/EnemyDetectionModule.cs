@@ -31,7 +31,7 @@ namespace NeonBlack.Gameplay.Features.Enemies
         private void Awake()
         {
             _detectionService = new EnemyDetectionService();
-            _player = _detectionService.ResolvePlayerTarget(targetOverride);
+            _player = _detectionService.ResolvePlayerTarget(transform, targetOverride);
         }
 
         public bool CanSeePlayer(MovementMode movementMode)
@@ -50,7 +50,7 @@ namespace NeonBlack.Gameplay.Features.Enemies
         public void SetTargetOverride(Transform target)
         {
             targetOverride = target;
-            _player = _detectionService.ResolvePlayerTarget(targetOverride);
+            _player = _detectionService.ResolvePlayerTarget(transform, targetOverride);
         }
     }
 }

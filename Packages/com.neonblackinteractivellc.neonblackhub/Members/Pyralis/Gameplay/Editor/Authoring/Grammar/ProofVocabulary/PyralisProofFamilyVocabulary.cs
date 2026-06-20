@@ -45,6 +45,40 @@ namespace NeonBlack.Gameplay.Editor
                 }));
 
             facts.Add(CreateFallbackProofFact(
+                "proof.local-pawn-join",
+                "Local Co-op Pawn Join Proof",
+                "Run one local multiplayer pawn proof after solo pawn setup is clear and before adding combat, HUD, enemies, scoring, or networking.",
+                "Generic local multiplayer pawn-backed route proof.",
+                "Each joined local player owns one participant, one PlayerInput action instance, one pawn, and one spawn seat; no controller should move every pawn.",
+                new[] { "Movement", "Input", "Participants" },
+                new[] { RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Billboard2_5D, RuntimeCapabilityLaneTag.ThirdPerson3D },
+                System.Array.Empty<RuntimeCapabilityLaneTag>(),
+                new[] { "combat", "projectiles", "HUD", "scoring", "pickups", "hazards", "networking", "split-screen polish" },
+                "the active local join pawn route",
+                "press Play after the local join setup is clear; join each player through Unity PlayerInputManager, move each pawn with its paired controller, and confirm seats spawn at their authored spawn points",
+                "each local PlayerInput join registers one participant, spawns or reuses one pawn at the expected seat spawn point, applies that participant's InputProfile action names, and only that controller moves that pawn",
+                "The local co-op pawn proof verifies input isolation, join policy, participant seating, spawn placement, and camera focus before broader multiplayer features are layered in.",
+                string.Empty,
+                new[]
+                {
+                    "route.pawn-actor",
+                    "route.participant-topology",
+                    "capability.2d-pawn-movement",
+                    "setup.assign-session-definition",
+                    "setup.assign-default-game-mode",
+                    "setup.resolve-route-capabilities",
+                    "setup.assign-default-participants",
+                    "setup.resolve-participant-join-policy",
+                    "setup.assign-player-input-manager",
+                    "setup.assign-participant-pawn",
+                    "setup.assign-input-profile",
+                    "setup.assign-spawn-points",
+                    "setup.assign-camera-rig",
+                    "setup.tune-pawn-visuals-and-collision",
+                    "setup.tune-movement-and-input-feel"
+                }));
+
+            facts.Add(CreateFallbackProofFact(
                 "proof.board-card-action",
                 "Board Card Action Proof",
                 "Run one rules-backed tabletop selection before adding card UX, AI turns, campaign flow, or networking.",
@@ -183,10 +217,21 @@ namespace NeonBlack.Gameplay.Editor
             return facts;
         }
 
-        public static string GetFallbackProofTargetId(RuntimeCapabilityFamily[] families, bool requiresPawn)
+        public static string GetFallbackProofTargetId(
+            RuntimeCapabilityFamily[] families,
+            bool requiresPawn,
+            PyralisParticipantTopology participantTopology = PyralisParticipantTopology.Unknown)
         {
             if (requiresPawn)
+            {
+                if (participantTopology == PyralisParticipantTopology.LocalJoin
+                    || participantTopology == PyralisParticipantTopology.HybridLocalNetworked)
+                {
+                    return "proof.local-pawn-join";
+                }
+
                 return "proof.1p-pawn-movement";
+            }
 
             if (ContainsFamily(families, RuntimeCapabilityFamily.BoardCardTabletop))
                 return "proof.board-card-action";

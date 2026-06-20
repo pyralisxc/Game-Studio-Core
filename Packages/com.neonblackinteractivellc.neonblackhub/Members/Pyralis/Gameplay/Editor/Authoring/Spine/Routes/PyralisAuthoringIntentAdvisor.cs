@@ -20,24 +20,38 @@ namespace NeonBlack.Gameplay.Editor
         Caution
     }
 
+    public enum PyralisIntentParticipantRoute
+    {
+        InferFromSetup,
+        SoloLocal,
+        TwoLocalPlayers,
+        ThreeLocalPlayers,
+        FourLocalPlayers,
+        Networked,
+        HybridLocalNetworked
+    }
+
     public sealed class PyralisAuthoringIntentSelection
     {
         public PyralisAuthoringIntentSelection(
             RuntimeCapabilityLaneTag lane,
             AuthoringCapability capabilities,
             AuthoringWorldAxiom axioms,
-            string[] descriptorIds = null)
+            string[] descriptorIds = null,
+            PyralisIntentParticipantRoute participantRoute = PyralisIntentParticipantRoute.InferFromSetup)
         {
             Lane = lane;
             Capabilities = capabilities;
             Axioms = axioms;
             DescriptorIds = descriptorIds ?? Array.Empty<string>();
+            ParticipantRoute = participantRoute;
         }
 
         public RuntimeCapabilityLaneTag Lane { get; }
         public AuthoringCapability Capabilities { get; }
         public AuthoringWorldAxiom Axioms { get; }
         public string[] DescriptorIds { get; }
+        public PyralisIntentParticipantRoute ParticipantRoute { get; }
     }
 
     public sealed class PyralisAuthoringIntentRow
