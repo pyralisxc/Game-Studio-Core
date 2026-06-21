@@ -148,12 +148,7 @@ namespace NeonBlack.Gameplay.Editor
             AuthoringWorldAxiom axioms)
         {
             if (capabilities == AuthoringCapability.None)
-            {
-                if (lane == RuntimeCapabilityLaneTag.Mixed && axioms == AuthoringWorldAxiom.None)
-                    return Array.Empty<RuntimeCapabilityFamily>();
-
-                return InferFamiliesFromCapability(capabilities, lane.ToString(), axioms);
-            }
+                return Array.Empty<RuntimeCapabilityFamily>();
 
             List<RuntimeCapabilityFamily> families = new List<RuntimeCapabilityFamily>();
             IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors = All;
@@ -162,16 +157,13 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringCapabilityDescriptor descriptor = descriptors[i];
                 if (descriptor != null
                     && descriptor.IsContractSemanticSource
+                    && descriptor.Family != RuntimeCapabilityFamily.Custom
                     && IsCapabilitySatisfiedBySelection(descriptor.Capability, capabilities)
                     && descriptor.Matches(capabilities, lane, axioms))
                 {
                     AddDistinct(families, descriptor.Family);
                 }
             }
-
-            RuntimeCapabilityFamily[] inferredFamilies = InferFamiliesFromCapability(capabilities, lane.ToString(), axioms);
-            for (int i = 0; i < inferredFamilies.Length; i++)
-                AddDistinct(families, inferredFamilies[i]);
 
             return families.ToArray();
         }
@@ -196,7 +188,8 @@ namespace NeonBlack.Gameplay.Editor
                 if (!IsGameplayIngredientDescriptor(descriptor))
                     continue;
 
-                if (descriptor.Matches(descriptor.Capability, lane, axioms))
+                if (descriptor.Family != RuntimeCapabilityFamily.Custom
+                    && descriptor.Matches(descriptor.Capability, lane, axioms))
                     AddDistinct(families, descriptor.Family);
             }
 
@@ -287,18 +280,18 @@ namespace NeonBlack.Gameplay.Editor
             if (HasExactRoleTag(descriptor, AuthoringContractRoleTags.CoreRouteAnchor))
                 return true;
 
+            RuntimeCapabilityFamily[] selectedFamilies =
+                PyralisAuthoringCapabilityDescriptorRegistry.BuildRuntimeFamilies(
+                    selectedCapabilities,
+                    selection.Lane,
+                    selection.Axioms);
             bool participantRoute = selection.ParticipantRoute != PyralisIntentParticipantRoute.InferFromSetup
-                || CapabilityOverlaps(selectedCapabilities,
-                    AuthoringCapability.Participants
-                    | AuthoringCapability.Input
-                    | AuthoringCapability.Movement
-                    | AuthoringCapability.KineticMotor2D
-                    | AuthoringCapability.KineticMotor3D
-                    | AuthoringCapability.Traversal);
+                || ContainsFamily(selectedFamilies, RuntimeCapabilityFamily.CharacterPawnGameplay)
+                || ContainsFamily(selectedFamilies, RuntimeCapabilityFamily.PlatformCore);
             if (participantRoute && HasExactRoleTag(descriptor, AuthoringContractRoleTags.ParticipantRouteSupport))
                 return true;
 
-            bool inputRoute = CapabilityOverlaps(selectedCapabilities, AuthoringCapability.Input)
+            bool inputRoute = ContainsFamily(selectedFamilies, RuntimeCapabilityFamily.ActionTargeting)
                 || selection.ParticipantRoute == PyralisIntentParticipantRoute.SoloLocal
                 || selection.ParticipantRoute == PyralisIntentParticipantRoute.TwoLocalPlayers
                 || selection.ParticipantRoute == PyralisIntentParticipantRoute.ThreeLocalPlayers
@@ -306,24 +299,21 @@ namespace NeonBlack.Gameplay.Editor
             if (inputRoute && HasExactRoleTag(descriptor, AuthoringContractRoleTags.InputRouteSupport))
                 return true;
 
-            if (CapabilityOverlaps(selectedCapabilities, AuthoringCapability.Animation)
+            if (ContainsFamily(selectedFamilies, RuntimeCapabilityFamily.AnimationPresentation)
                 && HasExactRoleTag(descriptor, AuthoringContractRoleTags.AnimationDefinitionRouteSupport))
                 return true;
 
-            if (CapabilityOverlaps(selectedCapabilities, AuthoringCapability.Combat | AuthoringCapability.MeleeFlow | AuthoringCapability.RangedFlow)
+            if ((ContainsFamily(selectedFamilies, RuntimeCapabilityFamily.Combat)
+                    || ContainsFamily(selectedFamilies, RuntimeCapabilityFamily.GunsProjectiles))
                 && HasExactRoleTag(descriptor, AuthoringContractRoleTags.CombatDefinitionRouteSupport))
                 return true;
 
-            bool featureModuleRoute = CapabilityOverlaps(selectedCapabilities,
-                AuthoringCapability.Traversal
-                | AuthoringCapability.Combat
-                | AuthoringCapability.MeleeFlow
-                | AuthoringCapability.RangedFlow
-                | AuthoringCapability.Puzzle
-                | AuthoringCapability.Inventory
-                | AuthoringCapability.Tabletop
-                | AuthoringCapability.Grid
-                | AuthoringCapability.TurnBased);
+            bool featureModuleRoute =
+                ContainsFamily(selectedFamilies, RuntimeCapabilityFamily.CharacterPawnGameplay)
+                || ContainsFamily(selectedFamilies, RuntimeCapabilityFamily.Combat)
+                || ContainsFamily(selectedFamilies, RuntimeCapabilityFamily.GunsProjectiles)
+                || ContainsFamily(selectedFamilies, RuntimeCapabilityFamily.ActionTargeting)
+                || ContainsFamily(selectedFamilies, RuntimeCapabilityFamily.BoardCardTabletop);
             return featureModuleRoute && HasExactRoleTag(descriptor, AuthoringContractRoleTags.FeatureModuleRouteSupport);
         }
 
@@ -371,11 +361,18 @@ namespace NeonBlack.Gameplay.Editor
                 && !HasExactRoleTag(contract.RoleTags, AuthoringContractRoleTags.IntentRouteEssential);
         }
 
-        private static bool CapabilityOverlaps(AuthoringCapability left, AuthoringCapability right)
+        private static bool ContainsFamily(RuntimeCapabilityFamily[] families, RuntimeCapabilityFamily expected)
         {
-            return left != AuthoringCapability.None
-                && right != AuthoringCapability.None
-                && (left & right) != 0;
+            if (families == null)
+                return false;
+
+            for (int i = 0; i < families.Length; i++)
+            {
+                if (families[i] == expected)
+                    return true;
+            }
+
+            return false;
         }
 
         private static bool HasExactRoleTag(PyralisAuthoringCapabilityDescriptor descriptor, string expected)
@@ -647,7 +644,9 @@ namespace NeonBlack.Gameplay.Editor
                 if (contract == null || contract.Capability == AuthoringCapability.None)
                     continue;
 
-                RuntimeCapabilityFamily[] families = InferFamiliesFromCapability(contract.Capability, contract.AuthoringLane, contract.Axioms);
+                RuntimeCapabilityFamily[] families = contract.RuntimeFamilies.Length > 0
+                    ? contract.RuntimeFamilies
+                    : new[] { RuntimeCapabilityFamily.Custom };
                 for (int familyIndex = 0; familyIndex < families.Length; familyIndex++)
                 {
                     RuntimeCapabilityFamily family = families[familyIndex];
@@ -736,63 +735,6 @@ namespace NeonBlack.Gameplay.Editor
 
             return descriptor.SourceOrigin == PyralisAuthoringGraphSourceOrigin.Contract
                 || descriptor.SourceOrigin == PyralisAuthoringGraphSourceOrigin.Reflection;
-        }
-
-        private static RuntimeCapabilityFamily[] InferFamiliesFromCapability(
-            AuthoringCapability capability,
-            string lane,
-            AuthoringWorldAxiom axioms)
-        {
-            List<RuntimeCapabilityFamily> families = new List<RuntimeCapabilityFamily>();
-
-            if (HasAnyCapability(capability, AuthoringCapability.Setup, AuthoringCapability.Session, AuthoringCapability.Participants))
-                AddDistinct(families, RuntimeCapabilityFamily.PlatformCore);
-            if (HasAnyCapability(capability, AuthoringCapability.Movement, AuthoringCapability.KineticMotor2D, AuthoringCapability.KineticMotor3D, AuthoringCapability.Steering2D, AuthoringCapability.Steering3D, AuthoringCapability.Traversal, AuthoringCapability.Participants))
-                AddDistinct(families, RuntimeCapabilityFamily.CharacterPawnGameplay);
-            if (HasAnyCapability(capability, AuthoringCapability.Combat, AuthoringCapability.CombatState, AuthoringCapability.CombatSensors, AuthoringCapability.MeleeFlow, AuthoringCapability.TacticsAggressive, AuthoringCapability.TacticsDefensive))
-                AddDistinct(families, RuntimeCapabilityFamily.Combat);
-            if (HasAnyCapability(capability, AuthoringCapability.RangedFlow))
-            {
-                AddDistinct(families, RuntimeCapabilityFamily.GunsProjectiles);
-                AddDistinct(families, RuntimeCapabilityFamily.Combat);
-            }
-            if (HasAnyCapability(capability, AuthoringCapability.Rules, AuthoringCapability.TurnBased, AuthoringCapability.Puzzle, AuthoringCapability.Input, AuthoringCapability.UI))
-                AddDistinct(families, RuntimeCapabilityFamily.ActionTargeting);
-            if (HasAnyCapability(capability, AuthoringCapability.Tabletop, AuthoringCapability.Grid))
-                AddDistinct(families, RuntimeCapabilityFamily.BoardCardTabletop);
-            if (HasAnyCapability(capability, AuthoringCapability.Camera))
-                AddDistinct(families, RuntimeCapabilityFamily.CameraInput);
-            if (HasAnyCapability(capability, AuthoringCapability.Animation, AuthoringCapability.VFX))
-                AddDistinct(families, RuntimeCapabilityFamily.AnimationPresentation);
-            if (HasAnyCapability(capability, AuthoringCapability.Scoring, AuthoringCapability.UI))
-                AddDistinct(families, RuntimeCapabilityFamily.ScoringObjectives);
-            if (HasAnyCapability(capability, AuthoringCapability.Environment) || (axioms & AuthoringWorldAxiom.InfiniteSpace) != 0)
-                AddDistinct(families, RuntimeCapabilityFamily.ProceduralGeneration);
-            if (HasAnyCapability(capability, AuthoringCapability.Networking) || (axioms & AuthoringWorldAxiom.Networked) != 0)
-                AddDistinct(families, RuntimeCapabilityFamily.Networking);
-
-            if (string.Equals(lane, RuntimeCapabilityLaneTag.TabletopBoard.ToString(), StringComparison.OrdinalIgnoreCase))
-                AddDistinct(families, RuntimeCapabilityFamily.BoardCardTabletop);
-            if (string.Equals(lane, RuntimeCapabilityLaneTag.CameraCursor.ToString(), StringComparison.OrdinalIgnoreCase))
-                AddDistinct(families, RuntimeCapabilityFamily.CameraInput);
-            if (string.Equals(lane, "Combat", StringComparison.OrdinalIgnoreCase))
-                AddDistinct(families, RuntimeCapabilityFamily.Combat);
-            if (string.Equals(lane, "Projectile", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(lane, "Projectiles", StringComparison.OrdinalIgnoreCase))
-                AddDistinct(families, RuntimeCapabilityFamily.GunsProjectiles);
-            if (string.Equals(lane, "Movement", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(lane, "Traversal", StringComparison.OrdinalIgnoreCase))
-                AddDistinct(families, RuntimeCapabilityFamily.CharacterPawnGameplay);
-            if (string.Equals(lane, "Animation", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(lane, "Presentation", StringComparison.OrdinalIgnoreCase))
-                AddDistinct(families, RuntimeCapabilityFamily.AnimationPresentation);
-            if (string.Equals(lane, "Camera", StringComparison.OrdinalIgnoreCase))
-                AddDistinct(families, RuntimeCapabilityFamily.CameraInput);
-            if (string.Equals(lane, "Setup", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(lane, "Session", StringComparison.OrdinalIgnoreCase))
-                AddDistinct(families, RuntimeCapabilityFamily.PlatformCore);
-
-            return families.Count > 0 ? families.ToArray() : new[] { RuntimeCapabilityFamily.Custom };
         }
 
         private static string GetFamilyDisplayName(RuntimeCapabilityFamily family)
@@ -1011,17 +953,6 @@ namespace NeonBlack.Gameplay.Editor
                     ? orderCompare
                     : string.Compare(left.DisplayName, right.DisplayName, StringComparison.Ordinal);
             });
-        }
-
-        private static bool HasAnyCapability(AuthoringCapability selected, params AuthoringCapability[] candidates)
-        {
-            for (int i = 0; i < candidates.Length; i++)
-            {
-                if ((selected & candidates[i]) != 0)
-                    return true;
-            }
-
-            return false;
         }
 
         private static string NormalizeId(string value)

@@ -1,18 +1,22 @@
 # Game Studio Core Docs Index
 
-This folder is not the live Pyralis product manual. It holds repository-level audits used by Codex-style development sessions.
+This folder holds repository-level notes only. It is not the live Pyralis product manual, and it should not collect phase plans, dated audits, or duplicate setup guides.
 
 ## Active Repository Notes
 
-- `authoring-coverage-audit.md` - current authoring coverage and setup-flow validation snapshot.
+- `PROJECT_GOAL.md` - the current broad creator-ready improvement goal prompt.
 
 ## Active Pyralis Product Docs
 
-Use these package docs as the source of truth for current gameplay setup and architecture:
+Use the package docs as the source of truth for gameplay setup and architecture:
 
-- `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/Authoring/START_HERE.md`
-- `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/Authoring/README.md`
+- `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/README.md`
 - `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/CURRENT_STATE_AUDIT.md`
-- `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/CURRENT_ARCHETYPE_QUALITY_AUDIT_2026-05-23.md`
+- `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/ARCHITECTURE_BLUEPRINT.md`
+- `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/FEATURE_DEVELOPMENT_ROADMAP.md`
+- `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/Authoring/START_HERE.md`
+- `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/Authoring/AUTHORING_BLUEPRINT.md`
+- `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/Authoring/AUTHORING_MODEL.md`
+- `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/Authoring/CANONICAL_SETUP.md`
 
-If a dated plan conflicts with those package docs, the package docs win.
+If a scratch plan or dated audit conflicts with those package docs, update the package docs and remove the stale note.

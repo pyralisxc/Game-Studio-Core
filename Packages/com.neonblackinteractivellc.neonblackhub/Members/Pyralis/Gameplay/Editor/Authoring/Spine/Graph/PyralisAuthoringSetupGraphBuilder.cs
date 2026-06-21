@@ -24,16 +24,16 @@ namespace NeonBlack.Gameplay.Editor
             List<PyralisAuthoringGraphEdge> edges = new List<PyralisAuthoringGraphEdge>();
 
             AddSetupChainNodes(source, route, nodes, edges);
-            AddCapabilityNodes(route, nodes, edges);
+            AddCapabilityNodes(route, intentSelection, nodes, edges);
             AddRouteShapeNode(route, nodes, edges);
             AddParticipantTopologyNode(route, nodes, edges);
             AddParticipantNodes(route, nodes, edges);
             AddParticipantSeatNodes(route, nodes, edges);
             AddSceneSurfaceNodes(source, route, nodes, edges);
-            string activeProofNodeId = AddProofNode(route, nodes, edges);
+            string activeProofNodeId = AddProofNode(route, intentSelection, nodes, edges);
             AddContractNodes(nodes, edges, activeProofNodeId);
             AddRuntimeValidationEvidence(source, route, nodes, edges);
-            AddReflectedDependencyEvidence(route, nodes, edges);
+            AddReflectedDependencyEvidence(source, route, nodes, edges);
             AddSceneReadinessEvidence(source, nodes, edges);
             AddCameraFocusEvidence(route, nodes, edges);
             AddProofBlockerEdges(nodes, edges, activeProofNodeId);
@@ -439,257 +439,214 @@ namespace NeonBlack.Gameplay.Editor
         }
 
         private static void AddReflectedDependencyEvidence(
+            UnityEngine.Object source,
             PyralisSetupRouteAnalysis route,
             List<PyralisAuthoringGraphNode> nodes,
             List<PyralisAuthoringGraphEdge> edges)
         {
-            if (route == null)
+            PyralisSetupDependencyTree tree = BuildDependencyTree(source, route);
+            if (tree == null)
                 return;
 
-            SessionDefinition session = route.Session;
-            GameModeDefinition mode = route.Mode;
-            ParticipantDefinition participant = route.Participant;
-            PawnDefinition pawn = route.Pawn;
-
-            if (session != null && mode == null)
+            for (int i = 0; i < tree.AssignmentRecords.Count; i++)
             {
-                AddMissingReflectedReference(
-                    nodes,
-                    edges,
-                    "dependency.session.default-game-mode",
-                    "Assign Default Game Mode",
-                    "SessionDefinition",
-                    "defaultGameMode",
-                    "GameModeDefinition",
-                    session,
-                    "session.definition",
-                    "mode.definition",
-                    "Create or assign a GameModeDefinition on SessionDefinition.defaultGameMode so the graph can reflect route rules and feature requirements.",
-                    PyralisAuthoringGraphEvidenceState.Missing,
-                    PyralisAuthoringGraphWorkIntent.RequiredSetup,
-                    PyralisAuthoringIssueSeverity.Required);
-            }
+                PyralisSetupAssignmentRecord assignment = tree.AssignmentRecords[i];
+                if (assignment == null || assignment.IsResolved || !assignment.DeclaredByContract)
+                    continue;
 
-            if (session != null && !route.HasParticipants)
-            {
-                AddMissingReflectedReference(
-                    nodes,
-                    edges,
-                    "dependency.session.default-participants",
-                    "Assign Default Participant",
-                    "SessionDefinition",
-                    "defaultParticipants",
-                    "ParticipantDefinition",
-                    session,
-                    "session.definition",
-                    "participant.default",
-                    "Create or assign at least one ParticipantDefinition in SessionDefinition.defaultParticipants so the route has a player, AI, seat, hand, faction, or command owner.",
-                    PyralisAuthoringGraphEvidenceState.Missing,
-                    PyralisAuthoringGraphWorkIntent.RequiredSetup,
-                    PyralisAuthoringIssueSeverity.Required);
-            }
+                PyralisReflectedAssignmentState assignmentState = ResolveReflectedAssignmentState(assignment, route);
+                if (assignmentState.EvidenceState == PyralisAuthoringGraphEvidenceState.Optional)
+                    continue;
 
-            if (route.RequiresPawn && route.ParticipantSeats.Length == 0 && participant != null && participant.defaultPawn == null)
-            {
-                AddMissingReflectedReference(
-                    nodes,
-                    edges,
-                    "dependency.participant.default-pawn",
-                    "Assign Participant Pawn",
-                    "ParticipantDefinition",
-                    "defaultPawn",
-                    "PawnDefinition",
-                    participant,
-                    "participant.default",
-                    "pawn.definition",
-                    "Create or assign PawnDefinition on ParticipantDefinition.defaultPawn because this reflected route needs a pawn-backed participant.",
-                    PyralisAuthoringGraphEvidenceState.Missing,
-                    PyralisAuthoringGraphWorkIntent.RequiredSetup,
-                    PyralisAuthoringIssueSeverity.Required);
-            }
-
-            if (route.RequiresPawn && route.ParticipantSeats.Length == 0 && participant != null && participant.inputProfile == null)
-            {
-                AddMissingReflectedReference(
-                    nodes,
-                    edges,
-                    "dependency.participant.input-profile",
-                    "Assign Input Profile",
-                    "ParticipantDefinition",
-                    "inputProfile",
-                    "InputProfile",
-                    participant,
-                    "participant.default",
-                    "route.shape",
-                    "Create or assign InputProfile on ParticipantDefinition.inputProfile so the participant controlling this pawn can route movement input.",
-                    PyralisAuthoringGraphEvidenceState.Missing,
-                    PyralisAuthoringGraphWorkIntent.RequiredSetup,
-                    PyralisAuthoringIssueSeverity.Required);
-            }
-
-            if (route.RequiresPawn && pawn != null && pawn.pawnPrefab == null)
-            {
-                AddMissingReflectedReference(
-                    nodes,
-                    edges,
-                    "dependency.pawn.pawn-prefab",
-                    "Assign Pawn Prefab",
-                    "PawnDefinition",
-                    "pawnPrefab",
-                    "GameObject prefab",
-                    pawn,
-                    "pawn.definition",
-                    "route.shape",
-                    "Assign the authored pawn prefab on PawnDefinition.pawnPrefab so the participant spawn path has a visible runtime body.",
-                    PyralisAuthoringGraphEvidenceState.Missing,
-                    PyralisAuthoringGraphWorkIntent.RequiredSetup,
-                    PyralisAuthoringIssueSeverity.Required);
-            }
-
-            if (route.UsesPawnGameplay() && pawn != null && pawn.movementProfile == null)
-            {
-                AddMissingReflectedReference(
-                    nodes,
-                    edges,
-                    "dependency.pawn.movement-profile",
-                    "Assign Pawn Movement Profile",
-                    "PawnDefinition",
-                    "movementProfile",
-                    "PawnMovementProfile",
-                    pawn,
-                    "pawn.definition",
-                    "route.shape",
-                    "Create or assign PawnMovementProfile on PawnDefinition.movementProfile so the pawn has movement tuning for the first movement proof.",
-                    PyralisAuthoringGraphEvidenceState.Missing,
-                    PyralisAuthoringGraphWorkIntent.RequiredSetup,
-                    PyralisAuthoringIssueSeverity.Required);
-            }
-
-            if (route.UsesPawnGameplay() && pawn != null && pawn.presentationProfile == null)
-            {
-                AddMissingReflectedReference(
-                    nodes,
-                    edges,
-                    "dependency.pawn.presentation-profile",
-                    "Assign Pawn Presentation Profile",
-                    "PawnDefinition",
-                    "presentationProfile",
-                    "PawnPresentationProfile",
-                    pawn,
-                    "pawn.definition",
-                    "route.shape",
-                    "Create or assign PawnPresentationProfile on PawnDefinition.presentationProfile so the spawned pawn knows its Sprite2D, Billboard2_5D, or Rigged3D presentation lane.",
-                    PyralisAuthoringGraphEvidenceState.Missing,
-                    PyralisAuthoringGraphWorkIntent.RequiredSetup,
-                    PyralisAuthoringIssueSeverity.Required);
-            }
-
-            if (ContainsFamily(route.CapabilityFamilies, RuntimeCapabilityFamily.AnimationPresentation)
-                && pawn != null
-                && pawn.animationProfile == null)
-            {
-                AddMissingReflectedReference(
-                    nodes,
-                    edges,
-                    "dependency.pawn.animation-profile",
-                    "Assign Pawn Animation Profile",
-                    "PawnDefinition",
-                    "animationProfile",
-                    "PawnAnimationProfile",
-                    pawn,
-                    "pawn.definition",
-                    "route.shape",
-                    "Create or assign PawnAnimationProfile on PawnDefinition.animationProfile when this route includes animation/presentation intent.",
-                    PyralisAuthoringGraphEvidenceState.Missing,
-                    PyralisAuthoringGraphWorkIntent.RequiredSetup,
-                    PyralisAuthoringIssueSeverity.Required);
-            }
-
-            if ((route.UsesPawnGameplay() || route.UsesCamera()) && mode != null && mode.cameraRigProfile == null)
-            {
-                AddMissingReflectedReference(
-                    nodes,
-                    edges,
-                    "dependency.mode.camera-rig-profile",
-                    "Assign Camera Rig Profile",
-                    "GameModeDefinition",
-                    "cameraRigProfile",
-                    "CameraRigProfile",
-                    mode,
-                    "mode.definition",
-                    "route.shape",
-                    "Create or assign CameraRigProfile on GameModeDefinition.cameraRigProfile so the scene camera route has an explicit focus mode and framing profile.",
-                    PyralisAuthoringGraphEvidenceState.Missing,
-                    PyralisAuthoringGraphWorkIntent.RequiredSetup,
-                    PyralisAuthoringIssueSeverity.Required);
-            }
-
-            if (route.UsesPlayfield() && mode != null && mode.playfieldProfile == null)
-            {
-                AddMissingReflectedReference(
-                    nodes,
-                    edges,
-                    "dependency.mode.playfield-profile",
-                    "Assign Playfield Profile",
-                    "GameModeDefinition",
-                    "playfieldProfile",
-                    "PlayfieldProfile",
-                    mode,
-                    "mode.definition",
-                    "route.shape",
-                    "Create or assign PlayfieldProfile on GameModeDefinition.playfieldProfile when the route needs authored movement bounds, board space, arena depth, or playfield rules.",
-                    PyralisAuthoringGraphEvidenceState.CandidateDetected,
-                    PyralisAuthoringGraphWorkIntent.ProofEnhancer,
-                    PyralisAuthoringIssueSeverity.Recommended);
+                AddMissingReflectedAssignment(nodes, edges, assignment, assignmentState);
             }
         }
 
-        private static void AddMissingReflectedReference(
+        private readonly struct PyralisReflectedAssignmentState
+        {
+            public PyralisReflectedAssignmentState(
+                PyralisAuthoringGraphEvidenceState evidenceState,
+                PyralisAuthoringGraphWorkIntent workIntent,
+                PyralisAuthoringIssueSeverity issueSeverity,
+                string routeNodeId,
+                string guidance)
+            {
+                EvidenceState = evidenceState;
+                WorkIntent = workIntent;
+                IssueSeverity = issueSeverity;
+                RouteNodeId = routeNodeId ?? string.Empty;
+                Guidance = guidance ?? string.Empty;
+            }
+
+            public PyralisAuthoringGraphEvidenceState EvidenceState { get; }
+            public PyralisAuthoringGraphWorkIntent WorkIntent { get; }
+            public PyralisAuthoringIssueSeverity IssueSeverity { get; }
+            public string RouteNodeId { get; }
+            public string Guidance { get; }
+        }
+
+        private static void AddMissingReflectedAssignment(
             List<PyralisAuthoringGraphNode> nodes,
             List<PyralisAuthoringGraphEdge> edges,
-            string nodeId,
-            string label,
-            string ownerType,
-            string fieldName,
-            string expectedType,
-            UnityEngine.Object owner,
-            string ownerNodeId,
-            string routeNodeId,
-            string guidance,
-            PyralisAuthoringGraphEvidenceState evidenceState,
-            PyralisAuthoringGraphWorkIntent workIntent,
-            PyralisAuthoringIssueSeverity issueSeverity)
+            PyralisSetupAssignmentRecord assignment,
+            PyralisReflectedAssignmentState assignmentState)
         {
-            string fieldPath = ownerType + "." + fieldName;
+            string fieldPath = assignment.QualifiedFieldPath;
+            string fieldName = GetFieldName(assignment.FieldPath);
+            string nodeId = "dependency.assignment." + NormalizeId(fieldPath);
+            string expectedType = FirstNonEmpty(assignment.ExpectedTypeName, "assigned object");
             PyralisAuthoringNativeAction nativeAction = new PyralisAuthoringNativeAction(
                 "Create or assign",
                 PyralisAuthoringActionSurface.Inspector,
-                ownerType,
+                assignment.OwnerTypeName,
                 fieldName,
                 fieldPath + " references a " + expectedType);
 
             AddNode(nodes, new PyralisAuthoringGraphNode(
                 nodeId,
-                label,
+                "Assign " + AuthoringCapabilityRegistry.PrettifyTypeName(fieldName),
                 PyralisAuthoringGraphNodeKind.AssignmentField,
                 PyralisAuthoringGraphSourceKind.Reflection,
-                evidenceState,
-                guidance: guidance,
+                assignmentState.EvidenceState,
+                guidance: assignmentState.Guidance,
                 nativeSetup: new[] { FormatNativeAction(nativeAction) },
                 assignmentFields: new[] { fieldPath },
-                blockingReason: evidenceState == PyralisAuthoringGraphEvidenceState.Missing ? guidance : string.Empty,
+                blockingReason: assignmentState.EvidenceState == PyralisAuthoringGraphEvidenceState.Missing
+                    ? assignmentState.Guidance
+                    : string.Empty,
                 nativeAction: nativeAction,
-                sourceObject: owner,
+                sourceObject: assignment.OwnerObject,
                 sourceOrigin: PyralisAuthoringGraphSourceOrigin.Reflection,
-                workIntent: workIntent,
-                issueSeverity: issueSeverity,
+                workIntent: assignmentState.WorkIntent,
+                issueSeverity: assignmentState.IssueSeverity,
                 setupDomain: GetSetupDomainForAssignmentField(fieldPath),
-                issueCode: evidenceState == PyralisAuthoringGraphEvidenceState.Ready
-                    ? string.Empty
-                    : BuildAssignmentIssueCode(fieldPath)));
+                issueCode: BuildAssignmentIssueCode(fieldPath)));
 
+            string ownerNodeId = ResolveAssignmentOwnerNodeId(assignment);
+            string routeNodeId = !string.IsNullOrWhiteSpace(assignmentState.RouteNodeId)
+                ? assignmentState.RouteNodeId
+                : "route.shape";
             AddEdge(edges, ownerNodeId, nodeId, PyralisAuthoringGraphEdgeKind.DependsOn, fieldName);
             AddEdge(edges, routeNodeId, nodeId, PyralisAuthoringGraphEdgeKind.DependsOn, "reflected route dependency");
+        }
+
+        private static PyralisReflectedAssignmentState ResolveReflectedAssignmentState(
+            PyralisSetupAssignmentRecord assignment,
+            PyralisSetupRouteAnalysis route)
+        {
+            string fieldPath = assignment?.QualifiedFieldPath ?? string.Empty;
+            string fieldName = assignment != null ? GetFieldName(assignment.FieldPath) : string.Empty;
+            bool required = IsRequiredReflectedAssignment(assignment, route);
+            bool recommended = required || IsRecommendedReflectedAssignment(assignment, route);
+            if (!recommended)
+            {
+                return new PyralisReflectedAssignmentState(
+                    PyralisAuthoringGraphEvidenceState.Optional,
+                    PyralisAuthoringGraphWorkIntent.Optional,
+                    PyralisAuthoringIssueSeverity.Info,
+                    string.Empty,
+                    string.Empty);
+            }
+
+            string guidance = $"Assign {fieldPath} so the route can use the contract-declared {AuthoringCapabilityRegistry.PrettifyTypeName(fieldName)} surface.";
+            return new PyralisReflectedAssignmentState(
+                required ? PyralisAuthoringGraphEvidenceState.Missing : PyralisAuthoringGraphEvidenceState.CandidateDetected,
+                required ? PyralisAuthoringGraphWorkIntent.RequiredSetup : PyralisAuthoringGraphWorkIntent.ProofEnhancer,
+                required ? PyralisAuthoringIssueSeverity.Required : PyralisAuthoringIssueSeverity.Recommended,
+                GetRouteNodeForAssignment(assignment.OwnerTypeName),
+                guidance);
+        }
+
+        private static bool IsRequiredReflectedAssignment(PyralisSetupAssignmentRecord assignment, PyralisSetupRouteAnalysis route)
+        {
+            if (assignment == null || route == null)
+                return false;
+
+            string ownerType = assignment.OwnerTypeName;
+            string fieldName = GetFieldName(assignment.FieldPath);
+
+            if (ownerType == nameof(SessionDefinition)
+                && (fieldName == nameof(SessionDefinition.defaultGameMode)
+                    || fieldName.StartsWith(nameof(SessionDefinition.defaultParticipants), StringComparison.Ordinal)))
+                return true;
+
+            if (!route.RequiresPawn)
+                return false;
+
+            if (ownerType == nameof(ParticipantDefinition)
+                && (fieldName == nameof(ParticipantDefinition.defaultPawn)
+                    || fieldName == nameof(ParticipantDefinition.inputProfile)))
+                return true;
+
+            if (ownerType == nameof(PawnDefinition) && fieldName == nameof(PawnDefinition.pawnPrefab))
+                return true;
+
+            if (ownerType == nameof(GameModeDefinition)
+                && fieldName == nameof(GameModeDefinition.cameraRigProfile)
+                && (route.UsesPawnGameplay() || route.UsesCamera()))
+                return true;
+
+            return false;
+        }
+
+        private static bool IsRecommendedReflectedAssignment(PyralisSetupAssignmentRecord assignment, PyralisSetupRouteAnalysis route)
+        {
+            if (assignment == null || route == null)
+                return false;
+
+            string ownerType = assignment.OwnerTypeName;
+            string fieldName = GetFieldName(assignment.FieldPath);
+
+            if (ownerType == nameof(GameModeDefinition)
+                && fieldName == nameof(GameModeDefinition.playfieldProfile))
+                return route.UsesPlayfield();
+
+            if (ownerType == nameof(PawnDefinition)
+                && (fieldName == nameof(PawnDefinition.movementProfile)
+                    || fieldName == nameof(PawnDefinition.presentationProfile)))
+                return route.UsesPawnGameplay();
+
+            if (ownerType == nameof(PawnDefinition)
+                && fieldName == nameof(PawnDefinition.animationProfile))
+                return ContainsFamily(route.CapabilityFamilies, RuntimeCapabilityFamily.AnimationPresentation);
+
+            return false;
+        }
+
+        private static string ResolveAssignmentOwnerNodeId(PyralisSetupAssignmentRecord assignment)
+        {
+            return assignment != null ? GetRouteNodeForAssignment(assignment.OwnerTypeName) : string.Empty;
+        }
+
+        private static string GetRouteNodeForAssignment(string ownerType)
+        {
+            if (ownerType == nameof(SessionDefinition))
+                return "session.definition";
+            if (ownerType == nameof(GameModeDefinition))
+                return "mode.definition";
+            if (ownerType == nameof(ParticipantDefinition))
+                return "participant.default";
+            if (ownerType == nameof(PawnDefinition))
+                return "pawn.definition";
+
+            return "route.shape";
+        }
+
+        private static string GetFieldName(string fieldPath)
+        {
+            if (string.IsNullOrWhiteSpace(fieldPath))
+                return string.Empty;
+
+            string field = fieldPath;
+            int bracket = field.IndexOf('[', StringComparison.Ordinal);
+            if (bracket > 0)
+                field = field.Substring(0, bracket);
+
+            int dot = field.LastIndexOf('.');
+            if (dot >= 0 && dot < field.Length - 1)
+                field = field.Substring(dot + 1);
+
+            return field;
         }
 
         private static void AddCameraFocusEvidence(
@@ -749,6 +706,7 @@ namespace NeonBlack.Gameplay.Editor
 
         private static void AddCapabilityNodes(
             PyralisSetupRouteAnalysis route,
+            PyralisAuthoringIntentSelection intentSelection,
             List<PyralisAuthoringGraphNode> nodes,
             List<PyralisAuthoringGraphEdge> edges)
         {
@@ -771,7 +729,7 @@ namespace NeonBlack.Gameplay.Editor
             for (int i = 0; i < families.Length; i++)
             {
                 RuntimeCapabilityFamily family = families[i];
-                PyralisAuthoringCapabilityDescriptor descriptor = PyralisAuthoringCapabilityDescriptorRegistry.FindPrimaryByFamily(family);
+                PyralisAuthoringCapabilityDescriptor descriptor = ResolveCapabilityDescriptorForFamily(family, intentSelection);
                 string nodeId = GetCapabilityNodeId(family, descriptor);
                 string proofTarget = descriptor?.ProofTargetId ?? string.Empty;
 
@@ -1320,7 +1278,9 @@ namespace NeonBlack.Gameplay.Editor
                 if (row == null)
                     continue;
 
-                string nodeId = "scene." + NormalizeId(row.Surface);
+                string nodeId = row.IssueCode == "SceneSurface.FallbackTypeName"
+                    ? "scene." + NormalizeId(row.Surface + "." + row.DetectorId + "." + (row.CandidateObject != null ? row.CandidateObject.name : "unknown"))
+                    : "scene." + NormalizeId(row.Surface);
                 AddNode(nodes, new PyralisAuthoringGraphNode(
                     nodeId,
                     row.Surface,
@@ -1330,8 +1290,17 @@ namespace NeonBlack.Gameplay.Editor
                     guidance: row.Current,
                     nativeSetup: !string.IsNullOrWhiteSpace(row.NextFix) ? new[] { row.NextFix } : Array.Empty<string>(),
                     blockingReason: row.SupportsFirstProofAttempt ? string.Empty : row.NextFix,
+                    nativeAction: row.NativeAction,
+                    sourceObject: row.CandidateObject,
                     sourceOrigin: PyralisAuthoringGraphSourceOrigin.RuntimeEvidence,
-                    setupDomain: PyralisAuthoringGraphSetupDomain.SceneSurface));
+                    workIntent: row.IssueCode == "SceneSurface.FallbackTypeName"
+                        ? PyralisAuthoringGraphWorkIntent.Reference
+                        : PyralisAuthoringGraphWorkIntent.Unknown,
+                    issueSeverity: row.IssueCode == "SceneSurface.FallbackTypeName"
+                        ? PyralisAuthoringIssueSeverity.Recommended
+                        : PyralisAuthoringIssueSeverity.Info,
+                    setupDomain: PyralisAuthoringGraphSetupDomain.SceneSurface,
+                    issueCode: row.IssueCode));
                 AddEdge(edges, "bootstrap.root", nodeId, PyralisAuthoringGraphEdgeKind.RelatesTo, "scene surface");
 
                 if (!row.SupportsFirstProofAttempt)
@@ -1361,10 +1330,11 @@ namespace NeonBlack.Gameplay.Editor
 
         private static string AddProofNode(
             PyralisSetupRouteAnalysis route,
+            PyralisAuthoringIntentSelection intentSelection,
             List<PyralisAuthoringGraphNode> nodes,
             List<PyralisAuthoringGraphEdge> edges)
         {
-            string selectedProofTargetId = ResolveProofTargetId(route);
+            string selectedProofTargetId = ResolveProofTargetId(route, intentSelection);
             PyralisAuthoringFact proofFact = ResolveProofFact(selectedProofTargetId);
             string proofNodeId = proofFact != null && !string.IsNullOrWhiteSpace(proofFact.StableId)
                 ? proofFact.StableId
@@ -1419,22 +1389,28 @@ namespace NeonBlack.Gameplay.Editor
             RuntimeCapabilityFamily[] families = route?.CapabilityFamilies ?? Array.Empty<RuntimeCapabilityFamily>();
             for (int i = 0; i < families.Length; i++)
             {
-                PyralisAuthoringCapabilityDescriptor descriptor = PyralisAuthoringCapabilityDescriptorRegistry.FindPrimaryByFamily(families[i]);
+                PyralisAuthoringCapabilityDescriptor descriptor = ResolveCapabilityDescriptorForFamily(families[i], intentSelection);
                 AddEdge(edges, GetCapabilityNodeId(families[i], descriptor), proofNodeId, PyralisAuthoringGraphEdgeKind.SupportsProof, "supports proof");
             }
 
             return proofNodeId;
         }
 
-        private static string ResolveProofTargetId(PyralisSetupRouteAnalysis route)
+        private static string ResolveProofTargetId(
+            PyralisSetupRouteAnalysis route,
+            PyralisAuthoringIntentSelection intentSelection)
         {
             RuntimeCapabilityFamily[] families = route?.CapabilityFamilies ?? Array.Empty<RuntimeCapabilityFamily>();
             if (families.Length == 0 || route == null || !route.HasSelectedCapabilities)
                 return "proof.unresolved-route";
 
+            string selectedDescriptorProofTargetId = ResolveSelectedDescriptorProofTargetId(intentSelection);
+            if (!string.IsNullOrWhiteSpace(selectedDescriptorProofTargetId))
+                return selectedDescriptorProofTargetId;
+
             for (int i = 0; i < families.Length; i++)
             {
-                PyralisAuthoringCapabilityDescriptor descriptor = PyralisAuthoringCapabilityDescriptorRegistry.FindPrimaryByFamily(families[i]);
+                PyralisAuthoringCapabilityDescriptor descriptor = ResolveCapabilityDescriptorForFamily(families[i], intentSelection);
                 if (descriptor != null && !string.IsNullOrWhiteSpace(descriptor.ProofTargetId))
                     return descriptor.ProofTargetId;
             }
@@ -1447,6 +1423,37 @@ namespace NeonBlack.Gameplay.Editor
                 return genericProofTargetId;
 
             return "proof.custom-object-effect";
+        }
+
+        private static string ResolveSelectedDescriptorProofTargetId(PyralisAuthoringIntentSelection intentSelection)
+        {
+            if (intentSelection?.DescriptorIds == null || intentSelection.DescriptorIds.Length == 0)
+                return string.Empty;
+
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors =
+                PyralisAuthoringCapabilityDescriptorRegistry.All;
+            for (int selectedIndex = 0; selectedIndex < intentSelection.DescriptorIds.Length; selectedIndex++)
+            {
+                string selectedId = intentSelection.DescriptorIds[selectedIndex];
+                if (string.IsNullOrWhiteSpace(selectedId))
+                    continue;
+
+                for (int descriptorIndex = 0; descriptorIndex < descriptors.Count; descriptorIndex++)
+                {
+                    PyralisAuthoringCapabilityDescriptor descriptor = descriptors[descriptorIndex];
+                    if (descriptor == null
+                        || !string.Equals(descriptor.StableId, selectedId, StringComparison.Ordinal)
+                        || !descriptor.IsContractSemanticSource
+                        || string.IsNullOrWhiteSpace(descriptor.ProofTargetId))
+                    {
+                        continue;
+                    }
+
+                    return descriptor.ProofTargetId;
+                }
+            }
+
+            return string.Empty;
         }
 
         private static string GetProofGuidance(PyralisAuthoringFact proofFact)
@@ -1575,6 +1582,29 @@ namespace NeonBlack.Gameplay.Editor
                     issueCode: "ContractMetadata.RouteEssentialCapabilityPathMissing"));
 
                 AddEdge(edges, contractNodeId, nodeId, PyralisAuthoringGraphEdgeKind.BlockedBy, "missing route essential metadata");
+            }
+
+            if (contract.Capability != AuthoringCapability.None
+                && (contract.RuntimeFamilies == null || contract.RuntimeFamilies.Length == 0))
+            {
+                string nodeId = "contract-metadata." + NormalizeId(contract.StableId) + ".runtime-families";
+                AddNode(nodes, new PyralisAuthoringGraphNode(
+                    nodeId,
+                    "Missing Runtime Families",
+                    PyralisAuthoringGraphNodeKind.Contract,
+                    PyralisAuthoringGraphSourceKind.AuthoringContract,
+                    PyralisAuthoringGraphEvidenceState.Missing,
+                    authoringCapability: contract.Capability,
+                    guidance: $"{contract.DisplayName} declares authoring capability meaning but does not declare AuthoringContract.RuntimeFamilies. Add the runtime family or set Capability = AuthoringCapability.None if this contract should not steer routes.",
+                    blockingReason: "Route analysis and proof selection will not infer runtime family from capability flags.",
+                    sourceContract: contract,
+                    sourceOrigin: GetContractSourceOrigin(contract),
+                    workIntent: PyralisAuthoringGraphWorkIntent.Reference,
+                    issueSeverity: PyralisAuthoringIssueSeverity.Recommended,
+                    setupDomain: PyralisAuthoringGraphSetupDomain.FeatureContract,
+                    issueCode: "ContractMetadata.RuntimeFamiliesMissing"));
+
+                AddEdge(edges, contractNodeId, nodeId, PyralisAuthoringGraphEdgeKind.BlockedBy, "missing runtime family metadata");
             }
         }
 
@@ -2234,6 +2264,37 @@ namespace NeonBlack.Gameplay.Editor
                 return "Choose Intent capability ingredients or create gameplay assets that expose capabilities through contracts and serialized references.";
 
             return route.RouteName;
+        }
+
+        private static PyralisAuthoringCapabilityDescriptor ResolveCapabilityDescriptorForFamily(
+            RuntimeCapabilityFamily family,
+            PyralisAuthoringIntentSelection intentSelection)
+        {
+            if (intentSelection?.DescriptorIds != null && intentSelection.DescriptorIds.Length > 0)
+            {
+                IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors =
+                    PyralisAuthoringCapabilityDescriptorRegistry.All;
+                for (int selectedIndex = 0; selectedIndex < intentSelection.DescriptorIds.Length; selectedIndex++)
+                {
+                    string selectedId = intentSelection.DescriptorIds[selectedIndex];
+                    if (string.IsNullOrWhiteSpace(selectedId))
+                        continue;
+
+                    for (int descriptorIndex = 0; descriptorIndex < descriptors.Count; descriptorIndex++)
+                    {
+                        PyralisAuthoringCapabilityDescriptor descriptor = descriptors[descriptorIndex];
+                        if (descriptor != null
+                            && descriptor.Family == family
+                            && descriptor.IsContractSemanticSource
+                            && string.Equals(descriptor.StableId, selectedId, StringComparison.Ordinal))
+                        {
+                            return descriptor;
+                        }
+                    }
+                }
+            }
+
+            return PyralisAuthoringCapabilityDescriptorRegistry.FindPrimaryByFamily(family);
         }
 
         private static string GetCapabilityNodeId(RuntimeCapabilityFamily family, PyralisAuthoringCapabilityDescriptor descriptor)

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Data.Definitions;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
@@ -116,6 +117,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
     [AuthoringContract(
         Capability = AuthoringCapability.Input,
         CapabilityPath = "Core Setup/Input/Participant Input Profile",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.ActionTargeting },
         Priority = AuthoringPriority.AuxiliaryDefault,
         Lane = "Input",
         Relevance = "Maps participant-owned gameplay actions (Move, Jump, Interact) to Unity Input System actions.",

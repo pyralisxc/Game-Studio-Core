@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Characters;
+using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
+using NeonBlack.Gameplay.Data.Definitions.Rules;
 using UnityEditor;
 using UnityEngine;
 
@@ -18,7 +20,8 @@ namespace NeonBlack.Gameplay.Editor
         Profile,
         Prefab,
         BoardDefinition,
-        TurnOrderDefinition
+        TurnOrderDefinition,
+        ObjectReference
     }
 
     public sealed class PyralisSetupDependencyNode
@@ -61,10 +64,42 @@ namespace NeonBlack.Gameplay.Editor
         public string Label { get; }
     }
 
+    public sealed class PyralisSetupAssignmentRecord
+    {
+        public PyralisSetupAssignmentRecord(
+            UnityEngine.Object ownerObject,
+            string ownerTypeName,
+            string fieldPath,
+            string expectedTypeName,
+            UnityEngine.Object referencedObject,
+            bool declaredByContract)
+        {
+            OwnerObject = ownerObject;
+            OwnerTypeName = ownerTypeName ?? string.Empty;
+            FieldPath = fieldPath ?? string.Empty;
+            ExpectedTypeName = expectedTypeName ?? string.Empty;
+            ReferencedObject = referencedObject;
+            DeclaredByContract = declaredByContract;
+        }
+
+        public UnityEngine.Object OwnerObject { get; }
+        public string OwnerTypeName { get; }
+        public string FieldPath { get; }
+        public string ExpectedTypeName { get; }
+        public UnityEngine.Object ReferencedObject { get; }
+        public bool DeclaredByContract { get; }
+        public bool IsResolved => ReferencedObject != null;
+        public string QualifiedFieldPath => string.IsNullOrWhiteSpace(OwnerTypeName)
+            ? FieldPath
+            : OwnerTypeName + "." + FieldPath;
+    }
+
     public sealed class PyralisSetupDependencyTree
     {
         private readonly List<PyralisSetupDependencyNode> _nodes = new List<PyralisSetupDependencyNode>();
         private readonly List<PyralisSetupDependencyEdge> _edges = new List<PyralisSetupDependencyEdge>();
+        private readonly List<PyralisSetupAssignmentRecord> _assignments = new List<PyralisSetupAssignmentRecord>();
+        private readonly Dictionary<UnityEngine.Object, string> _objectNodeIds = new Dictionary<UnityEngine.Object, string>();
 
         private PyralisSetupDependencyTree(UnityEngine.Object source)
         {
@@ -82,6 +117,7 @@ namespace NeonBlack.Gameplay.Editor
         public IReadOnlyList<FeatureModuleDefinition> FeatureModules => _featureModules;
         public IReadOnlyList<PyralisSetupDependencyNode> Nodes => _nodes;
         public IReadOnlyList<PyralisSetupDependencyEdge> Edges => _edges;
+        public IReadOnlyList<PyralisSetupAssignmentRecord> AssignmentRecords => _assignments;
 
         private readonly List<ParticipantDefinition> _participants = new List<ParticipantDefinition>();
         private readonly List<PawnDefinition> _pawns = new List<PawnDefinition>();
@@ -113,9 +149,6 @@ namespace NeonBlack.Gameplay.Editor
         private void Resolve(UnityEngine.Object source)
         {
             Bootstrap = source as GameplaySessionBootstrap;
-            if (Bootstrap != null)
-                Session = GetObjectReference<SessionDefinition>(Bootstrap, "sessionDefinition");
-
             if (source is SessionDefinition selectedSession)
                 Session = selectedSession;
 
@@ -128,42 +161,18 @@ namespace NeonBlack.Gameplay.Editor
             if (source is PawnDefinition selectedPawn)
                 FirstPawn = selectedPawn;
 
-            if (Session != null && Mode == null)
-                Mode = GetObjectReference<GameModeDefinition>(Session, "defaultGameMode");
+            DiscoverAssignments(source);
 
-            if (Session != null && FirstParticipant == null)
-            {
-                AddRangeDistinct(_participants, GetArrayReferences<ParticipantDefinition>(Session, "defaultParticipants"));
-                FirstParticipant = _participants.Count > 0 ? _participants[0] : null;
-            }
-            else if (FirstParticipant != null)
-            {
-                AddDistinct(_participants, FirstParticipant);
-            }
+            Session ??= FindFirstAssigned<SessionDefinition>();
+            Mode ??= FindFirstAssigned<GameModeDefinition>();
+            AddAssignedObjects(_participants);
+            AddAssignedObjects(_pawns);
+            AddAssignedObjects(_featureModules);
 
-            if (FirstParticipant != null && FirstPawn == null)
-                FirstPawn = GetObjectReference<PawnDefinition>(FirstParticipant, "defaultPawn");
-
-            for (int i = 0; i < _participants.Count; i++)
-            {
-                PawnDefinition pawn = GetObjectReference<PawnDefinition>(_participants[i], "defaultPawn");
-                AddDistinct(_pawns, pawn);
-            }
-
+            AddDistinct(_participants, FirstParticipant);
             AddDistinct(_pawns, FirstPawn);
+            FirstParticipant = FirstParticipant != null ? FirstParticipant : _participants.Count > 0 ? _participants[0] : null;
             FirstPawn = _pawns.Count > 0 ? _pawns[0] : null;
-
-            if (Mode != null)
-                AddRangeDistinct(_featureModules, GetArrayReferences<FeatureModuleDefinition>(Mode, "requiredFeatureModules"));
-
-            for (int i = 0; i < _pawns.Count; i++)
-            {
-                PawnDefinition pawn = _pawns[i];
-                if (pawn == null)
-                    continue;
-
-                AddRangeDistinct(_featureModules, GetArrayReferences<FeatureModuleDefinition>(pawn, "featureModules"));
-            }
         }
 
         private void BuildNodes()
@@ -173,9 +182,7 @@ namespace NeonBlack.Gameplay.Editor
             AddNode("mode.definition", "Game Mode Definition", PyralisSetupDependencyNodeKind.GameModeDefinition, Mode, "SessionDefinition.defaultGameMode");
             AddNode("participant.default", "Participants", PyralisSetupDependencyNodeKind.Participant, FirstParticipant, "SessionDefinition.defaultParticipants");
             AddNode("pawn.definition", "Pawn Definition", PyralisSetupDependencyNodeKind.PawnDefinition, FirstPawn, "ParticipantDefinition.defaultPawn");
-            AddModeDependencyNodes();
-            AddParticipantDependencyNodes();
-            AddPawnDependencyNodes();
+            AddReflectedReferenceNodes();
 
             AddEdge("bootstrap.root", "session.definition", "sessionDefinition", "reads");
             AddEdge("session.definition", "mode.definition", "defaultGameMode", "default mode");
@@ -183,130 +190,24 @@ namespace NeonBlack.Gameplay.Editor
             AddEdge("participant.default", "pawn.definition", "defaultPawn", "pawn route");
         }
 
-        private void AddModeDependencyNodes()
+        private void AddReflectedReferenceNodes()
         {
-            if (Mode == null)
-                return;
-
-            AddSingleObjectNode(
-                "mode.board-definition",
-                "Board Definition",
-                PyralisSetupDependencyNodeKind.BoardDefinition,
-                GetObjectReference<UnityEngine.Object>(Mode, "boardDefinition"),
-                "mode.definition",
-                "boardDefinition",
-                "board rules");
-            AddSingleObjectNode(
-                "mode.turn-order-definition",
-                "Turn Order Definition",
-                PyralisSetupDependencyNodeKind.TurnOrderDefinition,
-                GetObjectReference<UnityEngine.Object>(Mode, "turnOrderDefinition"),
-                "mode.definition",
-                "turnOrderDefinition",
-                "turn order");
-
-            for (int i = 0; i < _featureModules.Count; i++)
+            for (int i = 0; i < _assignments.Count; i++)
             {
-                FeatureModuleDefinition module = _featureModules[i];
-                if (module == null)
+                PyralisSetupAssignmentRecord assignment = _assignments[i];
+                if (assignment == null || assignment.OwnerObject == null || assignment.ReferencedObject == null)
                     continue;
 
-                string nodeId = "feature-module." + i;
-                AddNode(nodeId, GetObjectLabel(module), PyralisSetupDependencyNodeKind.FeatureModule, module, $"FeatureModuleDefinition[{i}]");
+                string ownerNodeId = GetNodeIdForObject(assignment.OwnerObject);
+                string targetNodeId = GetNodeIdForObject(assignment.ReferencedObject);
+                AddNode(
+                    targetNodeId,
+                    GetObjectLabel(assignment.ReferencedObject),
+                    ClassifyNodeKind(assignment.ReferencedObject),
+                    assignment.ReferencedObject,
+                    assignment.QualifiedFieldPath);
+                AddEdge(ownerNodeId, targetNodeId, assignment.FieldPath, assignment.FieldPath);
             }
-
-            FeatureModuleDefinition[] modeModules = GetArrayReferences<FeatureModuleDefinition>(Mode, "requiredFeatureModules");
-            for (int i = 0; i < modeModules.Length; i++)
-            {
-                FeatureModuleDefinition module = modeModules[i];
-                int moduleIndex = IndexOf(_featureModules, module);
-                if (moduleIndex >= 0)
-                    AddEdge("mode.definition", "feature-module." + moduleIndex, $"requiredFeatureModules[{i}]", "required feature module");
-            }
-        }
-
-        private void AddParticipantDependencyNodes()
-        {
-            for (int i = 0; i < _participants.Count; i++)
-            {
-                ParticipantDefinition participant = _participants[i];
-                if (participant == null)
-                    continue;
-
-                string participantNodeId = "participant.default." + i;
-                AddNode(participantNodeId, GetObjectLabel(participant), PyralisSetupDependencyNodeKind.Participant, participant, $"SessionDefinition.defaultParticipants[{i}]");
-                AddEdge("participant.default", participantNodeId, $"defaultParticipants[{i}]", "participant slot");
-
-                PawnDefinition pawn = GetObjectReference<PawnDefinition>(participant, "defaultPawn");
-                int pawnIndex = IndexOf(_pawns, pawn);
-                if (pawnIndex >= 0)
-                    AddEdge(participantNodeId, "pawn.definition." + pawnIndex, "defaultPawn", "default pawn");
-
-                UnityEngine.Object inputProfile = GetObjectReference<UnityEngine.Object>(participant, "inputProfile");
-                if (inputProfile != null)
-                {
-                    string inputNodeId = "participant.input-profile." + i;
-                    AddNode(inputNodeId, GetObjectLabel(inputProfile), PyralisSetupDependencyNodeKind.Profile, inputProfile, $"ParticipantDefinition.inputProfile[{i}]");
-                    AddEdge(participantNodeId, inputNodeId, "inputProfile", "input profile");
-                }
-            }
-        }
-
-        private void AddPawnDependencyNodes()
-        {
-            for (int i = 0; i < _pawns.Count; i++)
-            {
-                PawnDefinition pawn = _pawns[i];
-                if (pawn == null)
-                    continue;
-
-                string pawnNodeId = "pawn.definition." + i;
-                AddNode(pawnNodeId, GetObjectLabel(pawn), PyralisSetupDependencyNodeKind.PawnDefinition, pawn, $"PawnDefinition[{i}]");
-                AddEdge("pawn.definition", pawnNodeId, $"PawnDefinition[{i}]", "pawn asset");
-
-                AddSingleObjectNode("pawn.prefab." + i, "Pawn Prefab", PyralisSetupDependencyNodeKind.Prefab, GetObjectReference<UnityEngine.Object>(pawn, "pawnPrefab"), pawnNodeId, "pawnPrefab", "pawn prefab");
-                AddPawnProfileNode(pawn, pawnNodeId, i, "movementProfile");
-                AddPawnProfileNode(pawn, pawnNodeId, i, "combatProfile");
-                AddPawnProfileNode(pawn, pawnNodeId, i, "traversalProfile");
-                AddPawnProfileNode(pawn, pawnNodeId, i, "presentationProfile");
-                AddPawnProfileNode(pawn, pawnNodeId, i, "animationProfile");
-
-                FeatureModuleDefinition[] pawnModules = GetArrayReferences<FeatureModuleDefinition>(pawn, "featureModules");
-                for (int moduleSlot = 0; moduleSlot < pawnModules.Length; moduleSlot++)
-                {
-                    FeatureModuleDefinition module = pawnModules[moduleSlot];
-                    int moduleIndex = IndexOf(_featureModules, module);
-                    if (moduleIndex >= 0)
-                        AddEdge(pawnNodeId, "feature-module." + moduleIndex, $"featureModules[{moduleSlot}]", "pawn feature module");
-                }
-            }
-        }
-
-        private void AddPawnProfileNode(PawnDefinition pawn, string pawnNodeId, int pawnIndex, string fieldPath)
-        {
-            UnityEngine.Object profile = GetObjectReference<UnityEngine.Object>(pawn, fieldPath);
-            if (profile == null)
-                return;
-
-            string nodeId = $"pawn.profile.{pawnIndex}.{NormalizeId(fieldPath)}";
-            AddNode(nodeId, GetObjectLabel(profile), PyralisSetupDependencyNodeKind.Profile, profile, $"PawnDefinition.{fieldPath}");
-            AddEdge(pawnNodeId, nodeId, fieldPath, "profile");
-        }
-
-        private void AddSingleObjectNode(
-            string nodeId,
-            string fallbackLabel,
-            PyralisSetupDependencyNodeKind kind,
-            UnityEngine.Object sourceObject,
-            string parentNodeId,
-            string fieldPath,
-            string edgeLabel)
-        {
-            if (sourceObject == null)
-                return;
-
-            AddNode(nodeId, GetObjectLabel(sourceObject, fallbackLabel), kind, sourceObject, fieldPath);
-            AddEdge(parentNodeId, nodeId, fieldPath, edgeLabel);
         }
 
         private void AddNode(
@@ -316,7 +217,21 @@ namespace NeonBlack.Gameplay.Editor
             UnityEngine.Object sourceObject,
             string sourceFieldPath)
         {
+            if (string.IsNullOrWhiteSpace(stableId))
+                return;
+
+            if (sourceObject != null && _objectNodeIds.ContainsKey(sourceObject))
+                _objectNodeIds[sourceObject] = stableId;
+
+            for (int i = 0; i < _nodes.Count; i++)
+            {
+                if (string.Equals(_nodes[i].StableId, stableId, StringComparison.Ordinal))
+                    return;
+            }
+
             _nodes.Add(new PyralisSetupDependencyNode(stableId, label, kind, sourceObject, sourceFieldPath));
+            if (sourceObject != null && !_objectNodeIds.ContainsKey(sourceObject))
+                _objectNodeIds[sourceObject] = stableId;
         }
 
         private void AddEdge(string fromNodeId, string toNodeId, string fieldPath, string label)
@@ -324,44 +239,200 @@ namespace NeonBlack.Gameplay.Editor
             _edges.Add(new PyralisSetupDependencyEdge(fromNodeId, toNodeId, fieldPath, label));
         }
 
-        private static T GetObjectReference<T>(UnityEngine.Object owner, string propertyPath) where T : UnityEngine.Object
+        private void DiscoverAssignments(UnityEngine.Object root)
         {
-            if (owner == null || string.IsNullOrWhiteSpace(propertyPath))
-                return null;
+            if (root == null)
+                return;
 
-            SerializedObject serializedObject = new SerializedObject(owner);
-            SerializedProperty property = serializedObject.FindProperty(propertyPath);
-            return property != null ? property.objectReferenceValue as T : null;
+            Queue<UnityEngine.Object> queue = new Queue<UnityEngine.Object>();
+            HashSet<UnityEngine.Object> visited = new HashSet<UnityEngine.Object>();
+            queue.Enqueue(root);
+
+            while (queue.Count > 0)
+            {
+                UnityEngine.Object owner = queue.Dequeue();
+                if (owner == null || !visited.Add(owner) || !ShouldTraverse(owner))
+                    continue;
+
+                AddContractAssignmentRecords(owner, queue);
+                AddResolvedSerializedReferenceRecords(owner, queue);
+            }
         }
 
-        private static T[] GetArrayReferences<T>(UnityEngine.Object owner, string propertyPath) where T : UnityEngine.Object
+        private void AddContractAssignmentRecords(UnityEngine.Object owner, Queue<UnityEngine.Object> queue)
         {
-            if (owner == null || string.IsNullOrWhiteSpace(propertyPath))
-                return Array.Empty<T>();
+            ResolvedAuthoringContract contract = ResolvedAuthoringContractRegistry.FindByType(owner.GetType());
+            if (contract == null || contract.AssignmentFields == null)
+                return;
+
+            for (int i = 0; i < contract.AssignmentFields.Length; i++)
+                AddAssignmentRecordsForField(owner, contract.AssignmentFields[i], true, queue);
+        }
+
+        private void AddResolvedSerializedReferenceRecords(UnityEngine.Object owner, Queue<UnityEngine.Object> queue)
+        {
+            SerializedObject serializedObject = new SerializedObject(owner);
+            SerializedProperty iterator = serializedObject.GetIterator();
+            bool enterChildren = true;
+            while (iterator.NextVisible(enterChildren))
+            {
+                enterChildren = false;
+                if (iterator.propertyType != SerializedPropertyType.ObjectReference)
+                    continue;
+
+                if (iterator.propertyPath == "m_Script")
+                    continue;
+
+                AddAssignmentRecord(
+                    owner,
+                    iterator.propertyPath,
+                    iterator.objectReferenceValue != null ? iterator.objectReferenceValue.GetType().Name : iterator.type,
+                    iterator.objectReferenceValue,
+                    false,
+                    queue);
+            }
+        }
+
+        private void AddAssignmentRecordsForField(
+            UnityEngine.Object owner,
+            string fieldPath,
+            bool declaredByContract,
+            Queue<UnityEngine.Object> queue)
+        {
+            if (owner == null || string.IsNullOrWhiteSpace(fieldPath))
+                return;
 
             SerializedObject serializedObject = new SerializedObject(owner);
-            SerializedProperty property = serializedObject.FindProperty(propertyPath);
-            if (property == null || !property.isArray)
-                return Array.Empty<T>();
+            SerializedProperty property = serializedObject.FindProperty(fieldPath);
+            if (property == null)
+                return;
 
-            List<T> values = new List<T>();
+            if (property.propertyType == SerializedPropertyType.ObjectReference)
+            {
+                AddAssignmentRecord(owner, fieldPath, property.type, property.objectReferenceValue, declaredByContract, queue);
+                return;
+            }
+
+            if (!property.isArray || property.propertyType == SerializedPropertyType.String)
+                return;
+
             for (int i = 0; i < property.arraySize; i++)
             {
                 SerializedProperty element = property.GetArrayElementAtIndex(i);
-                if (element != null && element.objectReferenceValue is T value)
-                    values.Add(value);
-            }
+                if (element == null || element.propertyType != SerializedPropertyType.ObjectReference)
+                    continue;
 
-            return values.ToArray();
+                AddAssignmentRecord(
+                    owner,
+                    $"{fieldPath}[{i}]",
+                    element.objectReferenceValue != null ? element.objectReferenceValue.GetType().Name : element.type,
+                    element.objectReferenceValue,
+                    declaredByContract,
+                    queue);
+            }
         }
 
-        private static void AddRangeDistinct<T>(List<T> target, T[] values) where T : UnityEngine.Object
+        private void AddAssignmentRecord(
+            UnityEngine.Object owner,
+            string fieldPath,
+            string expectedTypeName,
+            UnityEngine.Object referencedObject,
+            bool declaredByContract,
+            Queue<UnityEngine.Object> queue)
         {
-            if (target == null || values == null)
+            if (owner == null || string.IsNullOrWhiteSpace(fieldPath))
                 return;
 
-            for (int i = 0; i < values.Length; i++)
-                AddDistinct(target, values[i]);
+            if (referencedObject != null && ShouldTraverse(referencedObject))
+                queue.Enqueue(referencedObject);
+
+            for (int i = 0; i < _assignments.Count; i++)
+            {
+                PyralisSetupAssignmentRecord record = _assignments[i];
+                if (record.OwnerObject == owner
+                    && string.Equals(record.FieldPath, fieldPath, StringComparison.Ordinal)
+                    && record.ReferencedObject == referencedObject)
+                {
+                    return;
+                }
+            }
+
+            _assignments.Add(new PyralisSetupAssignmentRecord(
+                owner,
+                owner.GetType().Name,
+                fieldPath,
+                expectedTypeName,
+                referencedObject,
+                declaredByContract));
+        }
+
+        private T FindFirstAssigned<T>() where T : UnityEngine.Object
+        {
+            for (int i = 0; i < _assignments.Count; i++)
+            {
+                if (_assignments[i].ReferencedObject is T value)
+                    return value;
+            }
+
+            return null;
+        }
+
+        private void AddAssignedObjects<T>(List<T> target) where T : UnityEngine.Object
+        {
+            for (int i = 0; i < _assignments.Count; i++)
+            {
+                if (_assignments[i].ReferencedObject is T value)
+                    AddDistinct(target, value);
+            }
+        }
+
+        private string GetNodeIdForObject(UnityEngine.Object sourceObject)
+        {
+            if (sourceObject == null)
+                return string.Empty;
+
+            if (_objectNodeIds.TryGetValue(sourceObject, out string existingNodeId))
+                return existingNodeId;
+
+            string nodeId = "dependency." + NormalizeId(sourceObject.GetType().Name) + "." + _objectNodeIds.Count;
+            _objectNodeIds[sourceObject] = nodeId;
+            return nodeId;
+        }
+
+        private static bool ShouldTraverse(UnityEngine.Object sourceObject)
+        {
+            if (sourceObject == null)
+                return false;
+
+            return sourceObject is ScriptableObject
+                || sourceObject is MonoBehaviour
+                || sourceObject is GameObject;
+        }
+
+        private static PyralisSetupDependencyNodeKind ClassifyNodeKind(UnityEngine.Object sourceObject)
+        {
+            if (sourceObject is GameplaySessionBootstrap)
+                return PyralisSetupDependencyNodeKind.BootstrapRoot;
+            if (sourceObject is SessionDefinition)
+                return PyralisSetupDependencyNodeKind.SessionDefinition;
+            if (sourceObject is GameModeDefinition)
+                return PyralisSetupDependencyNodeKind.GameModeDefinition;
+            if (sourceObject is ParticipantDefinition)
+                return PyralisSetupDependencyNodeKind.Participant;
+            if (sourceObject is PawnDefinition)
+                return PyralisSetupDependencyNodeKind.PawnDefinition;
+            if (sourceObject is FeatureModuleDefinition)
+                return PyralisSetupDependencyNodeKind.FeatureModule;
+            if (sourceObject is BoardDefinition)
+                return PyralisSetupDependencyNodeKind.BoardDefinition;
+            if (sourceObject is TurnOrderDefinition)
+                return PyralisSetupDependencyNodeKind.TurnOrderDefinition;
+            if (sourceObject is GameObject)
+                return PyralisSetupDependencyNodeKind.Prefab;
+            if (sourceObject is ScriptableObject)
+                return PyralisSetupDependencyNodeKind.Profile;
+
+            return PyralisSetupDependencyNodeKind.ObjectReference;
         }
 
         private static void AddDistinct<T>(List<T> target, T value) where T : UnityEngine.Object

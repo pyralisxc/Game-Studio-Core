@@ -16,6 +16,7 @@ namespace NeonBlack.Gameplay.Features.Input
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Input | AuthoringCapability.Setup,
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.PlatformCore },
         Relevance = "Routes physical input device events to the correct participant; participant definitions own the InputProfile that pawn and non-pawn control surfaces consume.",
         Axioms = AuthoringWorldAxiom.None,
         RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.InputRouteSupport },

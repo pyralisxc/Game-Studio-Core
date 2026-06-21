@@ -135,7 +135,7 @@ Do not store the same route advice separately in multiple windows, inspectors, v
 
 Fallback policy is strict: grammar fallback can label or phrase something, but it cannot make a contract selectable, assign a semantic capability path, add route-essential role tags, choose a runtime family, or make a proof look feature-owned. A missing `CapabilityPath`, route role tag, or feature-owned proof target should become `ContractMetadata.*` graph evidence and a Hygiene row. Do not recover by parsing namespaces, display names, setup node ids, or generic vocabulary cards into behavior.
 
-Behavior-affecting projection decisions must use typed graph metadata, not display text. Graph nodes should carry stable `IssueCode`, `SetupDomain`, node kind, source kind, source origin, work intent, severity, capability family, contract role tags, dependency evidence, validator fields, and native actions. Overview, Guide, Route Proof Trace, Map, Hygiene, Facts, and JSON exports may render prose, but they must not rank, filter, de-duplicate, or classify route work by searching labels or guidance sentences.
+Behavior-affecting projection decisions must use typed graph metadata, not display text. Graph nodes should carry stable `IssueCode`, `SetupDomain`, node kind, source kind, source origin, work intent, severity, capability family, contract role tags, dependency evidence, validator fields, and native actions. Overview, Guide, Route Proof Trace, Map, Hygiene, Facts, and JSON exports may render prose, but they must not rank, filter, de-duplicate, or classify route work by searching labels or guidance sentences. Tab projections should consume the shared projection metadata resolver for group, audience, route phase, owner domain, and sort rank; do not add tab-local source-kind, source-origin, id-prefix, or label parsing as readiness truth.
 
 Contracts may declare `CapabilityPath`, `RoleTags`, and `SelectableIntent` when reflection needs stable semantic grouping for Intent, Guide, Route Proof Trace, or Facts. These fields are routing meaning, not setup prose. Prefer them over hardcoded Intent categories, but do not use them to restate interfaces, required components, serialized fields, or dependency order that reflection can already discover.
 
@@ -178,10 +178,10 @@ Gameplay code / feature code
 | Input | Owns | Should not own |
 |---|---|---|
 | Gameplay code | runtime behavior, interfaces, components, profiles, definitions, feature modules | authoring prose that belongs in contracts |
-| `[AuthoringContract]` | feature meaning, capability, semantic path, role tags, relevance, proof guidance, native setup meaning, customization moments, unsupported lane messages | code-proven requirements that reflection can infer |
+| `[AuthoringContract]` | feature meaning, capability, runtime families, semantic path, role tags, relevance, proof target ids, proof guidance, native setup meaning, customization moments, unsupported lane messages | code-proven requirements that reflection can infer |
 | Reflection | implemented interfaces, `[RequireComponent]`, serialized fields, `CreateAssetMenu`, `AddComponentMenu`, feature/profile links | human meaning, route taste, or proof copy |
 | Dependency tree | setup/reference structure: bootstrap, session, mode, setup route, participants, pawns, prefabs, profiles, feature modules | UI labels or route guidance text |
-| Scene evidence | bootstrap-scoped scene components and candidate surfaces visible in the open scene | proof results or broad scene-quality policy |
+| Scene evidence | bootstrap-scoped scene components, typed scene-surface detector results, candidate objects, linked setup state, and fallback hygiene for untyped name matches | proof results, broad scene-quality policy, or feature-surface truth inferred only from type names |
 | Validators | local semantic readiness, blockers, invalid combinations, severity, native action targets | persistent feature meaning, grammar wording, or references reflection can prove |
 | Core route domains | graph/compiler milestones: root, lifetime scope, session, mode, route capabilities, participant topology, and join policy | feature-specific checklists, field assignments, pawn/input/spawn/camera/playfield setup, customization, or scene/prefab aggregate gates |
 | Grammar/vocabulary | labels, summaries, generic proof templates, native Unity surface names | feature-specific setup truth or route decisions |
@@ -582,80 +582,20 @@ Use these products and patterns as guidance, not as things to copy directly:
 
 Pyralis should stay Pyralis: definitions and profiles express intent, runtime components execute behavior, ordinary Unity scenes remain valid, and the Authoring Window keeps the chain understandable.
 
-## Implementation Phases
+## Extension Checklist
 
-### Phase 1: Structured Authoring Facts
+Most gameplay feature work should not edit the Authoring Window. Before changing UI or projection code, identify the owner of the missing truth:
 
-Introduce or consolidate structured models for setup nodes, issues, actions, and evidence.
+| Missing truth | Preferred owner |
+|---|---|
+| Feature identity, runtime family, role tags, proof target, supported lanes, native setup action | `[AuthoringContract]` on the feature-owned type |
+| Required references, serialized fields, `CreateAssetMenu`, required components, implemented interfaces | reflection and `PyralisSetupDependencyTree` |
+| Local semantic readiness, invalid values, cross-field constraints, route-specific semantic warnings | `PyralisRuntimeValidationIssue` records from the owning asset/component |
+| Open-scene surfaces such as cameras, UI roots, colliders, tilemaps, spawn points, pickups, hazards, zones, and scene services | typed scene-surface detectors |
+| Generic wording, labels, facts, fallback proof prose, and inspector handoff text | grammar/vocabulary |
+| Ranking, grouping, de-duplication, current action, route cards, and tab/export lenses | `PyralisAuthoringSetupGraphProjection` consuming typed graph metadata |
 
-Expected result:
-
-- less keyword-based categorization
-- fewer duplicated route checks
-- clearer UI rows across all modes
-- tests can validate authoring diagnosis without opening the window
-
-### Phase 2: Overview As Keep-Going Screen
-
-Refactor Overview around `Do Now`, `Proof Enhancers`, and Optional Capabilities.
-
-Expected result:
-
-- the next useful step is obvious
-- recommended items do not compete with blockers
-- optional systems stop feeling like required setup
-
-### Phase 3: Better Guide And Map Separation
-
-Make Guide selection-local and Map route-global.
-
-Expected result:
-
-- Guide explains the selected object
-- Map explains the dependency chain
-- neither duplicates Inspector field editing
-
-### Phase 4: Diagnosis-First Hygiene
-
-Replace text grouping with structured issue cards.
-
-Expected result:
-
-- validation becomes triage
-- each issue points to the affected object or field
-- safe fix actions become easier to add without brittle string matching
-
-### Phase 5: Detector-Based Scene Surfaces
-
-Move scene scanning into route-aware detectors with evidence. Keep route relevance and user-facing detector wording in `PyralisAuthoringSceneSurfaceGuidance` so Overview, Map, scene-surface rows, and docs do not drift.
-
-Expected result:
-
-- fewer false positives
-- project-owned equivalents are easier to support
-- scene surfaces explain partial readiness instead of only present/missing counts
-
-### Phase 6: Proof Loop Guidance
-
-Add first-proof recommendations through contracts, dependency-tree evidence, validators, and graph proof nodes. Use `PyralisProofFamilyVocabulary` only for generic proof wording.
-
-Expected result:
-
-- the developer knows what to test before expanding setup
-- first-proof routes stay playable instead of becoming paperwork
-
-### Phase 7: Window Architecture Hardening
-
-Keep `PyralisAuthoringWindow` as a UI Toolkit shell and mode coordinator.
-
-Move new behavior into graph projections, validators, analyzers, detectors, vocabulary, or action handlers before adding tab renderer logic.
-
-Expected result:
-
-- lower maintenance cost
-- easier route additions
-- better test coverage
-- tab UI, JSON export, and projection output stay aligned
+Projection code may translate low-level structural evidence into route-facing Unity actions, such as showing `Add Motor2D` for a Sprite2D pawn motor gap. It must not invent setup truth by parsing labels, namespaces, source origins, stable-id prefixes, or guidance prose.
 
 ## Maintenance Rules
 

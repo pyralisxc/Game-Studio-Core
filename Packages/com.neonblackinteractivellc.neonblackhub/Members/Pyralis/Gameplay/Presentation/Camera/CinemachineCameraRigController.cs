@@ -17,6 +17,7 @@ namespace NeonBlack.Gameplay.Presentation.Camera
     [AuthoringContract(
         Capability = AuthoringCapability.Camera,
         CapabilityPath = "World & Meta/Camera/Cinemachine Rig",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CameraInput },
         Relevance = "Cinemachine Camera Rig Controller is the Pyralis scene camera runtime. Use this Inspector for assigned references and tuning values.",
         RoleTags = new[] { "CameraRig", "Cinemachine", "ParticipantFollow" },
         NativeSetup = new[] 

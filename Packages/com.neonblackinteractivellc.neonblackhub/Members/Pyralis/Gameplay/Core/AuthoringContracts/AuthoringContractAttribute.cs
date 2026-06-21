@@ -4,6 +4,25 @@ using NeonBlack.Gameplay.Presentation.Animation;
 namespace NeonBlack.Gameplay.Core.Contracts
 {
     /// <summary>
+    /// Broad product area represented by a runtime setup pattern.
+    /// </summary>
+    public enum RuntimeCapabilityFamily
+    {
+        PlatformCore,
+        CharacterPawnGameplay,
+        ActionTargeting,
+        Combat,
+        GunsProjectiles,
+        ProceduralGeneration,
+        BoardCardTabletop,
+        AnimationPresentation,
+        ScoringObjectives,
+        CameraInput,
+        Networking,
+        Custom
+    }
+
+    /// <summary>
     /// Stable non-UI role tags consumed by reflection, dependency analysis, and Intent projection.
     /// </summary>
     public static class AuthoringContractRoleTags
@@ -155,6 +174,12 @@ namespace NeonBlack.Gameplay.Core.Contracts
         /// A custom message to display when this contract is used in an unsupported lane.
         /// </summary>
         public string UnsupportedLaneMessage { get; set; }
+
+        /// <summary>
+        /// Runtime capability families represented by this contract.
+        /// Keep broad runtime meaning here so authoring projections do not infer product area from UI capability flags.
+        /// </summary>
+        public RuntimeCapabilityFamily[] RuntimeFamilies { get; set; }
 
         /// <summary>
         /// Roles or tags consumed by this contract (e.g., "MainCamera", "PlayerPawn").

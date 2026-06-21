@@ -399,6 +399,49 @@ namespace NeonBlack.Gameplay.Editor
         public PyralisAuthoringNativeAction? NativeActionOverride { get; }
     }
 
+    internal enum PyralisAuthoringProjectionGroup
+    {
+        Reference,
+        Foundation,
+        SetupChain,
+        ReflectedAssignment,
+        PrefabReadiness,
+        RuntimeValidation,
+        SceneEvidence,
+        Contract,
+        Capability,
+        Proof
+    }
+
+    internal enum PyralisAuthoringProjectionAudience
+    {
+        Reference,
+        Map
+    }
+
+    internal readonly struct PyralisAuthoringProjectionMetadata
+    {
+        public PyralisAuthoringProjectionMetadata(
+            PyralisAuthoringProjectionGroup group,
+            PyralisAuthoringProjectionAudience audience,
+            PyralisAuthoringRouteStepPhase phase,
+            PyralisAuthoringGraphSetupDomain ownerDomain,
+            int sortRank)
+        {
+            Group = group;
+            Audience = audience;
+            Phase = phase;
+            OwnerDomain = ownerDomain;
+            SortRank = sortRank;
+        }
+
+        public PyralisAuthoringProjectionGroup Group { get; }
+        public PyralisAuthoringProjectionAudience Audience { get; }
+        public PyralisAuthoringRouteStepPhase Phase { get; }
+        public PyralisAuthoringGraphSetupDomain OwnerDomain { get; }
+        public int SortRank { get; }
+    }
+
     public sealed class PyralisAuthoringSelectedContextGraphRow
     {
         public PyralisAuthoringSelectedContextGraphRow(
@@ -843,15 +886,7 @@ namespace NeonBlack.Gameplay.Editor
                 return true;
             }
 
-            if (node.SourceKind == PyralisAuthoringGraphSourceKind.SceneReadiness
-                || node.SourceKind == PyralisAuthoringGraphSourceKind.RuntimeValidation
-                || node.SourceKind == PyralisAuthoringGraphSourceKind.Reflection
-                || node.SourceKind == PyralisAuthoringGraphSourceKind.CoreSetup)
-            {
-                return true;
-            }
-
-            return false;
+            return GetProjectionMetadata(node).Audience == PyralisAuthoringProjectionAudience.Map;
         }
 
         public static IReadOnlyList<PyralisAuthoringGraphConnectionRow> BuildProofSupportRows(PyralisAuthoringSetupGraph graph)
@@ -1197,8 +1232,7 @@ namespace NeonBlack.Gameplay.Editor
 
             PyralisAuthoringGraphNode[] coreSetupNodes = graph.Nodes
                 .Where(node => node != null
-                    && node.Kind == PyralisAuthoringGraphNodeKind.ValidationEvidence
-                    && node.SourceKind == PyralisAuthoringGraphSourceKind.CoreSetup
+                    && GetProjectionMetadata(node).Group == PyralisAuthoringProjectionGroup.SetupChain
                     && IsCriticalRouteSetupCard(node))
                 .OrderBy(GetRouteSetupCardRank)
                 .ThenBy(node => node.Label, StringComparer.Ordinal)
@@ -1267,7 +1301,7 @@ namespace NeonBlack.Gameplay.Editor
 
             PyralisAuthoringGraphNode[] reflectedNodes = graph.Nodes
                 .Where(node => node != null
-                    && node.SourceKind == PyralisAuthoringGraphSourceKind.Reflection
+                    && GetProjectionMetadata(node).Group == PyralisAuthoringProjectionGroup.ReflectedAssignment
                     && IsCriticalRouteSetupCard(node))
                 .OrderBy(GetRouteSetupCardRank)
                 .ThenBy(node => node.Label, StringComparer.Ordinal)
@@ -1300,8 +1334,7 @@ namespace NeonBlack.Gameplay.Editor
 
             PyralisAuthoringGraphNode[] runtimeNodes = graph.Nodes
                 .Where(node => node != null
-                    && node.Kind == PyralisAuthoringGraphNodeKind.ValidationEvidence
-                    && node.SourceKind == PyralisAuthoringGraphSourceKind.RuntimeValidation
+                    && GetProjectionMetadata(node).Group == PyralisAuthoringProjectionGroup.RuntimeValidation
                     && IsCriticalRouteSetupCard(node))
                 .OrderBy(GetRouteSetupCardRank)
                 .ThenBy(node => node.Label, StringComparer.Ordinal)
@@ -1334,9 +1367,7 @@ namespace NeonBlack.Gameplay.Editor
 
             PyralisAuthoringGraphNode[] readinessNodes = graph.Nodes
                 .Where(node => node != null
-                    && node.Kind == PyralisAuthoringGraphNodeKind.ValidationEvidence
-                    && node.SourceKind == PyralisAuthoringGraphSourceKind.SceneReadiness
-                    && IsPrefabReadinessRouteCard(node)
+                    && GetProjectionMetadata(node).Group == PyralisAuthoringProjectionGroup.PrefabReadiness
                     && IsCriticalRouteSetupCard(node))
                 .OrderBy(GetRouteSetupCardRank)
                 .ThenBy(node => node.Label, StringComparer.Ordinal)
@@ -1507,62 +1538,8 @@ namespace NeonBlack.Gameplay.Editor
             if (node == null)
                 return false;
 
-            if (node.Kind == PyralisAuthoringGraphNodeKind.SceneSurface
-                || node.SourceKind == PyralisAuthoringGraphSourceKind.SceneReadiness)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        private static void AddRouteContextRows(
-            PyralisAuthoringSetupGraph graph,
-            List<PyralisAuthoringRouteStepRow> rows,
-            HashSet<string> added,
-            ref int sequence)
-        {
-            if (graph == null)
-                return;
-
-            AddRouteStep(
-                rows,
-                added,
-                FindRouteShapeNode(graph),
-                ref sequence,
-                PyralisAuthoringRouteStepPhase.SetupChain,
-                PyralisAuthoringRouteStepRole.RouteContext,
-                "This is the participant ownership shape compiled from intent, reflected setup, and route evidence.",
-                graph: graph);
-
-            PyralisAuthoringGraphNode proof = FindCurrentProofNode(graph);
-            IReadOnlyList<PyralisAuthoringGraphNode> contractNodes = graph.FindNodes(PyralisAuthoringGraphNodeKind.Contract);
-            for (int i = 0; i < contractNodes.Count; i++)
-            {
-                PyralisAuthoringGraphNode node = contractNodes[i];
-                if (node == null || node.SourceOrigin != PyralisAuthoringGraphSourceOrigin.Contract)
-                    continue;
-
-                if (string.IsNullOrWhiteSpace(node.ProofTargetId)
-                    || proof == null
-                    || !string.Equals(node.ProofTargetId, proof.StableId, StringComparison.Ordinal))
-                {
-                    continue;
-                }
-
-                if (!IsDirectProofNode(graph, node, proof.StableId))
-                    continue;
-
-                AddRouteStep(
-                    rows,
-                    added,
-                    node,
-                    ref sequence,
-                    PyralisAuthoringRouteStepPhase.Capability,
-                    PyralisAuthoringRouteStepRole.RouteContext,
-                    "This reflected contract matches the first proof target.",
-                    graph: graph);
-            }
+            PyralisAuthoringProjectionGroup group = GetProjectionMetadata(node).Group;
+            return group != PyralisAuthoringProjectionGroup.SceneEvidence;
         }
 
         private static bool IsCriticalRouteSetupCard(PyralisAuthoringGraphNode node)
@@ -1583,8 +1560,8 @@ namespace NeonBlack.Gameplay.Editor
                 return false;
 
             if (node.SetupDomain == PyralisAuthoringGraphSetupDomain.GameplayRoot
-                && node.SourceKind == PyralisAuthoringGraphSourceKind.CoreSetup
-                && node.Kind == PyralisAuthoringGraphNodeKind.ValidationEvidence)
+                && node.Kind == PyralisAuthoringGraphNodeKind.ValidationEvidence
+                && GetProjectionMetadata(node).Group == PyralisAuthoringProjectionGroup.SetupChain)
             {
                 return false;
             }
@@ -1611,15 +1588,11 @@ namespace NeonBlack.Gameplay.Editor
             if (node == null)
                 return false;
 
-            if (node.SourceKind == PyralisAuthoringGraphSourceKind.AuthoringContract
-                || node.SourceOrigin == PyralisAuthoringGraphSourceOrigin.Contract)
-            {
-                return false;
-            }
-
-            return node.SourceKind == PyralisAuthoringGraphSourceKind.CoreSetup
-                || node.SourceKind == PyralisAuthoringGraphSourceKind.RuntimeValidation
-                || node.SourceKind == PyralisAuthoringGraphSourceKind.SceneReadiness;
+            PyralisAuthoringProjectionGroup group = GetProjectionMetadata(node).Group;
+            return group == PyralisAuthoringProjectionGroup.SetupChain
+                || group == PyralisAuthoringProjectionGroup.PrefabReadiness
+                || group == PyralisAuthoringProjectionGroup.RuntimeValidation
+                || group == PyralisAuthoringProjectionGroup.SceneEvidence;
         }
 
         private static bool IsCanWaitRouteSetupCard(PyralisAuthoringGraphNode node)
@@ -1649,7 +1622,7 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             return node.EvidenceState == PyralisAuthoringGraphEvidenceState.CandidateDetected
-                && node.SourceKind == PyralisAuthoringGraphSourceKind.CoreSetup;
+                && GetProjectionMetadata(node).Group == PyralisAuthoringProjectionGroup.SetupChain;
         }
 
         private static PyralisAuthoringRouteStepRole GetRouteSetupCardRole(
@@ -1714,7 +1687,150 @@ namespace NeonBlack.Gameplay.Editor
             if (node == null)
                 return 200;
 
-            return GetSetupDomainRank(node.SetupDomain);
+            return GetProjectionMetadata(node).SortRank;
+        }
+
+        private static PyralisAuthoringProjectionMetadata GetProjectionMetadata(PyralisAuthoringGraphNode node)
+        {
+            if (node == null)
+            {
+                return new PyralisAuthoringProjectionMetadata(
+                    PyralisAuthoringProjectionGroup.Reference,
+                    PyralisAuthoringProjectionAudience.Reference,
+                    PyralisAuthoringRouteStepPhase.Reference,
+                    PyralisAuthoringGraphSetupDomain.Unknown,
+                    200);
+            }
+
+            PyralisAuthoringProjectionGroup group = GetProjectionGroup(node);
+            PyralisAuthoringRouteStepPhase phase = GetProjectionPhase(group);
+            PyralisAuthoringProjectionAudience audience = GetProjectionAudience(node, group);
+            return new PyralisAuthoringProjectionMetadata(
+                group,
+                audience,
+                phase,
+                node.SetupDomain,
+                GetSetupDomainRank(node.SetupDomain));
+        }
+
+        private static PyralisAuthoringProjectionGroup GetProjectionGroup(PyralisAuthoringGraphNode node)
+        {
+            if (node == null)
+                return PyralisAuthoringProjectionGroup.Reference;
+
+            switch (node.Kind)
+            {
+                case PyralisAuthoringGraphNodeKind.SetupChain:
+                    return node.SetupDomain == PyralisAuthoringGraphSetupDomain.GameplayRoot
+                        ? PyralisAuthoringProjectionGroup.Foundation
+                        : PyralisAuthoringProjectionGroup.SetupChain;
+                case PyralisAuthoringGraphNodeKind.RouteShape:
+                    return PyralisAuthoringProjectionGroup.SetupChain;
+                case PyralisAuthoringGraphNodeKind.AssignmentField:
+                    return PyralisAuthoringProjectionGroup.ReflectedAssignment;
+                case PyralisAuthoringGraphNodeKind.SceneSurface:
+                case PyralisAuthoringGraphNodeKind.UnitySurfaceRequirement:
+                    return PyralisAuthoringProjectionGroup.SceneEvidence;
+                case PyralisAuthoringGraphNodeKind.Contract:
+                    return PyralisAuthoringProjectionGroup.Contract;
+                case PyralisAuthoringGraphNodeKind.Capability:
+                    return PyralisAuthoringProjectionGroup.Capability;
+                case PyralisAuthoringGraphNodeKind.Proof:
+                    return PyralisAuthoringProjectionGroup.Proof;
+                case PyralisAuthoringGraphNodeKind.ValidationEvidence:
+                    if (IsPrefabReadinessRouteCard(node))
+                        return PyralisAuthoringProjectionGroup.PrefabReadiness;
+                    if (IsCoreSetupDomain(node.SetupDomain))
+                        return PyralisAuthoringProjectionGroup.SetupChain;
+                    if (IsSceneEvidenceDomain(node.SetupDomain))
+                        return PyralisAuthoringProjectionGroup.SceneEvidence;
+                    return PyralisAuthoringProjectionGroup.RuntimeValidation;
+                default:
+                    return PyralisAuthoringProjectionGroup.Reference;
+            }
+        }
+
+        private static PyralisAuthoringRouteStepPhase GetProjectionPhase(PyralisAuthoringProjectionGroup group)
+        {
+            switch (group)
+            {
+                case PyralisAuthoringProjectionGroup.Foundation:
+                    return PyralisAuthoringRouteStepPhase.Foundation;
+                case PyralisAuthoringProjectionGroup.SetupChain:
+                case PyralisAuthoringProjectionGroup.ReflectedAssignment:
+                    return PyralisAuthoringRouteStepPhase.SetupChain;
+                case PyralisAuthoringProjectionGroup.PrefabReadiness:
+                case PyralisAuthoringProjectionGroup.SceneEvidence:
+                    return PyralisAuthoringRouteStepPhase.SceneEvidence;
+                case PyralisAuthoringProjectionGroup.RuntimeValidation:
+                    return PyralisAuthoringRouteStepPhase.Validation;
+                case PyralisAuthoringProjectionGroup.Contract:
+                case PyralisAuthoringProjectionGroup.Capability:
+                    return PyralisAuthoringRouteStepPhase.Capability;
+                case PyralisAuthoringProjectionGroup.Proof:
+                    return PyralisAuthoringRouteStepPhase.FirstProof;
+                default:
+                    return PyralisAuthoringRouteStepPhase.Reference;
+            }
+        }
+
+        private static PyralisAuthoringProjectionAudience GetProjectionAudience(
+            PyralisAuthoringGraphNode node,
+            PyralisAuthoringProjectionGroup group)
+        {
+            if (node == null)
+                return PyralisAuthoringProjectionAudience.Reference;
+
+            if (group == PyralisAuthoringProjectionGroup.Contract
+                || group == PyralisAuthoringProjectionGroup.Capability
+                || group == PyralisAuthoringProjectionGroup.Proof)
+            {
+                return PyralisAuthoringProjectionAudience.Reference;
+            }
+
+            if (node.Kind == PyralisAuthoringGraphNodeKind.ValidationEvidence
+                || node.Kind == PyralisAuthoringGraphNodeKind.SetupChain
+                || node.Kind == PyralisAuthoringGraphNodeKind.RouteShape
+                || node.Kind == PyralisAuthoringGraphNodeKind.UnitySurfaceRequirement
+                || node.Kind == PyralisAuthoringGraphNodeKind.SceneSurface
+                || node.Kind == PyralisAuthoringGraphNodeKind.AssignmentField)
+            {
+                return PyralisAuthoringProjectionAudience.Map;
+            }
+
+            return PyralisAuthoringProjectionAudience.Reference;
+        }
+
+        private static bool IsCoreSetupDomain(PyralisAuthoringGraphSetupDomain setupDomain)
+        {
+            switch (setupDomain)
+            {
+                case PyralisAuthoringGraphSetupDomain.GameplayRoot:
+                case PyralisAuthoringGraphSetupDomain.LifetimeScope:
+                case PyralisAuthoringGraphSetupDomain.Session:
+                case PyralisAuthoringGraphSetupDomain.GameMode:
+                case PyralisAuthoringGraphSetupDomain.RouteCapabilities:
+                case PyralisAuthoringGraphSetupDomain.RouteShape:
+                case PyralisAuthoringGraphSetupDomain.Participant:
+                case PyralisAuthoringGraphSetupDomain.ParticipantTopology:
+                case PyralisAuthoringGraphSetupDomain.Input:
+                case PyralisAuthoringGraphSetupDomain.PlayerInputManager:
+                case PyralisAuthoringGraphSetupDomain.Spawn:
+                case PyralisAuthoringGraphSetupDomain.PawnDefinition:
+                case PyralisAuthoringGraphSetupDomain.PawnPrefab:
+                case PyralisAuthoringGraphSetupDomain.Camera:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        private static bool IsSceneEvidenceDomain(PyralisAuthoringGraphSetupDomain setupDomain)
+        {
+            return setupDomain == PyralisAuthoringGraphSetupDomain.SceneSurface
+                || setupDomain == PyralisAuthoringGraphSetupDomain.SceneReadiness
+                || setupDomain == PyralisAuthoringGraphSetupDomain.UserInterface
+                || setupDomain == PyralisAuthoringGraphSetupDomain.Playfield;
         }
 
         private static int GetSetupDomainRank(PyralisAuthoringGraphSetupDomain setupDomain)
@@ -2273,20 +2389,7 @@ namespace NeonBlack.Gameplay.Editor
             if (node.WorkIntent == PyralisAuthoringGraphWorkIntent.Optional)
                 return PyralisAuthoringRouteStepPhase.Optional;
 
-            return node.Kind switch
-            {
-                PyralisAuthoringGraphNodeKind.SetupChain when string.Equals(node.StableId, "bootstrap.root", StringComparison.Ordinal) => PyralisAuthoringRouteStepPhase.Foundation,
-                PyralisAuthoringGraphNodeKind.SetupChain => PyralisAuthoringRouteStepPhase.SetupChain,
-                PyralisAuthoringGraphNodeKind.AssignmentField => PyralisAuthoringRouteStepPhase.SetupChain,
-                PyralisAuthoringGraphNodeKind.RouteShape => PyralisAuthoringRouteStepPhase.SetupChain,
-                PyralisAuthoringGraphNodeKind.Capability => PyralisAuthoringRouteStepPhase.Capability,
-                PyralisAuthoringGraphNodeKind.Contract => PyralisAuthoringRouteStepPhase.Capability,
-                PyralisAuthoringGraphNodeKind.Proof => PyralisAuthoringRouteStepPhase.FirstProof,
-                PyralisAuthoringGraphNodeKind.SceneSurface => PyralisAuthoringRouteStepPhase.SceneEvidence,
-                PyralisAuthoringGraphNodeKind.UnitySurfaceRequirement => PyralisAuthoringRouteStepPhase.SceneEvidence,
-                PyralisAuthoringGraphNodeKind.ValidationEvidence => PyralisAuthoringRouteStepPhase.Validation,
-                _ => PyralisAuthoringRouteStepPhase.Reference
-            };
+            return GetProjectionMetadata(node).Phase;
         }
 
         public static PyralisAuthoringGraphNode FindCurrentProofNode(PyralisAuthoringSetupGraph graph)
@@ -2508,7 +2611,7 @@ namespace NeonBlack.Gameplay.Editor
             return graph.Nodes
                 .Where(node => node != null
                     && node.Kind == PyralisAuthoringGraphNodeKind.ValidationEvidence
-                    && node.SourceKind == PyralisAuthoringGraphSourceKind.RuntimeValidation
+                    && GetProjectionMetadata(node).Group == PyralisAuthoringProjectionGroup.RuntimeValidation
                     && node.IssueCode.StartsWith("ValidationMetadata.", StringComparison.Ordinal))
                 .Select(node => new PyralisAuthoringGraphAuditRow(node))
                 .ToArray();
@@ -2583,9 +2686,7 @@ namespace NeonBlack.Gameplay.Editor
                 return true;
             }
 
-            return node.SourceKind == PyralisAuthoringGraphSourceKind.SceneReadiness
-                || node.SourceKind == PyralisAuthoringGraphSourceKind.RuntimeValidation
-                || node.SourceKind == PyralisAuthoringGraphSourceKind.CoreSetup;
+            return GetProjectionMetadata(node).Audience == PyralisAuthoringProjectionAudience.Map;
         }
 
         private static bool IsResolvedProofNode(PyralisAuthoringGraphNode node)
@@ -2654,7 +2755,7 @@ namespace NeonBlack.Gameplay.Editor
 
             return graph.FindNodes(PyralisAuthoringGraphNodeKind.Contract)
                 .Where(node => node != null
-                    && node.SourceKind == PyralisAuthoringGraphSourceKind.AuthoringContract
+                    && node.SourceContract != null
                     && node.EvidenceState != PyralisAuthoringGraphEvidenceState.Unknown)
                 .Select(node => new PyralisAuthoringReflectiveContractGraphRow(node))
                 .ToArray();
@@ -3168,10 +3269,9 @@ namespace NeonBlack.Gameplay.Editor
                 if (node == null)
                     continue;
 
-                bool coreSetupEvidence = node.Kind == PyralisAuthoringGraphNodeKind.ValidationEvidence
-                    && node.SourceKind == PyralisAuthoringGraphSourceKind.CoreSetup;
-                bool reflectedAssignment = node.Kind == PyralisAuthoringGraphNodeKind.AssignmentField
-                    && node.SourceKind == PyralisAuthoringGraphSourceKind.Reflection;
+                PyralisAuthoringProjectionGroup group = GetProjectionMetadata(node).Group;
+                bool coreSetupEvidence = group == PyralisAuthoringProjectionGroup.SetupChain;
+                bool reflectedAssignment = group == PyralisAuthoringProjectionGroup.ReflectedAssignment;
                 if (!coreSetupEvidence && !reflectedAssignment)
                     continue;
 
@@ -3271,30 +3371,46 @@ namespace NeonBlack.Gameplay.Editor
             if (linkedNode == null || string.IsNullOrWhiteSpace(nodeId))
                 return false;
 
+            PyralisAuthoringProjectionMetadata metadata = GetProjectionMetadata(linkedNode);
             if (string.Equals(nodeId, "scene.surfaces", StringComparison.Ordinal))
-                return linkedNode.Kind == PyralisAuthoringGraphNodeKind.SceneSurface
-                    || linkedNode.SourceKind == PyralisAuthoringGraphSourceKind.SceneReadiness;
+                return metadata.Group == PyralisAuthoringProjectionGroup.SceneEvidence;
 
-            if (linkedNode.Kind == PyralisAuthoringGraphNodeKind.SceneSurface)
-                return false;
-
-            if (linkedNode.SourceKind == PyralisAuthoringGraphSourceKind.SceneReadiness)
+            if (metadata.Group == PyralisAuthoringProjectionGroup.SceneEvidence)
                 return false;
 
             if (string.Equals(nodeId, "bootstrap.root", StringComparison.Ordinal))
-            {
-                return linkedNode.SourceKind == PyralisAuthoringGraphSourceKind.CoreSetup
-                    && !string.Equals(linkedNode.StableId, "scene.surfaces", StringComparison.Ordinal);
-            }
+                return IsCoreSetupDomain(metadata.OwnerDomain);
 
             if (string.Equals(nodeId, "participant.default", StringComparison.Ordinal)
                 || string.Equals(nodeId, "pawn.definition", StringComparison.Ordinal))
             {
-                return linkedNode.SourceKind == PyralisAuthoringGraphSourceKind.RuntimeValidation
-                    || linkedNode.SourceKind == PyralisAuthoringGraphSourceKind.CoreSetup;
+                return IsParticipantOrPawnDomain(metadata.OwnerDomain)
+                    || metadata.Group == PyralisAuthoringProjectionGroup.RuntimeValidation
+                    || metadata.Group == PyralisAuthoringProjectionGroup.SetupChain
+                    || metadata.Group == PyralisAuthoringProjectionGroup.ReflectedAssignment;
             }
 
-            return linkedNode.SourceKind == PyralisAuthoringGraphSourceKind.CoreSetup;
+            return IsCoreSetupDomain(metadata.OwnerDomain);
+        }
+
+        private static bool IsParticipantOrPawnDomain(PyralisAuthoringGraphSetupDomain setupDomain)
+        {
+            switch (setupDomain)
+            {
+                case PyralisAuthoringGraphSetupDomain.Participant:
+                case PyralisAuthoringGraphSetupDomain.ParticipantTopology:
+                case PyralisAuthoringGraphSetupDomain.Input:
+                case PyralisAuthoringGraphSetupDomain.PlayerInputManager:
+                case PyralisAuthoringGraphSetupDomain.PawnDefinition:
+                case PyralisAuthoringGraphSetupDomain.PawnPrefab:
+                case PyralisAuthoringGraphSetupDomain.PawnMotor:
+                case PyralisAuthoringGraphSetupDomain.PawnInput:
+                case PyralisAuthoringGraphSetupDomain.PawnPresentation:
+                case PyralisAuthoringGraphSetupDomain.PawnAnimation:
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         private static PyralisAuthoringGraphEvidenceState ResolveEffectiveEvidenceState(

@@ -20,6 +20,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
         Capability = AuthoringCapability.Session, 
         Priority = AuthoringPriority.Primary,
         SetupNodeId = "session.definition",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.PlatformCore },
         RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.CoreRouteAnchor },
         Relevance = "Root configuration for a gameplay session. Defines the boundary of your game world and network authority.",
         AssignmentFields = new[] { nameof(sessionName), nameof(defaultGameMode), nameof(defaultParticipants), nameof(networkMode), nameof(maxParticipants) },

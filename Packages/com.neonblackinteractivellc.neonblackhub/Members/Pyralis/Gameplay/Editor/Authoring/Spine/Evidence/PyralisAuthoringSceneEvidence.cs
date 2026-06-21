@@ -1,13 +1,20 @@
 using System;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Rules.Board;
 using NeonBlack.Gameplay.Core.Runtime;
 using NeonBlack.Gameplay.Features.Combat;
+using NeonBlack.Gameplay.Features.Encounters;
+using NeonBlack.Gameplay.Features.Enemies;
 using NeonBlack.Gameplay.Features.Feedback.UI;
 using NeonBlack.Gameplay.Features.GameFlow;
+using NeonBlack.Gameplay.Features.Hazards;
+using NeonBlack.Gameplay.Features.Pickups;
 using NeonBlack.Gameplay.Features.Settings;
+using NeonBlack.Gameplay.Features.Spawning;
 using NeonBlack.Gameplay.Features.Tabletop;
+using NeonBlack.Gameplay.Features.Zones;
 using NeonBlack.Gameplay.Presentation.Camera;
 using UnityEditor;
 using UnityEngine;
@@ -42,8 +49,10 @@ namespace NeonBlack.Gameplay.Editor
         public int EnemySurfaceCount { get; private set; }
         public int ZoneSurfaceCount { get; private set; }
         public int SpawnPointCount { get; private set; }
-        public int LinkedSpawnPointCount => SpawnPointCount;
-        public int LinkedCameraRigCount { get; private set; }
+        public int LinkedSpawnPointCount => CountLinkedSurfaces(PyralisAuthoringSceneSurfaceKind.EnvironmentPlayfield);
+        public int LinkedCameraRigCount => CountLinkedSurfaces(PyralisAuthoringSceneSurfaceKind.CameraBounds);
+        private readonly List<PyralisAuthoringSceneSurfaceDetectorResult> _detectorResults = new List<PyralisAuthoringSceneSurfaceDetectorResult>();
+        private readonly List<PyralisAuthoringSceneSurfaceDetectorResult> _fallbackTypeNameResults = new List<PyralisAuthoringSceneSurfaceDetectorResult>();
 
         public IGameplayStateReader GameplayStateService { get; private set; }
         public ICameraBoundsProvider CameraBoundsService { get; private set; }
@@ -75,6 +84,8 @@ namespace NeonBlack.Gameplay.Editor
         public bool HasFeedbackHud => FeedbackHud != null;
         public bool HasHealthHud => HealthHud != null;
         public bool HasHudSurface => HasUiManager || HasFeedbackHud || HasHealthHud;
+        public IReadOnlyList<PyralisAuthoringSceneSurfaceDetectorResult> DetectorResults => _detectorResults;
+        public IReadOnlyList<PyralisAuthoringSceneSurfaceDetectorResult> FallbackTypeNameResults => _fallbackTypeNameResults;
 
         public static PyralisAuthoringSceneEvidence Build(GameplaySessionBootstrap bootstrap)
         {
@@ -86,8 +97,7 @@ namespace NeonBlack.Gameplay.Editor
                 ColliderCount = CountSceneComponents<Collider>(bootstrap),
                 Collider2DCount = CountSceneComponents<Collider2D>(bootstrap),
                 TilemapCount = CountSceneComponents<Tilemap>(bootstrap),
-                SpawnPointCount = GetSpawnPointCount(bootstrap),
-                LinkedCameraRigCount = GetLinkedCameraRigCount(bootstrap)
+                SpawnPointCount = GetSpawnPointCount(bootstrap)
             };
 
             if (TryFindSceneComponent(bootstrap, out Canvas canvas))
@@ -107,6 +117,27 @@ namespace NeonBlack.Gameplay.Editor
             if (TryFindSceneComponent(bootstrap, out ParticipantHealthHudBinder healthHud))
                 evidence.HealthHud = healthHud;
 
+            evidence.AddComponentDetectorResults<Camera>(
+                "scene.camera",
+                PyralisAuthoringSceneSurfaceKind.CameraBounds,
+                linkedToActiveSetup: IsLinkedCameraRig(bootstrap));
+            evidence.AddComponentDetectorResults<Collider>(
+                "scene.collider-3d",
+                PyralisAuthoringSceneSurfaceKind.EnvironmentPlayfield);
+            evidence.AddComponentDetectorResults<Collider2D>(
+                "scene.collider-2d",
+                PyralisAuthoringSceneSurfaceKind.EnvironmentPlayfield);
+            evidence.AddComponentDetectorResults<Tilemap>(
+                "scene.tilemap",
+                PyralisAuthoringSceneSurfaceKind.EnvironmentPlayfield);
+            evidence.AddSpawnPointDetectorResults(bootstrap);
+            evidence.AddComponentDetectorResults<Canvas>(
+                "scene.canvas",
+                PyralisAuthoringSceneSurfaceKind.UiHudMenus);
+            evidence.AddComponentDetectorResults<EventSystem>(
+                "scene.event-system",
+                PyralisAuthoringSceneSurfaceKind.UiHudMenus);
+
             MonoBehaviour[] behaviours = Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include);
             for (int i = 0; i < behaviours.Length; i++)
             {
@@ -118,6 +149,23 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             return evidence;
+        }
+
+        public bool HasLinkedSurface(PyralisAuthoringSceneSurfaceKind kind)
+        {
+            return CountLinkedSurfaces(kind) > 0;
+        }
+
+        public string GetPrimaryDetectorId(PyralisAuthoringSceneSurfaceKind kind)
+        {
+            PyralisAuthoringSceneSurfaceDetectorResult result = GetPrimaryResult(kind);
+            return result != null ? result.DetectorId : string.Empty;
+        }
+
+        public Object GetPrimaryCandidate(PyralisAuthoringSceneSurfaceKind kind)
+        {
+            PyralisAuthoringSceneSurfaceDetectorResult result = GetPrimaryResult(kind);
+            return result != null ? result.CandidateObject : null;
         }
 
         public bool TryGetSceneService<T>(out T service) where T : class
@@ -219,29 +267,228 @@ namespace NeonBlack.Gameplay.Editor
             {
                 CameraBoundsProviderCount++;
                 CameraBoundsService ??= cameraBoundsProvider;
+                AddDetectorResult(
+                    "scene.camera-bounds-provider",
+                    PyralisAuthoringSceneSurfaceKind.CameraBounds,
+                    behaviour,
+                    IsLinkedCameraRig(Bootstrap, behaviour),
+                    behaviour.GetType().Name);
             }
             if (behaviour is ISessionScoreService scoreService)
             {
                 ScoreServiceCount++;
                 ScoreService ??= scoreService;
+                AddDetectorResult(
+                    "scene.score-service",
+                    PyralisAuthoringSceneSurfaceKind.ScoringObjectives,
+                    behaviour,
+                    false,
+                    behaviour.GetType().Name);
             }
 
             if (behaviour is ParticipantFeedbackHudPresenter || behaviour is ParticipantHealthHudBinder)
+            {
                 HudPresenterCount++;
+                AddDetectorResult(
+                    "scene.hud-presenter",
+                    PyralisAuthoringSceneSurfaceKind.UiHudMenus,
+                    behaviour,
+                    false,
+                    behaviour.GetType().Name);
+            }
             if (behaviour is UIManager || behaviour is SettingsManager || IsTypeNamed(behaviour, "SceneFader") || IsTypeNamed(behaviour, "MainMenuManager"))
+            {
                 MenuPresenterCount++;
+                AddDetectorResult(
+                    "scene.menu-presenter",
+                    PyralisAuthoringSceneSurfaceKind.UiHudMenus,
+                    behaviour,
+                    false,
+                    behaviour.GetType().Name);
+            }
             if (behaviour is TabletopBoardGridPresenter || behaviour is TabletopBoardSelectionBridge || IsActionPresenter(behaviour))
+            {
                 SelectionPresenterCount++;
+                AddDetectorResult(
+                    "scene.selection-presenter",
+                    PyralisAuthoringSceneSurfaceKind.BoardActionSelection,
+                    behaviour,
+                    false,
+                    behaviour.GetType().Name);
+            }
+
+            if (behaviour is IPickupCollectible || behaviour is IPickupSpawnSurface || behaviour is IPickupBurstSpawnSurface)
+            {
+                PickupSurfaceCount++;
+                AddDetectorResult(
+                    "scene.pickup-surface",
+                    PyralisAuthoringSceneSurfaceKind.PickupsHazardsEnemies,
+                    behaviour,
+                    false,
+                    behaviour.GetType().Name);
+            }
+            if (behaviour is Hazard || behaviour is HazardSpawner || behaviour is DifficultyManager || behaviour is DamageZone || behaviour is DamageZone2D)
+            {
+                HazardSurfaceCount++;
+                AddDetectorResult(
+                    "scene.hazard-surface",
+                    PyralisAuthoringSceneSurfaceKind.PickupsHazardsEnemies,
+                    behaviour,
+                    false,
+                    behaviour.GetType().Name);
+            }
+            if (behaviour is EnemyAI || behaviour is EnemySpawner)
+            {
+                EnemySurfaceCount++;
+                AddDetectorResult(
+                    "scene.enemy-surface",
+                    PyralisAuthoringSceneSurfaceKind.PickupsHazardsEnemies,
+                    behaviour,
+                    false,
+                    behaviour.GetType().Name);
+            }
+            if (behaviour is ArenaZone || behaviour is CameraZone)
+            {
+                ZoneSurfaceCount++;
+                AddDetectorResult(
+                    "scene.zone-surface",
+                    PyralisAuthoringSceneSurfaceKind.EnvironmentPlayfield,
+                    behaviour,
+                    false,
+                    behaviour.GetType().Name);
+                AddDetectorResult(
+                    "scene.encounter-zone-surface",
+                    PyralisAuthoringSceneSurfaceKind.PickupsHazardsEnemies,
+                    behaviour,
+                    false,
+                    behaviour.GetType().Name);
+            }
 
             string typeName = behaviour.GetType().Name;
-            if (typeName.Contains("Collectible") || typeName.Contains("Pickup"))
-                PickupSurfaceCount++;
-            if (typeName.Contains("Hazard") || typeName.Contains("DamageZone") || typeName.Contains("DifficultyManager"))
-                HazardSurfaceCount++;
-            if (typeName.Contains("Enemy"))
-                EnemySurfaceCount++;
-            if (typeName.Contains("Zone") || typeName == "ArenaZone")
-                ZoneSurfaceCount++;
+            if (IsFallbackTypeNameSurface(behaviour, typeName))
+                AddFallbackTypeNameResult(behaviour, typeName);
+        }
+
+        private void AddComponentDetectorResults<T>(
+            string detectorId,
+            PyralisAuthoringSceneSurfaceKind kind,
+            bool linkedToActiveSetup = false) where T : Component
+        {
+            T[] components = Object.FindObjectsByType<T>(FindObjectsInactive.Include);
+            for (int i = 0; i < components.Length; i++)
+            {
+                T component = components[i];
+                if (!IsInBootstrapScene(Bootstrap, component))
+                    continue;
+
+                AddDetectorResult(detectorId, kind, component, linkedToActiveSetup, typeof(T).Name);
+            }
+        }
+
+        private void AddSpawnPointDetectorResults(GameplaySessionBootstrap bootstrap)
+        {
+            if (bootstrap == null)
+                return;
+
+            SerializedObject serializedBootstrap = new SerializedObject(bootstrap);
+            ParticipantSpawnService spawnService = GetObjectReference<ParticipantSpawnService>(serializedBootstrap, "participantSpawnService");
+            if (spawnService == null)
+                spawnService = bootstrap.GetComponentInChildren<ParticipantSpawnService>(true);
+            if (spawnService == null)
+                return;
+
+            SerializedObject serializedSpawnService = new SerializedObject(spawnService);
+            SerializedProperty spawnPoints = serializedSpawnService.FindProperty("spawnPoints");
+            if (spawnPoints == null || !spawnPoints.isArray)
+                return;
+
+            for (int i = 0; i < spawnPoints.arraySize; i++)
+            {
+                Transform spawnPoint = spawnPoints.GetArrayElementAtIndex(i).objectReferenceValue as Transform;
+                if (spawnPoint == null)
+                    continue;
+
+                AddDetectorResult(
+                    "scene.spawn-point",
+                    PyralisAuthoringSceneSurfaceKind.EnvironmentPlayfield,
+                    spawnPoint,
+                    true,
+                    "ParticipantSpawnService spawn point");
+            }
+        }
+
+        private void AddDetectorResult(
+            string detectorId,
+            PyralisAuthoringSceneSurfaceKind kind,
+            Object candidateObject,
+            bool linkedToActiveSetup,
+            string summary)
+        {
+            if (candidateObject == null)
+                return;
+
+            for (int i = 0; i < _detectorResults.Count; i++)
+            {
+                PyralisAuthoringSceneSurfaceDetectorResult result = _detectorResults[i];
+                if (result.CandidateObject == candidateObject
+                    && result.SurfaceKind == kind
+                    && string.Equals(result.DetectorId, detectorId, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+
+            _detectorResults.Add(new PyralisAuthoringSceneSurfaceDetectorResult(
+                detectorId,
+                kind,
+                candidateObject,
+                linkedToActiveSetup,
+                summary));
+        }
+
+        private void AddFallbackTypeNameResult(MonoBehaviour behaviour, string typeName)
+        {
+            _fallbackTypeNameResults.Add(new PyralisAuthoringSceneSurfaceDetectorResult(
+                "scene.fallback-type-name",
+                PyralisAuthoringSceneSurfaceKind.FallbackTypeName,
+                behaviour,
+                false,
+                $"{typeName} matched a scene-surface name heuristic.",
+                "SceneSurface.FallbackTypeName",
+                PyralisAuthoringNativeActionFactory.AddComponentAction(
+                    typeName,
+                    string.Empty,
+                    "the scene surface is detected by a typed detector or contract-owned component role")));
+        }
+
+        private PyralisAuthoringSceneSurfaceDetectorResult GetPrimaryResult(PyralisAuthoringSceneSurfaceKind kind)
+        {
+            PyralisAuthoringSceneSurfaceDetectorResult fallback = null;
+            for (int i = 0; i < _detectorResults.Count; i++)
+            {
+                PyralisAuthoringSceneSurfaceDetectorResult result = _detectorResults[i];
+                if (result.SurfaceKind != kind)
+                    continue;
+
+                if (result.LinkedToActiveSetup)
+                    return result;
+
+                fallback ??= result;
+            }
+
+            return fallback;
+        }
+
+        private int CountLinkedSurfaces(PyralisAuthoringSceneSurfaceKind kind)
+        {
+            int count = 0;
+            for (int i = 0; i < _detectorResults.Count; i++)
+            {
+                if (_detectorResults[i].SurfaceKind == kind && _detectorResults[i].LinkedToActiveSetup)
+                    count++;
+            }
+
+            return count;
         }
 
         private static bool TryFindSceneComponent<T>(GameplaySessionBootstrap bootstrap, out T component) where T : Component
@@ -301,15 +548,6 @@ namespace NeonBlack.Gameplay.Editor
             return count;
         }
 
-        private static int GetLinkedCameraRigCount(GameplaySessionBootstrap bootstrap)
-        {
-            if (bootstrap == null)
-                return 0;
-
-            SerializedObject serializedBootstrap = new SerializedObject(bootstrap);
-            return serializedBootstrap.FindProperty("cameraRigController")?.objectReferenceValue != null ? 1 : 0;
-        }
-
         private static T GetObjectReference<T>(SerializedObject serializedObject, string propertyName) where T : Object
         {
             return serializedObject.FindProperty(propertyName)?.objectReferenceValue as T;
@@ -334,6 +572,55 @@ namespace NeonBlack.Gameplay.Editor
 
             string typeName = behaviour.GetType().Name;
             return typeName.Contains("Action") && typeName.Contains("Presenter");
+        }
+
+        private static bool IsFallbackTypeNameSurface(MonoBehaviour behaviour, string typeName)
+        {
+            if (behaviour == null || string.IsNullOrWhiteSpace(typeName))
+                return false;
+
+            if (behaviour is IPickupCollectible
+                || behaviour is IPickupSpawnSurface
+                || behaviour is IPickupBurstSpawnSurface
+                || behaviour is Hazard
+                || behaviour is HazardSpawner
+                || behaviour is DifficultyManager
+                || behaviour is DamageZone
+                || behaviour is DamageZone2D
+                || behaviour is EnemyAI
+                || behaviour is EnemySpawner
+                || behaviour is ArenaZone
+                || behaviour is CameraZone)
+            {
+                return false;
+            }
+
+            return typeName.Contains("Collectible", StringComparison.Ordinal)
+                || typeName.Contains("Pickup", StringComparison.Ordinal)
+                || typeName.Contains("Hazard", StringComparison.Ordinal)
+                || typeName.Contains("DamageZone", StringComparison.Ordinal)
+                || typeName.Contains("DifficultyManager", StringComparison.Ordinal)
+                || typeName.Contains("Enemy", StringComparison.Ordinal)
+                || typeName.Contains("Zone", StringComparison.Ordinal);
+        }
+
+        private static bool IsLinkedCameraRig(GameplaySessionBootstrap bootstrap)
+        {
+            if (bootstrap == null)
+                return false;
+
+            SerializedObject serializedBootstrap = new SerializedObject(bootstrap);
+            return serializedBootstrap.FindProperty("cameraRigController")?.objectReferenceValue != null;
+        }
+
+        private static bool IsLinkedCameraRig(GameplaySessionBootstrap bootstrap, Object candidate)
+        {
+            if (bootstrap == null || candidate == null)
+                return false;
+
+            SerializedObject serializedBootstrap = new SerializedObject(bootstrap);
+            Object linked = serializedBootstrap.FindProperty("cameraRigController")?.objectReferenceValue;
+            return linked == candidate;
         }
 
         private static void AddPart(System.Collections.Generic.List<string> parts, int count, string singular)

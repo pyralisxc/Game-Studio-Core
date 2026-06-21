@@ -13,6 +13,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
     [AuthoringContract(
         Capability = AuthoringCapability.Movement | AuthoringCapability.Combat, 
         CapabilityPath = "Character / Pawn Gameplay/Pawn Definition",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay, RuntimeCapabilityFamily.Combat },
         Priority = AuthoringPriority.Primary,
         SetupNodeId = "pawn.definition",
         Lane = "Entity",
@@ -111,14 +112,19 @@ namespace NeonBlack.Gameplay.Data.Definitions
                             nameof(featureModules));
                     }
 
-                    List<string> moduleIssues = module.GetValidationIssues();
-                    for (int issueIndex = 0; issueIndex < moduleIssues.Count; issueIndex++)
+                    foreach (PyralisRuntimeValidationIssue moduleIssue in module.GetRuntimeValidationIssues())
                     {
-                        AddRequired(
-                            issues,
-                            $"Feature `{module.moduleId}`: {moduleIssues[issueIndex]}",
-                            $"PawnDefinition.FeatureModule.{GetSafeIssueSegment(module.moduleId)}.{issueIndex}",
-                            nameof(featureModules));
+                        PyralisRuntimeValidationIssue contextualIssue =
+                            PyralisRuntimeValidationIssueUtility.WithParentContext(
+                                moduleIssue,
+                                $"Feature `{module.moduleId}`: ",
+                                $"PawnDefinition.FeatureModule.{GetSafeIssueSegment(module.moduleId)}",
+                                nameof(featureModules),
+                                nameof(PawnDefinition),
+                                "Open the assigned FeatureModuleDefinition and resolve the named issue.",
+                                "PawnDefinition feature modules report no validation issues.");
+
+                        AddIfPresent(issues, contextualIssue);
                     }
 
                     if (pawnPrefab != null && mode.HasValue)

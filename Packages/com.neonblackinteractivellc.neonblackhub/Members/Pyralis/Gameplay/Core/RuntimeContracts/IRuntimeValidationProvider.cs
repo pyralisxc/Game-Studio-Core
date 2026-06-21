@@ -96,6 +96,34 @@ namespace NeonBlack.Gameplay.Core.Contracts
 
     public static class PyralisRuntimeValidationIssueUtility
     {
+        public static PyralisRuntimeValidationIssue WithParentContext(
+            PyralisRuntimeValidationIssue issue,
+            string messagePrefix,
+            string issueCodePrefix,
+            string fieldPath = null,
+            string targetLabel = null,
+            string nativeAction = null,
+            string successCheck = null)
+        {
+            if (issue == null)
+                return null;
+
+            string message = !string.IsNullOrWhiteSpace(messagePrefix)
+                ? messagePrefix + issue.Message
+                : issue.Message;
+
+            string issueCode = CombineIssueCode(issueCodePrefix, issue.IssueCode);
+
+            return new PyralisRuntimeValidationIssue(
+                message,
+                CombineFieldPath(fieldPath, issue.FieldPath),
+                !string.IsNullOrWhiteSpace(issue.TargetLabel) ? issue.TargetLabel : targetLabel,
+                !string.IsNullOrWhiteSpace(issue.NativeAction) ? issue.NativeAction : nativeAction,
+                !string.IsNullOrWhiteSpace(issue.SuccessCheck) ? issue.SuccessCheck : successCheck,
+                issue.Severity,
+                issueCode);
+        }
+
         public static IEnumerable<PyralisRuntimeValidationIssue> FromLocalValidationMessages(
             IEnumerable<string> messages,
             object owner)
@@ -144,6 +172,28 @@ namespace NeonBlack.Gameplay.Core.Contracts
                 builder.Length--;
 
             return builder.ToString();
+        }
+
+        private static string CombineFieldPath(string parentFieldPath, string childFieldPath)
+        {
+            if (string.IsNullOrWhiteSpace(parentFieldPath))
+                return childFieldPath ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(childFieldPath))
+                return parentFieldPath;
+
+            return parentFieldPath + "." + childFieldPath;
+        }
+
+        private static string CombineIssueCode(string issueCodePrefix, string childIssueCode)
+        {
+            if (string.IsNullOrWhiteSpace(issueCodePrefix))
+                return childIssueCode ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(childIssueCode))
+                return issueCodePrefix;
+
+            return issueCodePrefix + "." + childIssueCode;
         }
     }
 

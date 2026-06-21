@@ -1,4 +1,5 @@
 using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Features.Characters;
 using UnityEngine;
 
@@ -12,6 +13,7 @@ namespace NeonBlack.Gameplay.Features.Input
 [AuthoringContract(
     Capability = AuthoringCapability.Input | AuthoringCapability.Movement, 
     CapabilityPath = "Core Setup/Input/2D Motor Input Adapter",
+    RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay },
     Relevance = "Primary input module for 2D characters. Translates participant input into Motor2D movement.",
     Axioms = AuthoringWorldAxiom.Dimensions2D,
     RequiredComponents = new[] { typeof(Motor2D) },

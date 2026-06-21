@@ -126,147 +126,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
             }
 #endif
 
-            ResolveDependencyProofTargets(contracts);
             return contracts;
-        }
-
-        private static void ResolveDependencyProofTargets(List<ResolvedAuthoringContract> contracts)
-        {
-            if (contracts == null || contracts.Count == 0)
-                return;
-
-            for (int i = 0; i < contracts.Count; i++)
-            {
-                ResolvedAuthoringContract contract = contracts[i];
-                if (contract == null || !string.IsNullOrWhiteSpace(contract.FirstProofTargetId))
-                    continue;
-
-                string inferredProofTargetId = InferDependencyProofTargetId(contract, contracts);
-                if (string.IsNullOrWhiteSpace(inferredProofTargetId))
-                    continue;
-
-                contracts[i] = WithFirstProofTargetId(contract, inferredProofTargetId);
-            }
-        }
-
-        private static string InferDependencyProofTargetId(
-            ResolvedAuthoringContract contract,
-            IReadOnlyList<ResolvedAuthoringContract> contracts)
-        {
-            HashSet<string> proofTargets = new HashSet<string>(StringComparer.Ordinal);
-
-            for (int i = 0; i < contracts.Count; i++)
-            {
-                ResolvedAuthoringContract candidate = contracts[i];
-                if (candidate == null
-                    || candidate == contract
-                    || string.IsNullOrWhiteSpace(candidate.FirstProofTargetId))
-                {
-                    continue;
-                }
-
-                if (ContractsAreDependencyConnected(contract, candidate))
-                    proofTargets.Add(candidate.FirstProofTargetId);
-            }
-
-            if (proofTargets.Count != 1)
-                return string.Empty;
-
-            foreach (string proofTarget in proofTargets)
-                return proofTarget;
-
-            return string.Empty;
-        }
-
-        private static bool ContractsAreDependencyConnected(
-            ResolvedAuthoringContract first,
-            ResolvedAuthoringContract second)
-        {
-            return ContractReferencesType(first, second.SourceType)
-                || ContractReferencesType(second, first.SourceType)
-                || TypeConnectsToContract(first.SourceType, second)
-                || TypeConnectsToContract(second.SourceType, first);
-        }
-
-        private static bool ContractReferencesType(ResolvedAuthoringContract contract, Type type)
-        {
-            if (contract == null || type == null)
-                return false;
-
-            if (contract.RequiredProfileType == type)
-                return true;
-
-            string fullName = type.FullName;
-            if (string.IsNullOrWhiteSpace(fullName))
-                return false;
-
-            return ContainsTypeName(contract.RequiredRuntimeInterfaceNames, fullName);
-        }
-
-        private static bool ContainsTypeName(string[] typeNames, string fullName)
-        {
-            if (typeNames == null || string.IsNullOrWhiteSpace(fullName))
-                return false;
-
-            for (int i = 0; i < typeNames.Length; i++)
-            {
-                if (string.Equals(typeNames[i], fullName, StringComparison.Ordinal))
-                    return true;
-            }
-
-            return false;
-        }
-
-        private static bool TypeConnectsToContract(Type type, ResolvedAuthoringContract contract)
-        {
-            if (type == null || contract == null || contract.SourceType == null)
-                return false;
-
-            if (contract.SourceType.IsAssignableFrom(type) || type.IsAssignableFrom(contract.SourceType))
-                return true;
-
-            return ContractReferencesType(contract, type);
-        }
-
-        private static ResolvedAuthoringContract WithFirstProofTargetId(
-            ResolvedAuthoringContract contract,
-            string firstProofTargetId)
-        {
-            return new ResolvedAuthoringContract(
-                stableId: contract.StableId,
-                displayName: contract.DisplayName,
-                authoringCategory: contract.AuthoringCategory,
-                requiredProfileType: contract.RequiredProfileType,
-                requiredRuntimeInterfaceNames: contract.RequiredRuntimeInterfaceNames,
-                supportedPresentationModes: contract.SupportedPresentationModes,
-                unsupportedPresentationModes: contract.UnsupportedPresentationModes,
-                unsupportedLaneMessage: contract.UnsupportedLaneMessage,
-                consumedActionRoles: contract.ConsumedActionRoles,
-                nativeSetup: contract.NativeSetup,
-                firstProofTargetId: firstProofTargetId,
-                firstProofGuidance: contract.FirstProofGuidance,
-                sourceType: contract.SourceType,
-                axioms: contract.Axioms,
-                workIntent: contract.WorkIntent,
-                confidence: contract.Confidence,
-                assignmentFields: contract.AssignmentFields,
-                customizationMoments: contract.CustomizationMoments,
-                requiredComponentNames: contract.RequiredComponentNames,
-                capability: contract.Capability,
-                priority: (AuthoringPriority)contract.Priority,
-                priorityValueOverride: contract.PriorityValueOverride,
-                deprecatedInVersion: contract.DeprecatedInVersion,
-                removableInVersion: contract.RemovableInVersion,
-                documentationURL: contract.DocumentationURL,
-                expertAdvice: contract.ExpertAdvice,
-                moduleId: contract.ModuleId,
-                setupNodeId: contract.SetupNodeId,
-                capabilityPath: contract.CapabilityPath,
-                roleTags: contract.RoleTags,
-                selectableIntent: contract.SelectableIntent,
-                authoringLane: contract.AuthoringLane,
-                relevance: contract.Relevance,
-                manualPath: contract.ManualPath);
         }
 
         private static ResolvedAuthoringContract CreateFromAttribute(Type type, AuthoringContractAttribute attr)
@@ -356,6 +216,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
                 moduleId: attr.ModuleId,
                 setupNodeId: attr.SetupNodeId,
                 capabilityPath: attr.CapabilityPath,
+                runtimeFamilies: NormalizeRuntimeFamilies(attr),
                 roleTags: attr.RoleTags,
                 selectableIntent: attr.SelectableIntent,
                 authoringLane: attr.Lane,
@@ -437,6 +298,22 @@ namespace NeonBlack.Gameplay.Core.Contracts
             return !string.IsNullOrWhiteSpace(attr.FirstProofTargetId) ? attr.FirstProofTargetId : string.Empty;
         }
 
+        private static RuntimeCapabilityFamily[] NormalizeRuntimeFamilies(AuthoringContractAttribute attr)
+        {
+            if (attr.RuntimeFamilies == null || attr.RuntimeFamilies.Length == 0)
+                return Array.Empty<RuntimeCapabilityFamily>();
+
+            List<RuntimeCapabilityFamily> families = new List<RuntimeCapabilityFamily>();
+            for (int i = 0; i < attr.RuntimeFamilies.Length; i++)
+            {
+                RuntimeCapabilityFamily family = attr.RuntimeFamilies[i];
+                if (!families.Contains(family))
+                    families.Add(family);
+            }
+
+            return families.ToArray();
+        }
+
         private static void AddImplementedInterfaceNames(Type type, List<string> interfaceNames)
         {
             if (type == null || interfaceNames == null || type.IsInterface)
@@ -514,6 +391,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
                 moduleId: FirstNonEmpty(current.ModuleId, incoming.ModuleId),
                 setupNodeId: FirstNonEmpty(current.SetupNodeId, incoming.SetupNodeId),
                 capabilityPath: FirstNonEmpty(current.CapabilityPath, incoming.CapabilityPath),
+                runtimeFamilies: MergeDistinct(current.RuntimeFamilies, incoming.RuntimeFamilies),
                 roleTags: MergeDistinct(current.RoleTags, incoming.RoleTags),
                 selectableIntent: current.SelectableIntent || incoming.SelectableIntent,
                 authoringLane: FirstNonEmpty(current.AuthoringLane, incoming.AuthoringLane),
@@ -559,6 +437,27 @@ namespace NeonBlack.Gameplay.Core.Contracts
                     string value = source[i];
                     if (!string.IsNullOrWhiteSpace(value) && values.Add(value))
                         merged.Add(value);
+                }
+            }
+        }
+
+        private static RuntimeCapabilityFamily[] MergeDistinct(RuntimeCapabilityFamily[] first, RuntimeCapabilityFamily[] second)
+        {
+            HashSet<RuntimeCapabilityFamily> values = new HashSet<RuntimeCapabilityFamily>();
+            List<RuntimeCapabilityFamily> merged = new List<RuntimeCapabilityFamily>();
+            AddRange(first);
+            AddRange(second);
+            return merged.ToArray();
+
+            void AddRange(RuntimeCapabilityFamily[] source)
+            {
+                if (source == null)
+                    return;
+
+                for (int i = 0; i < source.Length; i++)
+                {
+                    if (values.Add(source[i]))
+                        merged.Add(source[i]);
                 }
             }
         }

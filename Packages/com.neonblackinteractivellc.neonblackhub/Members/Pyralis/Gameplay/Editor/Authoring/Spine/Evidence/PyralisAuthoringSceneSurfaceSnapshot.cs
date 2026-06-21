@@ -1,9 +1,7 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Core.Contracts;
-using NeonBlack.Gameplay.Core.Enums;
 using NeonBlack.Gameplay.Data.Definitions;
-using NeonBlack.Gameplay.Data.Profiles;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -12,6 +10,46 @@ using UnityEngine.UI;
 
 namespace NeonBlack.Gameplay.Editor
 {
+    public enum PyralisAuthoringSceneSurfaceKind
+    {
+        EnvironmentPlayfield,
+        CameraBounds,
+        UiHudMenus,
+        ScoringObjectives,
+        BoardActionSelection,
+        PickupsHazardsEnemies,
+        FallbackTypeName
+    }
+
+    public sealed class PyralisAuthoringSceneSurfaceDetectorResult
+    {
+        public PyralisAuthoringSceneSurfaceDetectorResult(
+            string detectorId,
+            PyralisAuthoringSceneSurfaceKind surfaceKind,
+            Object candidateObject,
+            bool linkedToActiveSetup,
+            string summary,
+            string issueCode = "",
+            PyralisAuthoringNativeAction? nativeAction = null)
+        {
+            DetectorId = detectorId ?? string.Empty;
+            SurfaceKind = surfaceKind;
+            CandidateObject = candidateObject;
+            LinkedToActiveSetup = linkedToActiveSetup;
+            Summary = summary ?? string.Empty;
+            IssueCode = issueCode ?? string.Empty;
+            NativeAction = nativeAction;
+        }
+
+        public string DetectorId { get; }
+        public PyralisAuthoringSceneSurfaceKind SurfaceKind { get; }
+        public Object CandidateObject { get; }
+        public bool LinkedToActiveSetup { get; }
+        public string Summary { get; }
+        public string IssueCode { get; }
+        public PyralisAuthoringNativeAction? NativeAction { get; }
+    }
+
     public sealed class PyralisAuthoringSceneSurfaceRow
     {
         public PyralisAuthoringSceneSurfaceRow(
@@ -20,7 +58,14 @@ namespace NeonBlack.Gameplay.Editor
             bool recommended,
             string current,
             string nextFix,
-            PyralisAuthoringEvidenceState evidenceState = PyralisAuthoringEvidenceState.NotRelevant)
+            PyralisAuthoringEvidenceState evidenceState = PyralisAuthoringEvidenceState.NotRelevant,
+            string detectorId = "",
+            PyralisAuthoringSceneSurfaceKind surfaceKind = PyralisAuthoringSceneSurfaceKind.FallbackTypeName,
+            Object candidateObject = null,
+            bool linkedToActiveSetup = false,
+            bool routeRelevant = false,
+            string issueCode = "",
+            PyralisAuthoringNativeAction? nativeAction = null)
         {
             Surface = surface;
             Present = present;
@@ -28,6 +73,13 @@ namespace NeonBlack.Gameplay.Editor
             Current = current;
             NextFix = nextFix;
             EvidenceState = evidenceState;
+            DetectorId = detectorId ?? string.Empty;
+            SurfaceKind = surfaceKind;
+            CandidateObject = candidateObject;
+            LinkedToActiveSetup = linkedToActiveSetup;
+            RouteRelevant = routeRelevant;
+            IssueCode = issueCode ?? string.Empty;
+            NativeAction = nativeAction;
         }
 
         public string Surface { get; }
@@ -36,6 +88,13 @@ namespace NeonBlack.Gameplay.Editor
         public string Current { get; }
         public string NextFix { get; }
         public PyralisAuthoringEvidenceState EvidenceState { get; }
+        public string DetectorId { get; }
+        public PyralisAuthoringSceneSurfaceKind SurfaceKind { get; }
+        public Object CandidateObject { get; }
+        public bool LinkedToActiveSetup { get; }
+        public bool RouteRelevant { get; }
+        public string IssueCode { get; }
+        public PyralisAuthoringNativeAction? NativeAction { get; }
         public bool SupportsFirstProofAttempt => !Recommended || Present;
     }
 
@@ -71,18 +130,20 @@ namespace NeonBlack.Gameplay.Editor
             bool wantsActionOrTabletop = PyralisAuthoringSceneSurfaceGuidance.IsRecommended(route, PyralisAuthoringSceneSurfaceGuidance.BoardActionSelection);
             bool wantsHazardsOrPickups = PyralisAuthoringSceneSurfaceGuidance.IsRecommended(route, PyralisAuthoringSceneSurfaceGuidance.PickupsHazardsEnemies);
 
-            bool needsWalkableEnvironmentSurface = IsSideView2DMovementProof(bootstrap);
-            bool environmentPresent = wantsWorld && needsWalkableEnvironmentSurface
-                ? evidence.HasPlayableEnvironmentSurface
-                : evidence.HasEnvironmentSurface;
-
             rows.Add(new PyralisAuthoringSceneSurfaceRow(
                 PyralisAuthoringSceneSurfaceGuidance.EnvironmentPlayfield,
-                environmentPresent,
+                evidence.HasEnvironmentSurface,
                 wantsWorld,
                 evidence.GetEnvironmentSummary(),
                 PyralisAuthoringSceneSurfaceGuidance.GetNextFix(PyralisAuthoringSceneSurfaceGuidance.EnvironmentPlayfield, wantsWorld),
-                GetEvidenceState(environmentPresent, wantsWorld, evidence.LinkedSpawnPointCount > 0)));
+                GetEvidenceState(evidence.HasEnvironmentSurface, wantsWorld, evidence.HasLinkedSurface(PyralisAuthoringSceneSurfaceKind.EnvironmentPlayfield)),
+                detectorId: evidence.GetPrimaryDetectorId(PyralisAuthoringSceneSurfaceKind.EnvironmentPlayfield),
+                surfaceKind: PyralisAuthoringSceneSurfaceKind.EnvironmentPlayfield,
+                candidateObject: evidence.GetPrimaryCandidate(PyralisAuthoringSceneSurfaceKind.EnvironmentPlayfield),
+                linkedToActiveSetup: evidence.HasLinkedSurface(PyralisAuthoringSceneSurfaceKind.EnvironmentPlayfield),
+                routeRelevant: wantsWorld,
+                issueCode: BuildIssueCode(PyralisAuthoringSceneSurfaceKind.EnvironmentPlayfield, evidence.HasEnvironmentSurface, wantsWorld),
+                nativeAction: BuildNativeAction(PyralisAuthoringSceneSurfaceGuidance.EnvironmentPlayfield, wantsWorld)));
 
             rows.Add(new PyralisAuthoringSceneSurfaceRow(
                 PyralisAuthoringSceneSurfaceGuidance.CameraBounds,
@@ -90,7 +151,14 @@ namespace NeonBlack.Gameplay.Editor
                 wantsCamera,
                 evidence.GetCameraSummary(),
                 PyralisAuthoringSceneSurfaceGuidance.GetNextFix(PyralisAuthoringSceneSurfaceGuidance.CameraBounds, wantsCamera),
-                GetEvidenceState(evidence.HasCameraSurface, wantsCamera, evidence.LinkedCameraRigCount > 0)));
+                GetEvidenceState(evidence.HasCameraSurface, wantsCamera, evidence.HasLinkedSurface(PyralisAuthoringSceneSurfaceKind.CameraBounds)),
+                detectorId: evidence.GetPrimaryDetectorId(PyralisAuthoringSceneSurfaceKind.CameraBounds),
+                surfaceKind: PyralisAuthoringSceneSurfaceKind.CameraBounds,
+                candidateObject: evidence.GetPrimaryCandidate(PyralisAuthoringSceneSurfaceKind.CameraBounds),
+                linkedToActiveSetup: evidence.HasLinkedSurface(PyralisAuthoringSceneSurfaceKind.CameraBounds),
+                routeRelevant: wantsCamera,
+                issueCode: BuildIssueCode(PyralisAuthoringSceneSurfaceKind.CameraBounds, evidence.HasCameraSurface, wantsCamera),
+                nativeAction: BuildNativeAction(PyralisAuthoringSceneSurfaceGuidance.CameraBounds, wantsCamera)));
 
             rows.Add(new PyralisAuthoringSceneSurfaceRow(
                 PyralisAuthoringSceneSurfaceGuidance.UiHudMenus,
@@ -98,7 +166,13 @@ namespace NeonBlack.Gameplay.Editor
                 wantsUi,
                 evidence.GetUiSummary(),
                 PyralisAuthoringSceneSurfaceGuidance.GetNextFix(PyralisAuthoringSceneSurfaceGuidance.UiHudMenus, wantsUi),
-                GetEvidenceState(evidence.HasUiSurface, wantsUi)));
+                GetEvidenceState(evidence.HasUiSurface, wantsUi),
+                detectorId: evidence.GetPrimaryDetectorId(PyralisAuthoringSceneSurfaceKind.UiHudMenus),
+                surfaceKind: PyralisAuthoringSceneSurfaceKind.UiHudMenus,
+                candidateObject: evidence.GetPrimaryCandidate(PyralisAuthoringSceneSurfaceKind.UiHudMenus),
+                routeRelevant: wantsUi,
+                issueCode: BuildIssueCode(PyralisAuthoringSceneSurfaceKind.UiHudMenus, evidence.HasUiSurface, wantsUi),
+                nativeAction: BuildNativeAction(PyralisAuthoringSceneSurfaceGuidance.UiHudMenus, wantsUi)));
 
             rows.Add(new PyralisAuthoringSceneSurfaceRow(
                 PyralisAuthoringSceneSurfaceGuidance.ScoringObjectives,
@@ -106,7 +180,13 @@ namespace NeonBlack.Gameplay.Editor
                 wantsScoring,
                 evidence.ScoreServiceCount > 0 ? $"{evidence.ScoreServiceCount} score service object(s)" : "No score service detected",
                 PyralisAuthoringSceneSurfaceGuidance.GetNextFix(PyralisAuthoringSceneSurfaceGuidance.ScoringObjectives, wantsScoring),
-                GetEvidenceState(evidence.ScoreServiceCount > 0, wantsScoring)));
+                GetEvidenceState(evidence.ScoreServiceCount > 0, wantsScoring),
+                detectorId: evidence.GetPrimaryDetectorId(PyralisAuthoringSceneSurfaceKind.ScoringObjectives),
+                surfaceKind: PyralisAuthoringSceneSurfaceKind.ScoringObjectives,
+                candidateObject: evidence.GetPrimaryCandidate(PyralisAuthoringSceneSurfaceKind.ScoringObjectives),
+                routeRelevant: wantsScoring,
+                issueCode: BuildIssueCode(PyralisAuthoringSceneSurfaceKind.ScoringObjectives, evidence.ScoreServiceCount > 0, wantsScoring),
+                nativeAction: BuildNativeAction(PyralisAuthoringSceneSurfaceGuidance.ScoringObjectives, wantsScoring)));
 
             rows.Add(new PyralisAuthoringSceneSurfaceRow(
                 PyralisAuthoringSceneSurfaceGuidance.BoardActionSelection,
@@ -114,7 +194,13 @@ namespace NeonBlack.Gameplay.Editor
                 wantsActionOrTabletop,
                 evidence.GetSelectionSummary(),
                 PyralisAuthoringSceneSurfaceGuidance.GetNextFix(PyralisAuthoringSceneSurfaceGuidance.BoardActionSelection, wantsActionOrTabletop),
-                GetEvidenceState(evidence.HasSelectionSurface, wantsActionOrTabletop)));
+                GetEvidenceState(evidence.HasSelectionSurface, wantsActionOrTabletop),
+                detectorId: evidence.GetPrimaryDetectorId(PyralisAuthoringSceneSurfaceKind.BoardActionSelection),
+                surfaceKind: PyralisAuthoringSceneSurfaceKind.BoardActionSelection,
+                candidateObject: evidence.GetPrimaryCandidate(PyralisAuthoringSceneSurfaceKind.BoardActionSelection),
+                routeRelevant: wantsActionOrTabletop,
+                issueCode: BuildIssueCode(PyralisAuthoringSceneSurfaceKind.BoardActionSelection, evidence.HasSelectionSurface, wantsActionOrTabletop),
+                nativeAction: BuildNativeAction(PyralisAuthoringSceneSurfaceGuidance.BoardActionSelection, wantsActionOrTabletop)));
 
             rows.Add(new PyralisAuthoringSceneSurfaceRow(
                 PyralisAuthoringSceneSurfaceGuidance.PickupsHazardsEnemies,
@@ -122,7 +208,33 @@ namespace NeonBlack.Gameplay.Editor
                 wantsHazardsOrPickups,
                 evidence.GetEncounterSummary(),
                 PyralisAuthoringSceneSurfaceGuidance.GetNextFix(PyralisAuthoringSceneSurfaceGuidance.PickupsHazardsEnemies, wantsHazardsOrPickups),
-                GetEvidenceState(evidence.HasEncounterSurface, wantsHazardsOrPickups)));
+                GetEvidenceState(evidence.HasEncounterSurface, wantsHazardsOrPickups),
+                detectorId: evidence.GetPrimaryDetectorId(PyralisAuthoringSceneSurfaceKind.PickupsHazardsEnemies),
+                surfaceKind: PyralisAuthoringSceneSurfaceKind.PickupsHazardsEnemies,
+                candidateObject: evidence.GetPrimaryCandidate(PyralisAuthoringSceneSurfaceKind.PickupsHazardsEnemies),
+                routeRelevant: wantsHazardsOrPickups,
+                issueCode: BuildIssueCode(PyralisAuthoringSceneSurfaceKind.PickupsHazardsEnemies, evidence.HasEncounterSurface, wantsHazardsOrPickups),
+                nativeAction: BuildNativeAction(PyralisAuthoringSceneSurfaceGuidance.PickupsHazardsEnemies, wantsHazardsOrPickups)));
+
+            IReadOnlyList<PyralisAuthoringSceneSurfaceDetectorResult> fallbackResults = evidence.FallbackTypeNameResults;
+            for (int i = 0; i < fallbackResults.Count; i++)
+            {
+                PyralisAuthoringSceneSurfaceDetectorResult fallback = fallbackResults[i];
+                rows.Add(new PyralisAuthoringSceneSurfaceRow(
+                    "Fallback Type-Name Scene Surface",
+                    true,
+                    false,
+                    fallback.Summary,
+                    "Add a typed scene-surface detector for this component or tag it through an existing contract/component interface.",
+                    PyralisAuthoringEvidenceState.CandidateDetected,
+                    detectorId: fallback.DetectorId,
+                    surfaceKind: fallback.SurfaceKind,
+                    candidateObject: fallback.CandidateObject,
+                    linkedToActiveSetup: fallback.LinkedToActiveSetup,
+                    routeRelevant: false,
+                    issueCode: fallback.IssueCode,
+                    nativeAction: fallback.NativeAction));
+            }
 
             return new PyralisAuthoringSceneSurfaceSnapshot(rows);
         }
@@ -140,35 +252,26 @@ namespace NeonBlack.Gameplay.Editor
                 : PyralisAuthoringEvidenceState.CandidateDetected;
         }
 
-        private static bool IsSideView2DMovementProof(GameplaySessionBootstrap bootstrap)
+        private static string BuildIssueCode(PyralisAuthoringSceneSurfaceKind kind, bool present, bool recommended)
         {
-            PawnMovementProfile profile = GetFirstPawnMovementProfile(bootstrap);
-            return profile != null
-                && profile.movementMode == MovementMode.TwoD
-                && profile.use2DPhysics
-                && profile.Effective2DMovementStyle == Pawn2DMovementStyle.SideViewGravity;
+            if (!recommended)
+                return string.Empty;
+
+            return present
+                ? "SceneSurface." + kind + ".Detected"
+                : "SceneSurface." + kind + ".Missing";
         }
 
-        private static PawnMovementProfile GetFirstPawnMovementProfile(GameplaySessionBootstrap bootstrap)
+        private static PyralisAuthoringNativeAction? BuildNativeAction(string surface, bool recommended)
         {
-            if (bootstrap == null)
+            if (!recommended)
                 return null;
 
-            SerializedObject serializedBootstrap = new SerializedObject(bootstrap);
-            SessionDefinition session = serializedBootstrap.FindProperty("sessionDefinition")?.objectReferenceValue as SessionDefinition;
-            if (session == null || session.defaultParticipants == null)
-                return null;
-
-            for (int i = 0; i < session.defaultParticipants.Length; i++)
-            {
-                ParticipantDefinition participant = session.defaultParticipants[i];
-                PawnDefinition pawn = participant != null ? participant.defaultPawn : null;
-                if (pawn != null && pawn.movementProfile != null)
-                    return pawn.movementProfile;
-            }
-
-            return null;
+            return PyralisAuthoringNativeActionFactory.CreateSceneObjectAction(
+                surface,
+                string.Empty,
+                PyralisAuthoringSceneSurfaceGuidance.GetSuccess(surface),
+                PyralisAuthoringSceneSurfaceGuidance.GetExpected(surface));
         }
-
     }
 }

@@ -1,6 +1,6 @@
 # Pyralis Canonical Setup
 
-This is the technical contract for new Pyralis gameplay scenes after the platform realignment and deferred-cleanup pass.
+This is the technical contract for new Pyralis gameplay scenes.
 
 If you are wiring your first scene, use the Pyralis Authoring Window for route setup and use Inspector Field Guides only for the asset or component you are editing. Read `START_HERE.md` when you need the written first-scene path. Use this file as the technical contract once the basic route setup makes sense. The manual, prefab, and subsystem setup docs support it; they should not contradict it.
 

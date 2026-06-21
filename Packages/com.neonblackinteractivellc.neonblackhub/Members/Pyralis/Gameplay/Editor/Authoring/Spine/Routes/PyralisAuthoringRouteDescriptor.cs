@@ -1,4 +1,5 @@
 using NeonBlack.Gameplay.Characters;
+using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
 using UnityEngine;
 

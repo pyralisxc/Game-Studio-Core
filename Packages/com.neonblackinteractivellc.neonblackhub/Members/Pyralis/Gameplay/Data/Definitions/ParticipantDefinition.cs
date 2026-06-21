@@ -11,6 +11,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
         Capability = AuthoringCapability.Participants, 
         CapabilityPath = "Core Setup/Participants/Participant Definition",
         SetupNodeId = "participant.default",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.PlatformCore, RuntimeCapabilityFamily.CharacterPawnGameplay },
         Relevance = "Defines a player, AI, seat, hand, faction, or command owner within a session, including the preferred input profile and optional default pawn.",
         RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.ParticipantRouteSupport, "Participant", "InputOwner", "PawnOwner" },
         AssignmentFields = new[] { nameof(displayName), nameof(defaultPawn), nameof(inputProfile), nameof(teamIndex) },

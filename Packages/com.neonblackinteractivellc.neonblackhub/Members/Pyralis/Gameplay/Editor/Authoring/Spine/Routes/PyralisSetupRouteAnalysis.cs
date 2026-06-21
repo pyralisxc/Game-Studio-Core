@@ -614,12 +614,12 @@ namespace NeonBlack.Gameplay.Editor
             if (contract == null)
                 return;
 
-            RuntimeCapabilityFamily[] reflectedFamilies = PyralisAuthoringCapabilityDescriptorRegistry.BuildRuntimeFamilies(
-                contract.Capability,
-                RuntimeCapabilityLaneTag.Mixed,
-                contract.Axioms);
+            RuntimeCapabilityFamily[] reflectedFamilies = contract.RuntimeFamilies;
             for (int i = 0; i < reflectedFamilies.Length; i++)
-                AddFamily(families, reflectedFamilies[i]);
+            {
+                if (reflectedFamilies[i] != RuntimeCapabilityFamily.Custom)
+                    AddFamily(families, reflectedFamilies[i]);
+            }
         }
 
         private static void AddFamily(List<RuntimeCapabilityFamily> families, RuntimeCapabilityFamily family)

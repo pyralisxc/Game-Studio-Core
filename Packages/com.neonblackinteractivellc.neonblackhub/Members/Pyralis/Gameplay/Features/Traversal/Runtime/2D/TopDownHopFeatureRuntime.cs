@@ -1,4 +1,5 @@
 using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Features.Composition;
 using NeonBlack.Gameplay.Presentation.Animation;
@@ -15,6 +16,7 @@ namespace NeonBlack.Gameplay.Features.Traversal
         ModuleId = "actor.traversal.topdown-hop",
         Capability = AuthoringCapability.Movement | AuthoringCapability.Traversal,
         CapabilityPath = "Movement/Traversal/FakeGravityJump",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay },
         Axioms = AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone | AuthoringWorldAxiom.Realtime,
         Relevance = "Enables fake-gravity jump actions where a Sprite2D or billboard actor arcs visually while maintaining map-plane position.",
         Lane = "Traversal",
