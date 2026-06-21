@@ -46,17 +46,6 @@ namespace NeonBlack.Gameplay.Editor
             return JsonUtility.ToJson(snapshot, true);
         }
 
-        public static string ToJson(PyralisAuthoringSetupGraph graph, string view)
-        {
-            if (string.Equals(view, "Hygiene", StringComparison.OrdinalIgnoreCase))
-                return ToHygieneJson(graph, Array.Empty<PyralisSourceDependencyHygieneRecord>());
-
-            if (string.Equals(view, "Facts", StringComparison.OrdinalIgnoreCase))
-                return ToFactsJson(graph);
-
-            return ToMapJson(graph);
-        }
-
         private static IntentSnapshot BuildIntentSnapshot(
             PyralisAuthoringIntentSelection selection,
             PyralisAuthoringIntentModel model,
@@ -66,23 +55,36 @@ namespace NeonBlack.Gameplay.Editor
                 RuntimeCapabilityLaneTag.Sprite2D,
                 AuthoringCapability.None,
                 AuthoringWorldAxiom.None);
-            model ??= PyralisAuthoringSetupGraphProjection.BuildIntentModel(selection);
             descriptors ??= Array.Empty<PyralisAuthoringCapabilityDescriptor>();
 
-            string[] selectedIds = selection.DescriptorIds ?? Array.Empty<string>();
+            string[] selectedIds = PyralisAuthoringCapabilityDescriptorRegistry.FilterGameplayIntentDescriptorIds(
+                selection.DescriptorIds ?? Array.Empty<string>());
+            AuthoringCapability selectedCapabilities =
+                PyralisAuthoringCapabilityDescriptorRegistry.BuildCapabilitiesForDescriptors(selectedIds);
+            if (selectedCapabilities == AuthoringCapability.None && selectedIds.Length == 0)
+                selectedCapabilities = selection.Capabilities;
+            var exportSelection = new PyralisAuthoringIntentSelection(
+                selection.Lane,
+                selectedCapabilities,
+                selection.Axioms,
+                selectedIds,
+                selection.ParticipantRoute);
+            model ??= PyralisAuthoringSetupGraphProjection.BuildIntentModel(exportSelection);
+            PyralisAuthoringIntentProjection intentProjection =
+                PyralisAuthoringIntentProjection.Build(exportSelection, descriptors);
             return new IntentSnapshot
             {
                 schema = "pyralis.authoring.intentSnapshot.v1",
-                purpose = "Read-only Intent tab snapshot. Describes current route steering only: DNA axioms, presentation lane, participant route, selected capability descriptors, available descriptor groups, and advisor rows. It does not describe scene/setup reality.",
+                purpose = "Read-only Intent tab snapshot. Describes current route steering only: DNA axioms, presentation lane, participant route, user-selected gameplay ingredients, inferred route essentials, and advisor rows. It does not describe scene/setup reality.",
                 view = "Intent",
                 exportedAtUtc = DateTime.UtcNow.ToString("o"),
                 selection = new IntentSelectionSnapshot
                 {
                     lane = selection.Lane.ToString(),
                     axioms = selection.Axioms.ToString(),
-                    capabilities = selection.Capabilities.ToString(),
+                    capabilities = selectedCapabilities.ToString(),
                     participantRoute = selection.ParticipantRoute.ToString(),
-                    selectedDescriptorIds = selectedIds
+                    selectedDescriptorIds = intentProjection.SelectedDescriptorIds
                 },
                 summary = new IntentSummarySnapshot
                 {
@@ -93,13 +95,12 @@ namespace NeonBlack.Gameplay.Editor
                     cautionCount = model.Cautions.Count,
                     matchingIntentCount = model.MatchingIntents.Count
                 },
-                routeShapePreview = PyralisAuthoringSetupGraphProjection.BuildRouteShapeSummary(selection),
+                routeShapePreview = PyralisAuthoringSetupGraphProjection.BuildRouteShapeSummary(exportSelection),
                 advisorSummary = model.Summary,
-                descriptorGroups = BuildIntentDescriptorGroups(descriptors, selectedIds),
-                selectedDescriptors = descriptors
-                    .Where(descriptor => descriptor != null && selectedIds.Contains(descriptor.StableId))
-                    .Select(BuildIntentDescriptor)
-                    .ToArray(),
+                descriptorGroups = BuildIntentDescriptorGroups(intentProjection.AllGroups),
+                gameplayIngredientGroups = BuildIntentDescriptorGroups(intentProjection.GameplayIngredientGroups),
+                routeEssentialGroups = BuildIntentDescriptorGroups(intentProjection.RouteEssentialGroups),
+                selectedDescriptors = intentProjection.SelectedDescriptors.Select(BuildIntentDescriptor).ToArray(),
                 recommendations = model.Recommendations.Select(BuildIntentRow).ToArray(),
                 cautions = model.Cautions.Select(BuildIntentRow).ToArray(),
                 matchingIntents = model.MatchingIntents.Select(BuildFact).ToArray()
@@ -500,9 +501,11 @@ namespace NeonBlack.Gameplay.Editor
                 sourceOrigin = row != null ? row.SourceOrigin.ToString() : string.Empty,
                 workIntent = node != null ? node.WorkIntent.ToString() : string.Empty,
                 issueSeverity = node != null ? node.IssueSeverity.ToString() : string.Empty,
+                setupDomain = node != null ? node.SetupDomain.ToString() : string.Empty,
+                issueCode = node != null ? node.IssueCode : string.Empty,
                 reason = row?.Reason ?? string.Empty,
                 message = row?.Message ?? string.Empty,
-                owner = BuildRouteStepOwner(row),
+                owner = row?.OwnerLabel ?? string.Empty,
                 unityAction = row?.UnityActionLabel ?? string.Empty,
                 nativeAction = row != null ? BuildNativeAction(row.NativeAction) : null,
                 assignmentFields = row?.AssignmentFields ?? Array.Empty<string>(),
@@ -512,33 +515,6 @@ namespace NeonBlack.Gameplay.Editor
                 edge = row?.Edge != null ? BuildEdge(row.Edge) : null,
                 sourceObject = BuildSourceInfo(node?.SourceObject)
             };
-        }
-
-        private static string BuildRouteStepOwner(PyralisAuthoringRouteStepRow row)
-        {
-            PyralisAuthoringGraphNode node = row?.Node;
-            if (node == null)
-                return string.Empty;
-
-            if (row != null && row.NativeAction.HasValue)
-            {
-                PyralisAuthoringNativeAction action = row.NativeAction.Value;
-                string target = !string.IsNullOrWhiteSpace(action.Target) ? action.Target : action.Surface.ToString();
-                return !string.IsNullOrWhiteSpace(action.FieldOrComponent)
-                    ? $"{target}.{action.FieldOrComponent}"
-                    : target;
-            }
-
-            if (node.AssignmentFields != null && node.AssignmentFields.Length > 0)
-                return node.AssignmentFields[0];
-
-            if (node.SourceContract != null && !string.IsNullOrWhiteSpace(node.SourceContract.SetupNodeId))
-                return node.SourceContract.SetupNodeId;
-
-            if (node.SourceObject != null)
-                return $"{node.SourceObject.name} ({node.SourceObject.GetType().Name})";
-
-            return node.StableId;
         }
 
         private static ContractPressureSnapshot[] BuildSupportingContracts(
@@ -611,7 +587,7 @@ namespace NeonBlack.Gameplay.Editor
                     question = "What is the full fresh-scene card path?",
                     answer = criticalPath != null && criticalPath.Count > 0
                         ? string.Join(" -> ", criticalPath.Select(row => row.Label).Concat(new[] { PyralisAuthoringSetupGraphProjection.GetOverviewFirstProofLabel(graph) }))
-                        : "No setup-card path is present yet. Check setup-flow evidence, runtime validation evidence, and proof target resolution."
+                        : "No setup-card path is present yet. Check core setup graph nodes, runtime validation evidence, and proof target resolution."
                 },
                 new TraceDiagnosticQuestionSnapshot
                 {
@@ -632,12 +608,12 @@ namespace NeonBlack.Gameplay.Editor
                     question = "Which contracts are proof context rather than route cards?",
                     answer = proofSupport != null && proofSupport.Count > 0
                         ? string.Join("; ", proofSupport.Take(8).Select(row => row.FromLabel))
-                        : "No direct proof-support contracts are present yet. The ordered setup cards should still come from setup-flow and validation evidence."
+                        : "No direct proof-support contracts are present yet. The ordered setup cards should still come from core setup graph nodes and validation evidence."
                 },
                 new TraceDiagnosticQuestionSnapshot
                 {
                     question = "Where should incorrect guidance be fixed?",
-                    answer = "Fix the source that emitted the step: contract meaning, dependency reflection, setup-flow validation, scene-readiness validation, or graph projection. Do not hardcode a one-off Guide/Hygiene sentence."
+                    answer = "Fix the source that emitted the step: contract meaning, dependency reflection, local runtime validation, scene-readiness validation, or graph projection. Do not hardcode a one-off Guide/Hygiene sentence."
                 }
             };
 
@@ -745,6 +721,8 @@ namespace NeonBlack.Gameplay.Editor
                 evidenceState = node.EvidenceState.ToString(),
                 workIntent = node.WorkIntent.ToString(),
                 issueSeverity = node.IssueSeverity.ToString(),
+                setupDomain = node.SetupDomain.ToString(),
+                issueCode = node.IssueCode,
                 capabilityFamily = node.CapabilityFamily.ToString(),
                 authoringCapability = node.AuthoringCapability.ToString(),
                 proofTargetId = node.ProofTargetId,
@@ -961,35 +939,26 @@ namespace NeonBlack.Gameplay.Editor
         }
 
         private static IntentDescriptorGroupSnapshot[] BuildIntentDescriptorGroups(
-            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors,
-            IReadOnlyList<string> selectedIds)
+            IReadOnlyList<PyralisAuthoringIntentDescriptorGroupProjection> groups)
         {
-            if (descriptors == null || descriptors.Count == 0)
+            if (groups == null || groups.Count == 0)
                 return Array.Empty<IntentDescriptorGroupSnapshot>();
 
-            HashSet<string> selected = new HashSet<string>(selectedIds ?? Array.Empty<string>(), StringComparer.Ordinal);
-            return descriptors
-                .Where(descriptor => descriptor != null)
-                .GroupBy(descriptor => FirstNonEmpty(GetCapabilityPathPart(descriptor.CapabilityPath, 0), descriptor.Group, "General"))
-                .OrderBy(group => group.Key, StringComparer.Ordinal)
+            return groups
                 .Select(group => new IntentDescriptorGroupSnapshot
                 {
-                    group = group.Key,
-                    descriptorCount = group.Count(),
-                    selectedCount = group.Count(descriptor => selected.Contains(descriptor.StableId)),
-                    subgroups = group
-                        .GroupBy(descriptor => FirstNonEmpty(GetCapabilityPathPart(descriptor.CapabilityPath, 1), descriptor.Group, "General"))
-                        .OrderBy(subgroup => subgroup.Key, StringComparer.Ordinal)
+                    group = group.Group,
+                    descriptorCount = group.DescriptorCount,
+                    selectedCount = group.SelectedCount,
+                    inferredCount = group.InferredCount,
+                    subgroups = group.Subgroups
                         .Select(subgroup => new IntentDescriptorSubgroupSnapshot
                         {
-                            subgroup = subgroup.Key,
-                            descriptorCount = subgroup.Count(),
-                            selectedCount = subgroup.Count(descriptor => selected.Contains(descriptor.StableId)),
-                            descriptors = subgroup
-                                .OrderBy(descriptor => descriptor.SortOrder)
-                                .ThenBy(descriptor => descriptor.DisplayName, StringComparer.Ordinal)
-                                .Select(descriptor => BuildIntentDescriptor(descriptor, selected.Contains(descriptor.StableId)))
-                                .ToArray()
+                            subgroup = subgroup.Subgroup,
+                            descriptorCount = subgroup.DescriptorCount,
+                            selectedCount = subgroup.SelectedCount,
+                            inferredCount = subgroup.InferredCount,
+                            descriptors = subgroup.Descriptors.Select(BuildIntentDescriptor).ToArray()
                         })
                         .ToArray()
                 })
@@ -998,12 +967,21 @@ namespace NeonBlack.Gameplay.Editor
 
         private static IntentDescriptorSnapshot BuildIntentDescriptor(PyralisAuthoringCapabilityDescriptor descriptor)
         {
-            return BuildIntentDescriptor(descriptor, false);
+            return BuildIntentDescriptor(descriptor, false, false, string.Empty);
         }
 
         private static IntentDescriptorSnapshot BuildIntentDescriptor(
             PyralisAuthoringCapabilityDescriptor descriptor,
             bool selected)
+        {
+            return BuildIntentDescriptor(descriptor, selected, false, string.Empty);
+        }
+
+        private static IntentDescriptorSnapshot BuildIntentDescriptor(
+            PyralisAuthoringCapabilityDescriptor descriptor,
+            bool selected,
+            bool inferred,
+            string intentLayer)
         {
             if (descriptor == null)
                 return null;
@@ -1022,6 +1000,8 @@ namespace NeonBlack.Gameplay.Editor
                 sortOrder = descriptor.SortOrder,
                 selectableIntent = descriptor.SelectableIntent,
                 selected = selected,
+                inferred = inferred,
+                intentLayer = intentLayer ?? string.Empty,
                 sourceOrigin = descriptor.SourceOrigin.ToString(),
                 axioms = descriptor.Axioms.ToString(),
                 proofTargetId = descriptor.ProofTargetId,
@@ -1037,6 +1017,27 @@ namespace NeonBlack.Gameplay.Editor
                 nativeActions = descriptor.NativeActions.Select(action => BuildNativeAction(action)).ToArray(),
                 sourceFact = BuildFact(descriptor.SourceFact)
             };
+        }
+
+        private static IntentDescriptorSnapshot BuildIntentDescriptor(
+            PyralisAuthoringIntentDescriptorProjection projected)
+        {
+            if (projected == null)
+                return null;
+
+            IntentDescriptorSnapshot snapshot = BuildIntentDescriptor(
+                projected.Descriptor,
+                projected.Selected,
+                projected.Inferred,
+                projected.IntentLayer);
+            if (snapshot != null)
+            {
+                snapshot.pathGroup = projected.Group;
+                snapshot.pathSubgroup = projected.Subgroup;
+                snapshot.leafLabel = projected.LeafLabel;
+            }
+
+            return snapshot;
         }
 
         private static IntentRowSnapshot BuildIntentRow(PyralisAuthoringIntentRow row)
@@ -1312,6 +1313,8 @@ namespace NeonBlack.Gameplay.Editor
             public string sourceOrigin;
             public string workIntent;
             public string issueSeverity;
+            public string setupDomain;
+            public string issueCode;
             public string reason;
             public string message;
             public string owner;
@@ -1427,6 +1430,8 @@ namespace NeonBlack.Gameplay.Editor
             public string routeShapePreview;
             public string advisorSummary;
             public IntentDescriptorGroupSnapshot[] descriptorGroups;
+            public IntentDescriptorGroupSnapshot[] gameplayIngredientGroups;
+            public IntentDescriptorGroupSnapshot[] routeEssentialGroups;
             public IntentDescriptorSnapshot[] selectedDescriptors;
             public IntentRowSnapshot[] recommendations;
             public IntentRowSnapshot[] cautions;
@@ -1460,6 +1465,7 @@ namespace NeonBlack.Gameplay.Editor
             public string group;
             public int descriptorCount;
             public int selectedCount;
+            public int inferredCount;
             public IntentDescriptorSubgroupSnapshot[] subgroups;
         }
 
@@ -1469,6 +1475,7 @@ namespace NeonBlack.Gameplay.Editor
             public string subgroup;
             public int descriptorCount;
             public int selectedCount;
+            public int inferredCount;
             public IntentDescriptorSnapshot[] descriptors;
         }
 
@@ -1487,6 +1494,8 @@ namespace NeonBlack.Gameplay.Editor
             public int sortOrder;
             public bool selectableIntent;
             public bool selected;
+            public bool inferred;
+            public string intentLayer;
             public string sourceOrigin;
             public string axioms;
             public string proofTargetId;
@@ -1705,6 +1714,8 @@ namespace NeonBlack.Gameplay.Editor
             public string evidenceState;
             public string workIntent;
             public string issueSeverity;
+            public string setupDomain;
+            public string issueCode;
             public string capabilityFamily;
             public string authoringCapability;
             public string proofTargetId;

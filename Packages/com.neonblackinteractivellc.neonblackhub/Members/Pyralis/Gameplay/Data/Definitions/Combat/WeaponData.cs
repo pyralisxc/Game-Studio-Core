@@ -17,15 +17,36 @@ namespace NeonBlack.Gameplay.Features.Combat
     {
         public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            if (string.IsNullOrWhiteSpace(weaponName)) yield return PyralisRuntimeValidationIssue.Required("Weapon Name is required.");
-            if (damage < 0f) yield return PyralisRuntimeValidationIssue.Required("Damage cannot be negative.");
-            if (attackCooldown <= 0f) yield return PyralisRuntimeValidationIssue.Required("Attack Cooldown must be greater than zero.");
-            
+            if (string.IsNullOrWhiteSpace(weaponName))
+                yield return PyralisRuntimeValidationIssue.Required("Weapon Name is required.", nameof(weaponName), nameof(WeaponData), issueCode: "WeaponData.Name.Missing");
+            if (damage < 0f)
+                yield return PyralisRuntimeValidationIssue.Required("Damage cannot be negative.", nameof(damage), nameof(WeaponData), issueCode: "WeaponData.Damage.Invalid");
+            if (attackCooldown <= 0f)
+                yield return PyralisRuntimeValidationIssue.Required("Attack Cooldown must be greater than zero.", nameof(attackCooldown), nameof(WeaponData), issueCode: "WeaponData.AttackCooldown.Invalid");
+
             if ((weaponType == WeaponType.Ranged || weaponType == WeaponType.Thrown) && projectileDefinition == null)
-                yield return PyralisRuntimeValidationIssue.Required("Ranged/thrown weapons require a Projectile Definition.");
-            
+                yield return PyralisRuntimeValidationIssue.Required("Ranged/thrown weapons require a Projectile Definition.", nameof(projectileDefinition), nameof(WeaponData), issueCode: "WeaponData.ProjectileDefinition.Missing");
+
             if (weaponType == WeaponType.Melee && string.IsNullOrWhiteSpace(hitBoxZone))
-                yield return PyralisRuntimeValidationIssue.Required("Melee weapons should name the actor Hit Box Zone they use.");
+                yield return PyralisRuntimeValidationIssue.Required("Melee weapons should name the actor Hit Box Zone they use.", nameof(hitBoxZone), nameof(WeaponData), issueCode: "WeaponData.HitBoxZone.Missing");
+
+            if (projectileDefinition != null)
+            {
+                foreach (PyralisRuntimeValidationIssue issue in projectileDefinition.GetRuntimeValidationIssues())
+                {
+                    if (issue != null && !string.IsNullOrWhiteSpace(issue.Message))
+                    {
+                        yield return new PyralisRuntimeValidationIssue(
+                            $"Projectile Definition: {issue.Message}",
+                            nameof(projectileDefinition),
+                            nameof(WeaponData),
+                            "Open the assigned ProjectileDefinition and resolve the named issue.",
+                            "Assigned ProjectileDefinition reports no validation issues.",
+                            issue.Severity,
+                            "WeaponData.ProjectileDefinition." + issue.IssueCode);
+                    }
+                }
+            }
         }
 
         [Header("Identity")]

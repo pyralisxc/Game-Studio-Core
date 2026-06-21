@@ -28,6 +28,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
     [AuthoringContract(
         Capability = AuthoringCapability.Setup, 
         Relevance = "Authoring container for attachable runtime logic, used to extend Pawns or Game Modes with modular functionality.",
+        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.FeatureModuleRouteSupport },
         AssignmentFields = new[] { nameof(moduleId), nameof(displayName), nameof(profileAsset), nameof(runtimePrefab) },
         FirstProof = "Add this Feature Module to the 'Required Feature Modules' list on a Game Mode or Pawn Definition.",
         NativeSetup = new[] { "Define Module ID.", "Assign Runtime Prefab and Profile Asset." },
@@ -39,7 +40,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
     {
         public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            return PyralisRuntimeValidationIssueUtility.RequiredFrom(GetValidationIssues());
+            return BuildRuntimeValidationIssues();
         }
 
         private const string FeatureRuntimeInterfaceName = "NeonBlack.Gameplay.Features.Composition.IFeatureModuleRuntime";
@@ -106,9 +107,30 @@ namespace NeonBlack.Gameplay.Data.Definitions
         public List<string> GetValidationIssues()
         {
             List<string> issues = new List<string>();
+            List<PyralisRuntimeValidationIssue> runtimeIssues = BuildRuntimeValidationIssues();
+            for (int i = 0; i < runtimeIssues.Count; i++)
+            {
+                if (runtimeIssues[i] != null && !string.IsNullOrWhiteSpace(runtimeIssues[i].Message))
+                    issues.Add(runtimeIssues[i].Message);
+            }
+
+            return issues;
+        }
+
+        private List<PyralisRuntimeValidationIssue> BuildRuntimeValidationIssues()
+        {
+            List<PyralisRuntimeValidationIssue> issues = new List<PyralisRuntimeValidationIssue>();
 
             if (string.IsNullOrWhiteSpace(authoringCategory))
-                issues.Add("Feature modules should declare an authoring category for designer-facing tooling.");
+            {
+                issues.Add(PyralisRuntimeValidationIssue.Recommended(
+                    "Feature modules should declare an authoring category for designer-facing tooling.",
+                    nameof(authoringCategory),
+                    nameof(FeatureModuleDefinition),
+                    "Set FeatureModuleDefinition.authoringCategory to a stable designer-facing category.",
+                    "FeatureModuleDefinition has an authoring category.",
+                    "FeatureModuleDefinition.AuthoringCategory.Missing"));
+            }
 
             if (networkRole == FeatureNetworkRole.OfflineOnly)
             {
@@ -118,40 +140,100 @@ namespace NeonBlack.Gameplay.Data.Definitions
                     || requiresPrediction
                     || requiresServerExecution)
                 {
-                    issues.Add("OfflineOnly modules should not declare replication policies or authority/prediction requirements.");
+                    issues.Add(PyralisRuntimeValidationIssue.Required(
+                        "OfflineOnly modules should not declare replication policies or authority/prediction requirements.",
+                        nameof(networkRole),
+                        nameof(FeatureModuleDefinition),
+                        "Clear replication policy, ownership, authority, prediction, and server execution fields for OfflineOnly modules.",
+                        "OfflineOnly FeatureModuleDefinition has no network authority flags.",
+                        "FeatureModuleDefinition.NetworkRole.OfflineOnlyContradiction"));
                 }
             }
             else
             {
                 if (string.IsNullOrWhiteSpace(replicationPolicyId))
-                    issues.Add("Networked feature modules should declare a replication policy id.");
+                {
+                    issues.Add(PyralisRuntimeValidationIssue.Required(
+                        "Networked feature modules should declare a replication policy id.",
+                        nameof(replicationPolicyId),
+                        nameof(FeatureModuleDefinition),
+                        "Set FeatureModuleDefinition.replicationPolicyId for this networked module.",
+                        "Networked FeatureModuleDefinition has a replication policy id.",
+                        "FeatureModuleDefinition.ReplicationPolicy.Missing"));
+                }
 
                 if (networkRole == FeatureNetworkRole.CosmeticOnly
                     && (requiresOwnership || requiresAuthority || requiresPrediction || requiresServerExecution))
                 {
-                    issues.Add("CosmeticOnly modules cannot require ownership, authority, prediction, or server execution.");
+                    issues.Add(PyralisRuntimeValidationIssue.Required(
+                        "CosmeticOnly modules cannot require ownership, authority, prediction, or server execution.",
+                        nameof(networkRole),
+                        nameof(FeatureModuleDefinition),
+                        "Clear ownership, authority, prediction, and server execution flags for CosmeticOnly modules.",
+                        "CosmeticOnly FeatureModuleDefinition is presentation-only.",
+                        "FeatureModuleDefinition.NetworkRole.CosmeticAuthorityContradiction"));
                 }
 
                 if (networkRole == FeatureNetworkRole.Predicted && !requiresPrediction)
-                    issues.Add("Predicted modules should declare prediction support.");
+                {
+                    issues.Add(PyralisRuntimeValidationIssue.Required(
+                        "Predicted modules should declare prediction support.",
+                        nameof(requiresPrediction),
+                        nameof(FeatureModuleDefinition),
+                        "Enable FeatureModuleDefinition.requiresPrediction for a Predicted module.",
+                        "Predicted FeatureModuleDefinition declares prediction support.",
+                        "FeatureModuleDefinition.Prediction.Required"));
+                }
 
                 if (networkRole == FeatureNetworkRole.Predicted && !requiresOwnership)
-                    issues.Add("Predicted modules should require ownership so local prediction has an authority source.");
+                {
+                    issues.Add(PyralisRuntimeValidationIssue.Required(
+                        "Predicted modules should require ownership so local prediction has an authority source.",
+                        nameof(requiresOwnership),
+                        nameof(FeatureModuleDefinition),
+                        "Enable FeatureModuleDefinition.requiresOwnership for a Predicted module.",
+                        "Predicted FeatureModuleDefinition requires ownership.",
+                        "FeatureModuleDefinition.Ownership.RequiredForPrediction"));
+                }
 
                 if (networkRole == FeatureNetworkRole.ServerAuthoritative && !requiresServerExecution)
-                    issues.Add("ServerAuthoritative modules should require server execution.");
+                {
+                    issues.Add(PyralisRuntimeValidationIssue.Required(
+                        "ServerAuthoritative modules should require server execution.",
+                        nameof(requiresServerExecution),
+                        nameof(FeatureModuleDefinition),
+                        "Enable FeatureModuleDefinition.requiresServerExecution for a ServerAuthoritative module.",
+                        "Server-authoritative FeatureModuleDefinition requires server execution.",
+                        "FeatureModuleDefinition.ServerExecution.Required"));
+                }
             }
 
             ResolvedAuthoringContract contract = ResolvedAuthoringContractRegistry.FindByModuleId(moduleId);
 
             if (runtimePrefab == null)
-                issues.Add(GetMissingRuntimePrefabMessage(contract));
+            {
+                issues.Add(PyralisRuntimeValidationIssue.Required(
+                    GetMissingRuntimePrefabMessage(contract),
+                    nameof(runtimePrefab),
+                    nameof(FeatureModuleDefinition),
+                    BuildMissingRuntimePrefabNativeAction(contract),
+                    "FeatureModuleDefinition.runtimePrefab references a prefab with the expected feature runtime.",
+                    "FeatureModuleDefinition.RuntimePrefab.Missing"));
+            }
             else
             {
                 bool hasFeatureRuntime = HasFeatureRuntime(runtimePrefab);
                 bool matchesContractRuntime = AppendContractRuntimePrefabIssues(runtimePrefab, contract, issues);
                 if (runtimePrefab.GetComponentsInChildren<MonoBehaviour>(true).Length == 0 || !hasFeatureRuntime)
-                    issues.Add(GetRuntimePrefabMissingRuntimeMessage(contract));
+                {
+                    issues.Add(PyralisRuntimeValidationIssue.Required(
+                        GetRuntimePrefabMissingRuntimeMessage(contract),
+                        nameof(runtimePrefab),
+                        nameof(FeatureModuleDefinition),
+                        BuildRuntimePrefabMissingRuntimeNativeAction(contract),
+                        "FeatureModuleDefinition.runtimePrefab contains an IFeatureModuleRuntime component.",
+                        "FeatureModuleDefinition.RuntimePrefab.RuntimeMissing"));
+                }
 
                 if (hasFeatureRuntime && matchesContractRuntime)
                     AppendRuntimeValidationProviderIssues(runtimePrefab, issues);
@@ -251,22 +333,52 @@ namespace NeonBlack.Gameplay.Data.Definitions
             return "Runtime Prefab must contain at least one component that implements IFeatureModuleRuntime. Add the runtime component for this module to the prefab root.";
         }
 
-        private void AppendContractProfileIssue(ResolvedAuthoringContract contract, List<string> issues)
+        private string BuildMissingRuntimePrefabNativeAction(ResolvedAuthoringContract contract)
+        {
+            if (contract != null && contract.SourceType != null)
+                return $"Create a prefab with {contract.SourceType.Name} on the root, then assign it to FeatureModuleDefinition.runtimePrefab.";
+
+            return "Create a prefab with a component that implements IFeatureModuleRuntime, then assign it to FeatureModuleDefinition.runtimePrefab.";
+        }
+
+        private string BuildRuntimePrefabMissingRuntimeNativeAction(ResolvedAuthoringContract contract)
+        {
+            if (contract != null && contract.SourceType != null)
+                return $"Open the runtime prefab and add {contract.SourceType.Name} or another IFeatureModuleRuntime component.";
+
+            return "Open the runtime prefab and add the runtime component for this feature module.";
+        }
+
+        private void AppendContractProfileIssue(ResolvedAuthoringContract contract, List<PyralisRuntimeValidationIssue> issues)
         {
             if (contract == null || contract.RequiredProfileType == null)
                 return;
 
             if (profileAsset == null)
             {
-                issues.Add($"Profile Asset is required. Create or assign `{contract.RequiredProfileType.Name}` to FeatureModuleDefinition.profileAsset for module `{moduleId}`.");
+                issues.Add(PyralisRuntimeValidationIssue.Required(
+                    $"Profile Asset is required. Create or assign `{contract.RequiredProfileType.Name}` to FeatureModuleDefinition.profileAsset for module `{moduleId}`.",
+                    nameof(profileAsset),
+                    nameof(FeatureModuleDefinition),
+                    $"Create or assign {contract.RequiredProfileType.Name}, then set FeatureModuleDefinition.profileAsset.",
+                    "FeatureModuleDefinition.profileAsset references the contract-required profile type.",
+                    "FeatureModuleDefinition.ProfileAsset.Missing"));
                 return;
             }
 
             if (!contract.RequiredProfileType.IsInstanceOfType(profileAsset))
-                issues.Add($"Profile Asset must be `{contract.RequiredProfileType.Name}` for module `{moduleId}`.");
+            {
+                issues.Add(PyralisRuntimeValidationIssue.Required(
+                    $"Profile Asset must be `{contract.RequiredProfileType.Name}` for module `{moduleId}`.",
+                    nameof(profileAsset),
+                    nameof(FeatureModuleDefinition),
+                    $"Assign a {contract.RequiredProfileType.Name} asset to FeatureModuleDefinition.profileAsset.",
+                    "FeatureModuleDefinition.profileAsset matches the contract-required profile type.",
+                    "FeatureModuleDefinition.ProfileAsset.TypeMismatch"));
+            }
         }
 
-        private bool AppendContractRuntimePrefabIssues(GameObject prefab, ResolvedAuthoringContract contract, List<string> issues)
+        private bool AppendContractRuntimePrefabIssues(GameObject prefab, ResolvedAuthoringContract contract, List<PyralisRuntimeValidationIssue> issues)
         {
             if (prefab == null || contract == null)
                 return true;
@@ -275,7 +387,13 @@ namespace NeonBlack.Gameplay.Data.Definitions
                 && typeof(MonoBehaviour).IsAssignableFrom(contract.SourceType)
                 && !HasComponentOfTypeOnRoot(prefab, contract.SourceType.FullName))
             {
-                issues.Add($"Runtime Prefab `{prefab.name}` is not the expected feature runtime prefab for module `{moduleId}`. Create or assign a prefab whose root has `{contract.SourceType.Name}`; do not assign the pawn prefab here unless it intentionally contains that feature runtime component.");
+                issues.Add(PyralisRuntimeValidationIssue.Required(
+                    $"Runtime Prefab `{prefab.name}` is not the expected feature runtime prefab for module `{moduleId}`. Create or assign a prefab whose root has `{contract.SourceType.Name}`; do not assign the pawn prefab here unless it intentionally contains that feature runtime component.",
+                    nameof(runtimePrefab),
+                    nameof(FeatureModuleDefinition),
+                    $"Assign a prefab whose root has {contract.SourceType.Name} to FeatureModuleDefinition.runtimePrefab.",
+                    "FeatureModuleDefinition.runtimePrefab root has the contract source runtime component.",
+                    "FeatureModuleDefinition.RuntimePrefab.ContractRuntimeMismatch"));
                 return false;
             }
 
@@ -292,7 +410,13 @@ namespace NeonBlack.Gameplay.Data.Definitions
 
                 if (!HasComponentImplementing(prefab, interfaceName))
                 {
-                    issues.Add($"Runtime Prefab should expose `{GetShortTypeName(interfaceName)}` for module `{contract.ModuleId}`.");
+                    issues.Add(PyralisRuntimeValidationIssue.Required(
+                        $"Runtime Prefab should expose `{GetShortTypeName(interfaceName)}` for module `{contract.ModuleId}`.",
+                        nameof(runtimePrefab),
+                        nameof(FeatureModuleDefinition),
+                        $"Open the runtime prefab and add a component implementing {GetShortTypeName(interfaceName)}.",
+                        "FeatureModuleDefinition.runtimePrefab exposes the contract-required runtime interface.",
+                        "FeatureModuleDefinition.RuntimePrefab.InterfaceMissing." + GetShortTypeName(interfaceName)));
                     ready = false;
                 }
             }
@@ -366,7 +490,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
             return false;
         }
 
-        private static void AppendRuntimeValidationProviderIssues(GameObject prefab, List<string> issues)
+        private static void AppendRuntimeValidationProviderIssues(GameObject prefab, List<PyralisRuntimeValidationIssue> issues)
         {
             MonoBehaviour[] behaviours = prefab.GetComponentsInChildren<MonoBehaviour>(true);
             for (int i = 0; i < behaviours.Length; i++)
@@ -377,7 +501,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
                 foreach (PyralisRuntimeValidationIssue issue in provider.GetRuntimeValidationIssues())
                 {
                     if (issue != null && !string.IsNullOrWhiteSpace(issue.Message))
-                        issues.Add(issue.Message);
+                        issues.Add(issue);
                 }
             }
         }

@@ -334,6 +334,7 @@ namespace NeonBlack.Gameplay.Editor
 
         private PyralisAuthoringIntentModel GetCachedIntentModel()
         {
+            NormalizeSelectedIntentDescriptorIds();
             string key = $"{_intentLane}_{_intentAxioms}_{_intentParticipantRoute}_{_intentCapabilities}_{_intentDescriptorIdsValue}_{_authoringCacheVersion}";
             if (_cachedIntentModelKey == key && _cachedIntentModel != null)
                 return _cachedIntentModel;
@@ -346,6 +347,7 @@ namespace NeonBlack.Gameplay.Editor
 
         private PyralisAuthoringIntentSelection GetCurrentIntentSelection()
         {
+            NormalizeSelectedIntentDescriptorIds();
             return new PyralisAuthoringIntentSelection(
                 _intentLane,
                 _intentCapabilities,
@@ -367,6 +369,7 @@ namespace NeonBlack.Gameplay.Editor
 
         private PyralisAuthoringSetupGraph GetCachedIntentProjectedSetupGraph(Object graphSource)
         {
+            NormalizeSelectedIntentDescriptorIds();
             string key = GetSetupGraphCacheKey(graphSource, includeIntent: true);
             if (string.Equals(_cachedIntentProjectedSetupGraphKey, key, StringComparison.Ordinal) && _cachedIntentProjectedSetupGraph != null)
                 return _cachedIntentProjectedSetupGraph;

@@ -1,11 +1,7 @@
-using System.Collections;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Characters;
-using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
-using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Features.Input;
-using NeonBlack.Gameplay.Features.Combat;
 using NeonBlack.Gameplay.Features.Composition;
 using UnityEditor;
 using UnityEngine;
@@ -62,11 +58,13 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
         private readonly List<string> _recommendedIssues;
         private readonly List<PyralisSceneReadinessIssue> _issues;
 
-        public PyralisSceneReadinessReport(IEnumerable<string> requiredIssues, IEnumerable<string> recommendedIssues)
+        public PyralisSceneReadinessReport(IEnumerable<PyralisSceneReadinessIssue> issues)
         {
-            _requiredIssues = new List<string>(requiredIssues ?? System.Array.Empty<string>());
-            _recommendedIssues = new List<string>(recommendedIssues ?? System.Array.Empty<string>());
-            _issues = BuildIssues(_requiredIssues, _recommendedIssues);
+            _issues = new List<PyralisSceneReadinessIssue>(issues ?? System.Array.Empty<PyralisSceneReadinessIssue>());
+            _requiredIssues = new List<string>(GetMessages(PyralisSceneReadinessSeverity.RequiredBeforePlay));
+            _recommendedIssues = new List<string>();
+            _recommendedIssues.AddRange(GetMessages(PyralisSceneReadinessSeverity.RecommendedBeforePlay));
+            _recommendedIssues.AddRange(GetMessages(PyralisSceneReadinessSeverity.ProofEnhancer));
         }
 
         public IReadOnlyList<string> RequiredIssues => _requiredIssues;
@@ -122,120 +120,50 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             return messages;
         }
 
-        private static List<PyralisSceneReadinessIssue> BuildIssues(
-            IReadOnlyList<string> requiredIssues,
-            IReadOnlyList<string> recommendedIssues)
+        internal static void AddRequired(
+            List<PyralisSceneReadinessIssue> issues,
+            string message,
+            PyralisSceneReadinessCategory category,
+            string nativeAction = "")
         {
-            List<PyralisSceneReadinessIssue> issues = new List<PyralisSceneReadinessIssue>();
-            AppendIssues(issues, requiredIssues, PyralisSceneReadinessSeverity.RequiredBeforePlay);
-            AppendIssues(issues, recommendedIssues, PyralisSceneReadinessSeverity.RecommendedBeforePlay);
-            return issues;
+            AddIssue(issues, message, PyralisSceneReadinessSeverity.RequiredBeforePlay, category, nativeAction);
         }
 
-        private static void AppendIssues(
-            List<PyralisSceneReadinessIssue> output,
-            IReadOnlyList<string> messages,
-            PyralisSceneReadinessSeverity defaultSeverity)
+        internal static void AddRecommended(
+            List<PyralisSceneReadinessIssue> issues,
+            string message,
+            PyralisSceneReadinessCategory category,
+            string nativeAction = "")
         {
-            if (messages == null)
+            AddIssue(issues, message, PyralisSceneReadinessSeverity.RecommendedBeforePlay, category, nativeAction);
+        }
+
+        internal static void AddProofEnhancer(
+            List<PyralisSceneReadinessIssue> issues,
+            string message,
+            PyralisSceneReadinessCategory category,
+            string nativeAction = "")
+        {
+            AddIssue(issues, message, PyralisSceneReadinessSeverity.ProofEnhancer, category, nativeAction);
+        }
+
+        private static void AddIssue(
+            List<PyralisSceneReadinessIssue> issues,
+            string message,
+            PyralisSceneReadinessSeverity severity,
+            PyralisSceneReadinessCategory category,
+            string nativeAction)
+        {
+            if (issues == null || string.IsNullOrWhiteSpace(message))
                 return;
 
-            for (int i = 0; i < messages.Count; i++)
-            {
-                string message = messages[i];
-                if (string.IsNullOrWhiteSpace(message))
-                    continue;
-
-                PyralisSceneReadinessSeverity severity = defaultSeverity == PyralisSceneReadinessSeverity.RecommendedBeforePlay && IsProofEnhancer(message)
-                    ? PyralisSceneReadinessSeverity.ProofEnhancer
-                    : defaultSeverity;
-
-                output.Add(new PyralisSceneReadinessIssue(
-                    message,
-                    severity,
-                    InferCategory(message),
-                    InferNativeAction(message)));
-            }
-        }
-
-        private static bool IsProofEnhancer(string message)
-        {
-            string lower = message.ToLowerInvariant();
-            return lower.Contains("should have")
-                || lower.Contains("should be registered")
-                || lower.Contains("preferred seat")
-                || lower.Contains("mixes 2d and 3d physics")
-                || lower.Contains("has visible renderers but no collider");
-        }
-
-        private static PyralisSceneReadinessCategory InferCategory(string message)
-        {
-            string lower = (message ?? string.Empty).ToLowerInvariant();
-            if (lower.Contains("audio") || lower.Contains("camera"))
-                return PyralisSceneReadinessCategory.CameraAudio;
-
-            if (lower.Contains("inputprofile") || lower.Contains("input system") || lower.Contains("inputmodule") || lower.Contains("move row") || lower.Contains("action map"))
-                return PyralisSceneReadinessCategory.Input;
-
-            if (lower.Contains("eventsystem") || lower.Contains("ui") || lower.Contains("canvas") || lower.Contains("hud"))
-                return PyralisSceneReadinessCategory.UserInterface;
-
-            if (lower.Contains("physics") || lower.Contains("collider") || lower.Contains("rigidbody"))
-                return PyralisSceneReadinessCategory.Physics;
-
-            if (lower.Contains("sprite") || lower.Contains("renderer") || lower.Contains("presentation"))
-                return PyralisSceneReadinessCategory.Presentation;
-
-            if (lower.Contains("network"))
-                return PyralisSceneReadinessCategory.Networking;
-
-            if (lower.Contains("prefab") || lower.Contains("pawnroot") || lower.Contains("ipawn") || lower.Contains("missing script"))
-                return PyralisSceneReadinessCategory.PrefabContract;
-
-            if (lower.Contains("gameplay root") || lower.Contains("scene"))
-                return PyralisSceneReadinessCategory.SceneRoot;
-
-            return PyralisSceneReadinessCategory.Other;
-        }
-
-        private static string InferNativeAction(string message)
-        {
-            string lower = (message ?? string.Empty).ToLowerInvariant();
-            if (lower.Contains("standaloneinputmodule"))
-                return "Select the EventSystem in the Hierarchy, then use the Inspector warning or Add Component path to replace StandaloneInputModule with InputSystemUIInputModule.";
-
-            if (lower.Contains("core runtime service"))
-                return "Select Gameplay Root in the Hierarchy, create a child GameObject for the named service, add the named Pyralis service component, or assign the Bootstrap override field.";
-
-            if (lower.Contains("eventsystem"))
-                return "Create or select one EventSystem in the Hierarchy, then inspect its input module in the Inspector.";
-
-            if (lower.Contains("audiolistener"))
-                return "Select Main Camera in the Hierarchy and add or enable AudioListener in the Inspector.";
-
-            if (lower.Contains("camera"))
-                return "Create or select the physical Main Camera or Camera Root, then inspect framing and target camera fields.";
-
-            if (lower.Contains("sprite"))
-                return "Select the named scene object or prefab child and assign a Sprite on its SpriteRenderer.";
-
-            if (lower.Contains("inputprofile") || lower.Contains("move row") || lower.Contains("action map"))
-                return "Open the effective InputProfile and verify Actions, Primary Action Map, Move row, action name, and supported device toggles.";
-
-            if (lower.Contains("collider") || lower.Contains("physics"))
-                return "Inspect the prefab root and child colliders/Rigidbodies; keep one 2D or 3D physics lane for the proof.";
-
-            if (lower.Contains("prefab") || lower.Contains("pawnroot") || lower.Contains("ipawn") || lower.Contains("missing script"))
-                return "Inspect the prefab root in Prefab Mode or the Project window, then add or repair the named runtime component through the Inspector.";
-
-            return string.Empty;
+            issues.Add(new PyralisSceneReadinessIssue(message, severity, category, nativeAction));
         }
     }
 
     public static class PyralisSceneReadinessValidator
     {
         private const string NetworkManagerTypeName = "Unity.Netcode.NetworkManager";
-        private const string NetworkObjectTypeName = "Unity.Netcode.NetworkObject";
         private const string UnityTransportTypeName = "Unity.Netcode.Transports.UTP.UnityTransport";
         private const string NetworkedSessionStateServiceFullName = "NeonBlack.Gameplay.Networking.Participants.NetworkedSessionStateService";
         private const string NetworkedParticipantRosterServiceFullName = "NeonBlack.Gameplay.Networking.Participants.NetworkedParticipantRosterService";
@@ -243,66 +171,90 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
 
         public static PyralisSceneReadinessReport BuildReport(GameplaySessionBootstrap bootstrap)
         {
-            List<string> requiredIssues = new List<string>();
-            List<string> recommendedIssues = new List<string>();
+            List<PyralisSceneReadinessIssue> issues = new List<PyralisSceneReadinessIssue>();
 
             if (bootstrap == null)
             {
-                requiredIssues.Add("Select a GameplaySessionBootstrap before checking scene and prefab readiness.");
-                return new PyralisSceneReadinessReport(requiredIssues, recommendedIssues);
+                AddRequired(
+                    issues,
+                    "Select a GameplaySessionBootstrap before checking scene and prefab readiness.",
+                    PyralisSceneReadinessCategory.SceneRoot,
+                    "Select the Gameplay Root object with GameplaySessionBootstrap before checking route readiness.");
+                return new PyralisSceneReadinessReport(issues);
             }
 
             SerializedObject serializedBootstrap = new SerializedObject(bootstrap);
             SessionDefinition session = serializedBootstrap.FindProperty("sessionDefinition")?.objectReferenceValue as SessionDefinition;
             if (session == null)
-                return new PyralisSceneReadinessReport(requiredIssues, recommendedIssues);
+                return new PyralisSceneReadinessReport(issues);
 
-            AppendSceneRootIssues(bootstrap, serializedBootstrap, requiredIssues, recommendedIssues);
-            AppendCoreRuntimeServiceIssues(bootstrap, serializedBootstrap, session, requiredIssues);
-            AppendParticipantSeatIssues(session, requiredIssues, recommendedIssues);
-            AppendParticipantInputIssues(session, requiredIssues);
-            AppendParticipantPawnIssues(session, requiredIssues, recommendedIssues);
-            AppendNetworkReadinessIssues(bootstrap, session, requiredIssues, recommendedIssues);
+            AppendSceneRootIssues(bootstrap, serializedBootstrap, issues);
+            AppendCoreRuntimeServiceIssues(bootstrap, serializedBootstrap, session, issues);
+            AppendNetworkReadinessIssues(bootstrap, session, issues);
 
-            return new PyralisSceneReadinessReport(requiredIssues, recommendedIssues);
+            return new PyralisSceneReadinessReport(issues);
+        }
+
+        private static void AddRequired(
+            List<PyralisSceneReadinessIssue> issues,
+            string message,
+            PyralisSceneReadinessCategory category,
+            string nativeAction = "")
+        {
+            PyralisSceneReadinessReport.AddRequired(issues, message, category, nativeAction);
+        }
+
+        private static void AddRecommended(
+            List<PyralisSceneReadinessIssue> issues,
+            string message,
+            PyralisSceneReadinessCategory category,
+            string nativeAction = "")
+        {
+            PyralisSceneReadinessReport.AddRecommended(issues, message, category, nativeAction);
+        }
+
+        private static void AddProofEnhancer(
+            List<PyralisSceneReadinessIssue> issues,
+            string message,
+            PyralisSceneReadinessCategory category,
+            string nativeAction = "")
+        {
+            PyralisSceneReadinessReport.AddProofEnhancer(issues, message, category, nativeAction);
         }
 
         private static void AppendSceneRootIssues(
             GameplaySessionBootstrap bootstrap,
             SerializedObject serializedBootstrap,
-            List<string> requiredIssues,
-            List<string> recommendedIssues)
+            List<PyralisSceneReadinessIssue> issues)
         {
             HashSet<GameObject> inspectedRoots = new HashSet<GameObject>();
-            AppendReferencedHierarchyIssue(bootstrap.gameObject, "Gameplay root", inspectedRoots, requiredIssues);
-            AppendReferencedHierarchyIssue(GetObjectReference<Object>(serializedBootstrap, "cameraRigController"), "Camera rig", inspectedRoots, requiredIssues);
+            AppendReferencedHierarchyIssue(bootstrap.gameObject, "Gameplay root", inspectedRoots, issues, PyralisSceneReadinessCategory.SceneRoot);
+            AppendReferencedHierarchyIssue(GetObjectReference<Object>(serializedBootstrap, "cameraRigController"), "Camera rig", inspectedRoots, issues, PyralisSceneReadinessCategory.CameraAudio);
             PlayerInputManager playerInputManager = GetObjectReference<PlayerInputManager>(serializedBootstrap, "playerInputManager");
-            AppendReferencedHierarchyIssue(playerInputManager, "Player input manager", inspectedRoots, requiredIssues);
-            AppendPlayerInputManagerIssues(playerInputManager, requiredIssues);
-            AppendReferencedHierarchyIssue(GetObjectReference<Object>(serializedBootstrap, "sessionStateService"), "Session state service", inspectedRoots, requiredIssues);
-            AppendReferencedHierarchyIssue(GetObjectReference<Object>(serializedBootstrap, "participantRosterService"), "Participant roster service", inspectedRoots, requiredIssues);
-            AppendReferencedHierarchyIssue(GetObjectReference<Object>(serializedBootstrap, "participantSpawnService"), "Participant spawn service", inspectedRoots, requiredIssues);
-            AppendReferencedHierarchyIssue(GetObjectReference<Object>(serializedBootstrap, "participantInputRouter"), "Participant input router", inspectedRoots, requiredIssues);
-            AppendReferencedHierarchyIssue(GetObjectReference<Object>(serializedBootstrap, "sceneNavigatorSource"), "Scene navigator", inspectedRoots, requiredIssues);
-            AppendReferencedHierarchyIssue(GetObjectReference<Object>(serializedBootstrap, "timeManager"), "Time manager", inspectedRoots, requiredIssues);
-            AppendReferencedHierarchyIssue(GetObjectReference<Object>(serializedBootstrap, "cameraShake"), "Camera shake", inspectedRoots, requiredIssues);
+            AppendReferencedHierarchyIssue(playerInputManager, "Player input manager", inspectedRoots, issues, PyralisSceneReadinessCategory.Input);
+            AppendPlayerInputManagerIssues(playerInputManager, issues);
+            AppendReferencedHierarchyIssue(GetObjectReference<Object>(serializedBootstrap, "sessionStateService"), "Session state service", inspectedRoots, issues, PyralisSceneReadinessCategory.SceneRoot);
+            AppendReferencedHierarchyIssue(GetObjectReference<Object>(serializedBootstrap, "participantRosterService"), "Participant roster service", inspectedRoots, issues, PyralisSceneReadinessCategory.SceneRoot);
+            AppendReferencedHierarchyIssue(GetObjectReference<Object>(serializedBootstrap, "participantSpawnService"), "Participant spawn service", inspectedRoots, issues, PyralisSceneReadinessCategory.SceneRoot);
+            AppendReferencedHierarchyIssue(GetObjectReference<Object>(serializedBootstrap, "participantInputRouter"), "Participant input router", inspectedRoots, issues, PyralisSceneReadinessCategory.Input);
+            AppendReferencedHierarchyIssue(GetObjectReference<Object>(serializedBootstrap, "sceneNavigatorSource"), "Scene navigator", inspectedRoots, issues, PyralisSceneReadinessCategory.SceneRoot);
+            AppendReferencedHierarchyIssue(GetObjectReference<Object>(serializedBootstrap, "timeManager"), "Time manager", inspectedRoots, issues, PyralisSceneReadinessCategory.SceneRoot);
+            AppendReferencedHierarchyIssue(GetObjectReference<Object>(serializedBootstrap, "cameraShake"), "Camera shake", inspectedRoots, issues, PyralisSceneReadinessCategory.CameraAudio);
             ParticipantSpawnService spawnService = GetParticipantSpawnService(bootstrap, serializedBootstrap);
             if (spawnService != null)
-                AppendArrayReferenceIssues(new SerializedObject(spawnService), "spawnPoints", "Spawn point", inspectedRoots, requiredIssues);
+                AppendArrayReferenceIssues(new SerializedObject(spawnService), "spawnPoints", "Spawn point", inspectedRoots, issues, PyralisSceneReadinessCategory.SceneRoot);
 
             UnityEngine.SceneManagement.Scene scene = bootstrap.gameObject.scene;
-            AppendCameraAndAudioIssues(scene, inspectedRoots, requiredIssues, recommendedIssues);
-            AppendUiEventSystemIssues(scene, inspectedRoots, requiredIssues);
-            AppendSceneComponentIssues<ProjectileLauncherBase>(scene, "Projectile launcher", inspectedRoots, requiredIssues);
-            AppendSceneServiceIssues<ISessionScoreService>(scene, "Score service", inspectedRoots, requiredIssues);
-            AppendSceneSpriteRendererIssues(scene, inspectedRoots, requiredIssues);
+            AppendCameraAndAudioIssues(scene, inspectedRoots, issues);
+            AppendUiEventSystemIssues(scene, inspectedRoots, issues);
+            AppendSceneSpriteRendererIssues(scene, inspectedRoots, issues);
         }
 
         private static void AppendCoreRuntimeServiceIssues(
             GameplaySessionBootstrap bootstrap,
             SerializedObject serializedBootstrap,
             SessionDefinition session,
-            List<string> requiredIssues)
+            List<PyralisSceneReadinessIssue> issues)
         {
             if (bootstrap == null || session == null)
                 return;
@@ -314,28 +266,28 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 "sessionStateService",
                 "SessionStateService",
                 usesNetworkedCoreServices ? NetworkedSessionStateServiceFullName : string.Empty,
-                requiredIssues);
+                issues);
             AppendCoreRuntimeServiceIssue<ParticipantRosterService>(
                 bootstrap,
                 serializedBootstrap,
                 "participantRosterService",
                 "ParticipantRosterService",
                 usesNetworkedCoreServices ? NetworkedParticipantRosterServiceFullName : string.Empty,
-                requiredIssues);
+                issues);
             AppendCoreRuntimeServiceIssue<ParticipantSpawnService>(
                 bootstrap,
                 serializedBootstrap,
                 "participantSpawnService",
                 "ParticipantSpawnService",
                 usesNetworkedCoreServices ? NetworkedParticipantSpawnServiceFullName : string.Empty,
-                requiredIssues);
+                issues);
             AppendCoreRuntimeServiceIssue<ParticipantInputRouter>(
                 bootstrap,
                 serializedBootstrap,
                 "participantInputRouter",
                 "ParticipantInputRouter",
                 string.Empty,
-                requiredIssues);
+                issues);
         }
 
         private static void AppendCoreRuntimeServiceIssue<T>(
@@ -344,20 +296,28 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             string propertyName,
             string serviceName,
             string preferredFullTypeName,
-            List<string> requiredIssues) where T : Component
+            List<PyralisSceneReadinessIssue> issues) where T : Component
         {
             T service = GetObjectReference<T>(serializedBootstrap, propertyName);
             service ??= bootstrap.GetComponentInChildren<T>(true);
             if (service == null)
             {
-                requiredIssues.Add($"Gameplay Root is missing authored core runtime service `{serviceName}`. Add a child GameObject with {typeof(T).Name}, or assign Bootstrap > {ObjectNames.NicifyVariableName(propertyName)} before Play Mode.");
+                AddRequired(
+                    issues,
+                    $"Gameplay Root is missing authored core runtime service `{serviceName}`. Add a child GameObject with {typeof(T).Name}, or assign Bootstrap > {ObjectNames.NicifyVariableName(propertyName)} before Play Mode.",
+                    PyralisSceneReadinessCategory.SceneRoot,
+                    "Select Gameplay Root in the Hierarchy, create a child GameObject for the named service, add the named Pyralis service component, or assign the Bootstrap override field.");
                 return;
             }
 
             if (!string.IsNullOrWhiteSpace(preferredFullTypeName)
                 && !string.Equals(service.GetType().FullName, preferredFullTypeName, System.StringComparison.Ordinal))
             {
-                requiredIssues.Add($"Gameplay Root core runtime service `{serviceName}` uses `{service.GetType().Name}`, but this networked route expects `{GetTypeDisplayName(preferredFullTypeName)}`.");
+                AddRequired(
+                    issues,
+                    $"Gameplay Root core runtime service `{serviceName}` uses `{service.GetType().Name}`, but this networked route expects `{GetTypeDisplayName(preferredFullTypeName)}`.",
+                    PyralisSceneReadinessCategory.Networking,
+                    "Inspect the authored core service on Gameplay Root and assign the networked service variant for this route.");
             }
         }
 
@@ -372,29 +332,45 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 : fullTypeName;
         }
 
-        private static void AppendPlayerInputManagerIssues(PlayerInputManager playerInputManager, List<string> requiredIssues)
+        private static void AppendPlayerInputManagerIssues(PlayerInputManager playerInputManager, List<PyralisSceneReadinessIssue> issues)
         {
             if (playerInputManager == null)
                 return;
 
             if (playerInputManager.playerPrefab == null)
             {
-                requiredIssues.Add("Bootstrap has a PlayerInputManager assigned, but PlayerInputManager > Player Prefab is empty. Clear Bootstrap > Player Input Manager for single-player auto-join, or assign a player prefab with PlayerInput and PawnRoot for local join.");
+                AddRequired(
+                    issues,
+                    "Bootstrap has a PlayerInputManager assigned, but PlayerInputManager > Player Prefab is empty. Clear Bootstrap > Player Input Manager for single-player auto-join, or assign a player prefab with PlayerInput and PawnRoot for local join.",
+                    PyralisSceneReadinessCategory.Input,
+                    "Inspect PlayerInputManager and assign a player prefab with PlayerInput and PawnRoot, or clear Bootstrap > Player Input Manager for solo auto-start.");
                 return;
             }
 
             PlayerInput playerInput = playerInputManager.playerPrefab.GetComponent<PlayerInput>();
             if (playerInput == null)
             {
-                requiredIssues.Add($"PlayerInputManager prefab `{playerInputManager.playerPrefab.name}` needs a Unity PlayerInput component for local join.");
+                AddRequired(
+                    issues,
+                    $"PlayerInputManager prefab `{playerInputManager.playerPrefab.name}` needs a Unity PlayerInput component for local join.",
+                    PyralisSceneReadinessCategory.Input,
+                    "Open the PlayerInputManager player prefab and add Unity PlayerInput.");
                 return;
             }
 
             if (playerInput.actions == null)
-                requiredIssues.Add($"PlayerInputManager prefab `{playerInputManager.playerPrefab.name}` has PlayerInput but no Actions asset. Assign the same Input Actions asset used by the controlling InputProfile.");
+                AddRequired(
+                    issues,
+                    $"PlayerInputManager prefab `{playerInputManager.playerPrefab.name}` has PlayerInput but no Actions asset. Assign the same Input Actions asset used by the controlling InputProfile.",
+                    PyralisSceneReadinessCategory.Input,
+                    "Open the PlayerInput prefab and assign PlayerInput > Actions.");
 
             if (!PrefabContainsPawnInitializer(playerInputManager.playerPrefab))
-                requiredIssues.Add($"PlayerInputManager prefab `{playerInputManager.playerPrefab.name}` should contain PawnRoot/IPawnParticipantInitializer so the joined PlayerInput controls that participant's pawn instead of a shared action asset.");
+                AddRequired(
+                    issues,
+                    $"PlayerInputManager prefab `{playerInputManager.playerPrefab.name}` should contain PawnRoot/IPawnParticipantInitializer so the joined PlayerInput controls that participant's pawn instead of a shared action asset.",
+                    PyralisSceneReadinessCategory.Input,
+                    "Open the PlayerInput prefab and make the root or child pawn initializer visible to Unity PlayerInputManager.");
         }
 
         private static bool PrefabContainsPawnInitializer(GameObject prefab)
@@ -415,8 +391,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
         private static void AppendCameraAndAudioIssues(
             UnityEngine.SceneManagement.Scene scene,
             HashSet<GameObject> inspectedRoots,
-            List<string> requiredIssues,
-            List<string> recommendedIssues)
+            List<PyralisSceneReadinessIssue> issues)
         {
             Camera[] cameras = Object.FindObjectsByType<Camera>(FindObjectsInactive.Exclude);
             bool hasSceneCamera = false;
@@ -429,7 +404,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                     continue;
 
                 hasSceneCamera = true;
-                AppendReferencedHierarchyIssue(camera, "Camera", inspectedRoots, requiredIssues);
+                AppendReferencedHierarchyIssue(camera, "Camera", inspectedRoots, issues, PyralisSceneReadinessCategory.CameraAudio);
 
                 AudioListener listener = camera.GetComponent<AudioListener>();
                 if (listener != null && listener.enabled)
@@ -446,16 +421,28 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
 
                 sceneListenerCount++;
                 hasSceneAudioListener = true;
-                AppendReferencedHierarchyIssue(listener, "Audio listener", inspectedRoots, requiredIssues);
+                AppendReferencedHierarchyIssue(listener, "Audio listener", inspectedRoots, issues, PyralisSceneReadinessCategory.CameraAudio);
             }
 
             if (!hasSceneCamera)
-                requiredIssues.Add("Scene needs at least one enabled Camera before Play Mode can show a visual proof.");
+                AddRequired(
+                    issues,
+                    "Scene needs at least one enabled Camera before Play Mode can show a visual proof.",
+                    PyralisSceneReadinessCategory.CameraAudio,
+                    "Create or select the physical Main Camera or Camera Root, then inspect framing and target camera fields.");
 
             if (!hasSceneAudioListener)
-                recommendedIssues.Add("Scene should have one enabled AudioListener, usually on Main Camera, before Play Mode to avoid Unity audio errors.");
+                AddProofEnhancer(
+                    issues,
+                    "Scene should have one enabled AudioListener, usually on Main Camera, before Play Mode to avoid Unity audio errors.",
+                    PyralisSceneReadinessCategory.CameraAudio,
+                    "Select Main Camera in the Hierarchy and add or enable AudioListener in the Inspector.");
             else if (sceneListenerCount > 1)
-                requiredIssues.Add($"Scene has {sceneListenerCount} enabled AudioListener components. Keep exactly one active listener before Play Mode.");
+                AddRequired(
+                    issues,
+                    $"Scene has {sceneListenerCount} enabled AudioListener components. Keep exactly one active listener before Play Mode.",
+                    PyralisSceneReadinessCategory.CameraAudio,
+                    "Disable duplicate AudioListener components so Unity has exactly one active listener.");
         }
 
         private static bool HasSceneComponent<T>(UnityEngine.SceneManagement.Scene scene) where T : Component
@@ -494,7 +481,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
         private static void AppendUiEventSystemIssues(
             UnityEngine.SceneManagement.Scene scene,
             HashSet<GameObject> inspectedRoots,
-            List<string> requiredIssues)
+            List<PyralisSceneReadinessIssue> issues)
         {
             bool hasSceneUi = HasSceneComponent<Canvas>(scene)
                 || HasSceneComponent<Selectable>(scene)
@@ -513,7 +500,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                     continue;
 
                 sceneEventSystemCount++;
-                AppendReferencedHierarchyIssue(eventSystem, "EventSystem", inspectedRoots, requiredIssues);
+                AppendReferencedHierarchyIssue(eventSystem, "EventSystem", inspectedRoots, issues, PyralisSceneReadinessCategory.UserInterface);
 
                 if (eventSystem.GetComponent<InputSystemUIInputModule>() != null)
                     hasInputSystemModule = true;
@@ -523,13 +510,25 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             }
 
             if (hasSceneUi && sceneEventSystemCount == 0)
-                requiredIssues.Add("Scene UI needs one EventSystem before Play Mode so buttons, menus, HUD selection, and pointer input can work.");
+                AddRequired(
+                    issues,
+                    "Scene UI needs one EventSystem before Play Mode so buttons, menus, HUD selection, and pointer input can work.",
+                    PyralisSceneReadinessCategory.UserInterface,
+                    "Create or select one EventSystem in the Hierarchy, then inspect its input module in the Inspector.");
 
             if (sceneEventSystemCount > 1)
-                requiredIssues.Add($"Scene has {sceneEventSystemCount} active EventSystem objects. Keep one active EventSystem before Play Mode.");
+                AddRequired(
+                    issues,
+                    $"Scene has {sceneEventSystemCount} active EventSystem objects. Keep one active EventSystem before Play Mode.",
+                    PyralisSceneReadinessCategory.UserInterface,
+                    "Keep one active EventSystem in the scene and disable or remove duplicates.");
 
             if (sceneEventSystemCount > 0 && hasStandaloneModule && !hasInputSystemModule)
-                requiredIssues.Add("EventSystem uses StandaloneInputModule. Replace it with InputSystemUIInputModule for this Input System project before Play Mode.");
+                AddRequired(
+                    issues,
+                    "EventSystem uses StandaloneInputModule. Replace it with InputSystemUIInputModule for this Input System project before Play Mode.",
+                    PyralisSceneReadinessCategory.UserInterface,
+                    "Select the EventSystem in the Hierarchy, then use the Inspector warning or Add Component path to replace StandaloneInputModule with InputSystemUIInputModule.");
         }
 
         private static void AppendArrayReferenceIssues(
@@ -537,7 +536,8 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             string propertyName,
             string label,
             HashSet<GameObject> inspectedRoots,
-            List<string> requiredIssues)
+            List<PyralisSceneReadinessIssue> issues,
+            PyralisSceneReadinessCategory category)
         {
             SerializedProperty property = serializedObject.FindProperty(propertyName);
             if (property == null || !property.isArray)
@@ -546,37 +546,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             for (int i = 0; i < property.arraySize; i++)
             {
                 Object value = property.GetArrayElementAtIndex(i).objectReferenceValue;
-                AppendReferencedHierarchyIssue(value, $"{label} {i}", inspectedRoots, requiredIssues);
-            }
-        }
-
-        private static void AppendSceneComponentIssues<T>(
-            UnityEngine.SceneManagement.Scene scene,
-            string label,
-            HashSet<GameObject> inspectedRoots,
-            List<string> requiredIssues) where T : Component
-        {
-            T[] components = Object.FindObjectsByType<T>(FindObjectsInactive.Include);
-            for (int i = 0; i < components.Length; i++)
-            {
-                T component = components[i];
-                if (component != null && component.gameObject.scene == scene)
-                    AppendReferencedHierarchyIssue(component, label, inspectedRoots, requiredIssues);
-            }
-        }
-
-        private static void AppendSceneServiceIssues<T>(
-            UnityEngine.SceneManagement.Scene scene,
-            string label,
-            HashSet<GameObject> inspectedRoots,
-            List<string> requiredIssues) where T : class
-        {
-            MonoBehaviour[] behaviours = Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include);
-            for (int i = 0; i < behaviours.Length; i++)
-            {
-                MonoBehaviour behaviour = behaviours[i];
-                if (behaviour != null && behaviour.gameObject.scene == scene && behaviour is T)
-                    AppendReferencedHierarchyIssue(behaviour, label, inspectedRoots, requiredIssues);
+                AppendReferencedHierarchyIssue(value, $"{label} {i}", inspectedRoots, issues, category);
             }
         }
 
@@ -584,7 +554,8 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             Object reference,
             string label,
             HashSet<GameObject> inspectedRoots,
-            List<string> requiredIssues)
+            List<PyralisSceneReadinessIssue> issues,
+            PyralisSceneReadinessCategory category)
         {
             GameObject root = GetReferenceGameObject(reference);
             if (root == null || !inspectedRoots.Add(root))
@@ -592,7 +563,11 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
 
             int missingScripts = GetMissingScriptCountInHierarchy(root);
             if (missingScripts > 0)
-                requiredIssues.Add($"{label} `{root.name}` has {missingScripts} missing script reference(s) in its hierarchy.");
+                AddRequired(
+                    issues,
+                    $"{label} `{root.name}` has {missingScripts} missing script reference(s) in its hierarchy.",
+                    category,
+                    "Inspect the named scene object or prefab root and repair missing script references.");
         }
 
         private static GameObject GetReferenceGameObject(Object reference)
@@ -606,255 +581,10 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             return null;
         }
 
-        private static void AppendParticipantSeatIssues(
-            SessionDefinition session,
-            List<string> requiredIssues,
-            List<string> recommendedIssues)
-        {
-            if (session.defaultParticipants == null || session.defaultParticipants.Length == 0)
-                return;
-
-            int effectiveMaxParticipants = session.GetEffectiveMaxParticipants();
-            if (session.defaultParticipants.Length > effectiveMaxParticipants)
-                requiredIssues.Add($"Session has {session.defaultParticipants.Length} default participants but only supports {effectiveMaxParticipants} participants.");
-
-            HashSet<int> preferredSeats = new HashSet<int>();
-            for (int i = 0; i < session.defaultParticipants.Length; i++)
-            {
-                ParticipantDefinition participant = session.defaultParticipants[i];
-                if (participant == null)
-                {
-                    requiredIssues.Add($"Default participant slot {i} is empty.");
-                    continue;
-                }
-
-                if (participant.preferredSeatIndex < 0)
-                    continue;
-
-                if (participant.preferredSeatIndex >= effectiveMaxParticipants)
-                {
-                    requiredIssues.Add($"Participant `{participant.displayName}` prefers seat {participant.preferredSeatIndex}, outside max participant count {effectiveMaxParticipants}.");
-                    continue;
-                }
-
-                if (!preferredSeats.Add(participant.preferredSeatIndex))
-                    recommendedIssues.Add($"Preferred seat {participant.preferredSeatIndex} is assigned more than once; runtime can reassign duplicates, but prefabs/scenes should author seats clearly.");
-            }
-        }
-
-        private static void AppendParticipantPawnIssues(
-            SessionDefinition session,
-            List<string> requiredIssues,
-            List<string> recommendedIssues)
-        {
-            if (session.defaultParticipants == null)
-                return;
-
-            HashSet<Object> inspectedObjects = new HashSet<Object>();
-            for (int i = 0; i < session.defaultParticipants.Length; i++)
-            {
-                ParticipantDefinition participant = session.defaultParticipants[i];
-                PawnDefinition pawn = participant != null ? participant.defaultPawn : null;
-                if (pawn == null)
-                    continue;
-
-                AppendPawnDefinitionIssues(i, pawn, inspectedObjects, requiredIssues, recommendedIssues);
-            }
-        }
-
-        private static void AppendParticipantInputIssues(SessionDefinition session, List<string> requiredIssues)
-        {
-            if (session == null || session.defaultParticipants == null)
-                return;
-
-            for (int i = 0; i < session.defaultParticipants.Length; i++)
-            {
-                ParticipantDefinition participant = session.defaultParticipants[i];
-                if (participant == null || participant.defaultPawn == null)
-                    continue;
-
-                InputProfile profile = ParticipantInputProfileUtility.ResolveEffectiveInputProfile(participant);
-
-                if (profile == null)
-                {
-                    requiredIssues.Add($"Participant slot {i} pawn input needs an InputProfile on the controlling ParticipantDefinition.");
-                    continue;
-                }
-
-                string issue = GetInputProfileReadinessIssue(profile);
-                if (!string.IsNullOrWhiteSpace(issue))
-                    requiredIssues.Add($"Participant slot {i} effective InputProfile `{profile.name}`: {issue}");
-            }
-        }
-
-        private static string GetInputProfileReadinessIssue(InputProfile profile)
-        {
-            if (profile == null)
-                return "InputProfile is not assigned.";
-
-            profile.Sanitize();
-
-            if (profile.actions == null)
-                return "Actions must reference the stock Assets/InputSystem_Actions.inputactions asset or another Unity Input Action Asset before movement can be proven.";
-
-            InputActionMap map = ParticipantInputProfileUtility.FindGameplayActionMap(profile.actions, profile);
-            if (map == null)
-            {
-                string mapName = !string.IsNullOrWhiteSpace(profile.primaryActionMap)
-                    ? profile.primaryActionMap
-                    : "Player";
-                return $"Primary Action Map `{mapName}` was not found in Actions.";
-            }
-
-            GameplayInputActionBinding moveBinding = profile.FindBinding(GameplayInputActionRole.Move);
-            if (moveBinding == null)
-                return "Gameplay Actions must include a required Move row.";
-
-            if (string.IsNullOrWhiteSpace(moveBinding.actionName))
-                return "Move row must name the Unity action that drives movement.";
-
-            string moveMapName = moveBinding.GetActionMap(profile.primaryActionMap);
-            InputActionMap moveMap = string.Equals(moveMapName, map.name, System.StringComparison.OrdinalIgnoreCase)
-                ? map
-                : profile.actions.FindActionMap(moveMapName, throwIfNotFound: false);
-            if (moveMap == null)
-                return $"Move row Action Map `{moveMapName}` was not found in Actions.";
-
-            if (ParticipantInputProfileUtility.FindAction(moveMap, moveBinding.actionName) == null)
-                return $"Move row Unity Action Name `{moveBinding.actionName}` was not found in Action Map `{moveMap.name}`.";
-
-            if (!profile.supportsGamepad && !profile.supportsKeyboardMouse && !profile.touchFriendly)
-                return "At least one input surface should be enabled for a player-owned pawn.";
-
-            return string.Empty;
-        }
-
-        private static void AppendPawnDefinitionIssues(
-            int participantSlot,
-            PawnDefinition pawn,
-            HashSet<Object> inspectedObjects,
-            List<string> requiredIssues,
-            List<string> recommendedIssues)
-        {
-            if (pawn.pawnPrefab == null)
-                return;
-
-            GameObject prefab = pawn.pawnPrefab;
-            if (inspectedObjects.Add(prefab))
-            {
-                AppendMissingScriptIssue(prefab, $"Pawn prefab `{prefab.name}`", requiredIssues);
-
-                if (!prefab.activeSelf)
-                    requiredIssues.Add($"Participant slot {participantSlot} pawn prefab `{prefab.name}` root GameObject is inactive. Enable the prefab root before Play Mode so the spawned pawn can run.");
-
-                if (prefab.GetComponent<PawnRoot>() == null)
-                    requiredIssues.Add($"Participant slot {participantSlot} pawn prefab `{prefab.name}` is missing PawnRoot on its root GameObject.");
-                else if (!HasEnabledComponentImplementing<PawnRoot>(prefab))
-                    requiredIssues.Add($"Participant slot {participantSlot} pawn prefab `{prefab.name}` has PawnRoot disabled or on an inactive child. Enable PawnRoot on the prefab root before Play Mode.");
-
-                if (HasEnabledFeatureModules(pawn) && prefab.GetComponent<ActorFeatureHost>() == null)
-                    requiredIssues.Add($"Participant slot {participantSlot} pawn prefab `{prefab.name}` has enabled feature modules in PawnDefinition.featureModules, but the prefab root is missing ActorFeatureHost. Add ActorFeatureHost to the pawn root so optional feature modules are installed explicitly.");
-
-                if (!HasComponentImplementing<IPawnMotor>(prefab))
-                    requiredIssues.Add($"Participant slot {participantSlot} pawn prefab `{prefab.name}` is missing a lane motor component implementing IPawnMotor.");
-                else if (!HasEnabledComponentImplementing<IPawnMotor>(prefab))
-                    requiredIssues.Add($"Participant slot {participantSlot} pawn prefab `{prefab.name}` has a lane motor component, but it is disabled or on an inactive GameObject.");
-
-                if (!HasComponentImplementing<IPawnInputModule>(prefab))
-                    requiredIssues.Add($"Participant slot {participantSlot} pawn prefab `{prefab.name}` is missing an input adapter component implementing IPawnInputModule so the selected InputProfile can reach movement.");
-                else if (!HasEnabledComponentImplementing<IPawnInputModule>(prefab))
-                    requiredIssues.Add($"Participant slot {participantSlot} pawn prefab `{prefab.name}` has an input adapter, but it is disabled or on an inactive GameObject.");
-
-                if (!HasComponentImplementing<IPawnPresentationModule>(prefab))
-                    requiredIssues.Add($"Participant slot {participantSlot} pawn prefab `{prefab.name}` needs a component implementing IPawnPresentationModule.");
-                else if (!HasEnabledComponentImplementing<IPawnPresentationModule>(prefab))
-                    requiredIssues.Add($"Participant slot {participantSlot} pawn prefab `{prefab.name}` has a presentation module, but it is disabled or on an inactive GameObject.");
-
-                AppendPrefabSpriteRendererIssues(participantSlot, prefab, requiredIssues);
-                AppendPawnPrefabPresentationPhysicsIssues(participantSlot, prefab, recommendedIssues);
-            }
-
-            AppendFeatureModuleIssues(pawn, inspectedObjects, requiredIssues);
-            AppendCombatProjectileIssues(pawn, inspectedObjects, requiredIssues, recommendedIssues);
-        }
-
-        private static bool HasEnabledFeatureModules(PawnDefinition pawn)
-        {
-            if (pawn == null || pawn.featureModules == null)
-                return false;
-
-            for (int i = 0; i < pawn.featureModules.Length; i++)
-            {
-                FeatureModuleDefinition module = pawn.featureModules[i];
-                if (module != null && module.enabledByDefault)
-                    return true;
-            }
-
-            return false;
-        }
-
-        private static void AppendPrefabSpriteRendererIssues(int participantSlot, GameObject prefab, List<string> requiredIssues)
-        {
-            if (prefab == null)
-                return;
-
-            SpriteRenderer[] renderers = prefab.GetComponentsInChildren<SpriteRenderer>(true);
-            if (renderers == null || renderers.Length == 0)
-                return;
-
-            bool hasEnabledRenderer = false;
-            bool hasAssignedSprite = false;
-            for (int i = 0; i < renderers.Length; i++)
-            {
-                SpriteRenderer renderer = renderers[i];
-                if (renderer == null || !renderer.enabled)
-                    continue;
-
-                hasEnabledRenderer = true;
-                if (renderer.sprite != null)
-                    hasAssignedSprite = true;
-            }
-
-            if (hasEnabledRenderer && !hasAssignedSprite)
-                requiredIssues.Add($"Participant slot {participantSlot} pawn prefab `{prefab.name}` has enabled SpriteRenderer components but no assigned Sprite. Assign a visual sprite or use a presentation route that supplies one before Play Mode.");
-        }
-
-        private static void AppendPawnPrefabPresentationPhysicsIssues(int participantSlot, GameObject prefab, List<string> recommendedIssues)
-        {
-            if (prefab == null)
-                return;
-
-            bool hasVisibleRenderer = HasEnabledVisibleRenderer(prefab);
-            bool has2DPhysics = prefab.GetComponentInChildren<Rigidbody2D>(true) != null
-                || prefab.GetComponentInChildren<Collider2D>(true) != null;
-            bool has3DPhysics = prefab.GetComponentInChildren<Rigidbody>(true) != null
-                || prefab.GetComponentInChildren<Collider>(true) != null
-                || prefab.GetComponentInChildren<CharacterController>(true) != null;
-
-            if (hasVisibleRenderer && !has2DPhysics && !has3DPhysics)
-                recommendedIssues.Add($"Participant slot {participantSlot} pawn prefab `{prefab.name}` has visible renderers but no Collider, Rigidbody, or CharacterController. Add the route-appropriate collision surface before judging movement feel.");
-
-            if (has2DPhysics && has3DPhysics)
-                recommendedIssues.Add($"Participant slot {participantSlot} pawn prefab `{prefab.name}` mixes 2D and 3D physics components. Keep one physics lane per pawn prefab for clean movement proof behavior.");
-        }
-
-        private static bool HasEnabledVisibleRenderer(GameObject prefab)
-        {
-            Renderer[] renderers = prefab.GetComponentsInChildren<Renderer>(true);
-            for (int i = 0; i < renderers.Length; i++)
-            {
-                Renderer renderer = renderers[i];
-                if (renderer != null && renderer.enabled)
-                    return true;
-            }
-
-            return false;
-        }
-
         private static void AppendSceneSpriteRendererIssues(
             UnityEngine.SceneManagement.Scene scene,
             HashSet<GameObject> inspectedRoots,
-            List<string> requiredIssues)
+            List<PyralisSceneReadinessIssue> issues)
         {
             SpriteRenderer[] renderers = Object.FindObjectsByType<SpriteRenderer>(FindObjectsInactive.Exclude);
             for (int i = 0; i < renderers.Length; i++)
@@ -868,116 +598,18 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                     continue;
                 }
 
-                requiredIssues.Add($"Scene SpriteRenderer `{renderer.gameObject.name}` has no Sprite assigned. Assign a sprite before using Play Mode as a visual proof.");
+                AddRequired(
+                    issues,
+                    $"Scene SpriteRenderer `{renderer.gameObject.name}` has no Sprite assigned. Assign a sprite before using Play Mode as a visual proof.",
+                    PyralisSceneReadinessCategory.Presentation,
+                    "Select the named scene object and assign a Sprite on its SpriteRenderer.");
             }
-        }
-
-        private static void AppendFeatureModuleIssues(
-            PawnDefinition pawn,
-            HashSet<Object> inspectedObjects,
-            List<string> requiredIssues)
-        {
-            if (pawn.featureModules == null)
-                return;
-
-            for (int i = 0; i < pawn.featureModules.Length; i++)
-            {
-                FeatureModuleDefinition module = pawn.featureModules[i];
-                if (module == null || !module.enabledByDefault)
-                    continue;
-
-                if (inspectedObjects.Add(module))
-                {
-                    List<string> moduleIssues = module.GetValidationIssues();
-                    for (int issueIndex = 0; issueIndex < moduleIssues.Count; issueIndex++)
-                        requiredIssues.Add($"Feature module `{module.moduleId}`: {moduleIssues[issueIndex]}");
-                }
-
-                if (module.runtimePrefab != null && inspectedObjects.Add(module.runtimePrefab))
-                    AppendMissingScriptIssue(module.runtimePrefab, $"Feature runtime prefab `{module.runtimePrefab.name}`", requiredIssues);
-            }
-        }
-
-        private static void AppendCombatProjectileIssues(
-            PawnDefinition pawn,
-            HashSet<Object> inspectedObjects,
-            List<string> requiredIssues,
-            List<string> recommendedIssues)
-        {
-            PawnCombatProfile combatProfile = pawn.combatProfile;
-            if (combatProfile == null || !combatProfile.enableCombat)
-                return;
-
-            AppendWeaponProjectileIssues(combatProfile.attackWeapon, inspectedObjects, requiredIssues, recommendedIssues);
-            AppendWeaponProjectileIssues(combatProfile.kickWeapon, inspectedObjects, requiredIssues, recommendedIssues);
-            AppendWeaponProjectileIssues(combatProfile.aerialWeapon, inspectedObjects, requiredIssues, recommendedIssues);
-            AppendSequenceProjectileIssues(combatProfile.primarySequence, inspectedObjects, requiredIssues, recommendedIssues);
-            AppendSequenceProjectileIssues(combatProfile.secondarySequence, inspectedObjects, requiredIssues, recommendedIssues);
-            AppendSequenceProjectileIssues(combatProfile.aerialSequence, inspectedObjects, requiredIssues, recommendedIssues);
-        }
-
-        private static void AppendSequenceProjectileIssues(
-            CombatSequenceDefinition sequence,
-            HashSet<Object> inspectedObjects,
-            List<string> requiredIssues,
-            List<string> recommendedIssues)
-        {
-            if (sequence == null || sequence.actions == null)
-                return;
-
-            for (int i = 0; i < sequence.actions.Length; i++)
-            {
-                CombatActionDefinition action = sequence.actions[i];
-                if (action != null)
-                    AppendWeaponProjectileIssues(action.weapon, inspectedObjects, requiredIssues, recommendedIssues);
-            }
-        }
-
-        private static void AppendWeaponProjectileIssues(
-            WeaponData weapon,
-            HashSet<Object> inspectedObjects,
-            List<string> requiredIssues,
-            List<string> recommendedIssues)
-        {
-            if (weapon == null || weapon.projectileDefinition == null)
-                return;
-
-            ProjectileDefinition projectile = weapon.projectileDefinition;
-            if (!inspectedObjects.Add(projectile))
-                return;
-
-            List<string> projectileIssues = projectile.GetValidationIssues();
-            for (int i = 0; i < projectileIssues.Count; i++)
-                requiredIssues.Add($"Projectile `{projectile.displayName}`: {projectileIssues[i]}");
-
-            if (projectile.deliveryMode != ProjectileDeliveryMode.ProjectilePrefab || projectile.projectilePrefab == null)
-                return;
-
-            GameObject projectilePrefab = projectile.projectilePrefab;
-            AppendMissingScriptIssue(projectilePrefab, $"Projectile prefab `{projectilePrefab.name}`", requiredIssues);
-
-            if (!HasComponentImplementing<IProjectileRuntimeBody>(projectilePrefab))
-            {
-                requiredIssues.Add($"Projectile prefab `{projectilePrefab.name}` needs Projectile or Projectile2D so ProjectileDefinition data reaches runtime shots.");
-            }
-
-            bool has3DPhysics = projectilePrefab.GetComponentInChildren<Rigidbody>(true) != null
-                || projectilePrefab.GetComponentInChildren<Collider>(true) != null;
-            bool has2DPhysics = projectilePrefab.GetComponentInChildren<Rigidbody2D>(true) != null
-                || projectilePrefab.GetComponentInChildren<Collider2D>(true) != null;
-
-            if (!has3DPhysics && !has2DPhysics)
-                requiredIssues.Add($"Projectile prefab `{projectilePrefab.name}` needs 2D or 3D physics components for movement and hit detection.");
-
-            if (has2DPhysics && has3DPhysics)
-                recommendedIssues.Add($"Projectile prefab `{projectilePrefab.name}` mixes 2D and 3D physics. Keep one physics lane per projectile prefab.");
         }
 
         private static void AppendNetworkReadinessIssues(
             GameplaySessionBootstrap bootstrap,
             SessionDefinition session,
-            List<string> requiredIssues,
-            List<string> recommendedIssues)
+            List<PyralisSceneReadinessIssue> issues)
         {
             if (session.networkMode == GameplayNetworkMode.LocalOnly)
                 return;
@@ -985,42 +617,35 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             MonoBehaviour networkManager = FindSceneBehaviourByTypeName(bootstrap.gameObject.scene, NetworkManagerTypeName);
             if (networkManager == null)
             {
-                requiredIssues.Add("Networked sessions require a scene NetworkManager.");
+                AddRequired(
+                    issues,
+                    "Networked sessions require a scene NetworkManager.",
+                    PyralisSceneReadinessCategory.Networking,
+                    "Create or assign a NetworkManager in the scene for the networked route.");
             }
             else if (!NetworkManagerUsesUnityTransport(networkManager))
             {
-                requiredIssues.Add("Networked sessions require NetworkManager to use UnityTransport for the supported MVP lane.");
-            }
-
-            if (session.defaultParticipants == null)
-                return;
-
-            for (int i = 0; i < session.defaultParticipants.Length; i++)
-            {
-                ParticipantDefinition participant = session.defaultParticipants[i];
-                GameObject pawnPrefab = participant != null && participant.defaultPawn != null
-                    ? participant.defaultPawn.pawnPrefab
-                    : null;
-
-                if (pawnPrefab == null)
-                    continue;
-
-                if (!HasComponentOfTypeName(pawnPrefab, NetworkObjectTypeName))
-                {
-                    requiredIssues.Add($"Networked participant slot {i} pawn prefab `{pawnPrefab.name}` needs a NetworkObject.");
-                    continue;
-                }
-
-                if (networkManager != null && !NetworkManagerRegistersPrefab(networkManager, pawnPrefab))
-                    recommendedIssues.Add($"Networked participant slot {i} pawn prefab `{pawnPrefab.name}` should be registered in NetworkManager Network Prefabs before scene playtesting.");
+                AddRequired(
+                    issues,
+                    "Networked sessions require NetworkManager to use UnityTransport for the supported MVP lane.",
+                    PyralisSceneReadinessCategory.Networking,
+                    "Select NetworkManager and add or assign UnityTransport.");
             }
         }
 
-        private static void AppendMissingScriptIssue(GameObject root, string label, List<string> requiredIssues)
+        private static void AppendMissingScriptIssue(
+            GameObject root,
+            string label,
+            List<PyralisSceneReadinessIssue> issues,
+            PyralisSceneReadinessCategory category)
         {
             int missingScripts = GetMissingScriptCountInHierarchy(root);
             if (missingScripts > 0)
-                requiredIssues.Add($"{label} has {missingScripts} missing script reference(s).");
+                AddRequired(
+                    issues,
+                    $"{label} has {missingScripts} missing script reference(s).",
+                    category,
+                    "Inspect the prefab root and repair missing script references.");
         }
 
         private static int GetMissingScriptCountInHierarchy(GameObject root)
@@ -1037,37 +662,6 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             }
 
             return count;
-        }
-
-        private static bool HasComponentImplementing<T>(GameObject root) where T : class
-        {
-            if (root == null)
-                return false;
-
-            MonoBehaviour[] behaviours = root.GetComponentsInChildren<MonoBehaviour>(true);
-            for (int i = 0; i < behaviours.Length; i++)
-            {
-                if (behaviours[i] is T)
-                    return true;
-            }
-
-            return false;
-        }
-
-        private static bool HasEnabledComponentImplementing<T>(GameObject root) where T : class
-        {
-            if (root == null)
-                return false;
-
-            MonoBehaviour[] behaviours = root.GetComponentsInChildren<MonoBehaviour>(true);
-            for (int i = 0; i < behaviours.Length; i++)
-            {
-                MonoBehaviour behaviour = behaviours[i];
-                if (behaviour is T && behaviour.enabled && behaviour.gameObject.activeSelf)
-                    return true;
-            }
-
-            return false;
         }
 
         private static bool HasComponentOfTypeName(GameObject root, string fullTypeName)
@@ -1109,30 +703,6 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             object networkTransport = GetPropertyValue(networkConfig, "NetworkTransport");
             return networkTransport != null
                 && string.Equals(networkTransport.GetType().FullName, UnityTransportTypeName, System.StringComparison.Ordinal);
-        }
-
-        private static bool NetworkManagerRegistersPrefab(MonoBehaviour networkManager, GameObject prefab)
-        {
-            object networkConfig = GetPropertyValue(networkManager, "NetworkConfig");
-            object prefabs = GetPropertyValue(networkConfig, "Prefabs");
-            object prefabList = GetPropertyValue(prefabs, "Prefabs");
-            if (prefabList is not IEnumerable enumerable)
-                return false;
-
-            foreach (object networkPrefab in enumerable)
-            {
-                if (networkPrefab == null)
-                    continue;
-
-                if (ReferenceEquals(GetPropertyValue(networkPrefab, "Prefab"), prefab)
-                    || ReferenceEquals(GetPropertyValue(networkPrefab, "SourcePrefabToOverride"), prefab)
-                    || ReferenceEquals(GetPropertyValue(networkPrefab, "OverridingTargetPrefab"), prefab))
-                {
-                    return true;
-                }
-            }
-
-            return false;
         }
 
         private static object GetPropertyValue(object target, string propertyName)

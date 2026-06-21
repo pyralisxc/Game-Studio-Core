@@ -368,7 +368,7 @@ namespace NeonBlack.Gameplay.Editor
 
             if (string.Equals(dependencyDomain, "Core", StringComparison.Ordinal)
                 || string.Equals(dependencyDomain, "Data", StringComparison.Ordinal)
-                || usingNamespace.Contains(".Core.ContractInterfaces", StringComparison.Ordinal))
+                || usingNamespace.Contains(".Core.Contracts", StringComparison.Ordinal))
                 return false;
 
             return true;
@@ -445,7 +445,7 @@ namespace NeonBlack.Gameplay.Editor
             if (normalized.Contains("/Editor/Authoring/Grammar/", StringComparison.Ordinal))
                 return PyralisSourceDependencyPressureKind.GrammarVocabulary;
 
-            if (normalized.Contains("/Core/Authoring/", StringComparison.Ordinal)
+            if (normalized.Contains("/Core/AuthoringContracts/", StringComparison.Ordinal)
                 || string.Equals(fileName, "ResolvedAuthoringContractRegistry.cs", StringComparison.Ordinal))
             {
                 return PyralisSourceDependencyPressureKind.ContractReflectionSurface;

@@ -14,15 +14,16 @@ namespace NeonBlack.Gameplay.Features.Tabletop
     [AuthoringContract(
         Capability = AuthoringCapability.Tabletop | AuthoringCapability.Grid, 
         Relevance = "Inspector Add Component path for a board presenter that can build selectable tabletop spaces.",
-        AssignmentFields = new[] { nameof(boardDefinition), nameof(movePolicyDefinition), nameof(spacePrefab), nameof(piecePrefab) },
+        AssignmentFields = new[] { nameof(boardDefinition), nameof(movePolicyDefinition), nameof(turnOrderDefinition), nameof(selectionBridge), nameof(spacePrefab), nameof(piecePrefab) },
         FirstProofTargetId = "proof.board-card-action",
         FirstProof = "Click 'Rebuild Board' in the inspector and verify the grid is generated.",
-        NativeSetup = new[] { "Add TabletopBoardGridPresenter to a scene object.", "Assign Board, Move Policy, and Turn Order definitions.", "Assign Space and Piece prefabs." },
+        NativeSetup = new[] { "Add TabletopBoardGridPresenter and TabletopBoardSelectionBridge to the same scene object.", "Assign Board, Move Policy, Turn Order, and Selection Bridge references.", "Assign Space and Piece prefabs." },
         ExpertAdvice = "Bridges the abstract BoardDefinition to scene objects. It handles coordinate mapping (X,Y) to world positions. Ensure your cell size matches your visual assets.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/tabletop"
     )]
-[AddComponentMenu("NeonBlack/Gameplay/Tabletop/Tabletop Board Grid Presenter")]
-    public sealed class TabletopBoardGridPresenter : MonoBehaviour
+    [RequireComponent(typeof(TabletopBoardSelectionBridge))]
+    [AddComponentMenu("NeonBlack/Gameplay/Tabletop/Tabletop Board Grid Presenter")]
+    public sealed class TabletopBoardGridPresenter : MonoBehaviour, IRuntimeValidationProvider
     {
         [SerializeField] private BoardDefinition boardDefinition;
         [SerializeField] private BoardMovePolicyDefinition movePolicyDefinition;
@@ -48,6 +49,64 @@ namespace NeonBlack.Gameplay.Features.Tabletop
         public TurnRuntimeState TurnState => _turnState;
         public IActionQueueService ActionQueue => _actionQueue;
         public string LastIssue { get; private set; } = string.Empty;
+
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        {
+            if (boardDefinition == null)
+            {
+                yield return PyralisRuntimeValidationIssue.Required(
+                    "BoardDefinition is required before building a tabletop board presenter.",
+                    nameof(boardDefinition),
+                    nameof(TabletopBoardGridPresenter),
+                    "Assign TabletopBoardGridPresenter.boardDefinition to the BoardDefinition for this board route.",
+                    "TabletopBoardGridPresenter can create a board runtime state.",
+                    "TabletopBoardGridPresenter.BoardDefinition.Missing");
+            }
+
+            if (selectionBridge == null && GetComponent<TabletopBoardSelectionBridge>() == null)
+            {
+                yield return PyralisRuntimeValidationIssue.Required(
+                    "TabletopBoardSelectionBridge is required before board spaces can be selected.",
+                    nameof(selectionBridge),
+                    nameof(TabletopBoardGridPresenter),
+                    "Add TabletopBoardSelectionBridge as a sibling component or assign it to TabletopBoardGridPresenter.selectionBridge.",
+                    "TabletopBoardGridPresenter can initialize the board selection bridge.",
+                    "TabletopBoardGridPresenter.SelectionBridge.Missing");
+            }
+
+            if (cellSize.x <= 0f || cellSize.y <= 0f)
+            {
+                yield return PyralisRuntimeValidationIssue.Required(
+                    "Cell Size must be greater than zero on both axes.",
+                    nameof(cellSize),
+                    nameof(TabletopBoardGridPresenter),
+                    "Set TabletopBoardGridPresenter.cellSize X and Y above zero.",
+                    "Board spaces can be positioned at visible grid intervals.",
+                    "TabletopBoardGridPresenter.CellSize.Minimum");
+            }
+
+            if (spacePrefab == null)
+            {
+                yield return PyralisRuntimeValidationIssue.Recommended(
+                    "Space Prefab is empty. Runtime can create plain fallback spaces, but authored board art should use a prefab with TabletopBoardSpaceView.",
+                    nameof(spacePrefab),
+                    nameof(TabletopBoardGridPresenter),
+                    "Assign a board-space prefab to TabletopBoardGridPresenter.spacePrefab when the proof needs visible authored board spaces.",
+                    "Board spaces use authored project visuals.",
+                    "TabletopBoardGridPresenter.SpacePrefab.Missing");
+            }
+
+            if (piecePrefab == null)
+            {
+                yield return PyralisRuntimeValidationIssue.Recommended(
+                    "Piece Prefab is empty. Runtime can use piece-specific BoardPieceDefinition visual prefabs or create fallback pieces.",
+                    nameof(piecePrefab),
+                    nameof(TabletopBoardGridPresenter),
+                    "Assign a fallback piece prefab or assign visual prefabs on BoardPieceDefinition assets.",
+                    "Board pieces use authored project visuals.",
+                    "TabletopBoardGridPresenter.PiecePrefab.Missing");
+            }
+        }
 
         public bool ResolveQueuedMoveImmediately
         {
@@ -106,7 +165,9 @@ namespace NeonBlack.Gameplay.Features.Tabletop
 
             BoardMoveActionResolver resolver = new BoardMoveActionResolver(_boardState, _turnState, movePolicy);
             _actionQueue = new ActionQueueService(new IActionResolver[] { resolver });
-            EnsureSelectionBridge();
+            if (!TryResolveSelectionBridge(out issue))
+                return false;
+
             selectionBridge.ResolveQueuedMoveImmediately = resolveQueuedMoveImmediately;
             selectionBridge.Initialize(_boardState, _actionQueue, turnState: _turnState);
 
@@ -158,13 +219,16 @@ namespace NeonBlack.Gameplay.Features.Tabletop
                 RebuildBoard(out _);
         }
 
-        private void EnsureSelectionBridge()
+        private bool TryResolveSelectionBridge(out string issue)
         {
             if (selectionBridge == null)
                 selectionBridge = GetComponent<TabletopBoardSelectionBridge>();
 
             if (selectionBridge == null)
-                selectionBridge = gameObject.AddComponent<TabletopBoardSelectionBridge>();
+                return Fail("Assign TabletopBoardSelectionBridge or add it as a sibling component before rebuilding the board.", out issue);
+
+            issue = string.Empty;
+            return true;
         }
 
         private void CreateSpaceView(BoardCoordinate coordinate)

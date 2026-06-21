@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Rpg;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
@@ -17,7 +17,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
     {
         public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            return PyralisRuntimeValidationIssueUtility.RequiredFrom(GetValidationIssues());
+            return PyralisRuntimeValidationIssueUtility.FromLocalValidationMessages(GetValidationIssues(), this);
         }
 
         public string slotId = "slot.new";

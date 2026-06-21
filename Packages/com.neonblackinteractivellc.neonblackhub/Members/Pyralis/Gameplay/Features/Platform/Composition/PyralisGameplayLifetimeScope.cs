@@ -27,6 +27,7 @@ namespace NeonBlack.Gameplay.Core.Runtime
         Capability = AuthoringCapability.Setup, 
         Relevance = "Inspector Add Component path for the visible Pyralis runtime composition scope.", 
         Axioms = AuthoringWorldAxiom.None,
+        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.CoreRouteAnchor },
         AssignmentFields = new[] { nameof(InjectLoadedScenesOnBuild) },
         FirstProof = "Check the VContainer debugger to ensure all gameplay services are correctly registered in the scope.",
         NativeSetup = new[] { "Configure VContainer Resolver" }

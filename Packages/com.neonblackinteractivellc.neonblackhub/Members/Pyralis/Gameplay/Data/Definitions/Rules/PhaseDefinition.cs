@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
@@ -18,7 +18,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
     {
         public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            return PyralisRuntimeValidationIssueUtility.RequiredFrom(GetValidationIssues());
+            return PyralisRuntimeValidationIssueUtility.FromLocalValidationMessages(GetValidationIssues(), this);
         }
 
         public string phaseId = "phase.default";

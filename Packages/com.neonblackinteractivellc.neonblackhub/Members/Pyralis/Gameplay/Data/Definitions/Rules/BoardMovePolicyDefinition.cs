@@ -1,4 +1,4 @@
-﻿using NeonBlack.Gameplay.Core.Rules.Board;
+using NeonBlack.Gameplay.Core.Rules.Board;
 using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
 using UnityEngine;
@@ -37,7 +37,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
     {
         public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            return PyralisRuntimeValidationIssueUtility.RequiredFrom(GetValidationIssues());
+            return PyralisRuntimeValidationIssueUtility.FromLocalValidationMessages(GetValidationIssues(), this);
         }
 
         public string policyId = "policy.boardMove";

@@ -21,11 +21,6 @@ namespace NeonBlack.Gameplay.Features.Spawning
         [SerializeField] private ParticipantSpawnService participantSpawnService;
         [SerializeField] private ParticipantRosterService rosterService;
 
-        [Header("Spawn Points")]
-        [Tooltip("Possible spawn locations. The participant spawn service remains the owner of pawn instantiation.")]
-        [SerializeField] private Transform[] spawnPoints;
-        [SerializeField] private bool randomiseSpawnPoint;
-
         [Header("Timing")]
         [SerializeField] private float respawnDelay = 3f;
         [SerializeField] private float respawnShield = 2f;
@@ -208,7 +203,6 @@ namespace NeonBlack.Gameplay.Features.Spawning
                 GameObject pawn = participantSpawnService.SpawnParticipantPawn(participant);
                 if (pawn != null)
                 {
-                    pawn.transform.position = GetSpawnPosition(participant.SeatIndex);
                     SubscribeToPawn(pawn);
                     RevivePawn(pawn);
                 }
@@ -336,21 +330,6 @@ namespace NeonBlack.Gameplay.Features.Spawning
                 return false;
 
             return targetSeatIndex < 0 || participant.SeatIndex == targetSeatIndex;
-        }
-
-        private Vector3 GetSpawnPosition(int seatIndex)
-        {
-            if (spawnPoints != null && spawnPoints.Length > 0)
-            {
-                int index = randomiseSpawnPoint
-                    ? Random.Range(0, spawnPoints.Length)
-                    : Mathf.Clamp(seatIndex, 0, spawnPoints.Length - 1);
-
-                if (spawnPoints[index] != null)
-                    return spawnPoints[index].position;
-            }
-
-            return transform.position;
         }
 
         private void BuildCountdownUI()

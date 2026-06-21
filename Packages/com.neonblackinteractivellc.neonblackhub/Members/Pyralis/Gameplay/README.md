@@ -18,7 +18,7 @@ The current source of truth is a shared gameplay stack built around:
 
 ## Supported pawn presentation targets
 
-NeonBlack Gameplay now supports three official presentation modes:
+NeonBlack Gameplay supports three official presentation modes:
 
 - `Sprite2D`
 - `Billboard2_5D`
@@ -46,7 +46,7 @@ Do not keep broad optional domain matrices or documentation audits in the active
 
 ## Layout
 
-- `Core/`: engine spine, shared runtime services, runtime contracts, and shared contract metadata consumed by `Editor/Authoring`
+- `Core/`: engine spine, shared runtime services, runtime behavior contracts, and runtime-visible authoring contract metadata consumed by `Editor/Authoring`
 - `Data/`: ScriptableObject definitions and profiles
 - `Editor/`: shared authoring helpers and custom inspectors
 - `Features/`: optional runtime systems, gameplay modules, feature-owned composition, feature UI, and feature-specific editor tools

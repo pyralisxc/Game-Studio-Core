@@ -2,7 +2,7 @@
 
 This is the technical contract for new Pyralis gameplay scenes after the platform realignment and deferred-cleanup pass.
 
-If you are wiring your first scene, use the Pyralis Authoring Window for route setup and use Inspector Field Guides only for the asset or component you are editing. Read `START_HERE.md` when you need the written first-scene path. Use this file as the technical contract once the basic setup flow makes sense. The manual, prefab, and subsystem setup docs support it; they should not contradict it.
+If you are wiring your first scene, use the Pyralis Authoring Window for route setup and use Inspector Field Guides only for the asset or component you are editing. Read `START_HERE.md` when you need the written first-scene path. Use this file as the technical contract once the basic route setup makes sense. The manual, prefab, and subsystem setup docs support it; they should not contradict it.
 
 For feature-driven authoring contracts, add contracts in the feature package and let `ResolvedAuthoringContractRegistry` discover them reflectively. New package scripts/assets must carry `.meta` files and should be refreshed in Unity before relying on CLI build gates.
 
@@ -48,7 +48,7 @@ On `GameplaySessionBootstrap`, assign:
 
 On `ParticipantSpawnService`, assign:
 
-- `Spawn Points` - optional Transforms where pawn-backed participants should appear; leave empty and disable `Spawn On Register` for no-pawn routes
+- `Spawn Points` - required Transforms for pawn-backed routes when `Spawn On Register` is enabled; leave empty only when the route disables `Spawn On Register` for no-pawn or fully custom spawning
 - `Spawn On Register` - on for normal pawn-backed first proofs, off when participants control board seats, cameras, UI, cursors, or other non-pawn surfaces
 
 The runtime does not create missing service GameObjects. Map/Scene Readiness should point out any missing core service and tell you which child object or Bootstrap override field to author.
@@ -77,7 +77,7 @@ Create these authored assets for every new setup:
 - `GameModeDefinition`
 - at least one `ParticipantDefinition`
 
-Use the Authoring Window Intent tab as a graph filter while you wire real gameplay assets. The reflected route capabilities come from `SessionDefinition`, `GameModeDefinition`, participants, pawns, feature modules, scene evidence, contracts/reflection, and grammar vocabulary.
+Use the Authoring Window Intent tab as a graph filter while you wire real gameplay assets. The reflected route capabilities come from `SessionDefinition`, `GameModeDefinition`, participants, pawns, feature modules, scene evidence, and contracts/reflection; grammar vocabulary supplies labels and generic wording only.
 
 Create pawn assets only when a participant needs an actor body in the scene:
 

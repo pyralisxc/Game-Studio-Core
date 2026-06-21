@@ -83,7 +83,6 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             AddRange(PyralisReflectiveFactScanner.ScanProject());
-            AddRange(Inspectors.PyralisSetupFlowGuidance.GetAuthoringFacts());
             IReadOnlyList<PyralisAuthoringFact> proofTemplateFacts = PyralisProofFamilyVocabulary.GetAuthoringFacts();
             AddRange(proofTemplateFacts);
             AddRange(PyralisContractProofFactProjector.GetAuthoringFacts(GetStableIds(proofTemplateFacts)));

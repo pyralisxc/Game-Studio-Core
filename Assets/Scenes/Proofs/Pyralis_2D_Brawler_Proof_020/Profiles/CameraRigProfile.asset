@@ -13,17 +13,18 @@ MonoBehaviour:
   m_Name: CameraRigProfile
   m_EditorClassIdentifier: NeonBlack.Gameplay.Data::NeonBlack.Gameplay.Data.Profiles.CameraRigProfile
   presentationMode: 0
+  focusMode: 2
   useCinemachine: 1
   orthographic: 0
-  lockToPlayfield: 0
+  lockToPlayfield: 1
   useProfileTransform: 1
   followOffset: {x: 0, y: 0, z: -10}
   viewEulerAngles: {x: 0, y: 0, z: 0}
-  defaultDistance: 3.84
-  minZoom: 1.54
-  maxZoom: 10.08
-  followDamping: 0
-  zoomDamping: 0
-  orthographicSize: 4.49
+  defaultDistance: 10
+  minZoom: 3
+  maxZoom: 18
+  followDamping: 8
+  zoomDamping: 8
+  orthographicSize: 5
   shakeAmplitude: 1
   shakeFrequency: 1

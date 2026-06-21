@@ -25,7 +25,27 @@ namespace NeonBlack.Gameplay.Data.Definitions
     {
         public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            return PyralisRuntimeValidationIssueUtility.RequiredFrom(GetValidationIssues());
+            if (!enableRespawn && startingLives > 0)
+            {
+                yield return PyralisRuntimeValidationIssue.Required(
+                    "Starting lives are only meaningful when respawn is enabled.",
+                    nameof(startingLives),
+                    nameof(GameModeDefinition),
+                    "Set GameModeDefinition.startingLives to 0 or enable respawn for this route.",
+                    "GameModeDefinition respawn/lives settings agree.",
+                    "GameModeDefinition.StartingLives.RequiresRespawn");
+            }
+
+            List<string> nestedIssues = GetNestedValidationIssues();
+            for (int i = 0; i < nestedIssues.Count; i++)
+            {
+                yield return PyralisRuntimeValidationIssue.Required(
+                    nestedIssues[i],
+                    targetLabel: nameof(GameModeDefinition),
+                    nativeAction: "Open the referenced GameModeDefinition child asset and resolve the named issue.",
+                    successCheck: "GameModeDefinition child definitions report no validation issues.",
+                    issueCode: "GameModeDefinition.Nested." + i);
+            }
         }
 
         [Header("Scenes")]
@@ -65,6 +85,15 @@ namespace NeonBlack.Gameplay.Data.Definitions
 
             if (!enableRespawn && startingLives > 0)
                 issues.Add("Starting lives are only meaningful when respawn is enabled.");
+
+            issues.AddRange(GetNestedValidationIssues());
+
+            return issues;
+        }
+
+        private List<string> GetNestedValidationIssues()
+        {
+            List<string> issues = new List<string>();
 
             if (turnOrderDefinition != null)
             {

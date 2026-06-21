@@ -16,6 +16,7 @@ namespace NeonBlack.Gameplay.Characters
     [AuthoringContract(
         Capability = AuthoringCapability.Session,
         Relevance = "Authoritative runtime roster of participants. Exposes a default participant handle only for systems that need a single focus handle.",
+        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.ParticipantRouteSupport },
         AssignmentFields = new[] { nameof(sessionDefinition) },
         FirstProof = "Enter Play Mode and spawn a pawn. Verify the 'Participants' list reflects the character.",
         NativeSetup = new[] { "Add to GameplaySessionBootstrap child." },

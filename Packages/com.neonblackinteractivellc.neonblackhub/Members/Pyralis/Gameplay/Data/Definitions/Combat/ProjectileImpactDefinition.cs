@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
@@ -7,6 +7,7 @@ namespace NeonBlack.Gameplay.Features.Combat
     [AuthoringContract(
         Capability = AuthoringCapability.Combat | AuthoringCapability.VFX,
         Relevance = "Controls hit/miss VFX, audio, and impact feel for projectiles.",
+        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.CombatDefinitionRouteSupport },
         NativeSetup = new[] { "Assign Hit/Miss effects.", "Set impact intensity." },
         AssignmentFields = new[] { nameof(impactId), nameof(hitEffectPrefab) },
         FirstProof = "Verify hit effects spawn at the correct location with correct audio.",
@@ -17,7 +18,7 @@ namespace NeonBlack.Gameplay.Features.Combat
     {
         public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            return PyralisRuntimeValidationIssueUtility.RequiredFrom(GetValidationIssues());
+            return PyralisRuntimeValidationIssueUtility.FromLocalValidationMessages(GetValidationIssues(), this);
         }
 
         public string impactId = "impact.projectile";

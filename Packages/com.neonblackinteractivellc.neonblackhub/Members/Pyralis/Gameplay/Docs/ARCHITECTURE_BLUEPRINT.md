@@ -1,8 +1,8 @@
 # NeonBlack Gameplay Architecture Blueprint
 
-This document describes the target architecture for NeonBlack Gameplay as it evolves from mode-separated scripts into a shared, modular, N-player-ready gameplay package.
+This document describes the supported architecture for NeonBlack Gameplay: a shared, modular, N-player-ready Unity gameplay package.
 
-This is both a planning document and a reference for the currently implemented shared-core direction.
+Use this as the runtime ownership and folderbase reference when extending gameplay systems, authoring contracts, and setup guidance.
 
 ## Goals
 
@@ -13,9 +13,9 @@ This is both a planning document and a reference for the currently implemented s
 - Minimize custom framework code when stable Unity or commercial-ready open source solutions already exist.
 - Support non-character games where a participant controls a camera, cursor, hand, board seat, faction, or menu selection instead of a pawn.
 
-## Current Implemented Foundation
+## Runtime Foundation
 
-The current refactor pass now includes these concrete shared-core building blocks:
+The shared-core startup path is built from these concrete building blocks:
 
 - `GameplaySessionBootstrap`
 - `SessionStateService`
@@ -35,7 +35,7 @@ The current refactor pass now includes these concrete shared-core building block
 - feature module definitions and pawn-module interfaces
 - `ResolvedAuthoringContractRegistry` discovery for `[AuthoringContract]` metadata
 
-This means the package has a real Inspector-driven shared-core startup path. New gameplay and authoring work should extend this path directly instead of preserving abandoned setup routes.
+New gameplay and authoring work should extend this Inspector-driven shared-core startup path.
 
 `SessionStateService` is the shared gameplay-active state owner. Feature systems that need to know whether gameplay is running should consume `IGameplayStateReader`. Mode-specific flow orchestrators, such as the 2D `GameManager`, should expose their own flow contract for panels, scoring, and arcade transitions, then drive the shared session phase rather than implementing a second gameplay-state source.
 
@@ -83,11 +83,11 @@ The maintainable path is:
 
 - one obvious scene entrypoint,
 - one obvious top-level session asset,
-- visible links from session, mode, participants, pawns, feature modules, scene evidence, grammar vocabulary, and reflected contracts,
+- visible links from session, mode, participants, pawns, feature modules, scene evidence, and reflected contracts, with grammar vocabulary supplying labels and generic wording only,
 - validation messages near the fields that caused them,
 - feature-owned authoring contracts that feed setup guidance, validation, facts, and proof targets.
 
-Inspectors should stay tactical. They can show local field integrity, local validation messages, a handoff button into Pyralis Authoring, and asset-local utilities that operate on the inspected object. They should not become parallel route guides, preset pickers, first-proof cards, or hidden setup flows. If a user needs to understand where an object fits in the route, Authoring should explain it from the graph.
+Inspectors should stay tactical. They can show local field integrity, local validation messages, a handoff button into Pyralis Authoring, and asset-local utilities that operate on the inspected object. They should not become parallel route guides, preset pickers, first-proof cards, or hidden setup paths. If a user needs to understand where an object fits in the route, Authoring should explain it from the graph.
 
 ### 3.5. Feature Contracts Own Feature Setup Truth
 
@@ -374,13 +374,13 @@ Defines:
 - companion and cautionary capability relationships,
 - first-proof vocabulary and graph proof evidence.
 
-Route capability data is inferred from `SessionDefinition`, `GameModeDefinition`, participants, pawns, feature modules, scene evidence, contracts/reflection, and grammar vocabulary. It is reusable setup vocabulary, not an exclusive game-type label or a separate gameplay/runtime data asset.
+Route capability data is inferred from `SessionDefinition`, `GameModeDefinition`, participants, pawns, feature modules, scene evidence, and contracts/reflection. Grammar vocabulary may label or phrase the result, but it must not invent selectable capability paths, route-essential roles, runtime families, or proof ownership. Route capability data is reusable setup vocabulary, not an exclusive game-type label or a separate gameplay/runtime data asset.
 
 ### Reflected Setup Route
 
 Defines:
 
-- the route capabilities inferred from session, mode, participants, pawns, feature modules, scene evidence, contracts/reflection, and grammar vocabulary,
+- the route capabilities inferred from session, mode, participants, pawns, feature modules, scene evidence, and contracts/reflection,
 - setup notes from graph vocabulary, facts, and reflected contracts,
 - validation for missing route evidence, pawn/non-pawn mismatch, invalid feature modules, and cautionary combinations.
 
@@ -613,21 +613,19 @@ This should support:
 
 ### Target 3: Controller Decomposition
 
-Break large pawn scripts into modules with clear responsibilities.
-
-**Resolved for 3D and 2D.** `PlayerActions` is gone, `Motor3D` coordinates focused components, and `Motor2D` now delegates to dedicated 2D movement and presentation components instead of owning those concerns directly.
+Pawn controllers should be composed from focused components with clear responsibilities. `Motor3D` coordinates focused 3D sibling components. `Motor2D` is the 2D motor surface and delegates movement, presentation, and input adaptation to focused 2D components.
 
 ### Target 4: Mode As Data
 
 Move mode identity out of folders and into authored definitions.
 
-Arcade and brawler should remain example assemblies of shared parts, with reusable learning captured as capability facts, validation rules, grammar vocabulary, and generic setup guidance rather than presets.
+Arcade and brawler should remain example assemblies of shared parts, with reusable learning captured as contracts, dependency reflection, validation rules, grammar wording, and generic setup guidance rather than presets.
 
 ### Target 5: Documentation As Source Of Truth
 
-Keep architecture, standards, and migration docs current as code changes land.
+Keep architecture, standards, setup, and verification docs current as code changes land.
 
-Docs should describe the supported path directly. Keep historical notes only when they protect active content, a supported public contract, or a still-open cleanup task.
+Docs should describe the supported path directly. Historical notes belong outside active setup docs unless they protect active content or a supported public contract.
 
 ### Target 5.5: Single Runtime Composition Path
 
@@ -685,4 +683,4 @@ The preferred path is:
 - define target shapes,
 - refactor seams with high leverage,
 - keep active setup guidance focused on the supported path,
-- retire old paths once they no longer protect active content or a public contract.
+- remove unsupported paths from active guidance when they do not protect active content or a public contract.

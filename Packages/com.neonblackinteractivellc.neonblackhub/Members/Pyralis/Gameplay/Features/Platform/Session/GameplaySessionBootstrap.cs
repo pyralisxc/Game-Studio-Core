@@ -21,6 +21,7 @@ namespace NeonBlack.Gameplay.Characters
         Capability = AuthoringCapability.Setup,
         Priority = AuthoringPriority.Primary,
         SetupNodeId = "bootstrap.root",
+        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.CoreRouteAnchor },
         Relevance = "Primary entry point for gameplay sessions; wires the authored session, visible runtime services, input join, and camera setup.",
         Axioms = AuthoringWorldAxiom.None,
         NativeSetup = new[]

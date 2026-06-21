@@ -10,6 +10,7 @@ namespace NeonBlack.Gameplay.Networking.Runtime
     [AuthoringContract(
         Capability = AuthoringCapability.Networking,
         Relevance = "NGO-backed session ownership policy used by networked Pyralis sessions.",
+        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.NetworkRouteSupport },
         NativeSetup = new[]
         {
             "Add a Unity Netcode NetworkManager to the scene.",

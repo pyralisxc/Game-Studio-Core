@@ -297,11 +297,9 @@ namespace NeonBlack.Gameplay.Editor
                 new[]
                 {
                     "proof.1p-pawn-movement",
-                    "setup.assign-participant-pawn",
-                    "setup.assign-input-profile",
-                    "setup.assign-spawn-points",
-                    "setup.tune-pawn-visuals-and-collision",
-                    "setup.tune-movement-and-input-feel"
+                    "participant.default",
+                    "pawn.definition",
+                    "scene.surfaces"
                 }),
 
             new PyralisCapabilityVocabularyCard(
@@ -354,11 +352,11 @@ namespace NeonBlack.Gameplay.Editor
                     "intent.2_5d-lane-arena",
                     "intent.3d-space-action",
                     "intent.pawn-brawler",
-                    "setup.assign-player-input-manager",
-                    "setup.assign-participant-pawn",
-                    "setup.assign-spawn-points",
-                    "setup.tune-pawn-visuals-and-collision",
-                    "setup.tune-movement-and-input-feel"
+                    "route.participant-topology",
+                    "route.player-input-manager-prefab",
+                    "participant.default",
+                    "pawn.definition",
+                    "scene.surfaces"
                 }),
 
             new PyralisCapabilityVocabularyCard(

@@ -141,15 +141,39 @@ namespace NeonBlack.Gameplay.Data.Profiles
             List<string> issues = new List<string>();
 
             if (actions == null)
-                issues.Add("Actions should be assigned for player-owned input. Leave it empty only for AI/system-only usage.");
+            {
+                yield return PyralisRuntimeValidationIssue.Required(
+                    "Actions should be assigned for player-owned input. Leave it empty only for AI/system-only usage.",
+                    nameof(actions),
+                    nameof(InputProfile),
+                    "Assign a Unity Input Action Asset to InputProfile.actions.",
+                    "InputProfile.actions references the Input System asset used by the participant.",
+                    "InputProfile.Actions.Missing");
+            }
 
             if (string.IsNullOrWhiteSpace(primaryActionMap))
-                issues.Add("Primary Action Map should name the gameplay action map.");
+            {
+                yield return PyralisRuntimeValidationIssue.Required(
+                    "Primary Action Map should name the gameplay action map.",
+                    nameof(primaryActionMap),
+                    nameof(InputProfile),
+                    "Set InputProfile.primaryActionMap to the gameplay action map name, usually Player.",
+                    "InputProfile.primaryActionMap names an action map in the assigned Input Action Asset.",
+                    "InputProfile.PrimaryActionMap.Missing");
+            }
             else if (actions != null)
             {
                 InputActionMap map = actions.FindActionMap(primaryActionMap, throwIfNotFound: false);
                 if (map == null)
-                    issues.Add($"Primary Action Map '{primaryActionMap}' was not found in Actions.");
+                {
+                    yield return PyralisRuntimeValidationIssue.Required(
+                        $"Primary Action Map '{primaryActionMap}' was not found in Actions.",
+                        nameof(primaryActionMap),
+                        nameof(InputProfile),
+                        "Set InputProfile.primaryActionMap to an action map that exists in InputProfile.actions.",
+                        "InputProfile.primaryActionMap resolves to a Unity Input Action map.",
+                        "InputProfile.PrimaryActionMap.NotFound");
+                }
                 else
                 {
                     AddBindingIssues(issues);
@@ -157,9 +181,26 @@ namespace NeonBlack.Gameplay.Data.Profiles
             }
 
             if (!supportsGamepad && !supportsKeyboardMouse && !touchFriendly)
-                issues.Add("At least one input surface should be supported for player-owned input.");
+            {
+                yield return PyralisRuntimeValidationIssue.Required(
+                    "At least one input surface should be supported for player-owned input.",
+                    nameof(supportsGamepad),
+                    nameof(InputProfile),
+                    "Enable at least one InputProfile support flag: supportsGamepad, supportsKeyboardMouse, or touchFriendly.",
+                    "InputProfile declares at least one player input surface.",
+                    "InputProfile.InputSurface.Missing");
+            }
 
-            return PyralisRuntimeValidationIssueUtility.RequiredFrom(issues);
+            for (int i = 0; i < issues.Count; i++)
+            {
+                yield return PyralisRuntimeValidationIssue.Required(
+                    issues[i],
+                    nameof(actionBindings),
+                    nameof(InputProfile),
+                    "Use Input Actions Sync or edit InputProfile.actionBindings so required gameplay actions resolve to Unity Input Actions.",
+                    "InputProfile action bindings resolve to the assigned Unity Input Action Asset.",
+                    "InputProfile.ActionBindings." + i);
+            }
         }
 
         private void AddBindingIssues(List<string> issues)

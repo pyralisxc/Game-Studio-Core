@@ -5,12 +5,12 @@
   <Project Path="UnityEngine.TestRunner.csproj" />
   <Project Path="NeonBlack.Gameplay.Core.csproj" />
   <Project Path="VContainer.csproj" />
-  <Project Path="NeonBlack.Gameplay.Editor.csproj" />
   <Project Path="UnityEditor.TestRunner.csproj" />
   <Project Path="NeonBlack.Gameplay.Data.csproj" />
   <Project Path="NeonBlack.Gameplay.csproj" />
   <Project Path="Unity.PerformanceTesting.csproj" />
   <Project Path="NeonBlack.Gameplay.Characters.csproj" />
+  <Project Path="NeonBlack.Gameplay.Editor.csproj" />
   <Project Path="Unity.TextMeshPro.csproj" />
   <Project Path="Unity.TextMeshPro.Editor.csproj" />
   <Project Path="VContainer.Editor.csproj" />

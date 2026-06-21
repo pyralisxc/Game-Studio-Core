@@ -22,7 +22,41 @@ namespace NeonBlack.Gameplay.Features.Combat
         public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (actions == null || actions.Length == 0)
-                yield return PyralisRuntimeValidationIssue.Required("No actions assigned to this sequence.");
+                yield return PyralisRuntimeValidationIssue.Required("No actions assigned to this sequence.", nameof(actions), nameof(CombatSequenceDefinition), issueCode: "CombatSequence.Actions.Empty");
+
+            if (actions == null)
+                yield break;
+
+            for (int i = 0; i < actions.Length; i++)
+            {
+                CombatActionDefinition action = actions[i];
+                if (action == null)
+                {
+                    yield return PyralisRuntimeValidationIssue.Required(
+                        $"Actions[{i}] is empty.",
+                        $"{nameof(actions)}[{i}]",
+                        nameof(CombatSequenceDefinition),
+                        "Open the CombatSequenceDefinition and assign a CombatActionDefinition or remove the empty slot.",
+                        "Every sequence action slot is assigned.",
+                        "CombatSequence.Action.Missing");
+                    continue;
+                }
+
+                foreach (PyralisRuntimeValidationIssue issue in action.GetRuntimeValidationIssues())
+                {
+                    if (issue != null && !string.IsNullOrWhiteSpace(issue.Message))
+                    {
+                        yield return new PyralisRuntimeValidationIssue(
+                            $"Action `{action.displayName}`: {issue.Message}",
+                            $"{nameof(actions)}[{i}]",
+                            nameof(CombatSequenceDefinition),
+                            "Open the referenced CombatActionDefinition and resolve the named issue.",
+                            "Referenced CombatActionDefinition reports no validation issues.",
+                            issue.Severity,
+                            "CombatSequence.Action." + issue.IssueCode);
+                    }
+                }
+            }
         }
 
         public string displayName = "Combat Sequence";

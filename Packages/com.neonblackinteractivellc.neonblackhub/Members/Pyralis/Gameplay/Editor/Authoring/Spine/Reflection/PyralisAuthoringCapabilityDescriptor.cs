@@ -78,6 +78,9 @@ namespace NeonBlack.Gameplay.Editor
         public string[] RoleTags { get; }
         public bool SelectableIntent { get; }
         public PyralisAuthoringFact SourceFact { get; }
+        public bool HasSemanticCapabilityPath => !string.IsNullOrWhiteSpace(CapabilityPath);
+        public bool IsContractSemanticSource => SourceOrigin == PyralisAuthoringGraphSourceOrigin.Contract
+            || SourceOrigin == PyralisAuthoringGraphSourceOrigin.Reflection;
 
         public bool Matches(AuthoringCapability capabilities, RuntimeCapabilityLaneTag lane, AuthoringWorldAxiom axioms)
         {
@@ -158,6 +161,7 @@ namespace NeonBlack.Gameplay.Editor
             {
                 PyralisAuthoringCapabilityDescriptor descriptor = descriptors[i];
                 if (descriptor != null
+                    && descriptor.IsContractSemanticSource
                     && IsCapabilitySatisfiedBySelection(descriptor.Capability, capabilities)
                     && descriptor.Matches(capabilities, lane, axioms))
                 {
@@ -189,6 +193,9 @@ namespace NeonBlack.Gameplay.Editor
                 if (descriptor == null || !selected.Contains(descriptor.StableId))
                     continue;
 
+                if (!IsGameplayIngredientDescriptor(descriptor))
+                    continue;
+
                 if (descriptor.Matches(descriptor.Capability, lane, axioms))
                     AddDistinct(families, descriptor.Family);
             }
@@ -207,11 +214,117 @@ namespace NeonBlack.Gameplay.Editor
             for (int i = 0; i < descriptors.Count; i++)
             {
                 PyralisAuthoringCapabilityDescriptor descriptor = descriptors[i];
-                if (descriptor != null && selected.Contains(descriptor.StableId))
+                if (descriptor != null
+                    && selected.Contains(descriptor.StableId)
+                    && IsGameplayIngredientDescriptor(descriptor))
+                {
                     capabilities |= descriptor.Capability;
+                }
             }
 
             return capabilities;
+        }
+
+        public static string[] FilterGameplayIntentDescriptorIds(IReadOnlyList<string> descriptorIds)
+        {
+            if (descriptorIds == null || descriptorIds.Count == 0)
+                return Array.Empty<string>();
+
+            HashSet<string> seen = new HashSet<string>(StringComparer.Ordinal);
+            List<string> filtered = new List<string>();
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors = All;
+            for (int i = 0; i < descriptorIds.Count; i++)
+            {
+                string descriptorId = descriptorIds[i];
+                if (string.IsNullOrWhiteSpace(descriptorId) || !seen.Add(descriptorId))
+                    continue;
+
+                PyralisAuthoringCapabilityDescriptor descriptor = descriptors.FirstOrDefault(candidate =>
+                    candidate != null && string.Equals(candidate.StableId, descriptorId, StringComparison.Ordinal));
+                if (descriptor == null || !IsGameplayIngredientDescriptor(descriptor))
+                    continue;
+
+                filtered.Add(descriptorId);
+            }
+
+            filtered.Sort(StringComparer.Ordinal);
+            return filtered.ToArray();
+        }
+
+        public static bool IsIntentRouteEssential(PyralisAuthoringCapabilityDescriptor descriptor)
+        {
+            if (descriptor == null)
+                return false;
+
+            return HasExactRoleTag(descriptor, AuthoringContractRoleTags.IntentRouteEssential);
+        }
+
+        public static bool IsIntentRouteEssentialExpected(
+            PyralisAuthoringCapabilityDescriptor descriptor,
+            PyralisAuthoringIntentSelection selection)
+        {
+            if (!IsIntentRouteEssential(descriptor))
+                return false;
+
+            selection ??= new PyralisAuthoringIntentSelection(
+                RuntimeCapabilityLaneTag.Sprite2D,
+                AuthoringCapability.None,
+                AuthoringWorldAxiom.None);
+
+            AuthoringCapability selectedCapabilities = selection.Capabilities;
+            bool routeIsShaped =
+                selectedCapabilities != AuthoringCapability.None
+                || selection.Axioms != AuthoringWorldAxiom.None
+                || selection.ParticipantRoute != PyralisIntentParticipantRoute.InferFromSetup;
+            if (!routeIsShaped)
+                return false;
+
+            bool networkRoute = selection.ParticipantRoute == PyralisIntentParticipantRoute.Networked
+                || selection.ParticipantRoute == PyralisIntentParticipantRoute.HybridLocalNetworked;
+            if (HasExactRoleTag(descriptor, AuthoringContractRoleTags.NetworkRouteSupport))
+                return networkRoute;
+
+            if (HasExactRoleTag(descriptor, AuthoringContractRoleTags.CoreRouteAnchor))
+                return true;
+
+            bool participantRoute = selection.ParticipantRoute != PyralisIntentParticipantRoute.InferFromSetup
+                || CapabilityOverlaps(selectedCapabilities,
+                    AuthoringCapability.Participants
+                    | AuthoringCapability.Input
+                    | AuthoringCapability.Movement
+                    | AuthoringCapability.KineticMotor2D
+                    | AuthoringCapability.KineticMotor3D
+                    | AuthoringCapability.Traversal);
+            if (participantRoute && HasExactRoleTag(descriptor, AuthoringContractRoleTags.ParticipantRouteSupport))
+                return true;
+
+            bool inputRoute = CapabilityOverlaps(selectedCapabilities, AuthoringCapability.Input)
+                || selection.ParticipantRoute == PyralisIntentParticipantRoute.SoloLocal
+                || selection.ParticipantRoute == PyralisIntentParticipantRoute.TwoLocalPlayers
+                || selection.ParticipantRoute == PyralisIntentParticipantRoute.ThreeLocalPlayers
+                || selection.ParticipantRoute == PyralisIntentParticipantRoute.FourLocalPlayers;
+            if (inputRoute && HasExactRoleTag(descriptor, AuthoringContractRoleTags.InputRouteSupport))
+                return true;
+
+            if (CapabilityOverlaps(selectedCapabilities, AuthoringCapability.Animation)
+                && HasExactRoleTag(descriptor, AuthoringContractRoleTags.AnimationDefinitionRouteSupport))
+                return true;
+
+            if (CapabilityOverlaps(selectedCapabilities, AuthoringCapability.Combat | AuthoringCapability.MeleeFlow | AuthoringCapability.RangedFlow)
+                && HasExactRoleTag(descriptor, AuthoringContractRoleTags.CombatDefinitionRouteSupport))
+                return true;
+
+            bool featureModuleRoute = CapabilityOverlaps(selectedCapabilities,
+                AuthoringCapability.Traversal
+                | AuthoringCapability.Combat
+                | AuthoringCapability.MeleeFlow
+                | AuthoringCapability.RangedFlow
+                | AuthoringCapability.Puzzle
+                | AuthoringCapability.Inventory
+                | AuthoringCapability.Tabletop
+                | AuthoringCapability.Grid
+                | AuthoringCapability.TurnBased);
+            return featureModuleRoute && HasExactRoleTag(descriptor, AuthoringContractRoleTags.FeatureModuleRouteSupport);
         }
 
         public static IReadOnlyList<PyralisAuthoringCapabilityDescriptor> BuildIntentDescriptors(
@@ -220,8 +333,8 @@ namespace NeonBlack.Gameplay.Editor
         {
             return All
                 .Where(descriptor => descriptor != null
-                    && descriptor.SelectableIntent
                     && descriptor.Capability != AuthoringCapability.None
+                    && IsIntentSurfaceDescriptor(descriptor)
                     && descriptor.Matches(descriptor.Capability, lane, axioms))
                 .OrderBy(descriptor => descriptor.Group, StringComparer.Ordinal)
                 .ThenBy(descriptor => descriptor.SortOrder)
@@ -229,10 +342,73 @@ namespace NeonBlack.Gameplay.Editor
                 .ToArray();
         }
 
+        public static bool IsIntentSurfaceDescriptor(PyralisAuthoringCapabilityDescriptor descriptor)
+        {
+            if (descriptor == null)
+                return false;
+
+            return IsIntentRouteEssential(descriptor)
+                || IsGameplayIngredientDescriptor(descriptor);
+        }
+
+        public static bool IsGameplayIngredientDescriptor(PyralisAuthoringCapabilityDescriptor descriptor)
+        {
+            if (descriptor == null)
+                return false;
+
+            return descriptor.IsContractSemanticSource
+                && descriptor.SelectableIntent
+                && descriptor.HasSemanticCapabilityPath
+                && !IsIntentRouteEssential(descriptor);
+        }
+
+        public static bool RequiresGameplayIngredientCapabilityPath(ResolvedAuthoringContract contract)
+        {
+            return contract != null
+                && contract.Capability != AuthoringCapability.None
+                && contract.SelectableIntent
+                && IsIntentSelectableContract(contract)
+                && !HasExactRoleTag(contract.RoleTags, AuthoringContractRoleTags.IntentRouteEssential);
+        }
+
+        private static bool CapabilityOverlaps(AuthoringCapability left, AuthoringCapability right)
+        {
+            return left != AuthoringCapability.None
+                && right != AuthoringCapability.None
+                && (left & right) != 0;
+        }
+
+        private static bool HasExactRoleTag(PyralisAuthoringCapabilityDescriptor descriptor, string expected)
+        {
+            if (descriptor?.RoleTags == null || string.IsNullOrWhiteSpace(expected))
+                return false;
+
+            for (int i = 0; i < descriptor.RoleTags.Length; i++)
+            {
+                if (string.Equals(descriptor.RoleTags[i], expected, StringComparison.Ordinal))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static bool HasExactRoleTag(string[] roleTags, string expected)
+        {
+            if (roleTags == null || string.IsNullOrWhiteSpace(expected))
+                return false;
+
+            for (int i = 0; i < roleTags.Length; i++)
+            {
+                if (string.Equals(roleTags[i], expected, StringComparison.Ordinal))
+                    return true;
+            }
+
+            return false;
+        }
+
         public static PyralisAuthoringCapabilityDescriptor FindPrimaryByFamily(RuntimeCapabilityFamily family)
         {
             IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors = All;
-            PyralisAuthoringCapabilityDescriptor fallback = null;
             for (int i = 0; i < descriptors.Count; i++)
             {
                 PyralisAuthoringCapabilityDescriptor descriptor = descriptors[i];
@@ -244,11 +420,9 @@ namespace NeonBlack.Gameplay.Editor
                 {
                     return descriptor;
                 }
-
-                fallback ??= descriptor;
             }
 
-            return fallback;
+            return null;
         }
 
         public static PyralisAuthoringCapabilityDescriptor FindBestForCapability(
@@ -265,7 +439,7 @@ namespace NeonBlack.Gameplay.Editor
             for (int i = 0; i < descriptors.Count; i++)
             {
                 PyralisAuthoringCapabilityDescriptor descriptor = descriptors[i];
-                if (descriptor == null || (descriptor.Capability & capability) == 0)
+                if (descriptor == null || !descriptor.IsContractSemanticSource || (descriptor.Capability & capability) == 0)
                     continue;
 
                 if (!descriptor.Matches(capability, lane, axioms))
@@ -460,7 +634,6 @@ namespace NeonBlack.Gameplay.Editor
         {
             List<PyralisAuthoringCapabilityDescriptor> descriptors = new List<PyralisAuthoringCapabilityDescriptor>();
             AddContractDescriptors(descriptors);
-            AddCapabilityVocabularyFallbacks(descriptors);
             SortDescriptors(descriptors);
             return descriptors.ToArray();
         }
@@ -498,48 +671,9 @@ namespace NeonBlack.Gameplay.Editor
                         BuildNativeActions(contract),
                         GetContractSourceOrigin(contract),
                         capabilityPath: BuildCapabilityPath(contract, family),
-                        roleTags: BuildRoleTags(contract, family),
+                        roleTags: BuildRoleTags(contract),
                         selectableIntent: contract.SelectableIntent && IsIntentSelectableContract(contract)));
                 }
-            }
-        }
-
-        private static void AddCapabilityVocabularyFallbacks(List<PyralisAuthoringCapabilityDescriptor> descriptors)
-        {
-            IReadOnlyList<PyralisCapabilityVocabularyCard> cards = PyralisCapabilityVocabulary.All;
-            for (int i = 0; i < cards.Count; i++)
-            {
-                PyralisCapabilityVocabularyCard card = cards[i];
-                if (card == null)
-                    continue;
-
-                PyralisAuthoringFact fact = card.Fact;
-                if (fact == null)
-                    continue;
-
-                AddOrMerge(descriptors, new PyralisAuthoringCapabilityDescriptor(
-                    card.StableId,
-                    card.DisplayName,
-                    card.CapabilityFamily,
-                    fact.Capability,
-                    GetGroup(fact),
-                    GetSortOrder(fact.Capability),
-                    fact.Summary,
-                    fact.RouteRelevance,
-                    GetProofTargetId(fact),
-                    fact.GoalTags,
-                    fact.LaneTags,
-                    fact.UnsupportedLaneTags,
-                    fact.Axioms,
-                    Combine(fact.RequiredDefinitions, fact.RequiredProfiles, fact.RequiredSceneComponents, fact.RequiredUnitySurfaces),
-                    fact.AssignmentFields,
-                    fact.CustomizationMoments,
-                    fact.NativeActions,
-                    PyralisAuthoringGraphSourceOrigin.SpineGrammar,
-                    capabilityPath: GetFallbackCapabilityPath(card, fact),
-                    roleTags: fact.GoalTags,
-                    selectableIntent: true,
-                    sourceFact: fact));
             }
         }
 
@@ -568,13 +702,6 @@ namespace NeonBlack.Gameplay.Editor
             bool incomingIsContract = IsContractOwned(incoming);
             bool currentIsContract = IsContractOwned(current);
 
-            if (currentIsContract != incomingIsContract)
-            {
-                PyralisAuthoringCapabilityDescriptor contractDescriptor = currentIsContract ? current : incoming;
-                PyralisAuthoringCapabilityDescriptor fallbackDescriptor = currentIsContract ? incoming : current;
-                return MergeContractWithFallback(contractDescriptor, fallbackDescriptor);
-            }
-
             PyralisAuthoringCapabilityDescriptor labelSource = currentIsContract || !incomingIsContract ? current : incoming;
 
             return new PyralisAuthoringCapabilityDescriptor(
@@ -600,35 +727,6 @@ namespace NeonBlack.Gameplay.Editor
                 MergeDistinct(current.RoleTags, incoming.RoleTags),
                 current.SelectableIntent || incoming.SelectableIntent,
                 current.SourceFact ?? incoming.SourceFact);
-        }
-
-        private static PyralisAuthoringCapabilityDescriptor MergeContractWithFallback(
-            PyralisAuthoringCapabilityDescriptor contractDescriptor,
-            PyralisAuthoringCapabilityDescriptor fallbackDescriptor)
-        {
-            return new PyralisAuthoringCapabilityDescriptor(
-                contractDescriptor.StableId,
-                FirstNonEmpty(contractDescriptor.DisplayName, fallbackDescriptor.DisplayName),
-                contractDescriptor.Family,
-                contractDescriptor.Capability,
-                FirstNonEmpty(contractDescriptor.Group, fallbackDescriptor.Group),
-                Math.Min(contractDescriptor.SortOrder, fallbackDescriptor.SortOrder),
-                FirstNonEmpty(contractDescriptor.Summary, fallbackDescriptor.Summary),
-                FirstNonEmpty(contractDescriptor.RouteRelevance, fallbackDescriptor.RouteRelevance),
-                contractDescriptor.ProofTargetId,
-                contractDescriptor.GoalTags,
-                contractDescriptor.LaneTags,
-                contractDescriptor.UnsupportedLaneTags,
-                contractDescriptor.Axioms,
-                contractDescriptor.RequiredSetup,
-                contractDescriptor.AssignmentFields,
-                contractDescriptor.CustomizationMoments,
-                contractDescriptor.NativeActions,
-                contractDescriptor.SourceOrigin,
-                FirstNonEmpty(contractDescriptor.CapabilityPath, fallbackDescriptor.CapabilityPath),
-                MergeDistinct(contractDescriptor.RoleTags, fallbackDescriptor.RoleTags),
-                contractDescriptor.SelectableIntent || fallbackDescriptor.SelectableIntent,
-                contractDescriptor.SourceFact);
         }
 
         private static bool IsContractOwned(PyralisAuthoringCapabilityDescriptor descriptor)
@@ -721,7 +819,7 @@ namespace NeonBlack.Gameplay.Editor
             if (contract == null)
                 return "General";
 
-            return FirstNonEmpty(contract.AuthoringCategory, FirstNonEmpty(contract.AuthoringLane, GetFallbackGroup(contract.Capability)));
+            return FirstNonEmpty(contract.AuthoringCategory, FirstNonEmpty(contract.AuthoringLane, "Uncategorized Contract"));
         }
 
         private static string GetDescriptorGroup(ResolvedAuthoringContract contract)
@@ -765,120 +863,13 @@ namespace NeonBlack.Gameplay.Editor
             if (!string.IsNullOrWhiteSpace(contract.CapabilityPath))
                 return contract.CapabilityPath;
 
-            string domainPath = BuildDomainPath(contract, family);
-            string leaf = BuildContractPathLeaf(contract, family);
-
-            return domainPath + "/" + leaf;
+            return string.Empty;
         }
 
-        private static string BuildDomainPath(ResolvedAuthoringContract contract, RuntimeCapabilityFamily family)
-        {
-            string sourceName = contract.SourceType != null ? contract.SourceType.FullName ?? string.Empty : string.Empty;
-            string category = FirstNonEmpty(contract.AuthoringCategory, contract.AuthoringLane);
-
-            if (Contains(sourceName, ".Networking."))
-                return "Networking";
-            if (Contains(sourceName, ".Data.Definitions.Rpg.") || Contains(sourceName, ".Core.Rpg.") || Contains(sourceName, ".Features.Rpg."))
-                return "RPG & Narrative/" + GetRpgSubdomain(contract);
-            if (Contains(sourceName, ".Data.Definitions.Rules.") || Contains(sourceName, ".Core.Rules.Board.") || Contains(sourceName, ".Features.Tabletop."))
-                return "Strategy & Board/" + GetBoardSubdomain(contract);
-            if (Contains(sourceName, ".Data.Definitions.Combat.") || Contains(sourceName, ".Data.Profiles.Combat.") || Contains(sourceName, ".Features.Combat."))
-                return "Combat/" + GetCombatSubdomain(contract);
-            if (Contains(sourceName, ".Features.Enemies."))
-                return "NPC & AI/" + GetEnemySubdomain(contract);
-            if (Contains(sourceName, ".Features.Traversal."))
-                return "Movement/Traversal";
-            if (Contains(sourceName, ".Features.Input.") || Contains(sourceName, ".Core.Input"))
-                return "Core Setup/Input";
-            if (Contains(sourceName, ".Features.Characters.2D.") || Contains(sourceName, ".Features.Characters.Runtime.Shared.Movement.2D."))
-                return HasAnyCapability(contract.Capability, AuthoringCapability.Combat, AuthoringCapability.CombatState, AuthoringCapability.CombatSensors)
-                    ? "Combat/2D Pawn"
-                    : "Movement/2D";
-            if (Contains(sourceName, ".Features.Characters.3D.") || Contains(sourceName, ".Features.Characters.Runtime.Shared.Components.3D.") || Contains(sourceName, ".Features.Characters.Runtime.Shared.Movement.3D."))
-                return HasAnyCapability(contract.Capability, AuthoringCapability.Combat, AuthoringCapability.CombatState, AuthoringCapability.CombatSensors)
-                    ? "Combat/3D Pawn"
-                    : "Movement/3D";
-            if (Contains(sourceName, ".Features.Characters.Runtime.Shared.Components."))
-                return "Character / Pawn Gameplay/Shared Components";
-            if (Contains(sourceName, ".Features.Characters.Runtime.Shared.Contracts."))
-                return "Character / Pawn Gameplay/Runtime Contracts";
-            if (Contains(sourceName, ".Features.Characters."))
-                return HasAnyCapability(contract.Capability, AuthoringCapability.Combat, AuthoringCapability.CombatState, AuthoringCapability.CombatSensors)
-                    ? "Combat/Pawn Modules"
-                    : "Character / Pawn Gameplay/Pawn Modules";
-            if (Contains(sourceName, ".Presentation.Camera."))
-                return "World & Meta/Camera";
-            if (Contains(sourceName, ".Presentation.Animation."))
-                return "Presentation/Animation";
-            if (Contains(sourceName, ".Presentation.Visuals."))
-                return "Presentation/Visuals";
-            if (Contains(sourceName, ".Features.Feedback."))
-                return "Presentation/Feedback";
-            if (Contains(sourceName, ".Features.Pickups."))
-                return "Interaction/Pickups";
-            if (Contains(sourceName, ".Features.Interaction."))
-                return "Interaction/Actor Interaction";
-            if (Contains(sourceName, ".Features.Hazards."))
-                return "World & Meta/Hazards";
-            if (Contains(sourceName, ".Features.Scoring."))
-                return "Scoring";
-            if (Contains(sourceName, ".Features.Settings."))
-                return "Core Setup/Settings";
-            if (Contains(sourceName, ".Features.Platform.") || Contains(sourceName, ".Core.Local") || Contains(sourceName, ".Data.Definitions.Session") || Contains(sourceName, ".Data.Definitions.GameMode") || Contains(sourceName, ".Data.Config."))
-                return "Core Setup/Platform";
-            if (Contains(sourceName, ".Core.Navigation."))
-                return "Core Setup/Scenes & Menus";
-            if (Contains(sourceName, ".Core.Actions.") || Contains(sourceName, ".Data.Definitions.Actions."))
-                return "Core Setup/Actions";
-            if (Contains(sourceName, ".Data.Profiles."))
-                return GetProfileDomain(contract, category, family);
-            if (Contains(sourceName, ".Data.Definitions."))
-                return GetDefinitionDomain(contract, category, family);
-
-            return GetFallbackGroup(contract.Capability);
-        }
-
-        private static string BuildContractPathLeaf(ResolvedAuthoringContract contract, RuntimeCapabilityFamily family)
-        {
-            string leaf = !string.IsNullOrWhiteSpace(contract.DisplayName)
-                ? contract.DisplayName
-                : contract.SourceType != null
-                    ? contract.SourceType.Name
-                    : !string.IsNullOrWhiteSpace(contract.ModuleId)
-                        ? contract.ModuleId
-                        : family.ToString();
-
-            return NormalizePathSegment(leaf);
-        }
-
-        private static string[] BuildRoleTags(ResolvedAuthoringContract contract, RuntimeCapabilityFamily family)
+        private static string[] BuildRoleTags(ResolvedAuthoringContract contract)
         {
             List<string> tags = new List<string>();
             AddRangeDistinct(tags, contract.RoleTags);
-
-            if (contract.SourceType != null)
-            {
-                AddDistinct(tags, contract.SourceType.Name);
-                if (contract.SourceType.IsInterface)
-                    AddDistinct(tags, "InterfaceContract");
-                if (typeof(UnityEngine.ScriptableObject).IsAssignableFrom(contract.SourceType))
-                    AddDistinct(tags, "ScriptableObject");
-                if (typeof(UnityEngine.MonoBehaviour).IsAssignableFrom(contract.SourceType))
-                    AddDistinct(tags, "SceneComponent");
-            }
-
-            AddDistinct(tags, family.ToString());
-            AddDistinct(tags, contract.AuthoringLane);
-            AddDistinct(tags, contract.AuthoringCategory);
-            AddDistinct(tags, GetFallbackGroup(contract.Capability));
-
-            if (contract.RequiredProfileType != null)
-                AddDistinct(tags, contract.RequiredProfileType.Name);
-            if (!string.IsNullOrWhiteSpace(contract.SetupNodeId))
-                AddDistinct(tags, contract.SetupNodeId);
-            if (!string.IsNullOrWhiteSpace(contract.ModuleId))
-                AddDistinct(tags, contract.ModuleId);
-
             return tags.ToArray();
         }
 
@@ -894,135 +885,12 @@ namespace NeonBlack.Gameplay.Editor
             string sourceName = type.FullName ?? string.Empty;
             if (Contains(sourceName, ".Runtime.Shared.Contracts."))
                 return false;
-            if (Contains(sourceName, ".Core.ContractInterfaces."))
+            if (Contains(sourceName, ".Core.Contracts."))
                 return false;
             if (Contains(sourceName, ".Tests."))
                 return false;
 
             return true;
-        }
-
-        private static string GetRpgSubdomain(ResolvedAuthoringContract contract)
-        {
-            string name = contract.SourceType != null ? contract.SourceType.Name : contract.DisplayName;
-            if (Contains(name, "Dialogue")) return "Dialogue";
-            if (Contains(name, "Quest")) return "Quests";
-            if (Contains(name, "Vendor")) return "Vendors";
-            if (Contains(name, "Skill")) return "Skill Tree";
-            if (Contains(name, "Progress")) return "Progression";
-            if (Contains(name, "Inventory") || Contains(name, "Item") || Contains(name, "Equipment")) return "Inventory";
-            if (Contains(name, "Npc")) return "NPC";
-            return "RPG";
-        }
-
-        private static string GetBoardSubdomain(ResolvedAuthoringContract contract)
-        {
-            string name = contract.SourceType != null ? contract.SourceType.Name : contract.DisplayName;
-            if (Contains(name, "Turn") || Contains(name, "Phase")) return "Turn Based";
-            if (Contains(name, "Board") || Contains(name, "Grid")) return "Board & Grid";
-            if (Contains(name, "Piece")) return "Board Pieces";
-            return "Rules";
-        }
-
-        private static string GetCombatSubdomain(ResolvedAuthoringContract contract)
-        {
-            AuthoringCapability capability = contract.Capability;
-            string name = contract.SourceType != null ? contract.SourceType.Name : contract.DisplayName;
-            if (HasAnyCapability(capability, AuthoringCapability.CombatSensors) || Contains(name, "HitBox") || Contains(name, "Detection"))
-                return "Sensors";
-            if (HasAnyCapability(capability, AuthoringCapability.CombatState) || Contains(name, "Health") || Contains(name, "Status"))
-                return "State";
-            if (HasAnyCapability(capability, AuthoringCapability.RangedFlow) || Contains(name, "Projectile") || Contains(name, "Fire"))
-                return "Ranged";
-            if (HasAnyCapability(capability, AuthoringCapability.MeleeFlow) || Contains(name, "Weapon") || Contains(name, "Sequence"))
-                return "Melee";
-            return "Core";
-        }
-
-        private static string GetEnemySubdomain(ResolvedAuthoringContract contract)
-        {
-            string name = contract.SourceType != null ? contract.SourceType.Name : contract.DisplayName;
-            if (Contains(name, "Movement")) return "Movement";
-            if (Contains(name, "Detection")) return "Detection";
-            if (Contains(name, "Combat")) return "Combat";
-            if (Contains(name, "Animation")) return "Animation";
-            if (Contains(name, "Ambient")) return "Ambient";
-            return "Enemy Runtime";
-        }
-
-        private static string GetProfileDomain(ResolvedAuthoringContract contract, string category, RuntimeCapabilityFamily family)
-        {
-            string name = contract.SourceType != null ? contract.SourceType.Name : contract.DisplayName;
-            if (Contains(name, "Input")) return "Core Setup/Input";
-            if (Contains(name, "Camera")) return "World & Meta/Camera";
-            if (Contains(name, "Movement")) return "Movement/Profiles";
-            if (Contains(name, "Traversal") || Contains(name, "Hop")) return "Movement/Traversal";
-            if (Contains(name, "Animation")) return "Presentation/Animation";
-            if (Contains(name, "Presentation") || Contains(name, "Feedback")) return "Presentation/Profiles";
-            if (Contains(name, "Combat") || Contains(name, "Status") || Contains(name, "Reaction")) return "Combat/Profiles";
-            if (Contains(name, "Enemy")) return "NPC & AI/Profiles";
-            if (Contains(name, "Hazard")) return "World & Meta/Hazards";
-            if (Contains(name, "Pickup") || Contains(name, "Interaction")) return "Interaction/Profiles";
-            if (Contains(name, "Playfield")) return "World & Meta/Playfield";
-            if (Contains(name, "Settings")) return "Core Setup/Settings";
-            return GetFamilyDisplayName(family);
-        }
-
-        private static string GetDefinitionDomain(ResolvedAuthoringContract contract, string category, RuntimeCapabilityFamily family)
-        {
-            string name = contract.SourceType != null ? contract.SourceType.Name : contract.DisplayName;
-            if (Contains(name, "Session") || Contains(name, "GameMode") || Contains(name, "Participant"))
-                return "Core Setup/Definitions";
-            if (Contains(name, "Pawn"))
-                return "Character / Pawn Gameplay/Definitions";
-            return GetFamilyDisplayName(family) + "/Definitions";
-        }
-
-        private static string GetFallbackCapabilityPath(PyralisCapabilityVocabularyCard card, PyralisAuthoringFact fact)
-        {
-            string group = GetFallbackGroup(fact != null ? fact.Capability : AuthoringCapability.None);
-            if (card != null && !string.IsNullOrWhiteSpace(card.DisplayName))
-                return group + "/" + NormalizePathSegment(card.DisplayName);
-
-            return fact != null && !string.IsNullOrWhiteSpace(fact.DisplayName)
-                ? group + "/" + NormalizePathSegment(fact.DisplayName)
-                : string.Empty;
-        }
-
-        private static string NormalizePathSegment(string value)
-        {
-            if (string.IsNullOrWhiteSpace(value))
-                return "General";
-
-            string normalized = value.Replace('.', '/').Replace('-', ' ').Replace('_', ' ');
-            string[] parts = normalized.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-            string last = parts.Length > 0 ? parts[parts.Length - 1] : normalized;
-            return AuthoringCapabilityRegistry.PrettifyTypeName(last.Trim());
-        }
-
-        private static string GetGroup(PyralisAuthoringFact fact)
-        {
-            if (fact == null)
-                return "General";
-
-            if (fact.GoalTags != null && fact.GoalTags.Length > 0)
-                return fact.GoalTags[0];
-
-            if (fact.LaneTags != null && fact.LaneTags.Length > 0)
-                return fact.LaneTags[0];
-
-            return GetFallbackGroup(fact.Capability);
-        }
-
-        private static string GetFallbackGroup(AuthoringCapability capability)
-        {
-            if (HasAnyCapability(capability, AuthoringCapability.Setup, AuthoringCapability.Session, AuthoringCapability.Rules, AuthoringCapability.Participants, AuthoringCapability.Scoring, AuthoringCapability.Input, AuthoringCapability.UI, AuthoringCapability.Audio))
-                return "Core Setup";
-            if (HasAnyCapability(capability, AuthoringCapability.Movement, AuthoringCapability.KineticMotor2D, AuthoringCapability.KineticMotor3D, AuthoringCapability.Steering2D, AuthoringCapability.Steering3D, AuthoringCapability.Traversal, AuthoringCapability.Combat, AuthoringCapability.CombatState, AuthoringCapability.CombatSensors, AuthoringCapability.MeleeFlow, AuthoringCapability.RangedFlow, AuthoringCapability.TacticsAggressive, AuthoringCapability.TacticsDefensive, AuthoringCapability.Animation, AuthoringCapability.VFX))
-                return "Actor & Action";
-            if (HasAnyCapability(capability, AuthoringCapability.Stats, AuthoringCapability.Inventory, AuthoringCapability.Dialogue, AuthoringCapability.Quests, AuthoringCapability.Vendors, AuthoringCapability.SkillTree, AuthoringCapability.Progression, AuthoringCapability.Tabletop, AuthoringCapability.Grid))
-                return "RPG & Narrative";
-            return "World & Meta";
         }
 
         private static int GetSortOrder(AuthoringCapability capability)
@@ -1106,21 +974,6 @@ namespace NeonBlack.Gameplay.Editor
                     : PyralisAuthoringGraphSourceOrigin.Contract;
         }
 
-        private static string GetProofTargetId(PyralisAuthoringFact fact)
-        {
-            if (fact == null || fact.RelatedStableIds == null)
-                return string.Empty;
-
-            for (int i = 0; i < fact.RelatedStableIds.Length; i++)
-            {
-                string id = fact.RelatedStableIds[i];
-                if (!string.IsNullOrWhiteSpace(id) && id.StartsWith("proof.", StringComparison.Ordinal))
-                    return id;
-            }
-
-            return string.Empty;
-        }
-
         private static string[] SimplifyTypeNames(string[] interfaceNames, string[] componentNames)
         {
             List<string> names = new List<string>();
@@ -1186,15 +1039,6 @@ namespace NeonBlack.Gameplay.Editor
             return new string(chars).Trim('-');
         }
 
-        private static string[] Combine(params string[][] groups)
-        {
-            List<string> values = new List<string>();
-            for (int i = 0; i < groups.Length; i++)
-                AddRangeDistinct(values, groups[i]);
-
-            return values.ToArray();
-        }
-
         private static string FirstNonEmpty(string first, string second)
         {
             return string.IsNullOrWhiteSpace(first) ? second : first;
@@ -1252,6 +1096,211 @@ namespace NeonBlack.Gameplay.Editor
                 return;
 
             target.Add(value);
+        }
+    }
+
+    public sealed class PyralisAuthoringIntentDescriptorProjection
+    {
+        public PyralisAuthoringIntentDescriptorProjection(
+            PyralisAuthoringCapabilityDescriptor descriptor,
+            bool selected,
+            bool inferred,
+            string intentLayer)
+        {
+            Descriptor = descriptor;
+            Selected = selected;
+            Inferred = inferred;
+            IntentLayer = intentLayer ?? string.Empty;
+        }
+
+        public PyralisAuthoringCapabilityDescriptor Descriptor { get; }
+        public bool Selected { get; }
+        public bool Inferred { get; }
+        public string IntentLayer { get; }
+        public string Group => PyralisAuthoringIntentProjection.GetGroup(Descriptor);
+        public string Subgroup => PyralisAuthoringIntentProjection.GetSubgroup(Descriptor);
+        public string LeafLabel => PyralisAuthoringIntentProjection.GetLeafLabel(Descriptor);
+    }
+
+    public sealed class PyralisAuthoringIntentDescriptorSubgroupProjection
+    {
+        public PyralisAuthoringIntentDescriptorSubgroupProjection(
+            string subgroup,
+            IReadOnlyList<PyralisAuthoringIntentDescriptorProjection> descriptors)
+        {
+            Subgroup = subgroup ?? string.Empty;
+            Descriptors = descriptors ?? Array.Empty<PyralisAuthoringIntentDescriptorProjection>();
+        }
+
+        public string Subgroup { get; }
+        public IReadOnlyList<PyralisAuthoringIntentDescriptorProjection> Descriptors { get; }
+        public int DescriptorCount => Descriptors.Count;
+        public int SelectedCount => Descriptors.Count(descriptor => descriptor.Selected);
+        public int InferredCount => Descriptors.Count(descriptor => descriptor.Inferred);
+    }
+
+    public sealed class PyralisAuthoringIntentDescriptorGroupProjection
+    {
+        public PyralisAuthoringIntentDescriptorGroupProjection(
+            string group,
+            IReadOnlyList<PyralisAuthoringIntentDescriptorSubgroupProjection> subgroups)
+        {
+            Group = group ?? "General";
+            Subgroups = subgroups ?? Array.Empty<PyralisAuthoringIntentDescriptorSubgroupProjection>();
+        }
+
+        public string Group { get; }
+        public IReadOnlyList<PyralisAuthoringIntentDescriptorSubgroupProjection> Subgroups { get; }
+        public int DescriptorCount => Subgroups.Sum(subgroup => subgroup.DescriptorCount);
+        public int SelectedCount => Subgroups.Sum(subgroup => subgroup.SelectedCount);
+        public int InferredCount => Subgroups.Sum(subgroup => subgroup.InferredCount);
+    }
+
+    public sealed class PyralisAuthoringIntentProjection
+    {
+        public PyralisAuthoringIntentProjection(
+            PyralisAuthoringIntentSelection selection,
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors,
+            IReadOnlyList<string> selectedDescriptorIds)
+        {
+            Selection = selection ?? new PyralisAuthoringIntentSelection(
+                RuntimeCapabilityLaneTag.Sprite2D,
+                AuthoringCapability.None,
+                AuthoringWorldAxiom.None);
+            Descriptors = descriptors ?? Array.Empty<PyralisAuthoringCapabilityDescriptor>();
+            SelectedDescriptorIds = PyralisAuthoringCapabilityDescriptorRegistry.FilterGameplayIntentDescriptorIds(
+                selectedDescriptorIds ?? Array.Empty<string>());
+            SelectedDescriptorIdSet = new HashSet<string>(SelectedDescriptorIds, StringComparer.Ordinal);
+            InferredRouteEssentialIds = Descriptors
+                .Where(descriptor => PyralisAuthoringCapabilityDescriptorRegistry.IsIntentRouteEssentialExpected(descriptor, Selection))
+                .Select(descriptor => descriptor.StableId)
+                .ToArray();
+            InferredRouteEssentialIdSet = new HashSet<string>(InferredRouteEssentialIds, StringComparer.Ordinal);
+            GameplayIngredientDescriptors = Descriptors
+                .Where(descriptor => descriptor != null && !PyralisAuthoringCapabilityDescriptorRegistry.IsIntentRouteEssential(descriptor))
+                .ToArray();
+            RouteEssentialDescriptors = Descriptors
+                .Where(descriptor => descriptor != null && InferredRouteEssentialIdSet.Contains(descriptor.StableId))
+                .ToArray();
+            AllGroups = BuildGroups(Descriptors, "Available");
+            GameplayIngredientGroups = BuildGroups(GameplayIngredientDescriptors, "GameplayIngredient");
+            RouteEssentialGroups = BuildGroups(RouteEssentialDescriptors, "RouteEssential");
+            SelectedDescriptors = GameplayIngredientDescriptors
+                .Where(descriptor => SelectedDescriptorIdSet.Contains(descriptor.StableId))
+                .Select(descriptor => new PyralisAuthoringIntentDescriptorProjection(descriptor, true, false, "GameplayIngredient"))
+                .ToArray();
+        }
+
+        public PyralisAuthoringIntentSelection Selection { get; }
+        public IReadOnlyList<PyralisAuthoringCapabilityDescriptor> Descriptors { get; }
+        public string[] SelectedDescriptorIds { get; }
+        public string[] InferredRouteEssentialIds { get; }
+        public IReadOnlyList<PyralisAuthoringCapabilityDescriptor> GameplayIngredientDescriptors { get; }
+        public IReadOnlyList<PyralisAuthoringCapabilityDescriptor> RouteEssentialDescriptors { get; }
+        public IReadOnlyList<PyralisAuthoringIntentDescriptorGroupProjection> AllGroups { get; }
+        public IReadOnlyList<PyralisAuthoringIntentDescriptorGroupProjection> GameplayIngredientGroups { get; }
+        public IReadOnlyList<PyralisAuthoringIntentDescriptorGroupProjection> RouteEssentialGroups { get; }
+        public IReadOnlyList<PyralisAuthoringIntentDescriptorProjection> SelectedDescriptors { get; }
+        private HashSet<string> SelectedDescriptorIdSet { get; }
+        private HashSet<string> InferredRouteEssentialIdSet { get; }
+
+        public static PyralisAuthoringIntentProjection Build(
+            PyralisAuthoringIntentSelection selection,
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors)
+        {
+            return new PyralisAuthoringIntentProjection(
+                selection,
+                descriptors,
+                selection?.DescriptorIds ?? Array.Empty<string>());
+        }
+
+        public static string GetGroup(PyralisAuthoringCapabilityDescriptor descriptor)
+        {
+            if (descriptor == null)
+                return "Shared Ingredients";
+
+            if (!string.IsNullOrWhiteSpace(descriptor.CapabilityPath))
+            {
+                string[] parts = descriptor.CapabilityPath.Split('/');
+                if (parts.Length > 1 && !string.IsNullOrWhiteSpace(parts[0]))
+                    return parts[0].Trim();
+            }
+
+            return string.IsNullOrWhiteSpace(descriptor.Group) ? "Shared Ingredients" : descriptor.Group;
+        }
+
+        public static string GetSubgroup(PyralisAuthoringCapabilityDescriptor descriptor)
+        {
+            if (descriptor == null || string.IsNullOrWhiteSpace(descriptor.CapabilityPath))
+                return string.Empty;
+
+            string[] parts = descriptor.CapabilityPath.Split('/');
+            return parts.Length > 2 && !string.IsNullOrWhiteSpace(parts[1])
+                ? parts[1].Trim()
+                : string.Empty;
+        }
+
+        public static string GetLeafLabel(PyralisAuthoringCapabilityDescriptor descriptor)
+        {
+            if (descriptor == null)
+                return "Unknown";
+
+            if (string.IsNullOrWhiteSpace(descriptor.CapabilityPath))
+                return descriptor.DisplayName;
+
+            string[] parts = descriptor.CapabilityPath.Split('/');
+            if (parts.Length > 2 && !string.IsNullOrWhiteSpace(parts[2]))
+                return string.Join(" / ", GetNonEmptyPathParts(parts, 2));
+            if (parts.Length > 1 && !string.IsNullOrWhiteSpace(parts[1]))
+                return parts[1].Trim();
+
+            return descriptor.DisplayName;
+        }
+
+        private IReadOnlyList<PyralisAuthoringIntentDescriptorGroupProjection> BuildGroups(
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors,
+            string intentLayer)
+        {
+            if (descriptors == null || descriptors.Count == 0)
+                return Array.Empty<PyralisAuthoringIntentDescriptorGroupProjection>();
+
+            return descriptors
+                .Where(descriptor => descriptor != null)
+                .Select(descriptor => new PyralisAuthoringIntentDescriptorProjection(
+                    descriptor,
+                    SelectedDescriptorIdSet.Contains(descriptor.StableId),
+                    InferredRouteEssentialIdSet.Contains(descriptor.StableId),
+                    intentLayer))
+                .GroupBy(descriptor => descriptor.Group)
+                .OrderBy(group => group.Key, StringComparer.Ordinal)
+                .Select(group => new PyralisAuthoringIntentDescriptorGroupProjection(
+                    group.Key,
+                    group
+                        .GroupBy(descriptor => descriptor.Subgroup)
+                        .OrderBy(subgroup => subgroup.Key, StringComparer.Ordinal)
+                        .Select(subgroup => new PyralisAuthoringIntentDescriptorSubgroupProjection(
+                            subgroup.Key,
+                            subgroup
+                                .OrderBy(descriptor => descriptor.Descriptor.SortOrder)
+                                .ThenBy(descriptor => descriptor.Descriptor.DisplayName, StringComparer.Ordinal)
+                                .ToArray()))
+                        .ToArray()))
+                .ToArray();
+        }
+
+        private static string[] GetNonEmptyPathParts(string[] parts, int startIndex)
+        {
+            List<string> labels = new List<string>();
+            if (parts == null)
+                return labels.ToArray();
+
+            for (int i = startIndex; i < parts.Length; i++)
+            {
+                if (!string.IsNullOrWhiteSpace(parts[i]))
+                    labels.Add(parts[i].Trim());
+            }
+
+            return labels.ToArray();
         }
     }
 }

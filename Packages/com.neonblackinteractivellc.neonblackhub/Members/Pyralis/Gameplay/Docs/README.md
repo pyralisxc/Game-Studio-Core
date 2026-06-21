@@ -1,6 +1,6 @@
 # Pyralis Gameplay Docs
 
-This folder intentionally stays small. Active docs describe current truth only; old audits, phase plans, migration notes, and duplicate setup guides should be deleted or folded into the living docs below.
+This folder intentionally stays small. Active docs describe supported architecture, setup, verification, and roadmap truth. Extra audits, phase plans, historical notes, and duplicate setup guides belong outside the active doc set unless they protect current work.
 
 ## Living Docs
 

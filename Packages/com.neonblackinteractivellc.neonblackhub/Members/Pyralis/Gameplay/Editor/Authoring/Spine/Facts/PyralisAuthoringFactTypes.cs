@@ -28,7 +28,7 @@ namespace NeonBlack.Gameplay.Editor
     public enum PyralisAuthoringFactSourceKind
     {
         HandAuthoredGuideCard,
-        SetupFlow,
+        CoreSetup,
         FeatureContract,
         Validator,
         InspectorGuide,

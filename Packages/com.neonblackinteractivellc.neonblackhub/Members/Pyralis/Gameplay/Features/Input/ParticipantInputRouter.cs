@@ -18,6 +18,7 @@ namespace NeonBlack.Gameplay.Features.Input
         Capability = AuthoringCapability.Input | AuthoringCapability.Setup,
         Relevance = "Routes physical input device events to the correct participant; participant definitions own the InputProfile that pawn and non-pawn control surfaces consume.",
         Axioms = AuthoringWorldAxiom.None,
+        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.InputRouteSupport },
         AssignmentFields = new[] { nameof(sessionDefinition), nameof(rosterService), nameof(playerInputManager) },
         FirstProof = "Join a new player and verify they are correctly assigned to a participant seat in the roster.",
         NativeSetup = new[] 
@@ -34,9 +35,26 @@ namespace NeonBlack.Gameplay.Features.Input
         public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (sessionDefinition == null)
-                yield return PyralisRuntimeValidationIssue.Required("Session Definition is empty. This is expected when GameplaySessionBootstrap injects it at runtime.");
+            {
+                yield return PyralisRuntimeValidationIssue.Recommended(
+                    "Session Definition is empty. This is expected when GameplaySessionBootstrap injects it at runtime.",
+                    nameof(sessionDefinition),
+                    nameof(ParticipantInputRouter),
+                    "Assign ParticipantInputRouter.sessionDefinition only for a standalone scene object; otherwise let GameplaySessionBootstrap inject it.",
+                    "ParticipantInputRouter has a SessionDefinition before routing input in Play Mode.",
+                    "ParticipantInputRouter.SessionDefinition.Injected");
+            }
+
             if (rosterService == null)
-                yield return PyralisRuntimeValidationIssue.Required("Roster Service is empty. This is expected when GameplaySessionBootstrap injects it at runtime.");
+            {
+                yield return PyralisRuntimeValidationIssue.Recommended(
+                    "Roster Service is empty. This is expected when GameplaySessionBootstrap injects it at runtime.",
+                    nameof(rosterService),
+                    nameof(ParticipantInputRouter),
+                    "Assign ParticipantInputRouter.rosterService only for a standalone scene object; otherwise let GameplaySessionBootstrap inject it.",
+                    "ParticipantInputRouter has a ParticipantRosterService before routing input in Play Mode.",
+                    "ParticipantInputRouter.RosterService.Injected");
+            }
         }
         [SerializeField] private SessionDefinition sessionDefinition;
         [SerializeField] private ParticipantRosterService rosterService;

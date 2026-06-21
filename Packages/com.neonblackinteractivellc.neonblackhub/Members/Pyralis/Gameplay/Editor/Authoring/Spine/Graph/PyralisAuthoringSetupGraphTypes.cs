@@ -25,7 +25,7 @@ namespace NeonBlack.Gameplay.Editor
         CapabilityVocabulary,
         AuthoringContract,
         GrammarRegistry,
-        SetupFlow,
+        CoreSetup,
         RuntimeValidation,
         SceneReadiness,
         ProofVocabulary,
@@ -73,6 +73,38 @@ namespace NeonBlack.Gameplay.Editor
         Reference
     }
 
+    public enum PyralisAuthoringGraphSetupDomain
+    {
+        Unknown,
+        GameplayRoot,
+        LifetimeScope,
+        Session,
+        GameMode,
+        RouteCapabilities,
+        RouteShape,
+        Participant,
+        ParticipantTopology,
+        Input,
+        PlayerInputManager,
+        Spawn,
+        PawnDefinition,
+        PawnPrefab,
+        PawnMotor,
+        PawnInput,
+        PawnPresentation,
+        PawnAnimation,
+        Camera,
+        Playfield,
+        SceneSurface,
+        SceneReadiness,
+        UserInterface,
+        Settings,
+        Scoring,
+        Tabletop,
+        Networking,
+        FeatureContract
+    }
+
     public sealed class PyralisAuthoringGraphNode
     {
         public PyralisAuthoringGraphNode(
@@ -94,7 +126,9 @@ namespace NeonBlack.Gameplay.Editor
             UnityEngine.Object sourceObject = null,
             PyralisAuthoringGraphSourceOrigin sourceOrigin = PyralisAuthoringGraphSourceOrigin.Unknown,
             PyralisAuthoringGraphWorkIntent workIntent = PyralisAuthoringGraphWorkIntent.Unknown,
-            PyralisAuthoringIssueSeverity issueSeverity = PyralisAuthoringIssueSeverity.Info)
+            PyralisAuthoringIssueSeverity issueSeverity = PyralisAuthoringIssueSeverity.Info,
+            PyralisAuthoringGraphSetupDomain setupDomain = PyralisAuthoringGraphSetupDomain.Unknown,
+            string issueCode = null)
         {
             StableId = stableId ?? string.Empty;
             Label = label ?? string.Empty;
@@ -121,6 +155,8 @@ namespace NeonBlack.Gameplay.Editor
             IssueSeverity = issueSeverity == PyralisAuthoringIssueSeverity.Info
                 ? InferIssueSeverity(kind, EvidenceState)
                 : issueSeverity;
+            SetupDomain = setupDomain;
+            IssueCode = issueCode ?? string.Empty;
         }
 
         public string StableId { get; }
@@ -142,13 +178,15 @@ namespace NeonBlack.Gameplay.Editor
         public PyralisAuthoringGraphSourceOrigin SourceOrigin { get; }
         public PyralisAuthoringGraphWorkIntent WorkIntent { get; }
         public PyralisAuthoringIssueSeverity IssueSeverity { get; }
+        public PyralisAuthoringGraphSetupDomain SetupDomain { get; }
+        public string IssueCode { get; }
 
         private static PyralisAuthoringGraphSourceOrigin InferSourceOrigin(PyralisAuthoringGraphSourceKind sourceKind)
         {
             return sourceKind switch
             {
                 PyralisAuthoringGraphSourceKind.AuthoringContract => PyralisAuthoringGraphSourceOrigin.Contract,
-                PyralisAuthoringGraphSourceKind.SetupFlow => PyralisAuthoringGraphSourceOrigin.RuntimeEvidence,
+                PyralisAuthoringGraphSourceKind.CoreSetup => PyralisAuthoringGraphSourceOrigin.SpineGrammar,
                 PyralisAuthoringGraphSourceKind.RuntimeValidation => PyralisAuthoringGraphSourceOrigin.RuntimeEvidence,
                 PyralisAuthoringGraphSourceKind.SceneReadiness => PyralisAuthoringGraphSourceOrigin.RuntimeEvidence,
                 PyralisAuthoringGraphSourceKind.Reflection => PyralisAuthoringGraphSourceOrigin.Reflection,

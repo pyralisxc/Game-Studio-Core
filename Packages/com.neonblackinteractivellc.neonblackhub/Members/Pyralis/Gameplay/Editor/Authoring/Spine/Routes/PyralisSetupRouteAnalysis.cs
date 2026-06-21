@@ -1184,39 +1184,46 @@ namespace NeonBlack.Gameplay.Editor
                 return $"Selected pawn-backed intent asks PawnDefinition `{pawn.name}` to point at a pawn prefab before participants can spawn.";
             }
 
-            if (pawn.pawnPrefab.GetComponent<PawnRoot>() == null)
+            PyralisRuntimeValidationIssue pawnIssue = GetFirstRequiredPawnIssue(pawn);
+            if (pawnIssue != null)
             {
-                issueKind = PyralisParticipantPawnIssueKind.MissingPawnRoot;
-                return $"Pawn prefab `{pawn.pawnPrefab.name}` is missing PawnRoot on its root GameObject.";
-            }
-
-            if (!PrefabHasComponent<IPawnMotor>(pawn.pawnPrefab))
-            {
-                issueKind = PyralisParticipantPawnIssueKind.MissingMotor;
-                return $"Pawn prefab `{pawn.pawnPrefab.name}` is missing a lane motor component that implements IPawnMotor.";
-            }
-
-            if (!PrefabHasComponent<IPawnPresentationModule>(pawn.pawnPrefab))
-            {
-                issueKind = PyralisParticipantPawnIssueKind.MissingPresentation;
-                return $"Pawn prefab `{pawn.pawnPrefab.name}` is missing a presentation component that implements IPawnPresentationModule.";
-            }
-
-            if (!PrefabHasComponent<IPawnInputModule>(pawn.pawnPrefab))
-            {
-                issueKind = PyralisParticipantPawnIssueKind.MissingInputModule;
-                return $"Pawn prefab `{pawn.pawnPrefab.name}` is missing an input adapter that implements IPawnInputModule so the selected InputProfile can reach movement.";
-            }
-
-            List<string> pawnIssues = PyralisPawnPrefabReadinessAnalysis.BuildIssues(pawn);
-            if (pawnIssues.Count > 0)
-            {
-                issueKind = PyralisParticipantPawnIssueKind.PawnValidation;
-                return $"PawnDefinition `{pawn.name}`: {pawnIssues[0]}";
+                issueKind = ClassifyPawnValidationIssueCode(pawnIssue.IssueCode);
+                return $"PawnDefinition `{pawn.name}`: {pawnIssue.Message}";
             }
 
             issueKind = PyralisParticipantPawnIssueKind.None;
             return null;
+        }
+
+        private static PyralisRuntimeValidationIssue GetFirstRequiredPawnIssue(PawnDefinition pawn)
+        {
+            if (pawn == null)
+                return null;
+
+            foreach (PyralisRuntimeValidationIssue issue in pawn.GetRuntimeValidationIssues())
+            {
+                if (issue != null && issue.Severity == PyralisRuntimeValidationSeverity.Required)
+                    return issue;
+            }
+
+            return null;
+        }
+
+        private static PyralisParticipantPawnIssueKind ClassifyPawnValidationIssueCode(string issueCode)
+        {
+            if (string.IsNullOrWhiteSpace(issueCode))
+                return PyralisParticipantPawnIssueKind.PawnValidation;
+
+            if (issueCode.Contains(".PawnRoot.", System.StringComparison.Ordinal))
+                return PyralisParticipantPawnIssueKind.MissingPawnRoot;
+            if (issueCode.Contains(".PawnMotor.", System.StringComparison.Ordinal))
+                return PyralisParticipantPawnIssueKind.MissingMotor;
+            if (issueCode.Contains(".PawnInput.", System.StringComparison.Ordinal))
+                return PyralisParticipantPawnIssueKind.MissingInputModule;
+            if (issueCode.Contains(".PawnPresentation.", System.StringComparison.Ordinal))
+                return PyralisParticipantPawnIssueKind.MissingPresentation;
+
+            return PyralisParticipantPawnIssueKind.PawnValidation;
         }
 
         private static string GetPlayerInputManagerIssue(

@@ -13,6 +13,7 @@ namespace NeonBlack.Gameplay.Networking.Participants
     [AuthoringContract(
         Capability = AuthoringCapability.Networking,
         Relevance = "Drop-in replacement for ParticipantSpawnService in online sessions. Registers pawns with NGO.",
+        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.NetworkRouteSupport },
         FirstProof = "Spawned pawns have a valid NetworkObject and are correctly replicated to clients."
     )]
     public class NetworkedParticipantSpawnService : ParticipantSpawnService

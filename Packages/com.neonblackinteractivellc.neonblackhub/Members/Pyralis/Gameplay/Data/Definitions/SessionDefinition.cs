@@ -20,6 +20,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
         Capability = AuthoringCapability.Session, 
         Priority = AuthoringPriority.Primary,
         SetupNodeId = "session.definition",
+        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.CoreRouteAnchor },
         Relevance = "Root configuration for a gameplay session. Defines the boundary of your game world and network authority.",
         AssignmentFields = new[] { nameof(sessionName), nameof(defaultGameMode), nameof(defaultParticipants), nameof(networkMode), nameof(maxParticipants) },
         NativeSetup = new[] { "GameplaySessionBootstrap" },
@@ -32,7 +33,116 @@ namespace NeonBlack.Gameplay.Data.Definitions
     {
         public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            return PyralisRuntimeValidationIssueUtility.RequiredFrom(GetValidationIssues());
+            if (string.IsNullOrWhiteSpace(sessionName))
+            {
+                yield return PyralisRuntimeValidationIssue.Required(
+                    "Session name is required.",
+                    nameof(sessionName),
+                    nameof(SessionDefinition),
+                    "Set SessionDefinition.sessionName to a readable session name.",
+                    "SessionDefinition has a non-empty session name.",
+                    "SessionDefinition.SessionName.Required");
+            }
+
+            if (maxParticipants < 1)
+            {
+                yield return PyralisRuntimeValidationIssue.Required(
+                    "Max participants must be at least 1.",
+                    nameof(maxParticipants),
+                    nameof(SessionDefinition),
+                    "Set SessionDefinition.maxParticipants to 1 or higher.",
+                    "SessionDefinition.maxParticipants is at least 1.",
+                    "SessionDefinition.MaxParticipants.Minimum");
+            }
+
+            if (defaultGameMode == null)
+            {
+                yield return PyralisRuntimeValidationIssue.Required(
+                    "Default game mode is not assigned.",
+                    nameof(defaultGameMode),
+                    nameof(SessionDefinition),
+                    "Create or assign a GameModeDefinition on SessionDefinition.defaultGameMode.",
+                    "SessionDefinition.defaultGameMode references the game rules for this scene.",
+                    "SessionDefinition.DefaultGameMode.Missing");
+            }
+
+            if (networkMode != GameplayNetworkMode.LocalOnly && localFirst)
+            {
+                yield return PyralisRuntimeValidationIssue.Required(
+                    "Networked sessions should set Local First to false so setup tooling treats NGO as the authority path.",
+                    nameof(localFirst),
+                    nameof(SessionDefinition),
+                    "Disable SessionDefinition.localFirst for networked session routes.",
+                    "Networked SessionDefinition uses NGO authority setup.",
+                    "SessionDefinition.LocalFirst.NetworkedMismatch");
+            }
+
+            if (defaultParticipants == null || defaultParticipants.Length == 0)
+            {
+                yield return PyralisRuntimeValidationIssue.Required(
+                    "At least one default participant should be assigned.",
+                    nameof(defaultParticipants),
+                    nameof(SessionDefinition),
+                    "Create or assign at least one ParticipantDefinition in SessionDefinition.defaultParticipants.",
+                    "SessionDefinition.defaultParticipants has at least one participant.",
+                    "SessionDefinition.DefaultParticipants.Missing");
+                yield break;
+            }
+
+            int effectiveMaxParticipants = GetEffectiveMaxParticipants();
+            if (defaultParticipants.Length > effectiveMaxParticipants)
+            {
+                yield return PyralisRuntimeValidationIssue.Required(
+                    $"Session has {defaultParticipants.Length} default participants but only supports {effectiveMaxParticipants} participants.",
+                    nameof(defaultParticipants),
+                    nameof(SessionDefinition),
+                    "Inspect SessionDefinition.defaultParticipants and max participant fields.",
+                    "Default participant count fits inside the effective max participant count.",
+                    "SessionDefinition.DefaultParticipants.ExceedsMax");
+            }
+
+            HashSet<int> preferredSeats = new HashSet<int>();
+            for (int i = 0; i < defaultParticipants.Length; i++)
+            {
+                ParticipantDefinition participant = defaultParticipants[i];
+                if (participant == null)
+                {
+                    yield return PyralisRuntimeValidationIssue.Required(
+                        $"Default participant slot {i} is empty.",
+                        nameof(defaultParticipants),
+                        nameof(SessionDefinition),
+                        $"Assign a ParticipantDefinition to SessionDefinition.defaultParticipants[{i}] or remove the empty slot.",
+                        "Every SessionDefinition.defaultParticipants slot references a ParticipantDefinition.",
+                        "SessionDefinition.DefaultParticipants.EmptySlot." + i);
+                    continue;
+                }
+
+                if (participant.preferredSeatIndex < 0)
+                    continue;
+
+                if (participant.preferredSeatIndex >= effectiveMaxParticipants)
+                {
+                    yield return PyralisRuntimeValidationIssue.Required(
+                        $"Participant `{participant.displayName}` prefers seat {participant.preferredSeatIndex}, outside max participant count {effectiveMaxParticipants}.",
+                        nameof(defaultParticipants),
+                        nameof(SessionDefinition),
+                        "Inspect the ParticipantDefinition preferred seat index or increase the session participant limit.",
+                        "Every preferred seat index is inside the effective participant range.",
+                        "SessionDefinition.ParticipantSeat.OutOfRange." + i);
+                    continue;
+                }
+
+                if (!preferredSeats.Add(participant.preferredSeatIndex))
+                {
+                    yield return PyralisRuntimeValidationIssue.Recommended(
+                        $"Preferred seat {participant.preferredSeatIndex} is assigned more than once; runtime can reassign duplicates, but prefabs/scenes should author seats clearly.",
+                        nameof(defaultParticipants),
+                        nameof(SessionDefinition),
+                        "Inspect ParticipantDefinition preferred seat indexes and keep authored seats distinct.",
+                        "Preferred seat indexes are unique when authored.",
+                        "SessionDefinition.ParticipantSeat.Duplicate." + participant.preferredSeatIndex);
+                }
+            }
         }
 
         public string sessionName = "NeonBlack Gameplay Session";
@@ -75,10 +185,31 @@ namespace NeonBlack.Gameplay.Data.Definitions
             }
             else
             {
+                int effectiveMaxParticipants = GetEffectiveMaxParticipants();
+                if (defaultParticipants.Length > effectiveMaxParticipants)
+                    issues.Add($"Session has {defaultParticipants.Length} default participants but only supports {effectiveMaxParticipants} participants.");
+
+                HashSet<int> preferredSeats = new HashSet<int>();
                 for (int i = 0; i < defaultParticipants.Length; i++)
                 {
-                    if (defaultParticipants[i] == null)
+                    ParticipantDefinition participant = defaultParticipants[i];
+                    if (participant == null)
+                    {
                         issues.Add($"Default participant slot {i} is empty.");
+                        continue;
+                    }
+
+                    if (participant.preferredSeatIndex < 0)
+                        continue;
+
+                    if (participant.preferredSeatIndex >= effectiveMaxParticipants)
+                    {
+                        issues.Add($"Participant `{participant.displayName}` prefers seat {participant.preferredSeatIndex}, outside max participant count {effectiveMaxParticipants}.");
+                        continue;
+                    }
+
+                    if (!preferredSeats.Add(participant.preferredSeatIndex))
+                        issues.Add($"Preferred seat {participant.preferredSeatIndex} is assigned more than once; runtime can reassign duplicates, but prefabs/scenes should author seats clearly.");
                 }
             }
 

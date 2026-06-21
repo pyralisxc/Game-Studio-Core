@@ -24,8 +24,27 @@ namespace NeonBlack.Gameplay.Data.Profiles
     {
         public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            if (baseDamage < 0f) yield return PyralisRuntimeValidationIssue.Required("Base Damage cannot be negative.");
-            if (attackCooldown <= 0f) yield return PyralisRuntimeValidationIssue.Required("Attack Cooldown must be greater than zero.");
+            if (baseDamage < 0f)
+                yield return PyralisRuntimeValidationIssue.Required("Base Damage cannot be negative.", nameof(baseDamage), nameof(PawnCombatProfile), issueCode: "PawnCombatProfile.BaseDamage.Invalid");
+            if (attackCooldown <= 0f)
+                yield return PyralisRuntimeValidationIssue.Required("Attack Cooldown must be greater than zero.", nameof(attackCooldown), nameof(PawnCombatProfile), issueCode: "PawnCombatProfile.AttackCooldown.Invalid");
+
+            if (!enableCombat)
+                yield break;
+
+            foreach (PyralisRuntimeValidationIssue issue in GetWeaponIssues(attackWeapon, nameof(attackWeapon), "Attack Weapon"))
+                yield return issue;
+            foreach (PyralisRuntimeValidationIssue issue in GetWeaponIssues(kickWeapon, nameof(kickWeapon), "Kick Weapon"))
+                yield return issue;
+            foreach (PyralisRuntimeValidationIssue issue in GetWeaponIssues(aerialWeapon, nameof(aerialWeapon), "Aerial Weapon"))
+                yield return issue;
+
+            foreach (PyralisRuntimeValidationIssue issue in GetSequenceIssues(primarySequence, nameof(primarySequence), "Primary Sequence"))
+                yield return issue;
+            foreach (PyralisRuntimeValidationIssue issue in GetSequenceIssues(secondarySequence, nameof(secondarySequence), "Secondary Sequence"))
+                yield return issue;
+            foreach (PyralisRuntimeValidationIssue issue in GetSequenceIssues(aerialSequence, nameof(aerialSequence), "Aerial Sequence"))
+                yield return issue;
         }
 
         public bool enableCombat = true;
@@ -59,6 +78,54 @@ namespace NeonBlack.Gameplay.Data.Profiles
         private void OnValidate()
         {
             Sanitize();
+        }
+
+        private static IEnumerable<PyralisRuntimeValidationIssue> GetWeaponIssues(
+            WeaponData weapon,
+            string fieldPath,
+            string label)
+        {
+            if (weapon == null)
+                yield break;
+
+            foreach (PyralisRuntimeValidationIssue issue in weapon.GetRuntimeValidationIssues())
+            {
+                if (issue != null && !string.IsNullOrWhiteSpace(issue.Message))
+                {
+                    yield return new PyralisRuntimeValidationIssue(
+                        $"{label}: {issue.Message}",
+                        fieldPath,
+                        nameof(PawnCombatProfile),
+                        "Open the assigned WeaponData and resolve the named issue.",
+                        "Assigned WeaponData reports no validation issues.",
+                        issue.Severity,
+                        "PawnCombatProfile.Weapon." + issue.IssueCode);
+                }
+            }
+        }
+
+        private static IEnumerable<PyralisRuntimeValidationIssue> GetSequenceIssues(
+            CombatSequenceDefinition sequence,
+            string fieldPath,
+            string label)
+        {
+            if (sequence == null)
+                yield break;
+
+            foreach (PyralisRuntimeValidationIssue issue in sequence.GetRuntimeValidationIssues())
+            {
+                if (issue != null && !string.IsNullOrWhiteSpace(issue.Message))
+                {
+                    yield return new PyralisRuntimeValidationIssue(
+                        $"{label}: {issue.Message}",
+                        fieldPath,
+                        nameof(PawnCombatProfile),
+                        "Open the assigned CombatSequenceDefinition and resolve the named issue.",
+                        "Assigned CombatSequenceDefinition reports no validation issues.",
+                        issue.Severity,
+                        "PawnCombatProfile.Sequence." + issue.IssueCode);
+                }
+            }
         }
     }
 }

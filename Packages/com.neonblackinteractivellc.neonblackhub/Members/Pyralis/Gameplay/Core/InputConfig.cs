@@ -13,6 +13,7 @@ namespace NeonBlack.Gameplay.Core.Config
         Relevance = "Defines participant-specific input overrides (e.g., custom controller bindings).",
         Axioms = AuthoringWorldAxiom.None,
         ProfileType = typeof(InputConfig),
+        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.InputRouteSupport },
         AssignmentFields = new[] { nameof(actions) },
         FirstProof = "Verify that the assigned InputActionAsset is loaded by the input system.",
         NativeSetup = new[] { "Assign your .inputactions asset." },

@@ -650,7 +650,7 @@ namespace NeonBlack.Gameplay.Editor
             if (name == "SessionDefinition")
                 AddRelatedStableId(related, "setup.assign-session-definition");
             else if (name == "GameModeDefinition")
-                AddRelatedStableId(related, "setup.assign-game-mode");
+                AddRelatedStableId(related, "setup.assign-default-game-mode");
             else if (name == "ParticipantDefinition")
                 AddRelatedStableId(related, "setup.assign-default-participants");
             else if (name == "InputProfile")

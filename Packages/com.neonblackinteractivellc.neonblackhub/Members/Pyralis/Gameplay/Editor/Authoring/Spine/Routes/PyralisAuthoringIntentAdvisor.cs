@@ -125,6 +125,7 @@ namespace NeonBlack.Gameplay.Editor
 
             List<PyralisAuthoringFact> matchingIntents = FindMatchingIntentFacts(selection, facts);
             HashSet<string> relatedStableIds = BuildRelatedStableIdSet(matchingIntents);
+            HashSet<string> visibleDescriptorFactIds = BuildVisibleDescriptorFactIdSet(selection);
             List<PyralisAuthoringIntentRow> recommendations = new List<PyralisAuthoringIntentRow>();
             List<PyralisAuthoringIntentRow> cautions = new List<PyralisAuthoringIntentRow>();
 
@@ -137,6 +138,8 @@ namespace NeonBlack.Gameplay.Editor
                 bool unsupported = HasUnsupportedLane(fact, selection.Lane);
                 bool axiomContradiction = IsAxiomContradiction(selection.Axioms, fact.Axioms);
                 int score = ScoreFact(selection, fact, relatedStableIds, unsupported);
+                if (!IsRouteRelevantFact(selection, fact, score, relatedStableIds, visibleDescriptorFactIds))
+                    continue;
                 
                 if (score <= 0 && !unsupported && !HasCapabilityOverlap(selection, fact) && !HasGoalOverlap(selection, fact))
                     continue;
@@ -315,6 +318,76 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             return ids;
+        }
+
+        private static HashSet<string> BuildVisibleDescriptorFactIdSet(PyralisAuthoringIntentSelection selection)
+        {
+            HashSet<string> ids = new HashSet<string>(StringComparer.Ordinal);
+            if (selection == null)
+                return ids;
+
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors =
+                PyralisAuthoringCapabilityDescriptorRegistry.BuildIntentDescriptors(selection.Lane, selection.Axioms);
+            PyralisAuthoringIntentProjection projection = PyralisAuthoringIntentProjection.Build(selection, descriptors);
+
+            AddDescriptorFacts(projection.SelectedDescriptors);
+            AddDescriptorFacts(projection.RouteEssentialGroups
+                .SelectMany(group => group.Subgroups)
+                .SelectMany(subgroup => subgroup.Descriptors));
+
+            return ids;
+
+            void AddDescriptorFacts(IEnumerable<PyralisAuthoringIntentDescriptorProjection> projectedDescriptors)
+            {
+                if (projectedDescriptors == null)
+                    return;
+
+                foreach (PyralisAuthoringIntentDescriptorProjection projected in projectedDescriptors)
+                {
+                    PyralisAuthoringCapabilityDescriptor descriptor = projected?.Descriptor;
+                    if (descriptor == null)
+                        continue;
+
+                    if (!string.IsNullOrWhiteSpace(descriptor.StableId))
+                        ids.Add(descriptor.StableId);
+                    if (!string.IsNullOrWhiteSpace(descriptor.SourceFact?.StableId))
+                        ids.Add(descriptor.SourceFact.StableId);
+                    if (descriptor.SourceFact?.RelatedStableIds == null)
+                        continue;
+
+                    for (int i = 0; i < descriptor.SourceFact.RelatedStableIds.Length; i++)
+                    {
+                        string relatedId = descriptor.SourceFact.RelatedStableIds[i];
+                        if (!string.IsNullOrWhiteSpace(relatedId))
+                            ids.Add(relatedId);
+                    }
+                }
+            }
+        }
+
+        private static bool IsRouteRelevantFact(
+            PyralisAuthoringIntentSelection selection,
+            PyralisAuthoringFact fact,
+            int score,
+            HashSet<string> relatedStableIds,
+            HashSet<string> visibleDescriptorFactIds)
+        {
+            if (fact == null)
+                return false;
+
+            if (fact.Kind == PyralisAuthoringFactKind.RouteIntent)
+                return true;
+
+            if (relatedStableIds != null && relatedStableIds.Contains(fact.StableId))
+                return true;
+
+            if (visibleDescriptorFactIds != null && visibleDescriptorFactIds.Contains(fact.StableId))
+                return true;
+
+            if (fact.Kind == PyralisAuthoringFactKind.Proof)
+                return score >= 180 && (HasCapabilityOverlap(selection, fact) || HasGoalOverlap(selection, fact));
+
+            return false;
         }
 
         private static int CountAxiomOverlap(AuthoringWorldAxiom selection, AuthoringWorldAxiom fact)

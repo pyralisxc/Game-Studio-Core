@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
 using UnityEditor;
@@ -45,7 +46,7 @@ namespace NeonBlack.Gameplay.Editor
             var capTitle = new Label("CAPABILITY INGREDIENTS");
             capTitle.AddToClassList("section-title");
             capabilityContainer.Add(capTitle);
-            var capHelp = new Label("Toggle the gameplay ingredients this route needs. These are not presets; Intent filters the graph while gameplay setup stays in native Unity assets and scene objects.");
+            var capHelp = new Label("Toggle what the game should do. These are not presets; Intent filters the graph while gameplay setup stays in native Unity assets and scene objects.");
             capHelp.style.whiteSpace = WhiteSpace.Normal;
             capHelp.style.opacity = 0.75f;
             capHelp.style.marginBottom = 6f;
@@ -243,6 +244,7 @@ namespace NeonBlack.Gameplay.Editor
         {
             if (container == null) return;
 
+            NormalizeSelectedIntentDescriptorIds();
             var searchField = new ToolbarSearchField();
             searchField.value = _intentGoalFilter;
             searchField.style.width = new Length(100, LengthUnit.Percent);
@@ -257,69 +259,137 @@ namespace NeonBlack.Gameplay.Editor
             grid.AddToClassList("capability-grid");
             container.Add(grid);
 
-            Dictionary<string, List<PyralisAuthoringCapabilityDescriptor>> groups = BuildIntentDescriptorGroups();
-            HashSet<string> selectedIds = new HashSet<string>(GetSelectedIntentDescriptorIds(), StringComparer.Ordinal);
-            foreach (var group in groups)
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors =
+                PyralisAuthoringCapabilityDescriptorRegistry.BuildIntentDescriptors(_intentLane, _intentAxioms);
+            PyralisAuthoringIntentSelection selection = GetCurrentIntentSelection();
+            PyralisAuthoringIntentProjection projection =
+                PyralisAuthoringIntentProjection.Build(selection, descriptors);
+
+            AddIntentDescriptorSection(
+                grid,
+                "Gameplay Ingredients",
+                "Main goals and optional gameplay ingredients. These are the toggles that should feel like steering.",
+                projection.GameplayIngredientGroups,
+                defaultExpanded: true,
+                readOnly: false);
+
+            AddIntentDescriptorSection(
+                grid,
+                "Route Essentials",
+                "Read-only setup/session pieces inferred from the selected ingredients, DNA, lane, and participant route.",
+                projection.RouteEssentialGroups,
+                defaultExpanded: false,
+                readOnly: true);
+        }
+
+        private void AddIntentDescriptorSection(
+            VisualElement parent,
+            string title,
+            string help,
+            IReadOnlyList<PyralisAuthoringIntentDescriptorGroupProjection> groups,
+            bool defaultExpanded,
+            bool readOnly)
+        {
+            if (parent == null || groups == null || groups.Count == 0)
+                return;
+
+            int selectedCount = readOnly
+                ? groups.Sum(group => group.DescriptorCount)
+                : groups.Sum(group => group.SelectedCount);
+            int descriptorCount = groups.Sum(group => group.DescriptorCount);
+            var sectionFoldout = new Foldout
             {
-                var foldout = new Foldout
-                {
-                    text = group.Key,
-                    value = GetCapabilityGroupFoldout(group.Key)
-                };
-                foldout.AddToClassList("capability-group-foldout");
+                text = readOnly
+                    ? $"{title} ({selectedCount} inferred)"
+                    : $"{title} ({selectedCount}/{descriptorCount})",
+                value = GetCapabilityGroupFoldout(title, defaultExpanded)
+            };
+            sectionFoldout.AddToClassList("intent-lens-foldout");
+            string sectionKey = title;
+            sectionFoldout.RegisterValueChangedCallback(evt => SetCapabilityGroupFoldout(sectionKey, evt.newValue));
 
-                string key = group.Key;
-                foldout.RegisterValueChangedCallback(evt =>
-                {
-                    SetCapabilityGroupFoldout(key, evt.newValue);
-                });
+            var sectionHelp = new Label(help);
+            sectionHelp.AddToClassList("authoring-help");
+            sectionFoldout.Add(sectionHelp);
 
-                Dictionary<string, List<PyralisAuthoringCapabilityDescriptor>> subgroups =
-                    BuildIntentDescriptorSubgroups(group.Value);
-                foreach (var subgroup in subgroups)
-                {
-                    if (string.IsNullOrWhiteSpace(subgroup.Key))
-                    {
-                        AddIntentDescriptorToggles(foldout, subgroup.Value, selectedIds);
-                        continue;
-                    }
+            foreach (var group in groups)
+                AddIntentDescriptorGroup(sectionFoldout, group, defaultExpanded, readOnly);
 
-                    var subgroupFoldout = new Foldout
-                    {
-                        text = subgroup.Key,
-                        value = GetCapabilityGroupFoldout(group.Key + "/" + subgroup.Key)
-                    };
-                    subgroupFoldout.AddToClassList("capability-subgroup-foldout");
-                    string subgroupKey = group.Key + "/" + subgroup.Key;
-                    subgroupFoldout.RegisterValueChangedCallback(evt =>
-                    {
-                        SetCapabilityGroupFoldout(subgroupKey, evt.newValue);
-                    });
-                    AddIntentDescriptorToggles(subgroupFoldout, subgroup.Value, selectedIds);
-                    foldout.Add(subgroupFoldout);
+            parent.Add(sectionFoldout);
+        }
+
+        private void AddIntentDescriptorGroup(
+            VisualElement parent,
+            PyralisAuthoringIntentDescriptorGroupProjection group,
+            bool defaultExpanded,
+            bool readOnly)
+        {
+            if (parent == null || group == null || group.DescriptorCount == 0)
+                return;
+
+            int selectedCount = readOnly
+                ? group.DescriptorCount
+                : group.SelectedCount;
+            var foldout = new Foldout
+            {
+                text = readOnly
+                    ? $"{group.Group} ({selectedCount} inferred)"
+                    : $"{group.Group} ({selectedCount}/{group.DescriptorCount})",
+                value = GetCapabilityGroupFoldout(group.Group, defaultExpanded)
+            };
+            foldout.AddToClassList("capability-group-foldout");
+
+            string key = group.Group;
+            foldout.RegisterValueChangedCallback(evt => SetCapabilityGroupFoldout(key, evt.newValue));
+
+            foreach (var subgroup in group.Subgroups)
+            {
+                if (string.IsNullOrWhiteSpace(subgroup.Subgroup))
+                {
+                    if (readOnly)
+                        AddIntentDescriptorReadonlyRows(foldout, subgroup.Descriptors);
+                    else
+                        AddIntentDescriptorToggles(foldout, subgroup.Descriptors);
+                    continue;
                 }
 
-                grid.Add(foldout);
+                var subgroupFoldout = new Foldout
+                {
+                    text = readOnly
+                        ? $"{subgroup.Subgroup} ({subgroup.DescriptorCount} inferred)"
+                        : $"{subgroup.Subgroup} ({subgroup.SelectedCount}/{subgroup.DescriptorCount})",
+                    value = GetCapabilityGroupFoldout(group.Group + "/" + subgroup.Subgroup, defaultExpanded)
+                };
+                subgroupFoldout.AddToClassList("capability-subgroup-foldout");
+                string subgroupKey = group.Group + "/" + subgroup.Subgroup;
+                subgroupFoldout.RegisterValueChangedCallback(evt => SetCapabilityGroupFoldout(subgroupKey, evt.newValue));
+                if (readOnly)
+                    AddIntentDescriptorReadonlyRows(subgroupFoldout, subgroup.Descriptors);
+                else
+                    AddIntentDescriptorToggles(subgroupFoldout, subgroup.Descriptors);
+                foldout.Add(subgroupFoldout);
             }
+
+            parent.Add(foldout);
         }
 
         private void AddIntentDescriptorToggles(
             VisualElement parent,
-            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors,
-            HashSet<string> selectedIds)
+            IReadOnlyList<PyralisAuthoringIntentDescriptorProjection> descriptors)
         {
             if (parent == null || descriptors == null)
                 return;
 
             for (int i = 0; i < descriptors.Count; i++)
             {
-                PyralisAuthoringCapabilityDescriptor descriptor = descriptors[i];
-                if (descriptor == null)
+                PyralisAuthoringIntentDescriptorProjection projected = descriptors[i];
+                PyralisAuthoringCapabilityDescriptor descriptor = projected?.Descriptor;
+                if (projected == null || descriptor == null)
                     continue;
 
-                var toggle = new Toggle(GetIntentDescriptorLeafLabel(descriptor));
+                var toggle = new Toggle(projected.LeafLabel);
                 toggle.name = "cap_" + descriptor.StableId.Replace('.', '_').Replace('/', '_');
-                toggle.value = selectedIds.Contains(descriptor.StableId);
+                toggle.value = projected.Selected;
                 toggle.tooltip = GetIntentDescriptorTooltip(descriptor);
                 toggle.RegisterValueChangedCallback(evt =>
                 {
@@ -332,150 +402,27 @@ namespace NeonBlack.Gameplay.Editor
             }
         }
 
-        private Dictionary<string, List<PyralisAuthoringCapabilityDescriptor>> BuildIntentDescriptorGroups()
+        private void AddIntentDescriptorReadonlyRows(
+            VisualElement parent,
+            IReadOnlyList<PyralisAuthoringIntentDescriptorProjection> descriptors)
         {
-            Dictionary<string, List<PyralisAuthoringCapabilityDescriptor>> groups =
-                new Dictionary<string, List<PyralisAuthoringCapabilityDescriptor>>(StringComparer.Ordinal);
-            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors =
-                PyralisAuthoringCapabilityDescriptorRegistry.BuildIntentDescriptors(_intentLane, _intentAxioms);
+            if (parent == null || descriptors == null)
+                return;
 
             for (int i = 0; i < descriptors.Count; i++)
             {
-                PyralisAuthoringCapabilityDescriptor descriptor = descriptors[i];
-                if (descriptor == null)
+                PyralisAuthoringIntentDescriptorProjection projected = descriptors[i];
+                PyralisAuthoringCapabilityDescriptor descriptor = projected?.Descriptor;
+                if (projected == null || descriptor == null)
                     continue;
 
-                string group = GetIntentDescriptorGroup(descriptor);
-                if (!groups.TryGetValue(group, out List<PyralisAuthoringCapabilityDescriptor> groupDescriptors))
-                {
-                    groupDescriptors = new List<PyralisAuthoringCapabilityDescriptor>();
-                    groups.Add(group, groupDescriptors);
-                }
-
-                groupDescriptors.Add(descriptor);
+                var row = new Label(projected.LeafLabel);
+                row.name = "intent_readonly_" + descriptor.StableId.Replace('.', '_').Replace('/', '_');
+                row.tooltip = GetIntentDescriptorTooltip(descriptor)
+                    + "\n\nInferred from Intent. Route essentials are not user-selected ingredients.";
+                row.AddToClassList("intent-readonly-row");
+                parent.Add(row);
             }
-
-            foreach (List<PyralisAuthoringCapabilityDescriptor> groupDescriptors in groups.Values)
-            {
-                groupDescriptors.Sort((left, right) =>
-                {
-                    int orderCompare = left.SortOrder.CompareTo(right.SortOrder);
-                    return orderCompare != 0
-                        ? orderCompare
-                        : string.Compare(left.DisplayName, right.DisplayName, StringComparison.Ordinal);
-                });
-            }
-
-            return groups;
-        }
-
-        private static string GetIntentDescriptorGroup(PyralisAuthoringCapabilityDescriptor descriptor)
-        {
-            if (descriptor == null)
-                return "Shared Ingredients";
-
-            if (!string.IsNullOrWhiteSpace(descriptor.CapabilityPath))
-            {
-                string[] parts = descriptor.CapabilityPath.Split('/');
-                if (parts.Length > 1 && !string.IsNullOrWhiteSpace(parts[0]))
-                    return parts[0].Trim();
-            }
-
-            return string.IsNullOrWhiteSpace(descriptor.Group) ? "Shared Ingredients" : descriptor.Group;
-        }
-
-        private static Dictionary<string, List<PyralisAuthoringCapabilityDescriptor>> BuildIntentDescriptorSubgroups(
-            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors)
-        {
-            Dictionary<string, List<PyralisAuthoringCapabilityDescriptor>> subgroups =
-                new Dictionary<string, List<PyralisAuthoringCapabilityDescriptor>>(StringComparer.Ordinal);
-            if (descriptors == null)
-                return subgroups;
-
-            for (int i = 0; i < descriptors.Count; i++)
-            {
-                PyralisAuthoringCapabilityDescriptor descriptor = descriptors[i];
-                if (descriptor == null)
-                    continue;
-
-                string subgroup = GetIntentDescriptorSubgroup(descriptor);
-                if (!subgroups.TryGetValue(subgroup, out List<PyralisAuthoringCapabilityDescriptor> subgroupDescriptors))
-                {
-                    subgroupDescriptors = new List<PyralisAuthoringCapabilityDescriptor>();
-                    subgroups.Add(subgroup, subgroupDescriptors);
-                }
-
-                subgroupDescriptors.Add(descriptor);
-            }
-
-            return subgroups;
-        }
-
-        private static string GetIntentDescriptorSubgroup(PyralisAuthoringCapabilityDescriptor descriptor)
-        {
-            if (descriptor == null || string.IsNullOrWhiteSpace(descriptor.CapabilityPath))
-                return string.Empty;
-
-            string[] parts = descriptor.CapabilityPath.Split('/');
-            return parts.Length > 2 && !string.IsNullOrWhiteSpace(parts[1])
-                ? parts[1].Trim()
-                : string.Empty;
-        }
-
-        private static string GetIntentDescriptorLabel(PyralisAuthoringCapabilityDescriptor descriptor)
-        {
-            if (descriptor == null)
-                return "Unknown";
-
-            if (string.IsNullOrWhiteSpace(descriptor.CapabilityPath))
-                return descriptor.DisplayName;
-
-            string[] parts = descriptor.CapabilityPath.Split('/');
-            if (parts.Length <= 1)
-                return descriptor.DisplayName;
-
-            List<string> labels = new List<string>();
-            for (int i = 1; i < parts.Length; i++)
-            {
-                if (!string.IsNullOrWhiteSpace(parts[i]))
-                    labels.Add(parts[i].Trim());
-            }
-
-            return labels.Count > 0
-                ? string.Join(" / ", labels)
-                : descriptor.DisplayName;
-        }
-
-        private static string GetIntentDescriptorLeafLabel(PyralisAuthoringCapabilityDescriptor descriptor)
-        {
-            if (descriptor == null)
-                return "Unknown";
-
-            if (string.IsNullOrWhiteSpace(descriptor.CapabilityPath))
-                return descriptor.DisplayName;
-
-            string[] parts = descriptor.CapabilityPath.Split('/');
-            if (parts.Length > 2 && !string.IsNullOrWhiteSpace(parts[2]))
-                return string.Join(" / ", GetNonEmptyPathParts(parts, 2));
-            if (parts.Length > 1 && !string.IsNullOrWhiteSpace(parts[1]))
-                return parts[1].Trim();
-
-            return descriptor.DisplayName;
-        }
-
-        private static string[] GetNonEmptyPathParts(string[] parts, int startIndex)
-        {
-            List<string> labels = new List<string>();
-            if (parts == null)
-                return labels.ToArray();
-
-            for (int i = startIndex; i < parts.Length; i++)
-            {
-                if (!string.IsNullOrWhiteSpace(parts[i]))
-                    labels.Add(parts[i].Trim());
-            }
-
-            return labels.ToArray();
         }
 
         private string GetIntentDescriptorTooltip(PyralisAuthoringCapabilityDescriptor descriptor)
@@ -492,6 +439,12 @@ namespace NeonBlack.Gameplay.Editor
 
         private string[] GetSelectedIntentDescriptorIds()
         {
+            return PyralisAuthoringCapabilityDescriptorRegistry.FilterGameplayIntentDescriptorIds(
+                GetRawSelectedIntentDescriptorIds());
+        }
+
+        private string[] GetRawSelectedIntentDescriptorIds()
+        {
             if (string.IsNullOrWhiteSpace(_intentDescriptorIdsValue))
                 return Array.Empty<string>();
 
@@ -507,9 +460,27 @@ namespace NeonBlack.Gameplay.Editor
             return cleaned.ToArray();
         }
 
+        private void NormalizeSelectedIntentDescriptorIds()
+        {
+            string[] raw = GetRawSelectedIntentDescriptorIds();
+            string[] filtered = PyralisAuthoringCapabilityDescriptorRegistry.FilterGameplayIntentDescriptorIds(raw);
+            if (!raw.SequenceEqual(filtered))
+            {
+                _intentDescriptorIdsValue = string.Join(";", filtered);
+                _intentCapabilities = PyralisAuthoringCapabilityDescriptorRegistry.BuildCapabilitiesForDescriptors(filtered);
+                InvalidateAuthoringCache();
+            }
+        }
+
         private void UpdateSelectedIntentDescriptor(string descriptorId, bool selected)
         {
             if (string.IsNullOrWhiteSpace(descriptorId))
+                return;
+
+            PyralisAuthoringCapabilityDescriptor descriptor =
+                PyralisAuthoringCapabilityDescriptorRegistry.All.FirstOrDefault(candidate =>
+                    candidate != null && string.Equals(candidate.StableId, descriptorId, StringComparison.Ordinal));
+            if (PyralisAuthoringCapabilityDescriptorRegistry.IsIntentRouteEssential(descriptor))
                 return;
 
             HashSet<string> ids = new HashSet<string>(GetSelectedIntentDescriptorIds(), StringComparer.Ordinal);
@@ -526,9 +497,15 @@ namespace NeonBlack.Gameplay.Editor
 
         private bool GetCapabilityGroupFoldout(string group)
         {
+            return GetCapabilityGroupFoldout(group, true);
+        }
+
+        private bool GetCapabilityGroupFoldout(string group, bool defaultValue)
+        {
             return string.IsNullOrWhiteSpace(group)
                 || !_capabilityGroupFoldouts.TryGetValue(group, out bool expanded)
-                || expanded;
+                    ? defaultValue
+                    : expanded;
         }
 
         private void SetCapabilityGroupFoldout(string group, bool value)
@@ -610,6 +587,17 @@ namespace NeonBlack.Gameplay.Editor
                 {
                     bool matches = !hasFilter || toggle.label.ToLowerInvariant().Contains(filter);
                     toggle.style.display = matches ? DisplayStyle.Flex : DisplayStyle.None;
+                    if (matches)
+                        visibleToggles++;
+                    continue;
+                }
+
+                if (child is Label label
+                    && child.name != null
+                    && child.name.StartsWith("intent_readonly_", StringComparison.Ordinal))
+                {
+                    bool matches = !hasFilter || label.text.ToLowerInvariant().Contains(filter);
+                    label.style.display = matches ? DisplayStyle.Flex : DisplayStyle.None;
                     if (matches)
                         visibleToggles++;
                     continue;

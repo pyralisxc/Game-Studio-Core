@@ -11,6 +11,7 @@ namespace NeonBlack.Gameplay.Features.Combat
     [AuthoringContract(
         Capability = AuthoringCapability.Combat | AuthoringCapability.Animation, 
         Relevance = "Project-window creation path for one combat action.",
+        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.CombatDefinitionRouteSupport },
         AssignmentFields = new[] { nameof(displayName), nameof(inputType), nameof(animationSignal) },
         FirstProof = "Verify the combat action triggers the correct animation and applies damage/weapon effects.",
         ExpertAdvice = "Use comboStep to sequence multi-hit attacks. Use cooldownOverride if this move should be slower or faster than the weapon default."
@@ -20,9 +21,30 @@ namespace NeonBlack.Gameplay.Features.Combat
     {
         public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            if (comboStep < 1) yield return PyralisRuntimeValidationIssue.Required("Combo Step must be at least 1.");
-            if (comboWindow < 0f) yield return PyralisRuntimeValidationIssue.Required("Combo Window cannot be negative.");
-            if (weapon == null) yield return PyralisRuntimeValidationIssue.Required("No Weapon Data assigned. Attack may not have damage or range stats.");
+            if (comboStep < 1)
+                yield return PyralisRuntimeValidationIssue.Required("Combo Step must be at least 1.", nameof(comboStep), nameof(CombatActionDefinition), issueCode: "CombatAction.ComboStep.Invalid");
+            if (comboWindow < 0f)
+                yield return PyralisRuntimeValidationIssue.Required("Combo Window cannot be negative.", nameof(comboWindow), nameof(CombatActionDefinition), issueCode: "CombatAction.ComboWindow.Invalid");
+            if (weapon == null)
+                yield return PyralisRuntimeValidationIssue.Required("No Weapon Data assigned. Attack may not have damage or range stats.", nameof(weapon), nameof(CombatActionDefinition), issueCode: "CombatAction.Weapon.Missing");
+
+            if (weapon != null)
+            {
+                foreach (PyralisRuntimeValidationIssue issue in weapon.GetRuntimeValidationIssues())
+                {
+                    if (issue != null && !string.IsNullOrWhiteSpace(issue.Message))
+                    {
+                        yield return new PyralisRuntimeValidationIssue(
+                            $"Weapon: {issue.Message}",
+                            nameof(weapon),
+                            nameof(CombatActionDefinition),
+                            "Open the assigned WeaponData and resolve the named issue.",
+                            "Assigned WeaponData reports no validation issues.",
+                            issue.Severity,
+                            "CombatAction.Weapon." + issue.IssueCode);
+                    }
+                }
+            }
         }
 
         public string displayName = "Combat Action";

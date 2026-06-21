@@ -28,7 +28,7 @@ namespace NeonBlack.Gameplay.Editor
                     "SessionDefinition.defaultGameMode -> GameModeDefinition",
                     "SessionDefinition",
                     "Default Game Mode",
-                    "the setup flow can reflect rule-level defaults, feature modules, board rules, camera, and playfield setup",
+                    "the resolved setup graph can reflect rule-level defaults, feature modules, board rules, camera, and playfield setup",
                     new[] { "setup.assign-default-game-mode" }),
 
                 CreateAssignmentFact(
@@ -62,7 +62,7 @@ namespace NeonBlack.Gameplay.Editor
                     "ParticipantDefinition",
                     "Default Pawn",
                     "the participant can resolve its pawn definition for the first proof",
-                    new[] { "setup.assign-participant-pawn", "capability.2d-pawn-movement", "proof.1p-pawn-movement" }),
+                    new[] { "participant.default", "pawn.definition", "capability.2d-pawn-movement", "proof.1p-pawn-movement" }),
 
                 CreateAssignmentFact(
                     "inspector.pawn-definition.pawn-prefab",
@@ -73,7 +73,7 @@ namespace NeonBlack.Gameplay.Editor
                     "PawnDefinition",
                     "Pawn Prefab",
                     "Play Mode can spawn one pawn from the selected definition",
-                    new[] { "setup.assign-participant-pawn", "capability.2d-pawn-movement", "proof.1p-pawn-movement" }),
+                    new[] { "pawn.definition", "capability.2d-pawn-movement", "proof.1p-pawn-movement" }),
 
                 CreateAssignmentFact(
                     "inspector.pawn-definition.movement-and-presentation-profiles",
@@ -84,7 +84,7 @@ namespace NeonBlack.Gameplay.Editor
                     "PawnDefinition",
                     "Movement Profile and Presentation Profile",
                     "the pawn route has tunable feel and visible presentation",
-                    new[] { "setup.tune-pawn-visuals-and-collision", "setup.tune-movement-and-input-feel", "capability.2d-pawn-movement", "proof.1p-pawn-movement" }),
+                    new[] { "pawn.definition", "capability.2d-pawn-movement", "proof.1p-pawn-movement" }),
 
                 CreateCustomizationFact(
                     "inspector.input-profile.gameplay-action-names",
@@ -95,7 +95,7 @@ namespace NeonBlack.Gameplay.Editor
                     "InputProfile",
                     "Gameplay Action Names",
                     "input reaches the pawn through the selected InputProfile",
-                    new[] { "setup.assign-input-profile", "setup.tune-movement-and-input-feel", "capability.2d-pawn-movement", "proof.1p-pawn-movement" }),
+                    new[] { "participant.default", "capability.2d-pawn-movement", "proof.1p-pawn-movement" }),
 
                 CreateAssignmentFact(
                     "inspector.game-mode-definition.board-and-turn-rules",

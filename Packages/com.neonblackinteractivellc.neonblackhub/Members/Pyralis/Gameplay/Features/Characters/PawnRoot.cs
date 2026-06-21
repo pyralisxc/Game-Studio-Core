@@ -13,6 +13,7 @@ namespace NeonBlack.Gameplay.Characters
         Capability = AuthoringCapability.Movement | AuthoringCapability.Session,
         SetupNodeId = "pawn.definition",
         Relevance = "The root coordinator for participant-owned pawns. Handles profile application and feature installation after a participant spawns the pawn prefab.",
+        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.ParticipantRouteSupport, "PawnRoot" },
         NativeSetup = new[] { "Add to Pawn prefab root" },
         FirstProof = "Pawn spawns and receives its defined movement/combat profiles.",
         ExpertAdvice = "PawnDefinition owns the prefab reference. PawnRoot receives the participant's PawnDefinition during spawn; assign the local field only when placing a pawn directly in a scene without ParticipantSpawnService.",

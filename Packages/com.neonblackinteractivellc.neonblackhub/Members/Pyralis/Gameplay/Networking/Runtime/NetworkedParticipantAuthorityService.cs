@@ -11,6 +11,7 @@ namespace NeonBlack.Gameplay.Networking.Runtime
     [AuthoringContract(
         Capability = AuthoringCapability.Networking,
         Relevance = "Resolves participant authority from the active Netcode for GameObjects (NGO) local client.",
+        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.NetworkRouteSupport },
         FirstProof = "The local client is correctly identified as the owner in a networked session.",
         NativeSetup = new[] { "Register as the participant authority service for networked sessions.", "Use with NetworkManager and Unity PlayerInput seating." },
         RequiredInterfaceNames = new[] { nameof(IParticipantAuthorityService) },

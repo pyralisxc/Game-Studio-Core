@@ -39,7 +39,7 @@ Core Pyralis setup assets include compact Inspector guidance, and the **Pyralis 
 
 The top of the Authoring Window shows the **Active Setup**. Leave it following selection for quick browsing, or use **Pin Selection As Active Setup** on a bootstrap, session, game mode, or setup route when you want the window to keep tracking one game setup while you inspect child objects, components, prefabs, and assets. **Overview** and **Map** use the active setup; **Guide** still explains the current Unity selection.
 
-Start from the `GameplaySessionBootstrap` Inspector whenever you are unsure where you are in setup. Its **Setup Flow** monitor reads the scene root, `SessionDefinition`, `GameModeDefinition`, reflected route capabilities, grammar vocabulary, participants, pawns, spawn points, camera, input, playfield, and scoring settings, then shows the next required step first.
+Start from the `GameplaySessionBootstrap` Inspector whenever you are unsure where you are in setup. Use its handoff button to open the Pyralis Authoring Window, which reads the scene root, `SessionDefinition`, `GameModeDefinition`, reflected route capabilities, participants, pawns, spawn points, camera, input, playfield, and scoring settings through the resolved setup graph, then shows the next required step first.
 
 The Authoring Window has six modes:
 
@@ -64,17 +64,17 @@ Bootstrap -> Session -> Game Mode -> Participants -> Pawns -> Feature Modules ->
 
 Use it as a setup-prep surface, not as another Inspector. It diagnoses which part of the chain is ready, which part needs setup, and when a core link is missing it tells you the native Unity path to create the asset or object and which Inspector field owns the assignment. Use **Inspect Asset** only when you need to jump to the Inspector for field-level editing.
 
-The Setup Flow monitor is intentionally safe. It is an expert guide, not an auto-builder. It does not create a whole scene, wire referenced assets, edit prefabs, choose art, choose character speed, or make design choices for you. It tells you what kind of Unity object to create, which Pyralis component belongs on it, which field to drag into, and why that step matters. Its buttons mainly select/ping and copy the checklist; any helper action (like adding `PyralisGameplayLifetimeScope` or restoring defaults) is optional.
+The Authoring Window is intentionally safe. It is an expert guide, not an auto-builder. It does not create a whole scene, wire referenced assets, edit prefabs, choose art, choose character speed, or make design choices for you. It tells you what kind of Unity object to create, which Pyralis component belongs on it, which field to drag into, and why that step matters. Its buttons mainly navigate, inspect, export, or hand you to the native Unity surface that owns the edit.
 
 For a first-playability proof, keep this as your mental baseline:
 - movement proof first (pawn spawns, input, and one visible movement loop),
 - then add one optional system at a time (score, combat, UI, network, etc.).
 
-The Authoring Window is the route guide. Open it from the Setup Flow when you need overall progress, intent shaping, selection guidance, setup mapping, hygiene, or fact coverage. Use **Overview** for the route-aware next decision, **Intent** for route/capability steering, **Guide** for the expanded checklist, **Map** for current scene/setup reality and scene-surface issues, **Hygiene** for graph integrity, dependency pressure, and developer evidence, and **Facts** when you need to audit where guidance came from. Overview reads the active route before judging readiness: pawn-backed routes require participant pawns and spawn points, while tabletop or other no-pawn routes treat empty pawn fields as correct.
+The Authoring Window is the route guide. Open it when you need overall progress, intent shaping, selection guidance, setup mapping, hygiene, or fact coverage. Use **Overview** for the route-aware next decision, **Intent** for route/capability steering, **Guide** for the expanded checklist, **Map** for current scene/setup reality and scene-surface issues, **Hygiene** for graph integrity, dependency pressure, and developer evidence, and **Facts** when you need to audit where guidance came from. Overview reads the active route before judging readiness: pawn-backed routes require participant pawns and spawn points, while tabletop or other no-pawn routes treat empty pawn fields as correct.
 
 Use the Authoring Window as a senior setup companion, not a scene generator. It should explain why a route needs a pawn, board surface, camera/cursor, action resolver, input profile, or UI presenter, then send you to the normal Unity object or Inspector field where you make the creative choice.
 
-When a session/mode route is active, the Authoring Window keeps tab ownership straight. The **current setup graph** is what Unity and authored assets prove; **Overview**, **Guide**, **Map**, **Hygiene**, and **Facts** read that truth surface. **Intent** owns the steering controls for what the developer wants to wire next, but it does not create a hidden route that the other tabs treat as already authored. **Guide** owns expanded route rows and selected-object help, **Overview** owns the next one to three moves from the same route working projection, **Map** owns scene/setup reality and concrete Unity repair rows, **Hygiene** owns graph integrity and code/dependency audits, and **Facts** owns the full dictionary. The tabs read reflected route capabilities from the authored setup, contracts/reflection, and grammar vocabulary, then explain:
+When a session/mode route is active, the Authoring Window keeps tab ownership straight. The **current setup graph** is what Unity and authored assets prove; **Overview**, **Guide**, **Map**, **Hygiene**, and **Facts** read that truth surface. **Intent** owns the steering controls for what the developer wants to wire next, but it does not create a hidden route that the other tabs treat as already authored. **Guide** owns expanded route rows and selected-object help, **Overview** owns the next one to three moves from the same route working projection, **Map** owns scene/setup reality and concrete Unity repair rows, **Hygiene** owns graph integrity and code/dependency audits, and **Facts** owns the full dictionary. The tabs read reflected route capabilities from the authored setup and contracts/reflection, then apply grammar wording to explain:
 
 - the **Intent** tab DNA axioms, presentation lane, and capability ingredients that define what kind of game route is being authored
 - design questions to answer before setup, such as what the player controls, what kind of space the game happens in, and what the first proof of interaction should be
@@ -91,7 +91,7 @@ The Authoring Window guidance is route-aware:
 - Intent is the visible route-filtering surface. It narrows and explains the graph from reflected capability descriptors; it does not create assets, assign fields, or mutate gameplay objects.
 - `GameModeDefinition` contributes scene, rule, board, turn, playfield, camera, scoring, combat, respawn, and feature-module signals to the active route.
 - `SessionDefinition` explains whether participants need pawns, input, seats, hands, factions, camera, cursor, or menu surfaces.
-- `GameplaySessionBootstrap` checks the assigned session chain and shows the consolidated Setup Flow checklist.
+- `GameplaySessionBootstrap` anchors the assigned session chain and hands off to the graph-backed Authoring Window.
 
 Use the visible Authoring Window summary for route progress, first proof, setup-map status, scene-surface evidence, and validation. Inspector guidance should stay compact: field tooltips, local validation, and an **Open Authoring Window** handoff. Broader wiring steps, valid path choices, and common mistakes belong in the Authoring Window.
 
@@ -221,7 +221,7 @@ On `ParticipantSpawnService`, assign `Spawn Points` only if pawns spawn into the
 
 The runtime does not create missing service GameObjects. If one is absent, Overview/Map should tell you which Unity object or Bootstrap override field to author.
 
-After assigning the `SessionDefinition`, keep the `GameplaySessionBootstrap` selected and work down the **Setup Flow** list. Fix the selected intent's Do Now items first. Treat recommended items as proof enhancers, not universal requirements. Optional items can stay empty until the selected intent needs them.
+After assigning the `SessionDefinition`, keep the `GameplaySessionBootstrap` selected and work through **Overview** and **Guide**. Fix the selected intent's Do Now items first. Treat recommended items as proof enhancers, not universal requirements. Optional items can stay empty until the selected intent needs them.
 
 For the first route proof, treat these as Do Now only when the selected intent asks for them:
 

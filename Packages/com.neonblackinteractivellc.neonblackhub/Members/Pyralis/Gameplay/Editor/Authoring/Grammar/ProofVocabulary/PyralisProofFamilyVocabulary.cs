@@ -13,7 +13,7 @@ namespace NeonBlack.Gameplay.Editor
         public static System.Collections.Generic.IReadOnlyList<PyralisAuthoringFact> GetDefaultProofTemplates()
         {
             System.Collections.Generic.List<PyralisAuthoringFact> facts = new System.Collections.Generic.List<PyralisAuthoringFact>();
-            facts.Add(CreateFallbackProofFact(
+            facts.Add(CreateGenericProofFact(
                 "proof.1p-pawn-movement",
                 "1P Pawn Movement Proof",
                 "Run one local pawn-backed movement proof before adding combat, HUD, enemies, scoring, or networking.",
@@ -36,15 +36,13 @@ namespace NeonBlack.Gameplay.Editor
                     "setup.assign-default-game-mode",
                     "setup.resolve-route-capabilities",
                     "setup.assign-default-participants",
-                    "setup.assign-participant-pawn",
-                    "setup.assign-input-profile",
-                    "setup.assign-spawn-points",
-                    "setup.assign-camera-rig",
-                    "setup.tune-pawn-visuals-and-collision",
-                    "setup.tune-movement-and-input-feel"
+                    "participant.default",
+                    "pawn.definition",
+                    "route.camera-focus",
+                    "scene.surfaces"
                 }));
 
-            facts.Add(CreateFallbackProofFact(
+            facts.Add(CreateGenericProofFact(
                 "proof.local-pawn-join",
                 "Local Co-op Pawn Join Proof",
                 "Run one local multiplayer pawn proof after solo pawn setup is clear and before adding combat, HUD, enemies, scoring, or networking.",
@@ -69,16 +67,14 @@ namespace NeonBlack.Gameplay.Editor
                     "setup.resolve-route-capabilities",
                     "setup.assign-default-participants",
                     "setup.resolve-participant-join-policy",
-                    "setup.assign-player-input-manager",
-                    "setup.assign-participant-pawn",
-                    "setup.assign-input-profile",
-                    "setup.assign-spawn-points",
-                    "setup.assign-camera-rig",
-                    "setup.tune-pawn-visuals-and-collision",
-                    "setup.tune-movement-and-input-feel"
+                    "route.player-input-manager-prefab",
+                    "participant.default",
+                    "pawn.definition",
+                    "route.camera-focus",
+                    "scene.surfaces"
                 }));
 
-            facts.Add(CreateFallbackProofFact(
+            facts.Add(CreateGenericProofFact(
                 "proof.board-card-action",
                 "Board Card Action Proof",
                 "Run one rules-backed tabletop selection before adding card UX, AI turns, campaign flow, or networking.",
@@ -95,7 +91,7 @@ namespace NeonBlack.Gameplay.Editor
                 string.Empty,
                 new[] { "route.tabletop-card", "capability.interaction-action-selection", "capability.ui-scoring-feedback" }));
 
-            facts.Add(CreateFallbackProofFact(
+            facts.Add(CreateGenericProofFact(
                 "proof.action-selection",
                 "Action Selection Proof",
                 "Run one selected command before expanding menus, cards, ability lists, animation polish, or AI.",
@@ -112,7 +108,7 @@ namespace NeonBlack.Gameplay.Editor
                 string.Empty,
                 new[] { "route.custom-object-feature", "route.ui-hud-menu", "route.tabletop-card", "capability.interaction-action-selection" }));
 
-            facts.Add(CreateFallbackProofFact(
+            facts.Add(CreateGenericProofFact(
                 "proof.npc-enemy-behavior",
                 "NPC Enemy Behavior Proof",
                 "Run one NPC or enemy behavior proof before building encounter waves, boss phases, vendors, or broad AI systems.",
@@ -129,7 +125,7 @@ namespace NeonBlack.Gameplay.Editor
                 string.Empty,
                 new[] { "route.npc-enemy-actor", "capability.combat-projectile-proof", "capability.interaction-action-selection" }));
 
-            facts.Add(CreateFallbackProofFact(
+            facts.Add(CreateGenericProofFact(
                 "proof.custom-object-effect",
                 "Custom Object Effect Proof",
                 "Run one custom object, feature, trigger, pickup, hazard, turret, trap, or service effect before treating it as a full system.",
@@ -146,7 +142,7 @@ namespace NeonBlack.Gameplay.Editor
                 string.Empty,
                 new[] { "route.custom-object-feature", "capability.interaction-action-selection", "capability.combat-projectile-proof", "capability.ui-scoring-feedback" }));
 
-            facts.Add(CreateFallbackProofFact(
+            facts.Add(CreateGenericProofFact(
                 "proof.ui-hud-menu",
                 "UI HUD Menu Proof",
                 "Run one UI, HUD, prompt, score, health, feedback, or menu event before building full navigation or result screens.",
@@ -163,7 +159,7 @@ namespace NeonBlack.Gameplay.Editor
                 string.Empty,
                 new[] { "route.ui-hud-menu", "capability.ui-scoring-feedback", "capability.interaction-action-selection" }));
 
-            facts.Add(CreateFallbackProofFact(
+            facts.Add(CreateGenericProofFact(
                 "proof.camera-cursor-world",
                 "Camera Cursor World Proof",
                 "Run one camera, cursor, bounds, or world-surface proof before adding multi-target framing or cinematic polish.",
@@ -178,9 +174,9 @@ namespace NeonBlack.Gameplay.Editor
                 "visibility, framing, bounds, cursor, highlight, or scene response changes as authored",
                 "Camera and cursor proofs are vital for navigation-heavy routes. Ensure your raycast masks are correctly configured.",
                 string.Empty,
-                new[] { "route.world-camera", "capability.camera-follow-bounds", "setup.assign-camera-rig", "setup.assign-camera-bounds-service" }));
+                new[] { "route.world-camera", "capability.camera-follow-bounds", "route.camera-focus", "dependency.mode.camera-rig-profile" }));
 
-            facts.Add(CreateFallbackProofFact(
+            facts.Add(CreateGenericProofFact(
                 "proof.generated-content",
                 "Generated Content Proof",
                 "Generate one inspectable output before making generated content required for progression.",
@@ -197,7 +193,7 @@ namespace NeonBlack.Gameplay.Editor
                 string.Empty,
                 new[] { "route.custom-object-feature", "route.world-camera" }));
 
-            facts.Add(CreateFallbackProofFact(
+            facts.Add(CreateGenericProofFact(
                 "proof.network-ownership",
                 "Network Ownership Proof",
                 "Confirm the local proof first, then prove one host/client ownership path before expanding replication.",
@@ -217,7 +213,7 @@ namespace NeonBlack.Gameplay.Editor
             return facts;
         }
 
-        public static string GetFallbackProofTargetId(
+        public static string GetGenericProofTargetId(
             RuntimeCapabilityFamily[] families,
             bool requiresPawn,
             PyralisParticipantTopology participantTopology = PyralisParticipantTopology.Unknown)
@@ -287,7 +283,7 @@ namespace NeonBlack.Gameplay.Editor
             return PyralisContractProofFactProjector.FindProofFact(stableId, existingProofIds);
         }
 
-        private static PyralisAuthoringFact CreateFallbackProofFact(
+        private static PyralisAuthoringFact CreateGenericProofFact(
             string stableId,
             string displayName,
             string summary,
@@ -355,7 +351,7 @@ namespace NeonBlack.Gameplay.Editor
                 stableId,
                 displayName,
                 PyralisAuthoringFactKind.Proof,
-                PyralisAuthoringFactSourceKind.SetupFlow,
+                PyralisAuthoringFactSourceKind.CoreSetup,
                 PyralisAuthoringConfidence.Explicit,
                 summary,
                 routeRelevance,

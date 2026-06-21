@@ -14,6 +14,7 @@ namespace NeonBlack.Gameplay.Features.Composition
     [AuthoringContract(
         Capability = AuthoringCapability.Setup | AuthoringCapability.Session,
         Relevance = "Installs runtime feature prefabs declared by actor definitions or profiles.",
+        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.FeatureModuleRouteSupport },
         NativeSetup = new[]
         {
             "Add one host to the actor root.",

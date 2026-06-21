@@ -14,6 +14,7 @@ namespace NeonBlack.Gameplay.Characters
         Capability = AuthoringCapability.Setup | AuthoringCapability.Session,
         Relevance = "Single owner for participant pawn spawning. It resolves each ParticipantDefinition default pawn, places it at authored spawn points, and reports pawn assignment through the roster.",
         Axioms = AuthoringWorldAxiom.None,
+        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.ParticipantRouteSupport },
         RequiredInterfaces = new[] { typeof(IGameService) },
         AssignmentFields = new[] { nameof(rosterService), nameof(sessionStateService), nameof(spawnPoints) },
         FirstProof = "Register a participant and confirm ParticipantSpawnService creates or reuses the pawn, attaches it to the roster, and places it at the expected spawn point.",
@@ -128,13 +129,18 @@ namespace NeonBlack.Gameplay.Characters
             GameObject joinedPawnInstance = TryResolveJoinedPawnInstance(participant);
             if (joinedPawnInstance != null)
             {
-                joinedPawnInstance.transform.position = ResolveSpawnPosition(participant.SeatIndex);
+                if (!TryResolveSpawnPosition(participant.SeatIndex, out Vector3 joinedSpawnPosition))
+                    return null;
+
+                joinedPawnInstance.transform.position = joinedSpawnPosition;
                 AttachParticipantPawn(participant, joinedPawnInstance);
                 InitializePawnInstance(joinedPawnInstance, participant);
                 return joinedPawnInstance;
             }
 
-            Vector3 spawnPosition = ResolveSpawnPosition(participant.SeatIndex);
+            if (!TryResolveSpawnPosition(participant.SeatIndex, out Vector3 spawnPosition))
+                return null;
+
             GameObject instance = _resolver != null 
                 ? _resolver.Instantiate(participant.PawnDefinition.pawnPrefab, spawnPosition, Quaternion.identity)
                 : Instantiate(participant.PawnDefinition.pawnPrefab, spawnPosition, Quaternion.identity);
@@ -223,15 +229,29 @@ namespace NeonBlack.Gameplay.Characters
                 participant.ClearPawn();
         }
 
-        private Vector3 ResolveSpawnPosition(int seatIndex)
+        private bool TryResolveSpawnPosition(int seatIndex, out Vector3 position)
         {
+            position = default;
             if (spawnPoints != null && spawnPoints.Length > 0)
             {
                 if (seatIndex >= 0 && seatIndex < spawnPoints.Length && spawnPoints[seatIndex] != null)
-                    return spawnPoints[seatIndex].position;
+                {
+                    position = spawnPoints[seatIndex].position;
+                    return true;
+                }
+
+                for (int i = 0; i < spawnPoints.Length; i++)
+                {
+                    if (spawnPoints[i] == null)
+                        continue;
+
+                    position = spawnPoints[i].position;
+                    return true;
+                }
             }
 
-            return transform.position + new Vector3(seatIndex * 2f, 0f, 0f);
+            Debug.LogError("[ParticipantSpawnService] Spawn On Register is enabled, but no spawn point is assigned. Add at least one Transform to ParticipantSpawnService > Spawn Points, or disable Spawn On Register for a custom/no-pawn route.", this);
+            return false;
         }
 
         /// <summary>Override in a networked subclass to despawn the pawn from NGO before destroying it.</summary>

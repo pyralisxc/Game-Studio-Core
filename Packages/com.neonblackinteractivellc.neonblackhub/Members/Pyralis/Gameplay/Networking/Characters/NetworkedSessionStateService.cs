@@ -11,6 +11,7 @@ namespace NeonBlack.Gameplay.Networking.Participants
     [AuthoringContract(
         Capability = AuthoringCapability.Networking,
         Relevance = "Drop-in replacement for SessionStateService in online sessions. Handles NGO role startup.",
+        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.NetworkRouteSupport },
         AssignmentFields = new[] { "networkMode", "autoStartHost" },
         FirstProof = "Entering the scene correctly triggers the NGO role (Host/Client/Server) defined in the SessionDefinition."
     )]

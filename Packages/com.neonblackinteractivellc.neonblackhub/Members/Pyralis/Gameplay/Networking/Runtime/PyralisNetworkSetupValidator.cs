@@ -22,11 +22,29 @@ namespace NeonBlack.Gameplay.Networking.Runtime
     {
         public static List<string> GetIssues(SessionDefinition sessionDefinition, NetworkManager networkManager)
         {
+            List<PyralisRuntimeValidationIssue> validationIssues = GetValidationIssues(sessionDefinition, networkManager);
             List<string> issues = new List<string>();
+            for (int i = 0; i < validationIssues.Count; i++)
+            {
+                if (validationIssues[i] != null && !string.IsNullOrWhiteSpace(validationIssues[i].Message))
+                    issues.Add(validationIssues[i].Message);
+            }
+
+            return issues;
+        }
+
+        public static List<PyralisRuntimeValidationIssue> GetValidationIssues(SessionDefinition sessionDefinition, NetworkManager networkManager)
+        {
+            List<PyralisRuntimeValidationIssue> issues = new List<PyralisRuntimeValidationIssue>();
 
             if (sessionDefinition == null)
             {
-                issues.Add("SessionDefinition is required before validating network setup.");
+                issues.Add(PyralisRuntimeValidationIssue.Required(
+                    "SessionDefinition is required before validating network setup.",
+                    targetLabel: nameof(SessionDefinition),
+                    nativeAction: "Assign a SessionDefinition before validating network setup.",
+                    successCheck: "Network setup has a SessionDefinition.",
+                    issueCode: "NetworkSetup.SessionDefinition.Missing"));
                 return issues;
             }
 
@@ -35,20 +53,44 @@ namespace NeonBlack.Gameplay.Networking.Runtime
 
             if (networkManager == null)
             {
-                issues.Add("Networked sessions require a scene NetworkManager.");
+                issues.Add(PyralisRuntimeValidationIssue.Required(
+                    "Networked sessions require a scene NetworkManager.",
+                    targetLabel: nameof(NetworkManager),
+                    nativeAction: "Create or assign a NetworkManager in the scene for the networked route.",
+                    successCheck: "Scene has a NetworkManager for networked sessions.",
+                    issueCode: "NetworkSetup.NetworkManager.Missing"));
                 return issues;
             }
 
             if (networkManager.NetworkConfig == null)
             {
-                issues.Add("NetworkManager has no NetworkConfig.");
+                issues.Add(PyralisRuntimeValidationIssue.Required(
+                    "NetworkManager has no NetworkConfig.",
+                    targetLabel: nameof(NetworkManager),
+                    nativeAction: "Inspect NetworkManager and restore its NetworkConfig.",
+                    successCheck: "NetworkManager has a NetworkConfig.",
+                    issueCode: "NetworkSetup.NetworkConfig.Missing"));
                 return issues;
             }
 
             if (networkManager.NetworkConfig.NetworkTransport == null)
-                issues.Add("NetworkManager requires a NetworkTransport. Add UnityTransport for the supported MVP lane.");
+            {
+                issues.Add(PyralisRuntimeValidationIssue.Required(
+                    "NetworkManager requires a NetworkTransport. Add UnityTransport for the supported MVP lane.",
+                    targetLabel: nameof(NetworkManager),
+                    nativeAction: "Add UnityTransport and assign it to NetworkManager.NetworkConfig.NetworkTransport.",
+                    successCheck: "NetworkManager uses UnityTransport.",
+                    issueCode: "NetworkSetup.Transport.Missing"));
+            }
             else if (networkManager.NetworkConfig.NetworkTransport is not UnityTransport)
-                issues.Add("NetworkManager uses a non-UnityTransport transport. Pyralis MVP networking is validated against UnityTransport.");
+            {
+                issues.Add(PyralisRuntimeValidationIssue.Required(
+                    "NetworkManager uses a non-UnityTransport transport. Pyralis MVP networking is validated against UnityTransport.",
+                    targetLabel: nameof(NetworkManager),
+                    nativeAction: "Replace the NetworkTransport with UnityTransport for the supported MVP lane.",
+                    successCheck: "NetworkManager uses UnityTransport.",
+                    issueCode: "NetworkSetup.Transport.Unsupported"));
+            }
 
             AppendParticipantPawnIssues(sessionDefinition, networkManager, issues);
             return issues;
@@ -59,7 +101,7 @@ namespace NeonBlack.Gameplay.Networking.Runtime
             return GetIssues(sessionDefinition, networkManager).Count == 0;
         }
 
-        private static void AppendParticipantPawnIssues(SessionDefinition sessionDefinition, NetworkManager networkManager, List<string> issues)
+        private static void AppendParticipantPawnIssues(SessionDefinition sessionDefinition, NetworkManager networkManager, List<PyralisRuntimeValidationIssue> issues)
         {
             if (sessionDefinition.defaultParticipants == null)
                 return;
@@ -76,12 +118,24 @@ namespace NeonBlack.Gameplay.Networking.Runtime
 
                 if (!pawnPrefab.TryGetComponent(out NetworkObject _))
                 {
-                    issues.Add($"Participant slot {i} pawn prefab `{pawnPrefab.name}` needs a NetworkObject for networked spawning.");
+                    issues.Add(PyralisRuntimeValidationIssue.Required(
+                        $"Participant slot {i} pawn prefab `{pawnPrefab.name}` needs a NetworkObject for networked spawning.",
+                        targetLabel: nameof(NetworkObject),
+                        nativeAction: "Open the pawn prefab and add NetworkObject for networked spawning.",
+                        successCheck: "Networked pawn prefab has NetworkObject.",
+                        issueCode: "NetworkSetup.PawnPrefab.NetworkObjectMissing." + i));
                     continue;
                 }
 
                 if (!IsRegisteredNetworkPrefab(networkManager, pawnPrefab))
-                    issues.Add($"Participant slot {i} pawn prefab `{pawnPrefab.name}` is not registered in NetworkManager Network Prefabs.");
+                {
+                    issues.Add(PyralisRuntimeValidationIssue.Recommended(
+                        $"Participant slot {i} pawn prefab `{pawnPrefab.name}` is not registered in NetworkManager Network Prefabs.",
+                        targetLabel: nameof(NetworkManager),
+                        nativeAction: "Inspect NetworkManager Network Prefabs and register the pawn prefab.",
+                        successCheck: "NetworkManager Network Prefabs contains each networked pawn prefab.",
+                        issueCode: "NetworkSetup.PawnPrefab.NotRegistered." + i));
+                }
             }
         }
 

@@ -72,7 +72,194 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void IntentProjection_SmokeInfersDomainPathsAndHidesInterfaceContracts()
+        public void IntentProjection_SmokeRouteEssentialsAreInferredNotSelected()
+        {
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors =
+                PyralisAuthoringCapabilityDescriptorRegistry.BuildIntentDescriptors(
+                    RuntimeCapabilityLaneTag.Sprite2D,
+                    AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone | AuthoringWorldAxiom.Realtime);
+
+            PyralisAuthoringCapabilityDescriptor movementIngredient = descriptors.FirstOrDefault(descriptor =>
+                descriptor != null
+                && !PyralisAuthoringCapabilityDescriptorRegistry.IsIntentRouteEssential(descriptor)
+                && descriptor.CapabilityPath == "Movement/Traversal/FakeGravityJump");
+            PyralisAuthoringCapabilityDescriptor routeEssential = descriptors.FirstOrDefault(descriptor =>
+                descriptor != null
+                && PyralisAuthoringCapabilityDescriptorRegistry.IsIntentRouteEssential(descriptor)
+                && descriptor.DisplayName.Contains("Participant", System.StringComparison.OrdinalIgnoreCase));
+
+            Assert.That(movementIngredient, Is.Not.Null);
+            Assert.That(routeEssential, Is.Not.Null);
+
+            string[] selectedIds =
+            {
+                movementIngredient.StableId,
+                routeEssential.StableId
+            };
+            string[] filtered = PyralisAuthoringCapabilityDescriptorRegistry.FilterGameplayIntentDescriptorIds(selectedIds);
+
+            Assert.That(filtered, Does.Contain(movementIngredient.StableId));
+            Assert.That(filtered, Does.Not.Contain(routeEssential.StableId));
+
+            var intentSelection = new PyralisAuthoringIntentSelection(
+                RuntimeCapabilityLaneTag.Sprite2D,
+                PyralisAuthoringCapabilityDescriptorRegistry.BuildCapabilitiesForDescriptors(filtered),
+                AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone | AuthoringWorldAxiom.Realtime,
+                selectedIds,
+                PyralisIntentParticipantRoute.TwoLocalPlayers);
+            string intentJson = PyralisAuthoringSetupGraphJsonExporter.ToIntentJson(
+                intentSelection,
+                PyralisAuthoringSetupGraphProjection.BuildIntentModel(intentSelection),
+                descriptors);
+
+            Assert.That(intentJson, Does.Contain("\"selectedDescriptorIds\""));
+            Assert.That(intentJson, Does.Contain(movementIngredient.StableId));
+            int selectedIdsStart = intentJson.IndexOf("\"selectedDescriptorIds\"", System.StringComparison.Ordinal);
+            int selectedIdsEnd = intentJson.IndexOf("]", selectedIdsStart, System.StringComparison.Ordinal);
+            string selectedIdsBlock = intentJson.Substring(selectedIdsStart, selectedIdsEnd - selectedIdsStart);
+            Assert.That(selectedIdsBlock, Does.Not.Contain(routeEssential.StableId));
+            Assert.That(intentJson, Does.Contain("\"intentLayer\": \"RouteEssential\""));
+            Assert.That(intentJson, Does.Contain("\"inferred\": true"));
+        }
+
+        [Test]
+        public void IntentProjection_SmokeRouteEssentialsStayNarrowForLocalMovement()
+        {
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors =
+                PyralisAuthoringCapabilityDescriptorRegistry.BuildIntentDescriptors(
+                    RuntimeCapabilityLaneTag.Sprite2D,
+                    AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone | AuthoringWorldAxiom.Realtime);
+
+            var intentSelection = new PyralisAuthoringIntentSelection(
+                RuntimeCapabilityLaneTag.Sprite2D,
+                AuthoringCapability.Input | AuthoringCapability.Movement | AuthoringCapability.KineticMotor2D | AuthoringCapability.Traversal,
+                AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone | AuthoringWorldAxiom.Realtime,
+                participantRoute: PyralisIntentParticipantRoute.TwoLocalPlayers);
+
+            string[] inferredEssentials = descriptors
+                .Where(descriptor => PyralisAuthoringCapabilityDescriptorRegistry.IsIntentRouteEssentialExpected(descriptor, intentSelection))
+                .Select(descriptor => descriptor.DisplayName)
+                .ToArray();
+
+            Assert.That(inferredEssentials, Does.Contain("Gameplay Session Bootstrap"));
+            Assert.That(inferredEssentials, Does.Contain("Session Definition"));
+            Assert.That(inferredEssentials, Does.Contain("Participant Definition"));
+            Assert.That(inferredEssentials, Does.Contain("Participant Input Router"));
+            Assert.That(inferredEssentials, Does.Contain("Participant Spawn Service"));
+            Assert.That(inferredEssentials, Does.Contain("Pawn Root"));
+            Assert.That(inferredEssentials, Does.Contain("2 D  Motor  Input  Adapter"));
+            Assert.That(inferredEssentials, Does.Contain("Feature Module Definition"));
+
+            Assert.That(inferredEssentials, Does.Not.Contain("Networked Participant Spawn Service"));
+            Assert.That(inferredEssentials, Does.Not.Contain("Networked Session State Service"));
+            Assert.That(inferredEssentials, Does.Not.Contain("Main Menu Manager"));
+            Assert.That(inferredEssentials, Does.Not.Contain("Loading Screen Controller"));
+            Assert.That(inferredEssentials, Does.Not.Contain("Projectile Impact Definition"));
+            Assert.That(inferredEssentials, Does.Not.Contain("Combat Action Definition"));
+        }
+
+        [Test]
+        public void IntentProjection_SmokeRouteEssentialsRequireContractRoleTags()
+        {
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors =
+                PyralisAuthoringCapabilityDescriptorRegistry.BuildIntentDescriptors(
+                    RuntimeCapabilityLaneTag.Sprite2D,
+                    AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone | AuthoringWorldAxiom.Realtime);
+
+            var intentSelection = new PyralisAuthoringIntentSelection(
+                RuntimeCapabilityLaneTag.Sprite2D,
+                AuthoringCapability.Input | AuthoringCapability.Movement | AuthoringCapability.KineticMotor2D | AuthoringCapability.Traversal,
+                AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone | AuthoringWorldAxiom.Realtime,
+                participantRoute: PyralisIntentParticipantRoute.TwoLocalPlayers);
+
+            PyralisAuthoringIntentProjection projection =
+                PyralisAuthoringIntentProjection.Build(intentSelection, descriptors);
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> routeEssentials =
+                projection.RouteEssentialDescriptors;
+
+            Assert.That(routeEssentials, Is.Not.Empty);
+            Assert.That(routeEssentials.All(descriptor =>
+                descriptor.RoleTags.Contains(AuthoringContractRoleTags.IntentRouteEssential)), Is.True);
+            Assert.That(routeEssentials.Any(descriptor =>
+                descriptor.RoleTags.Contains(AuthoringContractRoleTags.CoreRouteAnchor)), Is.True);
+            Assert.That(routeEssentials.Any(descriptor =>
+                descriptor.RoleTags.Contains(AuthoringContractRoleTags.ParticipantRouteSupport)), Is.True);
+            Assert.That(routeEssentials.Any(descriptor =>
+                descriptor.RoleTags.Contains(AuthoringContractRoleTags.InputRouteSupport)), Is.True);
+            Assert.That(routeEssentials.Any(descriptor =>
+                descriptor.RoleTags.Contains(AuthoringContractRoleTags.NetworkRouteSupport)), Is.False);
+        }
+
+        [Test]
+        public void IntentProjection_SmokeSharedProjectionFeedsJsonLenses()
+        {
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors =
+                PyralisAuthoringCapabilityDescriptorRegistry.BuildIntentDescriptors(
+                    RuntimeCapabilityLaneTag.Sprite2D,
+                    AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone | AuthoringWorldAxiom.Realtime);
+            string[] selectedIds = descriptors
+                .Where(descriptor => descriptor.CapabilityPath == "Movement/Traversal/FakeGravityJump"
+                    || descriptor.CapabilityPath == "Movement/2D/Kinetic Motor")
+                .Select(descriptor => descriptor.StableId)
+                .ToArray();
+
+            var intentSelection = new PyralisAuthoringIntentSelection(
+                RuntimeCapabilityLaneTag.Sprite2D,
+                PyralisAuthoringCapabilityDescriptorRegistry.BuildCapabilitiesForDescriptors(selectedIds),
+                AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone | AuthoringWorldAxiom.Realtime,
+                selectedIds,
+                PyralisIntentParticipantRoute.TwoLocalPlayers);
+            PyralisAuthoringIntentProjection projection =
+                PyralisAuthoringIntentProjection.Build(intentSelection, descriptors);
+
+            string intentJson = PyralisAuthoringSetupGraphJsonExporter.ToIntentJson(
+                intentSelection,
+                PyralisAuthoringSetupGraphProjection.BuildIntentModel(intentSelection),
+                descriptors);
+
+            Assert.That(projection.SelectedDescriptors.Count, Is.EqualTo(selectedIds.Length));
+            Assert.That(projection.RouteEssentialGroups.Sum(group => group.SelectedCount), Is.EqualTo(0));
+            Assert.That(projection.RouteEssentialGroups.Sum(group => group.InferredCount), Is.GreaterThan(0));
+            Assert.That(intentJson, Does.Contain("\"gameplayIngredientGroups\""));
+            Assert.That(intentJson, Does.Contain("\"routeEssentialGroups\""));
+            Assert.That(intentJson, Does.Contain("\"intentLayer\": \"GameplayIngredient\""));
+            Assert.That(intentJson, Does.Contain("\"intentLayer\": \"RouteEssential\""));
+        }
+
+        [Test]
+        public void IntentAdvisor_SmokeFiltersLooseReflectiveFactsForMovementIntent()
+        {
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors =
+                PyralisAuthoringCapabilityDescriptorRegistry.BuildIntentDescriptors(
+                    RuntimeCapabilityLaneTag.Sprite2D,
+                    AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone | AuthoringWorldAxiom.Realtime);
+            string[] selectedIds = descriptors
+                .Where(descriptor => descriptor.CapabilityPath == "Movement/Traversal/FakeGravityJump"
+                    || descriptor.CapabilityPath == "Movement/2D/Kinetic Motor"
+                    || descriptor.CapabilityPath == "Movement/2D/Movement Component")
+                .Select(descriptor => descriptor.StableId)
+                .ToArray();
+
+            var intentSelection = new PyralisAuthoringIntentSelection(
+                RuntimeCapabilityLaneTag.Sprite2D,
+                PyralisAuthoringCapabilityDescriptorRegistry.BuildCapabilitiesForDescriptors(selectedIds),
+                AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone | AuthoringWorldAxiom.Realtime,
+                selectedIds,
+                PyralisIntentParticipantRoute.TwoLocalPlayers);
+
+            PyralisAuthoringIntentModel model = PyralisAuthoringIntentAdvisor.Build(intentSelection);
+            string[] recommendationIds = model.Recommendations
+                .Select(row => row.Fact.StableId)
+                .ToArray();
+
+            Assert.That(recommendationIds, Does.Contain("proof.1p-pawn-movement"));
+            Assert.That(recommendationIds.Any(id => id.Contains(".Core.Rpg.", System.StringComparison.Ordinal)), Is.False);
+            Assert.That(recommendationIds.Any(id => id.Contains(".Features.Enemies.", System.StringComparison.Ordinal)), Is.False);
+            Assert.That(model.Cautions.Any(row => row.Fact.StableId == "proof.npc-enemy-behavior"), Is.False);
+        }
+
+        [Test]
+        public void IntentProjection_SmokeUsesOnlyContractSemanticPathsForGameplayIngredients()
         {
             IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors =
                 PyralisAuthoringCapabilityDescriptorRegistry.BuildIntentDescriptors(
@@ -80,13 +267,28 @@ namespace NeonBlack.Gameplay.Tests.Editor
                     AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.Realtime);
 
             Assert.That(descriptors.Any(descriptor =>
-                descriptor.CapabilityPath.StartsWith("RPG & Narrative", System.StringComparison.Ordinal)), Is.True);
-            Assert.That(descriptors.Any(descriptor =>
-                descriptor.CapabilityPath.StartsWith("Strategy & Board", System.StringComparison.Ordinal)), Is.True);
-            Assert.That(descriptors.Any(descriptor =>
-                descriptor.CapabilityPath.StartsWith("Interaction", System.StringComparison.Ordinal)), Is.True);
+                descriptor.SourceOrigin == PyralisAuthoringGraphSourceOrigin.SpineGrammar
+                || descriptor.SourceOrigin == PyralisAuthoringGraphSourceOrigin.GrammarFallback), Is.False);
+            Assert.That(descriptors.Where(descriptor =>
+                    !PyralisAuthoringCapabilityDescriptorRegistry.IsIntentRouteEssential(descriptor))
+                .All(descriptor =>
+                    descriptor.IsContractSemanticSource
+                    && descriptor.SelectableIntent
+                    && !string.IsNullOrWhiteSpace(descriptor.CapabilityPath)), Is.True);
             Assert.That(descriptors.Any(descriptor =>
                 descriptor.DisplayName.Contains("IFeatureModuleRuntime", System.StringComparison.Ordinal)), Is.False);
+        }
+
+        [Test]
+        public void SetupGraph_SmokeMissingContractSemanticMetadataAppearsInHygiene()
+        {
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(null);
+
+            Assert.That(graph.Nodes.Any(node =>
+                node.IssueCode == "ContractMetadata.CapabilityPathMissing"
+                && node.Guidance.Contains("CapabilityPath", System.StringComparison.Ordinal)), Is.True);
+            Assert.That(PyralisAuthoringSetupGraphProjection.BuildHygieneSections(graph)
+                .Any(section => section.Label == "Missing Contract Metadata" && section.Rows.Count > 0), Is.True);
         }
 
         [Test]
@@ -110,6 +312,9 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(mapJson, Does.Contain("\"participantSeats\""));
             Assert.That(routeTraceJson, Does.Contain("\"proofTargetId\": \"proof.local-pawn-join\""));
             Assert.That(routeTraceJson, Does.Contain("Local Co-op Pawn Join Proof"));
+            Assert.That(graph.Nodes.Any(node =>
+                node.IssueCode == "ContractMetadata.ProofTargetGenericTemplate"
+                && node.SourceOrigin == PyralisAuthoringGraphSourceOrigin.GrammarFallback), Is.True);
         }
 
         [Test]
@@ -142,10 +347,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void SceneReadiness_SmokeRequiresAuthoredFeatureHostForEnabledPawnModules()
+        public void RuntimeValidation_SmokeRequiresAuthoredFeatureHostForEnabledPawnModules()
         {
-            GameObject root = new GameObject("Gameplay Root");
-            GameplaySessionBootstrap bootstrap = root.AddComponent<GameplaySessionBootstrap>();
             GameObject pawnPrefab = new GameObject("Pawn Prefab");
             pawnPrefab.AddComponent<PawnRoot>();
             pawnPrefab.AddComponent<SmokePawnMotor>();
@@ -163,19 +366,17 @@ namespace NeonBlack.Gameplay.Tests.Editor
             pawn.featureModules = new[] { module };
             participant.defaultPawn = pawn;
             session.defaultParticipants = new[] { participant };
-            SetPrivateField(bootstrap, "sessionDefinition", session);
 
-            PyralisSceneReadinessReport report = PyralisSceneReadinessValidator.BuildReport(bootstrap);
+            IReadOnlyList<PyralisRuntimeValidationIssue> issues = pawn.GetRuntimeValidationIssues().ToArray();
 
-            Assert.That(report.RequiredIssues.Any(issue =>
-                issue.Contains("missing ActorFeatureHost", System.StringComparison.Ordinal)), Is.True);
+            Assert.That(issues.Any(issue =>
+                string.Equals(issue.IssueCode, "PawnDefinition.ActorFeatureHost.Missing", System.StringComparison.Ordinal)), Is.True);
 
             Object.DestroyImmediate(module);
             Object.DestroyImmediate(pawn);
             Object.DestroyImmediate(participant);
             Object.DestroyImmediate(session);
             Object.DestroyImmediate(pawnPrefab);
-            Object.DestroyImmediate(root);
         }
 
         [Test]
@@ -185,7 +386,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 "bootstrap.root",
                 "Gameplay Root",
                 PyralisAuthoringGraphNodeKind.SetupChain,
-                PyralisAuthoringGraphSourceKind.SetupFlow,
+                PyralisAuthoringGraphSourceKind.CoreSetup,
                 PyralisAuthoringGraphEvidenceState.Ready,
                 guidance: "Gameplay Root is assigned.");
             PyralisAuthoringGraphNode sceneSurfaces = new PyralisAuthoringGraphNode(
@@ -230,7 +431,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 "setup.session",
                 "Session",
                 PyralisAuthoringGraphNodeKind.SetupChain,
-                PyralisAuthoringGraphSourceKind.SetupFlow,
+                PyralisAuthoringGraphSourceKind.CoreSetup,
                 PyralisAuthoringGraphEvidenceState.Missing,
                 guidance: "Assign a SessionDefinition.");
             PyralisAuthoringGraphNode proof = new PyralisAuthoringGraphNode(
@@ -366,6 +567,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(intentJson, Does.Contain("\"selection\""));
             Assert.That(intentJson, Does.Contain("\"participantRoute\": \"TwoLocalPlayers\""));
             Assert.That(intentJson, Does.Contain("\"descriptorGroups\""));
+            Assert.That(intentJson, Does.Contain("\"gameplayIngredientGroups\""));
+            Assert.That(intentJson, Does.Contain("\"routeEssentialGroups\""));
             Assert.That(intentJson, Does.Contain("\"advisorSummary\""));
             Assert.That(intentJson, Does.Contain("\"recommendations\""));
             Assert.That(intentJson, Does.Not.Contain("\"mapRows\""));
@@ -436,6 +639,65 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Object.DestroyImmediate(cameraProfile);
             Object.DestroyImmediate(mode);
             Object.DestroyImmediate(session);
+        }
+
+        [Test]
+        public void RuntimeValidation_SmokeInputProfileOwnsActionMapReadiness()
+        {
+            GameObject root = new GameObject("Gameplay Root");
+            GameplaySessionBootstrap bootstrap = root.AddComponent<GameplaySessionBootstrap>();
+            root.AddComponent<ParticipantInputRouter>();
+            root.AddComponent<ParticipantSpawnService>();
+
+            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
+            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
+            CameraRigProfile cameraProfile = ScriptableObject.CreateInstance<CameraRigProfile>();
+            ParticipantDefinition participant = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            InputProfile inputProfile = ScriptableObject.CreateInstance<InputProfile>();
+            PawnDefinition pawn = ScriptableObject.CreateInstance<PawnDefinition>();
+            GameObject prefab = new GameObject("Pawn Prefab");
+            prefab.AddComponent<PawnRoot>();
+            prefab.AddComponent<SmokePawnMotor>();
+            prefab.AddComponent<SmokePawnPresentation>();
+            prefab.AddComponent<SmokePawnInput>();
+            pawn.pawnPrefab = prefab;
+            participant.defaultPawn = pawn;
+            participant.inputProfile = inputProfile;
+            session.defaultGameMode = mode;
+            session.defaultParticipants = new[] { participant };
+            mode.cameraRigProfile = cameraProfile;
+            SetPrivateField(bootstrap, "sessionDefinition", session);
+
+            PyralisAuthoringIntentSelection intent = new PyralisAuthoringIntentSelection(
+                RuntimeCapabilityLaneTag.Sprite2D,
+                AuthoringCapability.Movement | AuthoringCapability.Input,
+                AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone | AuthoringWorldAxiom.Realtime);
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap, intent);
+            PyralisSceneReadinessReport sceneReport = PyralisSceneReadinessValidator.BuildReport(bootstrap);
+
+            PyralisAuthoringGraphNode inputProfileValidation = graph.Nodes.FirstOrDefault(node =>
+                node.SourceObject == inputProfile
+                && node.SourceKind == PyralisAuthoringGraphSourceKind.RuntimeValidation
+                && string.Equals(node.IssueCode, "InputProfile.Actions.Missing", System.StringComparison.Ordinal));
+
+            Assert.That(inputProfileValidation, Is.Not.Null);
+            Assert.That(inputProfileValidation.Kind, Is.EqualTo(PyralisAuthoringGraphNodeKind.ValidationEvidence));
+            Assert.That(inputProfileValidation.AssignmentFields, Does.Contain("InputProfile.actions"));
+            Assert.That(inputProfileValidation.NativeSetup.FirstOrDefault(), Does.Contain("InputProfile.actions"));
+            Assert.That(sceneReport.Issues.Any(issue =>
+                issue.Message.Contains("effective InputProfile")
+                || issue.Message.Contains("Primary Action Map")
+                || issue.Message.Contains("Gameplay Actions")), Is.False);
+
+            Object.DestroyImmediate(prefab);
+            Object.DestroyImmediate(pawn);
+            Object.DestroyImmediate(inputProfile);
+            Object.DestroyImmediate(participant);
+            Object.DestroyImmediate(cameraProfile);
+            Object.DestroyImmediate(mode);
+            Object.DestroyImmediate(session);
+            Object.DestroyImmediate(root);
         }
 
         [Test]
@@ -559,7 +821,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void SetupFlow_SmokeLocalJoinUsesBootstrapPlayerInputManager()
+        public void CoreSetupGraph_SmokeLocalJoinKeepsPlayerInputManagerInGraphEvidence()
         {
             GameObject root = new GameObject("Gameplay Root");
             GameplaySessionBootstrap bootstrap = root.AddComponent<GameplaySessionBootstrap>();
@@ -591,15 +853,14 @@ namespace NeonBlack.Gameplay.Tests.Editor
             session.defaultParticipants = new[] { participantOne, participantTwo };
             SetPrivateField(bootstrap, "sessionDefinition", session);
 
-            PyralisSetupFlowReport report = PyralisSetupFlowValidator.BuildReport(bootstrap);
-            PyralisSetupFlowStep playerInputStep = report.GetStep(PyralisSetupFlowStepId.AssignPlayerInputManager);
-            PyralisSetupFlowStep joinPolicyStep = report.GetStep(PyralisSetupFlowStepId.ResolveParticipantJoinPolicy);
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
+            PyralisSetupRouteAnalysis route = PyralisSetupRouteAnalysis.Build(bootstrap);
 
-            Assert.That(PyralisSetupRouteAnalysis.Build(bootstrap).HasPlayerInputManager, Is.True);
-            Assert.That(playerInputStep.Status, Is.EqualTo(PyralisSetupFlowStepStatus.Ready));
-            Assert.That(playerInputStep.Message, Does.Contain("PlayerInputManager is assigned"));
-            Assert.That(playerInputStep.Message, Does.Not.Contain("GameplaySessionBootstrap.playerInputManager assigned"));
-            Assert.That(joinPolicyStep.Status, Is.EqualTo(PyralisSetupFlowStepStatus.Ready));
+            Assert.That(route.HasPlayerInputManager, Is.True);
+            Assert.That(route.ParticipantTopology, Is.EqualTo(PyralisParticipantTopology.LocalJoin));
+            Assert.That(graph.TryFindNode("route.participant-topology", out PyralisAuthoringGraphNode topologyNode), Is.True);
+            Assert.That(topologyNode.Guidance, Does.Contain("PlayerInputManager"));
+            Assert.That(topologyNode.EvidenceState, Is.EqualTo(PyralisAuthoringGraphEvidenceState.Ready));
 
             Object.DestroyImmediate(pawnPrefab);
             Object.DestroyImmediate(pawn);
@@ -609,6 +870,56 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Object.DestroyImmediate(mode);
             Object.DestroyImmediate(session);
             Object.DestroyImmediate(root);
+        }
+
+        [Test]
+        public void CoreSetupGraph_SmokeBuildsCoreRouteSpineFromGraphNodes()
+        {
+            GameObject root = new GameObject("Gameplay Root");
+            GameplaySessionBootstrap bootstrap = root.AddComponent<GameplaySessionBootstrap>();
+            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
+            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
+            session.defaultGameMode = mode;
+            SetPrivateField(bootstrap, "sessionDefinition", session);
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(bootstrap);
+
+            Assert.That(graph.TryFindNode("bootstrap.root", out PyralisAuthoringGraphNode bootstrapNode), Is.True);
+            Assert.That(graph.TryFindNode("session.definition", out PyralisAuthoringGraphNode sessionNode), Is.True);
+            Assert.That(graph.TryFindNode("mode.definition", out PyralisAuthoringGraphNode modeNode), Is.True);
+            Assert.That(bootstrapNode.SourceKind, Is.EqualTo(PyralisAuthoringGraphSourceKind.CoreSetup));
+            Assert.That(sessionNode.SourceKind, Is.EqualTo(PyralisAuthoringGraphSourceKind.CoreSetup));
+            Assert.That(modeNode.SourceKind, Is.EqualTo(PyralisAuthoringGraphSourceKind.CoreSetup));
+
+            Object.DestroyImmediate(mode);
+            Object.DestroyImmediate(session);
+            Object.DestroyImmediate(root);
+        }
+
+        [Test]
+        public void AuthoringGrammar_SmokeDoesNotReferenceRetiredSetupCards()
+        {
+            string[] retiredSetupIds =
+            {
+                "setup.assign-participant-pawn",
+                "setup.assign-input-profile",
+                "setup.assign-spawn-points",
+                "setup.assign-camera-rig",
+                "setup.assign-player-input-manager",
+                "setup.tune-pawn-visuals-and-collision",
+                "setup.tune-movement-and-input-feel",
+                "setup.assign-playfield-profile",
+                "setup.scene-prefab-readiness",
+                "setup.assign-game-mode"
+            };
+
+            string[] facts = PyralisAuthoringGrammarRegistry.AllFacts
+                .SelectMany(fact => fact.RelatedStableIds ?? System.Array.Empty<string>())
+                .Concat(PyralisAuthoringGrammarRegistry.AllFacts.Select(fact => fact.StableId))
+                .ToArray();
+
+            for (int i = 0; i < retiredSetupIds.Length; i++)
+                Assert.That(facts, Does.Not.Contain(retiredSetupIds[i]), retiredSetupIds[i]);
         }
 
         [Test]
