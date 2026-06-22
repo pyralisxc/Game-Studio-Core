@@ -16,7 +16,8 @@ namespace NeonBlack.Gameplay.Core.Navigation
             "Place this in scenes that may be loaded after a persistent UI or camera bootstrap."
         },
         FirstProof = "Load a scene with a duplicate EventSystem and verify SceneGuard destroys it in the console.",
-        ExpertAdvice = "Keep one active EventSystem and one active AudioListener as the expected final state. Use it as cleanup support, not as a substitute for clean scene ownership."
+        ExpertAdvice = "Keep one active EventSystem and one active AudioListener as the expected final state. Use it as cleanup support, not as a substitute for clean scene ownership.",
+        CapabilityPath = "Core Setup/Navigation/Scene Guard"
     )]
     public class SceneGuard : MonoBehaviour
     {

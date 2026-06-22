@@ -30,7 +30,9 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
         Capability = AuthoringCapability.Tabletop | AuthoringCapability.Grid, 
         Relevance = "Project-window creation path for tabletop legal-move policy.",
         AssignmentFields = new[] { nameof(policyId), nameof(shape), nameof(maxDistance) },
-        FirstProof = "Verify that pieces can only move according to the shape and distance defined in this policy."
+        FirstProof = "Verify that pieces can only move according to the shape and distance defined in this policy.",
+        CapabilityPath = "Tabletop/Board/Board Move Policy Definition",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.BoardCardTabletop }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Rules/Board Move Policy", fileName = "BoardMovePolicy", order = -80)]
     public class BoardMovePolicyDefinition : ScriptableObject, IRuntimeValidationProvider

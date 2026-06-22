@@ -49,6 +49,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
             string capabilityPath = null,
             RuntimeCapabilityFamily[] runtimeFamilies = null,
             string[] roleTags = null,
+            string[] ownershipClaims = null,
             bool selectableIntent = true,
             string authoringLane = null,
             string relevance = null,
@@ -85,6 +86,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
             CapabilityPath = capabilityPath ?? string.Empty;
             RuntimeFamilies = runtimeFamilies ?? Array.Empty<RuntimeCapabilityFamily>();
             RoleTags = roleTags ?? Array.Empty<string>();
+            OwnershipClaims = ownershipClaims ?? Array.Empty<string>();
             SelectableIntent = selectableIntent;
             AuthoringLane = authoringLane ?? string.Empty;
             Relevance = relevance ?? string.Empty;
@@ -99,6 +101,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
         public string CapabilityPath { get; }
         public RuntimeCapabilityFamily[] RuntimeFamilies { get; }
         public string[] RoleTags { get; }
+        public string[] OwnershipClaims { get; }
         public bool SelectableIntent { get; }
         public string AuthoringLane { get; }
         public Type RequiredProfileType { get; }

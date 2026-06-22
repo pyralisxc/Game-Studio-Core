@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Features.Combat;
 using UnityEngine;
@@ -12,7 +12,9 @@ namespace NeonBlack.Gameplay.Data.Profiles
         AssignmentFields = new[] { nameof(defaultShieldDamageReduction) },
         FirstProof = "Verify the actor is spawned with the specified starting effects.",
         ExpertAdvice = "Use defaultShieldDamageReduction to scale incoming damage when the actor has an active shield effect.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/combat"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/combat",
+        CapabilityPath = "Combat/Actions/Actor Status Effect Profile",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.Combat }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Actor Status Effect Profile", fileName = "ActorStatusEffectProfile")]
     public class ActorStatusEffectProfile : ScriptableObject, IRuntimeValidationProvider

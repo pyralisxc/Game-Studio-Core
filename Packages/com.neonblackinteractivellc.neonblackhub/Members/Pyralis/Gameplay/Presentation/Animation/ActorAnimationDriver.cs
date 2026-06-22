@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Presentation.Visuals;
@@ -18,7 +18,8 @@ namespace NeonBlack.Gameplay.Presentation.Animation
         AssignmentFields = new[] { nameof(animator), nameof(presentationProfile), nameof(animationProfile), nameof(visualRoot), nameof(billboardTarget), nameof(cameraOverride) },
         FirstProof = "Enter Play Mode. Verify the 'Speed' and 'IsGrounded' parameters on the Animator react to pawn movement.",
         ExpertAdvice = "The Animation Driver is a 'Signal Bridge'. It decouples logic from visual state. If using sprites, ensure 'Visual Root' is assigned so the driver can flip the localScale for facing direction logic.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/animation"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/animation",
+        CapabilityPath = "Presentation/Feedback/Actor Animation Driver"
     )]
 [AddComponentMenu("NeonBlack/Gameplay/Animation/Actor Animation Driver")]
     public class ActorAnimationDriver : MonoBehaviour, IActorAnimationController, IRuntimeValidationProvider

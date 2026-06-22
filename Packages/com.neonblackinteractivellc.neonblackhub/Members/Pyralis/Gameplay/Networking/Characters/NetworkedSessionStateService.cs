@@ -10,6 +10,8 @@ namespace NeonBlack.Gameplay.Networking.Participants
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Networking,
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.Networking },
+        CapabilityPath = "Networking/Session/Networked Session State Service",
         Relevance = "Drop-in replacement for SessionStateService in online sessions. Handles NGO role startup.",
         RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.NetworkRouteSupport },
         AssignmentFields = new[] { "networkMode", "autoStartHost" },

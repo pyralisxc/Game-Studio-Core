@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using NeonBlack.Gameplay.Core.Contracts;
 
@@ -17,7 +17,8 @@ namespace NeonBlack.Gameplay.Data.Profiles
         AssignmentFields = new[] { nameof(presentationMode), nameof(focusMode), nameof(useCinemachine), nameof(followOffset), nameof(orthographic), nameof(minZoom), nameof(maxZoom) },
         FirstProof = "Verify Cinemachine follows the profile's selected focus target at the specified framing.",
         ExpertAdvice = "CameraRigProfile chooses the focus route and framing; Cinemachine composes the actual view. For 2D games, check Orthographic. Use Participant Group for shared pawn cameras, Participant Pawns for split-screen/per-participant cameras, Playfield Center for board/menu views, Explicit Scene Target for authored anchors, and Manual Cinemachine when the scene owns Follow/LookAt directly.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/camera"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/camera",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CameraInput }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Camera Rig Profile", fileName = "CameraRigProfile", order = -70)]
     public class CameraRigProfile : ScriptableObject, IRuntimeValidationProvider

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Features.Combat;
 using NeonBlack.Gameplay.Features.Characters;
@@ -17,7 +17,8 @@ namespace NeonBlack.Gameplay.Features.Characters
             "Route input from an adapter into this bridge."
         },
         FirstProof = "Verify the guard feature activates when the guard input is triggered.",
-        ExpertAdvice = "Bridge only forwards input; it does not block damage by itself. Ensure the Guard feature is installed in PawnDefinition."
+        ExpertAdvice = "Bridge only forwards input; it does not block damage by itself. Ensure the Guard feature is installed in PawnDefinition.",
+        CapabilityPath = "Combat/Actions/Actor Guard Input Bridge2D"
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Characters/2D/Actor Guard Input Bridge 2D")]
     public class ActorGuardInputBridge2D : MonoBehaviour, IActorGuardInputReceiver2D, IRuntimeValidationProvider

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using TMPro;
 using NeonBlack.Gameplay.Core.Contracts;
@@ -23,7 +23,8 @@ namespace NeonBlack.Gameplay.Features.Scoring
         },
         AssignmentFields = new[] { nameof(_mainMenuPage), nameof(_leaderboardPage), nameof(_backButton), nameof(_rowContainer), nameof(_rowPrefab), nameof(_statusLabel) },
         FirstProof = "Open the leaderboard in the menu and verify the 'Fetching scores...' status appears.",
-        ExpertAdvice = "Ensure the Row Prefab has exactly three TMP labels in order: Rank, Name, Score."
+        ExpertAdvice = "Ensure the Row Prefab has exactly three TMP labels in order: Rank, Name, Score.",
+        CapabilityPath = "UI/HUD/Leaderboard Screen"
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Scoring/Leaderboard Screen")]
     public class LeaderboardScreen : MonoBehaviour, IRuntimeValidationProvider

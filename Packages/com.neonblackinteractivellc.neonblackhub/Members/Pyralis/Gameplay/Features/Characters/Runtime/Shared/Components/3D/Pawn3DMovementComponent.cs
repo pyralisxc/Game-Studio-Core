@@ -25,7 +25,8 @@ namespace NeonBlack.Gameplay.Characters
         NativeSetup = new[] { "Attach to a Pawn root with CharacterController.", "Assign Ground Layer mask." },
         AssignmentFields = new[] { nameof(movementMode), nameof(groundLayer), nameof(walkSpeed), nameof(jumpHeight) },
         FirstProof = "Verify the pawn can walk and jump in Play Mode.",
-        ExpertAdvice = "Movement Component uses CharacterController.Move(). Ensure the Ground Layer mask does not include the 'Player' layer to prevent the pawn from trying to ground itself on its own collider."
+        ExpertAdvice = "Movement Component uses CharacterController.Move(). Ensure the Ground Layer mask does not include the 'Player' layer to prevent the pawn from trying to ground itself on its own collider.",
+        CapabilityPath = "Movement/Traversal/Pawn3D Movement Component"
     )]
 [AddComponentMenu("NeonBlack/Gameplay/3D/Pawn 3D Movement Component")]
     [RequireComponent(typeof(CharacterController))]

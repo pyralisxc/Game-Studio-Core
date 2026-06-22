@@ -14,7 +14,8 @@ namespace NeonBlack.Gameplay.Features.Characters
         NativeSetup = new[] { "Add on the same root as Motor2D.", "Assign SpriteRenderer." },
         AssignmentFields = new[] { nameof(spriteRenderer), nameof(movingTint), nameof(tiltEnabled), nameof(stretchAmount), nameof(squashSnapSpeed), nameof(tiltSpeed) },
         FirstProof = "Move the pawn and verify the sprite tilts and tints according to velocity.",
-        ExpertAdvice = "Keep this as the single 2D presentation facade for beginner prefabs. Sprite facing/tint, animation parameters, deformation, and feedback audio are separate internal lanes and can later become dedicated presenter scripts when a route needs deeper specialization."
+        ExpertAdvice = "Keep this as the single 2D presentation facade for beginner prefabs. Sprite facing/tint, animation parameters, deformation, and feedback audio are separate internal lanes and can later become dedicated presenter scripts when a route needs deeper specialization.",
+        CapabilityPath = "Presentation/Feedback/Pawn2D Presentation Component"
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Characters/2D/Pawn 2D Presentation Component")]
     [RequireComponent(typeof(Pawn2DMovementComponent))]

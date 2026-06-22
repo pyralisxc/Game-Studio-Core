@@ -12,7 +12,9 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
         Capability = AuthoringCapability.Inventory,
         Lane = "RPG",
         AssignmentFields = new[] { nameof(vendorId), nameof(displayName), nameof(offers) },
-        FirstProof = "Proof that the vendor offers valid items and prices are correctly defined."
+        FirstProof = "Proof that the vendor offers valid items and prices are correctly defined.",
+        CapabilityPath = "RPG/Inventory/Definitions/Vendor Definition",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Vendor", fileName = "VendorDefinition")]
     public class VendorDefinition : ScriptableObject, IVendorDefinition, IRuntimeValidationProvider

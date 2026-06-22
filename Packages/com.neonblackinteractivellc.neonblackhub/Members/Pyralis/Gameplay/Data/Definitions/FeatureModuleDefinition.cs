@@ -28,6 +28,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
     [AuthoringContract(
         Capability = AuthoringCapability.Setup, 
         RuntimeFamilies = new[] { RuntimeCapabilityFamily.Custom },
+        CapabilityPath = "Core Setup/Feature Modules/Feature Module Definition",
         Relevance = "Authoring container for attachable runtime logic, used to extend Pawns or Game Modes with modular functionality.",
         RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.FeatureModuleRouteSupport },
         AssignmentFields = new[] { nameof(moduleId), nameof(displayName), nameof(profileAsset), nameof(runtimePrefab) },

@@ -10,7 +10,9 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
         Capability = AuthoringCapability.Inventory,
         Lane = "RPG",
         AssignmentFields = new[] { nameof(itemId), nameof(displayName), nameof(category), nameof(rarity), nameof(maxStackSize), nameof(tags) },
-        FirstProof = "Proof that the item can exist in an inventory and has correct display properties."
+        FirstProof = "Proof that the item can exist in an inventory and has correct display properties.",
+        CapabilityPath = "RPG/Inventory/Definitions/Item Definition",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Item Definition", fileName = "ItemDefinition")]
     public class ItemDefinition : ScriptableObject, IRuntimeValidationProvider

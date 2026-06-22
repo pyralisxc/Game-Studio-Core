@@ -20,7 +20,9 @@ namespace NeonBlack.Gameplay.Core.Rpg
             "configure StatSheets for classes"
         },
         FirstProof = "Grant experience to an actor and verify they level up according to the progression curve.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/rpg"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/rpg",
+        CapabilityPath = "RPG/Progression/Progression Service",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
     )]
     public sealed class ProgressionService : IProgressionService
 {

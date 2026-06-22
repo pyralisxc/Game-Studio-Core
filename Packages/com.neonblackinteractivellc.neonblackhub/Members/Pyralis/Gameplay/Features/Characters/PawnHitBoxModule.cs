@@ -12,7 +12,8 @@ namespace NeonBlack.Gameplay.Features.Characters
         AssignmentFields = new[] { nameof(hitBoxZones) },
         FirstProof = "Verify hitboxes are correctly mirrored when the pawn flips direction.",
         ExpertAdvice = "Each HitBoxSlot maps a 'Zone Name' to a physical HitBox component. Ensure the zone names match your attack definitions.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/combat"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/combat",
+        CapabilityPath = "Combat/Sensors/Pawn Hit Box Module"
     )]
     public class PawnHitBoxModule : MonoBehaviour
 {

@@ -24,7 +24,9 @@ namespace NeonBlack.Gameplay.Features.GameFlow
     AssignmentFields = new[] { "_hudPanel", "_gameOverPanel", "_scoreLabel", "_timeLabel" },
     FirstProof = "The HUD shows points and survival time when the game starts.",
     ExpertAdvice = "The UIManager is a high-level presentation layer. It listens to IGameplaySessionFlow for arcade panels and IGameplayStateReader for active-time updates.",
-    DocumentationURL = "https://docs.neonblack.com/pyralis/ui")]
+    DocumentationURL = "https://docs.neonblack.com/pyralis/ui",
+    CapabilityPath = "UI/HUD/UI Manager"
+)]
 [DefaultExecutionOrder(-10)]
 public class UIManager : MonoBehaviour
 {

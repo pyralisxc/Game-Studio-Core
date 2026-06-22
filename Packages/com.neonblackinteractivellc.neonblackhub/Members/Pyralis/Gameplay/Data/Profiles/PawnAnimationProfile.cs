@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Presentation.Animation;
@@ -16,7 +16,9 @@ namespace NeonBlack.Gameplay.Data.Profiles
         FirstProof = "Verify the character animates correctly in play mode using the assigned controller.",
         ExpertAdvice = "Use the Controller Mapping Wizard in the custom inspector to quickly align your animator with Pyralis signals. This profile acts as the bridge between gameplay logic and visual feedback.",
         NativeSetup = new[] { "Assign Animation Definition.", "Assign Base Controller.", "Map bindings." },
-        DocumentationURL = "https://docs.neonblack.com/pyralis/animation"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/animation",
+        CapabilityPath = "Presentation/Feedback/Pawn Animation Profile",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.AnimationPresentation }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Pawn Animation Profile", fileName = "PawnAnimationProfile", order = -30)]
     public class PawnAnimationProfile : ScriptableObject, IRuntimeValidationProvider

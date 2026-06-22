@@ -15,7 +15,6 @@ For your first playable proof, use only native Unity actions:
 
 Run this route before adding score, combat, networking, or extras:
 
-- Open `authoring-native-1p-proof-checklist.md` (repo `docs/` root) and follow it in sequence.
 - In the Authoring Window, stay in **Overview -> Map -> Hygiene** until
   - Do Now is clear
   - required links are green
@@ -88,7 +87,7 @@ When a session/mode route is active, the Authoring Window keeps tab ownership st
 The Authoring Window guidance is route-aware:
 
 - `SessionDefinition`, `GameModeDefinition`, participants, pawns, feature modules, and contracts expose the route capabilities the graph can prove.
-- Intent is the visible route-filtering surface. It narrows and explains the graph from reflected capability descriptors; it does not create assets, assign fields, or mutate gameplay objects.
+- Intent is the visible route-filtering surface. It narrows and explains the graph from route capability descriptors; it does not create assets, assign fields, or mutate gameplay objects.
 - `GameModeDefinition` contributes scene, rule, board, turn, playfield, camera, scoring, combat, respawn, and feature-module signals to the active route.
 - `SessionDefinition` explains whether participants need pawns, input, seats, hands, factions, camera, cursor, or menu surfaces.
 - `GameplaySessionBootstrap` anchors the assigned session chain and hands off to the graph-backed Authoring Window.
@@ -169,8 +168,6 @@ Before creating assets, remember:
 
 Manual path:
 
-- `SessionDefinition`
-- `GameModeDefinition`
 - `SessionDefinition`
 - `GameModeDefinition`
 - `ParticipantDefinition`
@@ -338,7 +335,6 @@ Before adding more features, run this proof pass first:
 
 Read only the guide that matches your immediate task:
 
-- Full setup manual: `MANUAL.md`
 - Asset relationship map: `AUTHORING_MODEL.md`
 - First scene root and route chain: this `START_HERE.md` guide plus `AUTHORING_MODEL.md`
 - Pawn prefab, camera, combat, health, hazards, pickups, and scoring: follow the Authoring Window, selected Inspector field guides, and `AUTHORING_MODEL.md`

@@ -10,7 +10,9 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
         Capability = AuthoringCapability.Inventory,
         Lane = "RPG",
         AssignmentFields = new[] { nameof(catalogId), nameof(displayName), nameof(items) },
-        FirstProof = "Proof that the catalog contains valid item definitions and can resolve stack sizes."
+        FirstProof = "Proof that the catalog contains valid item definitions and can resolve stack sizes.",
+        CapabilityPath = "RPG/Inventory/Definitions/Item Catalog Definition",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Item Catalog", fileName = "ItemCatalogDefinition")]
     public class ItemCatalogDefinition : ScriptableObject, IItemCatalog, IRuntimeValidationProvider

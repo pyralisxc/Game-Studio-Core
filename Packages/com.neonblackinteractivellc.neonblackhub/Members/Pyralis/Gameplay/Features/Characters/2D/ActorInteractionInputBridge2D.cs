@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Features.Characters;
 using NeonBlack.Gameplay.Features.Composition;
@@ -16,7 +16,8 @@ namespace NeonBlack.Gameplay.Features.Characters
             "Install a module providing IActorInteractionFeature."
         },
         FirstProof = "Verify interaction triggers the installed feature.",
-        ExpertAdvice = "Bridge only forwards input. Ensure the Interaction feature is installed in PawnDefinition."
+        ExpertAdvice = "Bridge only forwards input. Ensure the Interaction feature is installed in PawnDefinition.",
+        CapabilityPath = "Input/Pawn/Actor Interaction Input Bridge2D"
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Interaction/Actor Interaction Input Bridge 2D")]
     public class ActorInteractionInputBridge2D : MonoBehaviour, IActorInteractionInputReceiver2D, IRuntimeValidationProvider

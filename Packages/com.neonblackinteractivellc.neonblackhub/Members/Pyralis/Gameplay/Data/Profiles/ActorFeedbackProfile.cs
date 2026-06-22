@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using NeonBlack.Gameplay.Core.Contracts;
 
@@ -11,7 +11,9 @@ namespace NeonBlack.Gameplay.Data.Profiles
         AssignmentFields = new[] { nameof(publishDamageEvents), nameof(publishDeathEvents), nameof(publishScoreEvents) },
         FirstProof = "Verify that damage events trigger floating text or HUD updates.",
         ExpertAdvice = "Use these toggles to silence feedback for specific actor archetypes (e.g., destructible props vs. bosses).",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/visuals"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/visuals",
+        CapabilityPath = "Presentation/Feedback/Actor Feedback Profile",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.AnimationPresentation }
     )]
 [CreateAssetMenu(menuName = "NeonBlack/Profiles/Actor Feedback Profile", fileName = "ActorFeedbackProfile")]
     public class ActorFeedbackProfile : ScriptableObject, IRuntimeValidationProvider

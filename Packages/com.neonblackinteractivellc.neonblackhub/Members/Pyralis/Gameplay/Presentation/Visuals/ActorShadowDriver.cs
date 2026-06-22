@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Presentation.Animation;
@@ -19,7 +19,8 @@ namespace NeonBlack.Gameplay.Presentation.Visuals
         AssignmentFields = new[] { nameof(visualRoot), nameof(shadowRoot), nameof(shadowSpriteRenderer), nameof(modelRenderers), nameof(presentationProfile) },
         FirstProof = "Verify a shadow appears under the actor and scales correctly with height.",
         ExpertAdvice = "Use Blob mode for 2D and 2.5D games. Renderer mode is only supported for Rigged3D actors.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/visuals"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/visuals",
+        CapabilityPath = "Presentation/Feedback/Actor Shadow Driver"
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Visuals/Actor Shadow Driver")]
     public class ActorShadowDriver : MonoBehaviour, IRuntimeValidationProvider

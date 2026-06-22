@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Features.Combat;
 using UnityEngine;
@@ -17,7 +17,9 @@ namespace NeonBlack.Gameplay.Data.Profiles
         AssignmentFields = new[] { nameof(baseDamage), nameof(attackCooldown), nameof(attackWeapon), nameof(primarySequence) },
         FirstProof = "Verify the pawn can attack and take damage in-game.",
         ExpertAdvice = "Use comboResetTime to control the window for continuing a combo. Assign a WeaponData asset to define the hitboxes and visual effects of the attack.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/combat"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/combat",
+        CapabilityPath = "Combat/Actions/Pawn Combat Profile",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.Combat }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Pawn Combat Profile", fileName = "PawnCombatProfile", order = -20)]
     public class PawnCombatProfile : ScriptableObject, IRuntimeValidationProvider

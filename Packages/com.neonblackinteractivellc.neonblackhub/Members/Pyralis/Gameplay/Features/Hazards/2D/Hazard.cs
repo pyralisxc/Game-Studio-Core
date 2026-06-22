@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Features.Characters;
 using NeonBlack.Gameplay.Core.Contracts;
@@ -51,7 +51,8 @@ namespace NeonBlack.Gameplay.Features.Hazards
     },
     FirstProof = "Place a hazard in the scene and verify it executes its sequence (Slam, Crossing, etc.) on start.",
     AssignmentFields = new[] { nameof(_data), nameof(_hitColliders), nameof(_shadowRenderer) },
-    ExpertAdvice = "Ensure a Kinematic Rigidbody2D is on the root for explosive hazards. Keep Shadow and Outline renderers on separate child objects."
+    ExpertAdvice = "Ensure a Kinematic Rigidbody2D is on the root for explosive hazards. Keep Shadow and Outline renderers on separate child objects.",
+    CapabilityPath = "Combat/Actions/Hazard"
 )]
 public partial class Hazard : MonoBehaviour, IRuntimeValidationProvider
 {

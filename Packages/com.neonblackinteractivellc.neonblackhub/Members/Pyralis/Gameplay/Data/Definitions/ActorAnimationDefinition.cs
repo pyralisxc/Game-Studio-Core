@@ -9,6 +9,8 @@ namespace NeonBlack.Gameplay.Data.Definitions
 {
     [AuthoringContract(
         Capability = AuthoringCapability.Animation,
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.AnimationPresentation },
+        CapabilityPath = "Animation/Definitions/Actor Animation Definition",
         Relevance = "Defines the animation signal contract supported by an actor setup.",
         RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.AnimationDefinitionRouteSupport },
         NativeSetup = new[] { "Set supported presentation modes.", "Optionally list supported signals." },

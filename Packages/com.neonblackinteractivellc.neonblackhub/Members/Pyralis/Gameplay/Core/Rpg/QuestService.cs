@@ -21,7 +21,9 @@ namespace NeonBlack.Gameplay.Core.Rpg
         },
         AssignmentFields = new[] { nameof(_progression), nameof(_inventory) },
         FirstProof = "Quests can be started and objectives can be progressed.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/rpg"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/rpg",
+        CapabilityPath = "RPG/Quests/Quest Service",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
     )]
     public sealed class QuestService : IQuestService
 {

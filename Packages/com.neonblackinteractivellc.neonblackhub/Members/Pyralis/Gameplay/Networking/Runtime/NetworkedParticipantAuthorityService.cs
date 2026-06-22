@@ -10,6 +10,8 @@ namespace NeonBlack.Gameplay.Networking.Runtime
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Networking,
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.Networking },
+        CapabilityPath = "Networking/Participants/Participant Authority Service",
         Relevance = "Resolves participant authority from the active Netcode for GameObjects (NGO) local client.",
         RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.NetworkRouteSupport },
         FirstProof = "The local client is correctly identified as the owner in a networked session.",

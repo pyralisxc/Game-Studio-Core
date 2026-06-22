@@ -15,7 +15,8 @@ namespace NeonBlack.Gameplay.Core.Runtime
         FirstProof = "Verify that local participants are treated as locally controlled in an offline or same-machine session.",
         NativeSetup = new[] { "Register through the scene/session composition root when an offline authority service is needed." },
         ExpertAdvice = "The Local Authority service is a pass-through for offline and same-machine play. It identifies participant input as local. Use a networked authority service when ownership comes from an online backend.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/authority"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/authority",
+        CapabilityPath = "Core Setup/Participants/Local Authority Service"
     )]
 public sealed class LocalParticipantAuthorityService : IParticipantAuthorityService
 {

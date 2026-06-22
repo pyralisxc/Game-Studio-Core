@@ -25,7 +25,7 @@ namespace NeonBlack.Gameplay.Editor
                     new[] { "Camera", "Movement", "Interaction" },
                     new[] { RuntimeCapabilityLaneTag.CameraCursor, RuntimeCapabilityLaneTag.Sprite2D, RuntimeCapabilityLaneTag.Billboard2_5D, RuntimeCapabilityLaneTag.ThirdPerson3D, RuntimeCapabilityLaneTag.TabletopBoard },
                     new[] { "camera root", "camera controller", "camera profile", "playfield profile", "physical camera", "camera bounds source" },
-                    new[] { "route.world-camera", "capability.camera-follow-bounds", "proof.camera-cursor-world", "inspector.cinemachine-camera-rig-controller.camera-fields" }),
+                    new[] { "route.world-camera", "capability.camera-follow-bounds", "proof.camera-cursor-world" }),
 
                 CreateSceneSurfaceFact(
                     "scene-evidence.ui-hud-menus",

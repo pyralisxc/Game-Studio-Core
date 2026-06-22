@@ -31,6 +31,14 @@ Do not use dated audits, migration notes, or old setup guides as source truth. I
 
 ## Development Expectations
 
+- Keep the core motto visible in every architecture choice:
+  - Unity owns engine behavior.
+  - Pyralis owns gameplay meaning.
+  - Reflection discovers structure.
+  - Dependency analysis discovers setup relationships.
+  - Validators witness local semantic readiness.
+  - The graph compiles understanding.
+  - Authoring renders guidance.
 - Treat gameplay mechanics as shared platform capabilities by default.
 - Check how mechanics apply to `Sprite2D`, `Billboard2_5D`, `Rigged3D`, non-pawn participants, and networking/authority when relevant.
 - Prefer Unity packages, Unity ecosystem packages, and credible free/open packages before writing custom infrastructure.

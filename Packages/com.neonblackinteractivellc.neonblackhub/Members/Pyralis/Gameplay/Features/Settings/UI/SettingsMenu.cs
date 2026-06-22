@@ -20,7 +20,8 @@ namespace NeonBlack.Gameplay.Features.Settings
     },
     AssignmentFields = new[] { nameof(settingsSource), nameof(masterSlider), nameof(musicSlider), nameof(sfxSlider), nameof(fullscreenToggle), nameof(resolutionDropdown) },
     FirstProof = "Open the settings panel and verify sliders modify volume and the resolution dropdown updates display.",
-    ExpertAdvice = "Do not leave every control empty; the panel will open but cannot change settings. Wire the resolution dropdown On Value Changed event only if another script needs to observe it; this script adds its own listener on enable."
+    ExpertAdvice = "Do not leave every control empty; the panel will open but cannot change settings. Wire the resolution dropdown On Value Changed event only if another script needs to observe it; this script adds its own listener on enable.",
+    CapabilityPath = "Settings/UI/Settings Menu"
 )]
 public class SettingsMenu : MonoBehaviour
 {

@@ -19,7 +19,9 @@ namespace NeonBlack.Gameplay.Core.Rpg
             "create SkillTree assets",
             "link SkillNodes to StatModifiers or Abilities",
             "assign skill tree to ProgressionService"
-        }
+        },
+        CapabilityPath = "RPG/Skill Tree/Skill Tree Service",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
     )]
     public sealed class SkillTreeService : ISkillTreeService
 {

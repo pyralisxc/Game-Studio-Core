@@ -9,7 +9,8 @@ namespace NeonBlack.Gameplay.Core.Rules.Board
     [AuthoringContract(
         Capability = AuthoringCapability.Tabletop | AuthoringCapability.Grid,
         Relevance = "Authoritative logical board state for tabletop-style games.",
-        FirstProof = "Board state correctly tracks piece occupancy and coordinate mapping at runtime."
+        FirstProof = "Board state correctly tracks piece occupancy and coordinate mapping at runtime.",
+        CapabilityPath = "Tabletop/Board/Board Runtime State"
     )]
     public sealed class BoardRuntimeState : IBoardStateService
     {

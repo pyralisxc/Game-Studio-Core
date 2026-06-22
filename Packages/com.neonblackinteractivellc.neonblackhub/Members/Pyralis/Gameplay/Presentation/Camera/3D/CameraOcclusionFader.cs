@@ -19,7 +19,8 @@ namespace NeonBlack.Gameplay.Presentation.Camera
     },
     AssignmentFields = new[] { nameof(target), nameof(fadeAlpha), nameof(fadeDistance), nameof(occlusionMask) },
     FirstProof = "Walk the player behind world geometry and verify it fades out.",
-    ExpertAdvice = "Keep the player layer out of Occlusion Mask. Use this for 3D line-of-sight fading; 2D sprite visibility is usually handled via sorting layers."
+    ExpertAdvice = "Keep the player layer out of Occlusion Mask. Use this for 3D line-of-sight fading; 2D sprite visibility is usually handled via sorting layers.",
+    CapabilityPath = "World & Meta/Camera/Camera Occlusion Fader"
 )]
 [AddComponentMenu("NeonBlack/Gameplay/Camera/Camera Occlusion Fader 3D")]
 public class CameraOcclusionFader : MonoBehaviour

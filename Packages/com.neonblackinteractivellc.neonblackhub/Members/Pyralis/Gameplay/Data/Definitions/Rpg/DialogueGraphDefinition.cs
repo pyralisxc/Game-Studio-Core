@@ -12,7 +12,9 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
         Capability = AuthoringCapability.Dialogue,
         Lane = "RPG",
         AssignmentFields = new[] { nameof(graphId), nameof(displayName), nameof(startNodeId), nameof(nodes) },
-        FirstProof = "Proof that the dialogue graph can be traversed and contains at least one terminal node."
+        FirstProof = "Proof that the dialogue graph can be traversed and contains at least one terminal node.",
+        CapabilityPath = "RPG/Dialogue/Definitions/Dialogue Graph Definition",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Dialogue Graph", fileName = "DialogueGraphDefinition")]
     public class DialogueGraphDefinition : ScriptableObject, IDialogueGraph, IRuntimeValidationProvider

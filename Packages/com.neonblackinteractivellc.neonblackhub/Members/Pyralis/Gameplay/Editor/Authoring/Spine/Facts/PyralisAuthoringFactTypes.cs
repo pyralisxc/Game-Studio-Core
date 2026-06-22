@@ -31,7 +31,6 @@ namespace NeonBlack.Gameplay.Editor
         CoreSetup,
         FeatureContract,
         Validator,
-        InspectorGuide,
         Reflection,
         Convention,
         SceneEvidence
@@ -50,7 +49,7 @@ namespace NeonBlack.Gameplay.Editor
 
     public sealed class PyralisAuthoringFact
     {
-public PyralisAuthoringFact(
+        public PyralisAuthoringFact(
             string stableId,
             string displayName,
             PyralisAuthoringFactKind kind,

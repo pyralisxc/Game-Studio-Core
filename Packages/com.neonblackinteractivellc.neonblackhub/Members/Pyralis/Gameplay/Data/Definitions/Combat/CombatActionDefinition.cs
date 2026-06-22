@@ -10,6 +10,8 @@ namespace NeonBlack.Gameplay.Features.Combat
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Combat | AuthoringCapability.Animation, 
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.Combat, RuntimeCapabilityFamily.AnimationPresentation },
+        CapabilityPath = "Combat/Actions/Combat Action Definition",
         Relevance = "Project-window creation path for one combat action.",
         RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.CombatDefinitionRouteSupport },
         AssignmentFields = new[] { nameof(displayName), nameof(inputType), nameof(animationSignal) },

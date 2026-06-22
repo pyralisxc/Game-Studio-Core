@@ -65,6 +65,52 @@ namespace NeonBlack.Gameplay.Editor
         public string SourceLabel => Node != null ? FormatSourceKind(Node.SourceKind) : string.Empty;
         public string OriginLabel => Node != null ? FormatSourceOrigin(Node.SourceOrigin) : string.Empty;
         public PyralisAuthoringGraphEvidenceState EvidenceState => Node != null ? Node.EvidenceState : PyralisAuthoringGraphEvidenceState.Unknown;
+        public string IssueCode => Node != null ? Node.IssueCode : string.Empty;
+        public string TriageBucket => BuildTriageBucket(Node);
+        public string TriageAdvice => BuildTriageAdvice(Node);
+        public string OwnershipBucket => BuildOwnershipClassification(Node).OwnershipBucket;
+        public string RepairOwner => BuildOwnershipClassification(Node).RepairOwner;
+        public string OwnershipAdvice => BuildOwnershipClassification(Node).OwnershipAdvice;
+
+        private static PyralisAuthoringContractMetadataClassification BuildOwnershipClassification(PyralisAuthoringGraphNode node)
+        {
+            return PyralisAuthoringContractMetadataPolicy.Classify(node?.SourceContract, node?.IssueCode);
+        }
+
+        private static string BuildTriageBucket(PyralisAuthoringGraphNode node)
+        {
+            if (node == null || string.IsNullOrWhiteSpace(node.IssueCode))
+                return string.Empty;
+
+            return node.IssueCode switch
+            {
+                "ContractMetadata.CapabilityPathMissing" => "IntentMetadataDecision",
+                "ContractMetadata.RouteEssentialCapabilityPathMissing" => "RouteEssentialNeedsPath",
+                "ContractMetadata.RuntimeFamiliesMissing" => "RuntimeFamilyDecision",
+                "ContractMetadata.DuplicateOwnershipClaim" => "DuplicateOwnershipClaim",
+                "ContractMetadata.ProofTargetGenericTemplate" => "NeedsFeatureProofTarget",
+                "ValidationEvidence.MetadataMissing" => "ValidationMetadata",
+                _ => string.Empty
+            };
+        }
+
+        private static string BuildTriageAdvice(PyralisAuthoringGraphNode node)
+        {
+            if (node == null || string.IsNullOrWhiteSpace(node.IssueCode))
+                return string.Empty;
+
+            string sourceName = node.SourceContract != null ? node.SourceContract.DisplayName : node.Label;
+            return node.IssueCode switch
+            {
+                "ContractMetadata.CapabilityPathMissing" => $"{sourceName} is selectable Intent metadata. Either give it a semantic CapabilityPath so users can focus it, or mark it support-only.",
+                "ContractMetadata.RouteEssentialCapabilityPathMissing" => $"{sourceName} is route-essential infrastructure. Give it a Core Setup path so Intent can group it without display-name guessing.",
+                "ContractMetadata.RuntimeFamiliesMissing" => $"{sourceName} has capability meaning but no runtime family. Add the runtime family that owns the behavior, or set capability to None if it is metadata-only.",
+                "ContractMetadata.DuplicateOwnershipClaim" => "Pick one canonical owner for this responsibility, or split the ownership claim into narrower contract responsibilities.",
+                "ContractMetadata.ProofTargetGenericTemplate" => "Replace the generic proof target with the specific feature proof this contract should support.",
+                "ValidationEvidence.MetadataMissing" => "Validation is witnessing readiness without enough metadata for Hygiene to route the repair cleanly.",
+                _ => string.Empty
+            };
+        }
 
         private static string FormatSourceKind(PyralisAuthoringGraphSourceKind sourceKind)
         {
@@ -365,6 +411,18 @@ namespace NeonBlack.Gameplay.Editor
         }
     }
 
+    public sealed class PyralisAuthoringRouteDiagnosticQuestionRow
+    {
+        public PyralisAuthoringRouteDiagnosticQuestionRow(string question, string answer)
+        {
+            Question = question ?? string.Empty;
+            Answer = answer ?? string.Empty;
+        }
+
+        public string Question { get; }
+        public string Answer { get; }
+    }
+
     internal readonly struct PyralisRouteStepLens
     {
         public static readonly PyralisRouteStepLens Empty = new PyralisRouteStepLens(
@@ -653,6 +711,9 @@ namespace NeonBlack.Gameplay.Editor
             Sections = sections ?? Array.Empty<PyralisAuthoringGraphAuditSection>();
             DetailRows = detailRows ?? Array.Empty<PyralisAuthoringGraphAuditRow>();
             DependencyRecords = dependencyRecords ?? Array.Empty<PyralisSourceDependencyHygieneRecord>();
+            ProofBlockers = PyralisAuthoringSetupGraphProjection.BuildHygieneProofBlockerConnectionRows(Graph);
+            ContractSourcePressureRows = BuildContractSourcePressureRows(Graph);
+            DependencyPressureRows = BuildDependencyPressureRows(DependencyRecords);
             CleanupFocus = BuildCleanupFocus(DependencyRecords);
             WatchList = BuildWatchList(DependencyRecords);
         }
@@ -662,8 +723,14 @@ namespace NeonBlack.Gameplay.Editor
         public IReadOnlyList<PyralisAuthoringGraphAuditSection> Sections { get; }
         public IReadOnlyList<PyralisAuthoringGraphAuditRow> DetailRows { get; }
         public IReadOnlyList<PyralisSourceDependencyHygieneRecord> DependencyRecords { get; }
+        public IReadOnlyList<PyralisAuthoringGraphConnectionRow> ProofBlockers { get; }
+        public IReadOnlyList<PyralisAuthoringGraphNode> ContractSourcePressureRows { get; }
+        public IReadOnlyList<PyralisSourceDependencyHygieneRecord> DependencyPressureRows { get; }
         public IReadOnlyList<PyralisSourceDependencyHygieneRecord> CleanupFocus { get; }
         public IReadOnlyList<PyralisSourceDependencyHygieneRecord> WatchList { get; }
+        public int DependencyPressureCount => DependencyRecords.Count(record => record != null && record.Risk != PyralisSourceDependencyRisk.Low);
+        public int CleanupFocusCount => DependencyRecords.Count(record => record != null && record.Risk != PyralisSourceDependencyRisk.Low && IsCleanupFocus(record.PressureKind));
+        public int WatchListCount => DependencyRecords.Count(record => record != null && record.Risk != PyralisSourceDependencyRisk.Low && !IsCleanupFocus(record.PressureKind));
         public int WatchCount => CountRisk(PyralisSourceDependencyRisk.Watch);
         public int HeavyCount => CountRisk(PyralisSourceDependencyRisk.Heavy);
         public int BoundaryRiskCount => CountRisk(PyralisSourceDependencyRisk.BoundaryRisk);
@@ -691,6 +758,17 @@ namespace NeonBlack.Gameplay.Editor
                 .ToArray();
         }
 
+        public IReadOnlyList<string> BuildOwnershipBucketSummary()
+        {
+            return DetailRows
+                .Where(row => row != null && !string.IsNullOrWhiteSpace(row.OwnershipBucket))
+                .GroupBy(row => row.OwnershipBucket)
+                .OrderByDescending(group => group.Count())
+                .ThenBy(group => group.Key, StringComparer.Ordinal)
+                .Select(group => group.Key + ": " + group.Count())
+                .ToArray();
+        }
+
         private int CountRisk(PyralisSourceDependencyRisk risk)
         {
             return DependencyRecords.Count(record => record != null && record.Risk == risk);
@@ -703,7 +781,6 @@ namespace NeonBlack.Gameplay.Editor
                 .OrderBy(record => PyralisSourceDependencyHygieneScanner.GetCleanupPriority(record.PressureKind))
                 .ThenByDescending(record => record.RiskScore)
                 .ThenBy(record => record.FileName, StringComparer.Ordinal)
-                .Take(8)
                 .ToArray();
         }
 
@@ -714,14 +791,34 @@ namespace NeonBlack.Gameplay.Editor
                 .OrderBy(record => PyralisSourceDependencyHygieneScanner.GetCleanupPriority(record.PressureKind))
                 .ThenByDescending(record => record.RiskScore)
                 .ThenBy(record => record.FileName, StringComparer.Ordinal)
-                .Take(8)
+                .ToArray();
+        }
+
+        private static IReadOnlyList<PyralisSourceDependencyHygieneRecord> BuildDependencyPressureRows(IReadOnlyList<PyralisSourceDependencyHygieneRecord> records)
+        {
+            return records
+                .Where(record => record != null && record.Risk != PyralisSourceDependencyRisk.Low)
+                .OrderBy(record => PyralisSourceDependencyHygieneScanner.GetCleanupPriority(record.PressureKind))
+                .ThenByDescending(record => record.RiskScore)
+                .ThenBy(record => record.FileName, StringComparer.Ordinal)
+                .ToArray();
+        }
+
+        private static IReadOnlyList<PyralisAuthoringGraphNode> BuildContractSourcePressureRows(PyralisAuthoringSetupGraph graph)
+        {
+            if (graph == null)
+                return Array.Empty<PyralisAuthoringGraphNode>();
+
+            return graph.Nodes
+                .Where(node => node != null && (node.Kind == PyralisAuthoringGraphNodeKind.Contract || node.SourceContract != null))
                 .ToArray();
         }
 
         public static bool IsCleanupFocus(PyralisSourceDependencyPressureKind pressureKind)
         {
             return pressureKind == PyralisSourceDependencyPressureKind.RuntimeOwnership
-                || pressureKind == PyralisSourceDependencyPressureKind.DirectSceneQuerySurface;
+                || pressureKind == PyralisSourceDependencyPressureKind.DirectSceneQuerySurface
+                || PyralisSourceDependencyHygieneScanner.IsOwnershipLeakPressure(pressureKind);
         }
 
         private static bool IsActionablePressure(PyralisSourceDependencyHygieneRecord record)
@@ -732,27 +829,70 @@ namespace NeonBlack.Gameplay.Editor
         }
     }
 
+    public sealed class PyralisAuthoringFactKindSummaryRow
+    {
+        public PyralisAuthoringFactKindSummaryRow(PyralisAuthoringFactKind kind, int count)
+        {
+            Kind = kind;
+            Count = count;
+            Label = kind.ToString();
+        }
+
+        public PyralisAuthoringFactKind Kind { get; }
+        public string Label { get; }
+        public int Count { get; }
+    }
+
+    public sealed class PyralisAuthoringFactGroupRow
+    {
+        public PyralisAuthoringFactGroupRow(PyralisAuthoringFactKind kind, IReadOnlyList<PyralisAuthoringFact> facts)
+        {
+            Kind = kind;
+            Label = kind.ToString();
+            Facts = facts ?? Array.Empty<PyralisAuthoringFact>();
+        }
+
+        public PyralisAuthoringFactKind Kind { get; }
+        public string Label { get; }
+        public IReadOnlyList<PyralisAuthoringFact> Facts { get; }
+    }
+
+    public sealed class PyralisAuthoringContractGroupRow
+    {
+        public PyralisAuthoringContractGroupRow(string category, IReadOnlyList<PyralisAuthoringReflectiveContractGraphRow> contracts)
+        {
+            Category = string.IsNullOrWhiteSpace(category) ? "Uncategorized" : category;
+            Contracts = contracts ?? Array.Empty<PyralisAuthoringReflectiveContractGraphRow>();
+        }
+
+        public string Category { get; }
+        public IReadOnlyList<PyralisAuthoringReflectiveContractGraphRow> Contracts { get; }
+    }
+
     public sealed class PyralisAuthoringFactsProjection
     {
         private PyralisAuthoringFactsProjection(
             Object activeSetup,
             PyralisAuthoringSetupGraph graph,
             IReadOnlyList<PyralisAuthoringFact> facts,
-            IReadOnlyList<PyralisAuthoringReflectiveContractGraphRow> contracts,
-            IReadOnlyList<PyralisAuthoringGraphConnectionRow> proofCoverage)
+            IReadOnlyList<PyralisAuthoringReflectiveContractGraphRow> contracts)
         {
             ActiveSetup = activeSetup;
             Graph = graph;
             Facts = facts ?? Array.Empty<PyralisAuthoringFact>();
             Contracts = contracts ?? Array.Empty<PyralisAuthoringReflectiveContractGraphRow>();
-            ProofCoverage = proofCoverage ?? Array.Empty<PyralisAuthoringGraphConnectionRow>();
+            FactKindRows = BuildFactKindRows(Facts);
+            FactGroups = BuildFactGroups(Facts);
+            ContractGroups = BuildContractGroups(Contracts);
         }
 
         public Object ActiveSetup { get; }
         public PyralisAuthoringSetupGraph Graph { get; }
         public IReadOnlyList<PyralisAuthoringFact> Facts { get; }
         public IReadOnlyList<PyralisAuthoringReflectiveContractGraphRow> Contracts { get; }
-        public IReadOnlyList<PyralisAuthoringGraphConnectionRow> ProofCoverage { get; }
+        public IReadOnlyList<PyralisAuthoringFactKindSummaryRow> FactKindRows { get; }
+        public IReadOnlyList<PyralisAuthoringFactGroupRow> FactGroups { get; }
+        public IReadOnlyList<PyralisAuthoringContractGroupRow> ContractGroups { get; }
 
         public static PyralisAuthoringFactsProjection Build(Object activeSetup, PyralisAuthoringSetupGraph graph)
         {
@@ -760,13 +900,338 @@ namespace NeonBlack.Gameplay.Editor
                 activeSetup,
                 graph,
                 PyralisAuthoringSetupGraphProjection.BuildCookbookFacts(graph),
-                PyralisAuthoringSetupGraphProjection.BuildReflectiveContractRows(graph),
-                PyralisAuthoringSetupGraphProjection.BuildProofSupportRows(graph));
+                PyralisAuthoringSetupGraphProjection.BuildReflectiveContractRows(graph));
         }
+
+        private static IReadOnlyList<PyralisAuthoringFactKindSummaryRow> BuildFactKindRows(IReadOnlyList<PyralisAuthoringFact> facts)
+        {
+            if (facts == null)
+                return Array.Empty<PyralisAuthoringFactKindSummaryRow>();
+
+            List<PyralisAuthoringFactKindSummaryRow> rows = new List<PyralisAuthoringFactKindSummaryRow>();
+            Array kinds = Enum.GetValues(typeof(PyralisAuthoringFactKind));
+            for (int i = 0; i < kinds.Length; i++)
+            {
+                PyralisAuthoringFactKind kind = (PyralisAuthoringFactKind)kinds.GetValue(i);
+                int count = facts.Count(fact => fact != null && fact.Kind == kind);
+                if (count > 0)
+                    rows.Add(new PyralisAuthoringFactKindSummaryRow(kind, count));
+            }
+
+            return rows;
+        }
+
+        private static IReadOnlyList<PyralisAuthoringFactGroupRow> BuildFactGroups(IReadOnlyList<PyralisAuthoringFact> facts)
+        {
+            if (facts == null)
+                return Array.Empty<PyralisAuthoringFactGroupRow>();
+
+            List<PyralisAuthoringFactGroupRow> rows = new List<PyralisAuthoringFactGroupRow>();
+            Array kinds = Enum.GetValues(typeof(PyralisAuthoringFactKind));
+            for (int i = 0; i < kinds.Length; i++)
+            {
+                PyralisAuthoringFactKind kind = (PyralisAuthoringFactKind)kinds.GetValue(i);
+                PyralisAuthoringFact[] group = facts
+                    .Where(fact => fact != null && fact.Kind == kind)
+                    .ToArray();
+                if (group.Length > 0)
+                    rows.Add(new PyralisAuthoringFactGroupRow(kind, group));
+            }
+
+            return rows;
+        }
+
+        private static IReadOnlyList<PyralisAuthoringContractGroupRow> BuildContractGroups(
+            IReadOnlyList<PyralisAuthoringReflectiveContractGraphRow> contracts)
+        {
+            if (contracts == null)
+                return Array.Empty<PyralisAuthoringContractGroupRow>();
+
+            return contracts
+                .Where(row => row?.Contract != null)
+                .GroupBy(row => string.IsNullOrWhiteSpace(row.Contract.AuthoringCategory) ? "Uncategorized" : row.Contract.AuthoringCategory)
+                .OrderBy(group => group.Key, StringComparer.Ordinal)
+                .Select(group => new PyralisAuthoringContractGroupRow(group.Key, group.ToArray()))
+                .ToArray();
+        }
+    }
+
+    public sealed class PyralisAuthoringMapExportProjection
+    {
+        public PyralisAuthoringMapExportProjection(
+            PyralisAuthoringSetupGraph graph,
+            IReadOnlyList<PyralisAuthoringGraphNode> nodes,
+            IReadOnlyList<PyralisAuthoringGraphEdge> edges,
+            IReadOnlyList<PyralisAuthoringSetupGraphRow> mapRows,
+            IReadOnlyList<PyralisAuthoringGraphConnectionRow> mapConnections,
+            IReadOnlyList<PyralisAuthoringGraphNode> sceneSurfaces,
+            IReadOnlyList<PyralisAuthoringGraphAuditRow> sceneSetupIssues)
+        {
+            Graph = graph;
+            Nodes = nodes ?? Array.Empty<PyralisAuthoringGraphNode>();
+            Edges = edges ?? Array.Empty<PyralisAuthoringGraphEdge>();
+            MapRows = mapRows ?? Array.Empty<PyralisAuthoringSetupGraphRow>();
+            MapConnections = mapConnections ?? Array.Empty<PyralisAuthoringGraphConnectionRow>();
+            SceneSurfaces = sceneSurfaces ?? Array.Empty<PyralisAuthoringGraphNode>();
+            SceneSetupIssues = sceneSetupIssues ?? Array.Empty<PyralisAuthoringGraphAuditRow>();
+        }
+
+        public PyralisAuthoringSetupGraph Graph { get; }
+        public IReadOnlyList<PyralisAuthoringGraphNode> Nodes { get; }
+        public IReadOnlyList<PyralisAuthoringGraphEdge> Edges { get; }
+        public IReadOnlyList<PyralisAuthoringSetupGraphRow> MapRows { get; }
+        public IReadOnlyList<PyralisAuthoringGraphConnectionRow> MapConnections { get; }
+        public IReadOnlyList<PyralisAuthoringGraphNode> SceneSurfaces { get; }
+        public IReadOnlyList<PyralisAuthoringGraphAuditRow> SceneSetupIssues { get; }
+    }
+
+    public sealed class PyralisAuthoringGraphSummaryProjection
+    {
+        public PyralisAuthoringGraphSummaryProjection(
+            int nodeCount,
+            int edgeCount,
+            int unknownNodeCount,
+            int missingNodeCount,
+            int blockedNodeCount,
+            int contractMetadataIssueCount,
+            int contractInventoryNodeCount,
+            int proofBlockerCount,
+            int dependencyPressureCount,
+            int contractNodeCount,
+            int hygieneUnknownRowCount,
+            int hygieneMissingRowCount,
+            int hygieneBlockedRowCount)
+        {
+            NodeCount = nodeCount;
+            EdgeCount = edgeCount;
+            UnknownNodeCount = unknownNodeCount;
+            MissingNodeCount = missingNodeCount;
+            BlockedNodeCount = blockedNodeCount;
+            ContractMetadataIssueCount = contractMetadataIssueCount;
+            ContractInventoryNodeCount = contractInventoryNodeCount;
+            ProofBlockerCount = proofBlockerCount;
+            DependencyPressureCount = dependencyPressureCount;
+            ContractNodeCount = contractNodeCount;
+            HygieneUnknownRowCount = hygieneUnknownRowCount;
+            HygieneMissingRowCount = hygieneMissingRowCount;
+            HygieneBlockedRowCount = hygieneBlockedRowCount;
+        }
+
+        public int NodeCount { get; }
+        public int EdgeCount { get; }
+        public int UnknownNodeCount { get; }
+        public int MissingNodeCount { get; }
+        public int BlockedNodeCount { get; }
+        public int SetupReadinessUnknownNodeCount => UnknownNodeCount;
+        public int SetupReadinessMissingNodeCount => MissingNodeCount;
+        public int SetupReadinessBlockedNodeCount => BlockedNodeCount;
+        public int ContractMetadataIssueCount { get; }
+        public int ContractInventoryNodeCount { get; }
+        public int ProofBlockerCount { get; }
+        public int DependencyPressureCount { get; }
+        public int ContractNodeCount { get; }
+        public int HygieneUnknownRowCount { get; }
+        public int HygieneMissingRowCount { get; }
+        public int HygieneBlockedRowCount { get; }
+    }
+
+    public sealed class PyralisAuthoringRouteProofTraceProjection
+    {
+        public PyralisAuthoringRouteProofTraceProjection(
+            PyralisAuthoringRouteWorkingProjection route,
+            IReadOnlyList<PyralisAuthoringGraphNode> supportingContracts,
+            IReadOnlyList<PyralisAuthoringRouteDiagnosticQuestionRow> diagnosticQuestions)
+        {
+            Route = route;
+            SupportingContracts = supportingContracts ?? Array.Empty<PyralisAuthoringGraphNode>();
+            DiagnosticQuestions = diagnosticQuestions ?? Array.Empty<PyralisAuthoringRouteDiagnosticQuestionRow>();
+        }
+
+        public PyralisAuthoringRouteWorkingProjection Route { get; }
+        public IReadOnlyList<PyralisAuthoringGraphNode> SupportingContracts { get; }
+        public IReadOnlyList<PyralisAuthoringRouteDiagnosticQuestionRow> DiagnosticQuestions { get; }
     }
 
     public static class PyralisAuthoringSetupGraphProjection
     {
+        public static PyralisAuthoringMapExportProjection BuildMapExportProjection(PyralisAuthoringSetupGraph graph)
+        {
+            PyralisAuthoringGraphNode[] mapNodes = BuildMapExportNodes(graph);
+            HashSet<string> mapNodeIds = new HashSet<string>(
+                mapNodes.Select(node => node.StableId),
+                StringComparer.Ordinal);
+            PyralisAuthoringGraphEdge[] mapEdges = BuildMapExportEdges(graph, mapNodeIds);
+
+            return new PyralisAuthoringMapExportProjection(
+                graph,
+                mapNodes,
+                mapEdges,
+                BuildSetupMapRows(graph),
+                BuildMapConnectionRows(graph),
+                FindSceneSurfaceNodes(graph),
+                BuildMapSceneSetupIssueRows(graph));
+        }
+
+        public static PyralisAuthoringRouteProofTraceProjection BuildRouteProofTraceProjection(PyralisAuthoringSetupGraph graph)
+        {
+            PyralisAuthoringRouteWorkingProjection route = BuildRouteWorkingProjection(graph);
+            return new PyralisAuthoringRouteProofTraceProjection(
+                route,
+                BuildRouteSupportingContractNodes(graph, route),
+                BuildRouteDiagnosticQuestions(graph, route));
+        }
+
+        public static PyralisAuthoringGraphSummaryProjection BuildGraphSummaryProjection(
+            PyralisAuthoringSetupGraph graph,
+            IReadOnlyList<PyralisSourceDependencyHygieneRecord> dependencyRecords,
+            IReadOnlyList<PyralisAuthoringGraphConnectionRow> proofBlockers)
+        {
+            PyralisAuthoringGraphNode[] nodes = graph?.Nodes.ToArray() ?? Array.Empty<PyralisAuthoringGraphNode>();
+            PyralisAuthoringGraphNode[] integrityNodes = nodes
+                .Where(node => node != null && IsGraphIntegrityNode(node))
+                .ToArray();
+            PyralisAuthoringGraphAuditRow[] hygieneRows = BuildHygieneDetailRows(graph).ToArray();
+
+            return new PyralisAuthoringGraphSummaryProjection(
+                nodes.Length,
+                graph?.Edges.Count ?? 0,
+                integrityNodes.Count(node => node.EvidenceState == PyralisAuthoringGraphEvidenceState.Unknown),
+                integrityNodes.Count(node => node.EvidenceState == PyralisAuthoringGraphEvidenceState.Missing),
+                integrityNodes.Count(node => node.EvidenceState == PyralisAuthoringGraphEvidenceState.Blocked),
+                nodes.Count(IsContractMetadataIssueNode),
+                nodes.Count(node => node != null && (node.Kind == PyralisAuthoringGraphNodeKind.Contract || node.SourceContract != null)),
+                proofBlockers?.Count ?? 0,
+                dependencyRecords?.Count(record => record != null && record.Risk != PyralisSourceDependencyRisk.Low) ?? 0,
+                nodes.Count(node => node != null && (node.Kind == PyralisAuthoringGraphNodeKind.Contract || node.SourceContract != null)),
+                hygieneRows.Count(row => row != null && row.EvidenceState == PyralisAuthoringGraphEvidenceState.Unknown),
+                hygieneRows.Count(row => row != null && row.EvidenceState == PyralisAuthoringGraphEvidenceState.Missing),
+                hygieneRows.Count(row => row != null && row.EvidenceState == PyralisAuthoringGraphEvidenceState.Blocked));
+        }
+
+        private static PyralisAuthoringGraphNode[] BuildMapExportNodes(PyralisAuthoringSetupGraph graph)
+        {
+            if (graph == null)
+                return Array.Empty<PyralisAuthoringGraphNode>();
+
+            return graph.Nodes
+                .Where(IsMapExportNode)
+                .OrderBy(node => node.StableId, StringComparer.Ordinal)
+                .ToArray();
+        }
+
+        private static PyralisAuthoringGraphEdge[] BuildMapExportEdges(
+            PyralisAuthoringSetupGraph graph,
+            HashSet<string> mapNodeIds)
+        {
+            if (graph == null || mapNodeIds == null || mapNodeIds.Count == 0)
+                return Array.Empty<PyralisAuthoringGraphEdge>();
+
+            return graph.Edges
+                .Where(edge => edge != null
+                    && mapNodeIds.Contains(edge.FromNodeId)
+                    && mapNodeIds.Contains(edge.ToNodeId))
+                .OrderBy(edge => edge.FromNodeId, StringComparer.Ordinal)
+                .ThenBy(edge => edge.ToNodeId, StringComparer.Ordinal)
+                .ToArray();
+        }
+
+        private static bool IsMapExportNode(PyralisAuthoringGraphNode node)
+        {
+            if (node == null)
+                return false;
+
+            if (node.Kind == PyralisAuthoringGraphNodeKind.Contract
+                || node.SourceContract != null
+                || node.SourceKind == PyralisAuthoringGraphSourceKind.AuthoringContract)
+            {
+                return false;
+            }
+
+            if (IsContractMetadataIssueNode(node))
+                return false;
+
+            switch (node.Kind)
+            {
+                case PyralisAuthoringGraphNodeKind.SetupChain:
+                case PyralisAuthoringGraphNodeKind.RouteShape:
+                case PyralisAuthoringGraphNodeKind.SceneSurface:
+                case PyralisAuthoringGraphNodeKind.UnitySurfaceRequirement:
+                case PyralisAuthoringGraphNodeKind.ValidationEvidence:
+                    return true;
+                case PyralisAuthoringGraphNodeKind.AssignmentField:
+                    return node.SourceKind == PyralisAuthoringGraphSourceKind.Reflection
+                        || node.SourceKind == PyralisAuthoringGraphSourceKind.RuntimeValidation
+                        || node.SourceKind == PyralisAuthoringGraphSourceKind.CoreSetup;
+                default:
+                    return false;
+            }
+        }
+
+        private static bool IsGraphIntegrityNode(PyralisAuthoringGraphNode node)
+        {
+            if (node == null)
+                return false;
+
+            return !IsContractMetadataIssueNode(node)
+                && node.Kind != PyralisAuthoringGraphNodeKind.Contract
+                && node.SourceContract == null;
+        }
+
+        private static bool IsContractMetadataIssueNode(PyralisAuthoringGraphNode node)
+        {
+            return node != null
+                && !string.IsNullOrWhiteSpace(node.IssueCode)
+                && node.IssueCode.StartsWith("ContractMetadata.", StringComparison.Ordinal);
+        }
+
+        private static IReadOnlyList<PyralisAuthoringGraphNode> BuildRouteSupportingContractNodes(
+            PyralisAuthoringSetupGraph graph,
+            PyralisAuthoringRouteWorkingProjection route)
+        {
+            if (graph == null)
+                return Array.Empty<PyralisAuthoringGraphNode>();
+
+            HashSet<string> contractNodeIds = new HashSet<string>(StringComparer.Ordinal);
+            AddRouteContractNodeIds(contractNodeIds, route?.OrderedSteps);
+            AddProofSupportContractNodeIds(contractNodeIds, route?.ProofSupport);
+
+            return graph.Nodes
+                .Where(node => node != null
+                    && contractNodeIds.Contains(node.StableId)
+                    && (node.Kind == PyralisAuthoringGraphNodeKind.Contract || node.SourceContract != null))
+                .ToArray();
+        }
+
+        private static void AddRouteContractNodeIds(
+            HashSet<string> contractNodeIds,
+            IReadOnlyList<PyralisAuthoringRouteStepRow> orderedSteps)
+        {
+            if (contractNodeIds == null || orderedSteps == null)
+                return;
+
+            for (int i = 0; i < orderedSteps.Count; i++)
+            {
+                PyralisAuthoringGraphNode node = orderedSteps[i]?.Node;
+                if (node != null && (node.Kind == PyralisAuthoringGraphNodeKind.Contract || node.SourceContract != null))
+                    contractNodeIds.Add(node.StableId);
+            }
+        }
+
+        private static void AddProofSupportContractNodeIds(
+            HashSet<string> contractNodeIds,
+            IReadOnlyList<PyralisAuthoringGraphConnectionRow> proofSupport)
+        {
+            if (contractNodeIds == null || proofSupport == null)
+                return;
+
+            for (int i = 0; i < proofSupport.Count; i++)
+            {
+                PyralisAuthoringGraphNode node = proofSupport[i]?.From;
+                if (node != null && (node.Kind == PyralisAuthoringGraphNodeKind.Contract || node.SourceContract != null))
+                    contractNodeIds.Add(node.StableId);
+            }
+        }
+
         public static IReadOnlyList<PyralisAuthoringSetupGraphRow> BuildSetupMapRows(PyralisAuthoringSetupGraph graph)
         {
             if (graph == null)
@@ -1072,7 +1537,20 @@ namespace NeonBlack.Gameplay.Editor
 
         public static IReadOnlyList<PyralisAuthoringFact> BuildCookbookFacts(PyralisAuthoringSetupGraph graph)
         {
-            return PyralisAuthoringGrammarRegistry.AllFacts;
+            return PyralisAuthoringGrammarRegistry.AllFacts
+                .Where(IsFactsCookbookFact)
+                .ToArray();
+        }
+
+        private static bool IsFactsCookbookFact(PyralisAuthoringFact fact)
+        {
+            if (fact == null)
+                return false;
+
+            return fact.Kind != PyralisAuthoringFactKind.RouteIntent
+                && fact.Kind != PyralisAuthoringFactKind.RuntimeCapability
+                && fact.Kind != PyralisAuthoringFactKind.CustomizationMoment
+                && fact.Kind != PyralisAuthoringFactKind.Proof;
         }
 
         public static IReadOnlyList<PyralisAuthoringFact> BuildRuntimeCapabilityFactsForCapability(
@@ -1131,6 +1609,67 @@ namespace NeonBlack.Gameplay.Editor
                 canWait,
                 proofBlockers,
                 proofSupport);
+        }
+
+        public static IReadOnlyList<PyralisAuthoringRouteDiagnosticQuestionRow> BuildRouteDiagnosticQuestions(
+            PyralisAuthoringSetupGraph graph,
+            PyralisAuthoringRouteWorkingProjection route)
+        {
+            PyralisAuthoringRouteStepRow currentAction = route?.CurrentAction;
+            IReadOnlyList<PyralisAuthoringRouteStepRow> orderedSteps = route?.OrderedSteps ?? Array.Empty<PyralisAuthoringRouteStepRow>();
+            IReadOnlyList<PyralisAuthoringRouteStepRow> criticalPath = route?.CriticalPath ?? Array.Empty<PyralisAuthoringRouteStepRow>();
+            IReadOnlyList<PyralisAuthoringRouteStepRow> proofEnhancers = route?.ProofEnhancers ?? Array.Empty<PyralisAuthoringRouteStepRow>();
+            IReadOnlyList<PyralisAuthoringRouteStepRow> canWait = route?.CanWait ?? Array.Empty<PyralisAuthoringRouteStepRow>();
+            IReadOnlyList<PyralisAuthoringGraphConnectionRow> proofBlockers = route?.ProofBlockers ?? Array.Empty<PyralisAuthoringGraphConnectionRow>();
+            IReadOnlyList<PyralisAuthoringGraphConnectionRow> proofSupport = route?.ProofSupport ?? Array.Empty<PyralisAuthoringGraphConnectionRow>();
+
+            List<PyralisAuthoringRouteDiagnosticQuestionRow> questions = new List<PyralisAuthoringRouteDiagnosticQuestionRow>
+            {
+                new PyralisAuthoringRouteDiagnosticQuestionRow(
+                    "What is the next route action?",
+                    currentAction != null
+                        ? $"{currentAction.Label}: {FirstNonEmpty(currentAction.UnityActionLabel, currentAction.Message, currentAction.Reason)}"
+                        : orderedSteps.Count > 0
+                            ? "Required setup is clear for the projected proof. Use the full fresh-scene path to review how the route is assembled, then attempt the first Play Mode proof."
+                            : "No ordered steps were generated. Check whether the active setup graph has a resolved setup context."),
+                new PyralisAuthoringRouteDiagnosticQuestionRow(
+                    "What blocks the first proof?",
+                    proofBlockers.Count > 0
+                        ? string.Join("; ", proofBlockers.Take(6).Select(row => row.ToLabel))
+                        : "No proof blocker links are present in the current graph."),
+                new PyralisAuthoringRouteDiagnosticQuestionRow(
+                    "What is the full fresh-scene card path?",
+                    criticalPath.Count > 0
+                        ? string.Join(" -> ", criticalPath.Select(row => row.Label).Concat(new[] { GetOverviewFirstProofLabel(graph) }))
+                        : "No setup-card path is present yet. Check core setup graph nodes, runtime validation evidence, and proof target resolution."),
+                new PyralisAuthoringRouteDiagnosticQuestionRow(
+                    "What can wait until after this proof?",
+                    canWait.Count > 0
+                        ? string.Join("; ", canWait.Take(8).Select(row => row.Label))
+                        : "No can-wait setup cards were projected for this proof route."),
+                new PyralisAuthoringRouteDiagnosticQuestionRow(
+                    "Which proof enhancers are useful but not blockers?",
+                    proofEnhancers.Count > 0
+                        ? string.Join("; ", proofEnhancers.Take(6).Select(row => row.Label))
+                        : "No proof enhancers were projected for this route."),
+                new PyralisAuthoringRouteDiagnosticQuestionRow(
+                    "Which contracts are proof context rather than route cards?",
+                    proofSupport.Count > 0
+                        ? string.Join("; ", proofSupport.Take(8).Select(row => row.FromLabel))
+                        : "No direct proof-support contracts are present yet. The ordered setup cards should still come from core setup graph nodes and validation evidence."),
+                new PyralisAuthoringRouteDiagnosticQuestionRow(
+                    "Where should incorrect guidance be fixed?",
+                    "Fix the source that emitted the step: contract meaning, dependency reflection, local runtime validation, scene-readiness validation, or graph projection. Do not hardcode a one-off Guide/Hygiene sentence.")
+            };
+
+            if (graph == null || graph.Source == null)
+            {
+                questions.Add(new PyralisAuthoringRouteDiagnosticQuestionRow(
+                    "Why is the route empty?",
+                    "No active setup source was resolved. Select or pin a Bootstrap, SessionDefinition, GameModeDefinition, ParticipantDefinition, PawnDefinition, or FeatureModuleDefinition."));
+            }
+
+            return questions;
         }
 
         private static PyralisAuthoringRouteStepRow[] BuildOrderedRouteStepRows(
@@ -1591,8 +2130,7 @@ namespace NeonBlack.Gameplay.Editor
             PyralisAuthoringProjectionGroup group = GetProjectionMetadata(node).Group;
             return group == PyralisAuthoringProjectionGroup.SetupChain
                 || group == PyralisAuthoringProjectionGroup.PrefabReadiness
-                || group == PyralisAuthoringProjectionGroup.RuntimeValidation
-                || group == PyralisAuthoringProjectionGroup.SceneEvidence;
+                || group == PyralisAuthoringProjectionGroup.RuntimeValidation;
         }
 
         private static bool IsCanWaitRouteSetupCard(PyralisAuthoringGraphNode node)
@@ -2154,6 +2692,9 @@ namespace NeonBlack.Gameplay.Editor
                 return false;
 
             if (!string.Equals(node.ProofTargetId, proofTargetId, StringComparison.Ordinal))
+                return false;
+
+            if (node.SourceContract == null)
                 return false;
 
             if (IsPresentationLaneMismatch(graph, node))

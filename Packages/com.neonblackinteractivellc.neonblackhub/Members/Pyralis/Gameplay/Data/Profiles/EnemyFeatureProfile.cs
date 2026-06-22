@@ -1,4 +1,4 @@
-﻿using NeonBlack.Gameplay.Data.Definitions;
+using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Features.Combat;
 using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Core.Contracts;
@@ -14,7 +14,9 @@ namespace NeonBlack.Gameplay.Data.Profiles
         AssignmentFields = new[] { nameof(combatProfile), nameof(reactionProfile) },
         FirstProof = "Confirm the enemy uses all assigned profiles in its runtime behavior.",
         ExpertAdvice = "Use modular profiles to share behaviors across multiple enemy types while keeping the root profile unique per archetype.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/enemies"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/enemies",
+        CapabilityPath = "Combat/Actions/Enemy Feature Profile",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.Combat }
     )]
 [CreateAssetMenu(menuName = "NeonBlack/Profiles/Enemy Feature Profile", fileName = "EnemyFeatureProfile")]
     public class EnemyFeatureProfile : ScriptableObject, IRuntimeValidationProvider

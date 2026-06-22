@@ -16,7 +16,8 @@ namespace NeonBlack.Gameplay.Core.Runtime
         NativeSetup = new[] { "Add to a Bootstrap child GameObject or assign to GameplaySessionBootstrap." },
         FirstProof = "Calling Freeze(duration) pauses the game for the specified time.",
         ExpertAdvice = "Use TimeManager to create dramatic pauses during combat or UI events. It manages the global Unity Time.timeScale safely and resets it on disable.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/time"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/time",
+        CapabilityPath = "Core Setup/Runtime/Time Manager"
     )]
 public class TimeManager : MonoBehaviour, IHitPauseSink
     {

@@ -24,7 +24,8 @@ namespace NeonBlack.Gameplay.Core.Runtime
         AssignmentFields = new[] { nameof(fadeDuration) },
         FirstProof = "Transitioning between scenes triggers a smooth fade out and fade in.",
         ExpertAdvice = "Inject ISceneNavigator to trigger transitions. Keep Fade Duration non-negative; zero gives an instant cut with the generated fade canvas. Do not place SceneLoader and SceneFader in the same scene unless one is intentionally unused.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/navigation"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/navigation",
+        CapabilityPath = "Core Setup/Navigation/Scene Loader"
     )]
     public class SceneLoader : MonoBehaviour, ISceneNavigator
     {

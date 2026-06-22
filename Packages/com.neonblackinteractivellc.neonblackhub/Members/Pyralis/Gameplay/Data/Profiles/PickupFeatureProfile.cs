@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using NeonBlack.Gameplay.Core.Contracts;
 
@@ -11,7 +11,9 @@ namespace NeonBlack.Gameplay.Data.Profiles
         FirstProof = "Walk over a pickup and verify it is collected.",
         NativeSetup = new[] { "Assign to a Pawn or Interaction component." },
         ExpertAdvice = "Enable 'preferNearestPickup' for precise interaction in dense item clusters. Auto-collect is best for currency, while interaction-collect is better for loot crates.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/inventory"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/inventory",
+        CapabilityPath = "RPG/Inventory/Profiles/Pickup Feature Profile",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
     )]
 [CreateAssetMenu(menuName = "NeonBlack/Profiles/Pickup Feature Profile", fileName = "PickupFeatureProfile")]
     public class PickupFeatureProfile : ScriptableObject, IRuntimeValidationProvider

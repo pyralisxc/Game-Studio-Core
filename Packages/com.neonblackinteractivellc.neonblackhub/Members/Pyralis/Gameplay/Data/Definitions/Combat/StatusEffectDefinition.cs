@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Presentation.Animation;
 using UnityEngine;
@@ -36,7 +36,9 @@ namespace NeonBlack.Gameplay.Features.Combat
         NativeSetup = new[] { "Set Effect Kind and Duration.", "Configure stack mode." },
         AssignmentFields = new[] { nameof(effectId), nameof(displayName), nameof(duration) },
         FirstProof = "Apply the effect to an actor and verify its magnitude and duration match the definition.",
-        ExpertAdvice = "Use tickInterval for effects that apply over time (e.g., Poison, Heal)."
+        ExpertAdvice = "Use tickInterval for effects that apply over time (e.g., Poison, Heal).",
+        CapabilityPath = "Combat/Actions/Status Effect Definition",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.Combat }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Combat/Status Effect", fileName = "StatusEffectDefinition")]
     public class StatusEffectDefinition : ScriptableObject, IRuntimeValidationProvider

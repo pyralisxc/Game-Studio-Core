@@ -48,6 +48,14 @@ namespace NeonBlack.Gameplay.Editor
         EditorAudit,
         GrammarVocabulary,
         DirectSceneQuerySurface,
+        ReflectionMeaningLeak,
+        ValidatorGuideLeak,
+        InspectorRouteGuideLeak,
+        ExportTruthLeak,
+        TabRendererLogicLeak,
+        LegacyDocTruthLeak,
+        CompatibilityBridge,
+        OldOwnerName,
         ScannerImplementation
     }
 
@@ -173,7 +181,7 @@ namespace NeonBlack.Gameplay.Editor
 
             string normalizedRoot = Path.GetFullPath(root);
             List<PyralisSourceDependencyHygieneRecord> records = new List<PyralisSourceDependencyHygieneRecord>();
-            foreach (string file in Directory.GetFiles(normalizedRoot, "*.cs", SearchOption.AllDirectories))
+            foreach (string file in EnumerateScannableFiles(normalizedRoot))
             {
                 if (ShouldSkip(file))
                     continue;
@@ -225,9 +233,11 @@ namespace NeonBlack.Gameplay.Editor
             int staticAccessCount = StaticAccessRegex.Matches(safeSource).Count;
             int reflectionOrStringLookupCount = ReflectionOrStringLookupRegex.Matches(safeSource).Count;
             int dependencyCount = neonBlackUsingCount + serializedFieldCount + unityLookupCount + reflectionOrStringLookupCount;
-            int riskScore = CalculateRiskScore(domains.Count, concreteCrossDomainCount, serializedFieldCount, localComponentLookupCount, broadUnityDiscoveryCount, staticAccessCount, reflectionOrStringLookupCount);
             PyralisSourceDependencyPressureKind pressureKind = ResolvePressureKind(safePath, safeSource, ownerDomain);
+            int riskScore = CalculateRiskScore(domains.Count, concreteCrossDomainCount, serializedFieldCount, localComponentLookupCount, broadUnityDiscoveryCount, staticAccessCount, reflectionOrStringLookupCount);
+            riskScore = ApplyPressureKindRiskFloor(riskScore, pressureKind);
             List<string> reasons = BuildReasons(domains.Count, concreteCrossDomainCount, serializedFieldCount, localComponentLookupCount, broadUnityDiscoveryCount, staticAccessCount, reflectionOrStringLookupCount);
+            AddPressureKindReason(reasons, pressureKind);
 
             return new PyralisSourceDependencyHygieneRecord(
                 safePath,
@@ -255,46 +265,71 @@ namespace NeonBlack.Gameplay.Editor
             {
                 PyralisSourceDependencyPressureKind.RuntimeOwnership => 0,
                 PyralisSourceDependencyPressureKind.DirectSceneQuerySurface => 1,
-                PyralisSourceDependencyPressureKind.AcceptedComposition => 2,
-                PyralisSourceDependencyPressureKind.PawnCoordinator => 3,
-                PyralisSourceDependencyPressureKind.PawnCapabilitySibling => 4,
-                PyralisSourceDependencyPressureKind.LocalPresentationSurface => 5,
-                PyralisSourceDependencyPressureKind.SceneZoneSurface => 6,
-                PyralisSourceDependencyPressureKind.InputRoutingSurface => 7,
-                PyralisSourceDependencyPressureKind.EnemyCapabilityModule => 8,
-                PyralisSourceDependencyPressureKind.EnemyCoordinator => 9,
-                PyralisSourceDependencyPressureKind.CombatContactSurface => 10,
-                PyralisSourceDependencyPressureKind.PawnRuntimeHelper => 11,
-                PyralisSourceDependencyPressureKind.NetworkAdapterSurface => 12,
-                PyralisSourceDependencyPressureKind.SceneNavigationSurface => 13,
-                PyralisSourceDependencyPressureKind.RpgDomainCore => 14,
-                PyralisSourceDependencyPressureKind.RpgSceneSurface => 15,
-                PyralisSourceDependencyPressureKind.ScoringRuntimeSurface => 16,
-                PyralisSourceDependencyPressureKind.SpawningRuntimeSurface => 17,
-                PyralisSourceDependencyPressureKind.GameFlowRuntimeSurface => 18,
-                PyralisSourceDependencyPressureKind.ContractReflectionSurface => 19,
-                PyralisSourceDependencyPressureKind.PersistenceDataSurface => 20,
-                PyralisSourceDependencyPressureKind.ActorFeatureContext => 21,
-                PyralisSourceDependencyPressureKind.SceneCameraRig => 22,
-                PyralisSourceDependencyPressureKind.AuthoredDataAsset => 23,
-                PyralisSourceDependencyPressureKind.HazardRuntimeSurface => 24,
-                PyralisSourceDependencyPressureKind.DomainUtility => 25,
-                PyralisSourceDependencyPressureKind.FeatureModule => 26,
-                PyralisSourceDependencyPressureKind.AuthoredRuntimeSurface => 27,
-                PyralisSourceDependencyPressureKind.ReferenceAssembly => 28,
-                PyralisSourceDependencyPressureKind.EditorAudit => 29,
-                PyralisSourceDependencyPressureKind.GrammarVocabulary => 30,
-                PyralisSourceDependencyPressureKind.ScannerImplementation => 31,
+                PyralisSourceDependencyPressureKind.ReflectionMeaningLeak => 2,
+                PyralisSourceDependencyPressureKind.ValidatorGuideLeak => 3,
+                PyralisSourceDependencyPressureKind.InspectorRouteGuideLeak => 4,
+                PyralisSourceDependencyPressureKind.ExportTruthLeak => 5,
+                PyralisSourceDependencyPressureKind.TabRendererLogicLeak => 6,
+                PyralisSourceDependencyPressureKind.CompatibilityBridge => 7,
+                PyralisSourceDependencyPressureKind.LegacyDocTruthLeak => 8,
+                PyralisSourceDependencyPressureKind.OldOwnerName => 9,
+                PyralisSourceDependencyPressureKind.AcceptedComposition => 10,
+                PyralisSourceDependencyPressureKind.PawnCoordinator => 11,
+                PyralisSourceDependencyPressureKind.PawnCapabilitySibling => 12,
+                PyralisSourceDependencyPressureKind.LocalPresentationSurface => 13,
+                PyralisSourceDependencyPressureKind.SceneZoneSurface => 14,
+                PyralisSourceDependencyPressureKind.InputRoutingSurface => 15,
+                PyralisSourceDependencyPressureKind.EnemyCapabilityModule => 16,
+                PyralisSourceDependencyPressureKind.EnemyCoordinator => 17,
+                PyralisSourceDependencyPressureKind.CombatContactSurface => 18,
+                PyralisSourceDependencyPressureKind.PawnRuntimeHelper => 19,
+                PyralisSourceDependencyPressureKind.NetworkAdapterSurface => 20,
+                PyralisSourceDependencyPressureKind.SceneNavigationSurface => 21,
+                PyralisSourceDependencyPressureKind.RpgDomainCore => 22,
+                PyralisSourceDependencyPressureKind.RpgSceneSurface => 23,
+                PyralisSourceDependencyPressureKind.ScoringRuntimeSurface => 24,
+                PyralisSourceDependencyPressureKind.SpawningRuntimeSurface => 25,
+                PyralisSourceDependencyPressureKind.GameFlowRuntimeSurface => 26,
+                PyralisSourceDependencyPressureKind.ContractReflectionSurface => 27,
+                PyralisSourceDependencyPressureKind.PersistenceDataSurface => 28,
+                PyralisSourceDependencyPressureKind.ActorFeatureContext => 29,
+                PyralisSourceDependencyPressureKind.SceneCameraRig => 30,
+                PyralisSourceDependencyPressureKind.AuthoredDataAsset => 31,
+                PyralisSourceDependencyPressureKind.HazardRuntimeSurface => 32,
+                PyralisSourceDependencyPressureKind.DomainUtility => 33,
+                PyralisSourceDependencyPressureKind.FeatureModule => 34,
+                PyralisSourceDependencyPressureKind.AuthoredRuntimeSurface => 35,
+                PyralisSourceDependencyPressureKind.ReferenceAssembly => 36,
+                PyralisSourceDependencyPressureKind.EditorAudit => 37,
+                PyralisSourceDependencyPressureKind.GrammarVocabulary => 38,
+                PyralisSourceDependencyPressureKind.ScannerImplementation => 39,
                 _ => 6
             };
+        }
+
+        private static IEnumerable<string> EnumerateScannableFiles(string normalizedRoot)
+        {
+            foreach (string file in Directory.GetFiles(normalizedRoot, "*.cs", SearchOption.AllDirectories))
+                yield return file;
+
+            foreach (string file in Directory.GetFiles(normalizedRoot, "*.md", SearchOption.AllDirectories))
+            {
+                string normalized = file.Replace('\\', '/');
+                if (normalized.Contains("/Docs/", StringComparison.Ordinal)
+                    || normalized.EndsWith("/README.md", StringComparison.Ordinal))
+                {
+                    yield return file;
+                }
+            }
         }
 
         private static bool ShouldSkip(string file)
         {
             string normalized = file.Replace('\\', '/');
-            return normalized.Contains("/Docs/", StringComparison.Ordinal)
-                || normalized.Contains("/Tests/", StringComparison.Ordinal)
+            return normalized.Contains("/Tests/", StringComparison.Ordinal)
                 || normalized.Contains("/_Archive/", StringComparison.Ordinal)
+                || normalized.Contains("/Archive/", StringComparison.Ordinal)
+                || normalized.Contains("/TempGraphs/", StringComparison.Ordinal)
                 || normalized.EndsWith(".g.cs", StringComparison.Ordinal)
                 || normalized.EndsWith(".Designer.cs", StringComparison.Ordinal);
         }
@@ -434,13 +469,76 @@ namespace NeonBlack.Gameplay.Editor
             return PyralisSourceDependencyRisk.Low;
         }
 
+        private static int ApplyPressureKindRiskFloor(int riskScore, PyralisSourceDependencyPressureKind pressureKind)
+        {
+            if (IsOwnershipLeakPressure(pressureKind))
+                return Math.Max(riskScore, 8);
+
+            if (pressureKind == PyralisSourceDependencyPressureKind.LegacyDocTruthLeak
+                || pressureKind == PyralisSourceDependencyPressureKind.OldOwnerName)
+            {
+                return Math.Max(riskScore, 4);
+            }
+
+            return riskScore;
+        }
+
+        private static void AddPressureKindReason(List<string> reasons, PyralisSourceDependencyPressureKind pressureKind)
+        {
+            if (reasons == null)
+                return;
+
+            string reason = pressureKind switch
+            {
+                PyralisSourceDependencyPressureKind.ReflectionMeaningLeak => "Reflection surface appears to contain vocabulary, proof, or route meaning.",
+                PyralisSourceDependencyPressureKind.ValidatorGuideLeak => "Validator surface appears to contain route-guide or first-proof wording.",
+                PyralisSourceDependencyPressureKind.InspectorRouteGuideLeak => "Inspector surface appears to contain route-guide or first-proof wording.",
+                PyralisSourceDependencyPressureKind.ExportTruthLeak => "Export surface appears to compute authoring truth instead of serializing a projection.",
+                PyralisSourceDependencyPressureKind.TabRendererLogicLeak => "Tab renderer appears to classify readiness or route logic while rendering.",
+                PyralisSourceDependencyPressureKind.LegacyDocTruthLeak => "Active documentation appears to preserve legacy or deprecated setup truth.",
+                PyralisSourceDependencyPressureKind.CompatibilityBridge => "Source appears to contain compatibility or fallback repair behavior.",
+                PyralisSourceDependencyPressureKind.OldOwnerName => "Active file or source wording appears to reference an old ownership model.",
+                _ => string.Empty
+            };
+
+            if (!string.IsNullOrWhiteSpace(reason) && !reasons.Contains(reason))
+                reasons.Add(reason);
+        }
+
         private static PyralisSourceDependencyPressureKind ResolvePressureKind(string assetPath, string source, string ownerDomain)
         {
             string normalized = (assetPath ?? string.Empty).Replace('\\', '/');
             string fileName = Path.GetFileName(normalized);
             string safeSource = source ?? string.Empty;
-            if (normalized.Contains("/Editor/Authoring/Spine/Hygiene/", StringComparison.Ordinal))
+            if (IsScannerImplementationPath(normalized))
                 return PyralisSourceDependencyPressureKind.ScannerImplementation;
+
+            if (IsLegacyDocTruthLeak(normalized, safeSource))
+                return PyralisSourceDependencyPressureKind.LegacyDocTruthLeak;
+
+            if (IsCompatibilityBridge(normalized, fileName, safeSource))
+                return PyralisSourceDependencyPressureKind.CompatibilityBridge;
+
+            if (IsOldOwnerName(normalized, safeSource))
+                return PyralisSourceDependencyPressureKind.OldOwnerName;
+
+            if (IsReflectionMeaningLeak(normalized, safeSource))
+                return PyralisSourceDependencyPressureKind.ReflectionMeaningLeak;
+
+            if (IsValidatorGuideLeak(normalized, fileName, safeSource))
+                return PyralisSourceDependencyPressureKind.ValidatorGuideLeak;
+
+            if (IsInspectorRouteGuideLeak(normalized, fileName, safeSource))
+                return PyralisSourceDependencyPressureKind.InspectorRouteGuideLeak;
+
+            if (IsExportTruthLeak(normalized, fileName, safeSource))
+                return PyralisSourceDependencyPressureKind.ExportTruthLeak;
+
+            if (IsTabRendererLogicLeak(normalized, fileName, safeSource))
+                return PyralisSourceDependencyPressureKind.TabRendererLogicLeak;
+
+            if (normalized.EndsWith(".md", StringComparison.Ordinal))
+                return PyralisSourceDependencyPressureKind.EditorAudit;
 
             if (normalized.Contains("/Editor/Authoring/Grammar/", StringComparison.Ordinal))
                 return PyralisSourceDependencyPressureKind.GrammarVocabulary;
@@ -637,10 +735,267 @@ namespace NeonBlack.Gameplay.Editor
             return PyralisSourceDependencyPressureKind.RuntimeOwnership;
         }
 
+        public static bool IsOwnershipLeakPressure(PyralisSourceDependencyPressureKind pressureKind)
+        {
+            return pressureKind == PyralisSourceDependencyPressureKind.ReflectionMeaningLeak
+                || pressureKind == PyralisSourceDependencyPressureKind.ValidatorGuideLeak
+                || pressureKind == PyralisSourceDependencyPressureKind.InspectorRouteGuideLeak
+                || pressureKind == PyralisSourceDependencyPressureKind.ExportTruthLeak
+                || pressureKind == PyralisSourceDependencyPressureKind.TabRendererLogicLeak
+                || pressureKind == PyralisSourceDependencyPressureKind.CompatibilityBridge;
+        }
+
+        private static bool IsLegacyDocTruthLeak(string normalizedPath, string source)
+        {
+            if (!normalizedPath.EndsWith(".md", StringComparison.Ordinal)
+                || !normalizedPath.Contains("/Docs/", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            bool hasLegacySetupLanguage = ContainsAny(source,
+                "we used to",
+                "old setup",
+                "legacy setup",
+                "deprecated path",
+                "deprecated setup",
+                "no longer do",
+                "migration residue");
+            if (hasLegacySetupLanguage)
+                return true;
+
+            return ContainsAny(source, "compatibility bridge")
+                && !IsProtectivePolicyText(source);
+        }
+
+        private static bool IsOldOwnerName(string normalizedPath, string source)
+        {
+            if (IsScannerImplementationPath(normalizedPath))
+                return false;
+
+            if (normalizedPath.EndsWith(".md", StringComparison.Ordinal)
+                && IsProtectivePolicyText(source))
+            {
+                return false;
+            }
+
+            return ContainsAny(normalizedPath,
+                    "Legacy",
+                    "Deprecated",
+                    "OldOwner")
+                || ContainsAny(source,
+                    "LegacyAuthoring",
+                    "OldAuthoring",
+                    "OldOwner",
+                    "DeprecatedOwner");
+        }
+
+        private static bool IsReflectionMeaningLeak(string normalizedPath, string source)
+        {
+            return normalizedPath.Contains("/Editor/Authoring/Spine/Reflection/", StringComparison.Ordinal)
+                && ContainsAny(source,
+                    "proof.",
+                    "FirstProof",
+                    "Route Proof",
+                    "CapabilityPath",
+                    "RuntimeCapabilityFamily",
+                    "NativeSetup",
+                    "Guide",
+                    "Overview");
+        }
+
+        private static bool IsValidatorGuideLeak(string normalizedPath, string fileName, string source)
+        {
+            bool validatorSurface = normalizedPath.Contains("/Validation/", StringComparison.Ordinal)
+                || fileName.Contains("Validation", StringComparison.Ordinal)
+                || fileName.Contains("Validator", StringComparison.Ordinal);
+            return validatorSurface && ContainsRouteGuideWording(source);
+        }
+
+        private static bool IsInspectorRouteGuideLeak(string normalizedPath, string fileName, string source)
+        {
+            bool inspectorSurface = normalizedPath.Contains("/Surfaces/Inspectors/", StringComparison.Ordinal)
+                || normalizedPath.Contains("/Editor/Inspectors/", StringComparison.Ordinal)
+                || fileName.EndsWith("Editor.cs", StringComparison.Ordinal)
+                || fileName.Contains("Inspector", StringComparison.Ordinal);
+            return inspectorSurface
+                && ContainsRouteGuideWording(source)
+                && !IsInspectorAuthoringHandoffOnly(source);
+        }
+
+        private static bool IsExportTruthLeak(string normalizedPath, string fileName, string source)
+        {
+            bool exportSurface = fileName.Contains("Exporter", StringComparison.Ordinal)
+                || fileName.Contains("JsonExport", StringComparison.Ordinal)
+                || normalizedPath.Contains("/TempGraphs/", StringComparison.Ordinal);
+            if (!exportSurface)
+                return false;
+
+            if (IsExportControlChrome(normalizedPath, fileName, source))
+                return false;
+
+            return ContainsAny(source,
+                    "BuildRouteWorkingProjection(",
+                    "FindCurrentProofNode(",
+                    "ResolveProofReadiness(",
+                    "BuildMapSceneSetupIssueRows(")
+                || (source.Contains(".OrderBy(", StringComparison.Ordinal)
+                    && source.Contains("EvidenceState", StringComparison.Ordinal));
+        }
+
+        private static bool IsExportControlChrome(string normalizedPath, string fileName, string source)
+        {
+            if (!normalizedPath.Contains("/Surfaces/AuthoringWindow/", StringComparison.Ordinal)
+                || !fileName.Contains("JsonExportControl", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            return !ContainsAny(source,
+                "BuildRouteWorkingProjection(",
+                "FindCurrentProofNode(",
+                "ResolveProofReadiness(",
+                "BuildMapSceneSetupIssueRows(",
+                "PyralisAuthoringGraphEvidenceState.",
+                "IssueCode.StartsWith(");
+        }
+
+        private static bool IsTabRendererLogicLeak(string normalizedPath, string fileName, string source)
+        {
+            bool tabRenderer = normalizedPath.Contains("/Surfaces/AuthoringWindow/", StringComparison.Ordinal)
+                && (fileName.Contains("Renderer", StringComparison.Ordinal)
+                    || fileName.Contains("ExportControl", StringComparison.Ordinal)
+                    || fileName.Contains("Window", StringComparison.Ordinal));
+            if (!tabRenderer)
+                return false;
+
+            return ContainsAny(source,
+                    "PyralisAuthoringGraphEvidenceState.",
+                    "BuildRouteWorkingProjection(",
+                    "FindCurrentProofNode(",
+                    "IssueCode.StartsWith(")
+                || (source.Contains(".Where(", StringComparison.Ordinal)
+                    && source.Contains("EvidenceState", StringComparison.Ordinal));
+        }
+
+        private static bool IsCompatibilityBridge(string normalizedPath, string fileName, string source)
+        {
+            if (fileName.Contains("CodexUnityValidationRefreshBridge", StringComparison.Ordinal))
+                return false;
+            if (normalizedPath.EndsWith(".md", StringComparison.Ordinal))
+                return false;
+            if (IsScannerImplementationPath(normalizedPath))
+                return false;
+            if (normalizedPath.Contains("/Spine/Reflection/", StringComparison.Ordinal)
+                && source.Contains("ReflectionTypeLoadException", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            bool compatibilityLanguage = ContainsAny(normalizedPath, "Compatibility", "Legacy", "Bridge")
+                || ContainsAny(source, "compatibility", "legacy", "obsolete", "[Obsolete");
+            bool repairLanguage = ContainsAny(source, "fallback", "repair", "auto-wire", "auto wire", "auto-create", "auto create", "quietly");
+            return compatibilityLanguage && repairLanguage;
+        }
+
+        private static bool IsScannerImplementationPath(string normalizedPath)
+        {
+            return !string.IsNullOrWhiteSpace(normalizedPath)
+                && normalizedPath.EndsWith("/Editor/Authoring/Spine/Hygiene/PyralisSourceDependencyHygieneScanner.cs", StringComparison.Ordinal);
+        }
+
+        private static bool ContainsRouteGuideWording(string source)
+        {
+            return ContainsAny(source,
+                "Route Proof",
+                "first proof",
+                "FirstProof",
+                "Do Now",
+                "Overview",
+                "Guide",
+                "Map owns",
+                "Route Trace",
+                "proof.");
+        }
+
+        private static bool IsInspectorAuthoringHandoffOnly(string source)
+        {
+            if (string.IsNullOrWhiteSpace(source))
+                return false;
+
+            bool handoff = ContainsAny(source,
+                "Use Pyralis Authoring",
+                "Open Pyralis Authoring",
+                "PyralisInspectorHandoff.DrawAuthoringButton",
+                "Authoring owns route",
+                "Authoring owns first-proof",
+                "Authoring owns first proof");
+            if (!handoff)
+                return false;
+
+            bool ownsGuidance = ContainsAny(source,
+                "PyralisGuideContent",
+                "PyralisGuideSection",
+                "PyralisInspectorValidationIssue",
+                "CreateAssignmentFact",
+                "relatedStableIds",
+                "BuildChecklist",
+                "FeatureModuleSetup",
+                "Do Now:",
+                "Route Proof",
+                "proof.");
+            return !ownsGuidance;
+        }
+
+        private static bool IsProtectivePolicyText(string source)
+        {
+            if (string.IsNullOrWhiteSpace(source))
+                return false;
+
+            return ContainsAny(source,
+                "Fallback policy is strict",
+                "Do not recover by parsing",
+                "should not quietly repair",
+                "must not quietly repair",
+                "must not auto-wire",
+                "must not auto wire",
+                "must not auto-create",
+                "must not auto create",
+                "compatibility bridges are cleanup smells",
+                "source-ownership residue",
+                "Hygiene pressure kinds are not all cleanup commands");
+        }
+
+        private static bool ContainsAny(string value, params string[] needles)
+        {
+            if (string.IsNullOrWhiteSpace(value) || needles == null)
+                return false;
+
+            for (int i = 0; i < needles.Length; i++)
+            {
+                string needle = needles[i];
+                if (!string.IsNullOrWhiteSpace(needle)
+                    && value.IndexOf(needle, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private static string BuildReviewHint(PyralisSourceDependencyPressureKind pressureKind)
         {
             return pressureKind switch
             {
+                PyralisSourceDependencyPressureKind.ReflectionMeaningLeak => "Reflection should expose structure only. Move vocabulary, route labels, proof meaning, and setup prose to contracts, grammar, validators, or projection.",
+                PyralisSourceDependencyPressureKind.ValidatorGuideLeak => "Validators should witness local semantic readiness. Move route setup cards, first-proof wording, and guide sequencing to graph projection or grammar.",
+                PyralisSourceDependencyPressureKind.InspectorRouteGuideLeak => "Inspectors should stay field-local. Move route guide, first-proof, and setup-path wording to Authoring projections or grammar.",
+                PyralisSourceDependencyPressureKind.ExportTruthLeak => "Exports should serialize tab projections. Move ranking, readiness classification, and route truth back to projection/model builders.",
+                PyralisSourceDependencyPressureKind.TabRendererLogicLeak => "Tab renderers should render projection models. Move readiness and route decisions back to graph projection.",
+                PyralisSourceDependencyPressureKind.LegacyDocTruthLeak => "Active docs should state current ownership directly. Delete or archive stale legacy/deprecated setup truth.",
+                PyralisSourceDependencyPressureKind.CompatibilityBridge => "Compatibility bridges should not quietly repair authoring setup. Prefer explicit contract/reflection/validator evidence and Map guidance.",
+                PyralisSourceDependencyPressureKind.OldOwnerName => "Old owner names make future work follow stale seams. Rename or document why the old concept is still active.",
                 PyralisSourceDependencyPressureKind.ReferenceAssembly => "Expected pressure for a focused reference/context assembly helper; review only if gameplay decisions move into it.",
                 PyralisSourceDependencyPressureKind.AcceptedComposition => "Expected pressure for bootstrap/composition code; review only if it starts owning feature behavior instead of wiring services.",
                 PyralisSourceDependencyPressureKind.PawnCoordinator => "Expected pressure for an explicit pawn coordinator. Review only if it starts constructing optional features or owning movement/combat/presentation behavior directly.",

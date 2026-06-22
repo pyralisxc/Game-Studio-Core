@@ -2,7 +2,7 @@
 
 This is the technical contract for new Pyralis gameplay scenes.
 
-If you are wiring your first scene, use the Pyralis Authoring Window for route setup and use Inspector Field Guides only for the asset or component you are editing. Read `START_HERE.md` when you need the written first-scene path. Use this file as the technical contract once the basic route setup makes sense. The manual, prefab, and subsystem setup docs support it; they should not contradict it.
+If you are wiring your first scene, use the Pyralis Authoring Window for route setup and use Inspector validation only for the asset or component you are editing. Read `START_HERE.md` when you need the written first-scene path. Use this file as the technical contract once the basic route setup makes sense. The manual, prefab, and subsystem setup docs support it; they should not contradict it.
 
 For feature-driven authoring contracts, add contracts in the feature package and let `ResolvedAuthoringContractRegistry` discover them reflectively. New package scripts/assets must carry `.meta` files and should be refreshed in Unity before relying on CLI build gates.
 

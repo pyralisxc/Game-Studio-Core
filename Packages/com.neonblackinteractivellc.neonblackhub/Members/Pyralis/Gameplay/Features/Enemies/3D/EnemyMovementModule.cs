@@ -12,7 +12,8 @@ namespace NeonBlack.Gameplay.Features.Enemies
         AssignmentFields = new[] { nameof(movementMode), nameof(gravity), nameof(groundCheckRadius), nameof(groundLayer) },
         FirstProof = "Verify enemy can move toward a target and stay grounded.",
         ExpertAdvice = "Adjust gravity and ground check radius if the enemy jitters or floats on uneven terrain.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/enemies"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/enemies",
+        CapabilityPath = "Movement/Traversal/Enemy Movement Module"
     )]
     [RequireComponent(typeof(CharacterController))]
 public class EnemyMovementModule : MonoBehaviour

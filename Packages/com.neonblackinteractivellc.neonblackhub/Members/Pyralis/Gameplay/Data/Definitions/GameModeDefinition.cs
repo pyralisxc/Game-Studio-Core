@@ -1,4 +1,4 @@
-﻿using NeonBlack.Gameplay.Data.Definitions.Rules;
+using NeonBlack.Gameplay.Data.Definitions.Rules;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Profiles;
 using System.Collections.Generic;
@@ -18,7 +18,9 @@ namespace NeonBlack.Gameplay.Data.Definitions
         AssignmentFields = new[] { nameof(playfieldProfile), nameof(cameraRigProfile), nameof(requiredFeatureModules), nameof(gameplayScene) },
         FirstProof = "Assign this Game Mode Definition to a Session Definition asset.",
         ExpertAdvice = "Start neutral, then enable only the systems this route actually uses. Use Required Feature Modules for project-owned global systems, and assign board or turn-order assets only for tabletop-style routes.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/game-mode"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/game-mode",
+        CapabilityPath = "Goals & Scoring/Rules/Game Mode Definition",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.ScoringObjectives }
     )]
 [CreateAssetMenu(menuName = "NeonBlack/Definitions/Game Mode Definition", fileName = "GameModeDefinition", order = 10)]
     public class GameModeDefinition : ScriptableObject, IRuntimeValidationProvider

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
@@ -23,7 +23,9 @@ namespace NeonBlack.Gameplay.Core.Navigation
         FirstProof = "Verify the level is selectable in the menu and loads the correct scene.",
         NativeSetup = new[] { "Set SceneName to match Build Settings.", "Assign Preview Image." },
         ExpertAdvice = "LevelData assets are primarily used by the LevelRegistry to build the world-select UI. Ensure the SceneName exactly matches the entry in File -> Build Settings.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/navigation"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/navigation",
+        CapabilityPath = "Core Setup/Navigation/Level Data",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.PlatformCore }
     )]
 public class LevelData : ScriptableObject, IRuntimeValidationProvider
     {

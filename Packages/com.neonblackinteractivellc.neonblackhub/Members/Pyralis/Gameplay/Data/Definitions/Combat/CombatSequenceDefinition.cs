@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
@@ -14,7 +14,9 @@ namespace NeonBlack.Gameplay.Features.Combat
         NativeSetup = new[] { "Set Input Type.", "Add CombatActionDefinitions to the actions array." },
         AssignmentFields = new[] { nameof(inputType), nameof(actions) },
         FirstProof = "Verify the actor performs the sequence of animations and attacks in order.",
-        ExpertAdvice = "Use sequences to build multi-hit brawler combos. Each action in the list must correspond to the correct combo step."
+        ExpertAdvice = "Use sequences to build multi-hit brawler combos. Each action in the list must correspond to the correct combo step.",
+        CapabilityPath = "Combat/Actions/Combat Sequence Definition",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.Combat }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Combat/Combat Sequence Definition", fileName = "CombatSequenceDefinition")]
     public class CombatSequenceDefinition : ScriptableObject, IRuntimeValidationProvider

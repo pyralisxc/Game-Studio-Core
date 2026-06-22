@@ -25,7 +25,8 @@ namespace NeonBlack.Gameplay.Presentation.Visuals
         "Assign a FlashPresetSO for common effects (Hit, Flash)."
     },
     ExpertAdvice = "Use SpriteFlasher for hit reactions and status effects. For best performance, group multiple renderers into one flasher if they should flash in sync.",
-    DocumentationURL = "https://docs.neonblack.com/pyralis/visuals"
+    DocumentationURL = "https://docs.neonblack.com/pyralis/visuals",
+    CapabilityPath = "Presentation/Feedback/Sprite Flasher"
 )]
 public class SpriteFlasher : MonoBehaviour
 {

@@ -12,7 +12,9 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
         Capability = AuthoringCapability.Tabletop | AuthoringCapability.Grid, 
         Relevance = "Project-window creation path for tabletop board layouts and starting pieces.",
         AssignmentFields = new[] { nameof(width), nameof(height), nameof(startingPieces) },
-        FirstProof = "Verify the board dimensions and starting pieces are correct in the Board Presenter."
+        FirstProof = "Verify the board dimensions and starting pieces are correct in the Board Presenter.",
+        CapabilityPath = "Tabletop/Board/Board Definition",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.BoardCardTabletop }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Rules/Board Definition", fileName = "BoardDefinition", order = -100)]
     public class BoardDefinition : ScriptableObject, IRuntimeValidationProvider

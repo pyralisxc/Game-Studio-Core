@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
@@ -21,7 +21,8 @@ namespace NeonBlack.Gameplay.Presentation.Visuals
     AssignmentFields = new[] { nameof(target), nameof(mirroredVisualRoot), nameof(spriteRenderer), nameof(cameraOverride), nameof(facingMode) },
     FirstProof = "Move the camera and verify the object rotates to face it.",
     ExpertAdvice = "Use Y-Axis only for ground-based actors. Use Full Facing for projectiles or floating items.",
-    DocumentationURL = "https://docs.neonblack.com/pyralis/visuals"
+    DocumentationURL = "https://docs.neonblack.com/pyralis/visuals",
+    CapabilityPath = "Presentation/Feedback/Billboard Facing3D"
 )]
 [AddComponentMenu("NeonBlack/Gameplay/Runtime 3D/Presentation/Billboard Facing 3D")]
 public class BillboardFacing3D : MonoBehaviour, IRuntimeValidationProvider

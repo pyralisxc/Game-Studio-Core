@@ -12,7 +12,9 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
         Capability = AuthoringCapability.Dialogue,
         Lane = "RPG",
         AssignmentFields = new[] { nameof(npcId), nameof(displayName), nameof(role), nameof(tags), nameof(factionId), nameof(actorLinkId) },
-        FirstProof = "Proof that the NPC can initiate dialogue and has a valid profile."
+        FirstProof = "Proof that the NPC can initiate dialogue and has a valid profile.",
+        CapabilityPath = "RPG/Dialogue/Definitions/Npc Definition",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/NPC", fileName = "NpcDefinition")]
     public class NpcDefinition : ScriptableObject, INpcProfile, IRuntimeValidationProvider

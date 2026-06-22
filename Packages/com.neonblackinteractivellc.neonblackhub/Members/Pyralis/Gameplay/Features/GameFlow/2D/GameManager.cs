@@ -38,7 +38,9 @@ public interface IGameplaySessionFlow
     FirstProof = "Start the game and verify the session initializes and transitions to the Playing state.",
     AssignmentFields = new[] { nameof(scoreManager), nameof(hazardSpawner), nameof(pickupSpawner), nameof(difficultyManager) },
     ExpertAdvice = "The GameManager is the 2D arcade orchestrator. SessionStateService remains the normal IGameplayStateReader for movement/input/spawner activity. Prefer participant roster pawns for active players; use explicit Player Controllers only for intentionally standalone scene-authored tests.",
-    DocumentationURL = "https://docs.neonblack.com/pyralis/gameflow")]
+    DocumentationURL = "https://docs.neonblack.com/pyralis/gameflow",
+    CapabilityPath = "Core Setup/Session/Game Manager"
+)]
 [AddComponentMenu("NeonBlack/Gameplay/Game Flow/2D Game Manager")]
 [DefaultExecutionOrder(-20)]
 public partial class GameManager : MonoBehaviour,

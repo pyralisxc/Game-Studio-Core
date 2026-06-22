@@ -19,7 +19,8 @@ namespace NeonBlack.Gameplay.Core.Navigation
         },
         AssignmentFields = new[] { nameof(mainPanel), nameof(newGameButton), nameof(exitButton), nameof(gameSceneName), nameof(sceneNavigatorSource) },
         FirstProof = "Menu buttons correctly navigate between panels or trigger scene transitions.",
-        ExpertAdvice = "Do not leave New Game, Settings, or Exit buttons empty unless disabled. Navigation services cannot load an unnamed scene. Ensure the Scene Navigator Source is present in the menu scene."
+        ExpertAdvice = "Do not leave New Game, Settings, or Exit buttons empty unless disabled. Navigation services cannot load an unnamed scene. Ensure the Scene Navigator Source is present in the menu scene.",
+        CapabilityPath = "Core Setup/Navigation/Main Menu Manager"
     )]
     public class MainMenuManager : MonoBehaviour
     {

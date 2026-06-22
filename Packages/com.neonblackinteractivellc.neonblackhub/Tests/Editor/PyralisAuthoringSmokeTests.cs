@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NeonBlack.Gameplay.Core.Contracts;
@@ -13,6 +14,7 @@ using NeonBlack.Gameplay.Features.Pickups;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Object = UnityEngine.Object;
 
 namespace NeonBlack.Gameplay.Tests.Editor
 {
@@ -302,18 +304,104 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
-        public void SetupGraph_SmokeMissingContractSemanticMetadataAppearsInHygiene()
+        public void SetupGraph_ClassifiesContractMetadataOwnershipBeforeRequestingContractFields()
         {
-            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(null);
+            ResolvedAuthoringContract inferred =
+                ResolvedAuthoringContractRegistry.FindByModuleId("test.metadata.inferred-pawn");
+            ResolvedAuthoringContract supportOnly =
+                ResolvedAuthoringContractRegistry.FindByModuleId("test.metadata.support-interface");
+            ResolvedAuthoringContract semantic =
+                ResolvedAuthoringContractRegistry.FindByModuleId("test.metadata.semantic-combat");
+
+            Assert.That(inferred, Is.Not.Null);
+            Assert.That(supportOnly, Is.Not.Null);
+            Assert.That(semantic, Is.Not.Null);
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.BuildForContracts(
+                null,
+                default,
+                new[] { inferred, supportOnly, semantic });
 
             Assert.That(graph.Nodes.Any(node =>
-                node.IssueCode == "ContractMetadata.CapabilityPathMissing"
-                && node.Guidance.Contains("CapabilityPath", System.StringComparison.Ordinal)), Is.True);
-            Assert.That(PyralisAuthoringSetupGraphProjection.BuildHygieneSections(graph)
-                .Any(section => section.Label == "Missing Contract Metadata" && section.Rows.Count > 0), Is.True);
+                node.SourceContract == inferred
+                && node.IssueCode == "ContractMetadata.RuntimeFamiliesMissing"), Is.False);
             Assert.That(graph.Nodes.Any(node =>
-                node.IssueCode == "ContractMetadata.RuntimeFamiliesMissing"
-                && node.Guidance.Contains("RuntimeFamilies", System.StringComparison.Ordinal)), Is.True);
+                node.SourceContract == supportOnly
+                && node.IssueCode == "ContractMetadata.RuntimeFamiliesMissing"), Is.False);
+
+            PyralisAuthoringGraphNode semanticRuntimeFamily = graph.Nodes.FirstOrDefault(node =>
+                node.SourceContract == semantic
+                && node.IssueCode == "ContractMetadata.RuntimeFamiliesMissing");
+            Assert.That(semanticRuntimeFamily, Is.Not.Null);
+
+            PyralisAuthoringGraphAuditRow semanticRow = PyralisAuthoringSetupGraphProjection
+                .BuildHygieneDetailRows(graph)
+                .FirstOrDefault(row => row.Node == semanticRuntimeFamily);
+            Assert.That(semanticRow, Is.Not.Null);
+            Assert.That(semanticRow.OwnershipBucket, Is.EqualTo("ContractOwnedSemanticMetadata"));
+            Assert.That(semanticRow.RepairOwner, Is.EqualTo("Contract"));
+            Assert.That(semanticRow.OwnershipAdvice, Does.Contain("semantic runtime family"));
+
+            string hygieneJson = PyralisAuthoringSetupGraphJsonExporter.ToHygieneJson(
+                PyralisAuthoringHygieneProjection.Build(null, graph, Array.Empty<PyralisSourceDependencyHygieneRecord>()));
+            AssertJsonObjectContaining(
+                hygieneJson,
+                "\"nodeId\": \"contract-metadata.feature-test-metadata-semantic-combat.runtime-families\"",
+                "\"ownershipBucket\": \"ContractOwnedSemanticMetadata\"",
+                "\"repairOwner\": \"Contract\"",
+                "\"ownershipAdvice\"");
+            Assert.That(hygieneJson, Does.Not.Contain("contract-metadata.feature-test-metadata-inferred-pawn.runtime-families"));
+            Assert.That(hygieneJson, Does.Not.Contain("contract-metadata.feature-test-metadata-support-interface.runtime-families"));
+        }
+
+        [Test]
+        public void SetupGraph_SmokeDuplicateOwnershipClaimsAppearInHygiene()
+        {
+            ResolvedAuthoringContract first =
+                ResolvedAuthoringContractRegistry.FindByModuleId("test.ownership.first");
+            ResolvedAuthoringContract second =
+                ResolvedAuthoringContractRegistry.FindByModuleId("test.ownership.second");
+
+            Assert.That(first, Is.Not.Null);
+            Assert.That(second, Is.Not.Null);
+            Assert.That(first.OwnershipClaims, Does.Contain("test.runtime.owner"));
+            Assert.That(second.OwnershipClaims, Does.Contain("test.runtime.owner"));
+
+            ResolvedAuthoringContract[] fixtureContracts = { first, second };
+            PyralisAuthoringSetupGraph graph =
+                PyralisAuthoringSetupGraphBuilder.BuildForContracts(null, default, fixtureContracts);
+            PyralisAuthoringGraphNode duplicateOwner = graph.Nodes.FirstOrDefault(node =>
+                node.IssueCode == "ContractMetadata.DuplicateOwnershipClaim"
+                && node.Guidance.Contains("test.runtime.owner", System.StringComparison.Ordinal));
+
+            Assert.That(duplicateOwner, Is.Not.Null);
+            Assert.That(duplicateOwner.SourceKind, Is.EqualTo(PyralisAuthoringGraphSourceKind.AuthoringContract));
+            Assert.That(duplicateOwner.SourceOrigin, Is.EqualTo(PyralisAuthoringGraphSourceOrigin.Contract));
+            Assert.That(PyralisAuthoringSetupGraphProjection.BuildHygieneSections(graph)
+                .Any(section => section.Label == "Missing Contract Metadata"
+                    && section.Rows.Any(row => row.NodeId == duplicateOwner.StableId)), Is.True);
+            Assert.That(graph.Edges.Any(edge =>
+                edge.FromNodeId == "contract.feature.test.ownership.first"
+                && edge.ToNodeId == duplicateOwner.StableId
+                && edge.Kind == PyralisAuthoringGraphEdgeKind.BlockedBy), Is.True);
+            Assert.That(graph.Edges.Any(edge =>
+                edge.FromNodeId == "contract.feature.test.ownership.second"
+                && edge.ToNodeId == duplicateOwner.StableId
+                && edge.Kind == PyralisAuthoringGraphEdgeKind.BlockedBy), Is.True);
+        }
+
+        [Test]
+        public void SetupGraph_SmokeProductGraphExcludesTestFixtureContracts()
+        {
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(null);
+            string hygieneJson = PyralisAuthoringSetupGraphJsonExporter.ToHygieneJson(
+                PyralisAuthoringHygieneProjection.Build(null, graph, Array.Empty<PyralisSourceDependencyHygieneRecord>()));
+
+            Assert.That(ResolvedAuthoringContractRegistry.ProductContracts.Any(
+                ResolvedAuthoringContractRegistry.IsTestContract), Is.False);
+            Assert.That(hygieneJson, Does.Not.Contain("test.runtime.owner"));
+            Assert.That(hygieneJson, Does.Not.Contain("test.ownership.first"));
+            Assert.That(hygieneJson, Does.Not.Contain("test.ownership.second"));
         }
 
         [Test]
@@ -334,6 +422,9 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(graph.Nodes.Any(node =>
                 node.ProofTargetId == "proof.1p-pawn-movement"
                 && node.SourceOrigin == PyralisAuthoringGraphSourceOrigin.Contract), Is.True);
+            Assert.That(graph.Nodes.Any(node =>
+                node.IssueCode == "ContractMetadata.ProofTargetGenericTemplate"
+                && node.ProofTargetId == "proof.1p-pawn-movement"), Is.False);
         }
 
         [Test]
@@ -594,22 +685,23 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 });
 
             string mapJson = PyralisAuthoringSetupGraphJsonExporter.ToMapJson(graph);
-            string hygieneJson = PyralisAuthoringSetupGraphJsonExporter.ToHygieneJson(
-                graph,
-                new[]
-                {
-                    PyralisSourceDependencyHygieneScanner.AnalyzeSource(
-                        "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Platform/Session/HeavyRuntime.cs",
-                        "using NeonBlack.Gameplay.Features.Input; using NeonBlack.Gameplay.Features.Combat; class HeavyRuntime { void Tick() { UnityEngine.Object.FindAnyObjectByType<UnityEngine.Transform>(); } }")
-                });
+            var hygieneRecords = new[]
+            {
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Platform/Session/HeavyRuntime.cs",
+                    "using NeonBlack.Gameplay.Features.Input; using NeonBlack.Gameplay.Features.Combat; class HeavyRuntime { void Tick() { UnityEngine.Object.FindAnyObjectByType<UnityEngine.Transform>(); } }")
+            };
+            var noRouteHygieneRecords = new[]
+            {
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Platform/Session/NoRoutePressure.cs",
+                    "using NeonBlack.Gameplay.Features.Input; using NeonBlack.Gameplay.Features.Combat; class NoRoutePressure { }")
+            };
+            PyralisAuthoringHygieneProjection hygieneProjection =
+                PyralisAuthoringHygieneProjection.Build(null, graph, hygieneRecords);
+            string hygieneJson = PyralisAuthoringSetupGraphJsonExporter.ToHygieneJson(hygieneProjection);
             string noRouteHygieneJson = PyralisAuthoringSetupGraphJsonExporter.ToHygieneJson(
-                null,
-                new[]
-                {
-                    PyralisSourceDependencyHygieneScanner.AnalyzeSource(
-                        "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Platform/Session/NoRoutePressure.cs",
-                        "using NeonBlack.Gameplay.Features.Input; using NeonBlack.Gameplay.Features.Combat; class NoRoutePressure { }")
-                });
+                PyralisAuthoringHygieneProjection.Build(null, null, noRouteHygieneRecords));
             string routeProofTraceJson = PyralisAuthoringSetupGraphJsonExporter.ToRouteProofTraceJson(graph);
             var intentSelection = new PyralisAuthoringIntentSelection(
                 RuntimeCapabilityLaneTag.Sprite2D,
@@ -619,8 +711,10 @@ namespace NeonBlack.Gameplay.Tests.Editor
             string intentJson = PyralisAuthoringSetupGraphJsonExporter.ToIntentJson(
                 intentSelection,
                 PyralisAuthoringSetupGraphProjection.BuildIntentModel(intentSelection),
-                PyralisAuthoringCapabilityDescriptorRegistry.BuildIntentDescriptors(intentSelection.Lane, intentSelection.Axioms));
+                PyralisAuthoringCapabilityDescriptorRegistry.BuildIntentProjectionDescriptors(intentSelection.Lane, intentSelection.Axioms));
             string factsJson = PyralisAuthoringSetupGraphJsonExporter.ToFactsJson(graph);
+            IReadOnlyList<PyralisAuthoringFact> factsProjectionFacts =
+                PyralisAuthoringSetupGraphProjection.BuildCookbookFacts(graph);
 
             Assert.That(mapJson, Does.Contain("pyralis.authoring.mapSnapshot.v1"));
             Assert.That(mapJson, Does.Contain("\"view\": \"Map\""));
@@ -634,6 +728,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(mapJson, Does.Contain("\"mapConnections\""));
             Assert.That(mapJson, Does.Contain("\"sceneSetupIssues\""));
             Assert.That(mapJson, Does.Contain("validation.input-profile"));
+            Assert.That(mapJson, Does.Not.Contain("graph.assignment.coverage"));
             Assert.That(mapJson, Does.Not.Contain("\"hygieneSections\""));
 
             Assert.That(hygieneJson, Does.Contain("pyralis.authoring.hygieneSnapshot.v2"));
@@ -647,16 +742,42 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(hygieneJson, Does.Contain("\"hygieneRows\""));
             Assert.That(hygieneJson, Does.Contain("\"proofBlockers\""));
             Assert.That(hygieneJson, Does.Contain("\"sourceOriginCounts\""));
+            Assert.That(hygieneJson, Does.Contain("\"ownershipBucketCounts\""));
             Assert.That(hygieneJson, Does.Contain("\"dependencyPressureSummary\""));
             Assert.That(hygieneJson, Does.Contain("\"pressureKindCounts\""));
+            Assert.That(hygieneJson, Does.Contain("\"omittedDependencyPressureCount\": 0"));
+            Assert.That(hygieneJson, Does.Contain("\"omittedRecordCount\": 0"));
             Assert.That(hygieneJson, Does.Contain("\"cleanupFocus\""));
             Assert.That(hygieneJson, Does.Contain("\"watchList\""));
             Assert.That(hygieneJson, Does.Contain("\"dependencyPressure\""));
             Assert.That(hygieneJson, Does.Contain("\"pressureKind\""));
             Assert.That(hygieneJson, Does.Contain("\"reviewHint\""));
+            Assert.That(hygieneJson, Does.Contain("\"issueCode\""));
+            Assert.That(hygieneJson, Does.Contain("\"triageBucket\""));
+            Assert.That(hygieneJson, Does.Contain("\"triageAdvice\""));
+            Assert.That(hygieneJson, Does.Contain("\"ownershipBucket\""));
+            Assert.That(hygieneJson, Does.Contain("\"repairOwner\""));
+            Assert.That(hygieneJson, Does.Contain("\"ownershipAdvice\""));
+            Assert.That(hygieneJson, Does.Contain("\"nativeAction\""));
+            Assert.That(hygieneJson, Does.Contain("\"canInspectTarget\""));
+            Assert.That(hygieneJson, Does.Contain("\"target\""));
+            AssertJsonObjectContaining(
+                hygieneJson,
+                "\"nodeId\": \"graph.assignment.coverage\"",
+                "\"issueCode\"",
+                "\"triageBucket\"",
+                "\"triageAdvice\"",
+                "\"nativeAction\"",
+                "\"canInspectTarget\"",
+                "\"target\"");
             Assert.That(hygieneJson, Does.Contain("\"localComponentLookupCount\""));
             Assert.That(hygieneJson, Does.Contain("\"broadUnityDiscoveryCount\""));
             Assert.That(hygieneJson, Does.Contain("\"contractSourcePressure\""));
+            Assert.That(hygieneJson, Does.Contain("\"declaredRuntimeFamilies\""));
+            Assert.That(hygieneJson, Does.Contain("\"inferredRuntimeFamilies\""));
+            Assert.That(hygieneJson, Does.Contain("\"supportOnly\""));
+            Assert.That(hygieneJson, Does.Contain("HeavyRuntime.cs"));
+            Assert.That(hygieneJson, Does.Not.Contain("NoRoutePressure.cs"));
             Assert.That(hygieneJson, Does.Not.Contain("validation.input-profile"));
             Assert.That(hygieneJson, Does.Not.Contain("setup.session"));
             Assert.That(hygieneJson, Does.Contain("graph.assignment.coverage"));
@@ -669,6 +790,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(noRouteHygieneJson, Does.Contain("\"dependencyPressureSummary\""));
             Assert.That(noRouteHygieneJson, Does.Contain("\"dependencyPressure\""));
             Assert.That(noRouteHygieneJson, Does.Contain("\"nodeCount\": 0"));
+            Assert.That(noRouteHygieneJson, Does.Contain("NoRoutePressure.cs"));
+            Assert.That(noRouteHygieneJson, Does.Not.Contain("HeavyRuntime.cs"));
             Assert.That(noRouteHygieneJson, Does.Not.Contain("\"mapRows\""));
 
             Assert.That(routeProofTraceJson, Does.Contain("pyralis.authoring.routeProofTrace.v1"));
@@ -685,6 +808,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(routeProofTraceJson, Does.Contain("\"proofBlockers\""));
             Assert.That(routeProofTraceJson, Does.Contain("\"proofSupport\""));
             Assert.That(routeProofTraceJson, Does.Contain("\"diagnosticQuestions\""));
+            Assert.That(routeProofTraceJson, Does.Contain("\"question\": \"What is the next route action?\""));
+            Assert.That(routeProofTraceJson, Does.Contain("\"question\": \"Where should incorrect guidance be fixed?\""));
             Assert.That(routeProofTraceJson, Does.Contain("setup.session"));
             Assert.That(routeProofTraceJson, Does.Not.Contain("validation.input-profile"));
             Assert.That(routeProofTraceJson, Does.Not.Contain("\"mapRows\""));
@@ -696,9 +821,15 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(intentJson, Does.Contain("\"participantRoute\": \"TwoLocalPlayers\""));
             Assert.That(intentJson, Does.Contain("\"descriptorGroups\""));
             Assert.That(intentJson, Does.Contain("\"gameplayIngredientGroups\""));
+            Assert.That(intentJson, Does.Contain("\"metadataBacklogGroups\""));
+            Assert.That(intentJson, Does.Contain("\"metadataBacklogCount\""));
             Assert.That(intentJson, Does.Contain("\"routeEssentialGroups\""));
             Assert.That(intentJson, Does.Contain("\"advisorSummary\""));
             Assert.That(intentJson, Does.Contain("\"recommendations\""));
+            Assert.That(intentJson, Does.Contain("\"runtimeFamilies\""));
+            Assert.That(intentJson, Does.Not.Contain("\"requiredSetup\""));
+            Assert.That(intentJson, Does.Not.Contain("\"assignmentFields\""));
+            Assert.That(intentJson, Does.Not.Contain("\"nativeActions\""));
             Assert.That(intentJson, Does.Not.Contain("\"mapRows\""));
             Assert.That(intentJson, Does.Not.Contain("\"hygieneSections\""));
 
@@ -707,10 +838,155 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(factsJson, Does.Contain("\"factKindCounts\""));
             Assert.That(factsJson, Does.Contain("\"sourceKindCounts\""));
             Assert.That(factsJson, Does.Contain("\"graphContractCoverage\""));
-            Assert.That(factsJson, Does.Contain("\"graphProofCoverage\""));
             Assert.That(factsJson, Does.Contain("\"facts\""));
+            Assert.That(factsJson, Does.Not.Contain("\"capabilityCounts\""));
+            Assert.That(factsJson, Does.Not.Contain("\"graphProofCoverage\""));
+            Assert.That(factsJson, Does.Not.Contain("\"proofSupportCount\""));
+            Assert.That(factsJson, Does.Not.Contain("\"kind\": \"RouteIntent\""));
+            Assert.That(factsJson, Does.Not.Contain("\"kind\": \"RuntimeCapability\""));
+            Assert.That(factsJson, Does.Not.Contain("\"kind\": \"CustomizationMoment\""));
+            Assert.That(factsJson, Does.Not.Contain("\"kind\": \"Proof\""));
+            Assert.That(factsJson, Does.Not.Contain("\"capability\""));
+            Assert.That(factsJson, Does.Not.Contain("\"axioms\""));
+            Assert.That(factsJson, Does.Not.Contain("\"routeRelevance\""));
+            Assert.That(factsJson, Does.Not.Contain("\"workIntent\""));
+            Assert.That(factsJson, Does.Not.Contain("\"goalTags\""));
+            Assert.That(factsJson, Does.Not.Contain("\"laneTags\""));
+            Assert.That(factsJson, Does.Not.Contain("\"unsupportedLaneTags\""));
+            Assert.That(factsJson, Does.Not.Contain("\"customizationMoments\""));
+            Assert.That(factsJson, Does.Not.Contain("\"firstProof\""));
+            Assert.That(factsJson, Does.Not.Contain("\"assignmentFields\""));
+            Assert.That(factsJson, Does.Not.Contain("\"nativeActions\""));
+            Assert.That(factsJson, Does.Not.Contain("\"fieldOrComponent\""));
             Assert.That(factsJson, Does.Not.Contain("\"mapRows\""));
             Assert.That(factsJson, Does.Not.Contain("\"hygieneSections\""));
+            Assert.That(factsJson, Does.Not.Contain("\"InspectorGuide\""));
+            Assert.That(factsJson, Does.Not.Contain("\"inspector."));
+            Assert.That(factsProjectionFacts.Any(fact => fact.Kind == PyralisAuthoringFactKind.RouteIntent), Is.False);
+            Assert.That(factsProjectionFacts.Any(fact => fact.Kind == PyralisAuthoringFactKind.RuntimeCapability), Is.False);
+            Assert.That(factsProjectionFacts.Any(fact => fact.Kind == PyralisAuthoringFactKind.CustomizationMoment), Is.False);
+            Assert.That(factsProjectionFacts.Any(fact => fact.Kind == PyralisAuthoringFactKind.Proof), Is.False);
+        }
+
+        [Test]
+        public void HygieneScanner_SmokeClassifiesOwnershipResidueHidingSpots()
+        {
+            AssertResiduePressure(
+                "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Editor/Authoring/Spine/Reflection/LeakyReflection.cs",
+                "class LeakyReflection { const string proof = \"proof.1p-pawn-movement\"; const string path = \"CapabilityPath\"; }",
+                PyralisSourceDependencyPressureKind.ReflectionMeaningLeak,
+                cleanupFocus: true);
+            AssertResiduePressure(
+                "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Editor/Authoring/Spine/Validation/LeakyValidator.cs",
+                "class LeakyValidator { const string text = \"Open Guide and follow the first proof route.\"; }",
+                PyralisSourceDependencyPressureKind.ValidatorGuideLeak,
+                cleanupFocus: true);
+            AssertResiduePressure(
+                "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Editor/Authoring/Surfaces/Inspectors/LeakyInspector.cs",
+                "class LeakyInspector { const string text = \"Do Now: Route Proof through Overview.\"; }",
+                PyralisSourceDependencyPressureKind.InspectorRouteGuideLeak,
+                cleanupFocus: true);
+            AssertResiduePressure(
+                "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Editor/Authoring/Spine/Graph/LeakyJsonExporter.cs",
+                "class LeakyJsonExporter { void Export() { PyralisAuthoringSetupGraphProjection.BuildRouteWorkingProjection(null); } }",
+                PyralisSourceDependencyPressureKind.ExportTruthLeak,
+                cleanupFocus: true);
+            AssertResiduePressure(
+                "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Editor/Authoring/Surfaces/AuthoringWindow/LeakyTabRenderer.cs",
+                "class LeakyTabRenderer { void Render() { var state = PyralisAuthoringGraphEvidenceState.Missing; } }",
+                PyralisSourceDependencyPressureKind.TabRendererLogicLeak,
+                cleanupFocus: true);
+            AssertResiduePressure(
+                "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Compatibility/LegacySetupBridge.cs",
+                "class LegacySetupBridge { void Repair() { /* compatibility fallback auto-create quietly */ } }",
+                PyralisSourceDependencyPressureKind.CompatibilityBridge,
+                cleanupFocus: true);
+            AssertResiduePressure(
+                "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/Authoring/OLD.md",
+                "This active guide describes the old setup and deprecated path.",
+                PyralisSourceDependencyPressureKind.LegacyDocTruthLeak,
+                cleanupFocus: false);
+            AssertResiduePressure(
+                "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/OldOwnerName.cs",
+                "class OldOwnerName { }",
+                PyralisSourceDependencyPressureKind.OldOwnerName,
+                cleanupFocus: false);
+        }
+
+        [Test]
+        public void HygieneScanner_SmokeSuppressesPolicyDocsAndInspectorHandoffNoise()
+        {
+            PyralisSourceDependencyHygieneRecord policyDoc =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/Authoring/AUTHORING_BLUEPRINT.md",
+                    "Fallback policy is strict. Do not recover by parsing display labels, must not auto-wire setup, and compatibility bridges are cleanup smells.");
+            Assert.That(policyDoc.PressureKind, Is.Not.EqualTo(PyralisSourceDependencyPressureKind.CompatibilityBridge));
+            Assert.That(policyDoc.PressureKind, Is.Not.EqualTo(PyralisSourceDependencyPressureKind.LegacyDocTruthLeak));
+
+            PyralisSourceDependencyHygieneRecord currentOwnershipDoc =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/Authoring/AUTHORING_BLUEPRINT.md",
+                    "Hygiene pressure kinds are not all cleanup commands. Protective anti-fallback policy text and docs that define the current source-ownership audit should not be classified as ownership leaks.");
+            Assert.That(currentOwnershipDoc.PressureKind, Is.Not.EqualTo(PyralisSourceDependencyPressureKind.CompatibilityBridge));
+            Assert.That(currentOwnershipDoc.PressureKind, Is.Not.EqualTo(PyralisSourceDependencyPressureKind.LegacyDocTruthLeak));
+            Assert.That(currentOwnershipDoc.PressureKind, Is.Not.EqualTo(PyralisSourceDependencyPressureKind.OldOwnerName));
+
+            PyralisSourceDependencyHygieneRecord scannerImplementation =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Editor/Authoring/Spine/Hygiene/PyralisSourceDependencyHygieneScanner.cs",
+                    "enum PyralisSourceDependencyPressureKind { OldOwnerName, CompatibilityBridge } class Scanner { string hint = \"CompatibilityBridge\"; }");
+            Assert.That(scannerImplementation.PressureKind, Is.EqualTo(PyralisSourceDependencyPressureKind.ScannerImplementation));
+
+            PyralisSourceDependencyHygieneRecord hygieneBridge =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Editor/Authoring/Spine/Hygiene/PyralisCompatibilityBridge.cs",
+                    "class PyralisCompatibilityBridge { void Repair() { /* compatibility fallback auto-create quietly */ } }");
+            Assert.That(hygieneBridge.PressureKind, Is.EqualTo(PyralisSourceDependencyPressureKind.CompatibilityBridge));
+
+            PyralisSourceDependencyHygieneRecord mixedDoc =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/Authoring/MIXED.md",
+                    "Fallback policy is strict, but this active guide also still points users at the legacy setup and deprecated path.");
+            Assert.That(mixedDoc.PressureKind, Is.EqualTo(PyralisSourceDependencyPressureKind.LegacyDocTruthLeak));
+
+            PyralisSourceDependencyHygieneRecord handoffInspector =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Enemies/3D/Editor/Inspectors/EnemyAIEditor.cs",
+                    "class EnemyAIEditor { void OnInspectorGUI() { PyralisInspectorHandoff.DrawAuthoringButton(\"Enemy AI\", \"Use Pyralis Authoring for route setup and first proof guidance.\"); } }");
+            Assert.That(handoffInspector.PressureKind, Is.Not.EqualTo(PyralisSourceDependencyPressureKind.InspectorRouteGuideLeak));
+
+            PyralisSourceDependencyHygieneRecord enemyRuntimeHandoffInspector =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Features/Enemies/3D/Editor/Inspectors/EnemyFeatureRuntimeGuidedEditors.cs",
+                    "class EnemyFeatureRuntimeGuidedEditors { void OnInspectorGUI() { PyralisInspectorHandoff.DrawAuthoringButton(\"Enemy Ambient Feature Runtime\", null); PyralisInspectorHandoff.DrawAuthoringButton(\"Enemy Reaction Feature Runtime\", null); } }");
+            Assert.That(enemyRuntimeHandoffInspector.PressureKind, Is.Not.EqualTo(PyralisSourceDependencyPressureKind.InspectorRouteGuideLeak));
+
+            PyralisSourceDependencyHygieneRecord routeOwnerInspector =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Editor/Authoring/Surfaces/Inspectors/PyralisInspectorGuide.cs",
+                    "class PyralisInspectorGuide { PyralisGuideContent content; void BuildChecklist() { const string proof = \"proof.1p-pawn-movement\"; } }");
+            Assert.That(routeOwnerInspector.PressureKind, Is.EqualTo(PyralisSourceDependencyPressureKind.InspectorRouteGuideLeak));
+
+            PyralisSourceDependencyHygieneRecord exportControlChrome =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(
+                    "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Editor/Authoring/Surfaces/AuthoringWindow/PyralisAuthoringGraphJsonExportControl.cs",
+                    "class PyralisAuthoringGraphJsonExportControl { void Draw() { if (GUILayout.Button(\"Export Map\")) PyralisAuthoringSetupGraphJsonExporter.ToMapJson(graph); } }");
+            Assert.That(exportControlChrome.PressureKind, Is.Not.EqualTo(PyralisSourceDependencyPressureKind.ExportTruthLeak));
+        }
+
+        [Test]
+        public void ReflectiveFactScanner_SmokeDoesNotFallbackRepairCoreSetupRelations()
+        {
+            PyralisAuthoringFact[] reflectionFacts = PyralisReflectiveFactScanner.ScanProject()
+                .Where(fact => fact.SourceKind == PyralisAuthoringFactSourceKind.Reflection)
+                .ToArray();
+            string[] reflectionRelatedStableIds = reflectionFacts
+                .SelectMany(fact => fact.RelatedStableIds)
+                .ToArray();
+
+            Assert.That(reflectionRelatedStableIds, Does.Not.Contain("setup.assign-session-definition"));
+            Assert.That(reflectionRelatedStableIds, Does.Not.Contain("setup.assign-default-game-mode"));
+            Assert.That(reflectionRelatedStableIds, Does.Not.Contain("setup.assign-default-participants"));
         }
 
         [Test]
@@ -1351,6 +1627,44 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         [Test]
+        public void RouteProofTrace_SmokeLocalJoinUsesLocalPawnJoinProofAndExcludesSceneSurfaceCards()
+        {
+            PyralisAuthoringIntentSelection intent = new PyralisAuthoringIntentSelection(
+                RuntimeCapabilityLaneTag.Sprite2D,
+                AuthoringCapability.Session
+                | AuthoringCapability.Input
+                | AuthoringCapability.Movement
+                | AuthoringCapability.Participants
+                | AuthoringCapability.KineticMotor2D,
+                AuthoringWorldAxiom.Dimensions2D
+                | AuthoringWorldAxiom.GravityNone
+                | AuthoringWorldAxiom.Realtime,
+                PyralisAuthoringCapabilityDescriptorRegistry.FilterGameplayIntentDescriptorIds(
+                    new[] { "contract.NeonBlack.Gameplay.Features.Characters.Motor2D" }),
+                PyralisIntentParticipantRoute.FourLocalPlayers);
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(null, intent);
+            PyralisAuthoringGraphNode proof = PyralisAuthoringSetupGraphProjection.FindCurrentProofNode(graph);
+            PyralisAuthoringRouteWorkingProjection route = PyralisAuthoringSetupGraphProjection.BuildRouteWorkingProjection(graph);
+
+            Assert.That(proof, Is.Not.Null);
+            Assert.That(proof.StableId, Is.EqualTo("proof.local-pawn-join"));
+            Assert.That(route.ProofEnhancers.Any(row => row.Node.SetupDomain == PyralisAuthoringGraphSetupDomain.SceneSurface), Is.False);
+            Assert.That(route.ProofSupport.Any(row => row.From != null
+                && row.From.SourceKind == PyralisAuthoringGraphSourceKind.AuthoringContract
+                && row.From.ProofTargetId != "proof.local-pawn-join"), Is.False);
+
+            string traceJson = PyralisAuthoringSetupGraphJsonExporter.ToRouteProofTraceJson(graph);
+            Assert.That(traceJson, Does.Contain("\"nodeId\": \"proof.local-pawn-join\""));
+            Assert.That(traceJson, Does.Not.Contain("\"nodeId\": \"proof.1p-pawn-movement\""));
+            Assert.That(traceJson, Does.Not.Contain("SceneSurface.PickupsHazardsEnemies"));
+            Assert.That(traceJson, Does.Not.Contain("SceneSurface.ScoringObjectives"));
+            Assert.That(traceJson, Does.Not.Contain("SceneReadiness.CameraAudio"));
+            Assert.That(traceJson, Does.Not.Contain("Fake Gravity Jump"));
+            Assert.That(traceJson, Does.Not.Contain("Top Down Hop"));
+        }
+
+        [Test]
         public void OverviewProjection_SmokeReadsGraphNextAction()
         {
             GameObject root = new GameObject("Gameplay Root");
@@ -1505,6 +1819,87 @@ namespace NeonBlack.Gameplay.Tests.Editor
         }
 
         private sealed class PickupNameOnlySurface : MonoBehaviour
+        {
+        }
+
+        private static void AssertResiduePressure(
+            string assetPath,
+            string source,
+            PyralisSourceDependencyPressureKind expectedKind,
+            bool cleanupFocus)
+        {
+            PyralisSourceDependencyHygieneRecord record =
+                PyralisSourceDependencyHygieneScanner.AnalyzeSource(assetPath, source);
+
+            Assert.That(record.PressureKind, Is.EqualTo(expectedKind));
+            Assert.That(record.Risk, Is.Not.EqualTo(PyralisSourceDependencyRisk.Low));
+            Assert.That(record.Reasons.Any(reason => reason.Contains("appears", System.StringComparison.OrdinalIgnoreCase)
+                || reason.Contains("Ownership residue", System.StringComparison.OrdinalIgnoreCase)
+                || reason.Contains("legacy", System.StringComparison.OrdinalIgnoreCase)), Is.True);
+            Assert.That(PyralisAuthoringHygieneProjection.IsCleanupFocus(record.PressureKind), Is.EqualTo(cleanupFocus));
+        }
+
+        private static void AssertJsonObjectContaining(string json, string objectNeedle, params string[] expectedFields)
+        {
+            int needleIndex = json.IndexOf(objectNeedle, System.StringComparison.Ordinal);
+            Assert.That(needleIndex, Is.GreaterThanOrEqualTo(0), objectNeedle);
+
+            int objectStart = json.LastIndexOf('{', needleIndex);
+            int objectEnd = json.IndexOf('}', needleIndex);
+            Assert.That(objectStart, Is.GreaterThanOrEqualTo(0), objectNeedle);
+            Assert.That(objectEnd, Is.GreaterThan(objectStart), objectNeedle);
+
+            string objectJson = json.Substring(objectStart, objectEnd - objectStart + 1);
+            for (int i = 0; i < expectedFields.Length; i++)
+                Assert.That(objectJson, Does.Contain(expectedFields[i]), expectedFields[i]);
+        }
+
+        [AuthoringContract(
+            ModuleId = "test.ownership.first",
+            SelectableIntent = false,
+            OwnershipClaims = new[] { "test.runtime.owner" },
+            RuntimeFamilies = new[] { RuntimeCapabilityFamily.Custom },
+            Relevance = "Test-only contract owner for duplicate ownership hygiene.")]
+        private sealed class TestDuplicateOwnershipFirst
+        {
+        }
+
+        [AuthoringContract(
+            ModuleId = "test.ownership.second",
+            SelectableIntent = false,
+            OwnershipClaims = new[] { "test.runtime.owner" },
+            RuntimeFamilies = new[] { RuntimeCapabilityFamily.Custom },
+            Relevance = "Test-only competing owner for duplicate ownership hygiene.")]
+        private sealed class TestDuplicateOwnershipSecond
+        {
+        }
+
+        [AuthoringContract(
+            ModuleId = "test.metadata.inferred-pawn",
+            Capability = AuthoringCapability.Movement,
+            CapabilityPath = "Movement/Test/Inferred Pawn",
+            Relevance = "Test-only pawn runtime family inference contract.")]
+        private sealed class TestInferredPawnContract : MonoBehaviour, IPawnMotor
+        {
+            public void ApplyMovementProfile(PawnProfileApplicationContext context, PawnMovementProfile movementProfile)
+            {
+            }
+        }
+
+        [AuthoringContract(
+            ModuleId = "test.metadata.support-interface",
+            Capability = AuthoringCapability.Setup,
+            Relevance = "Test-only support contract that should not ask humans for route metadata.")]
+        private interface ITestSupportOnlyContract
+        {
+        }
+
+        [AuthoringContract(
+            ModuleId = "test.metadata.semantic-combat",
+            Capability = AuthoringCapability.Combat,
+            CapabilityPath = "Combat/Test/Semantic Combat",
+            Relevance = "Test-only semantic combat contract that needs explicit runtime family ownership.")]
+        private sealed class TestSemanticCombatContract
         {
         }
     }

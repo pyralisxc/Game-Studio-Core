@@ -17,7 +17,9 @@ namespace NeonBlack.Gameplay.Core.Rpg
             "tag items as Equippable",
             "configure equipment visual mapping"
         },
-        FirstProof = "Equip an item to an actor and verify its stats or visuals update accordingly."
+        FirstProof = "Equip an item to an actor and verify its stats or visuals update accordingly.",
+        CapabilityPath = "RPG/Inventory/Equipment Service",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
     )]
     public sealed class EquipmentService : IEquipmentService
 {

@@ -19,6 +19,14 @@ namespace NeonBlack.Gameplay.Editor
             UnityEngine.Object source,
             PyralisAuthoringIntentSelection intentSelection)
         {
+            return BuildForContracts(source, intentSelection, ResolvedAuthoringContractRegistry.ProductContracts);
+        }
+
+        public static PyralisAuthoringSetupGraph BuildForContracts(
+            UnityEngine.Object source,
+            PyralisAuthoringIntentSelection intentSelection,
+            IReadOnlyList<ResolvedAuthoringContract> contracts)
+        {
             PyralisSetupRouteAnalysis route = BuildRoute(source, intentSelection);
             List<PyralisAuthoringGraphNode> nodes = new List<PyralisAuthoringGraphNode>();
             List<PyralisAuthoringGraphEdge> edges = new List<PyralisAuthoringGraphEdge>();
@@ -31,7 +39,7 @@ namespace NeonBlack.Gameplay.Editor
             AddParticipantSeatNodes(route, nodes, edges);
             AddSceneSurfaceNodes(source, route, nodes, edges);
             string activeProofNodeId = AddProofNode(route, intentSelection, nodes, edges);
-            AddContractNodes(nodes, edges, activeProofNodeId);
+            AddContractNodes(nodes, edges, activeProofNodeId, contracts);
             AddRuntimeValidationEvidence(source, route, nodes, edges);
             AddReflectedDependencyEvidence(source, route, nodes, edges);
             AddSceneReadinessEvidence(source, nodes, edges);
@@ -1213,8 +1221,6 @@ namespace NeonBlack.Gameplay.Editor
                     return PyralisAuthoringGraphSetupDomain.PawnPresentation;
                 case PyralisSceneReadinessCategory.Physics:
                     return PyralisAuthoringGraphSetupDomain.PawnMotor;
-                case PyralisSceneReadinessCategory.PrefabContract:
-                    return PyralisAuthoringGraphSetupDomain.PawnPrefab;
                 case PyralisSceneReadinessCategory.Networking:
                     return PyralisAuthoringGraphSetupDomain.Networking;
                 default:
@@ -1406,13 +1412,13 @@ namespace NeonBlack.Gameplay.Editor
 
             string selectedDescriptorProofTargetId = ResolveSelectedDescriptorProofTargetId(intentSelection);
             if (!string.IsNullOrWhiteSpace(selectedDescriptorProofTargetId))
-                return selectedDescriptorProofTargetId;
+                return NormalizeProofTargetForTopology(selectedDescriptorProofTargetId, route);
 
             for (int i = 0; i < families.Length; i++)
             {
                 PyralisAuthoringCapabilityDescriptor descriptor = ResolveCapabilityDescriptorForFamily(families[i], intentSelection);
                 if (descriptor != null && !string.IsNullOrWhiteSpace(descriptor.ProofTargetId))
-                    return descriptor.ProofTargetId;
+                    return NormalizeProofTargetForTopology(descriptor.ProofTargetId, route);
             }
 
             string genericProofTargetId = PyralisProofFamilyVocabulary.GetGenericProofTargetId(
@@ -1423,6 +1429,19 @@ namespace NeonBlack.Gameplay.Editor
                 return genericProofTargetId;
 
             return "proof.custom-object-effect";
+        }
+
+        private static string NormalizeProofTargetForTopology(string proofTargetId, PyralisSetupRouteAnalysis route)
+        {
+            if (string.Equals(proofTargetId, "proof.1p-pawn-movement", StringComparison.Ordinal)
+                && route != null
+                && (route.ParticipantTopology == PyralisParticipantTopology.LocalJoin
+                    || route.ParticipantTopology == PyralisParticipantTopology.HybridLocalNetworked))
+            {
+                return "proof.local-pawn-join";
+            }
+
+            return proofTargetId;
         }
 
         private static string ResolveSelectedDescriptorProofTargetId(PyralisAuthoringIntentSelection intentSelection)
@@ -1491,13 +1510,18 @@ namespace NeonBlack.Gameplay.Editor
         private static void AddContractNodes(
             List<PyralisAuthoringGraphNode> nodes,
             List<PyralisAuthoringGraphEdge> edges,
-            string activeProofNodeId)
+            string activeProofNodeId,
+            IReadOnlyList<ResolvedAuthoringContract> sourceContracts)
         {
-            foreach (ResolvedAuthoringContract contract in ResolvedAuthoringContractRegistry.All)
+            List<ResolvedAuthoringContract> contracts = new List<ResolvedAuthoringContract>();
+            IReadOnlyList<ResolvedAuthoringContract> contractSource =
+                sourceContracts ?? ResolvedAuthoringContractRegistry.ProductContracts;
+            foreach (ResolvedAuthoringContract contract in contractSource)
             {
                 if (contract == null || string.IsNullOrWhiteSpace(contract.StableId))
                     continue;
 
+                contracts.Add(contract);
                 string nodeId = "contract." + contract.StableId;
                 AddNode(nodes, new PyralisAuthoringGraphNode(
                     nodeId,
@@ -1526,6 +1550,72 @@ namespace NeonBlack.Gameplay.Editor
                 if (!string.IsNullOrWhiteSpace(contract.SetupNodeId))
                     AddEdge(edges, nodeId, contract.SetupNodeId, PyralisAuthoringGraphEdgeKind.RelatesTo, "setup node");
             }
+
+            AddDuplicateOwnershipClaimEvidence(contracts, nodes, edges);
+        }
+
+        private static void AddDuplicateOwnershipClaimEvidence(
+            IReadOnlyList<ResolvedAuthoringContract> contracts,
+            List<PyralisAuthoringGraphNode> nodes,
+            List<PyralisAuthoringGraphEdge> edges)
+        {
+            if (contracts == null || contracts.Count == 0)
+                return;
+
+            Dictionary<string, List<ResolvedAuthoringContract>> contractsByClaim =
+                new Dictionary<string, List<ResolvedAuthoringContract>>(StringComparer.Ordinal);
+
+            for (int i = 0; i < contracts.Count; i++)
+            {
+                ResolvedAuthoringContract contract = contracts[i];
+                if (contract?.OwnershipClaims == null)
+                    continue;
+
+                for (int claimIndex = 0; claimIndex < contract.OwnershipClaims.Length; claimIndex++)
+                {
+                    string claim = contract.OwnershipClaims[claimIndex]?.Trim();
+                    if (string.IsNullOrWhiteSpace(claim))
+                        continue;
+
+                    if (!contractsByClaim.TryGetValue(claim, out List<ResolvedAuthoringContract> claimContracts))
+                    {
+                        claimContracts = new List<ResolvedAuthoringContract>();
+                        contractsByClaim.Add(claim, claimContracts);
+                    }
+
+                    if (!claimContracts.Exists(candidate => string.Equals(candidate.StableId, contract.StableId, StringComparison.Ordinal)))
+                        claimContracts.Add(contract);
+                }
+            }
+
+            foreach (KeyValuePair<string, List<ResolvedAuthoringContract>> pair in contractsByClaim)
+            {
+                List<ResolvedAuthoringContract> claimContracts = pair.Value;
+                if (claimContracts == null || claimContracts.Count < 2)
+                    continue;
+
+                string nodeId = "contract-metadata.ownership-claim." + NormalizeId(pair.Key);
+                string owners = string.Join(", ", claimContracts.ConvertAll(contract => contract.DisplayName));
+                AddNode(nodes, new PyralisAuthoringGraphNode(
+                    nodeId,
+                    "Duplicate Ownership Claim",
+                    PyralisAuthoringGraphNodeKind.Contract,
+                    PyralisAuthoringGraphSourceKind.AuthoringContract,
+                    PyralisAuthoringGraphEvidenceState.Missing,
+                    guidance: $"Multiple authoring contracts declare OwnershipClaims '{pair.Key}': {owners}. Keep one canonical contract owner for this runtime responsibility, or split the claim into narrower responsibilities.",
+                    blockingReason: "Hygiene cannot treat a runtime responsibility as canonical while multiple contracts claim the same ownership key.",
+                    sourceContract: claimContracts[0],
+                    sourceOrigin: PyralisAuthoringGraphSourceOrigin.Contract,
+                    workIntent: PyralisAuthoringGraphWorkIntent.Reference,
+                    issueSeverity: PyralisAuthoringIssueSeverity.Warning,
+                    setupDomain: PyralisAuthoringGraphSetupDomain.FeatureContract,
+                    issueCode: "ContractMetadata.DuplicateOwnershipClaim"));
+
+                for (int i = 0; i < claimContracts.Count; i++)
+                {
+                    AddEdge(edges, "contract." + claimContracts[i].StableId, nodeId, PyralisAuthoringGraphEdgeKind.BlockedBy, "duplicate ownership claim");
+                }
+            }
         }
 
         private static void AddContractMetadataEvidence(
@@ -1549,7 +1639,7 @@ namespace NeonBlack.Gameplay.Editor
                     PyralisAuthoringGraphSourceKind.AuthoringContract,
                     PyralisAuthoringGraphEvidenceState.Missing,
                     authoringCapability: contract.Capability,
-                    guidance: $"{contract.DisplayName} is marked selectable for Intent but does not declare AuthoringContract.CapabilityPath. Add a stable semantic path such as 'Movement/2D/Kinetic Motor', or set SelectableIntent = false if this contract is support-only.",
+                    guidance: $"{contract.DisplayName} is marked selectable for Intent but does not declare AuthoringContract.CapabilityPath. Add a stable semantic path such as '{BuildCapabilityPathExample(contract)}', or set SelectableIntent = false if this contract is support-only.",
                     blockingReason: "Intent cannot safely expose this contract as a gameplay ingredient until the contract declares its semantic CapabilityPath.",
                     sourceContract: contract,
                     sourceOrigin: GetContractSourceOrigin(contract),
@@ -1572,7 +1662,7 @@ namespace NeonBlack.Gameplay.Editor
                     PyralisAuthoringGraphSourceKind.AuthoringContract,
                     PyralisAuthoringGraphEvidenceState.Missing,
                     authoringCapability: contract.Capability,
-                    guidance: $"{contract.DisplayName} is marked as an Intent route essential but does not declare AuthoringContract.CapabilityPath. Add a stable semantic path such as 'Core Setup/Input/Participant Input Router' so Intent can group route infrastructure without display-name guessing.",
+                    guidance: $"{contract.DisplayName} is marked as an Intent route essential but does not declare AuthoringContract.CapabilityPath. Add a stable semantic path such as '{BuildRouteEssentialCapabilityPathExample(contract)}' so Intent can group route infrastructure without display-name guessing.",
                     blockingReason: "Intent can infer this route essential, but it cannot group it cleanly without a semantic CapabilityPath.",
                     sourceContract: contract,
                     sourceOrigin: GetContractSourceOrigin(contract),
@@ -1584,8 +1674,7 @@ namespace NeonBlack.Gameplay.Editor
                 AddEdge(edges, contractNodeId, nodeId, PyralisAuthoringGraphEdgeKind.BlockedBy, "missing route essential metadata");
             }
 
-            if (contract.Capability != AuthoringCapability.None
-                && (contract.RuntimeFamilies == null || contract.RuntimeFamilies.Length == 0))
+            if (PyralisAuthoringContractMetadataPolicy.ShouldEmitRuntimeFamiliesMissing(contract))
             {
                 string nodeId = "contract-metadata." + NormalizeId(contract.StableId) + ".runtime-families";
                 AddNode(nodes, new PyralisAuthoringGraphNode(
@@ -1595,7 +1684,7 @@ namespace NeonBlack.Gameplay.Editor
                     PyralisAuthoringGraphSourceKind.AuthoringContract,
                     PyralisAuthoringGraphEvidenceState.Missing,
                     authoringCapability: contract.Capability,
-                    guidance: $"{contract.DisplayName} declares authoring capability meaning but does not declare AuthoringContract.RuntimeFamilies. Add the runtime family or set Capability = AuthoringCapability.None if this contract should not steer routes.",
+                    guidance: $"{contract.DisplayName} declares authoring capability meaning but does not declare AuthoringContract.RuntimeFamilies. {BuildRuntimeFamilyAdvice(contract)}",
                     blockingReason: "Route analysis and proof selection will not infer runtime family from capability flags.",
                     sourceContract: contract,
                     sourceOrigin: GetContractSourceOrigin(contract),
@@ -1606,6 +1695,87 @@ namespace NeonBlack.Gameplay.Editor
 
                 AddEdge(edges, contractNodeId, nodeId, PyralisAuthoringGraphEdgeKind.BlockedBy, "missing runtime family metadata");
             }
+        }
+
+        private static string BuildCapabilityPathExample(ResolvedAuthoringContract contract)
+        {
+            AuthoringCapability capability = contract != null ? contract.Capability : AuthoringCapability.None;
+            string displayName = contract != null ? contract.DisplayName : "Feature";
+
+            if (HasAnyCapability(capability, AuthoringCapability.Camera))
+                return "World & Meta/Camera/" + displayName;
+            if (HasAnyCapability(capability, AuthoringCapability.CombatSensors))
+                return "Combat/Sensors/" + displayName;
+            if (HasAnyCapability(capability, AuthoringCapability.Combat | AuthoringCapability.MeleeFlow | AuthoringCapability.RangedFlow))
+                return "Combat/Actions/" + displayName;
+            if (HasAnyCapability(capability, AuthoringCapability.Scoring | AuthoringCapability.Rules))
+                return "Goals & Scoring/Rules/" + displayName;
+            if (HasAnyCapability(capability, AuthoringCapability.Input | AuthoringCapability.Participants | AuthoringCapability.Session | AuthoringCapability.Setup))
+                return "Core Setup/Input/" + displayName;
+            if (HasAnyCapability(capability, AuthoringCapability.Networking))
+                return "Core Setup/Networking/" + displayName;
+            if (HasAnyCapability(capability, AuthoringCapability.Animation | AuthoringCapability.VFX | AuthoringCapability.Audio))
+                return "Presentation/Feedback/" + displayName;
+            if (HasAnyCapability(capability, AuthoringCapability.Tabletop | AuthoringCapability.Grid | AuthoringCapability.TurnBased))
+                return "Tabletop/Board/" + displayName;
+            if (HasAnyCapability(capability, AuthoringCapability.UI))
+                return "UI/HUD/" + displayName;
+            if (HasAnyCapability(capability, AuthoringCapability.Movement | AuthoringCapability.KineticMotor2D | AuthoringCapability.KineticMotor3D | AuthoringCapability.Steering2D | AuthoringCapability.Steering3D | AuthoringCapability.Traversal))
+                return "Movement/Traversal/" + displayName;
+
+            return "Capability/" + displayName;
+        }
+
+        private static string BuildRouteEssentialCapabilityPathExample(ResolvedAuthoringContract contract)
+        {
+            AuthoringCapability capability = contract != null ? contract.Capability : AuthoringCapability.None;
+
+            if (HasAnyCapability(capability, AuthoringCapability.Input | AuthoringCapability.Participants))
+                return "Core Setup/Input/Participant Input Router";
+            if (HasAnyCapability(capability, AuthoringCapability.Session | AuthoringCapability.Setup | AuthoringCapability.Rules))
+                return "Core Setup/Session/Gameplay Session";
+            if (HasAnyCapability(capability, AuthoringCapability.Networking))
+                return "Core Setup/Networking/Network Session";
+            if (HasAnyCapability(capability, AuthoringCapability.Camera))
+                return "World & Meta/Camera/Route Camera Rig";
+
+            return BuildCapabilityPathExample(contract);
+        }
+
+        private static string BuildRuntimeFamilyAdvice(ResolvedAuthoringContract contract)
+        {
+            RuntimeCapabilityFamily family = SuggestRuntimeFamily(contract != null ? contract.Capability : AuthoringCapability.None);
+            if (family == RuntimeCapabilityFamily.Custom)
+                return "Add the runtime family that owns this behavior, or set Capability = AuthoringCapability.None if this contract should not steer routes.";
+
+            return $"Add RuntimeFamilies = new[] {{ RuntimeCapabilityFamily.{family} }} if that owns the behavior, or set Capability = AuthoringCapability.None if this contract should not steer routes.";
+        }
+
+        private static RuntimeCapabilityFamily SuggestRuntimeFamily(AuthoringCapability capability)
+        {
+            if (HasAnyCapability(capability, AuthoringCapability.Camera | AuthoringCapability.Input))
+                return RuntimeCapabilityFamily.CameraInput;
+            if (HasAnyCapability(capability, AuthoringCapability.Combat | AuthoringCapability.CombatState | AuthoringCapability.CombatSensors | AuthoringCapability.MeleeFlow | AuthoringCapability.RangedFlow | AuthoringCapability.TacticsAggressive | AuthoringCapability.TacticsDefensive))
+                return RuntimeCapabilityFamily.Combat;
+            if (HasAnyCapability(capability, AuthoringCapability.Scoring | AuthoringCapability.Rules))
+                return RuntimeCapabilityFamily.ScoringObjectives;
+            if (HasAnyCapability(capability, AuthoringCapability.Networking))
+                return RuntimeCapabilityFamily.Networking;
+            if (HasAnyCapability(capability, AuthoringCapability.Animation | AuthoringCapability.VFX | AuthoringCapability.Audio))
+                return RuntimeCapabilityFamily.AnimationPresentation;
+            if (HasAnyCapability(capability, AuthoringCapability.Tabletop | AuthoringCapability.Grid | AuthoringCapability.TurnBased))
+                return RuntimeCapabilityFamily.BoardCardTabletop;
+            if (HasAnyCapability(capability, AuthoringCapability.Movement | AuthoringCapability.KineticMotor2D | AuthoringCapability.KineticMotor3D | AuthoringCapability.Steering2D | AuthoringCapability.Steering3D | AuthoringCapability.Traversal | AuthoringCapability.Participants | AuthoringCapability.Stats | AuthoringCapability.Inventory | AuthoringCapability.Dialogue | AuthoringCapability.Puzzle | AuthoringCapability.Rpg | AuthoringCapability.Quests | AuthoringCapability.Vendors | AuthoringCapability.SkillTree | AuthoringCapability.Progression))
+                return RuntimeCapabilityFamily.CharacterPawnGameplay;
+            if (HasAnyCapability(capability, AuthoringCapability.Setup | AuthoringCapability.Session | AuthoringCapability.UI | AuthoringCapability.Environment))
+                return RuntimeCapabilityFamily.PlatformCore;
+
+            return RuntimeCapabilityFamily.Custom;
+        }
+
+        private static bool HasAnyCapability(AuthoringCapability value, AuthoringCapability flags)
+        {
+            return (value & flags) != 0;
         }
 
         private static bool HasRoleTag(ResolvedAuthoringContract contract, string roleTag)
@@ -2098,7 +2268,6 @@ namespace NeonBlack.Gameplay.Editor
             {
                 PyralisSceneReadinessSeverity.RequiredBeforePlay => PyralisAuthoringGraphEvidenceState.Blocked,
                 PyralisSceneReadinessSeverity.RecommendedBeforePlay => PyralisAuthoringGraphEvidenceState.Missing,
-                PyralisSceneReadinessSeverity.ProofEnhancer => PyralisAuthoringGraphEvidenceState.CandidateDetected,
                 _ => PyralisAuthoringGraphEvidenceState.Unknown
             };
         }
@@ -2109,7 +2278,6 @@ namespace NeonBlack.Gameplay.Editor
             {
                 PyralisSceneReadinessSeverity.RequiredBeforePlay => PyralisAuthoringGraphWorkIntent.RequiredSetup,
                 PyralisSceneReadinessSeverity.RecommendedBeforePlay => PyralisAuthoringGraphWorkIntent.ProofEnhancer,
-                PyralisSceneReadinessSeverity.ProofEnhancer => PyralisAuthoringGraphWorkIntent.ProofEnhancer,
                 _ => PyralisAuthoringGraphWorkIntent.Unknown
             };
         }
@@ -2120,7 +2288,6 @@ namespace NeonBlack.Gameplay.Editor
             {
                 PyralisSceneReadinessSeverity.RequiredBeforePlay => PyralisAuthoringIssueSeverity.Required,
                 PyralisSceneReadinessSeverity.RecommendedBeforePlay => PyralisAuthoringIssueSeverity.Recommended,
-                PyralisSceneReadinessSeverity.ProofEnhancer => PyralisAuthoringIssueSeverity.Recommended,
                 _ => PyralisAuthoringIssueSeverity.Info
             };
         }

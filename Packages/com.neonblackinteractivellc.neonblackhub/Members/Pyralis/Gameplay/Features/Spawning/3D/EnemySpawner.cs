@@ -15,7 +15,8 @@ namespace NeonBlack.Gameplay.Features.Spawning
     Relevance = "Inspector Add Component path for scene-authored enemy spawning.",
     AssignmentFields = new[] { "enemyPrefabs", "spawnPoints", "mode" },
     FirstProof = "Verify that enemies are spawned according to the selected mode (Continuous/Waves).",
-    NativeSetup = new[] { "Configure Spawn Points" }
+    NativeSetup = new[] { "Configure Spawn Points" },
+    CapabilityPath = "Combat/Actions/Enemy Spawner"
 )]
 [AddComponentMenu("NeonBlack/Gameplay/Spawning/Enemy Spawner")]
 public class EnemySpawner : MonoBehaviour

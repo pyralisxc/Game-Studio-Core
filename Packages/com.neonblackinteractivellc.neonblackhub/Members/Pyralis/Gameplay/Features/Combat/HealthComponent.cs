@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using NeonBlack.Gameplay.Core.Contracts;
@@ -24,7 +24,8 @@ namespace NeonBlack.Gameplay.Features.Combat
         FirstProofTargetId = "proof.npc-enemy-behavior",
         ExpertAdvice = "HealthComponent is a neutral actor. Use Faction to prevent friendly fire. Attach HitFlash or HitPause listeners to the OnDamaged event for standard combat feel. Use Faction.Neutral for props that should be destructible by everyone.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/health",
-        Axioms = AuthoringWorldAxiom.Realtime
+        Axioms = AuthoringWorldAxiom.Realtime,
+        CapabilityPath = "Combat/State/Health Component"
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Combat/Health Component")]
     public class HealthComponent : MonoBehaviour, IActorHealthModifierReceiver, IActorHealthState, IRuntimeValidationProvider

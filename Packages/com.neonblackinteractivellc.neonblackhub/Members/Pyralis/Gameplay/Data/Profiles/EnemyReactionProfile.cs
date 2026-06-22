@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
@@ -14,7 +14,9 @@ namespace NeonBlack.Gameplay.Data.Profiles
         AssignmentFields = new[] { nameof(hurtLockDuration), nameof(staggerDamageThreshold) },
         FirstProof = "Hit the enemy and verify it enters a hit-stun state for the specified duration.",
         ExpertAdvice = "Balance hit stun to prevent 'infinite' combos by the player while still providing satisfying weight to attacks.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/enemies"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/enemies",
+        CapabilityPath = "Combat/Actions/Enemy Reaction Profile",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.Combat }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Enemy Reaction Profile", fileName = "EnemyReactionProfile")]
     public class EnemyReactionProfile : ScriptableObject, IRuntimeValidationProvider

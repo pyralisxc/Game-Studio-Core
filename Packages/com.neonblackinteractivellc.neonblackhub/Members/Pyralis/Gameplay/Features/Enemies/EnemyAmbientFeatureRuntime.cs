@@ -30,7 +30,8 @@ namespace NeonBlack.Gameplay.Features.Enemies
         {
             "EnemyAmbientFeatureProfile.enableAmbientLookAround",
             "EnemyAmbientFeatureProfile.lookAroundInterval"
-        }
+        },
+        CapabilityPath = "Combat/Actions/Enemy Ambient Feature Runtime"
     )]
     public class EnemyAmbientFeatureRuntime : MonoBehaviour, IFeatureModuleRuntime
 {

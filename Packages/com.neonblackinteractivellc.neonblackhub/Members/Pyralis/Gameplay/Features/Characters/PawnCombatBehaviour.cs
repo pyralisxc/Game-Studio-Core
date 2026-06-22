@@ -19,7 +19,8 @@ namespace NeonBlack.Gameplay.Features.Characters
         AssignmentFields = new[] { nameof(primarySequence), nameof(secondarySequence), nameof(aerialSequence), nameof(attackCooldown), nameof(kickCooldown), nameof(maxAerialAttacks) },
         FirstProof = "Perform an attack combo in Play Mode and verify that 'HitBox.Fire()' is called via animation events and damage is applied.",
         ExpertAdvice = "PawnCombatBehaviour is sequence-driven. If attacks feel floaty or don't land, check that your Animation Sequence assets have the 'FireHitBox' event timed precisely with the swing frame.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/combat"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/combat",
+        CapabilityPath = "Combat/Actions/Pawn Combat Behaviour"
     )]
 [AddComponentMenu("NeonBlack/Gameplay/Characters/Pawn Combat Behaviour")]
     [RequireComponent(typeof(PawnHitBoxModule))]

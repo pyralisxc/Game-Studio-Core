@@ -13,9 +13,6 @@ namespace NeonBlack.Gameplay.Networking.Runtime
     [AuthoringContract(
         Capability = AuthoringCapability.Networking,
         Relevance = "Shared validation for the NGO-backed Pyralis runtime lane.",
-        FirstProof = "Start a networked session and verify transport, pawn ownership, and prefab registration.",
-        FirstProofTargetId = "proof.network-ownership",
-        NativeSetup = new[] { "Add NetworkManager to the scene.", "Assign UnityTransport.", "Register networked pawn prefabs." },
         RequiredComponentNames = new[] { nameof(NetworkManager), nameof(UnityTransport) }
     )]
     public static class PyralisNetworkSetupValidator
@@ -98,7 +95,14 @@ namespace NeonBlack.Gameplay.Networking.Runtime
 
         public static bool IsNetworkReady(SessionDefinition sessionDefinition, NetworkManager networkManager)
         {
-            return GetIssues(sessionDefinition, networkManager).Count == 0;
+            List<PyralisRuntimeValidationIssue> issues = GetValidationIssues(sessionDefinition, networkManager);
+            for (int i = 0; i < issues.Count; i++)
+            {
+                if (issues[i] != null && issues[i].Severity == PyralisRuntimeValidationSeverity.Required)
+                    return false;
+            }
+
+            return true;
         }
 
         private static void AppendParticipantPawnIssues(SessionDefinition sessionDefinition, NetworkManager networkManager, List<PyralisRuntimeValidationIssue> issues)

@@ -11,7 +11,8 @@ namespace NeonBlack.Gameplay.Features.Characters
         AssignmentFields = new[] { nameof(blockDamageReduction), nameof(blockFrontalAngle) },
         FirstProof = "Hold the block button and verify damage from the front is reduced.",
         ExpertAdvice = "Block frontal angle defines the 'safe zone' for incoming damage. 90 degrees covers the entire forward hemisphere.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/combat"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/combat",
+        CapabilityPath = "Combat/Actions/Pawn Block Module"
     )]
     public class PawnBlockModule : MonoBehaviour
 {

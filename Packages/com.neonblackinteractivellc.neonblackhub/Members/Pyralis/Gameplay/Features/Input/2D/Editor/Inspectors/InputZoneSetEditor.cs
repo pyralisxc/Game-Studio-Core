@@ -32,38 +32,7 @@ public class InputZoneSetEditor : Editor
         if (asset == null)
             return;
 
-        PyralisInspectorGuide.DrawGuide(new PyralisGuideContent(
-            "Guided Authoring: Input Zone Set",
-            "An input zone set defines portrait and landscape screen polygons where gameplay input should be ignored or reserved for UI.",
-            whenToUse: new[]
-            {
-                "Use this for mobile/touch games, virtual sticks, on-screen buttons, card hands, HUD panels, or board UI regions.",
-                "Select the asset to edit polygons directly in the Scene view."
-            },
-            createBefore: new[]
-            {
-                "Camera and UI layout that define where touch/gameplay input should be blocked.",
-                "Input system or pointer router that checks this zone set."
-            },
-            assignFirst: new[]
-            {
-                "Choose Portrait or Landscape editing mode.",
-                "Add polygon vertices for each dead zone.",
-                "Drag vertices in Scene view until the zones match your UI."
-            },
-            safeToCustomize: new[]
-            {
-                "Portrait and Landscape can have different zones.",
-                "Zones can be empty when the game has no touch-blocking UI.",
-                "Use several simple polygons instead of one hard-to-edit shape."
-            },
-            validation: new[]
-            {
-                "Scene-view zones cover the intended UI controls.",
-                "Gameplay input is ignored inside zones and works outside zones.",
-                "Both orientations are checked if the game supports rotation."
-            },
-            manualPath: PyralisInspectorGuide.AuthoringDocPath("AUTHORING_MODEL.md")));
+        PyralisInspectorHandoff.DrawAuthoringButton("Input Zone Set", null);
 
         EditorGUILayout.Space(10f);
         EditorGUILayout.LabelField("Scene-View Zone Editor", EditorStyles.boldLabel);

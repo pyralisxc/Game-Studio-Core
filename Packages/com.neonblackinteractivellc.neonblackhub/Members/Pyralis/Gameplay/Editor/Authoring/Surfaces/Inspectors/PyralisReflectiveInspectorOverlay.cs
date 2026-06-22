@@ -34,19 +34,19 @@ namespace NeonBlack.Gameplay.Editor
 
             if (_contract != null)
             {
-                PyralisResolvedInspectorGuide.DrawHeader(_contract);
+                PyralisResolvedInspectorValidation.DrawHeader(_contract);
             }
 
             DrawDefaultInspector();
 
             if (_contract != null)
             {
-                PyralisResolvedInspectorGuide.DrawValidationFooter(_contract, target, serializedObject);
+                PyralisResolvedInspectorValidation.DrawValidationFooter(_contract, target, serializedObject);
             }
         }
     }
 
-    internal static class PyralisResolvedInspectorGuide
+    internal static class PyralisResolvedInspectorValidation
     {
         public static void DrawHeader(ResolvedAuthoringContract contract)
         {
@@ -108,35 +108,6 @@ namespace NeonBlack.Gameplay.Editor
                     return prop.arraySize == 0;
                 default:
                     return false;
-            }
-        }
-    }
-
-    public static class PyralisInspectorHandoff
-    {
-        public static void DrawAuthoringButton()
-        {
-            DrawAuthoringButton(null, null);
-        }
-
-        public static void DrawAuthoringButton(string context, string summary)
-        {
-            EditorGUILayout.Space(8f);
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
-            {
-                string label = string.IsNullOrWhiteSpace(context)
-                    ? "Pyralis Authoring"
-                    : context;
-                EditorGUILayout.LabelField(label, EditorStyles.miniBoldLabel);
-                EditorGUILayout.LabelField(
-                    string.IsNullOrWhiteSpace(summary) ? PyralisInspectorGuide.InspectorHandoffSummary : summary,
-                    EditorStyles.wordWrappedMiniLabel);
-
-                GUIContent button = new GUIContent(
-                    "Open Pyralis Authoring",
-                    "Open the graph-backed Pyralis Authoring Window for route setup, next steps, and first proof readiness.");
-                if (GUILayout.Button(button))
-                    NeonBlack.Gameplay.Editor.PyralisAuthoringWindow.Open();
             }
         }
     }

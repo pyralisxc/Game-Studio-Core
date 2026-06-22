@@ -33,7 +33,8 @@ namespace NeonBlack.Gameplay.Features.Interaction
             "interactionCooldown",
             "triggerInteractAnimationWhenUnhandled"
         },
-        ConsumedRoles = new[] { "Interact" }
+        ConsumedRoles = new[] { "Interact" },
+        CapabilityPath = "Interaction/Runtime/Actor Interaction Feature Runtime"
     )]
     public class ActorInteractionFeatureRuntime : MonoBehaviour, IFeatureModuleRuntime, IActorInteractionFeature
 {

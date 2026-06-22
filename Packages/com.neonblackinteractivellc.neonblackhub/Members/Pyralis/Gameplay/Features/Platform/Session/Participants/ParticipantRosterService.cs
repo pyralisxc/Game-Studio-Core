@@ -15,6 +15,8 @@ namespace NeonBlack.Gameplay.Characters
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Session,
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.PlatformCore },
+        CapabilityPath = "Core Setup/Participants/Participant Roster Service",
         Relevance = "Authoritative runtime roster of participants. Exposes a default participant handle only for systems that need a single focus handle.",
         RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.ParticipantRouteSupport },
         AssignmentFields = new[] { nameof(sessionDefinition) },

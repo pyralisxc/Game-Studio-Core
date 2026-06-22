@@ -18,8 +18,11 @@ namespace NeonBlack.Gameplay.Core.Contracts
     {
         private static readonly Lazy<IReadOnlyList<ResolvedAuthoringContract>> _allContracts =
             new Lazy<IReadOnlyList<ResolvedAuthoringContract>>(BuildContracts);
+        private static readonly Lazy<IReadOnlyList<ResolvedAuthoringContract>> _productContracts =
+            new Lazy<IReadOnlyList<ResolvedAuthoringContract>>(BuildProductContracts);
 
         public static IReadOnlyList<ResolvedAuthoringContract> All => _allContracts.Value;
+        public static IReadOnlyList<ResolvedAuthoringContract> ProductContracts => _productContracts.Value;
 
         public static ResolvedAuthoringContract FindByType(Type type)
         {
@@ -129,6 +132,40 @@ namespace NeonBlack.Gameplay.Core.Contracts
             return contracts;
         }
 
+        private static IReadOnlyList<ResolvedAuthoringContract> BuildProductContracts()
+        {
+            List<ResolvedAuthoringContract> contracts = new List<ResolvedAuthoringContract>();
+            for (int i = 0; i < All.Count; i++)
+            {
+                ResolvedAuthoringContract contract = All[i];
+                if (contract == null || IsTestContract(contract))
+                    continue;
+
+                contracts.Add(contract);
+            }
+
+            return contracts;
+        }
+
+        public static bool IsTestContract(ResolvedAuthoringContract contract)
+        {
+            Type type = contract?.SourceType;
+            if (type == null)
+                return false;
+
+            string namespaceName = type.Namespace ?? string.Empty;
+            if (namespaceName.StartsWith("NeonBlack.Gameplay.Tests", StringComparison.Ordinal))
+                return true;
+
+            string fullName = type.FullName ?? string.Empty;
+            if (fullName.Contains(".Tests.", StringComparison.Ordinal))
+                return true;
+
+            string assemblyName = type.Assembly.GetName().Name ?? string.Empty;
+            return assemblyName.Contains(".Tests", StringComparison.Ordinal)
+                || assemblyName.EndsWith("Tests", StringComparison.Ordinal);
+        }
+
         private static ResolvedAuthoringContract CreateFromAttribute(Type type, AuthoringContractAttribute attr)
         {
             List<string> interfaceNames = new List<string>();
@@ -218,6 +255,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
                 capabilityPath: attr.CapabilityPath,
                 runtimeFamilies: NormalizeRuntimeFamilies(attr),
                 roleTags: attr.RoleTags,
+                ownershipClaims: MergeDistinct(null, attr.OwnershipClaims),
                 selectableIntent: attr.SelectableIntent,
                 authoringLane: attr.Lane,
                 relevance: attr.Relevance,
@@ -393,6 +431,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
                 capabilityPath: FirstNonEmpty(current.CapabilityPath, incoming.CapabilityPath),
                 runtimeFamilies: MergeDistinct(current.RuntimeFamilies, incoming.RuntimeFamilies),
                 roleTags: MergeDistinct(current.RoleTags, incoming.RoleTags),
+                ownershipClaims: MergeDistinct(current.OwnershipClaims, incoming.OwnershipClaims),
                 selectableIntent: current.SelectableIntent || incoming.SelectableIntent,
                 authoringLane: FirstNonEmpty(current.AuthoringLane, incoming.AuthoringLane),
                 relevance: FirstNonEmpty(current.Relevance, incoming.Relevance),

@@ -15,7 +15,8 @@ Axioms = AuthoringWorldAxiom.Dimensions3D,
         AssignmentFields = new[] { nameof(allowClimb), nameof(allowHang), nameof(climbCooldown), nameof(ledgeProbe) },
         FirstProof = "Verify the pawn can grab and climb ledges in Play Mode.",
         ExpertAdvice = "Traversal logic is separated from base movement. Ensure your Animator has 'Climb' and 'Hang' signals wired to valid animations.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/traversal"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/traversal",
+        CapabilityPath = "Movement/Traversal/Pawn3D Traversal Component"
     )]
 [AddComponentMenu("NeonBlack/Gameplay/3D/Pawn 3D Traversal Component")]
     [RequireComponent(typeof(Pawn3DMovementComponent))]

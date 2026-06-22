@@ -1,116 +1,47 @@
 using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
 using System.Text;
-using NeonBlack.Gameplay.Editor;
 using NeonBlack.Gameplay.Features.Composition;
 using UnityEditor;
-using UnityEngine;
 
 namespace NeonBlack.Gameplay.Editor.Inspectors
 {
-    public readonly struct PyralisGuideContent
-    {
-        public readonly string Title;
-        public readonly string Summary;
-        public readonly string[] WhenToUse;
-        public readonly string[] CreateBefore;
-        public readonly string[] AssignFirst;
-        public readonly string[] SafeToCustomize;
-        public readonly string[] Validation;
-        public readonly string ManualPath;
-
-        public PyralisGuideContent(
-            string title,
-            string summary,
-            string[] whenToUse = null,
-            string[] createBefore = null,
-            string[] assignFirst = null,
-            string[] safeToCustomize = null,
-            string[] validation = null,
-            string manualPath = null)
-        {
-            Title = title;
-            Summary = summary;
-            WhenToUse = whenToUse;
-            CreateBefore = createBefore;
-            AssignFirst = assignFirst;
-            SafeToCustomize = safeToCustomize;
-            Validation = validation;
-            ManualPath = manualPath;
-        }
-    }
-
-    public readonly struct PyralisGuideSection
-    {
-        public readonly string Title;
-        public readonly string Summary;
-        public readonly string[] Items;
-        public readonly string ManualPath;
-
-        public PyralisGuideSection(string title, string summary = null, string[] items = null, string manualPath = null)
-        {
-            Title = title;
-            Summary = summary;
-            Items = items;
-            ManualPath = manualPath;
-        }
-    }
-
-    public enum PyralisGuideIssueSeverity
+    public enum PyralisInspectorValidationIssueSeverity
     {
         RequiredFix,
         Recommended,
         Optional
     }
 
-    public readonly struct PyralisGuideIssue
+    public readonly struct PyralisInspectorValidationIssue
     {
         public readonly string Message;
-        public readonly PyralisGuideIssueSeverity Severity;
+        public readonly PyralisInspectorValidationIssueSeverity Severity;
 
-        public PyralisGuideIssue(string message, PyralisGuideIssueSeverity severity = PyralisGuideIssueSeverity.RequiredFix)
+        public PyralisInspectorValidationIssue(string message, PyralisInspectorValidationIssueSeverity severity = PyralisInspectorValidationIssueSeverity.RequiredFix)
         {
             Message = message;
             Severity = severity;
         }
 
-        public static PyralisGuideIssue Required(string message)
+        public static PyralisInspectorValidationIssue Required(string message)
         {
-            return new PyralisGuideIssue(message, PyralisGuideIssueSeverity.RequiredFix);
+            return new PyralisInspectorValidationIssue(message, PyralisInspectorValidationIssueSeverity.RequiredFix);
         }
 
-        public static PyralisGuideIssue Recommended(string message)
+        public static PyralisInspectorValidationIssue Recommended(string message)
         {
-            return new PyralisGuideIssue(message, PyralisGuideIssueSeverity.Recommended);
+            return new PyralisInspectorValidationIssue(message, PyralisInspectorValidationIssueSeverity.Recommended);
         }
 
-        public static PyralisGuideIssue Optional(string message)
+        public static PyralisInspectorValidationIssue Optional(string message)
         {
-            return new PyralisGuideIssue(message, PyralisGuideIssueSeverity.Optional);
+            return new PyralisInspectorValidationIssue(message, PyralisInspectorValidationIssueSeverity.Optional);
         }
     }
 
-    public static class PyralisInspectorGuide
+    public static class PyralisInspectorValidation
     {
-        private const string AuthoringDocsRoot = "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/Authoring/";
-        private const string InspectorHandoffText = "Inspector owns local field edits. Pyralis Authoring owns route setup, next steps, and first proof guidance.";
-
-        public static void DrawGuide(PyralisGuideContent content)
-        {
-            string title = string.IsNullOrWhiteSpace(content.Title) ? "Pyralis Authoring" : content.Title;
-            PyralisInspectorHandoff.DrawAuthoringButton(title, null);
-        }
-
-        public static void DrawFieldGuide(string title, params PyralisGuideSection[] sections)
-        {
-            DrawFieldGuide(title, false, sections);
-        }
-
-        public static void DrawFieldGuide(string title, bool defaultOpen = false, params PyralisGuideSection[] sections)
-        {
-            PyralisInspectorHandoff.DrawAuthoringButton(title, null);
-        }
-
         public static void DrawValidationIssues(IReadOnlyList<string> issues, string readyMessage = "No setup issues found.")
         {
             if (issues == null || issues.Count == 0)
@@ -133,7 +64,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                 EditorGUILayout.HelpBox(builder.ToString().Trim(), MessageType.Warning);
         }
 
-        public static void DrawValidationMessages(IReadOnlyList<PyralisGuideIssue> issues, string readyMessage = "No setup issues found.")
+        public static void DrawValidationMessages(IReadOnlyList<PyralisInspectorValidationIssue> issues, string readyMessage = "No setup issues found.")
         {
             if (issues == null || issues.Count == 0)
             {
@@ -152,8 +83,8 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
 
                 StringBuilder target = issues[i].Severity switch
                 {
-                    PyralisGuideIssueSeverity.RequiredFix => required,
-                    PyralisGuideIssueSeverity.Recommended => recommended,
+                    PyralisInspectorValidationIssueSeverity.RequiredFix => required,
+                    PyralisInspectorValidationIssueSeverity.Recommended => recommended,
                     _ => optional
                 };
 
@@ -168,29 +99,9 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             if (optional.Length > 0)
                 EditorGUILayout.HelpBox("Optional context\n" + optional.ToString().Trim(), MessageType.Info);
         }
-
-        public static string BuildChecklist(PyralisGuideContent content)
-        {
-            StringBuilder builder = new StringBuilder();
-            if (!string.IsNullOrWhiteSpace(content.Title))
-                builder.AppendLine(content.Title);
-
-            if (builder.Length > 0)
-                builder.AppendLine();
-            builder.AppendLine(InspectorHandoffText);
-
-            return builder.ToString().Trim();
-        }
-
-        public static string AuthoringDocPath(string relativePath)
-        {
-            return string.IsNullOrWhiteSpace(relativePath) ? AuthoringDocsRoot + "START_HERE.md" : AuthoringDocsRoot + relativePath;
-        }
-
-        public static string InspectorHandoffSummary => InspectorHandoffText;
     }
 
-    public static class ResolvedAuthoringContractGuideText
+    public static class ResolvedAuthoringContractInspectorText
     {
         public static string FeatureModuleSetup(IFeatureModuleRuntime runtime)
         {

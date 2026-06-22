@@ -17,7 +17,8 @@ namespace NeonBlack.Gameplay.Core.Actions
         ExpertAdvice = "Register custom IActionResolvers to extend the engine's action vocabulary. The queue handles FIFO execution and validation.",
         FirstProof = "PendingCount increments when an action is successfully enqueued.",
         NativeSetup = new[] { "Add ActionQueueService to the session dependency container.", "Register one or more IActionResolver implementations." },
-        DocumentationURL = "https://docs.neonblack.com/pyralis/actions"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/actions",
+        CapabilityPath = "Core Setup/Actions/Action Queue Service"
     )]
 public sealed class ActionQueueService : IActionQueueService
 {

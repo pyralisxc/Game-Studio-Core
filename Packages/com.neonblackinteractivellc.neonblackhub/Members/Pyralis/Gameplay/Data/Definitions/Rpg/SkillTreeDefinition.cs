@@ -10,7 +10,9 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
         Capability = AuthoringCapability.Stats,
         Lane = "RPG",
         AssignmentFields = new[] { nameof(treeId), nameof(displayName), nameof(nodes) },
-        FirstProof = "Proof that the skill tree contains valid nodes and prerequisites are correctly linked."
+        FirstProof = "Proof that the skill tree contains valid nodes and prerequisites are correctly linked.",
+        CapabilityPath = "RPG/Stats/Definitions/Skill Tree Definition",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Skill Tree", fileName = "SkillTreeDefinition")]
     public class SkillTreeDefinition : ScriptableObject, ISkillTree, IRuntimeValidationProvider

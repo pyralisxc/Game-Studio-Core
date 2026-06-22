@@ -12,7 +12,8 @@ namespace NeonBlack.Gameplay.Features.Characters
         AssignmentFields = new[] { nameof(attackWeapon), nameof(kickWeapon), nameof(aerialWeapon), nameof(equippedWeapons) },
         FirstProof = "Assign a weapon and verify the pawn's animator controller is overridden at runtime.",
         ExpertAdvice = "WeaponData assets can override the base animator controller. Ensure your weapon assets have the correct 'overrideController' assigned.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/combat"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/combat",
+        CapabilityPath = "Combat/Actions/Pawn Weapon Module"
     )]
     public class PawnWeaponModule : MonoBehaviour
 {

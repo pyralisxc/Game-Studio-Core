@@ -10,7 +10,8 @@ namespace NeonBlack.Gameplay.Features.Enemies
         AssignmentFields = new[] { nameof(aggroRange), nameof(leashRange), nameof(requireLineOfSight), nameof(obstacleMask) },
         FirstProof = "Enemy should enter Aggro state when player enters aggroRange.",
         ExpertAdvice = "Increase leashRange to prevent enemies from resetting too early in large arenas.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/enemies"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/enemies",
+        CapabilityPath = "Combat/Sensors/Enemy Detection Module"
     )]
     public class EnemyDetectionModule : MonoBehaviour
 {

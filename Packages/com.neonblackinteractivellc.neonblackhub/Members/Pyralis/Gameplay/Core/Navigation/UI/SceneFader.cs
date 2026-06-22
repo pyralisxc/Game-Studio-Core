@@ -20,7 +20,8 @@ namespace NeonBlack.Gameplay.Core.Navigation
         },
         AssignmentFields = new[] { nameof(_fadeOutDuration), nameof(_fadeInDuration) },
         FirstProof = "Initiate a scene transition and verify the screen fades smoothly to black.",
-        ExpertAdvice = "Do not load multiple SceneFaders; Awake keeps one active transition service and destroys duplicates. Do not use FadeToSceneViaLoader unless SceneNames.LoadingScreen is in Build Settings."
+        ExpertAdvice = "Do not load multiple SceneFaders; Awake keeps one active transition service and destroys duplicates. Do not use FadeToSceneViaLoader unless SceneNames.LoadingScreen is in Build Settings.",
+        CapabilityPath = "Core Setup/Navigation/Scene Fader"
     )]
     [DefaultExecutionOrder(-40)]
     public class SceneFader : MonoBehaviour, ISceneNavigator

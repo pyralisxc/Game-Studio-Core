@@ -13,6 +13,8 @@ namespace NeonBlack.Gameplay.Features.Composition
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Setup | AuthoringCapability.Session,
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.PlatformCore, RuntimeCapabilityFamily.Custom },
+        CapabilityPath = "Core Setup/Feature Modules/Actor Feature Host",
         Relevance = "Installs runtime feature prefabs declared by actor definitions or profiles.",
         RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.FeatureModuleRouteSupport },
         NativeSetup = new[]

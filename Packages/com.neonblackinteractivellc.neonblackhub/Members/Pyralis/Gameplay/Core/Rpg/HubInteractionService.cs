@@ -17,7 +17,8 @@ namespace NeonBlack.Gameplay.Core.Rpg
             "configure HubInteractables",
             "place HubInteractionSceneController in scene"
         },
-        FirstProof = "Interact with an NPC in the hub and verify the dialogue or interaction flow begins."
+        FirstProof = "Interact with an NPC in the hub and verify the dialogue or interaction flow begins.",
+        CapabilityPath = "RPG/Dialogue/Hub Interaction Service"
     )]
     public sealed class HubInteractionService : IHubInteractionService
 {

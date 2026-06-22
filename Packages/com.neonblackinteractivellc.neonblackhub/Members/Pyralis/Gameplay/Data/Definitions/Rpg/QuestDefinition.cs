@@ -12,7 +12,9 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
         Capability = AuthoringCapability.Dialogue,
         Lane = "RPG",
         AssignmentFields = new[] { nameof(questId), nameof(displayName), nameof(objectives), nameof(rewards) },
-        FirstProof = "Proof that the quest can be tracked and rewards are correctly defined."
+        FirstProof = "Proof that the quest can be tracked and rewards are correctly defined.",
+        CapabilityPath = "RPG/Dialogue/Definitions/Quest Definition",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Quest", fileName = "QuestDefinition")]
     public class QuestDefinition : ScriptableObject, IQuestDefinition, IRuntimeValidationProvider

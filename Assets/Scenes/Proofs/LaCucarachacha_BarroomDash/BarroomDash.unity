@@ -967,7 +967,7 @@ MonoBehaviour:
   sessionDefinition: {fileID: 11400000, guid: e50ebed4383c590418fdd53e3da09227, type: 2}
   rosterService: {fileID: 1978985685}
   playerInputManager: {fileID: 1978985674}
-  autoRegisterDefaultParticipantsWithoutPlayerInput: 1
+  autoRegisterDefaultParticipantsWithoutPlayerInput: 0
 --- !u!114 &1978985684
 MonoBehaviour:
   m_ObjectHideFlags: 0

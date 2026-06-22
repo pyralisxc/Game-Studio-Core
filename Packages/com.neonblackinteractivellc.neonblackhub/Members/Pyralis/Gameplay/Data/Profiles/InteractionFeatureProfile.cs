@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
@@ -11,7 +11,9 @@ namespace NeonBlack.Gameplay.Data.Profiles
         AssignmentFields = new[] { nameof(enableInteraction) },
         FirstProof = "Verify the actor can trigger interaction events on compatible world objects.",
         ExpertAdvice = "Use interactionCooldown to prevent rapid-fire interaction spamming.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/interaction"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/interaction",
+        CapabilityPath = "Interaction/Profiles/Interaction Feature Profile",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Interaction Feature Profile", fileName = "InteractionFeatureProfile")]
     public class InteractionFeatureProfile : ScriptableObject, IRuntimeValidationProvider

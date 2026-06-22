@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Characters;
@@ -27,7 +27,8 @@ namespace NeonBlack.Gameplay.Features.Pickups
     },
     AssignmentFields = new[] { nameof(_crumbPrefab), nameof(_poolSize), nameof(_initialCrumbCount), nameof(_spawnInterval), nameof(_minimumOnScreen), nameof(_spawnMargin) },
     FirstProof = "Enter Play Mode and verify collectibles appear across the screen.",
-    ExpertAdvice = "Use a pool size that covers the maximum expected collectibles. Higher minimum-on-screen counts ensure the player always has something to collect. Gameplay state and camera bounds are normally supplied by GameManager or the Pyralis runtime scope; assign those fields directly only for standalone spawner tests."
+    ExpertAdvice = "Use a pool size that covers the maximum expected collectibles. Higher minimum-on-screen counts ensure the player always has something to collect. Gameplay state and camera bounds are normally supplied by GameManager or the Pyralis runtime scope; assign those fields directly only for standalone spawner tests.",
+    CapabilityPath = "Pickups/Spawning/Collectible Spawner 2D"
 )]
 [DefaultExecutionOrder(-10)]
 [AddComponentMenu("NeonBlack/Gameplay/Pickups/Collectible Spawner 2D")]

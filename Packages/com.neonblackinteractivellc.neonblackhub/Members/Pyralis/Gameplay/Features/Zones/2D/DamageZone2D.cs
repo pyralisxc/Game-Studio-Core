@@ -15,7 +15,8 @@ namespace NeonBlack.Gameplay.Features.Zones
         FirstProof = "Walk an actor into the zone and verify it takes repeated damage.",
         NativeSetup = new[] { "Place on a 2D volume.", "Assign Collider2D (Awake forces Is Trigger).", "Assign Hazard Impact Profile or use fallback fields." },
         ExpertAdvice = "Use for floor spikes, poison gas, or area-of-effect hazards. Set Tick Interval to 0.5s for standard 'lava' feel. Ensure actors have a Rigidbody2D to trigger 2D physics events.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/combat/hazards"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/combat/hazards",
+        CapabilityPath = "Combat/Actions/Damage Zone2D"
     )]
 [RequireComponent(typeof(Collider2D))]
     [AddComponentMenu("NeonBlack/Gameplay/Zones/Damage Zone 2D")]

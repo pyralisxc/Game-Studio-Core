@@ -10,7 +10,9 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
         Capability = AuthoringCapability.Inventory,
         Lane = "RPG",
         AssignmentFields = new[] { nameof(slotId), nameof(displayName), nameof(slotFamily) },
-        FirstProof = "Proof that the equipment slot has a valid id and display properties."
+        FirstProof = "Proof that the equipment slot has a valid id and display properties.",
+        CapabilityPath = "RPG/Inventory/Definitions/Equipment Slot Definition",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Equipment Slot", fileName = "EquipmentSlotDefinition")]
     public class EquipmentSlotDefinition : ScriptableObject, IEquipmentSlot, IRuntimeValidationProvider

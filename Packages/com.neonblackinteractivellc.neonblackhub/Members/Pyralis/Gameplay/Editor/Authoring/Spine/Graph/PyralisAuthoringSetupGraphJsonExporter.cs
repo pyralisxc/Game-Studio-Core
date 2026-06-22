@@ -13,15 +13,13 @@ namespace NeonBlack.Gameplay.Editor
     {
         public static string ToMapJson(PyralisAuthoringSetupGraph graph)
         {
-            MapSnapshot snapshot = BuildMapSnapshot(graph);
+            MapSnapshot snapshot = BuildMapSnapshot(PyralisAuthoringSetupGraphProjection.BuildMapExportProjection(graph));
             return JsonUtility.ToJson(snapshot, true);
         }
 
-        public static string ToHygieneJson(
-            PyralisAuthoringSetupGraph graph,
-            IReadOnlyList<PyralisSourceDependencyHygieneRecord> dependencyRecords)
+        public static string ToHygieneJson(PyralisAuthoringHygieneProjection projection)
         {
-            HygieneSnapshot snapshot = BuildHygieneSnapshot(graph, dependencyRecords);
+            HygieneSnapshot snapshot = BuildHygieneSnapshot(projection);
             return JsonUtility.ToJson(snapshot, true);
         }
 
@@ -75,7 +73,7 @@ namespace NeonBlack.Gameplay.Editor
             return new IntentSnapshot
             {
                 schema = "pyralis.authoring.intentSnapshot.v1",
-                purpose = "Read-only Intent tab snapshot. Describes current route steering only: DNA axioms, presentation lane, participant route, user-selected gameplay ingredients, inferred route essentials, and advisor rows. It does not describe scene/setup reality.",
+                purpose = "Read-only Intent tab snapshot. Describes current route steering only: DNA axioms, presentation lane, participant route, user-selected gameplay ingredients, contract-metadata backlog, inferred route essentials, and advisor rows. It does not describe scene/setup reality.",
                 view = "Intent",
                 exportedAtUtc = DateTime.UtcNow.ToString("o"),
                 selection = new IntentSelectionSnapshot
@@ -90,6 +88,7 @@ namespace NeonBlack.Gameplay.Editor
                 {
                     descriptorCount = descriptors.Count,
                     selectableDescriptorCount = descriptors.Count(descriptor => descriptor != null && descriptor.SelectableIntent),
+                    metadataBacklogCount = intentProjection.MetadataBacklogDescriptors.Count,
                     selectedDescriptorCount = selectedIds.Length,
                     recommendationCount = model.Recommendations.Count,
                     cautionCount = model.Cautions.Count,
@@ -99,6 +98,7 @@ namespace NeonBlack.Gameplay.Editor
                 advisorSummary = model.Summary,
                 descriptorGroups = BuildIntentDescriptorGroups(intentProjection.AllGroups),
                 gameplayIngredientGroups = BuildIntentDescriptorGroups(intentProjection.GameplayIngredientGroups),
+                metadataBacklogGroups = BuildIntentDescriptorGroups(intentProjection.MetadataBacklogGroups),
                 routeEssentialGroups = BuildIntentDescriptorGroups(intentProjection.RouteEssentialGroups),
                 selectedDescriptors = intentProjection.SelectedDescriptors.Select(BuildIntentDescriptor).ToArray(),
                 recommendations = model.Recommendations.Select(BuildIntentRow).ToArray(),
@@ -111,46 +111,56 @@ namespace NeonBlack.Gameplay.Editor
         {
             IReadOnlyList<PyralisAuthoringFact> facts = PyralisAuthoringSetupGraphProjection.BuildCookbookFacts(graph)
                 ?? Array.Empty<PyralisAuthoringFact>();
+            PyralisAuthoringFact[] exportedFacts = facts
+                .Where(IsFactsExportFact)
+                .ToArray();
             IReadOnlyList<PyralisAuthoringReflectiveContractGraphRow> contractRows =
                 PyralisAuthoringSetupGraphProjection.BuildReflectiveContractRows(graph);
-            IReadOnlyList<PyralisAuthoringGraphConnectionRow> proofRows =
-                PyralisAuthoringSetupGraphProjection.BuildProofSupportRows(graph);
 
             return new FactsSnapshot
             {
                 schema = "pyralis.authoring.factsSnapshot.v1",
-                purpose = "Read-only Facts tab snapshot. Describes the compiled dictionary/cookbook: vocabulary facts, reflected contracts, proof templates, source provenance, and graph coverage. Setup actions belong to Guide/Map.",
+                purpose = "Read-only Facts tab snapshot. Describes dictionary/provenance facts and reflected contract coverage. Route intent, runtime capability routing, proof workflow, customization, and setup actions belong to Intent, Guide, Route Proof Trace, or Map.",
                 view = "Facts",
                 routeName = graph != null ? graph.RouteName : "No setup route selected",
                 exportedAtUtc = DateTime.UtcNow.ToString("o"),
                 source = BuildSourceInfo(graph?.Source),
                 summary = new FactsSummarySnapshot
                 {
-                    factCount = facts.Count,
+                    factCount = exportedFacts.Length,
                     graphNodeCount = graph?.Nodes.Count ?? 0,
                     graphEdgeCount = graph?.Edges.Count ?? 0,
-                    graphContractCount = contractRows.Count,
-                    proofSupportCount = proofRows.Count
+                    graphContractCount = contractRows.Count
                 },
-                factKindCounts = CountBy(facts, fact => fact.Kind.ToString()),
-                sourceKindCounts = CountBy(facts, fact => fact.SourceKind.ToString()),
-                confidenceCounts = CountBy(facts, fact => fact.Confidence.ToString()),
-                capabilityCounts = CountCapabilityFacts(facts),
+                factKindCounts = CountBy(exportedFacts, fact => fact.Kind.ToString()),
+                sourceKindCounts = CountBy(exportedFacts, fact => fact.SourceKind.ToString()),
+                confidenceCounts = CountBy(exportedFacts, fact => fact.Confidence.ToString()),
                 graphContractCoverage = contractRows.Select(BuildReflectiveContract).ToArray(),
-                graphProofCoverage = proofRows.Select(BuildConnection).ToArray(),
-                facts = facts.Select(BuildFact).ToArray()
+                facts = exportedFacts.Select(BuildDictionaryFact).ToArray()
             };
         }
 
-        private static MapSnapshot BuildMapSnapshot(PyralisAuthoringSetupGraph graph)
+        private static bool IsFactsExportFact(PyralisAuthoringFact fact)
         {
-            MapRowSnapshot[] mapRows = PyralisAuthoringSetupGraphProjection.BuildSetupMapRows(graph)
+            if (fact == null)
+                return false;
+
+            return fact.Kind != PyralisAuthoringFactKind.RouteIntent
+                && fact.Kind != PyralisAuthoringFactKind.RuntimeCapability
+                && fact.Kind != PyralisAuthoringFactKind.CustomizationMoment
+                && fact.Kind != PyralisAuthoringFactKind.Proof;
+        }
+
+        private static MapSnapshot BuildMapSnapshot(PyralisAuthoringMapExportProjection projection)
+        {
+            PyralisAuthoringSetupGraph graph = projection?.Graph;
+            MapRowSnapshot[] mapRows = (projection?.MapRows ?? Array.Empty<PyralisAuthoringSetupGraphRow>())
                 .Select(BuildMapRow)
                 .ToArray();
-            ConnectionSnapshot[] mapConnections = PyralisAuthoringSetupGraphProjection.BuildMapConnectionRows(graph)
+            ConnectionSnapshot[] mapConnections = (projection?.MapConnections ?? Array.Empty<PyralisAuthoringGraphConnectionRow>())
                 .Select(BuildConnection)
                 .ToArray();
-            MapIssueSnapshot[] sceneSetupIssues = PyralisAuthoringSetupGraphProjection.BuildMapSceneSetupIssueRows(graph)
+            MapIssueSnapshot[] sceneSetupIssues = (projection?.SceneSetupIssues ?? Array.Empty<PyralisAuthoringGraphAuditRow>())
                 .Select(BuildMapIssue)
                 .ToArray();
 
@@ -164,13 +174,13 @@ namespace NeonBlack.Gameplay.Editor
                 source = BuildSourceInfo(graph?.Source),
                 summary = BuildMapSummary(graph, mapRows, sceneSetupIssues),
                 currentRoute = BuildCurrentRoute(graph?.RouteAnalysis),
-                nodeCount = graph?.Nodes.Count ?? 0,
-                edgeCount = graph?.Edges.Count ?? 0,
-                nodes = graph?.Nodes.Select(BuildNode).ToArray() ?? Array.Empty<NodeSnapshot>(),
-                edges = graph?.Edges.Select(BuildEdge).ToArray() ?? Array.Empty<EdgeSnapshot>(),
+                nodeCount = projection?.Nodes.Count ?? 0,
+                edgeCount = projection?.Edges.Count ?? 0,
+                nodes = (projection?.Nodes ?? Array.Empty<PyralisAuthoringGraphNode>()).Select(BuildNode).ToArray(),
+                edges = (projection?.Edges ?? Array.Empty<PyralisAuthoringGraphEdge>()).Select(BuildEdge).ToArray(),
                 mapRows = mapRows,
                 mapConnections = mapConnections,
-                sceneSurfaces = PyralisAuthoringSetupGraphProjection.FindSceneSurfaceNodes(graph)
+                sceneSurfaces = (projection?.SceneSurfaces ?? Array.Empty<PyralisAuthoringGraphNode>())
                     .Select(BuildNode)
                     .ToArray(),
                 sceneSetupIssues = sceneSetupIssues
@@ -298,14 +308,11 @@ namespace NeonBlack.Gameplay.Editor
             };
         }
 
-        private static HygieneSnapshot BuildHygieneSnapshot(
-            PyralisAuthoringSetupGraph graph,
-            IReadOnlyList<PyralisSourceDependencyHygieneRecord> dependencyRecords)
+        private static HygieneSnapshot BuildHygieneSnapshot(PyralisAuthoringHygieneProjection projection)
         {
-            IReadOnlyList<PyralisSourceDependencyHygieneRecord> safeDependencyRecords =
-                dependencyRecords ?? Array.Empty<PyralisSourceDependencyHygieneRecord>();
-            PyralisAuthoringGraphConnectionRow[] proofBlockers =
-                PyralisAuthoringSetupGraphProjection.BuildHygieneProofBlockerConnectionRows(graph).ToArray();
+            projection ??= PyralisAuthoringHygieneProjection.Build(null, null, Array.Empty<PyralisSourceDependencyHygieneRecord>());
+            PyralisAuthoringSetupGraph graph = projection.Graph;
+            IReadOnlyList<PyralisSourceDependencyHygieneRecord> safeDependencyRecords = projection.DependencyRecords;
 
             return new HygieneSnapshot
             {
@@ -315,40 +322,40 @@ namespace NeonBlack.Gameplay.Editor
                 exportedAtUtc = DateTime.UtcNow.ToString("o"),
                 source = BuildSourceInfo(graph?.Source),
                 graphContext = BuildHygieneGraphContext(graph),
-                graphSummary = BuildGraphSummary(graph, safeDependencyRecords, proofBlockers),
-                summary = BuildHygieneSummary(graph, safeDependencyRecords, proofBlockers),
-                hygieneSections = PyralisAuthoringSetupGraphProjection.BuildHygieneSections(graph)
+                graphSummary = BuildGraphSummary(PyralisAuthoringSetupGraphProjection.BuildGraphSummaryProjection(graph, safeDependencyRecords, projection.ProofBlockers)),
+                summary = BuildHygieneSummary(projection),
+                hygieneSections = projection.Sections
                     .Select(BuildHygieneSection)
                     .ToArray(),
-                hygieneRows = PyralisAuthoringSetupGraphProjection.BuildHygieneDetailRows(graph)
+                hygieneRows = projection.DetailRows
                     .Select(BuildHygieneRow)
                     .ToArray(),
-                proofBlockers = proofBlockers.Select(BuildConnection).ToArray(),
+                proofBlockers = projection.ProofBlockers.Select(BuildConnection).ToArray(),
                 sourceOriginCounts = CountBy(graph?.Nodes, node => node.SourceOrigin.ToString()),
                 sourceKindCounts = CountBy(graph?.Nodes, node => node.SourceKind.ToString()),
                 evidenceStateCounts = CountBy(graph?.Nodes, node => node.EvidenceState.ToString()),
+                ownershipBucketCounts = CountBy(projection.DetailRows, row => row.OwnershipBucket),
                 dependencyPressureSummary = BuildDependencyPressureSummary(safeDependencyRecords),
-                cleanupFocus = BuildCleanupFocus(safeDependencyRecords)
+                cleanupFocus = projection.CleanupFocus
                     .Select(BuildDependencyPressure)
                     .ToArray(),
-                watchList = BuildWatchList(safeDependencyRecords)
+                watchList = projection.WatchList
                     .Select(BuildDependencyPressure)
                     .ToArray(),
-                dependencyPressure = safeDependencyRecords
-                    .Where(record => record != null && record.Risk != PyralisSourceDependencyRisk.Low)
-                    .OrderBy(record => PyralisSourceDependencyHygieneScanner.GetCleanupPriority(record.PressureKind))
-                    .ThenByDescending(record => record.RiskScore)
-                    .ThenBy(record => record.FileName, StringComparer.Ordinal)
-                    .Take(32)
+                dependencyPressure = projection.DependencyPressureRows
                     .Select(BuildDependencyPressure)
                     .ToArray(),
-                contractSourcePressure = BuildContractSourcePressure(graph)
+                contractSourcePressure = projection.ContractSourcePressureRows
+                    .Select(BuildContractPressure)
+                    .ToArray()
             };
         }
 
         private static RouteProofTraceSnapshot BuildRouteProofTraceSnapshot(PyralisAuthoringSetupGraph graph)
         {
-            PyralisAuthoringRouteWorkingProjection route = PyralisAuthoringSetupGraphProjection.BuildRouteWorkingProjection(graph);
+            PyralisAuthoringRouteProofTraceProjection trace =
+                PyralisAuthoringSetupGraphProjection.BuildRouteProofTraceProjection(graph);
+            PyralisAuthoringRouteWorkingProjection route = trace.Route;
             RouteStepSnapshot[] orderedSteps = route.OrderedSteps.Select(BuildRouteStep).ToArray();
             RouteStepSnapshot[] criticalPath = route.CriticalPath.Select(BuildRouteStep).ToArray();
             RouteStepSnapshot[] proofEnhancers = route.ProofEnhancers.Select(BuildRouteStep).ToArray();
@@ -377,9 +384,11 @@ namespace NeonBlack.Gameplay.Editor
                 canWait = canWait,
                 proofBlockers = proofBlockers,
                 proofSupport = proofSupport,
-                supportingContracts = BuildSupportingContracts(graph, route.OrderedSteps, route.ProofSupport),
-                graphSummary = BuildGraphSummary(graph, Array.Empty<PyralisSourceDependencyHygieneRecord>(), route.ProofBlockers),
-                diagnosticQuestions = BuildTraceDiagnosticQuestions(graph, route.CurrentAction, route.OrderedSteps, route.CriticalPath, route.ProofEnhancers, route.CanWait, route.ProofBlockers, route.ProofSupport)
+                supportingContracts = trace.SupportingContracts.Select(BuildContractPressure).ToArray(),
+                graphSummary = BuildGraphSummary(PyralisAuthoringSetupGraphProjection.BuildGraphSummaryProjection(graph, Array.Empty<PyralisSourceDependencyHygieneRecord>(), route.ProofBlockers)),
+                diagnosticQuestions = trace.DiagnosticQuestions
+                    .Select(BuildTraceDiagnosticQuestion)
+                    .ToArray()
             };
         }
 
@@ -410,11 +419,10 @@ namespace NeonBlack.Gameplay.Editor
             };
         }
 
-        private static HygieneSummarySnapshot BuildHygieneSummary(
-            PyralisAuthoringSetupGraph graph,
-            IReadOnlyList<PyralisSourceDependencyHygieneRecord> dependencyRecords,
-            IReadOnlyList<PyralisAuthoringGraphConnectionRow> proofBlockers)
+        private static HygieneSummarySnapshot BuildHygieneSummary(PyralisAuthoringHygieneProjection projection)
         {
+            PyralisAuthoringSetupGraph graph = projection?.Graph;
+            IReadOnlyList<PyralisSourceDependencyHygieneRecord> dependencyRecords = projection?.DependencyRecords;
             PyralisSourceDependencyHygieneRecord[] pressureRecords = dependencyRecords == null
                 ? Array.Empty<PyralisSourceDependencyHygieneRecord>()
                 : dependencyRecords.Where(record => record != null && record.Risk != PyralisSourceDependencyRisk.Low).ToArray();
@@ -426,15 +434,15 @@ namespace NeonBlack.Gameplay.Editor
                 hasGraphContext = graph != null,
                 nodeCount = graph?.Nodes.Count ?? 0,
                 edgeCount = graph?.Edges.Count ?? 0,
-                hygieneRowCount = PyralisAuthoringSetupGraphProjection.BuildHygieneDetailRows(graph).Count,
-                cleanupFocusCount = CountCleanupFocusRecords(pressureRecords),
-                watchListCount = CountWatchListRecords(pressureRecords),
-                exportedCleanupFocusCount = Math.Min(16, CountCleanupFocusRecords(pressureRecords)),
-                exportedWatchListCount = Math.Min(16, CountWatchListRecords(pressureRecords)),
-                omittedDependencyPressureCount = Math.Max(0, pressureRecords.Length - 32),
-                proofBlockerCount = proofBlockers?.Count ?? 0,
+                hygieneRowCount = projection?.DetailRows.Count ?? 0,
+                cleanupFocusCount = projection?.CleanupFocusCount ?? 0,
+                watchListCount = projection?.WatchListCount ?? 0,
+                exportedCleanupFocusCount = projection?.CleanupFocus.Count ?? 0,
+                exportedWatchListCount = projection?.WatchList.Count ?? 0,
+                omittedDependencyPressureCount = Math.Max(0, pressureRecords.Length - (projection?.DependencyPressureRows.Count ?? 0)),
+                proofBlockerCount = projection?.ProofBlockers.Count ?? 0,
                 dependencyPressureCount = pressureRecords.Length,
-                contractSourcePressureCount = BuildContractSourcePressure(graph).Length
+                contractSourcePressureCount = projection?.ContractSourcePressureRows.Count ?? 0
             };
         }
 
@@ -496,7 +504,7 @@ namespace NeonBlack.Gameplay.Editor
                 label = row?.Label ?? string.Empty,
                 phase = row?.PhaseLabel ?? string.Empty,
                 role = row?.RoleLabel ?? string.Empty,
-                evidenceState = row != null ? row.EvidenceState.ToString() : PyralisAuthoringGraphEvidenceState.Unknown.ToString(),
+                evidenceState = row != null ? row.EvidenceState.ToString() : string.Empty,
                 sourceKind = node != null ? node.SourceKind.ToString() : string.Empty,
                 sourceOrigin = row != null ? row.SourceOrigin.ToString() : string.Empty,
                 workIntent = node != null ? node.WorkIntent.ToString() : string.Empty,
@@ -517,150 +525,13 @@ namespace NeonBlack.Gameplay.Editor
             };
         }
 
-        private static ContractPressureSnapshot[] BuildSupportingContracts(
-            PyralisAuthoringSetupGraph graph,
-            IReadOnlyList<PyralisAuthoringRouteStepRow> orderedSteps,
-            IReadOnlyList<PyralisAuthoringGraphConnectionRow> proofSupport)
+        private static TraceDiagnosticQuestionSnapshot BuildTraceDiagnosticQuestion(PyralisAuthoringRouteDiagnosticQuestionRow row)
         {
-            if (graph == null)
-                return Array.Empty<ContractPressureSnapshot>();
-
-            HashSet<string> contractNodeIds = new HashSet<string>(StringComparer.Ordinal);
-            if (orderedSteps != null)
+            return new TraceDiagnosticQuestionSnapshot
             {
-                for (int i = 0; i < orderedSteps.Count; i++)
-                {
-                    PyralisAuthoringGraphNode node = orderedSteps[i]?.Node;
-                    if (node != null && (node.Kind == PyralisAuthoringGraphNodeKind.Contract || node.SourceContract != null))
-                        contractNodeIds.Add(node.StableId);
-                }
-            }
-
-            if (proofSupport != null)
-            {
-                for (int i = 0; i < proofSupport.Count; i++)
-                {
-                    PyralisAuthoringGraphNode node = proofSupport[i]?.From;
-                    if (node != null && (node.Kind == PyralisAuthoringGraphNodeKind.Contract || node.SourceContract != null))
-                        contractNodeIds.Add(node.StableId);
-                }
-            }
-
-            return graph.Nodes
-                .Where(node => node != null
-                    && contractNodeIds.Contains(node.StableId)
-                    && (node.Kind == PyralisAuthoringGraphNodeKind.Contract || node.SourceContract != null))
-                .Select(BuildContractPressure)
-                .ToArray();
-        }
-
-        private static TraceDiagnosticQuestionSnapshot[] BuildTraceDiagnosticQuestions(
-            PyralisAuthoringSetupGraph graph,
-            PyralisAuthoringRouteStepRow currentAction,
-            IReadOnlyList<PyralisAuthoringRouteStepRow> orderedSteps,
-            IReadOnlyList<PyralisAuthoringRouteStepRow> criticalPath,
-            IReadOnlyList<PyralisAuthoringRouteStepRow> proofEnhancers,
-            IReadOnlyList<PyralisAuthoringRouteStepRow> canWait,
-            IReadOnlyList<PyralisAuthoringGraphConnectionRow> proofBlockers,
-            IReadOnlyList<PyralisAuthoringGraphConnectionRow> proofSupport)
-        {
-            List<TraceDiagnosticQuestionSnapshot> questions = new List<TraceDiagnosticQuestionSnapshot>
-            {
-                new TraceDiagnosticQuestionSnapshot
-                {
-                    question = "What is the next route action?",
-                    answer = currentAction != null
-                        ? $"{currentAction.Label}: {FirstNonEmpty(currentAction.UnityActionLabel, currentAction.Message, currentAction.Reason)}"
-                        : orderedSteps != null && orderedSteps.Count > 0
-                            ? "Required setup is clear for the projected proof. Use the full fresh-scene path to review how the route is assembled, then attempt the first Play Mode proof."
-                            : "No ordered steps were generated. Check whether the active setup graph has a resolved setup context."
-                },
-                new TraceDiagnosticQuestionSnapshot
-                {
-                    question = "What blocks the first proof?",
-                    answer = proofBlockers != null && proofBlockers.Count > 0
-                        ? string.Join("; ", proofBlockers.Take(6).Select(row => row.ToLabel))
-                        : "No proof blocker links are present in the current graph."
-                },
-                new TraceDiagnosticQuestionSnapshot
-                {
-                    question = "What is the full fresh-scene card path?",
-                    answer = criticalPath != null && criticalPath.Count > 0
-                        ? string.Join(" -> ", criticalPath.Select(row => row.Label).Concat(new[] { PyralisAuthoringSetupGraphProjection.GetOverviewFirstProofLabel(graph) }))
-                        : "No setup-card path is present yet. Check core setup graph nodes, runtime validation evidence, and proof target resolution."
-                },
-                new TraceDiagnosticQuestionSnapshot
-                {
-                    question = "What can wait until after this proof?",
-                    answer = canWait != null && canWait.Count > 0
-                        ? string.Join("; ", canWait.Take(8).Select(row => row.Label))
-                        : "No can-wait setup cards were projected for this proof route."
-                },
-                new TraceDiagnosticQuestionSnapshot
-                {
-                    question = "Which proof enhancers are useful but not blockers?",
-                    answer = proofEnhancers != null && proofEnhancers.Count > 0
-                        ? string.Join("; ", proofEnhancers.Take(6).Select(row => row.Label))
-                        : "No proof enhancers were projected for this route."
-                },
-                new TraceDiagnosticQuestionSnapshot
-                {
-                    question = "Which contracts are proof context rather than route cards?",
-                    answer = proofSupport != null && proofSupport.Count > 0
-                        ? string.Join("; ", proofSupport.Take(8).Select(row => row.FromLabel))
-                        : "No direct proof-support contracts are present yet. The ordered setup cards should still come from core setup graph nodes and validation evidence."
-                },
-                new TraceDiagnosticQuestionSnapshot
-                {
-                    question = "Where should incorrect guidance be fixed?",
-                    answer = "Fix the source that emitted the step: contract meaning, dependency reflection, local runtime validation, scene-readiness validation, or graph projection. Do not hardcode a one-off Guide/Hygiene sentence."
-                }
+                question = row != null ? row.Question : string.Empty,
+                answer = row != null ? row.Answer : string.Empty
             };
-
-            if (graph == null || graph.Source == null)
-            {
-                questions.Add(new TraceDiagnosticQuestionSnapshot
-                {
-                    question = "Why is the route empty?",
-                    answer = "No active setup source was resolved. Select or pin a Bootstrap, SessionDefinition, GameModeDefinition, ParticipantDefinition, PawnDefinition, or FeatureModuleDefinition."
-                });
-            }
-
-            return questions.ToArray();
-        }
-
-        private static PyralisSourceDependencyHygieneRecord[] BuildCleanupFocus(
-            IReadOnlyList<PyralisSourceDependencyHygieneRecord> dependencyRecords)
-        {
-            if (dependencyRecords == null)
-                return Array.Empty<PyralisSourceDependencyHygieneRecord>();
-
-            return dependencyRecords
-                .Where(record => record != null
-                    && record.Risk != PyralisSourceDependencyRisk.Low
-                    && IsCleanupFocus(record.PressureKind))
-                .OrderBy(record => PyralisSourceDependencyHygieneScanner.GetCleanupPriority(record.PressureKind))
-                .ThenByDescending(record => record.RiskScore)
-                .ThenBy(record => record.FileName, StringComparer.Ordinal)
-                .Take(16)
-                .ToArray();
-        }
-
-        private static PyralisSourceDependencyHygieneRecord[] BuildWatchList(
-            IReadOnlyList<PyralisSourceDependencyHygieneRecord> dependencyRecords)
-        {
-            if (dependencyRecords == null)
-                return Array.Empty<PyralisSourceDependencyHygieneRecord>();
-
-            return dependencyRecords
-                .Where(record => record != null
-                    && record.Risk != PyralisSourceDependencyRisk.Low
-                    && !IsCleanupFocus(record.PressureKind))
-                .OrderBy(record => PyralisSourceDependencyHygieneScanner.GetCleanupPriority(record.PressureKind))
-                .ThenByDescending(record => record.RiskScore)
-                .ThenBy(record => record.FileName, StringComparer.Ordinal)
-                .Take(16)
-                .ToArray();
         }
 
         private static DependencyPressureSummarySnapshot BuildDependencyPressureSummary(
@@ -676,13 +547,13 @@ namespace NeonBlack.Gameplay.Editor
             return new DependencyPressureSummarySnapshot
             {
                 totalPressureRecordCount = pressureRecords.Length,
-                exportedTopRecordCount = Math.Min(32, pressureRecords.Length),
-                exportedCleanupFocusCount = Math.Min(16, CountCleanupFocusRecords(pressureRecords)),
-                exportedWatchListCount = Math.Min(16, CountWatchListRecords(pressureRecords)),
+                exportedTopRecordCount = pressureRecords.Length,
+                exportedCleanupFocusCount = CountCleanupFocusRecords(pressureRecords),
+                exportedWatchListCount = CountWatchListRecords(pressureRecords),
                 actionablePressureRecordCount = CountActionablePressureRecords(pressureRecords),
                 acceptedPressureRecordCount = CountWatchListRecords(pressureRecords),
                 expectedPressureRecordCount = Math.Max(0, pressureRecords.Length - CountActionablePressureRecords(pressureRecords)),
-                omittedRecordCount = Math.Max(0, pressureRecords.Length - 32),
+                omittedRecordCount = 0,
                 highestRiskScore = pressureRecords.Length > 0 ? pressureRecords[0].RiskScore : 0,
                 riskCounts = CountBy(pressureRecords, record => record.Risk.ToString()),
                 pressureKindCounts = CountBy(pressureRecords, record => record.PressureKind.ToString()),
@@ -691,21 +562,26 @@ namespace NeonBlack.Gameplay.Editor
             };
         }
 
-        private static GraphSummarySnapshot BuildGraphSummary(
-            PyralisAuthoringSetupGraph graph,
-            IReadOnlyList<PyralisSourceDependencyHygieneRecord> dependencyRecords,
-            IReadOnlyList<PyralisAuthoringGraphConnectionRow> proofBlockers)
+        private static GraphSummarySnapshot BuildGraphSummary(PyralisAuthoringGraphSummaryProjection projection)
         {
             return new GraphSummarySnapshot
             {
-                nodeCount = graph?.Nodes.Count ?? 0,
-                edgeCount = graph?.Edges.Count ?? 0,
-                unknownNodeCount = graph?.Nodes.Count(node => node.EvidenceState == PyralisAuthoringGraphEvidenceState.Unknown) ?? 0,
-                missingNodeCount = graph?.Nodes.Count(node => node.EvidenceState == PyralisAuthoringGraphEvidenceState.Missing) ?? 0,
-                blockedNodeCount = graph?.Nodes.Count(node => node.EvidenceState == PyralisAuthoringGraphEvidenceState.Blocked) ?? 0,
-                proofBlockerCount = proofBlockers?.Count ?? 0,
-                dependencyPressureCount = dependencyRecords?.Count(record => record != null && record.Risk != PyralisSourceDependencyRisk.Low) ?? 0,
-                contractNodeCount = graph?.Nodes.Count(node => node.Kind == PyralisAuthoringGraphNodeKind.Contract || node.SourceContract != null) ?? 0
+                nodeCount = projection?.NodeCount ?? 0,
+                edgeCount = projection?.EdgeCount ?? 0,
+                unknownNodeCount = projection?.UnknownNodeCount ?? 0,
+                missingNodeCount = projection?.MissingNodeCount ?? 0,
+                blockedNodeCount = projection?.BlockedNodeCount ?? 0,
+                setupReadinessUnknownNodeCount = projection?.SetupReadinessUnknownNodeCount ?? 0,
+                setupReadinessMissingNodeCount = projection?.SetupReadinessMissingNodeCount ?? 0,
+                setupReadinessBlockedNodeCount = projection?.SetupReadinessBlockedNodeCount ?? 0,
+                contractMetadataIssueCount = projection?.ContractMetadataIssueCount ?? 0,
+                contractInventoryNodeCount = projection?.ContractInventoryNodeCount ?? 0,
+                proofBlockerCount = projection?.ProofBlockerCount ?? 0,
+                dependencyPressureCount = projection?.DependencyPressureCount ?? 0,
+                contractNodeCount = projection?.ContractNodeCount ?? 0,
+                hygieneUnknownRowCount = projection?.HygieneUnknownRowCount ?? 0,
+                hygieneMissingRowCount = projection?.HygieneMissingRowCount ?? 0,
+                hygieneBlockedRowCount = projection?.HygieneBlockedRowCount ?? 0
             };
         }
 
@@ -811,6 +687,12 @@ namespace NeonBlack.Gameplay.Editor
                 evidenceState = row.EvidenceState.ToString(),
                 source = row.SourceLabel,
                 origin = row.OriginLabel,
+                issueCode = row.IssueCode,
+                triageBucket = row.TriageBucket,
+                triageAdvice = row.TriageAdvice,
+                ownershipBucket = row.OwnershipBucket,
+                repairOwner = row.RepairOwner,
+                ownershipAdvice = row.OwnershipAdvice,
                 message = row.Message,
                 nativeAction = row.NativeAction,
                 canInspectTarget = row.CanInspectTarget,
@@ -895,24 +777,15 @@ namespace NeonBlack.Gameplay.Editor
         private static bool IsCleanupFocus(PyralisSourceDependencyPressureKind pressureKind)
         {
             return pressureKind == PyralisSourceDependencyPressureKind.RuntimeOwnership
-                || pressureKind == PyralisSourceDependencyPressureKind.DirectSceneQuerySurface;
+                || pressureKind == PyralisSourceDependencyPressureKind.DirectSceneQuerySurface
+                || PyralisSourceDependencyHygieneScanner.IsOwnershipLeakPressure(pressureKind);
         }
 
         private static bool IsActionablePressure(PyralisSourceDependencyPressureKind pressureKind)
         {
             return pressureKind == PyralisSourceDependencyPressureKind.RuntimeOwnership
-                || pressureKind == PyralisSourceDependencyPressureKind.DirectSceneQuerySurface;
-        }
-
-        private static ContractPressureSnapshot[] BuildContractSourcePressure(PyralisAuthoringSetupGraph graph)
-        {
-            if (graph == null)
-                return Array.Empty<ContractPressureSnapshot>();
-
-            return graph.Nodes
-                .Where(node => node != null && (node.Kind == PyralisAuthoringGraphNodeKind.Contract || node.SourceContract != null))
-                .Select(BuildContractPressure)
-                .ToArray();
+                || pressureKind == PyralisSourceDependencyPressureKind.DirectSceneQuerySurface
+                || PyralisSourceDependencyHygieneScanner.IsOwnershipLeakPressure(pressureKind);
         }
 
         private static ContractPressureSnapshot BuildContractPressure(PyralisAuthoringGraphNode node)
@@ -932,6 +805,15 @@ namespace NeonBlack.Gameplay.Editor
                 capability = contract != null ? contract.Capability.ToString() : node.AuthoringCapability.ToString(),
                 confidence = contract != null ? contract.Confidence.ToString() : string.Empty,
                 sourceType = contract?.SourceType != null ? contract.SourceType.FullName : string.Empty,
+                declaredRuntimeFamilies = contract != null
+                    ? contract.RuntimeFamilies.Select(family => family.ToString()).ToArray()
+                    : Array.Empty<string>(),
+                inferredRuntimeFamilies = contract != null
+                    ? PyralisAuthoringContractMetadataPolicy.InferRuntimeFamilies(contract)
+                        .Select(family => family.ToString())
+                        .ToArray()
+                    : Array.Empty<string>(),
+                supportOnly = contract != null && PyralisAuthoringContractMetadataPolicy.IsSupportOnlyContract(contract),
                 assignmentFieldCount = node.AssignmentFields.Length,
                 customizationMomentCount = node.CustomizationMoments.Length,
                 nativeSetupCount = node.NativeSetup.Length
@@ -992,6 +874,7 @@ namespace NeonBlack.Gameplay.Editor
                 displayName = descriptor.DisplayName,
                 group = descriptor.Group,
                 family = descriptor.Family.ToString(),
+                runtimeFamilies = new[] { descriptor.Family.ToString() },
                 capability = descriptor.Capability.ToString(),
                 capabilityPath = descriptor.CapabilityPath,
                 pathGroup = GetCapabilityPathPart(descriptor.CapabilityPath, 0),
@@ -1011,10 +894,6 @@ namespace NeonBlack.Gameplay.Editor
                 laneTags = descriptor.LaneTags,
                 unsupportedLaneTags = descriptor.UnsupportedLaneTags,
                 roleTags = descriptor.RoleTags,
-                requiredSetup = descriptor.RequiredSetup,
-                assignmentFields = descriptor.AssignmentFields,
-                customizationMoments = descriptor.CustomizationMoments,
-                nativeActions = descriptor.NativeActions.Select(action => BuildNativeAction(action)).ToArray(),
                 sourceFact = BuildFact(descriptor.SourceFact)
             };
         }
@@ -1057,6 +936,11 @@ namespace NeonBlack.Gameplay.Editor
 
         private static FactSnapshot BuildFact(PyralisAuthoringFact fact)
         {
+            return BuildDictionaryFact(fact);
+        }
+
+        private static FactSnapshot BuildDictionaryFact(PyralisAuthoringFact fact)
+        {
             if (fact == null)
                 return null;
 
@@ -1067,25 +951,9 @@ namespace NeonBlack.Gameplay.Editor
                 kind = fact.Kind.ToString(),
                 sourceKind = fact.SourceKind.ToString(),
                 confidence = fact.Confidence.ToString(),
-                capability = fact.Capability.ToString(),
-                axioms = fact.Axioms.ToString(),
                 priority = fact.Priority,
                 priorityValueOverride = fact.PriorityValueOverride,
                 summary = fact.Summary,
-                routeRelevance = fact.RouteRelevance,
-                firstProof = fact.FirstProof,
-                workIntent = fact.WorkIntent,
-                goalTags = fact.GoalTags,
-                laneTags = fact.LaneTags,
-                unsupportedLaneTags = fact.UnsupportedLaneTags,
-                requiredDefinitions = fact.RequiredDefinitions,
-                requiredProfiles = fact.RequiredProfiles,
-                requiredSceneComponents = fact.RequiredSceneComponents,
-                requiredUnitySurfaces = fact.RequiredUnitySurfaces,
-                assignmentFields = fact.AssignmentFields,
-                customizationMoments = fact.CustomizationMoments,
-                canWait = fact.CanWait,
-                nativeActions = fact.NativeActions.Select(action => BuildNativeAction(action)).ToArray(),
                 relatedStableIds = fact.RelatedStableIds,
                 deprecatedInVersion = fact.DeprecatedInVersion,
                 removableInVersion = fact.RemovableInVersion,
@@ -1112,21 +980,9 @@ namespace NeonBlack.Gameplay.Editor
                 moduleId = contract != null ? contract.ModuleId : string.Empty,
                 setupNodeId = contract != null ? contract.SetupNodeId : string.Empty,
                 sourceType = contract?.SourceType != null ? contract.SourceType.FullName : string.Empty,
-                capability = contract != null ? contract.Capability.ToString() : string.Empty,
-                axioms = contract != null ? contract.Axioms.ToString() : string.Empty,
-                capabilityPath = contract != null ? contract.CapabilityPath : string.Empty,
-                selectableIntent = contract?.SelectableIntent ?? false,
-                authoringLane = contract != null ? contract.AuthoringLane : string.Empty,
-                relevance = contract != null ? contract.Relevance : string.Empty,
                 requiredProfileType = contract?.RequiredProfileType != null ? contract.RequiredProfileType.FullName : string.Empty,
                 requiredRuntimeInterfaceNames = contract != null ? contract.RequiredRuntimeInterfaceNames : Array.Empty<string>(),
                 requiredComponentNames = contract != null ? contract.RequiredComponentNames : Array.Empty<string>(),
-                assignmentFields = contract != null ? contract.AssignmentFields : Array.Empty<string>(),
-                customizationMoments = contract != null ? contract.CustomizationMoments : Array.Empty<string>(),
-                nativeSetup = contract != null ? contract.NativeSetup : Array.Empty<string>(),
-                roleTags = contract != null ? contract.RoleTags : Array.Empty<string>(),
-                firstProofTargetId = contract != null ? contract.FirstProofTargetId : string.Empty,
-                firstProofGuidance = contract != null ? contract.FirstProofGuidance : string.Empty,
                 target = BuildSourceInfo(row.Target)
             };
         }
@@ -1150,8 +1006,6 @@ namespace NeonBlack.Gameplay.Editor
             return values
                 .Where(value => value != null)
                 .GroupBy(value => NormalizeCountLabel(selector(value)))
-                .OrderByDescending(group => group.Count())
-                .ThenBy(group => group.Key, StringComparer.Ordinal)
                 .Select(group => new CountSnapshot { label = group.Key, count = group.Count() })
                 .ToArray();
         }
@@ -1175,7 +1029,6 @@ namespace NeonBlack.Gameplay.Editor
             return nodes
                 .Where(node => node != null)
                 .GroupBy(selector)
-                .OrderBy(group => group.Key, StringComparer.Ordinal)
                 .Select(group => new CountSnapshot { label = group.Key, count = group.Count() })
                 .ToArray();
         }
@@ -1190,8 +1043,20 @@ namespace NeonBlack.Gameplay.Editor
             return records
                 .Where(record => record != null)
                 .GroupBy(record => NormalizeCountLabel(selector(record)))
-                .OrderByDescending(group => group.Count())
-                .ThenBy(group => group.Key, StringComparer.Ordinal)
+                .Select(group => new CountSnapshot { label = group.Key, count = group.Count() })
+                .ToArray();
+        }
+
+        private static CountSnapshot[] CountBy(
+            IEnumerable<PyralisAuthoringGraphAuditRow> rows,
+            Func<PyralisAuthoringGraphAuditRow, string> selector)
+        {
+            if (rows == null)
+                return Array.Empty<CountSnapshot>();
+
+            return rows
+                .Where(row => row != null)
+                .GroupBy(row => NormalizeCountLabel(selector(row)))
                 .Select(group => new CountSnapshot { label = group.Key, count = group.Count() })
                 .ToArray();
         }
@@ -1205,8 +1070,6 @@ namespace NeonBlack.Gameplay.Editor
                 .Where(record => record?.Domains != null)
                 .SelectMany(record => record.Domains)
                 .GroupBy(NormalizeCountLabel)
-                .OrderByDescending(group => group.Count())
-                .ThenBy(group => group.Key, StringComparer.Ordinal)
                 .Select(group => new CountSnapshot { label = group.Key, count = group.Count() })
                 .ToArray();
         }
@@ -1431,6 +1294,7 @@ namespace NeonBlack.Gameplay.Editor
             public string advisorSummary;
             public IntentDescriptorGroupSnapshot[] descriptorGroups;
             public IntentDescriptorGroupSnapshot[] gameplayIngredientGroups;
+            public IntentDescriptorGroupSnapshot[] metadataBacklogGroups;
             public IntentDescriptorGroupSnapshot[] routeEssentialGroups;
             public IntentDescriptorSnapshot[] selectedDescriptors;
             public IntentRowSnapshot[] recommendations;
@@ -1453,6 +1317,7 @@ namespace NeonBlack.Gameplay.Editor
         {
             public int descriptorCount;
             public int selectableDescriptorCount;
+            public int metadataBacklogCount;
             public int selectedDescriptorCount;
             public int recommendationCount;
             public int cautionCount;
@@ -1486,6 +1351,7 @@ namespace NeonBlack.Gameplay.Editor
             public string displayName;
             public string group;
             public string family;
+            public string[] runtimeFamilies;
             public string capability;
             public string capabilityPath;
             public string pathGroup;
@@ -1505,10 +1371,6 @@ namespace NeonBlack.Gameplay.Editor
             public string[] laneTags;
             public string[] unsupportedLaneTags;
             public string[] roleTags;
-            public string[] requiredSetup;
-            public string[] assignmentFields;
-            public string[] customizationMoments;
-            public NativeActionSnapshot[] nativeActions;
             public FactSnapshot sourceFact;
         }
 
@@ -1535,9 +1397,7 @@ namespace NeonBlack.Gameplay.Editor
             public CountSnapshot[] factKindCounts;
             public CountSnapshot[] sourceKindCounts;
             public CountSnapshot[] confidenceCounts;
-            public CountSnapshot[] capabilityCounts;
             public ReflectiveContractSnapshot[] graphContractCoverage;
-            public ConnectionSnapshot[] graphProofCoverage;
             public FactSnapshot[] facts;
         }
 
@@ -1548,7 +1408,6 @@ namespace NeonBlack.Gameplay.Editor
             public int graphNodeCount;
             public int graphEdgeCount;
             public int graphContractCount;
-            public int proofSupportCount;
         }
 
         [Serializable]
@@ -1559,25 +1418,9 @@ namespace NeonBlack.Gameplay.Editor
             public string kind;
             public string sourceKind;
             public string confidence;
-            public string capability;
-            public string axioms;
             public int priority;
             public int priorityValueOverride;
             public string summary;
-            public string routeRelevance;
-            public string firstProof;
-            public string workIntent;
-            public string[] goalTags;
-            public string[] laneTags;
-            public string[] unsupportedLaneTags;
-            public string[] requiredDefinitions;
-            public string[] requiredProfiles;
-            public string[] requiredSceneComponents;
-            public string[] requiredUnitySurfaces;
-            public string[] assignmentFields;
-            public string[] customizationMoments;
-            public string[] canWait;
-            public NativeActionSnapshot[] nativeActions;
             public string[] relatedStableIds;
             public string deprecatedInVersion;
             public string removableInVersion;
@@ -1598,21 +1441,9 @@ namespace NeonBlack.Gameplay.Editor
             public string moduleId;
             public string setupNodeId;
             public string sourceType;
-            public string capability;
-            public string axioms;
-            public string capabilityPath;
-            public bool selectableIntent;
-            public string authoringLane;
-            public string relevance;
             public string requiredProfileType;
             public string[] requiredRuntimeInterfaceNames;
             public string[] requiredComponentNames;
-            public string[] assignmentFields;
-            public string[] customizationMoments;
-            public string[] nativeSetup;
-            public string[] roleTags;
-            public string firstProofTargetId;
-            public string firstProofGuidance;
             public SourceSnapshot target;
         }
 
@@ -1633,6 +1464,7 @@ namespace NeonBlack.Gameplay.Editor
             public CountSnapshot[] sourceOriginCounts;
             public CountSnapshot[] sourceKindCounts;
             public CountSnapshot[] evidenceStateCounts;
+            public CountSnapshot[] ownershipBucketCounts;
             public DependencyPressureSummarySnapshot dependencyPressureSummary;
             public DependencyPressureSnapshot[] cleanupFocus;
             public DependencyPressureSnapshot[] watchList;
@@ -1657,9 +1489,17 @@ namespace NeonBlack.Gameplay.Editor
             public int unknownNodeCount;
             public int missingNodeCount;
             public int blockedNodeCount;
+            public int setupReadinessUnknownNodeCount;
+            public int setupReadinessMissingNodeCount;
+            public int setupReadinessBlockedNodeCount;
+            public int contractMetadataIssueCount;
+            public int contractInventoryNodeCount;
             public int proofBlockerCount;
             public int dependencyPressureCount;
             public int contractNodeCount;
+            public int hygieneUnknownRowCount;
+            public int hygieneMissingRowCount;
+            public int hygieneBlockedRowCount;
         }
 
         [Serializable]
@@ -1791,6 +1631,12 @@ namespace NeonBlack.Gameplay.Editor
             public string evidenceState;
             public string source;
             public string origin;
+            public string issueCode;
+            public string triageBucket;
+            public string triageAdvice;
+            public string ownershipBucket;
+            public string repairOwner;
+            public string ownershipAdvice;
             public string message;
             public string nativeAction;
             public bool canInspectTarget;
@@ -1854,6 +1700,9 @@ namespace NeonBlack.Gameplay.Editor
             public string capability;
             public string confidence;
             public string sourceType;
+            public string[] declaredRuntimeFamilies;
+            public string[] inferredRuntimeFamilies;
+            public bool supportOnly;
             public int assignmentFieldCount;
             public int customizationMomentCount;
             public int nativeSetupCount;

@@ -4,7 +4,7 @@ This folder intentionally stays small. Active docs describe supported architectu
 
 ## Living Docs
 
-- `CURRENT_STATE_AUDIT.md` - current health, risks, cleanup focus, and verification posture.
+- `CURRENT_STATE_AUDIT.md` - current health, risks, Hygiene baseline, and verification posture.
 - `ARCHITECTURE_BLUEPRINT.md` - runtime ownership, folderbase, vocabulary, and system boundaries.
 - `FEATURE_DEVELOPMENT_ROADMAP.md` - current feature expansion priorities.
 - `Authoring/START_HERE.md` - human first-setup path.

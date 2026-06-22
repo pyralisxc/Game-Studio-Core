@@ -21,7 +21,9 @@ namespace NeonBlack.Gameplay.Core.Rpg
         },
         AssignmentFields = new[] { nameof(_progression), nameof(_inventory), nameof(_quests), nameof(_skills) },
         FirstProof = "A dialogue session starts and displays the correct starting node text.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/rpg/dialogue"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/rpg/dialogue",
+        CapabilityPath = "RPG/Dialogue/Dialogue Service",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
     )]
     public sealed class DialogueService : IDialogueService
 {

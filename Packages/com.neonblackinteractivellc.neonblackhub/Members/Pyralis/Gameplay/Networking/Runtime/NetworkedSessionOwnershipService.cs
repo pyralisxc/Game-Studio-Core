@@ -9,6 +9,8 @@ namespace NeonBlack.Gameplay.Networking.Runtime
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Networking,
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.Networking },
+        CapabilityPath = "Networking/Session/Session Ownership Service",
         Relevance = "NGO-backed session ownership policy used by networked Pyralis sessions.",
         RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.NetworkRouteSupport },
         NativeSetup = new[]

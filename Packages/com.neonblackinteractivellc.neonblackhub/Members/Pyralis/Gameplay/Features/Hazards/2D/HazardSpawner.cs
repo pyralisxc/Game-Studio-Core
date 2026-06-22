@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Core.Contracts;
@@ -23,7 +23,8 @@ namespace NeonBlack.Gameplay.Features.Hazards
         },
         FirstProof = "Start the game and verify hazards begin spawning around the play area.",
         AssignmentFields = new[] { nameof(_hazardEntries), nameof(_difficultyManager) },
-        ExpertAdvice = "Gameplay state, camera bounds, outcome sinks, and pickup burst surfaces are normally supplied by GameManager or the Pyralis runtime scope. Assign those service fields directly only for standalone test scenes or specialized custom orchestration."
+        ExpertAdvice = "Gameplay state, camera bounds, outcome sinks, and pickup burst surfaces are normally supplied by GameManager or the Pyralis runtime scope. Assign those service fields directly only for standalone test scenes or specialized custom orchestration.",
+        CapabilityPath = "Combat/Actions/Hazard Spawner"
     )]
     [DefaultExecutionOrder(-10)]
     public class HazardSpawner : MonoBehaviour, IRuntimeValidationProvider

@@ -12,7 +12,9 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
         Capability = AuthoringCapability.Tabletop | AuthoringCapability.Grid, 
         Relevance = "Project-window creation path for tabletop round or game-end conditions.",
         AssignmentFields = new[] { nameof(conditionId), nameof(kind), nameof(observedSeat), nameof(winningSeat) },
-        FirstProof = "Verify the game ends correctly when this condition is met."
+        FirstProof = "Verify the game ends correctly when this condition is met.",
+        CapabilityPath = "Tabletop/Board/Board Terminal Condition Definition",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.BoardCardTabletop }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Rules/Board Terminal Condition", fileName = "BoardTerminalCondition", order = -50)]
     public class BoardTerminalConditionDefinition : ScriptableObject, IRuntimeValidationProvider

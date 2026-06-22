@@ -19,7 +19,8 @@ namespace NeonBlack.Gameplay.Features.Tabletop
         FirstProof = "Click 'Rebuild Board' in the inspector and verify the grid is generated.",
         NativeSetup = new[] { "Add TabletopBoardGridPresenter and TabletopBoardSelectionBridge to the same scene object.", "Assign Board, Move Policy, Turn Order, and Selection Bridge references.", "Assign Space and Piece prefabs." },
         ExpertAdvice = "Bridges the abstract BoardDefinition to scene objects. It handles coordinate mapping (X,Y) to world positions. Ensure your cell size matches your visual assets.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/tabletop"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/tabletop",
+        CapabilityPath = "Tabletop/Board/Tabletop Board Grid Presenter"
     )]
     [RequireComponent(typeof(TabletopBoardSelectionBridge))]
     [AddComponentMenu("NeonBlack/Gameplay/Tabletop/Tabletop Board Grid Presenter")]

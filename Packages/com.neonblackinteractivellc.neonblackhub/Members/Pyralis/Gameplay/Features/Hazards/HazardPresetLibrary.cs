@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
@@ -13,7 +13,9 @@ namespace NeonBlack.Gameplay.Features.Hazards
     NativeSetup = new[] { "Add HazardData entries.", "Set unique preset names." },
     AssignmentFields = new[] { nameof(presets) },
     FirstProof = "Verify that hazards can be correctly looked up by name from this library.",
-    ExpertAdvice = "Use this to manage a large variety of hazards without cluttering scene references."
+    ExpertAdvice = "Use this to manage a large variety of hazards without cluttering scene references.",
+    CapabilityPath = "Combat/Actions/Hazard Preset Library",
+    RuntimeFamilies = new[] { RuntimeCapabilityFamily.Combat }
 )]
 [CreateAssetMenu(fileName = "HazardPresetLibrary", menuName = "NeonBlack/Hazards/Hazard Preset Library")]
 public class HazardPresetLibrary : ScriptableObject, IRuntimeValidationProvider

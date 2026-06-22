@@ -16,7 +16,8 @@ namespace NeonBlack.Gameplay.Data.Profiles
         AssignmentFields = new[] { nameof(actionRole), nameof(duration), nameof(height), nameof(cooldown) },
         FirstProof = "Perform a hop in a top-down scene and verify the shadow stays on the ground while the sprite arcs up.",
         ExpertAdvice = "This is a purely visual/presentation hop. It does not change the physical collider height. Best used for 'Jump' actions in isometric RPGs.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/movement"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/movement",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Top Down Hop Profile", fileName = "TopDownHopProfile")]
 public class TopDownHopProfile : ScriptableObject

@@ -17,7 +17,9 @@ namespace NeonBlack.Gameplay.Core.Rpg
             "create VendorDefinitions",
             "assign ItemCatalog to vendor",
             "link vendor to Hub interactable"
-        }
+        },
+        CapabilityPath = "RPG/Vendors/Vendor Service",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
     )]
     public sealed class VendorService : IVendorService
 {

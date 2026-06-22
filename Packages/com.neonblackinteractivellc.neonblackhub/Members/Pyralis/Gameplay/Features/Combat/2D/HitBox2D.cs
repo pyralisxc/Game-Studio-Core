@@ -26,7 +26,8 @@ namespace NeonBlack.Gameplay.Features.Combat
     AssignmentFields = new[] { nameof(owner), nameof(weapon), nameof(hitFXPrefab), nameof(hitSFX), nameof(hitPauseSink) },
     FirstProof = "The 2D hitbox damages a valid target during its active window.",
     FirstProofTargetId = "proof.npc-enemy-behavior",
-    ExpertAdvice = "HitBox2D uses OnTriggerEnter2D. Ensure the root actor has a Rigidbody2D and correct LayerMasks to detect the intended targets. Use 'Freeze Frame Duration' for impact weight."
+    ExpertAdvice = "HitBox2D uses OnTriggerEnter2D. Ensure the root actor has a Rigidbody2D and correct LayerMasks to detect the intended targets. Use 'Freeze Frame Duration' for impact weight.",
+    CapabilityPath = "Combat/Sensors/Hit Box2D"
 )]
 [RequireComponent(typeof(Collider2D))]
 public class HitBox2D : MonoBehaviour

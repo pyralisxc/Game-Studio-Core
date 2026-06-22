@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Presentation.Visuals;
 using UnityEngine;
@@ -12,7 +12,9 @@ namespace NeonBlack.Gameplay.Data.Profiles
         AssignmentFields = new[] { nameof(activationFlashPreset), nameof(explosionFlashPreset) },
         FirstProof = "Trigger a hazard and verify the flashes and popups match the profile.",
         ExpertAdvice = "Use popupFontSize to ensure warnings are visible at the game's camera distance.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/visuals"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/visuals",
+        CapabilityPath = "Presentation/Feedback/Hazard Feedback Profile",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.AnimationPresentation }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Hazard Feedback Profile", fileName = "HazardFeedbackProfile")]
     public class HazardFeedbackProfile : ScriptableObject, IRuntimeValidationProvider

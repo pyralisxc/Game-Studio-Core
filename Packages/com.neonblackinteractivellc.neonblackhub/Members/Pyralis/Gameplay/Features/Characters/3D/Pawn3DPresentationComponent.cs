@@ -16,7 +16,8 @@ namespace NeonBlack.Gameplay.Characters
         CustomizationMoments = new[] { "Animator signal mapping", "Billboard presentation", "debug HUD visibility" },
         FirstProof = "Move the 3D pawn and verify Animator signals follow movement and combat state.",
         FirstProofTargetId = "proof.1p-pawn-movement",
-        ExpertAdvice = "Presentation logic should be visual-only. It reads from movement/combat state and writes to the Animator. Use Billboarding settings if your 3D pawn uses 2D sprites."
+        ExpertAdvice = "Presentation logic should be visual-only. It reads from movement/combat state and writes to the Animator. Use Billboarding settings if your 3D pawn uses 2D sprites.",
+        CapabilityPath = "Presentation/Feedback/Pawn3D Presentation Component"
     )]
     [AddComponentMenu("NeonBlack/Gameplay/3D/Pawn 3D Presentation Component")]
     [RequireComponent(typeof(ActorAnimationDriver))]

@@ -12,7 +12,8 @@ namespace NeonBlack.Gameplay.Features.Characters
         AssignmentFields = new[] { nameof(projectileSpawnPoint), nameof(projectileLauncher) },
         FirstProof = "Fire a ranged weapon and verify a projectile is spawned at the spawn point.",
         ExpertAdvice = "The projectile spawn point should be positioned at the weapon muzzle. If null, the module defaults to a point above the pawn's feet.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/combat"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/combat",
+        CapabilityPath = "Combat/Actions/Pawn Projectile Module"
     )]
     public class PawnProjectileModule : MonoBehaviour
 {

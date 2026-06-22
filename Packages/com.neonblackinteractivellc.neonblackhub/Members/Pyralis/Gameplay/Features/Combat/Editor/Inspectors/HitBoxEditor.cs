@@ -39,42 +39,7 @@ public class HitBoxEditor : Editor
     {
         serializedObject.Update();
 
-        PyralisInspectorGuide.DrawFieldGuide(
-            "Inspector Field Guide: HitBox",
-            new PyralisGuideSection(
-                "What this component does",
-                "HitBox defines a damage/contact zone and optional feedback when something is hit.",
-                new[]
-                {
-                    "Use it on fists, weapons, enemy attack zones, hazards, and projectile impact zones.",
-                    "Do not put player movement, AI choice, or turn rules here. Those should call into combat instead.",
-                    "Use Owner to prevent friendly/self hits and to connect the hit back to the attacker."
-                },
-                PyralisInspectorGuide.AuthoringDocPath("START_HERE.md")),
-            new PyralisGuideSection(
-                "Path choices",
-                "HitBox can sit under several combat styles without forcing one.",
-                new[]
-                {
-                    "Brawler/fighter path: parent one or more hitboxes to bones, weapon sockets, or attack zone children.",
-                    "Projectile path: let the projectile use collision/trigger logic and use hit feedback here only when the projectile owns a HitBox.",
-                    "Turn-based/menu path: skip scene hitboxes and apply damage from the selected action or card effect.",
-                    "Board/card path: use hitboxes only when a piece has a spatial attack area on the board."
-                },
-                PyralisInspectorGuide.AuthoringDocPath("START_HERE.md")),
-            new PyralisGuideSection(
-                "Beginner wiring",
-                "A reliable hitbox needs a collider, an owner, and a clear activation rule.",
-                new[]
-                {
-                    "Add a BoxCollider or SphereCollider as a sizing volume. Do not rely on trigger events; HitBox fires overlap queries from code.",
-                    "Leave Is Trigger off. The collider is disabled at runtime and is used only for size, gizmos, and overlap-query bounds.",
-                    "Assign Owner to the pawn, enemy, weapon, or projectile that caused the hit.",
-                    "Assign Hit Pause Sink when Freeze Frame Duration is greater than zero.",
-                    "Assign Camera Shake Sink when Shake Intensity and Shake Duration are greater than zero.",
-                    "Tune Freeze Frame and Camera Shake lightly first; feedback should confirm impact, not hide gameplay.",
-                    "Use Enemy AI Range Override only when this zone should advertise a different attack reach to EnemyAI."
-                }));
+        PyralisInspectorHandoff.DrawAuthoringButton("HitBox", null);
 
         EditorGUILayout.LabelField("Owner", EditorStyles.boldLabel);
         EditorGUILayout.PropertyField(_owner);

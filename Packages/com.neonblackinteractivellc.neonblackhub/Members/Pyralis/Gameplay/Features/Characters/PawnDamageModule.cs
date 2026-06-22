@@ -9,7 +9,8 @@ namespace NeonBlack.Gameplay.Features.Characters
         Capability = AuthoringCapability.Combat | AuthoringCapability.CombatState,
         Relevance = "Pawn module for managing outgoing damage and knockback multipliers.",
         ExpertAdvice = "This module coordinates with the PawnDamageHandler to apply status-effect-based multipliers to all outgoing attacks.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/combat"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/combat",
+        CapabilityPath = "Combat/Actions/Pawn Damage Module"
     )]
     public class PawnDamageModule : MonoBehaviour, IDamageModifier, IActorCombatModifierReceiver
 {

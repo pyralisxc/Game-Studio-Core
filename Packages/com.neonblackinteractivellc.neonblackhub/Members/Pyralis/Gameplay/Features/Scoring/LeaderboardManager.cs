@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using NeonBlack.Gameplay.Core.Contracts;
@@ -17,7 +17,8 @@ namespace NeonBlack.Gameplay.Features.Scoring
     NativeSetup = new[] { "Place in the menu or bootstrap scene.", "Set Leaderboard ID." },
     AssignmentFields = new[] { nameof(_leaderboardId), nameof(_topScoresFetchLimit) },
     FirstProof = "Verify 'Leaderboard services not installed' warning appears in console when submitting score.",
-    ExpertAdvice = "Use this bridge to keep code compiling without backend dependencies. Ensure the Leaderboard ID matches your online configuration."
+    ExpertAdvice = "Use this bridge to keep code compiling without backend dependencies. Ensure the Leaderboard ID matches your online configuration.",
+    CapabilityPath = "Goals & Scoring/Leaderboard/Leaderboard Manager"
 )]
 [AddComponentMenu("NeonBlack/Gameplay/Scoring/Leaderboard Manager")]
 [DefaultExecutionOrder(-50)]

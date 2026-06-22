@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Runtime;
 using UnityEngine;
@@ -17,7 +17,8 @@ namespace NeonBlack.Gameplay.Features.Pickups
         },
         FirstProof = "Walk an actor into the collectible and verify it disappears and awards points.",
         ExpertAdvice = "Runtime award routing is normally injected by the session scope. Use Award Sink Source only for standalone/custom award routing.",
-        AssignmentFields = new[] { nameof(bobSpeed), nameof(bobHeight) }
+        AssignmentFields = new[] { nameof(bobSpeed), nameof(bobHeight) },
+        CapabilityPath = "Pickups/Collectibles/Collectible 3D"
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Pickups/Collectible 3D")]
     [RequireComponent(typeof(Collider))]

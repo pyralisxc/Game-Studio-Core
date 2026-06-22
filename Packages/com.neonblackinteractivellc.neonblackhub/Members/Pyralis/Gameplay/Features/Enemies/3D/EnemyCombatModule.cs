@@ -13,7 +13,8 @@ namespace NeonBlack.Gameplay.Features.Enemies
         AssignmentFields = new[] { nameof(combatProfile), nameof(hitBoxZones), nameof(attackSequence), nameof(attackMode) },
         FirstProof = "Verify enemy attacks when player is in range.",
         ExpertAdvice = "Use attackRangeOverride if the calculated hitbox range is inaccurate. Sequential mode is best for simple bosses.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/enemies"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/enemies",
+        CapabilityPath = "Combat/Actions/Enemy Combat Module"
     )]
     public partial class EnemyCombatModule : MonoBehaviour
 {

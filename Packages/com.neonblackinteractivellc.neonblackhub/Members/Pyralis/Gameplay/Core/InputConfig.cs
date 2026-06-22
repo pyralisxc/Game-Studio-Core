@@ -10,6 +10,8 @@ namespace NeonBlack.Gameplay.Core.Config
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Input,
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.ActionTargeting },
+        CapabilityPath = "Core Setup/Input/Input Config",
         Relevance = "Defines participant-specific input overrides (e.g., custom controller bindings).",
         Axioms = AuthoringWorldAxiom.None,
         ProfileType = typeof(InputConfig),

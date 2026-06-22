@@ -13,13 +13,12 @@ This folder is the editor-only authoring system for Pyralis. Keep it organized b
 
 ## Spine
 
-`Spine/` contains reflective infrastructure, route/dependency analysis, validation, evidence, and graph projection logic:
+`Spine/` contains route/dependency analysis, reflected evidence, validation, and graph projection logic:
 
 - `DependencyTree/`: reflected setup-reference discovery for bootstrap, session, mode, participants, pawns, authored profiles, and feature modules.
-- `Reflection/`: contract/fact scanning and capability descriptor synthesis. This is where code structure becomes graph-ready descriptors.
-- `Facts/`: fact records, convention providers, and contract proof projectors. Keep this small; facts are grammar/audit input, not setup readiness truth.
+- `Facts/`: fact records, reflected metadata scanning, convention providers, and contract proof projectors. Keep this small; facts are grammar/audit input, not setup readiness truth.
 - `Graph/`: resolved setup graph, graph node/edge vocabulary, and graph-backed tab projections.
-- `Routes/`: route descriptors, intent advice, capability selection, and pawn-prefab readiness analysis.
+- `Routes/`: route descriptors, capability descriptor synthesis, intent advice, capability selection, and pawn-prefab readiness analysis.
 - `Validation/`: scene-readiness, runtime-claim, and feature-contract validation.
 - `Evidence/`: scene-surface evidence snapshots and native Unity surface guidance.
 

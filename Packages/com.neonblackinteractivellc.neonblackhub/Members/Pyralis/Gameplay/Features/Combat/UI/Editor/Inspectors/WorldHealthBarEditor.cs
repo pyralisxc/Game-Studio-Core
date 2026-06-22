@@ -24,39 +24,7 @@ public class WorldHealthBarEditor : Editor
     {
         serializedObject.Update();
 
-        PyralisInspectorGuide.DrawFieldGuide(
-            "Inspector Field Guide: World Health Bar",
-            new PyralisGuideSection(
-                "What this component does",
-                "WorldHealthBar presents health near an actor in the world instead of in a fixed HUD.",
-                new[]
-                {
-                    "Use it for enemies, bosses, destructibles, brawler opponents, or side-scroller actors with visible health.",
-                    "Skip it for board/card/tabletop games unless pieces need world-space status markers.",
-                    "Keep the health data on HealthComponent; this script is presentation only."
-                },
-                PyralisInspectorGuide.AuthoringDocPath("START_HERE.md")),
-            new PyralisGuideSection(
-                "Beginner wiring",
-                "Most issues are references or render ordering.",
-                new[]
-                {
-                    "Assign the HealthComponent or target health source this bar should watch.",
-                    "Place the bar under the actor or set the follow/offset fields so it tracks the intended target.",
-                    "Pick a Sorting Layer that exists in Project Settings so the bar renders above sprites.",
-                    "Use Sorting Order In Layer to resolve overlap between characters, hit effects, and UI."
-                },
-                PyralisInspectorGuide.AuthoringDocPath("START_HERE.md")),
-            new PyralisGuideSection(
-                "Path choices",
-                "Health can be shown in different places depending on genre.",
-                new[]
-                {
-                    "Arcade/platformer path: use WorldHealthBar for enemies and a HUD bar for the player.",
-                    "Fighter/brawler path: use world bars for groups or large enemies, HUD bars for main combatants.",
-                    "Turn-based/menu path: show health in the selected target panel or action menu instead.",
-                    "Card/tabletop path: show health as counters, tokens, or card UI instead of world-space bars."
-                }));
+        PyralisInspectorHandoff.DrawAuthoringButton("World Health Bar", null);
 
         SerializedProperty prop = serializedObject.GetIterator();
         bool enterChildren = true;
@@ -80,32 +48,32 @@ public class WorldHealthBarEditor : Editor
                 EditorGUILayout.PropertyField(prop, true);
         }
 
-        PyralisInspectorGuide.DrawValidationMessages(GetMessages((WorldHealthBar)target), "WorldHealthBar is ready for explicit world-space health presentation.");
+        PyralisInspectorValidation.DrawValidationMessages(GetMessages((WorldHealthBar)target), "WorldHealthBar is ready for explicit world-space health presentation.");
         serializedObject.ApplyModifiedProperties();
     }
 
-    private List<PyralisGuideIssue> GetMessages(WorldHealthBar healthBar)
+    private List<PyralisInspectorValidationIssue> GetMessages(WorldHealthBar healthBar)
     {
-        List<PyralisGuideIssue> messages = new List<PyralisGuideIssue>();
+        List<PyralisInspectorValidationIssue> messages = new List<PyralisInspectorValidationIssue>();
 
         if (healthBar != null && healthBar.GetComponent<HealthComponent>() == null)
-            messages.Add(PyralisGuideIssue.Required("HealthComponent is required on the same GameObject."));
+            messages.Add(PyralisInspectorValidationIssue.Required("HealthComponent is required on the same GameObject."));
 
         SerializedProperty targetCamera = serializedObject.FindProperty("targetCamera");
         if (targetCamera != null && targetCamera.objectReferenceValue == null)
-            messages.Add(PyralisGuideIssue.Recommended("Target Camera is empty. Assign a gameplay camera or set it at runtime so the bar billboards correctly."));
+            messages.Add(PyralisInspectorValidationIssue.Recommended("Target Camera is empty. Assign a gameplay camera or set it at runtime so the bar billboards correctly."));
 
         bool showDamageNumbers = serializedObject.FindProperty("showDamageNumbers")?.boolValue == true;
         bool showHealNumbers = serializedObject.FindProperty("showHealNumbers")?.boolValue == true;
         SerializedProperty damageNumberSink = serializedObject.FindProperty("damageNumberSink");
         if ((showDamageNumbers || showHealNumbers) && damageNumberSink != null && damageNumberSink.objectReferenceValue == null)
-            messages.Add(PyralisGuideIssue.Recommended("Damage Number Sink is empty. Assign DamageNumberSpawner or another IDamageNumberSink to show damage/heal numbers."));
+            messages.Add(PyralisInspectorValidationIssue.Recommended("Damage Number Sink is empty. Assign DamageNumberSpawner or another IDamageNumberSink to show damage/heal numbers."));
 
         if (damageNumberSink != null
             && damageNumberSink.objectReferenceValue is Component sinkComponent
             && sinkComponent.GetComponent<IDamageNumberSink>() == null)
         {
-            messages.Add(PyralisGuideIssue.Required("Damage Number Sink must reference a component that implements IDamageNumberSink."));
+            messages.Add(PyralisInspectorValidationIssue.Required("Damage Number Sink must reference a component that implements IDamageNumberSink."));
         }
 
         return messages;

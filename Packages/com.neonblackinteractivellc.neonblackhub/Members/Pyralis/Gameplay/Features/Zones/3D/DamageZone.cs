@@ -25,7 +25,8 @@ namespace NeonBlack.Gameplay.Features.Zones
         AssignmentFields = new[] { nameof(impactProfile), nameof(damagePerTick), nameof(tickInterval), nameof(knockbackForce) },
         FirstProof = "Walk an actor into the zone and verify it takes repeated damage.",
         ExpertAdvice = "Do not set Tick Interval too low. Ensure target actors have a HealthComponent. Use Hazard Impact Profile if you want this hazard to behave identically to others.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/combat/hazards"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/combat/hazards",
+        CapabilityPath = "Combat/Actions/Damage Zone"
     )]
     [RequireComponent(typeof(BoxCollider))]
     public partial class DamageZone : MonoBehaviour, IRuntimeValidationProvider

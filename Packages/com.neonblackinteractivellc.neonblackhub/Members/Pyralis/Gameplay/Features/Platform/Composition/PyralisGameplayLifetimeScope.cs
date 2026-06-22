@@ -25,8 +25,10 @@ namespace NeonBlack.Gameplay.Core.Runtime
     [DisallowMultipleComponent]
     [AuthoringContract(
         Capability = AuthoringCapability.Setup, 
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.PlatformCore },
         Relevance = "Inspector Add Component path for the visible Pyralis runtime composition scope.", 
         Axioms = AuthoringWorldAxiom.None,
+        CapabilityPath = "Core Setup/Composition/Pyralis Gameplay Lifetime Scope",
         RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.CoreRouteAnchor },
         AssignmentFields = new[] { nameof(InjectLoadedScenesOnBuild) },
         FirstProof = "Check the VContainer debugger to ensure all gameplay services are correctly registered in the scope.",

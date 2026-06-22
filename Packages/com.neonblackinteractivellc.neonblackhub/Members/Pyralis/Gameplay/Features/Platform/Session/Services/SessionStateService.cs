@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Contracts.Networking;
@@ -23,7 +23,8 @@ namespace NeonBlack.Gameplay.Characters
         FirstProof = "Verify the session transitions from Boot to Gameplay state upon startup.",
         ExpertAdvice = "SessionStateService tracks the high-level flow (Lobby -> Gameplay). Inject IGameplayStateReader to listen for phase changes in your UI or Game Logic scripts.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/session",
-        NativeSetup = new[] { "Add to GameplaySessionBootstrap child." }
+        NativeSetup = new[] { "Add to GameplaySessionBootstrap child." },
+        CapabilityPath = "Core Setup/Session/Session State Service"
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Setup/Session State Service")]
     public class SessionStateService : MonoBehaviour, IGameService, IGameplayStateReader, IRuntimeValidationProvider

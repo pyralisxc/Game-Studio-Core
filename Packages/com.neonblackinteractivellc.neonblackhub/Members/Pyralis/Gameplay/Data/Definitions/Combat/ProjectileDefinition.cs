@@ -8,6 +8,8 @@ namespace NeonBlack.Gameplay.Features.Combat
 {
     [AuthoringContract(
         Capability = AuthoringCapability.Combat, 
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.GunsProjectiles, RuntimeCapabilityFamily.Combat },
+        CapabilityPath = "Combat/Projectiles/Projectile Definition",
         Relevance = "Project-window creation path for projectile behavior.",
         RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.CombatDefinitionRouteSupport },
         AssignmentFields = new[] { nameof(projectileId), nameof(projectilePrefab), nameof(speed) },

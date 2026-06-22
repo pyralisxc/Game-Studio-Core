@@ -10,6 +10,8 @@ namespace NeonBlack.Gameplay.Networking.Participants
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Networking,
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.Networking },
+        CapabilityPath = "Networking/Participants/Networked Participant Roster Service",
         Relevance = "Drop-in replacement for ParticipantRosterService in online sessions. Resolves NGO Client IDs.",
         RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.NetworkRouteSupport },
         FirstProof = "The participant roster correctly reflects the NetworkManager.LocalClientId for the local player."

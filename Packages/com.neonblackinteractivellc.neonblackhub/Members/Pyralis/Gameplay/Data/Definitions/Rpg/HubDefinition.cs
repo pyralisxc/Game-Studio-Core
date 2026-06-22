@@ -12,7 +12,9 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
         Capability = AuthoringCapability.Session,
         Lane = "RPG",
         AssignmentFields = new[] { nameof(hubId), nameof(displayName), nameof(sceneId), nameof(interactables) },
-        FirstProof = "Proof that the hub contains valid interactables and correctly links to a scene."
+        FirstProof = "Proof that the hub contains valid interactables and correctly links to a scene.",
+        CapabilityPath = "RPG/Hubs/Definitions/Hub Definition",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.PlatformCore }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Hub Definition", fileName = "HubDefinition")]
     public class HubDefinition : ScriptableObject, IHubDefinition, IRuntimeValidationProvider

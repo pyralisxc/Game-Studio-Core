@@ -27,14 +27,14 @@ namespace NeonBlack.Gameplay.Editor
 
             if (_contract != null)
             {
-                PyralisResolvedInspectorGuide.DrawHeader(_contract);
+                PyralisResolvedInspectorValidation.DrawHeader(_contract);
             }
 
             DrawCustomInspector();
 
             if (_contract != null)
             {
-                PyralisResolvedInspectorGuide.DrawValidationFooter(_contract, target, serializedObject);
+                PyralisResolvedInspectorValidation.DrawValidationFooter(_contract, target, serializedObject);
             }
 
             serializedObject.ApplyModifiedProperties();

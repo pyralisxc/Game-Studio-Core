@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Rpg;
 using NeonBlack.Gameplay.Core.Contracts;
@@ -17,7 +17,8 @@ namespace NeonBlack.Gameplay.Features.Rpg.UI
         Capability = AuthoringCapability.Dialogue,
         Lane = "RPG",
         RequiredComponentNames = new[] { "TMPro.TextMeshProUGUI" },
-        FirstProof = "Verify that the quest board displays the list of quests and correctly handles quest selection."
+        FirstProof = "Verify that the quest board displays the list of quests and correctly handles quest selection.",
+        CapabilityPath = "RPG/Quests/UI/Quest Board Panel Presenter"
     )]
     [AddComponentMenu("NeonBlack/Gameplay/RPG/UI/RPG Quest Board Panel Presenter")]
     public sealed class RpgQuestBoardPanelPresenter : MonoBehaviour, IRuntimeValidationProvider

@@ -11,7 +11,8 @@ namespace NeonBlack.Gameplay.Features.Enemies
         Relevance = "Binds enemy gameplay states to visual signals and animator triggers.",
         FirstProof = "Verify enemy plays walk, hurt, and attack animations.",
         ExpertAdvice = "Ensure the child Animator has 'IsMoving' and 'IsGrounded' parameters.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/visuals"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/visuals",
+        CapabilityPath = "Presentation/Feedback/Enemy Animation Module"
     )]
     public class EnemyAnimationModule : MonoBehaviour
 {

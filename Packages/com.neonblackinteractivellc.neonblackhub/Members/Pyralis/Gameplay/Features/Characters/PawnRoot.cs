@@ -13,6 +13,7 @@ namespace NeonBlack.Gameplay.Characters
         Capability = AuthoringCapability.Movement | AuthoringCapability.Session,
         SetupNodeId = "pawn.definition",
         RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay },
+        CapabilityPath = "Character/Pawn Gameplay/Pawn Root",
         Relevance = "The root coordinator for participant-owned pawns. Handles profile application and feature installation after a participant spawns the pawn prefab.",
         RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.ParticipantRouteSupport, "PawnRoot" },
         NativeSetup = new[] { "Add to Pawn prefab root" },

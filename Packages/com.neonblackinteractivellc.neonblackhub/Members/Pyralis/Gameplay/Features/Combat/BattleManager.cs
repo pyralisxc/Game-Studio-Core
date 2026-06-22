@@ -15,7 +15,8 @@ namespace NeonBlack.Gameplay.Features.Combat
         AssignmentFields = new[] { nameof(maxMeleeTokens), nameof(maxRangedTokens) },
         FirstProof = "Verify that enemies request and return tokens when starting/finishing attacks.",
         ExpertAdvice = "The BattleManager prevents 'ganging up' by limiting simultaneous attacks. If enemies are standing around doing nothing, increase the token counts.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/combat"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/combat",
+        CapabilityPath = "Combat/Actions/Battle Manager"
     )]
     public sealed class BattleManager : MonoBehaviour
     {

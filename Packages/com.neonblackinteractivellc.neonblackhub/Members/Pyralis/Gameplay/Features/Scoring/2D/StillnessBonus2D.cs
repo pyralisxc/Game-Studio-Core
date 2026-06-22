@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Features.Characters;
 using UnityEngine;
@@ -29,7 +29,8 @@ namespace NeonBlack.Gameplay.Features.Scoring
         },
         AssignmentFields = new[] { nameof(_collectiblesPerBonus), nameof(_stillnessInterval), nameof(_stillnessThreshold), nameof(_bonusClip) },
         FirstProof = "Stay still for 3 seconds and verify the score increases.",
-        ExpertAdvice = "Set the stillness threshold high enough to ignore micro-movement or drift. Runtime scoring and gameplay state are normally supplied by the session scope; use the source fields only for standalone custom orchestration."
+        ExpertAdvice = "Set the stillness threshold high enough to ignore micro-movement or drift. Runtime scoring and gameplay state are normally supplied by the session scope; use the source fields only for standalone custom orchestration.",
+        CapabilityPath = "Goals & Scoring/Bonuses/Stillness Bonus 2D"
     )]
     [RequireComponent(typeof(Motor2D))]
     [AddComponentMenu("NeonBlack/Gameplay/Features/Scoring/Stillness Bonus 2D")]

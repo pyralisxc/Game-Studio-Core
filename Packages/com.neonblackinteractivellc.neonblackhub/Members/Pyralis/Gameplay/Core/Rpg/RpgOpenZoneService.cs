@@ -15,7 +15,9 @@ namespace NeonBlack.Gameplay.Core.Rpg
             "configure WorldZone flags",
             "link EncounterRestoration to zone entry",
             "register persistent zone state"
-        }
+        },
+        CapabilityPath = "RPG/Runtime/Rpg Open Zone Service",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.PlatformCore }
     )]
     public sealed class RpgOpenZoneService
 {

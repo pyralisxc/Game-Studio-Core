@@ -1,4 +1,4 @@
-﻿using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Presentation.Visuals;
@@ -28,7 +28,8 @@ namespace NeonBlack.Gameplay.Features.Hazards
             "HazardFeedbackProfile.flashOnActivation",
             "HazardFeedbackProfile.showActivationPopup",
             "HazardFeedbackProfile.popupLifetime"
-        }
+        },
+        CapabilityPath = "Combat/Actions/Hazard Feedback Runtime"
     )]
     public class HazardFeedbackRuntime : MonoBehaviour, IRuntimeValidationProvider
 {

@@ -12,7 +12,9 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
         NativeSetup = new[] { "Add Allowed Slot Ids.", "Add Stat Modifiers." },
         AssignmentFields = new[] { nameof(allowedSlotIds) },
         FirstProof = "Verify the item can be equipped into the specified slots and correctly modifies stats.",
-        ExpertAdvice = "Use stat modifiers to provide meaningful progression and customization through equipment."
+        ExpertAdvice = "Use stat modifiers to provide meaningful progression and customization through equipment.",
+        CapabilityPath = "RPG/Inventory/Definitions/Equippable Item Definition",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Equippable Item", fileName = "EquippableItemDefinition")]
     public class EquippableItemDefinition : ItemDefinition, IEquippableItem, IRuntimeValidationProvider

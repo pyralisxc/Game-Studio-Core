@@ -40,38 +40,7 @@ namespace NeonBlack.Gameplay.Features.Traversal.Editor
             EnsureStyles();
             serializedObject.Update();
 
-            PyralisInspectorGuide.DrawFieldGuide(
-                "Inspector Field Guide: Climb Zone",
-                new PyralisGuideSection(
-                    "What this component does",
-                    "ClimbZone defines a ledge, ladder top, or traversal assist point that the player can grab and climb through.",
-                    new[]
-                    {
-                        "Use it for side-scroller ledges, brawler ledges, ladders, mantles, and scripted traversal assists.",
-                        "Skip it for games without actor traversal, such as board/card/tabletop, menu-only, or purely camera-driven games.",
-                        "Keep movement input and animation on the pawn; this zone only describes where a climb can happen."
-                    },
-                    PyralisInspectorGuide.AuthoringDocPath("AUTHORING_MODEL.md")),
-                new PyralisGuideSection(
-                    "Beginner wiring",
-                    "The player needs a detector child, this zone needs trigger geometry, and the animator needs matching parameters.",
-                    new[]
-                    {
-                        "Add a child object to the player named GrabDetector near hand or chest height.",
-                        "Add a trigger BoxCollider and GrabDetector component to that child.",
-                        "Place ClimbZone on the ledge/ladder object and tune its control points with the scene handles.",
-                        "Add the listed Animator parameters only if your controller should play climb animations."
-                    }),
-                new PyralisGuideSection(
-                    "Path choices",
-                    "Traversal can stay optional and genre-specific.",
-                    new[]
-                    {
-                        "Platformer path: use side ledges and hang state for shimmy/drop/climb-up.",
-                        "Brawler path: use forward climbs or mantles to move between arena heights.",
-                        "Camera/board/card path: omit traversal components and drive interaction through rules, selection, or camera controls."
-                    },
-                    PyralisInspectorGuide.AuthoringDocPath("CANONICAL_SETUP.md")));
+            PyralisInspectorHandoff.DrawAuthoringButton("Climb Zone", null);
 
             DrawDefaultInspector();
             DrawGrabDetectorSetup();

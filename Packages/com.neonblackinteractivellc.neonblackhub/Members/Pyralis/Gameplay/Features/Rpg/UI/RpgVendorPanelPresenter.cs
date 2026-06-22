@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Rpg;
 using NeonBlack.Gameplay.Core.Contracts;
@@ -16,7 +16,9 @@ namespace NeonBlack.Gameplay.Features.Rpg.UI
         Capability = AuthoringCapability.Inventory,
         Lane = "RPG",
         RequiredComponentNames = new[] { "TMPro.TextMeshProUGUI" },
-        FirstProof = "Verify that the vendor panel displays offers and correctly calculates total prices."
+        FirstProof = "Verify that the vendor panel displays offers and correctly calculates total prices.",
+        CapabilityPath = "RPG/Vendors/UI/Vendor Panel Presenter",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/RPG/UI/RPG Vendor Panel Presenter")]
     public sealed class RpgVendorPanelPresenter : MonoBehaviour, IRuntimeValidationProvider

@@ -21,7 +21,9 @@ namespace NeonBlack.Gameplay.Features.UI
             "Capture Portrait and Landscape layouts in the Inspector."
         },
         ExpertAdvice = "Captures the current RectTransform state. Position your UI for one orientation, hit Capture, then repeat for the other. Use with CanvasScaler in 'Match' mode for best results.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/ui"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/ui",
+        CapabilityPath = "UI/HUD/UI Orientation Handler",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.PlatformCore }
     )]
 [RequireComponent(typeof(RectTransform))]
     public class UIOrientationHandler : MonoBehaviour

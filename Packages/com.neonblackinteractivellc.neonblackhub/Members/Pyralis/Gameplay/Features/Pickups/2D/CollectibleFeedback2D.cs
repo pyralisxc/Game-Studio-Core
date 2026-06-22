@@ -31,7 +31,8 @@ namespace NeonBlack.Gameplay.Features.Pickups
     },
     AssignmentFields = new[] { nameof(_collectClip), nameof(_collectFX), nameof(_destroyClip), nameof(_destroyFX) },
     FirstProof = "Collect a pickup and verify the sparkle particles play and the collection sound triggers.",
-    ExpertAdvice = "Set SFX spatial blend to 0 (2D) for consistent UI-style feedback. Runtime score awards are normally injected by the session scope; use Score Award Source only for standalone/custom award routing."
+    ExpertAdvice = "Set SFX spatial blend to 0 (2D) for consistent UI-style feedback. Runtime score awards are normally injected by the session scope; use Score Award Source only for standalone/custom award routing.",
+    CapabilityPath = "Presentation/Feedback/Collectible Feedback2D"
 )]
 [AddComponentMenu("NeonBlack/Gameplay/Pickups/Collectible Feedback 2D")]
 public partial class CollectibleFeedback2D : MonoBehaviour, IPickupAwardSink, IRuntimeValidationProvider

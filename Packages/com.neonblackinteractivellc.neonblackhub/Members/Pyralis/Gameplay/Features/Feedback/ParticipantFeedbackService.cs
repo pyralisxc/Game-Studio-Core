@@ -16,7 +16,8 @@ namespace NeonBlack.Gameplay.Features.Feedback
         Relevance = "Global service for streaming feedback events (scoring, health) to participants for UI/SFX triggers.",
         Axioms = AuthoringWorldAxiom.None,
         RequiredInterfaces = new[] { typeof(IGameService), typeof(IParticipantFeedbackStream), typeof(IParticipantFeedbackPublisher) },
-        FirstProof = "Publish a score event via the service and verify it is received by registered UI listeners."
+        FirstProof = "Publish a score event via the service and verify it is received by registered UI listeners.",
+        CapabilityPath = "Presentation/Feedback/Participant Feedback Service"
     )]
     public class ParticipantFeedbackService : MonoBehaviour, IGameService, IParticipantFeedbackStream, IParticipantFeedbackPublisher
 {

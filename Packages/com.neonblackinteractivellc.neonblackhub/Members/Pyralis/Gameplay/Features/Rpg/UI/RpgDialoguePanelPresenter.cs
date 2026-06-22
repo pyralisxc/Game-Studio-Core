@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Rpg;
 using NeonBlack.Gameplay.Core.Contracts;
@@ -20,7 +20,9 @@ namespace NeonBlack.Gameplay.Features.Rpg.UI
         NativeSetup = new[] { "Add to a Canvas-backed RPG dialogue panel.", "Assign speaker, line, choice, and issue labels from the UI hierarchy." },
         AssignmentFields = new[] { nameof(routePresenter), nameof(dialogueGraphs), nameof(npcProfiles), nameof(speakerLabel), nameof(lineLabel), nameof(choiceButtons) },
         FirstProof = "Open one RPG dialogue panel and verify speaker, line, choices, and validation issues render from authored dialogue data.",
-        FirstProofTargetId = "proof.ui-hud-menu"
+        FirstProofTargetId = "proof.ui-hud-menu",
+        CapabilityPath = "RPG/Dialogue/UI/Dialogue Panel Presenter",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/RPG/UI/RPG Dialogue Panel Presenter")]
     public sealed class RpgDialoguePanelPresenter : MonoBehaviour, IRuntimeValidationProvider

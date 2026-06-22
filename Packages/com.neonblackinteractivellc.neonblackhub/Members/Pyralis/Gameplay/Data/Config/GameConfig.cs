@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
 using UnityEngine;
@@ -16,7 +16,9 @@ namespace NeonBlack.Gameplay.Core.Config
         NativeSetup = new[] { "Assign Session Definition.", "Set Scene names." },
         AssignmentFields = new[] { nameof(sessionDefinition), nameof(mainMenuScene) },
         FirstProof = "Verify the game boots into the specified main menu scene.",
-        ExpertAdvice = "Use service prefabs only if you need custom logic for core services like Time or Scene Loading."
+        ExpertAdvice = "Use service prefabs only if you need custom logic for core services like Time or Scene Loading.",
+        CapabilityPath = "Core Setup/Configuration/Game Config",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.PlatformCore }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Core/Game Config", fileName = "GameConfig")]
     public class GameConfig : ScriptableObject, IRuntimeValidationProvider

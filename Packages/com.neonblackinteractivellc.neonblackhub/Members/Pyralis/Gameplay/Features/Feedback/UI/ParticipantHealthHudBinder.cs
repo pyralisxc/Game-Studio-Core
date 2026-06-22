@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Characters;
 using NeonBlack.Gameplay.Features.Composition;
@@ -13,7 +13,8 @@ namespace NeonBlack.Gameplay.Features.Feedback.UI
         Relevance = "Binds participant health state to UI elements like labels and progress bars.",
         NativeSetup = new[] { "Attach to HUD canvas element", "Assign health label or fill image" },
         AssignmentFields = new[] { nameof(healthLabel), nameof(healthFillImage), nameof(healthPanels) },
-        FirstProof = "The health bar updates when the tracked participant takes damage."
+        FirstProof = "The health bar updates when the tracked participant takes damage.",
+        CapabilityPath = "UI/HUD/Participant Health Hud Binder"
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Feedback/UI/Participant Health HUD Binder")]
     public class ParticipantHealthHudBinder : ParticipantHudTargetBinding, IRuntimeValidationProvider

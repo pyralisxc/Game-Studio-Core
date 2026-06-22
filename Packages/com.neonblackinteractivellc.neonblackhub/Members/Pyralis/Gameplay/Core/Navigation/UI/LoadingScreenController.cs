@@ -21,7 +21,8 @@ namespace NeonBlack.Gameplay.Core.Navigation
         },
         AssignmentFields = new[] { nameof(_progressBar), nameof(_label) },
         FirstProof = "Load a scene via SceneFader and verify the loading screen displays progress before activation.",
-        ExpertAdvice = "Do not open the loading scene directly unless falling back to MainMenu is acceptable. Do not put gameplay-only startup logic here; this scene should remain transitional."
+        ExpertAdvice = "Do not open the loading scene directly unless falling back to MainMenu is acceptable. Do not put gameplay-only startup logic here; this scene should remain transitional.",
+        CapabilityPath = "Core Setup/Navigation/Loading Screen Controller"
     )]
     public class LoadingScreenController : MonoBehaviour
     {

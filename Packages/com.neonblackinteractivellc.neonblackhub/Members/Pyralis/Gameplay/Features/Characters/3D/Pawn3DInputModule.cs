@@ -29,7 +29,8 @@ namespace NeonBlack.Gameplay.Features.Characters
         AssignmentFields = new[] { nameof(inputActions), nameof(inputConfig) },
         FirstProof = "Verify movement and actions respond in Play Mode with the assigned Input Asset.",
         ExpertAdvice = "Converts hardware signals into FrameInput. It uses the InputProfile to find action names. Ensure your InputActionAsset has the 'Player' map (or as defined in your profile).",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/input"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/input",
+        CapabilityPath = "Input/Pawn/Pawn3D Input Module"
     )]
 [AddComponentMenu("NeonBlack/Gameplay/3D/Pawn 3D Input Module")]
     public sealed class Pawn3DInputModule : MonoBehaviour, IPawnInputModule

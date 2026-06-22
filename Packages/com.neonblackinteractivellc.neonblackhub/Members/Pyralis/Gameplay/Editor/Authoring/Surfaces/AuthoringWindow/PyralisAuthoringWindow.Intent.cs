@@ -93,10 +93,10 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringGraphJsonExportControl.ExportIntentSnapshot(
                     GetCurrentIntentSelection(),
                     GetCachedIntentModel(),
-                    PyralisAuthoringCapabilityDescriptorRegistry.BuildIntentDescriptors(_intentLane, _intentAxioms));
+                    PyralisAuthoringCapabilityDescriptorRegistry.BuildIntentProjectionDescriptors(_intentLane, _intentAxioms));
             })
             { text = "Export Intent JSON" };
-            exportButton.tooltip = "Write the Intent tab steering snapshot: DNA axioms, presentation lane, participant route, capability descriptors, selected ingredients, and advisor rows. It does not export scene/setup reality.";
+            exportButton.tooltip = "Write the Intent tab steering snapshot: DNA axioms, presentation lane, participant route, capability descriptors, metadata backlog, selected ingredients, and advisor rows. It does not export scene/setup reality.";
             actionRow.Add(guideButton);
             actionRow.Add(overviewButton);
             actionRow.Add(exportButton);
@@ -260,7 +260,7 @@ namespace NeonBlack.Gameplay.Editor
             container.Add(grid);
 
             IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors =
-                PyralisAuthoringCapabilityDescriptorRegistry.BuildIntentDescriptors(_intentLane, _intentAxioms);
+                PyralisAuthoringCapabilityDescriptorRegistry.BuildIntentProjectionDescriptors(_intentLane, _intentAxioms);
             PyralisAuthoringIntentSelection selection = GetCurrentIntentSelection();
             PyralisAuthoringIntentProjection projection =
                 PyralisAuthoringIntentProjection.Build(selection, descriptors);
@@ -272,6 +272,14 @@ namespace NeonBlack.Gameplay.Editor
                 projection.GameplayIngredientGroups,
                 defaultExpanded: true,
                 readOnly: false);
+
+            AddIntentDescriptorSection(
+                grid,
+                "Needs Contract Metadata",
+                "Potential gameplay ingredients that are visible in contracts, but cannot become steering toggles until they declare a semantic CapabilityPath and runtime family.",
+                projection.MetadataBacklogGroups,
+                defaultExpanded: false,
+                readOnly: true);
 
             AddIntentDescriptorSection(
                 grid,
@@ -297,9 +305,12 @@ namespace NeonBlack.Gameplay.Editor
                 ? groups.Sum(group => group.DescriptorCount)
                 : groups.Sum(group => group.SelectedCount);
             int descriptorCount = groups.Sum(group => group.DescriptorCount);
+            bool metadataBacklog = string.Equals(title, "Needs Contract Metadata", StringComparison.Ordinal);
             var sectionFoldout = new Foldout
             {
-                text = readOnly
+                text = metadataBacklog
+                    ? $"{title} ({descriptorCount} waiting)"
+                    : readOnly
                     ? $"{title} ({selectedCount} inferred)"
                     : $"{title} ({selectedCount}/{descriptorCount})",
                 value = GetCapabilityGroupFoldout(title, defaultExpanded)
@@ -330,9 +341,14 @@ namespace NeonBlack.Gameplay.Editor
             int selectedCount = readOnly
                 ? group.DescriptorCount
                 : group.SelectedCount;
+            bool metadataBacklog = group.Subgroups
+                .SelectMany(subgroup => subgroup.Descriptors)
+                .Any(descriptor => string.Equals(descriptor.IntentLayer, "MetadataBacklog", StringComparison.Ordinal));
             var foldout = new Foldout
             {
-                text = readOnly
+                text = metadataBacklog
+                    ? $"{group.Group} ({group.DescriptorCount} waiting)"
+                    : readOnly
                     ? $"{group.Group} ({selectedCount} inferred)"
                     : $"{group.Group} ({selectedCount}/{group.DescriptorCount})",
                 value = GetCapabilityGroupFoldout(group.Group, defaultExpanded)
@@ -355,7 +371,9 @@ namespace NeonBlack.Gameplay.Editor
 
                 var subgroupFoldout = new Foldout
                 {
-                    text = readOnly
+                    text = metadataBacklog
+                        ? $"{subgroup.Subgroup} ({subgroup.DescriptorCount} waiting)"
+                        : readOnly
                         ? $"{subgroup.Subgroup} ({subgroup.DescriptorCount} inferred)"
                         : $"{subgroup.Subgroup} ({subgroup.SelectedCount}/{subgroup.DescriptorCount})",
                     value = GetCapabilityGroupFoldout(group.Group + "/" + subgroup.Subgroup, defaultExpanded)
@@ -419,10 +437,32 @@ namespace NeonBlack.Gameplay.Editor
                 var row = new Label(projected.LeafLabel);
                 row.name = "intent_readonly_" + descriptor.StableId.Replace('.', '_').Replace('/', '_');
                 row.tooltip = GetIntentDescriptorTooltip(descriptor)
-                    + "\n\nInferred from Intent. Route essentials are not user-selected ingredients.";
+                    + GetReadonlyIntentDescriptorTooltipSuffix(projected);
                 row.AddToClassList("intent-readonly-row");
                 parent.Add(row);
             }
+        }
+
+        private string GetReadonlyIntentDescriptorTooltipSuffix(PyralisAuthoringIntentDescriptorProjection projected)
+        {
+            if (projected == null)
+                return string.Empty;
+
+            if (string.Equals(projected.IntentLayer, "MetadataBacklog", StringComparison.Ordinal))
+            {
+                List<string> missing = new List<string>();
+                PyralisAuthoringCapabilityDescriptor descriptor = projected.Descriptor;
+                if (descriptor != null && !descriptor.HasSemanticCapabilityPath)
+                    missing.Add("CapabilityPath");
+                if (descriptor != null && descriptor.Family == RuntimeCapabilityFamily.Custom)
+                    missing.Add("RuntimeFamilies");
+                string missingText = missing.Count > 0
+                    ? string.Join(" and ", missing)
+                    : "complete Intent metadata";
+                return "\n\nWaiting on contract metadata: add " + missingText + " before this can become a steering toggle.";
+            }
+
+            return "\n\nInferred from Intent. Route essentials are not user-selected ingredients.";
         }
 
         private string GetIntentDescriptorTooltip(PyralisAuthoringCapabilityDescriptor descriptor)

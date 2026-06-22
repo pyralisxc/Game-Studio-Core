@@ -193,6 +193,12 @@ namespace NeonBlack.Gameplay.Core.Contracts
         public string[] RoleTags { get; set; }
 
         /// <summary>
+        /// Stable ownership keys claimed by this contract for Hygiene duplicate-owner checks.
+        /// Use narrow keys such as "participant.spawn" or "pawn.movement.motor".
+        /// </summary>
+        public string[] OwnershipClaims { get; set; }
+
+        /// <summary>
         /// Whether this contract should appear as a directly selectable Intent ingredient.
         /// Defaults to true; set false for helper contracts that only enrich graph evidence.
         /// </summary>

@@ -18,7 +18,8 @@ namespace NeonBlack.Gameplay.Features.Feedback
         },
         AssignmentFields = new[] { nameof(damageNumberSink), nameof(popupCamera) },
         FirstProof = "Verify world-space popups appear above the actor during combat.",
-        ExpertAdvice = "Enable at least one feedback category. Use shorter popup lifetimes for actors that take frequent damage. For HUD-only games, prefer participant HUD presenters over world-space popups."
+        ExpertAdvice = "Enable at least one feedback category. Use shorter popup lifetimes for actors that take frequent damage. For HUD-only games, prefer participant HUD presenters over world-space popups.",
+        CapabilityPath = "Presentation/Feedback/Actor Floating Feedback Receiver"
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Feedback/Actor Floating Feedback Receiver")]
     public partial class ActorFloatingFeedbackReceiver : MonoBehaviour, IActorFeedbackReceiver, IRuntimeValidationProvider

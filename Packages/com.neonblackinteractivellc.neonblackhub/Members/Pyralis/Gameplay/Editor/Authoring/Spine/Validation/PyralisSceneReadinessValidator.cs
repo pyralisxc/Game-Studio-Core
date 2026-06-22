@@ -15,8 +15,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
     public enum PyralisSceneReadinessSeverity
     {
         RequiredBeforePlay,
-        RecommendedBeforePlay,
-        ProofEnhancer
+        RecommendedBeforePlay
     }
 
     public enum PyralisSceneReadinessCategory
@@ -27,7 +26,6 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
         UserInterface,
         Presentation,
         Physics,
-        PrefabContract,
         Networking,
         Other
     }
@@ -62,9 +60,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
         {
             _issues = new List<PyralisSceneReadinessIssue>(issues ?? System.Array.Empty<PyralisSceneReadinessIssue>());
             _requiredIssues = new List<string>(GetMessages(PyralisSceneReadinessSeverity.RequiredBeforePlay));
-            _recommendedIssues = new List<string>();
-            _recommendedIssues.AddRange(GetMessages(PyralisSceneReadinessSeverity.RecommendedBeforePlay));
-            _recommendedIssues.AddRange(GetMessages(PyralisSceneReadinessSeverity.ProofEnhancer));
+            _recommendedIssues = new List<string>(GetMessages(PyralisSceneReadinessSeverity.RecommendedBeforePlay));
         }
 
         public IReadOnlyList<string> RequiredIssues => _requiredIssues;
@@ -76,7 +72,6 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
         public string RecommendedSummary => BuildSummary(_recommendedIssues);
         public string RequiredBeforePlaySummary => BuildSummary(GetMessages(PyralisSceneReadinessSeverity.RequiredBeforePlay));
         public string RecommendedBeforePlaySummary => BuildSummary(GetMessages(PyralisSceneReadinessSeverity.RecommendedBeforePlay));
-        public string ProofEnhancerSummary => BuildSummary(GetMessages(PyralisSceneReadinessSeverity.ProofEnhancer));
 
         public IReadOnlyList<PyralisSceneReadinessIssue> GetIssues(PyralisSceneReadinessSeverity severity)
         {
@@ -138,15 +133,6 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             AddIssue(issues, message, PyralisSceneReadinessSeverity.RecommendedBeforePlay, category, nativeAction);
         }
 
-        internal static void AddProofEnhancer(
-            List<PyralisSceneReadinessIssue> issues,
-            string message,
-            PyralisSceneReadinessCategory category,
-            string nativeAction = "")
-        {
-            AddIssue(issues, message, PyralisSceneReadinessSeverity.ProofEnhancer, category, nativeAction);
-        }
-
         private static void AddIssue(
             List<PyralisSceneReadinessIssue> issues,
             string message,
@@ -179,7 +165,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                     issues,
                     "Select a GameplaySessionBootstrap before checking scene and prefab readiness.",
                     PyralisSceneReadinessCategory.SceneRoot,
-                    "Select the Gameplay Root object with GameplaySessionBootstrap before checking route readiness.");
+                    "Select the Gameplay Root object with GameplaySessionBootstrap before checking local readiness.");
                 return new PyralisSceneReadinessReport(issues);
             }
 
@@ -211,15 +197,6 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             string nativeAction = "")
         {
             PyralisSceneReadinessReport.AddRecommended(issues, message, category, nativeAction);
-        }
-
-        private static void AddProofEnhancer(
-            List<PyralisSceneReadinessIssue> issues,
-            string message,
-            PyralisSceneReadinessCategory category,
-            string nativeAction = "")
-        {
-            PyralisSceneReadinessReport.AddProofEnhancer(issues, message, category, nativeAction);
         }
 
         private static void AppendSceneRootIssues(
@@ -427,12 +404,12 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             if (!hasSceneCamera)
                 AddRequired(
                     issues,
-                    "Scene needs at least one enabled Camera before Play Mode can show a visual proof.",
+                    "Scene needs at least one enabled Camera before Play Mode can show gameplay.",
                     PyralisSceneReadinessCategory.CameraAudio,
                     "Create or select the physical Main Camera or Camera Root, then inspect framing and target camera fields.");
 
             if (!hasSceneAudioListener)
-                AddProofEnhancer(
+                AddRecommended(
                     issues,
                     "Scene should have one enabled AudioListener, usually on Main Camera, before Play Mode to avoid Unity audio errors.",
                     PyralisSceneReadinessCategory.CameraAudio,
@@ -600,7 +577,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
 
                 AddRequired(
                     issues,
-                    $"Scene SpriteRenderer `{renderer.gameObject.name}` has no Sprite assigned. Assign a sprite before using Play Mode as a visual proof.",
+                    $"Scene SpriteRenderer `{renderer.gameObject.name}` has no Sprite assigned. Assign a sprite before using Play Mode to inspect scene visuals.",
                     PyralisSceneReadinessCategory.Presentation,
                     "Select the named scene object and assign a Sprite on its SpriteRenderer.");
             }

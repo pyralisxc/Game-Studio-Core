@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Features.Composition;
 using TMPro;
@@ -12,7 +12,8 @@ namespace NeonBlack.Gameplay.Features.Feedback.UI
         Axioms = AuthoringWorldAxiom.None,
         NativeSetup = new[] { "Attach to a UI panel inside a Canvas." },
         AssignmentFields = new[] { nameof(label) },
-        FirstProof = "Call ShowText() from a script and verify the label appears on screen."
+        FirstProof = "Call ShowText() from a script and verify the label appears on screen.",
+        CapabilityPath = "UI/HUD/Participant Timed Text Panel"
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Feedback/UI/Participant Timed Text Panel")]
     public class ParticipantTimedTextPanel : MonoBehaviour, IRuntimeValidationProvider

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Characters;
 using UnityEngine;
@@ -26,7 +26,8 @@ namespace NeonBlack.Gameplay.Features.Scoring
         FirstProof = "Trigger one score change and verify the service raises score events for a HUD or presenter.",
         FirstProofTargetId = "proof.ui-hud-menu",
         AssignmentFields = new[] { nameof(OnPointsChanged), nameof(OnHighScoreBeaten) },
-        ExpertAdvice = "The Scoring service stores high scores in PlayerPrefs. Use ISessionScoreService for cross-feature point collection and IParticipantRoster for multiplayer leaderboards."
+        ExpertAdvice = "The Scoring service stores high scores in PlayerPrefs. Use ISessionScoreService for cross-feature point collection and IParticipantRoster for multiplayer leaderboards.",
+        CapabilityPath = "Goals & Scoring/Rules/Participant Score Service"
     )]
     [DefaultExecutionOrder(-30)]
     public class ParticipantScoreService : MonoBehaviour, IGameService, ISessionScoreService, IRuntimeValidationProvider

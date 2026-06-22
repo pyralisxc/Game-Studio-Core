@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Enums;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
@@ -14,7 +14,9 @@ namespace NeonBlack.Gameplay.Data.Profiles
         AssignmentFields = new[] { nameof(movementMode), nameof(minBounds), nameof(maxBounds) },
         FirstProof = "Verify that actors are clamped to the defined bounds in-game.",
         ExpertAdvice = "The Playfield defines the physical boundaries of the simulation. Use 'Clamp To Bounds' for arena-style games to keep participants within the playable area.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/core"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/core",
+        CapabilityPath = "Movement/Profiles/Playfield Profile",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Playfield Profile", fileName = "PlayfieldProfile", order = -80)]
     public class PlayfieldProfile : ScriptableObject, IRuntimeValidationProvider, IPlayfieldBoundsProvider

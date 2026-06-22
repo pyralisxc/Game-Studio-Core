@@ -13,7 +13,8 @@ namespace NeonBlack.Gameplay.Core.Rules.Board
         Relevance = "Bridge between a board presenter and queued board actions (e.g. piece selection and movement).",
         NativeSetup = new[] { "Add to Tabletop board root", "Initialize with BoardRuntimeState and ActionQueue" },
         AssignmentFields = new[] { nameof(resolveQueuedMoveImmediately) },
-        FirstProof = "Selecting a piece and a destination enqueues and resolves a move action."
+        FirstProof = "Selecting a piece and a destination enqueues and resolves a move action.",
+        CapabilityPath = "Tabletop/Board/Tabletop Board Selection Bridge"
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Tabletop/Tabletop Board Selection Bridge")]
     public sealed class TabletopBoardSelectionBridge : MonoBehaviour

@@ -24,7 +24,8 @@ namespace NeonBlack.Gameplay.Features.Zones
     AssignmentFields = new[] { nameof(onEnterProfile), nameof(onExitProfile), nameof(transitionDuration), nameof(_playerTag) },
     FirstProof = "Enter the trigger volume with a Player-tagged object and verify the camera switches profiles.",
     ExpertAdvice = "Combat arena path: enter a tighter profile and exit back to the default profile. Cutscene path: enable One Shot and leave On Exit Profile empty. Exploration path: use wider profiles for overlooks or large platforming spaces.",
-    DocumentationURL = "https://docs.neonblack.com/pyralis/camera"
+    DocumentationURL = "https://docs.neonblack.com/pyralis/camera",
+    CapabilityPath = "World & Meta/Camera/Camera Zone"
 )]
 [AddComponentMenu("NeonBlack/Gameplay/Camera/Camera Zone 3D")]
 [RequireComponent(typeof(BoxCollider))]

@@ -21,7 +21,9 @@ namespace NeonBlack.Gameplay.Core.Rpg
             "assign catalog to InventoryService"
         },
         AssignmentFields = new[] { nameof(_catalog) },
-        FirstProof = "Items can be added to and removed from a participant's inventory."
+        FirstProof = "Items can be added to and removed from a participant's inventory.",
+        CapabilityPath = "RPG/Inventory/Inventory Service",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
     )]
     public sealed class InventoryService : IInventoryService
 {

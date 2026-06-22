@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
@@ -16,7 +16,9 @@ namespace NeonBlack.Gameplay.Core.Navigation
         FirstProof = "The Level Registry is correctly discovered by the Session and Menu services.",
         NativeSetup = new[] { "Populate the Levels array with LevelData assets." },
         ExpertAdvice = "The Registry is the source of truth for the level selector UI. Use it to centralize world definitions across the project.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/navigation"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/navigation",
+        CapabilityPath = "Core Setup/Navigation/Level Registry",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.PlatformCore }
     )]
 public class LevelRegistry : ScriptableObject, IRuntimeValidationProvider
     {

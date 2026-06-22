@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Features.Composition;
 using UnityEngine;
@@ -12,7 +12,8 @@ namespace NeonBlack.Gameplay.Features.Combat
         NativeSetup = new[] { "Add to a 3D scene.", "Configure Hit Mask for world geometry." },
         AssignmentFields = new[] { nameof(hitMask) },
         FirstProof = "Fire a hitscan attack and verify it registers on a 3D HealthComponent.",
-        ExpertAdvice = "Set Hit Mask to exclude the shooter's layer. Ensure projectile prefabs have a Rigidbody or IProjectileRuntimeBody for movement."
+        ExpertAdvice = "Set Hit Mask to exclude the shooter's layer. Ensure projectile prefabs have a Rigidbody or IProjectileRuntimeBody for movement.",
+        CapabilityPath = "Combat/Actions/Projectile Launcher3D"
     )]
     public sealed class ProjectileLauncher3D : ProjectileLauncherBase, IRuntimeValidationProvider
     {

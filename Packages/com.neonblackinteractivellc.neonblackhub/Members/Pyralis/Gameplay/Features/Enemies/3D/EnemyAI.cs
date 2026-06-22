@@ -22,7 +22,8 @@ namespace NeonBlack.Gameplay.Features.Enemies
         NativeSetup = new[] { "Add EnemyAI to 3D actor.", "Assign EnemyFeatureProfile.", "Configure Detection Module ranges." },
         ExpertAdvice = "EnemyAI separates 'Tactics' and 'Steering'. Use 'EnemyFeatureProfile' to define shared stats like Aggro Range and Attack Cooldowns.",
         Axioms = AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.Dimensions3D,
-        DocumentationURL = "https://docs.neonblack.com/pyralis/enemy-ai"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/enemy-ai",
+        CapabilityPath = "Movement/Traversal/Enemy AI"
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Enemies/Enemy AI")]
     [RequireComponent(typeof(CharacterController))]

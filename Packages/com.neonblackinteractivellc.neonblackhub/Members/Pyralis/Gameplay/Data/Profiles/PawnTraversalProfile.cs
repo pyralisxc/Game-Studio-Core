@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
@@ -14,7 +14,9 @@ namespace NeonBlack.Gameplay.Data.Profiles
         AssignmentFields = new[] { nameof(allowJump), nameof(jumpHeight), nameof(gravity), nameof(allowDodge), nameof(dodgeDistance) },
         FirstProof = "Verify the pawn can jump and crouch correctly in-game.",
         ExpertAdvice = "Use jumpHeight and gravity to tune the arc of the jump. If 'allowJump' is off, the actor will be grounded unless a separate 'Hop' feature is installed.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/traversal"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/traversal",
+        CapabilityPath = "Movement/Traversal/Pawn Traversal Profile",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
     )]
 [CreateAssetMenu(menuName = "NeonBlack/Profiles/Pawn Traversal Profile", fileName = "PawnTraversalProfile", order = -50)]
     public class PawnTraversalProfile : ScriptableObject, IRuntimeValidationProvider

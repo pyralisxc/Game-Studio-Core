@@ -30,7 +30,8 @@ namespace NeonBlack.Gameplay.Features.Enemies
             "EnemyReactionProfile.enableReactions",
             "EnemyReactionProfile.staggerDamageThreshold",
             "EnemyReactionProfile.hitPauseDuration"
-        }
+        },
+        CapabilityPath = "Combat/Actions/Enemy Reaction Feature Runtime"
     )]
     public partial class EnemyReactionFeatureRuntime : MonoBehaviour, IFeatureModuleRuntime, IEnemyReactionState
 {

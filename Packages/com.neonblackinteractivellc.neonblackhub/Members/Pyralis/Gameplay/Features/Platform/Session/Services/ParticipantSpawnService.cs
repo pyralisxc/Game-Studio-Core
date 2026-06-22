@@ -13,6 +13,7 @@ namespace NeonBlack.Gameplay.Characters
     [AuthoringContract(
         Capability = AuthoringCapability.Setup | AuthoringCapability.Session,
         RuntimeFamilies = new[] { RuntimeCapabilityFamily.PlatformCore, RuntimeCapabilityFamily.CharacterPawnGameplay },
+        CapabilityPath = "Core Setup/Participants/Participant Spawn Service",
         Relevance = "Single owner for participant pawn spawning. It resolves each ParticipantDefinition default pawn, places it at authored spawn points, and reports pawn assignment through the roster.",
         Axioms = AuthoringWorldAxiom.None,
         RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.ParticipantRouteSupport },

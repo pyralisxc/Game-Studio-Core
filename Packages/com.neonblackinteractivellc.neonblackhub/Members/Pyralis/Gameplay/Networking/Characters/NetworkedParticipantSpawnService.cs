@@ -12,6 +12,8 @@ namespace NeonBlack.Gameplay.Networking.Participants
     /// </summary>
     [AuthoringContract(
         Capability = AuthoringCapability.Networking,
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.Networking },
+        CapabilityPath = "Networking/Participants/Networked Participant Spawn Service",
         Relevance = "Drop-in replacement for ParticipantSpawnService in online sessions. Registers pawns with NGO.",
         RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.NetworkRouteSupport },
         FirstProof = "Spawned pawns have a valid NetworkObject and are correctly replicated to clients."

@@ -12,7 +12,8 @@ namespace NeonBlack.Gameplay.Features.Tabletop
         Relevance = "LIGHTWEIGHT UI binding that shows which tabletop seat acts next.",
         NativeSetup = new[] { "Add to Tabletop HUD", "Assign BoardPresenter and TMP Label" },
         AssignmentFields = new[] { nameof(boardPresenter), nameof(label), nameof(seatZeroName), nameof(seatOneName) },
-        FirstProof = "The HUD label correctly displays the name of the active participant's seat."
+        FirstProof = "The HUD label correctly displays the name of the active participant's seat.",
+        CapabilityPath = "Tabletop/Board/Tabletop Turn Status Presenter"
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Tabletop/Tabletop Turn Status Presenter")]
     public sealed class TabletopTurnStatusPresenter : MonoBehaviour

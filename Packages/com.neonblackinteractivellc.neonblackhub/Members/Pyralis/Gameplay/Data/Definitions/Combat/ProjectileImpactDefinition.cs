@@ -6,6 +6,8 @@ namespace NeonBlack.Gameplay.Features.Combat
 {
     [AuthoringContract(
         Capability = AuthoringCapability.Combat | AuthoringCapability.VFX,
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.GunsProjectiles, RuntimeCapabilityFamily.Combat },
+        CapabilityPath = "Combat/Projectiles/Projectile Impact Definition",
         Relevance = "Controls hit/miss VFX, audio, and impact feel for projectiles.",
         RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.CombatDefinitionRouteSupport },
         NativeSetup = new[] { "Assign Hit/Miss effects.", "Set impact intensity." },

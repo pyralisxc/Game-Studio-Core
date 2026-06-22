@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Features.Composition;
 using UnityEngine;
@@ -12,7 +12,8 @@ namespace NeonBlack.Gameplay.Features.Combat
         NativeSetup = new[] { "Add to a 2D scene.", "Configure Hit Mask for 2D colliders." },
         AssignmentFields = new[] { nameof(hitMask) },
         FirstProof = "Fire a 2D projectile and verify it impacts a 2D HealthComponent.",
-        ExpertAdvice = "Set Hit Mask to exclude the shooter's layer. Use Hitscan for instant weapons (bullets) and Prefab for traveling projectiles (missiles, fireballs)."
+        ExpertAdvice = "Set Hit Mask to exclude the shooter's layer. Use Hitscan for instant weapons (bullets) and Prefab for traveling projectiles (missiles, fireballs).",
+        CapabilityPath = "Combat/Actions/Projectile Launcher2D"
     )]
     public sealed class ProjectileLauncher2D : ProjectileLauncherBase, IRuntimeValidationProvider
     {

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Features.Combat;
 using NeonBlack.Gameplay.Features.Hazards;
@@ -12,7 +12,9 @@ namespace NeonBlack.Gameplay.Data.Profiles
         NativeSetup = new[] { "Set Damage and Tick Interval.", "Configure Targeting." },
         AssignmentFields = new[] { nameof(effectId), nameof(damagePerTick) },
         FirstProof = "Verify the hazard applies the correct damage and status effects to targets.",
-        ExpertAdvice = "Use destroyCollectiblesOnContact for obstacle hazards that should 'eat' powerups."
+        ExpertAdvice = "Use destroyCollectiblesOnContact for obstacle hazards that should 'eat' powerups.",
+        CapabilityPath = "Combat/Actions/Hazard Impact Profile",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.Combat }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Hazard Impact Profile", fileName = "HazardImpactProfile")]
     public class HazardImpactProfile : ScriptableObject, IRuntimeValidationProvider

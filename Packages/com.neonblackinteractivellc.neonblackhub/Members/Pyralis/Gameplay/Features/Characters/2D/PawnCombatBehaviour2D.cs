@@ -20,7 +20,8 @@ namespace NeonBlack.Gameplay.Features.Characters
         },
         AssignmentFields = new[] { nameof(hitBoxZones), nameof(equippedWeapons), nameof(startingWeaponIndex), nameof(attackCooldown), nameof(kickCooldown), nameof(projectileLauncher) },
         FirstProof = "Verify attacks trigger animations and hitboxes detect targets.",
-        ExpertAdvice = "For 2D-only combat, prefer PawnCombatBehaviour2D. Do not leave hitbox zone names mismatched with WeaponData fallback zones."
+        ExpertAdvice = "For 2D-only combat, prefer PawnCombatBehaviour2D. Do not leave hitbox zone names mismatched with WeaponData fallback zones.",
+        CapabilityPath = "Combat/Actions/Pawn Combat Behaviour2D"
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Characters/2D/Pawn Combat Behaviour 2D")]
     [RequireComponent(typeof(Motor2D))]

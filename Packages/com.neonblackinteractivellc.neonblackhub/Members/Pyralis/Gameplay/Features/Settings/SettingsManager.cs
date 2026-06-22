@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Runtime;
@@ -30,7 +30,8 @@ namespace NeonBlack.Gameplay.Features.Settings
     AssignmentFields = new[] { nameof(settingsProfile), nameof(_mixerOverride) },
     FirstProof = "Verify AudioMixer parameters 'MusicVolume' and 'SFXVolume' change when sliders are moved in the Settings UI.",
     ExpertAdvice = "Ensure your AudioMixer has exposed parameters named 'MusicVolume' and 'SFXVolume' (case sensitive) for the manager to drive. This component persists across scenes if placed on a DontDestroyOnLoad root.",
-    DocumentationURL = "https://docs.neonblack.com/pyralis/settings"
+    DocumentationURL = "https://docs.neonblack.com/pyralis/settings",
+    CapabilityPath = "Settings/Runtime/Settings Manager"
 )]
 [DefaultExecutionOrder(-40)]
 public class SettingsManager : MonoBehaviour, IGameplaySettingsApplier, IInputSettingsRegistrar, IRuntimeValidationProvider

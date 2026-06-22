@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
+using UnityEngine;
 
 namespace NeonBlack.Gameplay.Editor
 {
@@ -332,6 +333,21 @@ namespace NeonBlack.Gameplay.Editor
                 .ToArray();
         }
 
+        public static IReadOnlyList<PyralisAuthoringCapabilityDescriptor> BuildIntentProjectionDescriptors(
+            RuntimeCapabilityLaneTag lane,
+            AuthoringWorldAxiom axioms)
+        {
+            return All
+                .Where(descriptor => descriptor != null
+                    && descriptor.Capability != AuthoringCapability.None
+                    && (IsIntentSurfaceDescriptor(descriptor) || IsIntentMetadataBacklogDescriptor(descriptor))
+                    && descriptor.Matches(descriptor.Capability, lane, axioms))
+                .OrderBy(descriptor => descriptor.Group, StringComparer.Ordinal)
+                .ThenBy(descriptor => descriptor.SortOrder)
+                .ThenBy(descriptor => descriptor.DisplayName, StringComparer.Ordinal)
+                .ToArray();
+        }
+
         public static bool IsIntentSurfaceDescriptor(PyralisAuthoringCapabilityDescriptor descriptor)
         {
             if (descriptor == null)
@@ -350,6 +366,18 @@ namespace NeonBlack.Gameplay.Editor
                 && descriptor.SelectableIntent
                 && descriptor.HasSemanticCapabilityPath
                 && !IsIntentRouteEssential(descriptor);
+        }
+
+        public static bool IsIntentMetadataBacklogDescriptor(PyralisAuthoringCapabilityDescriptor descriptor)
+        {
+            if (descriptor == null)
+                return false;
+
+            return descriptor.IsContractSemanticSource
+                && descriptor.SelectableIntent
+                && !IsIntentRouteEssential(descriptor)
+                && (!descriptor.HasSemanticCapabilityPath
+                    || descriptor.Family == RuntimeCapabilityFamily.Custom);
         }
 
         public static bool RequiresGameplayIngredientCapabilityPath(ResolvedAuthoringContract contract)
@@ -637,16 +665,15 @@ namespace NeonBlack.Gameplay.Editor
 
         private static void AddContractDescriptors(List<PyralisAuthoringCapabilityDescriptor> descriptors)
         {
-            IReadOnlyList<ResolvedAuthoringContract> contracts = ResolvedAuthoringContractRegistry.All;
+            IReadOnlyList<ResolvedAuthoringContract> contracts = ResolvedAuthoringContractRegistry.ProductContracts;
             for (int i = 0; i < contracts.Count; i++)
             {
                 ResolvedAuthoringContract contract = contracts[i];
                 if (contract == null || contract.Capability == AuthoringCapability.None)
                     continue;
 
-                RuntimeCapabilityFamily[] families = contract.RuntimeFamilies.Length > 0
-                    ? contract.RuntimeFamilies
-                    : new[] { RuntimeCapabilityFamily.Custom };
+                RuntimeCapabilityFamily[] families =
+                    PyralisAuthoringContractMetadataPolicy.BuildDescriptorRuntimeFamilies(contract);
                 for (int familyIndex = 0; familyIndex < families.Length; familyIndex++)
                 {
                     RuntimeCapabilityFamily family = families[familyIndex];
@@ -898,7 +925,7 @@ namespace NeonBlack.Gameplay.Editor
                 actions.Add(PyralisAuthoringNativeActionFactory.ConfigureInspectorAction(
                     contract.DisplayName,
                     contract.NativeSetup[i],
-                    "contract NativeSetup fallback",
+                    "contract NativeSetup",
                     "the contract setup is visible in graph evidence"));
             }
 
@@ -1108,13 +1135,17 @@ namespace NeonBlack.Gameplay.Editor
                 .ToArray();
             InferredRouteEssentialIdSet = new HashSet<string>(InferredRouteEssentialIds, StringComparer.Ordinal);
             GameplayIngredientDescriptors = Descriptors
-                .Where(descriptor => descriptor != null && !PyralisAuthoringCapabilityDescriptorRegistry.IsIntentRouteEssential(descriptor))
+                .Where(PyralisAuthoringCapabilityDescriptorRegistry.IsGameplayIngredientDescriptor)
+                .ToArray();
+            MetadataBacklogDescriptors = Descriptors
+                .Where(PyralisAuthoringCapabilityDescriptorRegistry.IsIntentMetadataBacklogDescriptor)
                 .ToArray();
             RouteEssentialDescriptors = Descriptors
                 .Where(descriptor => descriptor != null && InferredRouteEssentialIdSet.Contains(descriptor.StableId))
                 .ToArray();
             AllGroups = BuildGroups(Descriptors, "Available");
             GameplayIngredientGroups = BuildGroups(GameplayIngredientDescriptors, "GameplayIngredient");
+            MetadataBacklogGroups = BuildGroups(MetadataBacklogDescriptors, "MetadataBacklog");
             RouteEssentialGroups = BuildGroups(RouteEssentialDescriptors, "RouteEssential");
             SelectedDescriptors = GameplayIngredientDescriptors
                 .Where(descriptor => SelectedDescriptorIdSet.Contains(descriptor.StableId))
@@ -1127,9 +1158,11 @@ namespace NeonBlack.Gameplay.Editor
         public string[] SelectedDescriptorIds { get; }
         public string[] InferredRouteEssentialIds { get; }
         public IReadOnlyList<PyralisAuthoringCapabilityDescriptor> GameplayIngredientDescriptors { get; }
+        public IReadOnlyList<PyralisAuthoringCapabilityDescriptor> MetadataBacklogDescriptors { get; }
         public IReadOnlyList<PyralisAuthoringCapabilityDescriptor> RouteEssentialDescriptors { get; }
         public IReadOnlyList<PyralisAuthoringIntentDescriptorGroupProjection> AllGroups { get; }
         public IReadOnlyList<PyralisAuthoringIntentDescriptorGroupProjection> GameplayIngredientGroups { get; }
+        public IReadOnlyList<PyralisAuthoringIntentDescriptorGroupProjection> MetadataBacklogGroups { get; }
         public IReadOnlyList<PyralisAuthoringIntentDescriptorGroupProjection> RouteEssentialGroups { get; }
         public IReadOnlyList<PyralisAuthoringIntentDescriptorProjection> SelectedDescriptors { get; }
         private HashSet<string> SelectedDescriptorIdSet { get; }
@@ -1232,6 +1265,310 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             return labels.ToArray();
+        }
+    }
+
+    public sealed class PyralisAuthoringContractMetadataClassification
+    {
+        public PyralisAuthoringContractMetadataClassification(
+            string ownershipBucket,
+            string repairOwner,
+            string ownershipAdvice)
+        {
+            OwnershipBucket = ownershipBucket ?? string.Empty;
+            RepairOwner = repairOwner ?? string.Empty;
+            OwnershipAdvice = ownershipAdvice ?? string.Empty;
+        }
+
+        public string OwnershipBucket { get; }
+        public string RepairOwner { get; }
+        public string OwnershipAdvice { get; }
+    }
+
+    public static class PyralisAuthoringContractMetadataPolicy
+    {
+        public const string ContractOwnedSemanticMetadata = "ContractOwnedSemanticMetadata";
+        public const string ReflectionInferredRuntimeFamily = "ReflectionInferredRuntimeFamily";
+        public const string SupportOnlyContract = "SupportOnlyContract";
+        public const string DuplicateOwnershipClaim = "DuplicateOwnershipClaim";
+        public const string NeedsFeatureProofTarget = "NeedsFeatureProofTarget";
+        public const string ValidationMetadata = "ValidationMetadata";
+
+        public static bool ShouldEmitRuntimeFamiliesMissing(ResolvedAuthoringContract contract)
+        {
+            if (contract == null || contract.Capability == AuthoringCapability.None)
+                return false;
+            if (contract.RuntimeFamilies != null && contract.RuntimeFamilies.Length > 0)
+                return false;
+            if (IsSupportOnlyContract(contract))
+                return false;
+
+            return InferRuntimeFamilies(contract).Length == 0;
+        }
+
+        public static RuntimeCapabilityFamily[] BuildDescriptorRuntimeFamilies(ResolvedAuthoringContract contract)
+        {
+            if (contract == null)
+                return Array.Empty<RuntimeCapabilityFamily>();
+            if (contract.RuntimeFamilies != null && contract.RuntimeFamilies.Length > 0)
+                return contract.RuntimeFamilies;
+
+            RuntimeCapabilityFamily[] inferred = InferRuntimeFamilies(contract);
+            return inferred.Length > 0 ? inferred : new[] { RuntimeCapabilityFamily.Custom };
+        }
+
+        public static PyralisAuthoringContractMetadataClassification Classify(
+            ResolvedAuthoringContract contract,
+            string issueCode)
+        {
+            if (string.IsNullOrWhiteSpace(issueCode))
+                return EmptyClassification();
+
+            switch (issueCode)
+            {
+                case "ContractMetadata.CapabilityPathMissing":
+                case "ContractMetadata.RouteEssentialCapabilityPathMissing":
+                    return new PyralisAuthoringContractMetadataClassification(
+                        ContractOwnedSemanticMetadata,
+                        "Contract",
+                        "This is semantic Intent or route grouping metadata. Add it to the feature-owned contract only when the contract is meant to steer authoring.");
+                case "ContractMetadata.RuntimeFamiliesMissing":
+                    if (IsSupportOnlyContract(contract))
+                    {
+                        return new PyralisAuthoringContractMetadataClassification(
+                            SupportOnlyContract,
+                            "Projection",
+                            "This contract is support-only evidence. It should not ask humans for route metadata; keep it out of selectable Intent or leave it as graph support.");
+                    }
+
+                    if (InferRuntimeFamilies(contract).Length > 0)
+                    {
+                        return new PyralisAuthoringContractMetadataClassification(
+                            ReflectionInferredRuntimeFamily,
+                            "Reflection",
+                            "The runtime family can be inferred from reflected type, interface, required-component, or concrete runtime-surface evidence. Do not duplicate it in the contract.");
+                    }
+
+                    return new PyralisAuthoringContractMetadataClassification(
+                        ContractOwnedSemanticMetadata,
+                        "Contract",
+                        "This contract carries semantic runtime family meaning that reflection cannot prove. Add the semantic runtime family to the feature-owned contract.");
+                case "ContractMetadata.DuplicateOwnershipClaim":
+                    return new PyralisAuthoringContractMetadataClassification(
+                        DuplicateOwnershipClaim,
+                        "Contract",
+                        "Ownership claims are semantic responsibility keys. Narrow or remove the duplicate claim in the competing contracts.");
+                case "ContractMetadata.ProofTargetGenericTemplate":
+                    return new PyralisAuthoringContractMetadataClassification(
+                        NeedsFeatureProofTarget,
+                        "Contract",
+                        "Proof ownership is semantic. Replace generic proof fallback metadata with a feature-owned proof target only where the feature owns that proof.");
+                case "ValidationEvidence.MetadataMissing":
+                    return new PyralisAuthoringContractMetadataClassification(
+                        ValidationMetadata,
+                        "Validator",
+                        "Validation must emit stable issue metadata so the graph can route the finding without reading prose.");
+                default:
+                    return EmptyClassification();
+            }
+        }
+
+        public static RuntimeCapabilityFamily[] InferRuntimeFamilies(ResolvedAuthoringContract contract)
+        {
+            if (contract == null || contract.Capability == AuthoringCapability.None)
+                return Array.Empty<RuntimeCapabilityFamily>();
+
+            Type sourceType = contract.SourceType;
+            if (sourceType != null && typeof(ScriptableObject).IsAssignableFrom(sourceType))
+                return Array.Empty<RuntimeCapabilityFamily>();
+
+            bool concreteUnitySurface = sourceType != null && typeof(MonoBehaviour).IsAssignableFrom(sourceType);
+            List<RuntimeCapabilityFamily> families = new List<RuntimeCapabilityFamily>();
+            string evidence = BuildEvidenceText(contract, concreteUnitySurface);
+
+            AddFromEvidence(families, evidence);
+
+            if (concreteUnitySurface)
+                AddFromCapability(families, contract.Capability);
+
+            return families.ToArray();
+        }
+
+        public static bool IsSupportOnlyContract(ResolvedAuthoringContract contract)
+        {
+            if (contract == null)
+                return true;
+
+            if (HasRouteRoleTag(contract))
+                return false;
+
+            Type type = contract.SourceType;
+            if (type != null && (type.IsInterface || type.IsAbstract))
+                return true;
+
+            string sourceName = type?.FullName ?? string.Empty;
+            return Contains(sourceName, ".Core.Contracts.")
+                || Contains(sourceName, ".Runtime.Shared.Contracts.")
+                || !contract.SelectableIntent;
+        }
+
+        private static PyralisAuthoringContractMetadataClassification EmptyClassification()
+        {
+            return new PyralisAuthoringContractMetadataClassification(string.Empty, string.Empty, string.Empty);
+        }
+
+        private static string BuildEvidenceText(ResolvedAuthoringContract contract, bool includeSemanticLabels)
+        {
+            List<string> values = new List<string>();
+            if (includeSemanticLabels)
+            {
+                Add(values, contract.DisplayName);
+                Add(values, contract.ModuleId);
+                Add(values, contract.AuthoringCategory);
+                Add(values, contract.AuthoringLane);
+                Add(values, contract.SetupNodeId);
+                Add(values, contract.SourceType?.FullName);
+                Add(values, contract.RequiredProfileType?.FullName);
+            }
+
+            AddRange(values, contract.RequiredRuntimeInterfaceNames);
+            AddRange(values, contract.RequiredComponentNames);
+            if (includeSemanticLabels)
+            {
+                AddRange(values, contract.AssignmentFields);
+                AddRange(values, contract.NativeSetup);
+            }
+
+            Type sourceType = contract.SourceType;
+            if (sourceType != null)
+            {
+                Type[] interfaces = sourceType.GetInterfaces();
+                for (int i = 0; i < interfaces.Length; i++)
+                    Add(values, interfaces[i].FullName);
+            }
+
+            return string.Join(" ", values);
+        }
+
+        private static void AddFromEvidence(List<RuntimeCapabilityFamily> families, string evidence)
+        {
+            if (string.IsNullOrWhiteSpace(evidence))
+                return;
+
+            if (ContainsAny(evidence, "network", "authority", "clientid", "transport"))
+                AddDistinct(families, RuntimeCapabilityFamily.Networking);
+            if (ContainsAny(evidence, "camera", "cinemachine", "occlusion", "fader"))
+                AddDistinct(families, RuntimeCapabilityFamily.CameraInput);
+            if (ContainsAny(evidence, "score", "objective", "leaderboard"))
+                AddDistinct(families, RuntimeCapabilityFamily.ScoringObjectives);
+            if (ContainsAny(evidence, "tabletop", "board", "grid", "card", "turnorder", "turnruntime", "phase"))
+                AddDistinct(families, RuntimeCapabilityFamily.BoardCardTabletop);
+            if (ContainsAny(evidence, "projectile", "launcher", "ranged", "firemode", "weapon"))
+                AddDistinct(families, RuntimeCapabilityFamily.GunsProjectiles);
+            if (ContainsAny(evidence, "combat", "damage", "health", "hitbox", "status", "guard", "melee", "attack"))
+                AddDistinct(families, RuntimeCapabilityFamily.Combat);
+            if (ContainsAny(evidence, "input", "action", "target", "interaction"))
+                AddDistinct(families, RuntimeCapabilityFamily.ActionTargeting);
+            if (ContainsAny(evidence, "pawn", "motor", "movement", "traversal", "steering", "charactercontroller"))
+                AddDistinct(families, RuntimeCapabilityFamily.CharacterPawnGameplay);
+            if (ContainsAny(evidence, "animation", "animator", "presentation", "sprite", "billboard", "vfx", "feedback", "shake", "shadow", "audio"))
+                AddDistinct(families, RuntimeCapabilityFamily.AnimationPresentation);
+            if (ContainsAny(evidence, "session", "bootstrap", "participant", "roster", "spawn", "lifetime", "setup", "settings", "gameconfig"))
+                AddDistinct(families, RuntimeCapabilityFamily.PlatformCore);
+        }
+
+        private static void AddFromCapability(List<RuntimeCapabilityFamily> families, AuthoringCapability capability)
+        {
+            if (HasAnyCapability(capability, AuthoringCapability.Networking))
+                AddDistinct(families, RuntimeCapabilityFamily.Networking);
+            if (HasAnyCapability(capability, AuthoringCapability.Camera))
+                AddDistinct(families, RuntimeCapabilityFamily.CameraInput);
+            if (HasAnyCapability(capability, AuthoringCapability.Scoring))
+                AddDistinct(families, RuntimeCapabilityFamily.ScoringObjectives);
+            if (HasAnyCapability(capability, AuthoringCapability.Tabletop | AuthoringCapability.Grid | AuthoringCapability.TurnBased))
+                AddDistinct(families, RuntimeCapabilityFamily.BoardCardTabletop);
+            if (HasAnyCapability(capability, AuthoringCapability.RangedFlow))
+                AddDistinct(families, RuntimeCapabilityFamily.GunsProjectiles);
+            if (HasAnyCapability(capability, AuthoringCapability.Combat | AuthoringCapability.CombatState | AuthoringCapability.CombatSensors | AuthoringCapability.MeleeFlow | AuthoringCapability.TacticsAggressive | AuthoringCapability.TacticsDefensive))
+                AddDistinct(families, RuntimeCapabilityFamily.Combat);
+            if (HasAnyCapability(capability, AuthoringCapability.Input))
+                AddDistinct(families, RuntimeCapabilityFamily.ActionTargeting);
+            if (HasAnyCapability(capability, AuthoringCapability.Movement | AuthoringCapability.Traversal | AuthoringCapability.KineticMotor2D | AuthoringCapability.KineticMotor3D | AuthoringCapability.Steering2D | AuthoringCapability.Steering3D))
+                AddDistinct(families, RuntimeCapabilityFamily.CharacterPawnGameplay);
+            if (HasAnyCapability(capability, AuthoringCapability.Animation | AuthoringCapability.VFX | AuthoringCapability.Audio))
+                AddDistinct(families, RuntimeCapabilityFamily.AnimationPresentation);
+            if (HasAnyCapability(capability, AuthoringCapability.Setup | AuthoringCapability.Session | AuthoringCapability.Participants | AuthoringCapability.Rules))
+                AddDistinct(families, RuntimeCapabilityFamily.PlatformCore);
+        }
+
+        private static bool HasRouteRoleTag(ResolvedAuthoringContract contract)
+        {
+            return HasRoleTag(contract, AuthoringContractRoleTags.IntentRouteEssential)
+                || HasRoleTag(contract, AuthoringContractRoleTags.CoreRouteAnchor)
+                || HasRoleTag(contract, AuthoringContractRoleTags.ParticipantRouteSupport)
+                || HasRoleTag(contract, AuthoringContractRoleTags.InputRouteSupport)
+                || HasRoleTag(contract, AuthoringContractRoleTags.NetworkRouteSupport)
+                || HasRoleTag(contract, AuthoringContractRoleTags.CombatDefinitionRouteSupport)
+                || HasRoleTag(contract, AuthoringContractRoleTags.FeatureModuleRouteSupport)
+                || HasRoleTag(contract, AuthoringContractRoleTags.AnimationDefinitionRouteSupport);
+        }
+
+        private static bool HasRoleTag(ResolvedAuthoringContract contract, string expected)
+        {
+            if (contract?.RoleTags == null || string.IsNullOrWhiteSpace(expected))
+                return false;
+
+            for (int i = 0; i < contract.RoleTags.Length; i++)
+            {
+                if (string.Equals(contract.RoleTags[i], expected, StringComparison.Ordinal))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static bool HasAnyCapability(AuthoringCapability capability, AuthoringCapability expected)
+        {
+            return (capability & expected) != 0;
+        }
+
+        private static bool ContainsAny(string value, params string[] needles)
+        {
+            for (int i = 0; i < needles.Length; i++)
+            {
+                if (Contains(value, needles[i]))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static bool Contains(string value, string expected)
+        {
+            return !string.IsNullOrWhiteSpace(value)
+                && !string.IsNullOrWhiteSpace(expected)
+                && value.IndexOf(expected, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private static void Add(List<string> values, string value)
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+                values.Add(value);
+        }
+
+        private static void AddRange(List<string> values, string[] source)
+        {
+            if (source == null)
+                return;
+
+            for (int i = 0; i < source.Length; i++)
+                Add(values, source[i]);
+        }
+
+        private static void AddDistinct(List<RuntimeCapabilityFamily> families, RuntimeCapabilityFamily family)
+        {
+            if (!families.Contains(family))
+                families.Add(family);
         }
     }
 }

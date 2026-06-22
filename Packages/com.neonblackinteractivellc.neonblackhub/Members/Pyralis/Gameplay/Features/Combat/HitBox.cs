@@ -22,7 +22,8 @@ namespace NeonBlack.Gameplay.Features.Combat
         FirstProof = "The hitbox damages a valid target and plays impact feedback.",
         FirstProofTargetId = "proof.npc-enemy-behavior",
         ExpertAdvice = "HitBoxes are disabled colliders used only for overlap queries. Ensure the owner is set for correct knockback calculation. Use hitPauseSink for juicy combat feel.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/hitbox"
+        DocumentationURL = "https://docs.neonblack.com/pyralis/hitbox",
+        CapabilityPath = "Combat/Sensors/Hit Box"
     )]
     [RequireComponent(typeof(Collider))]
     public class HitBox : MonoBehaviour

@@ -20,7 +20,8 @@ namespace NeonBlack.Gameplay.Features.Settings
     },
     AssignmentFields = new[] { nameof(_mainMenuPage), nameof(_settingsPage), nameof(_settingsSource), nameof(_backButton) },
     FirstProof = "Open settings from the menu and verify it pauses gameplay and populates sliders correctly.",
-    ExpertAdvice = "Do not assign child controls as page roots; page swapping should hide whole panels. Sliders will not save unless Settings Source is assigned."
+    ExpertAdvice = "Do not assign child controls as page roots; page swapping should hide whole panels. Sliders will not save unless Settings Source is assigned.",
+    CapabilityPath = "Settings/UI/Settings Screen"
 )]
 public class SettingsScreen : MonoBehaviour
 {

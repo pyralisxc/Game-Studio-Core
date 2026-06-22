@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Enums;
 using UnityEngine;
@@ -23,7 +23,9 @@ namespace NeonBlack.Gameplay.Data.Profiles
         FirstProof = "Move the pawn in play mode and verify speed feel.",
         ExpertAdvice = "The movement profile is your 'steering wheel'. It defines the responsiveness and agility of your actor. For 2D games, set 'Use 2D Physics' to enable Rigidbody2D interaction.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/movement",
-        NativeSetup = new[] { "Assign to a PawnDefinition." }
+        NativeSetup = new[] { "Assign to a PawnDefinition." },
+        CapabilityPath = "Movement/Traversal/Pawn Movement Profile",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
     )]
 [CreateAssetMenu(menuName = "NeonBlack/Profiles/Pawn Movement Profile", fileName = "PawnMovementProfile", order = -60)]
     public class PawnMovementProfile : ScriptableObject, IRuntimeValidationProvider

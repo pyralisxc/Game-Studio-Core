@@ -13,35 +13,10 @@ namespace NeonBlack.Gameplay.Features.Traversal.Editor
         {
             serializedObject.Update();
 
-            PyralisInspectorGuide.DrawFieldGuide(
-                "Guided Authoring: Top Down Hop Profile",
-                defaultOpen: false,
-                new PyralisGuideSection(
-                    "What This Is",
-                    "TopDownHopProfile tunes a top-down or isometric hop. The pawn remains on the map plane while a visual child lifts on an arc.",
-                    manualPath: PyralisInspectorGuide.AuthoringDocPath("AUTHORING_MODEL.md")),
-                new PyralisGuideSection(
-                    "Use This For",
-                    null,
-                    new[]
-                    {
-                        "Zelda-like, isometric, tactics, or arcade top-down hop actions.",
-                        "Animation-only or presentation-first jump actions where map X/Y movement should stay free.",
-                        "Jump input that should not switch the pawn into side-view Rigidbody2D gravity."
-                    }),
-                new PyralisGuideSection(
-                    "Customize Here",
-                    null,
-                    new[]
-                    {
-                        "Action Role chooses which InputProfile row triggers the hop. Jump is the usual beginner route.",
-                        "Duration and Height tune the visible arc.",
-                        "Cooldown prevents accidental repeated hops.",
-                        "Trigger Jump Animation fires ActorAnimationSignal.Jump when the actor has an ActorAnimationDriver."
-                    }));
+            PyralisInspectorHandoff.DrawAuthoringButton("Top Down Hop Profile", null);
 
             DrawDefaultInspector();
-            PyralisInspectorGuide.DrawValidationIssues(GetIssues((TopDownHopProfile)target), "Top-down hop profile is ready for a FeatureModuleDefinition.");
+            PyralisInspectorValidation.DrawValidationIssues(GetIssues((TopDownHopProfile)target), "Top-down hop profile is ready for a FeatureModuleDefinition.");
             serializedObject.ApplyModifiedProperties();
         }
 
@@ -67,49 +42,24 @@ namespace NeonBlack.Gameplay.Features.Traversal.Editor
         {
             serializedObject.Update();
 
-            PyralisInspectorGuide.DrawFieldGuide(
-                "Inspector Field Guide: Top Down Hop Feature Runtime",
-                defaultOpen: false,
-                new PyralisGuideSection(
-                    "What This Is",
-                    "TopDownHopFeatureRuntime handles an authored gameplay action such as Jump by lifting the actor visual while the map-plane body stays in place.",
-                    manualPath: PyralisInspectorGuide.AuthoringDocPath("AUTHORING_MODEL.md")),
-                new PyralisGuideSection(
-                    "Required Route",
-                    null,
-                    new[]
-                    {
-                        ResolvedAuthoringContractGuideText.FeatureModuleSetup((TopDownHopFeatureRuntime)target),
-                        "Assign a TopDownHopProfile to FeatureModuleDefinition > Profile Asset.",
-                        "Add that FeatureModuleDefinition to PawnDefinition > Feature Modules.",
-                        "Keep PawnMovementProfile in top-down/free 2D when Move should still drive X/Y."
-                    }),
-                new PyralisGuideSection(
-                    "Customize Here",
-                    null,
-                    new[]
-                    {
-                        "Visual Transform can stay empty when the runtime should lift the first child SpriteRenderer or Animator.",
-                        "Assign Visual Transform explicitly when the sprite art lives under a specific child.",
-                        "Do not use this for side-view/platformer physics jump; use PawnMovementProfile > Allow 2D Jump for that route."
-                    }));
+            PyralisInspectorHandoff.DrawAuthoringButton("Top Down Hop Feature Runtime", null);
 
             DrawDefaultInspector();
-            PyralisInspectorGuide.DrawValidationMessages(GetMessages(serializedObject), "Top-down hop runtime is ready for feature-module installation.");
+            PyralisInspectorValidation.DrawValidationMessages(GetMessages(serializedObject), "Top-down hop runtime is ready for feature-module installation.");
             serializedObject.ApplyModifiedProperties();
         }
 
-        private static List<PyralisGuideIssue> GetMessages(SerializedObject serializedObject)
+        private static List<PyralisInspectorValidationIssue> GetMessages(SerializedObject serializedObject)
         {
-            List<PyralisGuideIssue> messages = new List<PyralisGuideIssue>();
+            List<PyralisInspectorValidationIssue> messages = new List<PyralisInspectorValidationIssue>();
             SerializedProperty profile = serializedObject.FindProperty("hopProfile");
             SerializedProperty visual = serializedObject.FindProperty("visualTransform");
 
             if (profile != null && profile.objectReferenceValue == null)
-                messages.Add(PyralisGuideIssue.Optional("Hop Profile is empty. This is expected when FeatureModuleDefinition provides a TopDownHopProfile at runtime."));
+                messages.Add(PyralisInspectorValidationIssue.Optional("Hop Profile is empty. This is expected when FeatureModuleDefinition provides a TopDownHopProfile at runtime."));
 
             if (visual != null && visual.objectReferenceValue == null)
-                messages.Add(PyralisGuideIssue.Optional("Visual Transform is empty. Runtime will lift a child SpriteRenderer or Animator when possible. Assign this field when the pawn art lives under a specific child."));
+                messages.Add(PyralisInspectorValidationIssue.Optional("Visual Transform is empty. Runtime will lift a child SpriteRenderer or Animator when possible. Assign this field when the pawn art lives under a specific child."));
 
             return messages;
         }

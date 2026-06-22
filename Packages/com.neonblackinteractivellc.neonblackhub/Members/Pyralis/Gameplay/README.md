@@ -16,6 +16,16 @@ The current source of truth is a shared gameplay stack built around:
 - `ActorFeatureHost` for optional/swappable gameplay capabilities
 - contracts, reflection, dependency-tree discovery, validators, and the resolved authoring graph
 
+Core motto:
+
+- Unity owns engine behavior.
+- Pyralis owns gameplay meaning.
+- Reflection discovers structure.
+- Dependency analysis discovers setup relationships.
+- Validators witness local semantic readiness.
+- The graph compiles understanding.
+- Authoring renders guidance.
+
 ## Supported pawn presentation targets
 
 NeonBlack Gameplay supports three official presentation modes:
@@ -71,7 +81,7 @@ For participant-spawned pawns, profile fields belong on `PawnDefinition`; prefab
 
 ## Recommended reading
 
-- `Docs/CURRENT_STATE_AUDIT.md` for current health, risks, and cleanup focus.
+- `Docs/CURRENT_STATE_AUDIT.md` for current health, risks, Hygiene baseline, and verification posture.
 - `Docs/ARCHITECTURE_BLUEPRINT.md` for runtime ownership, folderbase, and system boundaries.
 - `Docs/Authoring/START_HERE.md` for the first human setup path.
 - `Docs/Authoring/AUTHORING_BLUEPRINT.md` for Authoring Window behavior.

@@ -16,7 +16,7 @@ namespace NeonBlack.Gameplay.Editor
             List<PyralisAuthoringFact> facts = new List<PyralisAuthoringFact>();
             HashSet<string> seenStableIds = new HashSet<string>(StringComparer.Ordinal);
 
-            foreach (var contract in ResolvedAuthoringContractRegistry.All)
+            foreach (var contract in ResolvedAuthoringContractRegistry.ProductContracts)
             {
                 var fact = CreateFactFromContract(contract);
                 if (fact != null && seenStableIds.Add(fact.StableId))
@@ -546,7 +546,6 @@ namespace NeonBlack.Gameplay.Editor
             AddRelatedContracts(type, related);
             if (field != null)
                 AddRelatedContracts(GetAuthoringFieldType(field.FieldType), related);
-            AddCoreSetupFallback(type, field, related);
 
             return related.Count > 0 ? related.ToArray() : Array.Empty<string>();
         }
@@ -556,7 +555,7 @@ namespace NeonBlack.Gameplay.Editor
             if (type == null)
                 return;
 
-            IReadOnlyList<ResolvedAuthoringContract> contracts = ResolvedAuthoringContractRegistry.All;
+            IReadOnlyList<ResolvedAuthoringContract> contracts = ResolvedAuthoringContractRegistry.ProductContracts;
             for (int i = 0; i < contracts.Count; i++)
             {
                 ResolvedAuthoringContract contract = contracts[i];
@@ -629,32 +628,6 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             return fieldType;
-        }
-
-        private static void AddCoreSetupFallback(Type type, FieldInfo field, List<string> related)
-        {
-            if (type == null)
-                return;
-
-            AddKnownSetupType(type, related);
-            if (field != null)
-                AddKnownSetupType(GetAuthoringFieldType(field.FieldType), related);
-        }
-
-        private static void AddKnownSetupType(Type type, List<string> related)
-        {
-            if (type == null)
-                return;
-
-            string name = type.Name;
-            if (name == "SessionDefinition")
-                AddRelatedStableId(related, "setup.assign-session-definition");
-            else if (name == "GameModeDefinition")
-                AddRelatedStableId(related, "setup.assign-default-game-mode");
-            else if (name == "ParticipantDefinition")
-                AddRelatedStableId(related, "setup.assign-default-participants");
-            else if (name == "InputProfile")
-                AddRelatedStableId(related, "inspector.input-profile.gameplay-action-names");
         }
 
         private static void AddRelatedStableId(List<string> related, string stableId)
@@ -801,7 +774,7 @@ namespace NeonBlack.Gameplay.Editor
 
             string verb = "Inspect";
             PyralisAuthoringActionSurface surface = PyralisAuthoringActionSurface.Inspector;
-            string target = "contract NativeSetup fallback";
+            string target = "contract NativeSetup";
             string field = action;
             string success = "the setup step is captured and verified in the editor";
 

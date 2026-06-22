@@ -52,7 +52,7 @@ namespace NeonBlack.Gameplay.Editor
             }
 
             List<PyralisAuthoringFact> facts = new List<PyralisAuthoringFact>();
-            IReadOnlyList<ResolvedAuthoringContract> contracts = ResolvedAuthoringContractRegistry.All;
+            IReadOnlyList<ResolvedAuthoringContract> contracts = ResolvedAuthoringContractRegistry.ProductContracts;
             for (int i = 0; i < contracts.Count; i++)
             {
                 ResolvedAuthoringContract contract = contracts[i];
@@ -72,7 +72,7 @@ namespace NeonBlack.Gameplay.Editor
         {
             Dictionary<string, List<ResolvedAuthoringContract>> contractsByProofId =
                 new Dictionary<string, List<ResolvedAuthoringContract>>(StringComparer.Ordinal);
-            IReadOnlyList<ResolvedAuthoringContract> contracts = ResolvedAuthoringContractRegistry.All;
+            IReadOnlyList<ResolvedAuthoringContract> contracts = ResolvedAuthoringContractRegistry.ProductContracts;
 
             for (int i = 0; i < contracts.Count; i++)
             {
@@ -139,7 +139,7 @@ namespace NeonBlack.Gameplay.Editor
                 proofTemplate.StableId,
                 proofTemplate.DisplayName,
                 proofTemplate.Kind,
-                proofTemplate.SourceKind,
+                contractStableIds.Count > 0 ? PyralisAuthoringFactSourceKind.FeatureContract : proofTemplate.SourceKind,
                 proofTemplate.Confidence,
                 proofTemplate.Summary,
                 routeRelevance,

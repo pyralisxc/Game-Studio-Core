@@ -21,7 +21,8 @@ namespace NeonBlack.Gameplay.Core.Navigation
         },
         AssignmentFields = new[] { nameof(_nextSceneName), nameof(_blackOverlay), nameof(_videoClip), nameof(_videoPlayer), nameof(_videoDisplay) },
         FirstProof = "Verify the intro splash plays and transitions to the main menu successfully.",
-        ExpertAdvice = "Do not leave Next Scene Name blank; async loading will fail. Do not assign a video display without a video clip unless a static image is intentionally shown."
+        ExpertAdvice = "Do not leave Next Scene Name blank; async loading will fail. Do not assign a video display without a video clip unless a static image is intentionally shown.",
+        CapabilityPath = "UI/HUD/Splash Screen Controller"
     )]
     public class SplashScreenController : MonoBehaviour
     {
