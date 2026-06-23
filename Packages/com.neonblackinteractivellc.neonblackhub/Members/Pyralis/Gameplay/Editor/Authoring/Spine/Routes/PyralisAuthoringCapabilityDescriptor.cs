@@ -245,6 +245,27 @@ namespace NeonBlack.Gameplay.Editor
             return filtered.ToArray();
         }
 
+        public static string[] FilterGameplayIntentDescriptorIds(
+            IReadOnlyList<string> descriptorIds,
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> allowedDescriptors)
+        {
+            string[] filtered = FilterGameplayIntentDescriptorIds(descriptorIds);
+            if (filtered.Length == 0 || allowedDescriptors == null)
+                return filtered;
+
+            HashSet<string> allowed = new HashSet<string>(
+                allowedDescriptors
+                    .Where(IsGameplayIngredientDescriptor)
+                    .Select(descriptor => descriptor.StableId),
+                StringComparer.Ordinal);
+            if (allowed.Count == 0)
+                return Array.Empty<string>();
+
+            return filtered
+                .Where(allowed.Contains)
+                .ToArray();
+        }
+
         public static bool IsIntentRouteEssential(PyralisAuthoringCapabilityDescriptor descriptor)
         {
             if (descriptor == null)
@@ -1072,6 +1093,7 @@ namespace NeonBlack.Gameplay.Editor
         }
 
         public PyralisAuthoringCapabilityDescriptor Descriptor { get; }
+        public string StableId => Descriptor?.StableId ?? string.Empty;
         public bool Selected { get; }
         public bool Inferred { get; }
         public string IntentLayer { get; }
@@ -1127,7 +1149,8 @@ namespace NeonBlack.Gameplay.Editor
                 AuthoringWorldAxiom.None);
             Descriptors = descriptors ?? Array.Empty<PyralisAuthoringCapabilityDescriptor>();
             SelectedDescriptorIds = PyralisAuthoringCapabilityDescriptorRegistry.FilterGameplayIntentDescriptorIds(
-                selectedDescriptorIds ?? Array.Empty<string>());
+                selectedDescriptorIds ?? Array.Empty<string>(),
+                Descriptors);
             SelectedDescriptorIdSet = new HashSet<string>(SelectedDescriptorIds, StringComparer.Ordinal);
             InferredRouteEssentialIds = Descriptors
                 .Where(descriptor => PyralisAuthoringCapabilityDescriptorRegistry.IsIntentRouteEssentialExpected(descriptor, Selection))
@@ -1151,6 +1174,8 @@ namespace NeonBlack.Gameplay.Editor
                 .Where(descriptor => SelectedDescriptorIdSet.Contains(descriptor.StableId))
                 .Select(descriptor => new PyralisAuthoringIntentDescriptorProjection(descriptor, true, false, "GameplayIngredient"))
                 .ToArray();
+            RouteShapePreview = PyralisAuthoringSetupGraphProjection.BuildRouteShapeSummary(Selection);
+            LensSummary = BuildLensSummary();
         }
 
         public PyralisAuthoringIntentSelection Selection { get; }
@@ -1165,6 +1190,12 @@ namespace NeonBlack.Gameplay.Editor
         public IReadOnlyList<PyralisAuthoringIntentDescriptorGroupProjection> MetadataBacklogGroups { get; }
         public IReadOnlyList<PyralisAuthoringIntentDescriptorGroupProjection> RouteEssentialGroups { get; }
         public IReadOnlyList<PyralisAuthoringIntentDescriptorProjection> SelectedDescriptors { get; }
+        public string RouteShapePreview { get; }
+        public string LensSummary { get; }
+        public int GameplayIngredientCount => GameplayIngredientDescriptors.Count;
+        public int SelectedGameplayIngredientCount => SelectedDescriptors.Count;
+        public int MetadataBacklogCount => MetadataBacklogDescriptors.Count;
+        public int RouteEssentialCount => RouteEssentialDescriptors.Count;
         private HashSet<string> SelectedDescriptorIdSet { get; }
         private HashSet<string> InferredRouteEssentialIdSet { get; }
 
@@ -1250,6 +1281,11 @@ namespace NeonBlack.Gameplay.Editor
                                 .ToArray()))
                         .ToArray()))
                 .ToArray();
+        }
+
+        private string BuildLensSummary()
+        {
+            return $"Lenses: {SelectedGameplayIngredientCount}/{GameplayIngredientCount} gameplay ingredients selected, {RouteEssentialCount} route essentials inferred, {MetadataBacklogCount} metadata backlog.";
         }
 
         private static string[] GetNonEmptyPathParts(string[] parts, int startIndex)

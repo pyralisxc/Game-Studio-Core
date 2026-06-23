@@ -41,6 +41,17 @@ namespace NeonBlack.Gameplay.Editor
             participantContainer.Add(participantTitle);
             PopulateParticipantRoute(participantContainer);
 
+            var shapeContainer = new VisualElement() { name = "intentShapeContainer" };
+            shapeContainer.AddToClassList("section");
+            var shapeTitle = new Label("CURRENT INTENT SHAPE");
+            shapeTitle.AddToClassList("section-title");
+            shapeContainer.Add(shapeTitle);
+            shapeContainer.Add(new Label(string.Empty) { name = "intentShapeSummary" });
+            shapeContainer.Add(new Label(string.Empty) { name = "intentProofFocus" });
+            shapeContainer.Add(new Label(string.Empty) { name = "intentLensCounts" });
+            foreach (Label label in shapeContainer.Query<Label>().ToList())
+                label.AddToClassList("intent-shape-line");
+
             var capabilityContainer = new VisualElement() { name = "capabilityContainer" };
             capabilityContainer.AddToClassList("section");
             var capTitle = new Label("CAPABILITY INGREDIENTS");
@@ -90,13 +101,18 @@ namespace NeonBlack.Gameplay.Editor
             overviewButton.tooltip = "Return to the current setup route once a scene root or setup asset exists.";
             var exportButton = new Button(() =>
             {
+                PyralisAuthoringIntentSelection selection = GetCurrentIntentSelection();
+                IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors =
+                    PyralisAuthoringCapabilityDescriptorRegistry.BuildIntentProjectionDescriptors(_intentLane, _intentAxioms);
+                PyralisAuthoringIntentProjection projection =
+                    PyralisAuthoringIntentProjection.Build(selection, descriptors);
                 PyralisAuthoringGraphJsonExportControl.ExportIntentSnapshot(
-                    GetCurrentIntentSelection(),
+                    selection,
                     GetCachedIntentModel(),
-                    PyralisAuthoringCapabilityDescriptorRegistry.BuildIntentProjectionDescriptors(_intentLane, _intentAxioms));
+                    projection);
             })
             { text = "Export Intent JSON" };
-            exportButton.tooltip = "Write the Intent tab steering snapshot: DNA axioms, presentation lane, participant route, capability descriptors, metadata backlog, selected ingredients, and advisor rows. It does not export scene/setup reality.";
+            exportButton.tooltip = "Write the Intent projection snapshot: DNA axioms, presentation lane, participant route, capability descriptors, metadata backlog, selected ingredients, route-shape summary, and advisor rows. It does not export scene/setup reality.";
             actionRow.Add(guideButton);
             actionRow.Add(overviewButton);
             actionRow.Add(exportButton);
@@ -110,6 +126,7 @@ namespace NeonBlack.Gameplay.Editor
 
             var main = new VisualElement() { name = "main" };
             main.AddToClassList("intent-main");
+            main.Add(shapeContainer);
             main.Add(capabilityContainer);
             main.Add(advisorContainer);
 
@@ -479,8 +496,11 @@ namespace NeonBlack.Gameplay.Editor
 
         private string[] GetSelectedIntentDescriptorIds()
         {
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors =
+                PyralisAuthoringCapabilityDescriptorRegistry.BuildIntentProjectionDescriptors(_intentLane, _intentAxioms);
             return PyralisAuthoringCapabilityDescriptorRegistry.FilterGameplayIntentDescriptorIds(
-                GetRawSelectedIntentDescriptorIds());
+                GetRawSelectedIntentDescriptorIds(),
+                descriptors);
         }
 
         private string[] GetRawSelectedIntentDescriptorIds()
@@ -503,7 +523,9 @@ namespace NeonBlack.Gameplay.Editor
         private void NormalizeSelectedIntentDescriptorIds()
         {
             string[] raw = GetRawSelectedIntentDescriptorIds();
-            string[] filtered = PyralisAuthoringCapabilityDescriptorRegistry.FilterGameplayIntentDescriptorIds(raw);
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors =
+                PyralisAuthoringCapabilityDescriptorRegistry.BuildIntentProjectionDescriptors(_intentLane, _intentAxioms);
+            string[] filtered = PyralisAuthoringCapabilityDescriptorRegistry.FilterGameplayIntentDescriptorIds(raw, descriptors);
             if (!raw.SequenceEqual(filtered))
             {
                 _intentDescriptorIdsValue = string.Join(";", filtered);
@@ -661,17 +683,46 @@ namespace NeonBlack.Gameplay.Editor
             Label summaryLabel = root.Q<Label>("intentSummary");
             if (summaryLabel == null) return;
 
+            PyralisAuthoringIntentSelection selection = GetCurrentIntentSelection();
             PyralisAuthoringIntentModel model = GetCachedIntentModel();
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors =
+                PyralisAuthoringCapabilityDescriptorRegistry.BuildIntentProjectionDescriptors(_intentLane, _intentAxioms);
+            PyralisAuthoringIntentProjection projection =
+                PyralisAuthoringIntentProjection.Build(selection, descriptors);
 
             summaryLabel.text = model.Summary;
             Label routeShapeLabel = root.Q<Label>("intentRouteShape");
             if (routeShapeLabel != null)
-                routeShapeLabel.text = PyralisAuthoringSetupGraphProjection.BuildRouteShapeSummary(GetCurrentIntentSelection());
+                routeShapeLabel.text = projection.RouteShapePreview;
+
+            Label shapeLabel = root.Q<Label>("intentShapeSummary");
+            if (shapeLabel != null)
+                shapeLabel.text = model.ShapeSummary;
+
+            Label proofLabel = root.Q<Label>("intentProofFocus");
+            if (proofLabel != null)
+                proofLabel.text = model.ProofFocusSummary;
+
+            Label countLabel = root.Q<Label>("intentLensCounts");
+            if (countLabel != null)
+                countLabel.text = BuildIntentLensSummary(projection, model);
 
             Label nextLabel = root.Q<Label>("intentNext");
             if (nextLabel != null)
                 nextLabel.text = GetIntentReadinessMessage();
 
+        }
+
+        private static string BuildIntentLensSummary(
+            PyralisAuthoringIntentProjection projection,
+            PyralisAuthoringIntentModel model)
+        {
+            if (projection == null)
+                return "Lenses: no Intent projection yet.";
+
+            int recommendationCount = model?.Recommendations.Count ?? 0;
+            int cautionCount = model?.Cautions.Count ?? 0;
+            return $"{projection.LensSummary}, {recommendationCount} recommendations, {cautionCount} cautions.";
         }
 
         private string GetIntentReadinessMessage()

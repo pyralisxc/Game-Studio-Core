@@ -319,11 +319,9 @@ namespace NeonBlack.Gameplay.Editor
             bool mergedRequiresPawn = ContainsFamily(mergedFamilies, RuntimeCapabilityFamily.CharacterPawnGameplay);
             int desiredParticipantCount = GetIntentParticipantCount(intentSelection);
             PyralisParticipantTopology desiredTopology = GetIntentParticipantTopology(intentSelection, route.Session?.networkMode ?? GameplayNetworkMode.LocalOnly);
-            int authoredParticipantCount = route.AuthoredParticipantCount > 0
-                ? route.AuthoredParticipantCount
-                : route.AssignedParticipantCount;
+            int authoredParticipantCount = route.AuthoredParticipantCount;
             int assignedParticipantCount = System.Math.Max(authoredParticipantCount, desiredParticipantCount);
-            bool hasParticipants = route.HasParticipants || desiredParticipantCount > 0;
+            bool hasParticipants = route.HasParticipants;
             PyralisParticipantTopology topology = desiredTopology != PyralisParticipantTopology.Unknown
                 ? desiredTopology
                 : InferParticipantTopology(
@@ -357,7 +355,7 @@ namespace NeonBlack.Gameplay.Editor
                 route.HasAnyDefaultPawn,
                 route.ParticipantPawnIssue,
                 route.ParticipantPawnIssueKind,
-                BuildRouteFacts(mergedFamilies),
+                BuildRouteFacts(mergedFamilies, intentSelection),
                 topology,
                 joinPolicy,
                 spawnPolicy,
@@ -842,21 +840,28 @@ namespace NeonBlack.Gameplay.Editor
             return false;
         }
 
-        private static PyralisAuthoringRouteFact[] BuildRouteFacts(RuntimeCapabilityFamily[] families)
+        private static PyralisAuthoringRouteFact[] BuildRouteFacts(
+            RuntimeCapabilityFamily[] families,
+            PyralisAuthoringIntentSelection intentSelection = null)
         {
             if (families == null)
                 return System.Array.Empty<PyralisAuthoringRouteFact>();
 
             List<PyralisAuthoringRouteFact> facts = new List<PyralisAuthoringRouteFact>();
             for (int i = 0; i < families.Length; i++)
-                AddFact(facts, families[i]);
+                AddFact(facts, families[i], intentSelection);
 
             return facts.ToArray();
         }
 
-        private static void AddFact(List<PyralisAuthoringRouteFact> facts, RuntimeCapabilityFamily family)
+        private static void AddFact(
+            List<PyralisAuthoringRouteFact> facts,
+            RuntimeCapabilityFamily family,
+            PyralisAuthoringIntentSelection intentSelection)
         {
-            PyralisAuthoringCapabilityDescriptor descriptor = PyralisAuthoringCapabilityDescriptorRegistry.FindPrimaryByFamily(family);
+            PyralisAuthoringCapabilityDescriptor descriptor =
+                FindIntentSelectedDescriptorForFamily(family, intentSelection)
+                ?? PyralisAuthoringCapabilityDescriptorRegistry.FindPrimaryByFamily(family);
             if (TryGetRouteCapability(family, out PyralisAuthoringRouteCapability capability))
             {
                 string label = descriptor != null && !string.IsNullOrWhiteSpace(descriptor.DisplayName)
@@ -865,6 +870,38 @@ namespace NeonBlack.Gameplay.Editor
                 bool primaryProofCandidate = descriptor != null && !string.IsNullOrWhiteSpace(descriptor.ProofTargetId);
                 facts.Add(new PyralisAuthoringRouteFact(capability, label, family, primaryProofCandidate));
             }
+        }
+
+        private static PyralisAuthoringCapabilityDescriptor FindIntentSelectedDescriptorForFamily(
+            RuntimeCapabilityFamily family,
+            PyralisAuthoringIntentSelection intentSelection)
+        {
+            if (intentSelection?.DescriptorIds == null || intentSelection.DescriptorIds.Length == 0)
+                return null;
+
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors =
+                PyralisAuthoringCapabilityDescriptorRegistry.All;
+            for (int selectedIndex = 0; selectedIndex < intentSelection.DescriptorIds.Length; selectedIndex++)
+            {
+                string selectedId = intentSelection.DescriptorIds[selectedIndex];
+                if (string.IsNullOrWhiteSpace(selectedId))
+                    continue;
+
+                for (int descriptorIndex = 0; descriptorIndex < descriptors.Count; descriptorIndex++)
+                {
+                    PyralisAuthoringCapabilityDescriptor descriptor = descriptors[descriptorIndex];
+                    if (descriptor != null
+                        && descriptor.Family == family
+                        && descriptor.IsContractSemanticSource
+                        && PyralisAuthoringCapabilityDescriptorRegistry.IsGameplayIngredientDescriptor(descriptor)
+                        && string.Equals(descriptor.StableId, selectedId, System.StringComparison.Ordinal))
+                    {
+                        return descriptor;
+                    }
+                }
+            }
+
+            return null;
         }
 
         private static PyralisAuthoringRouteFact FindRouteNameFact(PyralisAuthoringRouteFact[] facts)

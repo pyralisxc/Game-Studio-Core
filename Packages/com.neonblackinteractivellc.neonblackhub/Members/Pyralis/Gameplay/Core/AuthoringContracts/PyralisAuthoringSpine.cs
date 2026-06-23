@@ -114,15 +114,53 @@ namespace NeonBlack.Gameplay.Core.Contracts
             if (name.Length > 1 && name[0] == 'I' && char.IsUpper(name[1]))
                 name = name.Substring(1);
 
-            // Add spaces before capitals
             System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            char previousWritten = '\0';
             for (int i = 0; i < name.Length; i++)
             {
-                if (i > 0 && char.IsUpper(name[i]))
+                char current = name[i];
+                if (current == '_' || current == '-' || current == '/')
+                    current = ' ';
+
+                if (char.IsWhiteSpace(current))
+                {
+                    if (sb.Length > 0 && previousWritten != ' ')
+                    {
+                        sb.Append(' ');
+                        previousWritten = ' ';
+                    }
+                    continue;
+                }
+
+                if (sb.Length > 0 && ShouldInsertDisplaySpace(name, i, current, previousWritten))
+                {
                     sb.Append(' ');
-                sb.Append(name[i]);
+                    previousWritten = ' ';
+                }
+
+                sb.Append(current);
+                previousWritten = current;
             }
+
             return sb.ToString();
+        }
+
+        private static bool ShouldInsertDisplaySpace(string value, int index, char current, char previousWritten)
+        {
+            if (previousWritten == ' ' || !char.IsUpper(current))
+                return false;
+
+            char previous = index > 0 ? value[index - 1] : '\0';
+            char next = index + 1 < value.Length ? value[index + 1] : '\0';
+            if (previous == '_' || previous == '-' || previous == '/' || char.IsWhiteSpace(previous))
+                return false;
+
+            if (char.IsLower(previous))
+                return true;
+
+            return char.IsUpper(previous)
+                && next != '\0'
+                && char.IsLower(next);
         }
 
         public static IEnumerable<AuthoringCapability> GetAllIndividualCapabilities()

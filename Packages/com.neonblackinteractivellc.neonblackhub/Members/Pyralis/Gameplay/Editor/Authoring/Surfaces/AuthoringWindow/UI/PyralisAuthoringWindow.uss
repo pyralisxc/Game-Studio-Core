@@ -146,6 +146,11 @@ This was created with the help of Assistant, a Unity Artificial Intelligence pro
     white-space: normal;
 }
 
+.intent-shape-line {
+    white-space: normal;
+    margin-bottom: var(--spacing-sm);
+}
+
 .authoring-page {
     flex-grow: 1;
     padding: var(--spacing-md);

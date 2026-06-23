@@ -1,12 +1,9 @@
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEditor;
-using UnityEngine;
 using UnityEngine.UIElements;
-using Object = UnityEngine.Object;
 
 namespace NeonBlack.Gameplay.Editor
 {
@@ -34,33 +31,33 @@ namespace NeonBlack.Gameplay.Editor
             return BuildSnapshotButton("Facts", "Export Facts JSON", graph);
         }
 
-        public static Button BuildRouteProofTraceButton(PyralisAuthoringSetupGraph graph)
+        public static Button BuildRouteProofTraceButton(PyralisAuthoringRouteProofTraceProjection projection)
         {
-            var button = PyralisAuthoringUi.Button("Export Route Trace", () => ExportRouteProofTrace(graph), BuildTraceTooltip());
-            button.SetEnabled(graph != null);
+            var button = PyralisAuthoringUi.Button("Export Route Trace", () => ExportRouteProofTrace(projection), BuildTraceTooltip());
+            button.SetEnabled(projection?.Graph != null);
             return button;
         }
 
         public static Button BuildIntentSnapshotButton(
             PyralisAuthoringIntentSelection selection,
             PyralisAuthoringIntentModel model,
-            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors)
+            PyralisAuthoringIntentProjection projection)
         {
             return PyralisAuthoringUi.Button(
                 "Export Intent JSON",
-                () => ExportIntentSnapshot(selection, model, descriptors),
-                "Write the Intent tab steering snapshot: DNA axioms, presentation lane, participant route, capability descriptors, metadata backlog, selected ingredients, and advisor rows. It does not export scene/setup reality.");
+                () => ExportIntentSnapshot(selection, model, projection),
+                "Write the Intent projection snapshot: DNA axioms, presentation lane, participant route, capability descriptors, metadata backlog, selected ingredients, route-shape summary, and advisor rows. It does not export scene/setup reality.");
         }
 
         public static void ExportIntentSnapshot(
             PyralisAuthoringIntentSelection selection,
             PyralisAuthoringIntentModel model,
-            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors)
+            PyralisAuthoringIntentProjection projection)
         {
             Directory.CreateDirectory(TempGraphFolder);
             string safeRouteName = MakeFileSafe("Intent");
             string path = Path.Combine(TempGraphFolder, $"Pyralis_{safeRouteName}_IntentSnapshot.json");
-            string json = PyralisAuthoringSetupGraphJsonExporter.ToIntentJson(selection, model, descriptors);
+            string json = PyralisAuthoringSetupGraphJsonExporter.ToIntentJson(selection, model, projection);
             File.WriteAllText(path, json, new UTF8Encoding(false));
             RefreshAndReveal();
         }
@@ -113,15 +110,15 @@ namespace NeonBlack.Gameplay.Editor
             return PyralisAuthoringSetupGraphJsonExporter.ToMapJson(graph);
         }
 
-        private static void ExportRouteProofTrace(PyralisAuthoringSetupGraph graph)
+        private static void ExportRouteProofTrace(PyralisAuthoringRouteProofTraceProjection projection)
         {
-            if (graph == null)
+            if (projection?.Graph == null)
                 return;
 
             Directory.CreateDirectory(TempGraphFolder);
-            string safeRouteName = MakeFileSafe(graph.RouteName);
+            string safeRouteName = MakeFileSafe(projection.Graph.RouteName);
             string path = Path.Combine(TempGraphFolder, $"Pyralis_{safeRouteName}_RouteProofTrace.json");
-            string json = PyralisAuthoringSetupGraphJsonExporter.ToRouteProofTraceJson(graph);
+            string json = PyralisAuthoringSetupGraphJsonExporter.ToRouteProofTraceJson(projection);
             File.WriteAllText(path, json, new UTF8Encoding(false));
             RefreshAndReveal();
         }
@@ -147,7 +144,7 @@ namespace NeonBlack.Gameplay.Editor
 
         private static string BuildTraceTooltip()
         {
-            return "Write a Route Proof Trace JSON. This exports the ordered fresh-scene setup-card path toward the selected first proof, plus blockers, proof context, source owners, and route evidence for humans and agents.";
+            return "Write the Guide Route Proof Trace projection. This exports the ordered fresh-scene setup-card path toward the selected first proof, plus blockers, proof context, source owners, and route evidence for humans and agents.";
         }
 
         private static string MakeFileSafe(string value)

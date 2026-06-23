@@ -234,8 +234,10 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringGraphSourceKind.CoreSetup,
                 pawnReady ? PyralisAuthoringGraphEvidenceState.Ready : PyralisAuthoringGraphEvidenceState.Missing,
                 guidance: GetPawnGuidance(route),
+                nativeSetup: BuildPawnDefinitionNativeSetup(route, pawnReady),
                 assignmentFields: new[] { "ParticipantDefinition.defaultPawn" },
                 blockingReason: pawnReady ? string.Empty : route?.ParticipantPawnIssue,
+                nativeAction: GetPawnDefinitionNativeAction(route, pawnReady),
                 sourceObject: pawn != null ? pawn : participant != null ? participant : session,
                 sourceOrigin: pawn != null || participant != null || session != null
                     ? PyralisAuthoringGraphSourceOrigin.UserAuthoredSetup
@@ -789,11 +791,12 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringGraphSourceKind.CoreSetup,
                 state,
                 guidance: guidance,
-                nativeSetup: Array.Empty<string>(),
+                nativeSetup: BuildRouteShapeNativeSetup(route, hasOwnershipIssue, requiresPawn, hasParticipants),
                 assignmentFields: GetRouteShapeAssignmentFields(requiresPawn, hasGameplayFocus),
                 blockingReason: hasOwnershipIssue
                     ? FirstNonEmpty(route?.ParticipantPawnIssue, "Assign at least one ParticipantDefinition so the route has a player, AI, seat, hand, faction, or control owner.")
                     : string.Empty,
+                nativeAction: GetRouteShapeNativeAction(hasOwnershipIssue, requiresPawn, hasParticipants),
                 sourceObject: route?.Session != null ? route.Session : route?.Mode,
                 sourceOrigin: PyralisAuthoringGraphSourceOrigin.SpineGrammar,
                 setupDomain: PyralisAuthoringGraphSetupDomain.RouteShape,
@@ -1023,6 +1026,115 @@ namespace NeonBlack.Gameplay.Editor
                     "This intent is pawn-backed. The participant owns a PawnDefinition, the PawnDefinition owns the prefab, and participant input is the preferred control profile.");
 
             return "This intent does not require a pawn. Participants still own control, but the control surface can be a board seat, hand, cursor, camera, UI, or action resolver.";
+        }
+
+        private static string[] BuildRouteShapeNativeSetup(
+            PyralisSetupRouteAnalysis route,
+            bool hasOwnershipIssue,
+            bool requiresPawn,
+            bool hasParticipants)
+        {
+            if (!hasOwnershipIssue)
+                return Array.Empty<string>();
+
+            if (!hasParticipants)
+            {
+                return new[]
+                {
+                    "Project -> Create -> NeonBlack -> Definitions -> Participant Definition; assign it to SessionDefinition.defaultParticipants before choosing the pawn or non-pawn control surface."
+                };
+            }
+
+            if (requiresPawn)
+            {
+                return new[]
+                {
+                    "Create or assign a PawnDefinition in ParticipantDefinition.defaultPawn so this pawn-backed route has an owned control surface."
+                };
+            }
+
+            return Array.Empty<string>();
+        }
+
+        private static PyralisAuthoringNativeAction? GetRouteShapeNativeAction(
+            bool hasOwnershipIssue,
+            bool requiresPawn,
+            bool hasParticipants)
+        {
+            if (!hasOwnershipIssue)
+                return null;
+
+            if (!hasParticipants)
+            {
+                return new PyralisAuthoringNativeAction(
+                    "Create or assign",
+                    PyralisAuthoringActionSurface.Inspector,
+                    "SessionDefinition",
+                    "defaultParticipants",
+                    "The route has at least one participant owner");
+            }
+
+            if (requiresPawn)
+            {
+                return new PyralisAuthoringNativeAction(
+                    "Assign",
+                    PyralisAuthoringActionSurface.Inspector,
+                    "ParticipantDefinition",
+                    "defaultPawn",
+                    "The participant owns a PawnDefinition");
+            }
+
+            return null;
+        }
+
+        private static string[] BuildPawnDefinitionNativeSetup(PyralisSetupRouteAnalysis route, bool pawnReady)
+        {
+            if (pawnReady || route == null || !route.RequiresPawn)
+                return Array.Empty<string>();
+
+            switch (route.ParticipantPawnIssueKind)
+            {
+                case PyralisParticipantPawnIssueKind.MissingParticipants:
+                case PyralisParticipantPawnIssueKind.EmptyParticipantSlot:
+                    return new[]
+                    {
+                        "Create or assign ParticipantDefinition entries before choosing their default PawnDefinition."
+                    };
+                case PyralisParticipantPawnIssueKind.MissingPawnDefinition:
+                    return new[]
+                    {
+                        "Project -> Create -> NeonBlack -> Definitions -> Pawn Definition; assign it to ParticipantDefinition.defaultPawn."
+                    };
+                default:
+                    return Array.Empty<string>();
+            }
+        }
+
+        private static PyralisAuthoringNativeAction? GetPawnDefinitionNativeAction(PyralisSetupRouteAnalysis route, bool pawnReady)
+        {
+            if (pawnReady || route == null || !route.RequiresPawn)
+                return null;
+
+            switch (route.ParticipantPawnIssueKind)
+            {
+                case PyralisParticipantPawnIssueKind.MissingParticipants:
+                case PyralisParticipantPawnIssueKind.EmptyParticipantSlot:
+                    return new PyralisAuthoringNativeAction(
+                        "Create or assign",
+                        PyralisAuthoringActionSurface.Inspector,
+                        "SessionDefinition",
+                        "defaultParticipants",
+                        "ParticipantDefinition entries exist before pawn setup");
+                case PyralisParticipantPawnIssueKind.MissingPawnDefinition:
+                    return new PyralisAuthoringNativeAction(
+                        "Create or assign",
+                        PyralisAuthoringActionSurface.Inspector,
+                        "ParticipantDefinition",
+                        "defaultPawn",
+                        "ParticipantDefinition.defaultPawn references a PawnDefinition");
+                default:
+                    return null;
+            }
         }
 
         private static string[] GetRouteShapeAssignmentFields(bool requiresPawn, bool hasGameplayFocus)

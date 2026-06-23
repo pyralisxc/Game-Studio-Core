@@ -616,7 +616,7 @@ namespace NeonBlack.Gameplay.Editor
             Object activeSetup,
             PyralisAuthoringSetupGraph graph,
             PyralisAuthoringCurrentStepGraphRow currentStep,
-            PyralisAuthoringRouteWorkingProjection route,
+            PyralisAuthoringRouteProofTraceProjection routeTrace,
             IReadOnlyList<PyralisAuthoringReflectiveContractGraphRow> contracts,
             PyralisAuthoringSelectedContextGraphRow selectedContext,
             bool selectionFirst)
@@ -625,7 +625,8 @@ namespace NeonBlack.Gameplay.Editor
             ActiveSetup = activeSetup;
             Graph = graph;
             CurrentStep = currentStep;
-            Route = route;
+            RouteTrace = routeTrace ?? PyralisAuthoringSetupGraphProjection.BuildRouteProofTraceProjection(graph);
+            Route = RouteTrace.Route;
             Contracts = contracts ?? Array.Empty<PyralisAuthoringReflectiveContractGraphRow>();
             SelectedContext = selectedContext;
             SelectionFirst = selectionFirst;
@@ -635,6 +636,7 @@ namespace NeonBlack.Gameplay.Editor
         public Object ActiveSetup { get; }
         public PyralisAuthoringSetupGraph Graph { get; }
         public PyralisAuthoringCurrentStepGraphRow CurrentStep { get; }
+        public PyralisAuthoringRouteProofTraceProjection RouteTrace { get; }
         public PyralisAuthoringRouteWorkingProjection Route { get; }
         public IReadOnlyList<PyralisAuthoringReflectiveContractGraphRow> Contracts { get; }
         public PyralisAuthoringSelectedContextGraphRow SelectedContext { get; }
@@ -647,7 +649,7 @@ namespace NeonBlack.Gameplay.Editor
                 activeSetup,
                 graph,
                 PyralisAuthoringSetupGraphProjection.BuildCurrentStepRow(graph),
-                PyralisAuthoringSetupGraphProjection.BuildRouteWorkingProjection(graph),
+                PyralisAuthoringSetupGraphProjection.BuildRouteProofTraceProjection(graph),
                 PyralisAuthoringSetupGraphProjection.BuildReflectiveContractRows(graph),
                 PyralisAuthoringSetupGraphProjection.BuildSelectedContextRow(graph, selection),
                 activeSetup == null
@@ -1038,15 +1040,18 @@ namespace NeonBlack.Gameplay.Editor
     public sealed class PyralisAuthoringRouteProofTraceProjection
     {
         public PyralisAuthoringRouteProofTraceProjection(
+            PyralisAuthoringSetupGraph graph,
             PyralisAuthoringRouteWorkingProjection route,
             IReadOnlyList<PyralisAuthoringGraphNode> supportingContracts,
             IReadOnlyList<PyralisAuthoringRouteDiagnosticQuestionRow> diagnosticQuestions)
         {
+            Graph = graph;
             Route = route;
             SupportingContracts = supportingContracts ?? Array.Empty<PyralisAuthoringGraphNode>();
             DiagnosticQuestions = diagnosticQuestions ?? Array.Empty<PyralisAuthoringRouteDiagnosticQuestionRow>();
         }
 
+        public PyralisAuthoringSetupGraph Graph { get; }
         public PyralisAuthoringRouteWorkingProjection Route { get; }
         public IReadOnlyList<PyralisAuthoringGraphNode> SupportingContracts { get; }
         public IReadOnlyList<PyralisAuthoringRouteDiagnosticQuestionRow> DiagnosticQuestions { get; }
@@ -1076,6 +1081,7 @@ namespace NeonBlack.Gameplay.Editor
         {
             PyralisAuthoringRouteWorkingProjection route = BuildRouteWorkingProjection(graph);
             return new PyralisAuthoringRouteProofTraceProjection(
+                graph,
                 route,
                 BuildRouteSupportingContractNodes(graph, route),
                 BuildRouteDiagnosticQuestions(graph, route));
@@ -1662,11 +1668,13 @@ namespace NeonBlack.Gameplay.Editor
                     "Fix the source that emitted the step: contract meaning, dependency reflection, local runtime validation, scene-readiness validation, or graph projection. Do not hardcode a one-off Guide/Hygiene sentence.")
             };
 
-            if (graph == null || graph.Source == null)
+            if (orderedSteps.Count == 0)
             {
                 questions.Add(new PyralisAuthoringRouteDiagnosticQuestionRow(
                     "Why is the route empty?",
-                    "No active setup source was resolved. Select or pin a Bootstrap, SessionDefinition, GameModeDefinition, ParticipantDefinition, PawnDefinition, or FeatureModuleDefinition."));
+                    graph == null || graph.Source == null
+                        ? "No active setup source was resolved and no Intent-projected route cards were generated. Select or pin a Bootstrap, SessionDefinition, GameModeDefinition, ParticipantDefinition, PawnDefinition, or FeatureModuleDefinition, or choose Intent settings that imply a first proof."
+                        : "No ordered setup cards were generated for the active graph. Check route analysis, proof target resolution, and critical-path projection metadata."));
             }
 
             return questions;

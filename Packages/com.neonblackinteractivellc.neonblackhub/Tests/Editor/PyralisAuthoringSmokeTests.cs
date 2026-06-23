@@ -131,10 +131,12 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone | AuthoringWorldAxiom.Realtime,
                 selectedIds,
                 PyralisIntentParticipantRoute.TwoLocalPlayers);
+            PyralisAuthoringIntentProjection projection =
+                PyralisAuthoringIntentProjection.Build(intentSelection, descriptors);
             string intentJson = PyralisAuthoringSetupGraphJsonExporter.ToIntentJson(
                 intentSelection,
                 PyralisAuthoringSetupGraphProjection.BuildIntentModel(intentSelection),
-                descriptors);
+                projection);
 
             Assert.That(intentJson, Does.Contain("\"selectedDescriptorIds\""));
             Assert.That(intentJson, Does.Contain(movementIngredient.StableId));
@@ -239,7 +241,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             string intentJson = PyralisAuthoringSetupGraphJsonExporter.ToIntentJson(
                 intentSelection,
                 PyralisAuthoringSetupGraphProjection.BuildIntentModel(intentSelection),
-                descriptors);
+                projection);
 
             Assert.That(projection.SelectedDescriptors.Count, Is.EqualTo(selectedIds.Length));
             Assert.That(projection.RouteEssentialGroups.Sum(group => group.SelectedCount), Is.EqualTo(0));
@@ -416,7 +418,9 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 PyralisIntentParticipantRoute.SoloLocal);
 
             PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(null, intentSelection);
-            string routeTraceJson = PyralisAuthoringSetupGraphJsonExporter.ToRouteProofTraceJson(graph);
+            PyralisAuthoringRouteProofTraceProjection trace =
+                PyralisAuthoringSetupGraphProjection.BuildRouteProofTraceProjection(graph);
+            string routeTraceJson = PyralisAuthoringSetupGraphJsonExporter.ToRouteProofTraceJson(trace);
 
             Assert.That(routeTraceJson, Does.Contain("\"proofTargetId\": \"proof.1p-pawn-movement\""));
             Assert.That(graph.Nodes.Any(node =>
@@ -438,19 +442,63 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(null, intent);
             string mapJson = PyralisAuthoringSetupGraphJsonExporter.ToMapJson(graph);
-            string routeTraceJson = PyralisAuthoringSetupGraphJsonExporter.ToRouteProofTraceJson(graph);
+            PyralisAuthoringRouteProofTraceProjection routeTrace =
+                PyralisAuthoringSetupGraphProjection.BuildRouteProofTraceProjection(graph);
+            string routeTraceJson = PyralisAuthoringSetupGraphJsonExporter.ToRouteProofTraceJson(routeTrace);
 
             Assert.That(mapJson, Does.Contain("\"participantTopology\": \"LocalJoin\""));
             Assert.That(mapJson, Does.Contain("\"expectedJoinPolicy\": \"PlayerInputJoin\""));
             Assert.That(mapJson, Does.Contain("\"assignedParticipantCount\": 2"));
             Assert.That(mapJson, Does.Contain("\"authoredParticipantCount\": 0"));
             Assert.That(mapJson, Does.Contain("\"desiredParticipantCount\": 2"));
+            Assert.That(mapJson, Does.Contain("\"hasParticipants\": false"));
             Assert.That(mapJson, Does.Contain("\"participantSeats\""));
+            Assert.That(routeTraceJson, Does.Contain("\"label\": \"Participants\""));
+            Assert.That(routeTraceJson, Does.Contain("\"evidenceState\": \"Missing\""));
+            Assert.That(routeTraceJson, Does.Contain("2 previewed from Intent"));
             Assert.That(routeTraceJson, Does.Contain("\"proofTargetId\": \"proof.local-pawn-join\""));
             Assert.That(routeTraceJson, Does.Contain("Local Co-op Pawn Join Proof"));
+            Assert.That(routeTraceJson, Does.Not.Contain("Why is the route empty?"));
+            Assert.That(routeTrace.Route.CriticalPath.First(row => row.StableId == "route.shape").NativeSetup, Is.Not.Empty);
+            Assert.That(routeTrace.Route.CriticalPath.First(row => row.StableId == "pawn.definition").NativeSetup, Is.Not.Empty);
             Assert.That(graph.Nodes.Any(node =>
                 node.IssueCode == "ContractMetadata.ProofTargetGenericTemplate"
                 && node.SourceOrigin == PyralisAuthoringGraphSourceOrigin.GrammarFallback), Is.True);
+        }
+
+        [Test]
+        public void IntentProjection_SmokePrunesLaneHiddenSelectedDescriptors()
+        {
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> spriteDescriptors =
+                PyralisAuthoringCapabilityDescriptorRegistry.BuildIntentProjectionDescriptors(
+                    RuntimeCapabilityLaneTag.Sprite2D,
+                    AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone | AuthoringWorldAxiom.Realtime);
+            string spriteOnlyId = spriteDescriptors
+                .First(descriptor => descriptor.StableId == "feature.NeonBlack.Gameplay.Features.Characters.Pawn2DPresentationComponent")
+                .StableId;
+
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> billboardDescriptors =
+                PyralisAuthoringCapabilityDescriptorRegistry.BuildIntentProjectionDescriptors(
+                    RuntimeCapabilityLaneTag.Billboard2_5D,
+                    AuthoringWorldAxiom.Dimensions3D | AuthoringWorldAxiom.GravityVertical | AuthoringWorldAxiom.Realtime);
+            PyralisAuthoringIntentSelection billboardIntent = new PyralisAuthoringIntentSelection(
+                RuntimeCapabilityLaneTag.Billboard2_5D,
+                PyralisAuthoringCapabilityDescriptorRegistry.BuildCapabilitiesForDescriptors(new[] { spriteOnlyId }),
+                AuthoringWorldAxiom.Dimensions3D | AuthoringWorldAxiom.GravityVertical | AuthoringWorldAxiom.Realtime,
+                new[] { spriteOnlyId },
+                PyralisIntentParticipantRoute.FourLocalPlayers);
+
+            PyralisAuthoringIntentProjection projection =
+                PyralisAuthoringIntentProjection.Build(billboardIntent, billboardDescriptors);
+            string intentJson = PyralisAuthoringSetupGraphJsonExporter.ToIntentJson(
+                billboardIntent,
+                PyralisAuthoringSetupGraphProjection.BuildIntentModel(billboardIntent),
+                projection);
+
+            Assert.That(billboardDescriptors.Any(descriptor => descriptor.StableId == spriteOnlyId), Is.False);
+            Assert.That(projection.SelectedDescriptorIds, Does.Not.Contain(spriteOnlyId));
+            Assert.That(projection.SelectedDescriptors.Any(descriptor => descriptor.StableId == spriteOnlyId), Is.False);
+            Assert.That(intentJson, Does.Not.Contain(spriteOnlyId));
         }
 
         [Test]
@@ -473,7 +521,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
 
             PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(session, intent);
             string mapJson = PyralisAuthoringSetupGraphJsonExporter.ToMapJson(graph);
-            string routeTraceJson = PyralisAuthoringSetupGraphJsonExporter.ToRouteProofTraceJson(graph);
+            string routeTraceJson = PyralisAuthoringSetupGraphJsonExporter.ToRouteProofTraceJson(
+                PyralisAuthoringSetupGraphProjection.BuildRouteProofTraceProjection(graph));
 
             Assert.That(mapJson, Does.Contain("\"routeName\": \"Local Co-op Pawn route\""));
             Assert.That(mapJson, Does.Contain("\"assignedParticipantCount\": 4"));
@@ -702,7 +751,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
             string hygieneJson = PyralisAuthoringSetupGraphJsonExporter.ToHygieneJson(hygieneProjection);
             string noRouteHygieneJson = PyralisAuthoringSetupGraphJsonExporter.ToHygieneJson(
                 PyralisAuthoringHygieneProjection.Build(null, null, noRouteHygieneRecords));
-            string routeProofTraceJson = PyralisAuthoringSetupGraphJsonExporter.ToRouteProofTraceJson(graph);
+            string routeProofTraceJson = PyralisAuthoringSetupGraphJsonExporter.ToRouteProofTraceJson(
+                PyralisAuthoringSetupGraphProjection.BuildRouteProofTraceProjection(graph));
             var intentSelection = new PyralisAuthoringIntentSelection(
                 RuntimeCapabilityLaneTag.Sprite2D,
                 AuthoringCapability.Movement | AuthoringCapability.Input,
@@ -711,7 +761,9 @@ namespace NeonBlack.Gameplay.Tests.Editor
             string intentJson = PyralisAuthoringSetupGraphJsonExporter.ToIntentJson(
                 intentSelection,
                 PyralisAuthoringSetupGraphProjection.BuildIntentModel(intentSelection),
-                PyralisAuthoringCapabilityDescriptorRegistry.BuildIntentProjectionDescriptors(intentSelection.Lane, intentSelection.Axioms));
+                PyralisAuthoringIntentProjection.Build(
+                    intentSelection,
+                    PyralisAuthoringCapabilityDescriptorRegistry.BuildIntentProjectionDescriptors(intentSelection.Lane, intentSelection.Axioms)));
             string factsJson = PyralisAuthoringSetupGraphJsonExporter.ToFactsJson(graph);
             IReadOnlyList<PyralisAuthoringFact> factsProjectionFacts =
                 PyralisAuthoringSetupGraphProjection.BuildCookbookFacts(graph);
@@ -824,7 +876,14 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(intentJson, Does.Contain("\"metadataBacklogGroups\""));
             Assert.That(intentJson, Does.Contain("\"metadataBacklogCount\""));
             Assert.That(intentJson, Does.Contain("\"routeEssentialGroups\""));
+            Assert.That(intentJson, Does.Contain("\"shapeSummary\""));
+            Assert.That(intentJson, Does.Contain("\"routeShapePreview\""));
+            Assert.That(intentJson, Does.Contain("\"lensSummary\""));
             Assert.That(intentJson, Does.Contain("\"advisorSummary\""));
+            Assert.That(intentJson, Does.Contain("\"targetProofFocus\""));
+            Assert.That(intentJson, Does.Contain("\"targetProofSummary\""));
+            Assert.That(intentJson, Does.Contain("\"Local Co-op Pawn Join Proof\""));
+            Assert.That(intentJson, Does.Contain("Single-pawn movement recommendations are foundation pieces"));
             Assert.That(intentJson, Does.Contain("\"recommendations\""));
             Assert.That(intentJson, Does.Contain("\"runtimeFamilies\""));
             Assert.That(intentJson, Does.Not.Contain("\"requiredSetup\""));
@@ -1237,7 +1296,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(mapJson, Does.Contain("\"participantTopology\": \"LocalJoin\""));
             Assert.That(mapJson, Does.Contain("\"expectedJoinPolicy\": \"PlayerInputJoin\""));
             Assert.That(mapJson, Does.Contain("\"hasLocalJoinPolicyConflict\": true"));
-            string routeTraceJson = PyralisAuthoringSetupGraphJsonExporter.ToRouteProofTraceJson(graph);
+            string routeTraceJson = PyralisAuthoringSetupGraphJsonExporter.ToRouteProofTraceJson(
+                PyralisAuthoringSetupGraphProjection.BuildRouteProofTraceProjection(graph));
             Assert.That(routeTraceJson, Does.Contain("\"label\": \"Participant Join Policy\""));
             Assert.That(routeTraceJson, Does.Contain("\"currentActionLabel\": \"Participant Join Policy\""));
             Assert.That(routeTraceJson, Does.Contain("\"proofTargetId\": \"proof.local-pawn-join\""));
@@ -1561,7 +1621,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(route.ProofSupport.Any(row => row.FromLabel.Contains("Top Down Hop")), Is.False);
             Assert.That(route.ProofSupport.Any(row => row.FromLabel.Contains("Pawn Camera Target")), Is.False);
 
-            string traceJson = PyralisAuthoringSetupGraphJsonExporter.ToRouteProofTraceJson(graph);
+            string traceJson = PyralisAuthoringSetupGraphJsonExporter.ToRouteProofTraceJson(
+                PyralisAuthoringSetupGraphProjection.BuildRouteProofTraceProjection(graph));
             Assert.That(traceJson, Does.Contain("Add Motor2D"));
             Assert.That(traceJson, Does.Contain("\"currentActionLabel\": \"Add Motor2D\""));
             Assert.That(traceJson.Contains("Motor2DInputAdapter") || traceJson.Contains("Pawn2DMovementComponent"), Is.True);
@@ -1618,7 +1679,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(route.CurrentAction, Is.Not.Null);
             Assert.That(route.CurrentAction.Node.StableId, Is.EqualTo("bootstrap.root"));
 
-            string traceJson = PyralisAuthoringSetupGraphJsonExporter.ToRouteProofTraceJson(graph);
+            string traceJson = PyralisAuthoringSetupGraphJsonExporter.ToRouteProofTraceJson(
+                PyralisAuthoringSetupGraphProjection.BuildRouteProofTraceProjection(graph));
             Assert.That(traceJson, Does.Contain("\"orderedSteps\""));
             Assert.That(traceJson, Does.Contain("\"nodeId\": \"bootstrap.root\""));
             Assert.That(traceJson, Does.Contain("\"nodeId\": \"session.definition\""));
@@ -1654,7 +1716,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 && row.From.SourceKind == PyralisAuthoringGraphSourceKind.AuthoringContract
                 && row.From.ProofTargetId != "proof.local-pawn-join"), Is.False);
 
-            string traceJson = PyralisAuthoringSetupGraphJsonExporter.ToRouteProofTraceJson(graph);
+            string traceJson = PyralisAuthoringSetupGraphJsonExporter.ToRouteProofTraceJson(
+                PyralisAuthoringSetupGraphProjection.BuildRouteProofTraceProjection(graph));
             Assert.That(traceJson, Does.Contain("\"nodeId\": \"proof.local-pawn-join\""));
             Assert.That(traceJson, Does.Not.Contain("\"nodeId\": \"proof.1p-pawn-movement\""));
             Assert.That(traceJson, Does.Not.Contain("SceneSurface.PickupsHazardsEnemies"));
@@ -1662,6 +1725,46 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(traceJson, Does.Not.Contain("SceneReadiness.CameraAudio"));
             Assert.That(traceJson, Does.Not.Contain("Fake Gravity Jump"));
             Assert.That(traceJson, Does.Not.Contain("Top Down Hop"));
+        }
+
+        [Test]
+        public void RouteProofTrace_SmokeGuideProjectionExportUsesSelectedIntentRouteFacts()
+        {
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors =
+                PyralisAuthoringCapabilityDescriptorRegistry.BuildIntentProjectionDescriptors(
+                    RuntimeCapabilityLaneTag.Sprite2D,
+                    AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone | AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.BoundedSpace);
+            string[] selectedIds = descriptors
+                .Where(descriptor => descriptor.CapabilityPath == "Movement/2D/Kinetic Motor"
+                    || descriptor.CapabilityPath == "World & Meta/Camera/Pawn Camera Target"
+                    || descriptor.CapabilityPath == "Input/Pawn/Actor Interaction Input Bridge2D")
+                .Select(descriptor => descriptor.StableId)
+                .ToArray();
+            Assert.That(selectedIds.Length, Is.EqualTo(3));
+
+            PyralisAuthoringIntentSelection intent = new PyralisAuthoringIntentSelection(
+                RuntimeCapabilityLaneTag.Sprite2D,
+                PyralisAuthoringCapabilityDescriptorRegistry.BuildCapabilitiesForDescriptors(selectedIds),
+                AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone | AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.BoundedSpace,
+                selectedIds,
+                PyralisIntentParticipantRoute.FourLocalPlayers);
+
+            PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(null, intent);
+            PyralisAuthoringGuideProjection guide =
+                PyralisAuthoringGuideProjection.Build(null, null, graph);
+            string traceJson = PyralisAuthoringSetupGraphJsonExporter.ToRouteProofTraceJson(guide.RouteTrace);
+
+            Assert.That(guide.Route, Is.SameAs(guide.RouteTrace.Route));
+            Assert.That(traceJson, Does.Contain("\"desiredParticipantCount\": 4"));
+            Assert.That(traceJson, Does.Contain("\"capabilityFamilies\": ["));
+            Assert.That(traceJson, Does.Not.Contain("\"Combat\""));
+            Assert.That(traceJson, Does.Contain("Kinetic Motor"));
+            Assert.That(traceJson, Does.Not.Contain("Kinetic  Motor"));
+            Assert.That(traceJson, Does.Contain("\"family\": \"CharacterPawnGameplay\""));
+            Assert.That(traceJson, Does.Contain("Pawn Camera Target"));
+            Assert.That(traceJson, Does.Not.Contain("Pawn  Camera  Target"));
+            Assert.That(traceJson, Does.Not.Contain("Enemy Spawner"));
+            Assert.That(traceJson, Does.Not.Contain("Enemy Reaction Feature Runtime"));
         }
 
         [Test]

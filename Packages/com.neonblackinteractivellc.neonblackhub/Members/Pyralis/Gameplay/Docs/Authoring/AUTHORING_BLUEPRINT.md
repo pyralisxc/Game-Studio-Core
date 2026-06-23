@@ -109,18 +109,19 @@ Keep the implementation split by responsibility:
 | `PyralisAuthoringRouteDescriptor` | route facts inferred from authored setup, graph vocabulary, and selected context |
 | `PyralisAuthoringOverviewModel` | Overview read model for graph-projected lanes, first proof text, and Play Mode checklist |
 | `PyralisAuthoringCapabilityDescriptorRegistry` | route capability descriptors built from contracts, dependency evidence, and reflected metadata |
+| `PyralisAuthoringIntentProjection` | Intent tab projection packet for selected ingredients, metadata backlog, inferred route essentials, route-shape preview, and lens counts |
 | `PyralisCapabilityVocabulary` | generic capability labels, summaries, and native setup wording indexed by capability and runtime lane |
 | `PyralisProofFamilyVocabulary` | generic proof family templates |
 | `PyralisAuthoringIntentAdvisor` | pre-setup read model that ranks route-intent and graph-compatible vocabulary from selected world/playfield, control shape, lane, and goals |
 | `PyralisAuthoringSetupGraph` | read-only resolved graph of setup nodes, edges, evidence, proof targets, selected context, and source contracts |
-| `PyralisAuthoringSetupGraphProjection` | Map, Overview, Guide, Hygiene, reflective-contract, and selected-context projection rows derived from the resolved setup graph |
+| `PyralisAuthoringSetupGraphProjection` | Map, Overview, Guide, Route Proof Trace, Hygiene, reflective-contract, and selected-context projection rows derived from the resolved setup graph |
 | `PyralisAuthoringSceneSurfaceGuidance` | scene-surface labels, route relevance, next-fix text, expected evidence, and success text |
 | Bootstrap Inspector handoff | selected-object local integrity and a button into the graph-backed Authoring Window |
 | `PyralisSceneReadinessValidator` | concrete scene-object hygiene: missing scripts, scene services, native Unity input/UI/audio/camera/network surfaces, and scene-visible proof blockers |
 
 Add route facts, issue meaning, and setup analysis to these focused model/report classes before adding more drawing logic to the window.
 
-The window surface is UI Toolkit-only for non-Intent tabs. `PyralisAuthoringWindow` owns the tab shell, active setup cache, selection, and mode switching. Tab-specific projection packets are built in `PyralisAuthoringSetupGraphProjection`, rendered through the shared UI Toolkit tab renderer, and exported by the same export control. Do not add new IMGUI tab renderers or tab-local data discovery paths.
+The window surface is UI Toolkit-only for non-Intent tabs. `PyralisAuthoringWindow` owns the tab shell, active setup cache, selection, and mode switching. Tab-specific projection packets are built in `PyralisAuthoringSetupGraphProjection` or the Intent route projection classes, rendered through the shared UI Toolkit tab renderer or Intent tab surface, and exported by the same export control. Do not add new IMGUI tab renderers or tab-local data discovery paths.
 
 The active guidance pipeline is:
 
@@ -150,6 +151,8 @@ Route-facing projections may translate low-level structural evidence into concre
 Intent lane is compiled graph context, not disposable UI state. When setup is incomplete, the graph may not yet have a `Motor2D`, `Rigidbody2D`, `Pawn3DMovementComponent`, or other concrete prefab evidence to infer the lane from. In that case route-facing projections should fall back to the selected intent lane so a `Sprite2D` proof still says `Add Motor2D` instead of generic lane/interface wording. Concrete prefab evidence can refine or challenge the lane later, but incomplete setup should not erase the creator's selected route.
 
 Route shape is control ownership, not pawn implementation. The `route.shape` node should answer whether the route has the correct owner structure: participants exist, and pawn-backed routes have a participant default pawn. It should not own `PawnDefinition.pawnPrefab`, `ParticipantDefinition.inputProfile`, lane motor, input adapter, presentation, animation, or feature-module setup. Those belong to reflected assignment fields, prefab/component evidence, validators, and route-facing pawn setup cards.
+
+Route-shape and pawn-definition summary cards may include a concise native Unity action when the ownership spine itself is missing, such as creating/assigning `SessionDefinition.defaultParticipants` or assigning `ParticipantDefinition.defaultPawn`. They should not absorb field-level repair cards. If the user needs an input profile, pawn prefab, lane motor, presentation component, or local-join player prefab, that work must remain on the reflected assignment, runtime validation, or local-join card that owns the concrete evidence.
 
 Proof nodes are proof targets, not setup bundles. A first-proof node should explain the Play Mode test and the success signal. It should not absorb every native setup action, assignment field, or customization moment from supporting contracts. Put setup work before the proof as graph evidence; keep the proof card small enough that it reads as "what will prove this works."
 
@@ -445,7 +448,7 @@ Map may offer a compact read-only **Export Map JSON** button for human and agent
 
 ### Intent Export
 
-Intent may offer a compact read-only **Export Intent JSON** button. This snapshot serializes the steering lens only: DNA axioms, presentation lane, participant route, selected capability descriptor ids, reflected descriptor groups/subgroups, metadata backlog groups, runtime-family semantics, advisor summary, recommendations, cautions, and matching intent facts. It must not include Map setup rows, Hygiene audit rows, scene repair issues, generated setup content, required setup lists, assignment fields, or native action payloads. Intent export exists so humans and agents can inspect what the creator asked the route to focus on, and which potential ingredients are waiting on contract metadata, before judging whether Guide and Overview are honoring that focus.
+Intent may offer a compact read-only **Export Intent JSON** button. This snapshot serializes the same `PyralisAuthoringIntentProjection` and `PyralisAuthoringIntentModel` the tab renders: DNA axioms, presentation lane, participant route, selected capability descriptor ids, reflected descriptor groups/subgroups, metadata backlog groups, inferred route essentials, runtime-family semantics, route-shape preview, proof-focus summary, advisor summary, recommendations, cautions, and matching intent facts. It must not rebuild a separate export-only interpretation, and it must not include Map setup rows, Hygiene audit rows, scene repair issues, generated setup content, required setup lists, assignment fields, or native action payloads. Intent export exists so humans and agents can inspect what the creator asked the route to focus on, and which potential ingredients are waiting on contract metadata, before judging whether Guide and Overview are honoring that focus.
 
 ### Hygiene
 
@@ -470,9 +473,11 @@ Source ownership residue belongs in Hygiene, not Map. Reflection should expose s
 
 ### Route Proof Trace Export
 
-Guide may export a compact **Route Proof Trace** JSON packet through a page-local **Export Route Trace** button. This is an editor-only, read-only diagnostic view of the current proof route, not a preset, generator, setup model, or replacement for Map/Hygiene snapshots. Map exports only its current setup snapshot, Hygiene exports only its graph/code audit snapshot, and neither should offer Route Proof Trace.
+Guide may export a compact **Route Proof Trace** JSON packet through a page-local **Export Route Trace** button. This is an editor-only, read-only diagnostic view of the current proof route, not a preset, generator, setup model, or replacement for Map/Hygiene snapshots. The button must serialize the same `PyralisAuthoringRouteProofTraceProjection` carried by `PyralisAuthoringGuideProjection`; it must not rebuild a separate graph-only trace inside the exporter. Map exports only its current setup snapshot, Hygiene exports only its graph/code audit snapshot, and neither should offer Route Proof Trace.
 
 The trace should serialize the route projection's **fresh-scene setup-card path**: current route, intent focus when present as context, first proof priority, proof node, current action, ordered setup cards, proof blockers, direct proof context, supporting contracts, source owners, assignment fields, native setup actions, graph summary, and diagnostic questions for humans or agents. It may be generated from an Intent-projected graph before any concrete setup object is selected, because its job is to preview the path the user is about to create. The ordered cards should approximate the path a user would follow from an empty scene to the selected first proof: Gameplay Root, visible Lifetime Scope, Session Definition, Game Mode, route capabilities, participants, input, pawn definition, pawn prefab/runtime validation, proof enhancers when helpful, then the Play Mode proof target. Pawn-backed local join and hybrid routes use the local co-op pawn join proof even when a selected gameplay descriptor carries a generic 1P pawn movement proof hint.
+
+Route Trace diagnostic questions should describe the projection that actually exists. Empty-route troubleshooting belongs only on truly empty traces; an Intent-projected route with ordered cards should not warn that the route is empty just because no setup source has been selected yet. Display labels in route facts and exports should use contract/reflection display names with normalized spacing so acronyms and lane suffixes remain readable, such as `Pawn3D Movement Component`, `Pawn Camera Target`, and `Kinetic Motor`.
 
 The export separates route cards into three audit buckets:
 

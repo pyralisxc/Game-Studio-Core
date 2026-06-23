@@ -13,8 +13,9 @@ namespace NeonBlack.Gameplay.Features.Characters
     [AuthoringContract(
         Capability = AuthoringCapability.KineticMotor2D,
         CapabilityPath = "Movement/2D/Kinetic Motor",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay },
         Priority = AuthoringPriority.Primary,
-Lane = "Sprite2D",
+        Lane = "Sprite2D",
         Relevance = "Canonical 2D pawn motor; coordinates movement, animations, and reactions.",
         Axioms = AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.Realtime,
         RequiredComponents = new[] { typeof(Pawn2DMovementComponent), typeof(Pawn2DPresentationComponent) },
@@ -31,7 +32,7 @@ Lane = "Sprite2D",
         DocumentationURL = "https://docs.neonblack.com/pyralis/movement"
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Runtime 2D/Motor 2D")]
-[RequireComponent(typeof(Pawn2DMovementComponent))]
+    [RequireComponent(typeof(Pawn2DMovementComponent))]
     [RequireComponent(typeof(Pawn2DPresentationComponent))]
     public sealed class Motor2D : MonoBehaviour, IActorReactionResponder, IActorMovementModifierReceiver, IFacingDirectionProvider
     {

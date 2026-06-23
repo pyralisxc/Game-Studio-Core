@@ -23,18 +23,18 @@ namespace NeonBlack.Gameplay.Editor
             return JsonUtility.ToJson(snapshot, true);
         }
 
-        public static string ToRouteProofTraceJson(PyralisAuthoringSetupGraph graph)
+        public static string ToRouteProofTraceJson(PyralisAuthoringRouteProofTraceProjection projection)
         {
-            RouteProofTraceSnapshot snapshot = BuildRouteProofTraceSnapshot(graph);
+            RouteProofTraceSnapshot snapshot = BuildRouteProofTraceSnapshot(projection);
             return JsonUtility.ToJson(snapshot, true);
         }
 
         public static string ToIntentJson(
             PyralisAuthoringIntentSelection selection,
             PyralisAuthoringIntentModel model,
-            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors)
+            PyralisAuthoringIntentProjection projection)
         {
-            IntentSnapshot snapshot = BuildIntentSnapshot(selection, model, descriptors);
+            IntentSnapshot snapshot = BuildIntentSnapshot(selection, model, projection);
             return JsonUtility.ToJson(snapshot, true);
         }
 
@@ -47,16 +47,18 @@ namespace NeonBlack.Gameplay.Editor
         private static IntentSnapshot BuildIntentSnapshot(
             PyralisAuthoringIntentSelection selection,
             PyralisAuthoringIntentModel model,
-            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> descriptors)
+            PyralisAuthoringIntentProjection intentProjection)
         {
             selection ??= new PyralisAuthoringIntentSelection(
                 RuntimeCapabilityLaneTag.Sprite2D,
                 AuthoringCapability.None,
                 AuthoringWorldAxiom.None);
-            descriptors ??= Array.Empty<PyralisAuthoringCapabilityDescriptor>();
 
+            IReadOnlyList<PyralisAuthoringCapabilityDescriptor> projectionDescriptors =
+                PyralisAuthoringCapabilityDescriptorRegistry.BuildIntentProjectionDescriptors(selection.Lane, selection.Axioms);
             string[] selectedIds = PyralisAuthoringCapabilityDescriptorRegistry.FilterGameplayIntentDescriptorIds(
-                selection.DescriptorIds ?? Array.Empty<string>());
+                selection.DescriptorIds ?? Array.Empty<string>(),
+                projectionDescriptors);
             AuthoringCapability selectedCapabilities =
                 PyralisAuthoringCapabilityDescriptorRegistry.BuildCapabilitiesForDescriptors(selectedIds);
             if (selectedCapabilities == AuthoringCapability.None && selectedIds.Length == 0)
@@ -68,8 +70,9 @@ namespace NeonBlack.Gameplay.Editor
                 selectedIds,
                 selection.ParticipantRoute);
             model ??= PyralisAuthoringSetupGraphProjection.BuildIntentModel(exportSelection);
-            PyralisAuthoringIntentProjection intentProjection =
-                PyralisAuthoringIntentProjection.Build(exportSelection, descriptors);
+            intentProjection ??= PyralisAuthoringIntentProjection.Build(
+                exportSelection,
+                projectionDescriptors);
             return new IntentSnapshot
             {
                 schema = "pyralis.authoring.intentSnapshot.v1",
@@ -86,16 +89,21 @@ namespace NeonBlack.Gameplay.Editor
                 },
                 summary = new IntentSummarySnapshot
                 {
-                    descriptorCount = descriptors.Count,
-                    selectableDescriptorCount = descriptors.Count(descriptor => descriptor != null && descriptor.SelectableIntent),
-                    metadataBacklogCount = intentProjection.MetadataBacklogDescriptors.Count,
-                    selectedDescriptorCount = selectedIds.Length,
+                    descriptorCount = intentProjection.Descriptors.Count,
+                    selectableDescriptorCount = intentProjection.Descriptors.Count(descriptor => descriptor != null && descriptor.SelectableIntent),
+                    metadataBacklogCount = intentProjection.MetadataBacklogCount,
+                    selectedDescriptorCount = intentProjection.SelectedGameplayIngredientCount,
                     recommendationCount = model.Recommendations.Count,
                     cautionCount = model.Cautions.Count,
                     matchingIntentCount = model.MatchingIntents.Count
                 },
-                routeShapePreview = PyralisAuthoringSetupGraphProjection.BuildRouteShapeSummary(exportSelection),
+                shapeSummary = model.ShapeSummary,
+                routeShapePreview = intentProjection.RouteShapePreview,
+                lensSummary = intentProjection.LensSummary,
                 advisorSummary = model.Summary,
+                targetProofFocus = model.ProofFocusLabel,
+                targetProofAdvice = model.ProofFocusDetail,
+                targetProofSummary = model.ProofFocusSummary,
                 descriptorGroups = BuildIntentDescriptorGroups(intentProjection.AllGroups),
                 gameplayIngredientGroups = BuildIntentDescriptorGroups(intentProjection.GameplayIngredientGroups),
                 metadataBacklogGroups = BuildIntentDescriptorGroups(intentProjection.MetadataBacklogGroups),
@@ -351,11 +359,11 @@ namespace NeonBlack.Gameplay.Editor
             };
         }
 
-        private static RouteProofTraceSnapshot BuildRouteProofTraceSnapshot(PyralisAuthoringSetupGraph graph)
+        private static RouteProofTraceSnapshot BuildRouteProofTraceSnapshot(PyralisAuthoringRouteProofTraceProjection trace)
         {
-            PyralisAuthoringRouteProofTraceProjection trace =
-                PyralisAuthoringSetupGraphProjection.BuildRouteProofTraceProjection(graph);
-            PyralisAuthoringRouteWorkingProjection route = trace.Route;
+            PyralisAuthoringSetupGraph graph = trace?.Graph;
+            PyralisAuthoringRouteWorkingProjection route = trace?.Route
+                ?? PyralisAuthoringSetupGraphProjection.BuildRouteWorkingProjection(graph);
             RouteStepSnapshot[] orderedSteps = route.OrderedSteps.Select(BuildRouteStep).ToArray();
             RouteStepSnapshot[] criticalPath = route.CriticalPath.Select(BuildRouteStep).ToArray();
             RouteStepSnapshot[] proofEnhancers = route.ProofEnhancers.Select(BuildRouteStep).ToArray();
@@ -384,9 +392,9 @@ namespace NeonBlack.Gameplay.Editor
                 canWait = canWait,
                 proofBlockers = proofBlockers,
                 proofSupport = proofSupport,
-                supportingContracts = trace.SupportingContracts.Select(BuildContractPressure).ToArray(),
+                supportingContracts = (trace?.SupportingContracts ?? Array.Empty<PyralisAuthoringGraphNode>()).Select(BuildContractPressure).ToArray(),
                 graphSummary = BuildGraphSummary(PyralisAuthoringSetupGraphProjection.BuildGraphSummaryProjection(graph, Array.Empty<PyralisSourceDependencyHygieneRecord>(), route.ProofBlockers)),
-                diagnosticQuestions = trace.DiagnosticQuestions
+                diagnosticQuestions = (trace?.DiagnosticQuestions ?? Array.Empty<PyralisAuthoringRouteDiagnosticQuestionRow>())
                     .Select(BuildTraceDiagnosticQuestion)
                     .ToArray()
             };
@@ -1290,8 +1298,13 @@ namespace NeonBlack.Gameplay.Editor
             public string exportedAtUtc;
             public IntentSelectionSnapshot selection;
             public IntentSummarySnapshot summary;
+            public string shapeSummary;
             public string routeShapePreview;
+            public string lensSummary;
             public string advisorSummary;
+            public string targetProofFocus;
+            public string targetProofAdvice;
+            public string targetProofSummary;
             public IntentDescriptorGroupSnapshot[] descriptorGroups;
             public IntentDescriptorGroupSnapshot[] gameplayIngredientGroups;
             public IntentDescriptorGroupSnapshot[] metadataBacklogGroups;

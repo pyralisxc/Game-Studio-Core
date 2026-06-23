@@ -190,7 +190,7 @@ namespace NeonBlack.Gameplay.Editor
         private static void DrawRouteChecklist(VisualElement parent, PyralisAuthoringGuideProjection projection)
         {
             VisualElement section = PyralisAuthoringUi.Section(parent, "Intent Route Checklist");
-            section.Add(PyralisAuthoringUi.ActionRow(PyralisAuthoringGraphJsonExportControl.BuildRouteProofTraceButton(projection.Graph)));
+            section.Add(PyralisAuthoringUi.ActionRow(PyralisAuthoringGraphJsonExportControl.BuildRouteProofTraceButton(projection.RouteTrace)));
             if (projection.Route?.OrderedSteps == null || projection.Route.OrderedSteps.Count == 0)
             {
                 PyralisAuthoringUi.Help(section, "Guide needs an Intent focus and enough authored setup to build a route checklist. Start in Intent, then express setup through Unity assets and scene objects.");

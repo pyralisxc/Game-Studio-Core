@@ -81,17 +81,29 @@ namespace NeonBlack.Gameplay.Editor
     {
         public PyralisAuthoringIntentModel(
             string summary,
+            string shapeSummary,
+            string proofFocusLabel,
+            string proofFocusDetail,
+            string proofFocusSummary,
             IReadOnlyList<PyralisAuthoringIntentRow> recommendations,
             IReadOnlyList<PyralisAuthoringIntentRow> cautions,
             IReadOnlyList<PyralisAuthoringFact> matchingIntents)
         {
             Summary = summary ?? string.Empty;
+            ShapeSummary = shapeSummary ?? string.Empty;
+            ProofFocusLabel = proofFocusLabel ?? string.Empty;
+            ProofFocusDetail = proofFocusDetail ?? string.Empty;
+            ProofFocusSummary = proofFocusSummary ?? string.Empty;
             Recommendations = recommendations ?? Array.Empty<PyralisAuthoringIntentRow>();
             Cautions = cautions ?? Array.Empty<PyralisAuthoringIntentRow>();
             MatchingIntents = matchingIntents ?? Array.Empty<PyralisAuthoringFact>();
         }
 
         public string Summary { get; }
+        public string ShapeSummary { get; }
+        public string ProofFocusLabel { get; }
+        public string ProofFocusDetail { get; }
+        public string ProofFocusSummary { get; }
         public IReadOnlyList<PyralisAuthoringIntentRow> Recommendations { get; }
         public IReadOnlyList<PyralisAuthoringIntentRow> Cautions { get; }
         public IReadOnlyList<PyralisAuthoringFact> MatchingIntents { get; }
@@ -174,6 +186,10 @@ namespace NeonBlack.Gameplay.Editor
 
             return new PyralisAuthoringIntentModel(
                 BuildSummary(selection, matchingIntents),
+                BuildShapeSummary(selection, matchingIntents),
+                BuildProofFocusLabel(selection),
+                BuildProofFocusDetail(selection),
+                BuildProofFocusSummary(selection),
                 recommendations,
                 cautions,
                 matchingIntents);
@@ -273,6 +289,117 @@ namespace NeonBlack.Gameplay.Editor
                 return string.Format(PyralisAuthoringGuidance.MatchingIntentSummary, JoinFactNames(matchingIntents), selection.Lane, selection.Axioms);
 
             return string.Format(PyralisAuthoringGuidance.AxiomFoundationSummary, selection.Axioms, selection.Capabilities);
+        }
+
+        private static string BuildShapeSummary(PyralisAuthoringIntentSelection selection, IReadOnlyList<PyralisAuthoringFact> matchingIntents)
+        {
+            string focus = matchingIntents != null && matchingIntents.Count > 0
+                ? JoinFactNames(matchingIntents)
+                : "Custom route";
+            return $"Shape: {selection.Lane} / {GetParticipantRouteDisplayName(selection.ParticipantRoute)} / {focus}";
+        }
+
+        private static string BuildProofFocusLabel(PyralisAuthoringIntentSelection selection)
+        {
+            string proofId = ResolveProofFocusId(selection);
+            PyralisAuthoringFact proof = PyralisAuthoringGrammarRegistry.AllFacts.FirstOrDefault(fact =>
+                fact != null && string.Equals(fact.StableId, proofId, StringComparison.Ordinal));
+            return proof != null && !string.IsNullOrWhiteSpace(proof.DisplayName)
+                ? proof.DisplayName
+                : "First Proof";
+        }
+
+        private static string BuildProofFocusDetail(PyralisAuthoringIntentSelection selection)
+        {
+            string proofId = ResolveProofFocusId(selection);
+            if (string.Equals(proofId, "proof.local-pawn-join", StringComparison.Ordinal))
+                return "Target route focus is local pawn join. Single-pawn movement recommendations are foundation pieces, not a replacement for the local-player proof.";
+
+            if (string.Equals(proofId, "proof.1p-pawn-movement", StringComparison.Ordinal))
+                return "Target route focus is one responsive pawn. Add broader multiplayer, combat, UI, or scene features after this movement proof is honest.";
+
+            PyralisAuthoringFact proof = PyralisAuthoringGrammarRegistry.AllFacts.FirstOrDefault(fact =>
+                fact != null && string.Equals(fact.StableId, proofId, StringComparison.Ordinal));
+            return proof != null && !string.IsNullOrWhiteSpace(proof.Summary)
+                ? proof.Summary
+                : "Target route focus follows the selected lane, participant route, and gameplay ingredients.";
+        }
+
+        private static string BuildProofFocusSummary(PyralisAuthoringIntentSelection selection)
+        {
+            string label = BuildProofFocusLabel(selection);
+            string detail = BuildProofFocusDetail(selection);
+            return string.IsNullOrWhiteSpace(detail)
+                ? "Target proof: " + label
+                : "Target proof: " + label + ". " + detail;
+        }
+
+        private static string ResolveProofFocusId(PyralisAuthoringIntentSelection selection)
+        {
+            RuntimeCapabilityFamily[] families = BuildIntentRuntimeFamilies(selection);
+            bool requiresPawn = families.Any(family => family == RuntimeCapabilityFamily.CharacterPawnGameplay);
+            return PyralisProofFamilyVocabulary.GetGenericProofTargetId(
+                families,
+                requiresPawn,
+                GetParticipantTopology(selection?.ParticipantRoute ?? PyralisIntentParticipantRoute.InferFromSetup));
+        }
+
+        private static RuntimeCapabilityFamily[] BuildIntentRuntimeFamilies(PyralisAuthoringIntentSelection selection)
+        {
+            if (selection == null)
+                return Array.Empty<RuntimeCapabilityFamily>();
+
+            if (selection.DescriptorIds != null && selection.DescriptorIds.Length > 0)
+            {
+                RuntimeCapabilityFamily[] descriptorFamilies =
+                    PyralisAuthoringCapabilityDescriptorRegistry.BuildRuntimeFamiliesForDescriptors(
+                        selection.DescriptorIds,
+                        selection.Lane,
+                        selection.Axioms);
+                if (descriptorFamilies.Length > 0)
+                    return descriptorFamilies;
+            }
+
+            return PyralisAuthoringCapabilityDescriptorRegistry.BuildRuntimeFamilies(
+                selection.Capabilities,
+                selection.Lane,
+                selection.Axioms);
+        }
+
+        private static PyralisParticipantTopology GetParticipantTopology(PyralisIntentParticipantRoute route)
+        {
+            switch (route)
+            {
+                case PyralisIntentParticipantRoute.TwoLocalPlayers:
+                case PyralisIntentParticipantRoute.ThreeLocalPlayers:
+                case PyralisIntentParticipantRoute.FourLocalPlayers:
+                    return PyralisParticipantTopology.LocalJoin;
+                case PyralisIntentParticipantRoute.HybridLocalNetworked:
+                    return PyralisParticipantTopology.HybridLocalNetworked;
+                default:
+                    return PyralisParticipantTopology.Unknown;
+            }
+        }
+
+        private static string GetParticipantRouteDisplayName(PyralisIntentParticipantRoute route)
+        {
+            switch (route)
+            {
+                case PyralisIntentParticipantRoute.SoloLocal:
+                    return "Solo Local";
+                case PyralisIntentParticipantRoute.TwoLocalPlayers:
+                    return "2 Local Players";
+                case PyralisIntentParticipantRoute.ThreeLocalPlayers:
+                    return "3 Local Players";
+                case PyralisIntentParticipantRoute.FourLocalPlayers:
+                    return "4 Local Players";
+                case PyralisIntentParticipantRoute.Networked:
+                    return "Networked";
+                case PyralisIntentParticipantRoute.HybridLocalNetworked:
+                    return "Hybrid Local + Network";
+                default:
+                    return "Infer From Setup";
+            }
         }
 
         private static string BuildReason(PyralisAuthoringIntentSelection selection, PyralisAuthoringFact fact, HashSet<string> relatedStableIds)
