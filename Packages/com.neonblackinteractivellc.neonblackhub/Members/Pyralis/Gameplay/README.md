@@ -56,16 +56,21 @@ Do not keep broad optional domain matrices or documentation audits in the active
 
 ## Layout
 
-- `Core/`: engine spine, shared runtime services, runtime behavior contracts, and runtime-visible authoring contract metadata consumed by `Editor/Authoring`
-- `Data/`: ScriptableObject definitions and profiles
+- `Core/`: stable contracts plus tiny shared type vocabulary such as movement modes, presentation lanes, animation signals, action value language, and narrow optional sinks
+- `Data/`: ScriptableObject definitions, profiles, and config assets such as `GameConfig`; authored combat data lives here, not in the Combat runtime namespace
 - `Editor/`: shared authoring helpers and custom inspectors
-- `Features/`: optional runtime systems, gameplay modules, feature-owned composition, feature UI, and feature-specific editor tools
+- `Glue/`: bootstrap, lifetime scope, session services, participant services, input routing, participant spawning, route composition, and service-registration wiring that makes authored modules run
+- `Modules/`: reusable gameplay capability families such as character, combat, traversal, pickups, hazards, enemies, encounters, environment, interaction, feedback, scoring, tabletop, settings, input, spawning, RPG, and actor feature composition
 - `Networking/`: ownership, authority, and backend-facing runtime contracts
 - `Presentation/`: cross-feature visual and camera infrastructure
 - `Tests/`: package-level validation infrastructure
 - `Docs/`: setup and architecture notes
 
-Feature folders should own their local composition and tooling when the logic is not part of the universal authoring spine. For example, RPG service registration lives under `Features/Rpg/Runtime/Composition`, while the RPG narrative editor lives under `Features/Rpg/Editor/Tools`.
+Core is intentionally not an implementation home. Authored input setup is owned by `InputProfile`, gameplay config assets live under `Data/Config`, runtime session context lives under `Glue/Lifetime`, and optional feature domains live under `Modules`.
+
+Core contracts should stay neutral and compile-time focused. For example, `IDamageNumberSink` is a shared optional sink, but `DamageNumber` and `DamageNumberSpawner` belong to the Feedback module. `IActorCombatCommandReceiver` and `IActorGuardController` are tiny runtime seams that let motors, presentation, and input bridges talk to combat posture without importing concrete combat behavior. Combat definitions such as `WeaponData`, `CombatSequenceDefinition`, projectile definitions, and status effects are authored data under `Data.Definitions.Combat`; Combat runtime scripts consume them instead of owning their namespace.
+
+Module folders own their local runtime composition, lane-specific implementation, scene-facing presenters, and feature-specific editor tooling when the logic is not part of the universal authoring spine. Module code should be covered by feature-owned runtime, UI, and editor asmdefs instead of falling into the aggregate root assembly. A module's runtime asmdef should sit high enough to cover runtime-owned code without pulling in feature UI/view code that depends back on authored `Data`; feature UI/view asmdefs may sit beside runtime to keep those cycles explicit and acyclic. Nested `Editor` asmdefs own editor-only tools. Lane folders use `Sprite2D`, `Billboard2_5D`, and `Rigged3D` instead of shorthand folder names. Character owns pawn identity, movement, input receiver contracts, and pawn-facing contracts; Combat owns pawn combat behavior, hitbox/damage/projectile/block/weapon modules, combat action state, and its feature service installer. For example, RPG runtime domain/contracts/services compile through the RPG runtime module while RPG UI presenters compile through `Modules/Rpg/UI`; tabletop board/turn rules compile through the Tabletop runtime module while tabletop scene-facing views compile through `Modules/Tabletop/UI`; queued action execution lives under `Modules/Actions/Runtime`; and the RPG narrative editor lives under `Modules/Rpg/Editor/Tools`. Cross-feature display helpers live under `Presentation`, such as generic HUD orientation code in `Presentation/HUD/UI`, settings panels in `Presentation/HUD/Settings`, and camera trigger zones in `Presentation/Camera/Zones`. Route-specific mode orchestration and scene loading belong under `Glue/SceneFlow`.
 
 ## Current pawn animation architecture
 

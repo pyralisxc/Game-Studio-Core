@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NeonBlack.Gameplay.Core.Contracts;
-using NeonBlack.Gameplay.Presentation.Animation;
+using NeonBlack.Gameplay.Core.Types.Animation;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Data.Definitions
@@ -15,7 +15,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
         RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.AnimationDefinitionRouteSupport },
         NativeSetup = new[] { "Set supported presentation modes.", "Optionally list supported signals." },
         AssignmentFields = new[] { nameof(supportsSprite2D), nameof(supportsBillboard2_5D), nameof(supportsRigged3D) },
-        FirstProof = "Verify animation signals trigger correctly in the prefab's Animator.",
+        Proof = "Verify animation signals trigger correctly in the prefab's Animator.",
         ExpertAdvice = "Leave Supported Signals empty to accept all standard signals. Use specific signals only if the animator is restricted."
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Definitions/Actor Animation Definition", fileName = "ActorAnimationDefinition", order = 70)]

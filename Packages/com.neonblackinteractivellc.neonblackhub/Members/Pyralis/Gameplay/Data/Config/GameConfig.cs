@@ -3,7 +3,7 @@ using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
 using UnityEngine;
 
-namespace NeonBlack.Gameplay.Core.Config
+namespace NeonBlack.Gameplay.Data.Config
 {
     /// <summary>
     /// Game-specific wiring point for scenes and key service prefabs.
@@ -15,12 +15,13 @@ namespace NeonBlack.Gameplay.Core.Config
         Relevance = "The master wiring point for the game project; defines the entry session and service prefabs.",
         NativeSetup = new[] { "Assign Session Definition.", "Set Scene names." },
         AssignmentFields = new[] { nameof(sessionDefinition), nameof(mainMenuScene) },
-        FirstProof = "Verify the game boots into the specified main menu scene.",
+        Proof = "Verify the game boots into the specified main menu scene.",
         ExpertAdvice = "Use service prefabs only if you need custom logic for core services like Time or Scene Loading.",
-        CapabilityPath = "Core Setup/Configuration/Game Config",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.PlatformCore }
+        CapabilityPath = "Configuration/Game Config",
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.PlatformCore },
+        Surface = AuthoringContractSurface.SetupOnly
     )]
-    [CreateAssetMenu(menuName = "NeonBlack/Core/Game Config", fileName = "GameConfig")]
+    [CreateAssetMenu(menuName = "NeonBlack/Pyralis/Game Config", fileName = "GameConfig")]
     public class GameConfig : ScriptableObject, IRuntimeValidationProvider
     {
         public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()

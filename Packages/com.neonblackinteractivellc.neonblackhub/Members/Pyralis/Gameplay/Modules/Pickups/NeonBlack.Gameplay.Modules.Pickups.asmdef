@@ -1,0 +1,17 @@
+{
+    "name": "NeonBlack.Gameplay.Modules.Pickups",
+    "references": [
+        "NeonBlack.Gameplay.Core",
+        "NeonBlack.Gameplay.Data",
+        "NeonBlack.Gameplay.Modules.Actor.Composition",
+        "VContainer"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}

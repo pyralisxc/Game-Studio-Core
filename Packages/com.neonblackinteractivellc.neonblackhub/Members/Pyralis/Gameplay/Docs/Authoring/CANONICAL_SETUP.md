@@ -8,7 +8,7 @@ For feature-driven authoring contracts, add contracts in the feature package and
 
 ## 1. Core Scene Root
 
-For a first playable scene, create one empty GameObject named `Gameplay Root`.
+For a proof scene, create one empty GameObject named `Gameplay Root`.
 
 Attach these components to `Gameplay Root`:
 
@@ -26,7 +26,7 @@ Under `Gameplay Root`, author these core service components as child objects or 
 
 For networked sessions, use the networked session, roster, and spawn service replacements instead of the local service components.
 
-For the movement-first proof pass, stop after these links:
+For a pawn-focused proof or a selected proof that needs a pawn, stop after these links before Play Mode:
 
 - `GameplaySessionBootstrap` with `Session Definition`
 - at least one pawn-backed participant path (`ParticipantDefinition` + `PawnDefinition` + prefab)
@@ -35,7 +35,7 @@ For the movement-first proof pass, stop after these links:
 - a Cinemachine-backed `Camera Root` assigned to `GameplaySessionBootstrap > Camera Rig Controller` for camera framing, with `CameraRigProfile.focusMode` choosing pawn, group, playfield, explicit scene target, or manual Cinemachine focus
 - authored core runtime services listed above
 
-Delay scoring, HUD, combat, scene-flow, pickup/hazard, and network extras until movement proof is confirmed in Play mode.
+Delay unrelated scoring, HUD, combat, scene-flow, pickup/hazard, and network extras until the selected focused proof is confirmed in Play Mode. If one of those systems is the selected Intent focus, keep only its smallest proof path plus the required pawn/session/input prerequisites.
 
 On `GameplaySessionBootstrap`, assign:
 
@@ -49,7 +49,7 @@ On `GameplaySessionBootstrap`, assign:
 On `ParticipantSpawnService`, assign:
 
 - `Spawn Points` - required Transforms for pawn-backed routes when `Spawn On Register` is enabled; leave empty only when the route disables `Spawn On Register` for no-pawn or fully custom spawning
-- `Spawn On Register` - on for normal pawn-backed first proofs, off when participants control board seats, cameras, UI, cursors, or other non-pawn surfaces
+- `Spawn On Register` - on for normal pawn-backed proofs, off when participants control board seats, cameras, UI, cursors, or other non-pawn surfaces
 
 The runtime does not create missing service GameObjects. Map/Scene Readiness should point out any missing core service and tell you which child object or Bootstrap override field to author.
 
@@ -77,7 +77,7 @@ Create these authored assets for every new setup:
 - `GameModeDefinition`
 - at least one `ParticipantDefinition`
 
-Use the Authoring Window Intent tab as a graph filter while you wire real gameplay assets. The reflected route capabilities come from `SessionDefinition`, `GameModeDefinition`, participants, pawns, feature modules, scene evidence, and contracts/reflection; grammar vocabulary supplies labels and generic wording only.
+Use the Authoring Window Intent tab as a graph filter while you wire real gameplay assets. The reflected route capabilities come from `SessionDefinition`, `GameModeDefinition`, participants, pawns, feature modules, scene evidence, and contracts/reflection; vocabulary supplies labels and generic wording only.
 
 Create pawn assets only when a participant needs an actor body in the scene:
 
@@ -194,7 +194,7 @@ Important rules:
 - `ResolvedAuthoringContractRegistry` discovers contracts reflectively; do not add central hardcoded module-id registries
 - the contract should declare feature meaning, semantic capability path, role tags, supported/unsupported lanes, action roles, native setup meaning, customization moments, developer first-proof guidance, and `SetupNodeId` when the contract enriches a stable resolved setup graph node
 - do not duplicate structure that reflection can already infer, including implemented interfaces, `[RequireComponent]` dependencies, serialized fields, `CreateAssetMenu`, `AddComponentMenu`, profile asset types, prefab components, and dependency order
-- every declared `FirstProofTargetId` must resolve to a graph proof node; route-proof grammar may provide generic wording, but contract metadata and graph proof edges own the compiled proof relationship
+- every declared `ProofTargetId` must resolve to a graph proof node; route-proof grammar may provide generic wording, but contract metadata and graph proof edges own the compiled proof relationship
 - every feature module must declare network intent
 - runtime prefabs must expose the required feature runtime interfaces, while actor roots, scene roots, UI roots, and other authored objects must expose only the physical component requirements declared for that placement
 - feature-owned authored profiles should live with the feature whenever practical

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NeonBlack.Gameplay.Core.Rpg;
+using NeonBlack.Gameplay.Modules.Rpg.Runtime;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
@@ -12,7 +12,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
         Capability = AuthoringCapability.Dialogue,
         Lane = "RPG",
         AssignmentFields = new[] { nameof(graphId), nameof(displayName), nameof(startNodeId), nameof(nodes) },
-        FirstProof = "Proof that the dialogue graph can be traversed and contains at least one terminal node.",
+        Proof = "Proof that the dialogue graph can be traversed and contains at least one terminal node.",
         CapabilityPath = "RPG/Dialogue/Definitions/Dialogue Graph Definition",
         RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
     )]

@@ -1,4 +1,4 @@
-using NeonBlack.Gameplay.Core.Rules.Board;
+using NeonBlack.Gameplay.Modules.Tabletop.Runtime;
 using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
 using UnityEngine;
@@ -12,7 +12,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
         Capability = AuthoringCapability.Tabletop | AuthoringCapability.Grid, 
         Relevance = "Project-window creation path for tabletop board layouts and starting pieces.",
         AssignmentFields = new[] { nameof(width), nameof(height), nameof(startingPieces) },
-        FirstProof = "Verify the board dimensions and starting pieces are correct in the Board Presenter.",
+        Proof = "Verify the board dimensions and starting pieces are correct in the Board Presenter.",
         CapabilityPath = "Tabletop/Board/Board Definition",
         RuntimeFamilies = new[] { RuntimeCapabilityFamily.BoardCardTabletop }
     )]

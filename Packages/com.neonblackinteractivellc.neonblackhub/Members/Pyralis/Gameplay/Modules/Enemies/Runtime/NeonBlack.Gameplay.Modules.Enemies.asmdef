@@ -1,0 +1,20 @@
+{
+    "name": "NeonBlack.Gameplay.Modules.Enemies",
+    "references": [
+        "NeonBlack.Gameplay.Core",
+        "NeonBlack.Gameplay.Data",
+        "NeonBlack.Gameplay.Modules.Actor.Composition",
+        "NeonBlack.Gameplay.Modules.Character",
+        "NeonBlack.Gameplay.Modules.Combat",
+        "NeonBlack.Gameplay.Presentation",
+        "VContainer"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}

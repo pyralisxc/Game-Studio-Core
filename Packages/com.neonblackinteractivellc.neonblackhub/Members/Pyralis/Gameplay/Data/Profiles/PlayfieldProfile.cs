@@ -12,11 +12,12 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Capability = AuthoringCapability.Movement | AuthoringCapability.Setup,
         Relevance = "Project-window creation path for movement space, bounds, wrap, and arena-depth rules.",
         AssignmentFields = new[] { nameof(movementMode), nameof(minBounds), nameof(maxBounds) },
-        FirstProof = "Verify that actors are clamped to the defined bounds in-game.",
+        Proof = "Verify that actors are clamped to the defined bounds in-game.",
         ExpertAdvice = "The Playfield defines the physical boundaries of the simulation. Use 'Clamp To Bounds' for arena-style games to keep participants within the playable area.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/core",
         CapabilityPath = "Movement/Profiles/Playfield Profile",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay },
+        Surface = AuthoringContractSurface.Profile
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Playfield Profile", fileName = "PlayfieldProfile", order = -80)]
     public class PlayfieldProfile : ScriptableObject, IRuntimeValidationProvider, IPlayfieldBoundsProvider

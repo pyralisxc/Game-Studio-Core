@@ -20,7 +20,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Lane = "Movement",
         Relevance = "Defines the movement feel, speed, acceleration, and damping for a pawn archetype.",
         AssignmentFields = new[] { nameof(walkSpeed), nameof(acceleration), nameof(dashSpeed), nameof(movementMode), nameof(movementStyle), nameof(useCharacterController) },
-        FirstProof = "Move the pawn in play mode and verify speed feel.",
+        Proof = "Move the pawn in play mode and verify speed feel.",
         ExpertAdvice = "The movement profile is your 'steering wheel'. It defines the responsiveness and agility of your actor. For 2D games, set 'Use 2D Physics' to enable Rigidbody2D interaction.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/movement",
         NativeSetup = new[] { "Assign to a PawnDefinition." },

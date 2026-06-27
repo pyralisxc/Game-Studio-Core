@@ -3,10 +3,10 @@
     "references": [
         "NeonBlack.Gameplay.Core",
         "NeonBlack.Gameplay.Data",
-        "NeonBlack.Gameplay.Characters",
         "Unity.TextMeshPro",
         "Unity.InputSystem",
         "Unity.Cinemachine",
+        "UnityEngine.UI",
         "VContainer"
     ],
     "includePlatforms": [],

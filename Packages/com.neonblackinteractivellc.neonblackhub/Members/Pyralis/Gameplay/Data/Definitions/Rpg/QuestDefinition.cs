@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NeonBlack.Gameplay.Core.Rpg;
+using NeonBlack.Gameplay.Modules.Rpg.Runtime;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
@@ -12,7 +12,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
         Capability = AuthoringCapability.Dialogue,
         Lane = "RPG",
         AssignmentFields = new[] { nameof(questId), nameof(displayName), nameof(objectives), nameof(rewards) },
-        FirstProof = "Proof that the quest can be tracked and rewards are correctly defined.",
+        Proof = "Proof that the quest can be tracked and rewards are correctly defined.",
         CapabilityPath = "RPG/Dialogue/Definitions/Quest Definition",
         RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
     )]

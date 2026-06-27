@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
-using NeonBlack.Gameplay.Features.Combat;
+using NeonBlack.Gameplay.Data.Definitions.Combat;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Data.Profiles
@@ -10,7 +10,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Relevance = "Defines common status effect vulnerabilities and immunities for an actor.",
         NativeSetup = new[] { "List starting effects.", "Set default shield reduction." },
         AssignmentFields = new[] { nameof(defaultShieldDamageReduction) },
-        FirstProof = "Verify the actor is spawned with the specified starting effects.",
+        Proof = "Verify the actor is spawned with the specified starting effects.",
         ExpertAdvice = "Use defaultShieldDamageReduction to scale incoming damage when the actor has an active shield effect.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/combat",
         CapabilityPath = "Combat/Actions/Actor Status Effect Profile",

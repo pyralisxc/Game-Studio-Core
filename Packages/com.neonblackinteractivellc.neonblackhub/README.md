@@ -17,7 +17,8 @@ Use this package when you want to:
 | `Members/Pyralis/Gameplay/Core/` | Foundational services, VContainer composition, contracts, config, `SceneLoader`, and `TimeManager`. |
 | `Members/Pyralis/Gameplay/Data/` | ScriptableObject definitions and profiles for sessions, participants, pawns, modes, and settings. |
 | `Members/Pyralis/Gameplay/Editor/Authoring/` | Central Pyralis authoring spine, Authoring Window, Inspector guides, validation, diagnostics, and editor utilities. |
-| `Members/Pyralis/Gameplay/Features/` | All gameplay systems. Each feature lives in `Features/[Name]/` with `2D/` and `3D/` subfolders where applicable. |
+| `Members/Pyralis/Gameplay/Modules/` | Reusable gameplay capability families. Lane-specific code uses `Sprite2D`, `Billboard2_5D`, and `Rigged3D` folders where applicable. |
+| `Members/Pyralis/Gameplay/Glue/` | Bootstrap, lifetime, session, participant, input-routing, spawning, service-registration, and scene-flow composition that wires authored modules together. |
 | `Members/Pyralis/Gameplay/Networking/` | Session ownership, authority, replication-facing contracts, and backend adapters. |
 | `Members/Pyralis/Gameplay/Presentation/` | Cross-feature animation, camera, audio, and HUD infrastructure. |
 | `Members/Pyralis/Gameplay/Integrations/` | Service and package adapters for the wider platform. |
@@ -76,5 +77,5 @@ If `package.json` still says an older version, that machine has an older copy of
 - Active runtime code is under `Members/Pyralis/Gameplay/`.
 - `GameplaySessionBootstrap` is the Unity-facing startup path for new scenes.
 - `PyralisGameplayLifetimeScope` is the runtime DI graph. It registers owned services for the active bootstrap/session path.
-- The folder structure is `Core/`, `Data/`, `Editor/`, `Features/` with no `Shared/`, `Runtime2D/`, or `Runtime3D/` top-level folders.
+- The folder structure is `Core/`, `Data/`, `Editor/`, `Modules/` with no `Shared/`, `Runtime2D/`, or `Runtime3D/` top-level folders.
 - Scene setup should follow the current guides in `Members/Pyralis/Gameplay/Docs/Authoring/`.

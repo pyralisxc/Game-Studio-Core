@@ -1,0 +1,21 @@
+{
+    "name": "NeonBlack.Gameplay.Modules.Combat.Editor",
+    "references": [
+        "NeonBlack.Gameplay.Modules.Combat",
+        "NeonBlack.Gameplay.Editor",
+        "NeonBlack.Gameplay.Core",
+        "NeonBlack.Gameplay.Data",
+        "NeonBlack.Gameplay.Modules.Actor.Composition",
+        "NeonBlack.Gameplay.Presentation"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}

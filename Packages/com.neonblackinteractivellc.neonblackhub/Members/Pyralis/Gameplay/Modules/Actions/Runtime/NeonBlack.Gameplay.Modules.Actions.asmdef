@@ -1,0 +1,14 @@
+{
+    "name": "NeonBlack.Gameplay.Modules.Actions",
+    "references": [
+        "NeonBlack.Gameplay.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}

@@ -4,23 +4,23 @@ This is the first-scene path. Use it when you are opening Unity and asking, "Wha
 
 ## Native-First Setup Rule
 
-For your first playable proof, use only native Unity actions:
+For your selected proof, use only native Unity actions:
 
 - **Hierarchy/Project**: create objects and assets from Unity menus.
 - **Inspector Add Component**: use search to add scripts/components to game objects.
 - **Field assignment**: drag references to serialized fields in the Inspector.
 - **Authoring Window**: use this for route awareness and validation, not for scene auto-construction.
 
-### 1P Movement First Proof (required native route)
+### Intent-Focused Proof
 
-Run this route before adding score, combat, networking, or extras:
+Use Intent to pick the smallest behavior you want to prove first. For a pawn movement route, that proof is one spawned pawn responding to input. For combat, projectile, scoring, UI, tabletop, camera/cursor, or networking work, the proof should target that selected focus while the Authoring Window lists only the setup prerequisites needed to make it honest.
 
 - In the Authoring Window, stay in **Overview -> Map -> Hygiene** until
   - Do Now is clear
   - required links are green
   - Play blockers are clear.
-- Press Play and confirm the 1P movement proof passes.
-- Only then add one optional lane and re-run the same proof check.
+- Press Play and confirm the selected focused proof passes.
+- Only then add one optional lane and re-run the focused proof or the next selected proof check.
 
 If your route terms are still unclear (`Definition`, `Profile`, `Pattern`), read
 `AUTHORING_MODEL.md` right after this checklist.
@@ -28,8 +28,8 @@ If your route terms are still unclear (`Definition`, `Profile`, `Pattern`), read
 ## End-to-End First Test
 
 You need not build every support system first. Start with one `GameplaySessionBootstrap`,
-one session chain, one participant, one pawn route, one spawn point, and one input profile.
-That is enough for a first proof of life.
+one session chain, and only the participant, pawn, input, scene, or feature links required by the Intent-focused proof.
+For a pawn proof, that usually means one participant, one pawn route, one spawn point, and one input profile.
 
 
 ## Use The Inspector Guide
@@ -42,7 +42,7 @@ Start from the `GameplaySessionBootstrap` Inspector whenever you are unsure wher
 
 The Authoring Window has six modes:
 
-- **Overview**: shows the route-aware working dashboard: selected setup step, Best Next Action, first proof readiness, and the next one to three Do Now moves.
+- **Overview**: shows the route-aware working dashboard: selected setup step, Best Next Action, active proof readiness, and the next one to three Do Now moves.
 - **Intent**: lets you steer the proof focus with DNA axioms, presentation lane, and capability toggles without applying presets.
 - **Guide**: shows the full current-setup route checklist for the active setup, then explains what the selected script or asset does, which values matter, and what to wire first.
 - **Map**: shows current scene/setup reality: active setup, current links, scene-surface evidence, missing fields, concrete Unity setup issues, and collapsed developer route connections without editing fields.
@@ -66,17 +66,17 @@ Use it as a setup-prep surface, not as another Inspector. It diagnoses which par
 The Authoring Window is intentionally safe. It is an expert guide, not an auto-builder. It does not create a whole scene, wire referenced assets, edit prefabs, choose art, choose character speed, or make design choices for you. It tells you what kind of Unity object to create, which Pyralis component belongs on it, which field to drag into, and why that step matters. Its buttons mainly navigate, inspect, export, or hand you to the native Unity surface that owns the edit.
 
 For a first-playability proof, keep this as your mental baseline:
-- movement proof first (pawn spawns, input, and one visible movement loop),
-- then add one optional system at a time (score, combat, UI, network, etc.).
+- selected Intent proof first, with movement/session/input as prerequisites only when the focused proof needs them,
+- then add one optional or selected system at a time and prove that next focused behavior.
 
-The Authoring Window is the route guide. Open it when you need overall progress, intent shaping, selection guidance, setup mapping, hygiene, or fact coverage. Use **Overview** for the route-aware next decision, **Intent** for route/capability steering, **Guide** for the expanded checklist, **Map** for current scene/setup reality and scene-surface issues, **Hygiene** for graph integrity, dependency pressure, and developer evidence, and **Facts** when you need to audit where guidance came from. Overview reads the active route before judging readiness: pawn-backed routes require participant pawns and spawn points, while tabletop or other no-pawn routes treat empty pawn fields as correct.
+The Authoring Window is the route guide. Open it when you need overall progress, intent shaping, selection guidance, setup mapping, hygiene, or fact coverage. Use **Intent** to choose the proof focus, **Overview** for the next one to three moves toward that proof, **Guide** for the expanded checklist and visible Guide Trace to complete it, **Map** for current scene/setup reality and scene-surface issues, **Hygiene** for graph integrity, dependency pressure, and developer evidence, and **Facts** when you need to audit where guidance came from. Overview reads the active route before judging readiness: pawn-backed focused proofs require participant pawns and spawn points, while tabletop or other no-pawn proofs treat empty pawn fields as correct. Proof readiness means the selected Intent or topology-derived proof can be tried honestly in Play Mode.
 
 Use the Authoring Window as a senior setup companion, not a scene generator. It should explain why a route needs a pawn, board surface, camera/cursor, action resolver, input profile, or UI presenter, then send you to the normal Unity object or Inspector field where you make the creative choice.
 
 When a session/mode route is active, the Authoring Window keeps tab ownership straight. The **current setup graph** is what Unity and authored assets prove; **Overview**, **Guide**, **Map**, **Hygiene**, and **Facts** read that truth surface. **Intent** owns the steering controls for what the developer wants to wire next, but it does not create a hidden route that the other tabs treat as already authored. **Guide** owns expanded route rows and selected-object help, **Overview** owns the next one to three moves from the same route working projection, **Map** owns scene/setup reality and concrete Unity repair rows, **Hygiene** owns graph integrity and code/dependency audits, and **Facts** owns the full dictionary. The tabs read reflected route capabilities from the authored setup and contracts/reflection, then apply grammar wording to explain:
 
 - the **Intent** tab DNA axioms, presentation lane, and capability ingredients that define what kind of game route is being authored
-- design questions to answer before setup, such as what the player controls, what kind of space the game happens in, and what the first proof of interaction should be
+- design questions to answer before setup, such as what the player controls, what kind of space the game happens in, and what the proof of interaction should be
 - what kind of route the setup currently resembles, such as pawn action, brawler/fighter, tabletop, action-selection, projectile, or scoring loop
 - what each selected capability changes in the game
 - how the ground, board, arena, room, platform, card table, or environment affects Pyralis even when it is mostly plain Unity art
@@ -92,7 +92,7 @@ The Authoring Window guidance is route-aware:
 - `SessionDefinition` explains whether participants need pawns, input, seats, hands, factions, camera, cursor, or menu surfaces.
 - `GameplaySessionBootstrap` anchors the assigned session chain and hands off to the graph-backed Authoring Window.
 
-Use the visible Authoring Window summary for route progress, first proof, setup-map status, scene-surface evidence, and validation. Inspector guidance should stay compact: field tooltips, local validation, and an **Open Authoring Window** handoff. Broader wiring steps, valid path choices, and common mistakes belong in the Authoring Window.
+Use the visible Authoring Window summary for route progress, proof, setup-map status, scene-surface evidence, and validation. Inspector guidance should stay compact: field tooltips, local validation, and an **Open Authoring Window** handoff. Broader wiring steps, valid path choices, and common mistakes belong in the Authoring Window.
 
 ## The Short Version
 
@@ -109,7 +109,7 @@ Use the visible Authoring Window summary for route progress, first proof, setup-
    - `SessionDefinition` -> your session asset
    - one default participant
    - for pawn routes: one `Default Pawn` and one `PawnDefinition`
-   - keep the standard bootstrap-owned service path enabled for this first proof so gameplay-state services are created automatically.
+   - keep the standard bootstrap-owned service path enabled for this proof so gameplay-state services are created automatically.
 7. Add only the required proof objects:
    - pawn routes: one `Spawn Point` transform and assign it to `ParticipantSpawnService > Spawn Points`
    - input route for the route (`InputProfile` on participant; keep `Player Input Manager` empty unless you need local join)
@@ -218,7 +218,7 @@ On `ParticipantSpawnService`, assign `Spawn Points` only if pawns spawn into the
 
 The runtime does not create missing service GameObjects. If one is absent, Overview/Map should tell you which Unity object or Bootstrap override field to author.
 
-After assigning the `SessionDefinition`, keep the `GameplaySessionBootstrap` selected and work through **Overview** and **Guide**. Fix the selected intent's Do Now items first. Treat recommended items as proof enhancers, not universal requirements. Optional items can stay empty until the selected intent needs them.
+After assigning the `SessionDefinition`, keep the `GameplaySessionBootstrap` selected and work through **Overview** and **Guide**. Fix the active proof's Do Now items first, then run the proof checkpoint when the selected Intent can be tried honestly in Play Mode. Treat recommended items as proof enhancers, not universal requirements. Optional items can stay empty until the selected Intent or next topology-derived proof needs them.
 
 For the first route proof, treat these as Do Now only when the selected intent asks for them:
 
@@ -313,7 +313,7 @@ Common 3D or 2.5D movement stack:
 - `Pawn3DPresentationComponent`
 - `PawnCombatBehaviour` when combat is needed
 
-## Step 6: Press Play For The First Proof, Then Add Extras
+## Step 6: Press Play For The Proof, Then Add Extras
 
 Before adding more features, run this proof pass first:
 

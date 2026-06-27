@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using NeonBlack.Gameplay.Core.Contracts;
-using NeonBlack.Gameplay.Core.Rpg;
+using NeonBlack.Gameplay.Modules.Rpg.Runtime;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rpg
@@ -11,7 +11,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
         Relevance = "Extends standard items with equipment slots and stat modifiers.",
         NativeSetup = new[] { "Add Allowed Slot Ids.", "Add Stat Modifiers." },
         AssignmentFields = new[] { nameof(allowedSlotIds) },
-        FirstProof = "Verify the item can be equipped into the specified slots and correctly modifies stats.",
+        Proof = "Verify the item can be equipped into the specified slots and correctly modifies stats.",
         ExpertAdvice = "Use stat modifiers to provide meaningful progression and customization through equipment.",
         CapabilityPath = "RPG/Inventory/Definitions/Equippable Item Definition",
         RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }

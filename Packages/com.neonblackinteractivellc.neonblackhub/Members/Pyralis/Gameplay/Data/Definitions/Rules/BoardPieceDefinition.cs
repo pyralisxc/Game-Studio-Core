@@ -11,7 +11,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
         Capability = AuthoringCapability.Tabletop | AuthoringCapability.Grid, 
         Relevance = "Project-window creation path for tabletop board pieces.",
         AssignmentFields = new[] { nameof(pieceId), nameof(displayName), nameof(visualPrefab) },
-        FirstProof = "Verify the piece is instantiated correctly on the board with the assigned visual prefab.",
+        Proof = "Verify the piece is instantiated correctly on the board with the assigned visual prefab.",
         CapabilityPath = "Tabletop/Board/Board Piece Definition",
         RuntimeFamilies = new[] { RuntimeCapabilityFamily.BoardCardTabletop }
     )]

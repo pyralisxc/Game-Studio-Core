@@ -324,7 +324,7 @@ function Assert-PackagePortability {
     Write-Step "package portability"
 
     $packageId = "com.neonblackinteractivellc.neonblackhub"
-    $expectedVersion = "0.2.0"
+    $expectedVersion = "0.2.9"
     $packageRoot = Join-Path $ProjectPath "Packages\$packageId"
     $packageJsonPath = Join-Path $packageRoot "package.json"
     $manifestPath = Join-Path $ProjectPath "Packages\manifest.json"
@@ -356,7 +356,7 @@ function Assert-PackagePortability {
 
     $runtimeMarker = Get-Content -LiteralPath $runtimeMarkerPath -Raw
     $editorMarker = Get-Content -LiteralPath $editorMarkerPath -Raw
-    if ($runtimeMarker -notmatch 'Version\s*=\s*"0\.2\.0"' -or $editorMarker -notmatch 'Version\s*=\s*"0\.2\.0"') {
+    if ($runtimeMarker -notmatch 'Version\s*=\s*"0\.2\.9"' -or $editorMarker -notmatch 'Version\s*=\s*"0\.2\.9"') {
         throw "Package marker scripts are not stamped with version $expectedVersion."
     }
 

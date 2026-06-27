@@ -1,16 +1,16 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
-using NeonBlack.Gameplay.Presentation.Animation;
+using NeonBlack.Gameplay.Core.Types.Animation;
 using UnityEngine;
 
-namespace NeonBlack.Gameplay.Features.Combat
+namespace NeonBlack.Gameplay.Data.Definitions.Combat
 {
     [AuthoringContract(
         Capability = AuthoringCapability.Combat,
         Relevance = "Defines the selection criteria and execution of a specific AI attack.",
         NativeSetup = new[] { "Assign animation signal.", "Set Range and Priority." },
         AssignmentFields = new[] { nameof(animationSignal), nameof(hitBoxZone), nameof(attackRange), nameof(aiPriority) },
-        FirstProof = "Verify the enemy triggers this attack when within the specified range.",
+        Proof = "Verify the enemy triggers this attack when within the specified range.",
         ExpertAdvice = "Set Priority higher for 'punish' or 'finisher' moves. Use weight for random selection within the same priority.",
         CapabilityPath = "Combat/Actions/Enemy Attack",
         RuntimeFamilies = new[] { RuntimeCapabilityFamily.Combat }

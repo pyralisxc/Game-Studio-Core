@@ -9,9 +9,10 @@ namespace NeonBlack.Gameplay.Data.Definitions
         Capability = AuthoringCapability.Session | AuthoringCapability.TurnBased, 
         Relevance = "Project-window creation path for one selectable command or resolver-backed action.",
         AssignmentFields = new[] { nameof(actionId), nameof(displayName), nameof(targetRule) },
-        FirstProof = "Verify the action is selectable in the character menu or action bar.",
+        Proof = "Verify the action is selectable in the character menu or action bar.",
         CapabilityPath = "Core Setup/Input/Action Definition",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.BoardCardTabletop }
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.BoardCardTabletop },
+        Surface = AuthoringContractSurface.SetupOnly
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Definitions/Action Definition", fileName = "ActionDefinition", order = 60)]
     public class ActionDefinition : ScriptableObject, IRuntimeValidationProvider

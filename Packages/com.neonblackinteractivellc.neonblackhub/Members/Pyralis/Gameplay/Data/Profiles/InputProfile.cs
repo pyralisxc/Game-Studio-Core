@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
 using UnityEngine;
@@ -125,7 +125,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
         ProfileType = typeof(InputProfile),
         RoleTags = new[] { "ParticipantInput", "InputProfile", "InputActions" },
         AssignmentFields = new[] { nameof(actions), nameof(actionBindings), nameof(primaryActionMap) },
-        FirstProof = "Verify that input actions mapped in this profile correctly drive character movement and actions.",
+        Proof = "Verify that input actions mapped in this profile correctly drive character movement and actions.",
         ExpertAdvice = "InputProfile is assigned from ParticipantDefinition.inputProfile. The participant owns who is controlling the route; pawn input modules only consume the resolved profile.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/input",
         NativeSetup = new[] 

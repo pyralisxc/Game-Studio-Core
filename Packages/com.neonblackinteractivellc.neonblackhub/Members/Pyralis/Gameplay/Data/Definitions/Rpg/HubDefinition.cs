@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NeonBlack.Gameplay.Core.Rpg;
+using NeonBlack.Gameplay.Modules.Rpg.Runtime;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
@@ -12,7 +12,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
         Capability = AuthoringCapability.Session,
         Lane = "RPG",
         AssignmentFields = new[] { nameof(hubId), nameof(displayName), nameof(sceneId), nameof(interactables) },
-        FirstProof = "Proof that the hub contains valid interactables and correctly links to a scene.",
+        Proof = "Proof that the hub contains valid interactables and correctly links to a scene.",
         CapabilityPath = "RPG/Hubs/Definitions/Hub Definition",
         RuntimeFamilies = new[] { RuntimeCapabilityFamily.PlatformCore }
     )]

@@ -1,5 +1,5 @@
 using NeonBlack.Gameplay.Core.Contracts;
-using NeonBlack.Gameplay.Presentation.Animation;
+using NeonBlack.Gameplay.Core.Types.Animation;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -17,7 +17,7 @@ namespace NeonBlack.Gameplay.Presentation.Visuals
     Relevance = "Coroutine-driven color flash effects on SpriteRenderers.",
     SupportedLanes = new[] { ActorPresentationMode.Sprite2D, ActorPresentationMode.Billboard2_5D },
     AssignmentFields = new[] { "_renderers", "_defaultPreset", "_playOnStart" },
-    FirstProof = "Assign a FlashPresetSO and call Play() from a script or UnityEvent.",
+    Proof = "Assign a FlashPresetSO and call Play() from a script or UnityEvent.",
     NativeSetup = new[]
     {
         "Add SpriteFlasher to an actor or object prefab.",

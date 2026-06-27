@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using NeonBlack.Gameplay.Core.Rpg;
+using NeonBlack.Gameplay.Modules.Rpg.Runtime;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
@@ -10,7 +10,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
         Capability = AuthoringCapability.Stats,
         Lane = "RPG",
         AssignmentFields = new[] { nameof(curveId), nameof(displayName), nameof(levelExperienceThresholds), nameof(skillPointGrants) },
-        FirstProof = "Proof that the curve correctly resolves levels from experience points.",
+        Proof = "Proof that the curve correctly resolves levels from experience points.",
         CapabilityPath = "RPG/Stats/Definitions/Progression Curve Definition",
         RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
     )]

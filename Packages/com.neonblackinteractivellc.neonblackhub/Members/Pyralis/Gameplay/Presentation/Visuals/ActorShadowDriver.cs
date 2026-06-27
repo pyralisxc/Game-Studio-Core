@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Contracts;
-using NeonBlack.Gameplay.Presentation.Animation;
+using NeonBlack.Gameplay.Core.Types.Animation;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -17,7 +17,7 @@ namespace NeonBlack.Gameplay.Presentation.Visuals
             "Assign Model Renderers for 3D shadow control."
         },
         AssignmentFields = new[] { nameof(visualRoot), nameof(shadowRoot), nameof(shadowSpriteRenderer), nameof(modelRenderers), nameof(presentationProfile) },
-        FirstProof = "Verify a shadow appears under the actor and scales correctly with height.",
+        Proof = "Verify a shadow appears under the actor and scales correctly with height.",
         ExpertAdvice = "Use Blob mode for 2D and 2.5D games. Renderer mode is only supported for Rigged3D actors.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/visuals",
         CapabilityPath = "Presentation/Feedback/Actor Shadow Driver"
@@ -137,7 +137,7 @@ namespace NeonBlack.Gameplay.Presentation.Visuals
             if (presentationProfile.shadowMode != ActorShadowMode.Auto)
                 return presentationProfile.shadowMode;
 
-            if (presentationProfile.presentationMode == Animation.ActorPresentationMode.ThirdPerson3D &&
+            if (presentationProfile.presentationMode == ActorPresentationMode.ThirdPerson3D &&
                 presentationProfile.shadowSprite == null &&
                 presentationProfile.shadowPrefab == null)
             {

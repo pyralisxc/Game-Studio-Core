@@ -1,0 +1,81 @@
+using UnityEngine;
+using NeonBlack.Gameplay.Data.Definitions.Combat;
+using NeonBlack.Gameplay.Modules.Combat;
+using NeonBlack.Gameplay.Core.Enums;
+using NeonBlack.Gameplay.Data.Participants;
+using NeonBlack.Gameplay.Modules.Character;
+using NeonBlack.Gameplay.Core.Contracts;
+
+namespace NeonBlack.Gameplay.Modules.Combat
+{
+    [AuthoringContract(
+        Capability = AuthoringCapability.Combat | AuthoringCapability.RangedFlow,
+        Relevance = "Pawn module for spawning and launching projectiles from weapons.",
+        AssignmentFields = new[] { nameof(projectileSpawnPoint), nameof(projectileLauncher) },
+        Proof = "Fire a ranged weapon and verify a projectile is spawned at the spawn point.",
+        ExpertAdvice = "The projectile spawn point should be positioned at the weapon muzzle. If null, the module defaults to a point above the pawn's feet.",
+        DocumentationURL = "https://docs.neonblack.com/pyralis/combat",
+        CapabilityPath = "Combat/Actions/Pawn Projectile Module"
+    )]
+    public class PawnProjectileModule : MonoBehaviour
+{
+        [Header("Projectile")]
+        [SerializeField] private Transform projectileSpawnPoint;
+        [SerializeField] private ProjectileLauncher3D projectileLauncher;
+
+        private HealthComponent _health;
+
+        private void Awake()
+        {
+            _health = GetComponent<HealthComponent>();
+        }
+
+        public void FireProjectile(WeaponData weapon, bool facingRight, float damageMultiplier, float knockbackMultiplier)
+        {
+            ProjectileLauncher3D launcher = ResolveProjectileLauncher();
+            if (launcher == null)
+            {
+                Debug.LogWarning($"{nameof(PawnProjectileModule)} needs a {nameof(ProjectileLauncher3D)} to fire ranged weapon `{weapon.weaponName}`.", this);
+                return;
+            }
+
+            Vector3 spawnPos = projectileSpawnPoint != null
+                ? projectileSpawnPoint.position
+                : transform.position + Vector3.up * 1f + transform.forward * 0.5f;
+
+            Vector3 forward = facingRight ? Vector3.right : Vector3.left;
+            
+            if (weapon.projectileDefinition == null)
+                return;
+
+            ProjectileFireRequest request = new ProjectileFireRequest(
+                weapon.projectileDefinition,
+                weapon.fireModeDefinition,
+                spawnPos,
+                forward,
+                gameObject,
+                _health != null ? _health.faction : Faction.Neutral,
+                damageMultiplier: damageMultiplier,
+                knockbackMultiplier: knockbackMultiplier);
+
+            launcher.Fire(request);
+        }
+
+        private ProjectileLauncher3D ResolveProjectileLauncher()
+        {
+            if (projectileLauncher != null)
+                return projectileLauncher;
+
+            projectileLauncher = GetComponentInParent<ProjectileLauncher3D>();
+            if (projectileLauncher == null)
+                projectileLauncher = GetComponentInChildren<ProjectileLauncher3D>();
+
+            return projectileLauncher;
+        }
+
+        public void SetProjectileLauncher(ProjectileLauncher3D launcher)
+        {
+            projectileLauncher = launcher;
+        }
+    }
+}

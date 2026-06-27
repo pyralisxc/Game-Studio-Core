@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using NeonBlack.Gameplay.Core.Rpg;
+using NeonBlack.Gameplay.Modules.Rpg.Runtime;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
@@ -10,7 +10,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
         Capability = AuthoringCapability.Stats,
         Lane = "RPG",
         AssignmentFields = new[] { nameof(treeId), nameof(displayName), nameof(nodes) },
-        FirstProof = "Proof that the skill tree contains valid nodes and prerequisites are correctly linked.",
+        Proof = "Proof that the skill tree contains valid nodes and prerequisites are correctly linked.",
         CapabilityPath = "RPG/Stats/Definitions/Skill Tree Definition",
         RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
     )]

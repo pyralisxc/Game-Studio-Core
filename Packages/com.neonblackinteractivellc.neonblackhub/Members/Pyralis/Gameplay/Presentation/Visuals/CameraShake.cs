@@ -20,7 +20,7 @@ namespace NeonBlack.Gameplay.Presentation.Visuals
             "Set Default Shake Mode (Planar2D for most games)."
         },
         AssignmentFields = new[] { nameof(targetTransform), nameof(defaultShakeMode), nameof(positionInfluence), nameof(rotationInfluence) },
-        FirstProof = "Calling Shake(intensity, duration) causes the target transform to vibrate.",
+        Proof = "Calling Shake(intensity, duration) causes the target transform to vibrate.",
         ExpertAdvice = "2D path: use Planar2D and mostly position influence. 3D path: use Spatial3D or PositionAndRotation with lower intensity.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/visuals",
         CapabilityPath = "Presentation/Feedback/Camera Shake"

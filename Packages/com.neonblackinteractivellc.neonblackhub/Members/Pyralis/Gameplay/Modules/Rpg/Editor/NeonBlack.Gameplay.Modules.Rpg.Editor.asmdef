@@ -1,0 +1,18 @@
+{
+    "name": "NeonBlack.Gameplay.Modules.Rpg.Editor",
+    "references": [
+        "NeonBlack.Gameplay.Core",
+        "NeonBlack.Gameplay.Data",
+        "NeonBlack.Gameplay.Modules.Rpg"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}

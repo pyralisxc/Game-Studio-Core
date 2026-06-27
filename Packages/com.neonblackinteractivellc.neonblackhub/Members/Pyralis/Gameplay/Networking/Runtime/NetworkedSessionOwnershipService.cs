@@ -20,7 +20,7 @@ namespace NeonBlack.Gameplay.Networking.Runtime
             "Enter Play Mode and start host from the networked session surface."
         },
         RequiredInterfaceNames = new[] { nameof(ISessionOwnershipService) },
-        FirstProof = "StartHost correctly triggers the NGO NetworkManager to begin listening.",
+        Proof = "StartHost correctly triggers the NGO NetworkManager to begin listening.",
         ExpertAdvice = "This service enforces server-authoritative logic for the session lifecycle."
     )]
     public sealed class NetworkedSessionOwnershipService : ISessionOwnershipService

@@ -1,4 +1,4 @@
-using NeonBlack.Gameplay.Core.Rpg;
+using NeonBlack.Gameplay.Modules.Rpg.Runtime;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rpg

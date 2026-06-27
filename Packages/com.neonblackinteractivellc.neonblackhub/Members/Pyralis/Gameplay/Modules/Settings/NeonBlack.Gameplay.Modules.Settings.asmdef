@@ -1,0 +1,15 @@
+{
+    "name": "NeonBlack.Gameplay.Modules.Settings",
+    "references": [
+        "NeonBlack.Gameplay.Core",
+        "NeonBlack.Gameplay.Data"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}

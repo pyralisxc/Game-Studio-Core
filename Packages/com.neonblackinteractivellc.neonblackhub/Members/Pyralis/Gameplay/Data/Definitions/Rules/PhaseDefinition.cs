@@ -11,7 +11,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
         Capability = AuthoringCapability.Tabletop | AuthoringCapability.TurnBased, 
         Relevance = "Project-window creation path for turn phase rules.",
         AssignmentFields = new[] { nameof(phaseId), nameof(displayName), nameof(allowsActionSelection) },
-        FirstProof = "Verify that the phase allows or restricts actions as defined.",
+        Proof = "Verify that the phase allows or restricts actions as defined.",
         CapabilityPath = "Tabletop/Board/Phase Definition",
         RuntimeFamilies = new[] { RuntimeCapabilityFamily.BoardCardTabletop }
     )]

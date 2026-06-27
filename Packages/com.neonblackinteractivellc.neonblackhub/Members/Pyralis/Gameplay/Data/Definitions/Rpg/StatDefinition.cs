@@ -9,7 +9,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
         Relevance = "Defines a reusable RPG stat (e.g., Strength, Wisdom, Health).",
         NativeSetup = new[] { "Set Stat Id and Display Name.", "Choose Category." },
         AssignmentFields = new[] { nameof(statId), nameof(displayName), nameof(category) },
-        FirstProof = "Verify the stat is correctly displayed in character profiles and modified by equipment.",
+        Proof = "Verify the stat is correctly displayed in character profiles and modified by equipment.",
         ExpertAdvice = "Use categories to group related stats (e.g., 'Primary', 'Combat', 'Social') in UI and tools.",
         CapabilityPath = "RPG/Stats/Definitions/Stat Definition",
         RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }

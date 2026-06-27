@@ -1,4 +1,4 @@
-namespace NeonBlack.Gameplay.Features.Combat
+namespace NeonBlack.Gameplay.Data.Definitions.Combat
 {
     public enum ProjectileDeliveryMode
     {

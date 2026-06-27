@@ -1,5 +1,5 @@
 using NeonBlack.Gameplay.Data.Profiles;
-using NeonBlack.Gameplay.Features.Characters;
+using NeonBlack.Gameplay.Modules.Character;
 using NUnit.Framework;
 using UnityEngine;
 

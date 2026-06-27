@@ -49,6 +49,25 @@ Do not use dated audits, migration notes, or old setup guides as source truth. I
 - Keep the runtime simple and Unity-native: explicit pawn sibling components describe what a pawn is, `ActorFeatureHost` describes optional capabilities, and `ParticipantDefinition` owns input for the participant driving the pawn.
 - Keep active docs focused on present truth and intended direction. Remove stale legacy/history commentary from setup and architecture docs unless it protects active migration, shipped compatibility, or project data; move useful history to an archive, changelog, migration note, or audit file.
 
+### Pyralis Authoring Proof Semantics
+
+For Pyralis Authoring, a first proof is not the earliest technical Play Mode baseline. A first proof is the first successful Play Mode attempt that satisfies the selected Intent. If no Intent exists, or the authored setup has moved beyond the selected Intent, the active proof should come from the next meaningful Map/topology-derived route.
+
+Prerequisites are not proof completion. Movement, input, camera, session, participant, or pawn setup can be required setup for a combat/traversal/presentation proof, but they must not replace the chosen proof target.
+
+Before changing Authoring tabs, projections, or exports, state the affected surface's projection contract:
+
+- what question it answers
+- what payload it may show
+- what payload it must not show
+- whether it may show native Unity actions
+- whether it may show desired Intent
+- whether it may show current scene/setup reality
+- whether it may show code/ownership audit pressure
+- whether its export saves the same projection the UI renders
+
+Intent, Overview, and Guide form the user-driven development path workbench. Map is the scene/setup reality workbench. Facts and Hygiene are codebase/system audit workbenches with separate ownership. Route Proof Trace is Guide's exported route projection, not a separate tab or proof engine.
+
 ## Validation
 
 Preferred project gate:

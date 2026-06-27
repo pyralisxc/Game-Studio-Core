@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
-namespace NeonBlack.Gameplay.Features.Combat
+namespace NeonBlack.Gameplay.Data.Definitions.Combat
 {
     /// <summary>
     /// Authored ordered combo or action chain for one neutral combat lane.
@@ -13,7 +13,7 @@ namespace NeonBlack.Gameplay.Features.Combat
         Relevance = "Defines a sequence of combat actions (combos) triggered by a specific input type.",
         NativeSetup = new[] { "Set Input Type.", "Add CombatActionDefinitions to the actions array." },
         AssignmentFields = new[] { nameof(inputType), nameof(actions) },
-        FirstProof = "Verify the actor performs the sequence of animations and attacks in order.",
+        Proof = "Verify the actor performs the sequence of animations and attacks in order.",
         ExpertAdvice = "Use sequences to build multi-hit brawler combos. Each action in the list must correspond to the correct combo step.",
         CapabilityPath = "Combat/Actions/Combat Sequence Definition",
         RuntimeFamilies = new[] { RuntimeCapabilityFamily.Combat }

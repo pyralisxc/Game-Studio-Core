@@ -2,7 +2,7 @@
     "name": "NeonBlack.Gameplay.Networking",
     "references": [
         "NeonBlack.Gameplay.Core",
-        "NeonBlack.Gameplay.Characters",
+        "NeonBlack.Gameplay.Modules.Character",
         "NeonBlack.Gameplay.Data",
         "NeonBlack.Gameplay",
         "Unity.Netcode.Runtime",

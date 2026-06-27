@@ -2,13 +2,13 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
-namespace NeonBlack.Gameplay.Features.Combat
+namespace NeonBlack.Gameplay.Data.Definitions.Combat
 {
     [AuthoringContract(
         Capability = AuthoringCapability.Combat, 
         Relevance = "Project-window creation path for firing cadence, burst, and spread behavior.",
         AssignmentFields = new[] { nameof(fireModeId), nameof(cooldown), nameof(burstCount) },
-        FirstProof = "Equip a weapon with this fire mode and verify the firing cadence and spread.",
+        Proof = "Equip a weapon with this fire mode and verify the firing cadence and spread.",
         CapabilityPath = "Combat/Actions/Fire Mode Definition",
         RuntimeFamilies = new[] { RuntimeCapabilityFamily.Combat }
     )]

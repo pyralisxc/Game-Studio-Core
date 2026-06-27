@@ -1,0 +1,17 @@
+{
+    "name": "NeonBlack.Gameplay.Modules.Actor.Composition",
+    "references": [
+        "NeonBlack.Gameplay.Core",
+        "NeonBlack.Gameplay.Data",
+        "NeonBlack.Gameplay.Presentation",
+        "VContainer"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}

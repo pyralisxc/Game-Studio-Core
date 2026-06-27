@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using NeonBlack.Gameplay.Features.Combat;
+using NeonBlack.Gameplay.Data.Definitions.Combat;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
@@ -13,7 +13,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Relevance = "Defines how an AI enemy chooses and sequences its attacks.",
         NativeSetup = new[] { "Add EnemyAttacks to the attackSequence array.", "Set Attack Mode." },
         AssignmentFields = new[] { nameof(attackSequence), nameof(attackMode) },
-        FirstProof = "Verify the enemy cycles through the defined attacks during combat.",
+        Proof = "Verify the enemy cycles through the defined attacks during combat.",
         ExpertAdvice = "Use Sequential mode for boss phases or predictable combos. Use Priority or Weighted for dynamic combat behavior.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/enemies",
         CapabilityPath = "Combat/Actions/Enemy Combat Profile",

@@ -1,6 +1,9 @@
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
-using NeonBlack.Gameplay.Characters;
+using NeonBlack.Gameplay.Data.Participants;
+using NeonBlack.Gameplay.Glue.Session;
+using NeonBlack.Gameplay.Glue.Spawning;
+using NeonBlack.Gameplay.Modules.Character;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -16,7 +19,7 @@ namespace NeonBlack.Gameplay.Networking.Participants
         CapabilityPath = "Networking/Participants/Networked Participant Spawn Service",
         Relevance = "Drop-in replacement for ParticipantSpawnService in online sessions. Registers pawns with NGO.",
         RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.NetworkRouteSupport },
-        FirstProof = "Spawned pawns have a valid NetworkObject and are correctly replicated to clients."
+        Proof = "Spawned pawns have a valid NetworkObject and are correctly replicated to clients."
     )]
     public class NetworkedParticipantSpawnService : ParticipantSpawnService
     {

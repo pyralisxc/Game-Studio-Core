@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 using NeonBlack.Gameplay.Core.Contracts;
-using NeonBlack.Gameplay.Presentation.Animation;
+using NeonBlack.Gameplay.Core.Types.Animation;
 
 namespace NeonBlack.Gameplay.Data.Profiles
 {
@@ -10,10 +10,10 @@ namespace NeonBlack.Gameplay.Data.Profiles
         ModuleId = "enemy.ambient",
         Relevance = "Configuration for idle and non-combat 'living world' behaviors for enemies.",
         ProfileType = typeof(EnemyAmbientFeatureProfile),
-        RequiredInterfaceNames = new[] { "NeonBlack.Gameplay.Features.Composition.IFeatureModuleRuntime" },
+        RequiredInterfaceNames = new[] { "NeonBlack.Gameplay.Modules.Actor.Composition.IFeatureModuleRuntime" },
         SupportedLanes = new[] { ActorPresentationMode.Billboard2_5D, ActorPresentationMode.ThirdPerson3D },
         AssignmentFields = new[] { nameof(enableAmbientLookAround), nameof(lookAroundInterval) },
-        FirstProof = "Assign this profile to an enemy and verify ambient behaviors match the defined intervals.",
+        Proof = "Assign this profile to an enemy and verify ambient behaviors match the defined intervals.",
         NativeSetup = new[]
         {
             "Create EnemyAmbientFeatureProfile asset.",

@@ -9,7 +9,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Relevance = "Defines how an actor reacts to combat events (guard, parry, block, shield break).",
         NativeSetup = new[] { "Configure parry and guard windows.", "Set shield break durations." },
         AssignmentFields = new[] { nameof(enableGuard), nameof(enableParry), nameof(blockDamageReduction) },
-        FirstProof = "Trigger a parry in-game and verify the reaction lock is applied.",
+        Proof = "Trigger a parry in-game and verify the reaction lock is applied.",
         ExpertAdvice = "Use parryReactionLockDuration to stun the attacker when a parry is successful.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/combat",
         CapabilityPath = "Combat/Actions/Actor Combat Reaction Profile",

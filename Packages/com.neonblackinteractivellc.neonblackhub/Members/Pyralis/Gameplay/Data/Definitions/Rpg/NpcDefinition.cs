@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NeonBlack.Gameplay.Core.Rpg;
+using NeonBlack.Gameplay.Modules.Rpg.Runtime;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
@@ -12,7 +12,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
         Capability = AuthoringCapability.Dialogue,
         Lane = "RPG",
         AssignmentFields = new[] { nameof(npcId), nameof(displayName), nameof(role), nameof(tags), nameof(factionId), nameof(actorLinkId) },
-        FirstProof = "Proof that the NPC can initiate dialogue and has a valid profile.",
+        Proof = "Proof that the NPC can initiate dialogue and has a valid profile.",
         CapabilityPath = "RPG/Dialogue/Definitions/Npc Definition",
         RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
     )]

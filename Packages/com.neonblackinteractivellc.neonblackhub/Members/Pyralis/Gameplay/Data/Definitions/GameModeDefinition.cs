@@ -16,7 +16,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
         Lane = "Rules",
         Relevance = "Defines the project-owned rules, required feature modules, and scene targets for a gameplay session.",
         AssignmentFields = new[] { nameof(playfieldProfile), nameof(cameraRigProfile), nameof(requiredFeatureModules), nameof(gameplayScene) },
-        FirstProof = "Assign this Game Mode Definition to a Session Definition asset.",
+        Proof = "Assign this Game Mode Definition to a Session Definition asset.",
         ExpertAdvice = "Start neutral, then enable only the systems this route actually uses. Use Required Feature Modules for project-owned global systems, and assign board or turn-order assets only for tabletop-style routes.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/game-mode",
         CapabilityPath = "Goals & Scoring/Rules/Game Mode Definition",

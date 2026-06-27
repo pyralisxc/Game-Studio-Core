@@ -1,5 +1,8 @@
 using NeonBlack.Gameplay.Core.Contracts;
-using NeonBlack.Gameplay.Characters;
+using NeonBlack.Gameplay.Data.Participants;
+using NeonBlack.Gameplay.Glue.Session;
+using NeonBlack.Gameplay.Glue.Spawning;
+using NeonBlack.Gameplay.Modules.Character;
 using Unity.Netcode;
 
 namespace NeonBlack.Gameplay.Networking.Participants
@@ -15,7 +18,7 @@ namespace NeonBlack.Gameplay.Networking.Participants
         Relevance = "Drop-in replacement for SessionStateService in online sessions. Handles NGO role startup.",
         RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.NetworkRouteSupport },
         AssignmentFields = new[] { "networkMode", "autoStartHost" },
-        FirstProof = "Entering the scene correctly triggers the NGO role (Host/Client/Server) defined in the SessionDefinition."
+        Proof = "Entering the scene correctly triggers the NGO role (Host/Client/Server) defined in the SessionDefinition."
     )]
     public class NetworkedSessionStateService : SessionStateService
     {

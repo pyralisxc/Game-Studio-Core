@@ -1,4 +1,4 @@
-using NeonBlack.Gameplay.Core.Rules.Board;
+using NeonBlack.Gameplay.Modules.Tabletop.Runtime;
 using System;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rules

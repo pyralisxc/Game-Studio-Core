@@ -1,4 +1,5 @@
 using System;
+using NeonBlack.Gameplay.Core.Types.Animation;
 
 namespace NeonBlack.Gameplay.Presentation.Animation
 {

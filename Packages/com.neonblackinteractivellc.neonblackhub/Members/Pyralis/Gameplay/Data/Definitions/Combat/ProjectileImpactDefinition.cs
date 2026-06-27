@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
-namespace NeonBlack.Gameplay.Features.Combat
+namespace NeonBlack.Gameplay.Data.Definitions.Combat
 {
     [AuthoringContract(
         Capability = AuthoringCapability.Combat | AuthoringCapability.VFX,
@@ -12,7 +12,7 @@ namespace NeonBlack.Gameplay.Features.Combat
         RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.CombatDefinitionRouteSupport },
         NativeSetup = new[] { "Assign Hit/Miss effects.", "Set impact intensity." },
         AssignmentFields = new[] { nameof(impactId), nameof(hitEffectPrefab) },
-        FirstProof = "Verify hit effects spawn at the correct location with correct audio.",
+        Proof = "Verify hit effects spawn at the correct location with correct audio.",
         ExpertAdvice = "Use small hitPauseDuration to add 'weight' to physical impacts."
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Combat/Projectile Impact Definition", fileName = "ProjectileImpactDefinition")]

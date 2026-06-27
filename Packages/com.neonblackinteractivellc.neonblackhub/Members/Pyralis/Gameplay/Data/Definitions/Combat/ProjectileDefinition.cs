@@ -1,10 +1,10 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System;
 using NeonBlack.Gameplay.Core.Actions;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
-namespace NeonBlack.Gameplay.Features.Combat
+namespace NeonBlack.Gameplay.Data.Definitions.Combat
 {
     [AuthoringContract(
         Capability = AuthoringCapability.Combat, 
@@ -13,12 +13,12 @@ namespace NeonBlack.Gameplay.Features.Combat
         Relevance = "Project-window creation path for projectile behavior.",
         RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.CombatDefinitionRouteSupport },
         AssignmentFields = new[] { nameof(projectileId), nameof(projectilePrefab), nameof(speed) },
-        FirstProof = "Spawn the projectile and verify it travels at the correct speed and deals damage."
+        Proof = "Spawn the projectile and verify it travels at the correct speed and deals damage."
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Combat/Projectile Definition", fileName = "ProjectileDefinition")]
     public class ProjectileDefinition : ScriptableObject, IRuntimeValidationProvider
     {
-        private const string ProjectileRuntimeBodyInterfaceFullName = "NeonBlack.Gameplay.Features.Combat.IProjectileRuntimeBody";
+        private const string ProjectileRuntimeBodyInterfaceFullName = "NeonBlack.Gameplay.Modules.Combat.IProjectileRuntimeBody";
 
         public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {

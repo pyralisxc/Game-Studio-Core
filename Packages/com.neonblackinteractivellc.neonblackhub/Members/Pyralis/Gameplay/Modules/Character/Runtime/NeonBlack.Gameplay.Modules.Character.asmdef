@@ -1,0 +1,21 @@
+{
+    "name": "NeonBlack.Gameplay.Modules.Character",
+    "references": [
+        "NeonBlack.Gameplay.Core",
+        "NeonBlack.Gameplay.Data",
+        "NeonBlack.Gameplay.Modules.Actor.Composition",
+        "NeonBlack.Gameplay.Modules.Interaction",
+        "NeonBlack.Gameplay.Presentation",
+        "Unity.InputSystem",
+        "Unity.Netcode.Runtime",
+        "VContainer"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}

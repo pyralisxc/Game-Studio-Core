@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
-using NeonBlack.Gameplay.Presentation.Animation;
+using NeonBlack.Gameplay.Core.Types.Animation;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Data.Definitions
@@ -32,8 +32,9 @@ namespace NeonBlack.Gameplay.Data.Definitions
         Relevance = "Authoring container for attachable runtime logic, used to extend Pawns or Game Modes with modular functionality.",
         RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.FeatureModuleRouteSupport },
         AssignmentFields = new[] { nameof(moduleId), nameof(displayName), nameof(profileAsset), nameof(runtimePrefab) },
-        FirstProof = "Add this Feature Module to the 'Required Feature Modules' list on a Game Mode or Pawn Definition.",
+        Proof = "Add this Feature Module to the 'Required Feature Modules' list on a Game Mode or Pawn Definition.",
         NativeSetup = new[] { "Define Module ID.", "Assign Runtime Prefab and Profile Asset." },
+        Surface = AuthoringContractSurface.RouteEssential,
         ExpertAdvice = "Module ID must be unique across the project. Use 'OfflineOnly' network role for purely visual or local-state modules.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/composition"
     )]
@@ -45,7 +46,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
             return BuildRuntimeValidationIssues();
         }
 
-        private const string FeatureRuntimeInterfaceName = "NeonBlack.Gameplay.Features.Composition.IFeatureModuleRuntime";
+        private const string FeatureRuntimeInterfaceName = "NeonBlack.Gameplay.Modules.Actor.Composition.IFeatureModuleRuntime";
 
         public string moduleId = "feature.module";
         public string displayName = "Feature Module";

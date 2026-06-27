@@ -2,7 +2,7 @@ using Unity.Cinemachine;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Profiles;
-using NeonBlack.Gameplay.Characters;
+using NeonBlack.Gameplay.Data.Participants;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using VContainer;
@@ -29,8 +29,8 @@ namespace NeonBlack.Gameplay.Presentation.Camera
             "For pawn-follow cameras, add PawnCameraTarget to the pawn prefab or use the pawn root fallback."
         },
         AssignmentFields = new[] { nameof(cameraRigProfile), nameof(sharedCameraBehaviour), nameof(targetCamera), nameof(explicitFocusTarget) },
-        FirstProofTargetId = "proof.camera-cursor-world",
-        FirstProof = "Enter Play Mode. Verify the camera rig frames the spawned player pawn automatically. In Split-Screen, verify two viewports are created.",
+        ProofTargetId = "proof.camera-cursor-world",
+        Proof = "Enter Play Mode. Verify the camera rig frames the spawned player pawn automatically. In Split-Screen, verify two viewports are created.",
         ExpertAdvice = "Pyralis chooses the gameplay focus target; Cinemachine composes the view. Use Manual Cinemachine when you want scene-authored Follow/LookAt, Participant Group for shared pawn framing, Participant Pawns for per-participant cameras, Playfield Center for board/menu/playfield views, and Explicit Scene Target for a hand-authored anchor.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/camera"
     )]
@@ -40,7 +40,6 @@ namespace NeonBlack.Gameplay.Presentation.Camera
 {
         [SerializeField] private CameraRigProfile cameraRigProfile;
         [SerializeField] private PlayfieldProfile playfieldProfile;
-        [SerializeField] private ParticipantRosterService participantRoster;
         [SerializeField] private MonoBehaviour sharedCameraBehaviour;
         [SerializeField] private MonoBehaviour[] splitScreenCameraBehaviours;
         [SerializeField] private UnityEngine.Camera targetCamera;
@@ -78,6 +77,7 @@ namespace NeonBlack.Gameplay.Presentation.Camera
         private CameraRigProfile _blendFromProfile;
         private float _blendT        = 1f;   // 0 = blend start, 1 = complete
         private float _blendDuration = 0.5f;
+        private IParticipantRoster participantRoster;
 
         public Transform RuntimeSharedFocusTarget => _sharedFocusTarget;
         public Object RuntimeSharedCameraBehaviour => sharedCameraBehaviour;
@@ -105,7 +105,7 @@ namespace NeonBlack.Gameplay.Presentation.Camera
         }
 
         [Inject]
-        private void Construct(ParticipantRosterService rosterService = null)
+        private void Construct(IParticipantRoster rosterService = null)
         {
             participantRoster = rosterService != null
                 ? rosterService
@@ -185,7 +185,7 @@ namespace NeonBlack.Gameplay.Presentation.Camera
             cameraRigProfile?.Sanitize();
         }
 
-        public void SetParticipantRoster(ParticipantRosterService rosterService)
+        public void SetParticipantRoster(IParticipantRoster rosterService)
         {
             SubscribeToRoster(rosterService);
         }
@@ -618,7 +618,7 @@ namespace NeonBlack.Gameplay.Presentation.Camera
             return new Vector3(center.x, center.y, depth);
         }
 
-        private void SubscribeToRoster(ParticipantRosterService roster)
+        private void SubscribeToRoster(IParticipantRoster roster)
         {
             if (participantRoster != null)
             {

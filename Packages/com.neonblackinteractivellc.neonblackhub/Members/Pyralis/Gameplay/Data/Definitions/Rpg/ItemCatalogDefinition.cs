@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using NeonBlack.Gameplay.Core.Rpg;
+using NeonBlack.Gameplay.Modules.Rpg.Runtime;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
@@ -10,7 +10,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
         Capability = AuthoringCapability.Inventory,
         Lane = "RPG",
         AssignmentFields = new[] { nameof(catalogId), nameof(displayName), nameof(items) },
-        FirstProof = "Proof that the catalog contains valid item definitions and can resolve stack sizes.",
+        Proof = "Proof that the catalog contains valid item definitions and can resolve stack sizes.",
         CapabilityPath = "RPG/Inventory/Definitions/Item Catalog Definition",
         RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
     )]

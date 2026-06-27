@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
-using NeonBlack.Gameplay.Presentation.Animation;
+using NeonBlack.Gameplay.Core.Types.Animation;
 using NeonBlack.Gameplay.Presentation.Visuals;
 using UnityEngine;
 
@@ -13,11 +13,12 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Capability = AuthoringCapability.Animation | AuthoringCapability.VFX, 
         Relevance = "Project-window creation path for pawn presentation lane and visual setup choices.",
         AssignmentFields = new[] { nameof(presentationMode), nameof(hudPrefab), nameof(primaryTint) },
-        FirstProof = "Change the primary tint and see it reflected on the pawn in the scene.",
+        Proof = "Change the primary tint and see it reflected on the pawn in the scene.",
         ExpertAdvice = "The presentation profile decides how the actor is rendered. Use 'Billboard2_5D' for sprites that face the camera in 3D space. 'Shadow Mode' determines if a blob shadow is auto-generated.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/visuals",
         CapabilityPath = "Presentation/Feedback/Pawn Presentation Profile",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.AnimationPresentation }
+        RuntimeFamilies = new[] { RuntimeCapabilityFamily.AnimationPresentation },
+        Surface = AuthoringContractSurface.Profile
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Pawn Presentation Profile", fileName = "PawnPresentationProfile", order = -40)]
     public class PawnPresentationProfile : ScriptableObject, IRuntimeValidationProvider

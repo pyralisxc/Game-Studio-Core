@@ -1,7 +1,7 @@
-﻿using NeonBlack.Gameplay.Data.Profiles;
-using NeonBlack.Gameplay.Features.Combat;
-using NeonBlack.Gameplay.Presentation.Animation;
+using NeonBlack.Gameplay.Data.Profiles;
+using NeonBlack.Gameplay.Data.Definitions.Combat;
 using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Core.Types.Animation;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -21,7 +21,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
         RoleTags = new[] { "PawnDefinition", "PawnPrefab", "ActorBody" },
         AssignmentFields = new[] { nameof(pawnPrefab), nameof(movementProfile), nameof(combatProfile), nameof(animationProfile), nameof(featureModules) },
         NativeSetup = new[] { "PawnRoot" },
-        FirstProof = "Assign this Pawn Definition to the controlling ParticipantDefinition, then let ParticipantSpawnService place the spawned pawn at an authored spawn point.",
+        Proof = "Assign this Pawn Definition to the controlling ParticipantDefinition, then let ParticipantSpawnService place the spawned pawn at an authored spawn point.",
         ExpertAdvice = "PawnDefinition describes the actor body and prefab composition. ParticipantDefinition.inputProfile owns who controls this pawn; keep input off pawn definitions so seats, AI, hands, cursors, and pawn routes share one ownership rule.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/pawn"
     )]
@@ -29,11 +29,11 @@ namespace NeonBlack.Gameplay.Data.Definitions
     public class PawnDefinition : ScriptableObject, IRuntimeValidationProvider
     {
         private const string ActorAnimationDriverTypeFullName = "NeonBlack.Gameplay.Presentation.Animation.ActorAnimationDriver";
-        private const string ActorFeatureHostTypeFullName = "NeonBlack.Gameplay.Features.Composition.ActorFeatureHost";
-        private const string PawnRootTypeFullName = "NeonBlack.Gameplay.Characters.PawnRoot";
-        private const string PawnMotorInterfaceFullName = "NeonBlack.Gameplay.Characters.IPawnMotor";
-        private const string PawnInputModuleInterfaceFullName = "NeonBlack.Gameplay.Characters.IPawnInputModule";
-        private const string PawnPresentationModuleInterfaceFullName = "NeonBlack.Gameplay.Characters.IPawnPresentationModule";
+        private const string ActorFeatureHostTypeFullName = "NeonBlack.Gameplay.Modules.Actor.Composition.ActorFeatureHost";
+        private const string PawnRootTypeFullName = "NeonBlack.Gameplay.Modules.Character.PawnRoot";
+        private const string PawnMotorInterfaceFullName = "NeonBlack.Gameplay.Modules.Character.IPawnMotor";
+        private const string PawnInputModuleInterfaceFullName = "NeonBlack.Gameplay.Modules.Character.IPawnInputModule";
+        private const string PawnPresentationModuleInterfaceFullName = "NeonBlack.Gameplay.Modules.Character.IPawnPresentationModule";
         private const string TopDownHopModuleId = "actor.traversal.topdown-hop";
 
         public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()

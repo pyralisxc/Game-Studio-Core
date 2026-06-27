@@ -1,9 +1,7 @@
 {
     "name": "NeonBlack.Gameplay.Core",
     "references": [
-        "Unity.TextMeshPro",
-        "Unity.InputSystem",
-        "UnityEngine.UI"
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

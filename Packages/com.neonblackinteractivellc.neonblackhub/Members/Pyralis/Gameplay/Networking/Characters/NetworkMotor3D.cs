@@ -1,6 +1,8 @@
 using System.Collections.Generic;
-using NeonBlack.Gameplay.Characters;
-using NeonBlack.Gameplay.Features.Characters;
+using NeonBlack.Gameplay.Data.Participants;
+using NeonBlack.Gameplay.Glue.Session;
+using NeonBlack.Gameplay.Glue.Spawning;
+using NeonBlack.Gameplay.Modules.Character;
 using Unity.Netcode;
 using UnityEngine;
 

@@ -9,7 +9,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Relevance = "Configures which gameplay events (damage, death, score) trigger visual feedback or HUD notifications.",
         NativeSetup = new[] { "Toggle desired event publications." },
         AssignmentFields = new[] { nameof(publishDamageEvents), nameof(publishDeathEvents), nameof(publishScoreEvents) },
-        FirstProof = "Verify that damage events trigger floating text or HUD updates.",
+        Proof = "Verify that damage events trigger floating text or HUD updates.",
         ExpertAdvice = "Use these toggles to silence feedback for specific actor archetypes (e.g., destructible props vs. bosses).",
         DocumentationURL = "https://docs.neonblack.com/pyralis/visuals",
         CapabilityPath = "Presentation/Feedback/Actor Feedback Profile",

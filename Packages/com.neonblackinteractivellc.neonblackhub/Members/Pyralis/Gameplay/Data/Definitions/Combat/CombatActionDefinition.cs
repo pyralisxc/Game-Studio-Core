@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
-using NeonBlack.Gameplay.Presentation.Animation;
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Core.Types.Animation;
 using UnityEngine;
 
-namespace NeonBlack.Gameplay.Features.Combat
+namespace NeonBlack.Gameplay.Data.Definitions.Combat
 {
     /// <summary>
     /// Authored shared combat move that can be reused by 2D, 2.5D, and rigged 3D actors.
@@ -15,7 +15,7 @@ namespace NeonBlack.Gameplay.Features.Combat
         Relevance = "Project-window creation path for one combat action.",
         RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.CombatDefinitionRouteSupport },
         AssignmentFields = new[] { nameof(displayName), nameof(inputType), nameof(animationSignal) },
-        FirstProof = "Verify the combat action triggers the correct animation and applies damage/weapon effects.",
+        Proof = "Verify the combat action triggers the correct animation and applies damage/weapon effects.",
         ExpertAdvice = "Use comboStep to sequence multi-hit attacks. Use cooldownOverride if this move should be slower or faster than the weapon default."
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Combat/Combat Action Definition", fileName = "CombatActionDefinition")]

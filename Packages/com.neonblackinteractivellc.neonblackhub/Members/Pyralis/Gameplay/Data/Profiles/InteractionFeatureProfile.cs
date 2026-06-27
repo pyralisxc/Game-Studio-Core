@@ -9,7 +9,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Relevance = "Defines how an actor interacts with world objects.",
         NativeSetup = new[] { "Set Interaction Cooldown." },
         AssignmentFields = new[] { nameof(enableInteraction) },
-        FirstProof = "Verify the actor can trigger interaction events on compatible world objects.",
+        Proof = "Verify the actor can trigger interaction events on compatible world objects.",
         ExpertAdvice = "Use interactionCooldown to prevent rapid-fire interaction spamming.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/interaction",
         CapabilityPath = "Interaction/Profiles/Interaction Feature Profile",

@@ -1,0 +1,52 @@
+using System.Collections.Generic;
+using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Modules.Actor.Composition;
+using TMPro;
+using UnityEngine;
+
+namespace NeonBlack.Gameplay.Modules.Feedback.UI
+{
+    [AuthoringContract(
+        Capability = AuthoringCapability.UI,
+        Relevance = "Displays temporary text messages (e.g., 'Level Up', 'K.O.') on the HUD.",
+        Axioms = AuthoringWorldAxiom.None,
+        NativeSetup = new[] { "Attach to a UI panel inside a Canvas." },
+        AssignmentFields = new[] { nameof(label) },
+        Proof = "Call ShowText() from a script and verify the label appears on screen.",
+        CapabilityPath = "UI/HUD/Participant Timed Text Panel"
+    )]
+    [AddComponentMenu("NeonBlack/Gameplay/Feedback/UI/Participant Timed Text Panel")]
+    public class ParticipantTimedTextPanel : MonoBehaviour, IRuntimeValidationProvider
+    {
+        [SerializeField] private TextMeshProUGUI label;
+        [SerializeField] private float defaultDisplayTime = 0.8f;
+
+        private float _timer;
+
+        private void Update()
+        {
+            if (label == null || _timer <= 0f)
+                return;
+
+            _timer -= Time.deltaTime;
+            if (_timer <= 0f)
+                label.gameObject.SetActive(false);
+        }
+
+        public void ShowText(string text, float duration = -1f)
+        {
+            if (label == null || string.IsNullOrWhiteSpace(text))
+                return;
+
+            label.text = text;
+            label.gameObject.SetActive(true);
+            _timer = duration > 0f ? duration : defaultDisplayTime;
+        }
+
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        {
+            if (label == null)
+                yield return PyralisRuntimeValidationIssue.Required("`ParticipantTimedTextPanel` should reference a TextMeshProUGUI label.");
+        }
+    }
+}

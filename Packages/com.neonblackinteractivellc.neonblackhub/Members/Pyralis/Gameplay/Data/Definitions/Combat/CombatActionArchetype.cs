@@ -1,4 +1,4 @@
-namespace NeonBlack.Gameplay.Features.Combat
+namespace NeonBlack.Gameplay.Data.Definitions.Combat
 {
     /// <summary>
     /// Broad authored combat move identity used by shared combat definitions.

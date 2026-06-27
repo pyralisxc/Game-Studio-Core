@@ -2,14 +2,14 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
-namespace NeonBlack.Gameplay.Features.Combat
+namespace NeonBlack.Gameplay.Data.Definitions.Combat
 {
     [AuthoringContract(
         Capability = AuthoringCapability.Combat,
         Relevance = "The primary definition for an actor's weapon; defines damage, timing, range, and presentation.",
         NativeSetup = new[] { "Set Weapon Type.", "Assign Projectile or Hitbox Zone." },
         AssignmentFields = new[] { nameof(weaponName), nameof(damage), nameof(attackCooldown) },
-        FirstProof = "Assign to a Pawn or Enemy and verify attacks trigger animations and deal damage.",
+        Proof = "Assign to a Pawn or Enemy and verify attacks trigger animations and deal damage.",
         ExpertAdvice = "Use overrideController to change actor animations when this weapon is equipped.",
         CapabilityPath = "Combat/Actions/Weapon Data",
         RuntimeFamilies = new[] { RuntimeCapabilityFamily.Combat }

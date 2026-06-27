@@ -1,7 +1,11 @@
 using NeonBlack.Gameplay.Data.Definitions;
+using NeonBlack.Gameplay.Data.Participants;
 using NeonBlack.Gameplay.Data.Profiles;
-using NeonBlack.Gameplay.Characters;
-using NeonBlack.Gameplay.Features.Input;
+using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Glue.Participants;
+using NeonBlack.Gameplay.Modules.Character;
+using NeonBlack.Gameplay.Modules.Input;
+using NeonBlack.Gameplay.Presentation.Camera;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -32,12 +36,21 @@ namespace NeonBlack.Gameplay.Tests.Runtime
         {
             public PawnTraversalProfile LastProfile { get; private set; }
             public int CallCount { get; private set; }
+            public float ShimmyVelocityX => 0f;
 
             public void ApplyTraversalProfile(PawnProfileApplicationContext context, PawnTraversalProfile traversalProfile)
             {
                 LastProfile = traversalProfile;
                 CallCount++;
             }
+
+            public bool HandleHangFrame(FrameInput frameInput) => false;
+            public void ProbeLedge() { }
+            public void HandleInteract() { }
+            public void TriggerClimbUp() { }
+            public void TryLedgeGrab(IClimbZone zone, float maxVelocityY = 0f) { }
+            public void SetClimbZone(IClimbZone zone) { }
+            public void ClearClimbZone() { }
         }
 
         private class StubPresentation : MonoBehaviour, IPawnPresentationModule

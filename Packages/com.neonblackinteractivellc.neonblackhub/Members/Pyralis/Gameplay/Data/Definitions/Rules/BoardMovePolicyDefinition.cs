@@ -1,4 +1,4 @@
-using NeonBlack.Gameplay.Core.Rules.Board;
+using NeonBlack.Gameplay.Modules.Tabletop.Runtime;
 using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
 using UnityEngine;
@@ -30,7 +30,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
         Capability = AuthoringCapability.Tabletop | AuthoringCapability.Grid, 
         Relevance = "Project-window creation path for tabletop legal-move policy.",
         AssignmentFields = new[] { nameof(policyId), nameof(shape), nameof(maxDistance) },
-        FirstProof = "Verify that pieces can only move according to the shape and distance defined in this policy.",
+        Proof = "Verify that pieces can only move according to the shape and distance defined in this policy.",
         CapabilityPath = "Tabletop/Board/Board Move Policy Definition",
         RuntimeFamilies = new[] { RuntimeCapabilityFamily.BoardCardTabletop }
     )]

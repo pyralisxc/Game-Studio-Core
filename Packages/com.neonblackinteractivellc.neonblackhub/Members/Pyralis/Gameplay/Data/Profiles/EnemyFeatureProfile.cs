@@ -1,7 +1,7 @@
 using NeonBlack.Gameplay.Data.Definitions;
-using NeonBlack.Gameplay.Features.Combat;
-using NeonBlack.Gameplay.Presentation.Animation;
+using NeonBlack.Gameplay.Data.Definitions.Combat;
 using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Core.Types.Animation;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -12,7 +12,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Relevance = "The central configuration for an enemy; binds combat and reaction profiles together.",
         NativeSetup = new[] { "Assign Combat and Reaction profiles.", "Add optional Feature Modules (Ambient, etc)." },
         AssignmentFields = new[] { nameof(combatProfile), nameof(reactionProfile) },
-        FirstProof = "Confirm the enemy uses all assigned profiles in its runtime behavior.",
+        Proof = "Confirm the enemy uses all assigned profiles in its runtime behavior.",
         ExpertAdvice = "Use modular profiles to share behaviors across multiple enemy types while keeping the root profile unique per archetype.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/enemies",
         CapabilityPath = "Combat/Actions/Enemy Feature Profile",
