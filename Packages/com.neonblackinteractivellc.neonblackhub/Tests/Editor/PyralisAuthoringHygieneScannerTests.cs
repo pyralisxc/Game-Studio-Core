@@ -97,7 +97,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             PyralisSourceDependencyHygieneRecord enemyRuntimeHandoffInspector =
                 PyralisSourceDependencyHygieneScanner.AnalyzeSource(
                     "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Modules/Enemies/Rigged3D/Editor/Inspectors/EnemyFeatureRuntimeGuidedEditors.cs",
-                    "class EnemyFeatureRuntimeGuidedEditors { void OnInspectorGUI() { PyralisInspectorHandoff.DrawAuthoringButton(\"Enemy Ambient Feature Runtime\", null); PyralisInspectorHandoff.DrawAuthoringButton(\"Enemy Reaction Feature Runtime\", null); } }");
+                    "class EnemyFeatureRuntimeGuidedEditors { void OnInspectorGUI() { PyralisInspectorHandoff.DrawAuthoringButton(\"Enemy Ambient Component\", null); PyralisInspectorHandoff.DrawAuthoringButton(\"Enemy Reaction Component\", null); } }");
             Assert.That(enemyRuntimeHandoffInspector.PressureKind, Is.Not.EqualTo(PyralisSourceDependencyPressureKind.InspectorRouteGuideLeak));
 
             PyralisSourceDependencyHygieneRecord routeOwnerInspector =

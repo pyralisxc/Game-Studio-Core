@@ -1,7 +1,6 @@
 using System;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Profiles;
-using NeonBlack.Gameplay.Modules.Actor.Composition;
 using NeonBlack.Gameplay.Core.Types.Animation;
 
 namespace NeonBlack.Gameplay.Modules.Enemies
@@ -10,25 +9,19 @@ namespace NeonBlack.Gameplay.Modules.Enemies
         Capability = AuthoringCapability.Combat,
         ModuleId = "enemy.reaction",
         ProfileType = typeof(EnemyReactionProfile),
-        RequiredInterfaces = new[] { typeof(IFeatureModuleRuntime), typeof(IEnemyReactionState) },
+        RequiredInterfaces = new[] { typeof(IEnemyReactionState) },
         SupportedLanes = new[] { ActorPresentationMode.Billboard2_5D, ActorPresentationMode.ThirdPerson3D },
         Proof = "Verify that IsReactionLocked is true when the enemy is staggered or hit.",
         ProofTargetId = "proof.npc-enemy-behavior",
         NativeSetup = new[]
         {
-            "create EnemyReactionProfile",
-            "create FeatureModuleDefinition",
-            "assign runtime prefab with EnemyReactionFeatureRuntime",
-            "assign profile asset",
-            "add module to FeatureModuleDefinition array on enemy actor",
+            "add EnemyReactionComponent to the enemy root",
+            "assign EnemyReactionProfile",
             "ensure HealthComponent and Health/animation sources are present for reaction pathways"
         },
         AssignmentFields = new[]
         {
-            "FeatureModuleDefinition.moduleId",
-            "FeatureModuleDefinition.runtimePrefab",
-            "FeatureModuleDefinition.profileAsset",
-            "FeatureModuleDefinition.supportedPresentationModes"
+            "EnemyReactionComponent.reactionProfile"
         },
         CustomizationMoments = new[]
         {
@@ -36,8 +29,7 @@ namespace NeonBlack.Gameplay.Modules.Enemies
             "EnemyReactionProfile.hurtLockDuration",
             "EnemyReactionProfile.staggerDamageThreshold",
             "EnemyReactionProfile.hitPauseDuration",
-            "EnemyReactionProfile.cameraShakeIntensity",
-            "FeatureModuleDefinition.supportedPresentationModes"
+            "EnemyReactionProfile.cameraShakeIntensity"
         }
     )]
     public interface IEnemyReactionState

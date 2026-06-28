@@ -1,5 +1,4 @@
 using NeonBlack.Gameplay.Data.Participants;
-using NeonBlack.Gameplay.Modules.Character;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -8,7 +7,7 @@ namespace NeonBlack.Gameplay.Modules.Encounters
     /// <summary>
     /// Defines a self-contained combat section. When the player enters the trigger:
     ///   - Optionally switches the camera profile
-    ///   - Starts linked EnemySpawners
+    ///   - Starts linked encounter spawn sources
     ///   - Blocks the exit until all tracked enemies are dead
     ///   - Unlocks exit and fires OnCleared when the zone is finished
     /// </summary>

@@ -1,7 +1,5 @@
 using NeonBlack.Gameplay.Core.Contracts;
-using NeonBlack.Gameplay.Modules.Character;
 using NeonBlack.Gameplay.Modules.Combat;
-using NeonBlack.Gameplay.Modules.Actor.Composition;
 using NeonBlack.Gameplay.Presentation.Animation;
 using UnityEngine;
 
@@ -9,8 +7,9 @@ namespace NeonBlack.Gameplay.Modules.Combat
 {
     internal sealed class PawnCombat2DRuntimeReferences
     {
-        public Motor2D Motor { get; private set; }
+        public IActorCombatMovementState Motor { get; private set; }
         public ActorAnimationDriver AnimationDriver { get; private set; }
+        public IActorCombatResultReceiver[] CombatResultReceivers { get; private set; }
         public HealthComponent Health { get; private set; }
         public IActorFeedbackPublisher FeedbackPublisher { get; private set; }
         public ProjectileLauncher2D ProjectileLauncher { get; private set; }
@@ -21,8 +20,9 @@ namespace NeonBlack.Gameplay.Modules.Combat
             if (owner == null)
                 return references;
 
-            references.Motor = owner.GetComponent<Motor2D>();
+            references.Motor = owner.GetComponent<IActorCombatMovementState>();
             references.AnimationDriver = owner.GetComponent<ActorAnimationDriver>();
+            references.CombatResultReceivers = owner.GetComponents<IActorCombatResultReceiver>();
             references.Health = owner.GetComponent<HealthComponent>();
             references.FeedbackPublisher = owner.GetComponent<IActorFeedbackPublisher>();
             references.ProjectileLauncher = ResolveProjectileLauncherInternal(owner.transform, authoredProjectileLauncher);

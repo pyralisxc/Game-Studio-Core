@@ -51,7 +51,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
         public const string InputRouteSupport = "InputRouteSupport";
         public const string NetworkRouteSupport = "NetworkRouteSupport";
         public const string CombatDefinitionRouteSupport = "CombatDefinitionRouteSupport";
-        public const string FeatureModuleRouteSupport = "FeatureModuleRouteSupport";
+        public const string ModuleCapabilityRouteSupport = "ModuleCapabilityRouteSupport";
         public const string AnimationDefinitionRouteSupport = "AnimationDefinitionRouteSupport";
     }
 
@@ -92,7 +92,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
         public string RemovableInVersion { get; set; }
 
         /// <summary>
-        /// Stable feature module identity used by reflective authoring and proof-target mapping.
+        /// Stable module capability identity used by reflective authoring and proof-target mapping.
         /// </summary>
         public string ModuleId { get; set; }
 

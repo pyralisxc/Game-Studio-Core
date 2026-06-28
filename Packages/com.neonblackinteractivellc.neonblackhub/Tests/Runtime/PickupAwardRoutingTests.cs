@@ -1,5 +1,5 @@
 using NeonBlack.Gameplay.Core.Contracts;
-using NeonBlack.Gameplay.Modules.Pickups;
+using NeonBlack.Gameplay.Modules.Interaction;
 using NUnit.Framework;
 using UnityEngine;
 

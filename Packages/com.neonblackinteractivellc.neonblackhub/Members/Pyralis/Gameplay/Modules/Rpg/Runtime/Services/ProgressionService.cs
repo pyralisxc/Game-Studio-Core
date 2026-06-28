@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Data.Rpg;
 
 namespace NeonBlack.Gameplay.Modules.Rpg.Runtime
 {

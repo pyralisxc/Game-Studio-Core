@@ -1,5 +1,6 @@
-using NeonBlack.Gameplay.Modules.Tabletop.Runtime;
+using NeonBlack.Gameplay.Data.Tabletop;
 using NeonBlack.Gameplay.Editor.Inspectors;
+using NeonBlack.Gameplay.Modules.Tabletop.Runtime;
 using UnityEditor;
 
 namespace NeonBlack.Gameplay.Editor

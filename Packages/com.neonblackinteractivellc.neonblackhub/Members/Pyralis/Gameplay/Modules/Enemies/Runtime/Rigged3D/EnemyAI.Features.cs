@@ -1,42 +1,18 @@
-using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Profiles;
-using NeonBlack.Gameplay.Modules.Actor.Composition;
-using UnityEngine;
-using VContainer;
 
 namespace NeonBlack.Gameplay.Modules.Enemies
 {
     public partial class EnemyAI
     {
-        private IObjectResolver _resolver;
-
-        [Inject]
-        public void Construct(IObjectResolver resolver)
-        {
-            _resolver = resolver;
-        }
-
-        private void ApplyFeatureProfile(EnemyFeatureProfile profile)
+        private void ApplyProfile(EnemyProfile profile)
         {
             if (profile == null) return;
-            if (profile.combatProfile != null) CombatModule.ApplyCombatProfile(profile.combatProfile);
+            if (profile.combatProfile != null) _runtime?.CombatProfileReceiver?.ApplyCombatProfile(profile.combatProfile);
         }
 
-        private void InitializeFeatureModules()
+        private void ResolveDirectCapabilities()
         {
-            FeatureModuleDefinition[] definitions = enemyFeatureProfile != null ? enemyFeatureProfile.featureModules : null;
-            if (definitions == null || definitions.Length == 0) return;
-            ActorFeatureHost featureHost = _runtime.FeatureHost;
-            if (featureHost == null)
-            {
-                Debug.LogWarning(
-                    $"EnemyAI `{name}` has feature modules assigned through EnemyFeatureProfile `{enemyFeatureProfile.name}`, but the enemy prefab is missing ActorFeatureHost. Add ActorFeatureHost to the enemy root so optional features are explicit in the prefab.",
-                    this);
-                return;
-            }
-
-            featureHost.InitializeFeatures(new FeatureHostInitializationContext(_runtime.BuildFeatureContext(enemyFeatureProfile, this), _resolver), definitions);
-            featureHost.TryGetInstalledFeature(out _reactionState);
+            _reactionState = GetComponent<IEnemyReactionState>();
         }
     }
 }

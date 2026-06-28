@@ -1,6 +1,6 @@
 using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Data.Definitions.Combat;
 using NeonBlack.Gameplay.Data.Profiles;
-using NeonBlack.Gameplay.Modules.Combat;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Modules.Hazards
@@ -39,12 +39,12 @@ namespace NeonBlack.Gameplay.Modules.Hazards
 
             if (profile.knockbackForce > 0f)
             {
-                KnockbackReceiver knockback = healthComponent.GetComponent<KnockbackReceiver>() ?? healthComponent.GetComponentInParent<KnockbackReceiver>();
+                IActorKnockbackController knockback = healthComponent.GetComponent<IActorKnockbackController>() ?? healthComponent.GetComponentInParent<IActorKnockbackController>();
                 if (knockback != null)
                     knockback.ApplyKnockback(GetKnockbackDirection(healthComponent.transform.position, source != null ? source.transform.position : hitPoint, profile.useUpwardKnockback) * profile.knockbackForce);
             }
 
-            IActorStatusEffectReceiver statusReceiver = healthComponent.GetComponent<IActorStatusEffectReceiver>() ?? healthComponent.GetComponentInParent<IActorStatusEffectReceiver>();
+            IActorStatusEffectSink statusReceiver = healthComponent.GetComponent<IActorStatusEffectSink>() ?? healthComponent.GetComponentInParent<IActorStatusEffectSink>();
             if (statusReceiver != null && profile.statusEffects != null)
             {
                 for (int i = 0; i < profile.statusEffects.Length; i++)

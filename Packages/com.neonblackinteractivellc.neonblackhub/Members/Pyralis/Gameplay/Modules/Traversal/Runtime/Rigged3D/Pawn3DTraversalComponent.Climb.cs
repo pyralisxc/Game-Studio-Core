@@ -13,7 +13,7 @@ namespace NeonBlack.Gameplay.Modules.Traversal
             if (!EnsureDependencies())
                 return;
 
-            if (!allowClimb || zone == null || _movement.State.ClimbTimer > 0f || _movement.State.IsActing)
+            if (!allowClimb || zone == null || _movement.ClimbTimer > 0f || _movement.IsActing)
                 return;
 
             _movement.NotifyClimbStart(climbCooldown);

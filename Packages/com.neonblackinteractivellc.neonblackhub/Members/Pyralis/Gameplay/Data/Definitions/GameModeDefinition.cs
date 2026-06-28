@@ -14,10 +14,10 @@ namespace NeonBlack.Gameplay.Data.Definitions
         Priority = AuthoringPriority.Primary,
         SetupNodeId = "mode.definition",
         Lane = "Rules",
-        Relevance = "Defines the project-owned rules, required feature modules, and scene targets for a gameplay session.",
-        AssignmentFields = new[] { nameof(playfieldProfile), nameof(cameraRigProfile), nameof(requiredFeatureModules), nameof(gameplayScene) },
+        Relevance = "Defines the project-owned rules, system switches, and scene targets for a gameplay session.",
+        AssignmentFields = new[] { nameof(playfieldProfile), nameof(cameraRigProfile), nameof(gameplayScene) },
         Proof = "Assign this Game Mode Definition to a Session Definition asset.",
-        ExpertAdvice = "Start neutral, then enable only the systems this route actually uses. Use Required Feature Modules for project-owned global systems, and assign board or turn-order assets only for tabletop-style routes.",
+        ExpertAdvice = "Start neutral, then enable only the systems this route actually uses. Add module-owned components and profiles to the prefabs that use them; keep GameModeDefinition focused on session-level rules.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/game-mode",
         CapabilityPath = "Goals & Scoring/Rules/Game Mode Definition",
         RuntimeFamilies = new[] { RuntimeCapabilityFamily.ScoringObjectives }
@@ -58,7 +58,6 @@ namespace NeonBlack.Gameplay.Data.Definitions
         public CameraRigProfile cameraRigProfile;
 
         [Header("Systems")]
-        public FeatureModuleDefinition[] requiredFeatureModules;
         public bool enableCombat = false;
         public bool enablePickups = false;
         public bool enableHazards = false;
@@ -162,46 +161,6 @@ namespace NeonBlack.Gameplay.Data.Definitions
                 }
             }
 
-            HashSet<string> moduleIds = new HashSet<string>();
-            if (requiredFeatureModules == null)
-                return;
-
-            for (int i = 0; i < requiredFeatureModules.Length; i++)
-            {
-                FeatureModuleDefinition module = requiredFeatureModules[i];
-                if (module == null)
-                {
-                    issues.Add(PyralisRuntimeValidationIssue.Required(
-                        $"Required Feature Modules[{i}] is null.",
-                        $"{nameof(requiredFeatureModules)}[{i}]",
-                        nameof(GameModeDefinition),
-                        "Assign a FeatureModuleDefinition or remove the empty array entry.",
-                        "GameModeDefinition required feature modules contain no empty entries.",
-                        "GameModeDefinition.RequiredFeatureModule.Null"));
-                    continue;
-                }
-
-                if (!string.IsNullOrWhiteSpace(module.moduleId) && !moduleIds.Add(module.moduleId))
-                {
-                    issues.Add(PyralisRuntimeValidationIssue.Required(
-                        $"Required feature module `{module.moduleId}` is assigned more than once.",
-                        nameof(requiredFeatureModules),
-                        nameof(GameModeDefinition),
-                        "Remove the duplicate required feature module or give each module a unique id.",
-                        "GameModeDefinition required feature module ids are unique.",
-                        "GameModeDefinition.RequiredFeatureModule.Duplicate"));
-                }
-
-                foreach (PyralisRuntimeValidationIssue issue in module.GetRuntimeValidationIssues())
-                {
-                    AddChildIssue(
-                        issues,
-                        issue,
-                        $"Required feature `{module.moduleId}`: ",
-                        "GameModeDefinition.RequiredFeatureModule." + GetSafeIssueSegment(module.moduleId),
-                        $"{nameof(requiredFeatureModules)}[{i}]");
-                }
-            }
         }
 
         private static void AddChildIssue(

@@ -1,5 +1,6 @@
 using System.IO;
 using UnityEngine;
+using NeonBlack.Gameplay.Data.Rpg;
 
 namespace NeonBlack.Gameplay.Modules.Rpg.Runtime
 {

@@ -6,7 +6,6 @@ using NeonBlack.Gameplay.Modules.Combat;
 using NeonBlack.Gameplay.Modules.Hazards;
 using NeonBlack.Gameplay.Modules.Feedback;
 using NeonBlack.Gameplay.Modules.Feedback.UI;
-using NeonBlack.Gameplay.Modules.Actor.Composition;
 using NeonBlack.Gameplay.Modules.Character;
 using NeonBlack.Gameplay.Editor;
 using NUnit.Framework;
@@ -69,17 +68,5 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Object.DestroyImmediate(controller);
         }
 
-        protected sealed class TestFeatureRuntime : MonoBehaviour, IFeatureModuleRuntime
-        {
-            public string ModuleId => "feature.test";
-
-            public void InitializeFeature(FeatureRuntimeInitializationContext initializationContext)
-            {
-            }
-
-            public void ShutdownFeature()
-            {
-            }
-        }
     }
 }

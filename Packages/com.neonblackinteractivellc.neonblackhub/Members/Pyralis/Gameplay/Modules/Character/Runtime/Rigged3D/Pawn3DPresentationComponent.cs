@@ -1,6 +1,7 @@
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Data.Participants;
 using NeonBlack.Gameplay.Core.Types.Animation;
+using NeonBlack.Gameplay.Core.Types.Input;
 using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Modules.Character;

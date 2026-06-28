@@ -10,7 +10,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
     [AuthoringContract(
         Capability = AuthoringCapability.Combat,
         Relevance = "Configures stagger, hit-stun, and death reaction timing for enemies.",
-        NativeSetup = new[] { "Set hit stun and death delays.", "Assign to an EnemyFeatureProfile." },
+        NativeSetup = new[] { "Set hit stun and death delays.", "Assign to an EnemyProfile." },
         AssignmentFields = new[] { nameof(hurtLockDuration), nameof(staggerDamageThreshold) },
         Proof = "Hit the enemy and verify it enters a hit-stun state for the specified duration.",
         ExpertAdvice = "Balance hit stun to prevent 'infinite' combos by the player while still providing satisfying weight to attacks.",

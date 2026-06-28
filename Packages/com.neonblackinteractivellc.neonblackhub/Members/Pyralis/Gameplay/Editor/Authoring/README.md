@@ -4,7 +4,7 @@ This folder is the editor-only authoring system for Pyralis. The graph compiles 
 
 ## Graph Inputs
 
-- `Dependency/`: reflected setup-reference discovery for bootstrap, session, participants, pawns, authored profiles, and feature modules.
+- `Dependency/`: reflected setup-reference discovery for bootstrap, session, participants, pawns, authored profiles, and module-owned capabilities.
 - `Evidence/`: scene-surface evidence snapshots, native Unity surface guidance, and reflected scene facts.
 - `Validation/`: scene-readiness, runtime-claim, and feature-contract validation.
 - `Facts/`: fact records, reflected metadata scanning, convention providers, and contract proof projectors. Facts are vocabulary/provenance input, not setup readiness truth.

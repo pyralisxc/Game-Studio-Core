@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using NeonBlack.Gameplay.Core.Contracts;
-using NeonBlack.Gameplay.Modules.Rpg.Runtime;
+using NeonBlack.Gameplay.Data.Rpg;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rpg

@@ -162,7 +162,7 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringGraphSourceKind.CoreSetup,
                 route != null && route.Mode != null ? PyralisAuthoringGraphEvidenceState.Ready : PyralisAuthoringGraphEvidenceState.Missing,
                 guidance: route != null && route.Mode != null
-                    ? "GameModeDefinition is assigned and can expose route rules, feature modules, camera, playfield, and proof context."
+                    ? "GameModeDefinition is assigned and can expose route rules, module-owned capabilities, camera, playfield, and proof context."
                     : "Create a GameModeDefinition asset and assign it to SessionDefinition.defaultGameMode.",
                 nativeSetup: route != null && route.Mode != null
                     ? Array.Empty<string>()

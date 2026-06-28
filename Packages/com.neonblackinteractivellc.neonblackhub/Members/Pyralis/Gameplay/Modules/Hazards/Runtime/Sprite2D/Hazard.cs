@@ -1,9 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
-using NeonBlack.Gameplay.Modules.Character;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Participants;
-using NeonBlack.Gameplay.Modules.Actor.Composition;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Modules.Hazards
@@ -377,9 +375,8 @@ public partial class Hazard : MonoBehaviour, IRuntimeValidationProvider
         bool isActorTarget = HazardRuntimeReferences.IsActorTarget(other);
         if (isActorTarget)
         {
-            // Dash i-frames: a dashing player is invulnerable.
-            Motor2D motor = HazardRuntimeReferences.ResolveTargetMotor(other);
-            if (motor != null && motor.IsDashing) return;
+            IActorHazardImpactTarget hazardTarget = HazardRuntimeReferences.ResolveHazardImpactTarget(other);
+            if (hazardTarget != null && hazardTarget.IsHazardImpactImmune) return;
 
             bool appliedImpact = _data != null
                 && _data.impactProfile != null

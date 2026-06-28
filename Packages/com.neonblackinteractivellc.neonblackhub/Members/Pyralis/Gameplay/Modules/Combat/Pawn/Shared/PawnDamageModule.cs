@@ -1,8 +1,5 @@
 using UnityEngine;
-using NeonBlack.Gameplay.Data.Participants;
-using NeonBlack.Gameplay.Modules.Character;
 using NeonBlack.Gameplay.Core.Contracts;
-using NeonBlack.Gameplay.Modules.Combat;
 
 namespace NeonBlack.Gameplay.Modules.Combat
 {

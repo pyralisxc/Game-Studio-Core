@@ -3,9 +3,6 @@
     "references": [
         "NeonBlack.Gameplay.Core",
         "NeonBlack.Gameplay.Data",
-        "NeonBlack.Gameplay.Modules.Character",
-        "NeonBlack.Gameplay.Modules.Combat",
-        "NeonBlack.Gameplay.Modules.Interaction",
         "Unity.InputSystem",
         "UnityEngine.UI",
         "VContainer"

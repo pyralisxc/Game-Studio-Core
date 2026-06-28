@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
-using NeonBlack.Gameplay.Modules.Spawning;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Modules.Encounters
@@ -9,8 +8,8 @@ namespace NeonBlack.Gameplay.Modules.Encounters
     public partial class ArenaZone
     {
         [Header("Spawners")]
-        [Tooltip("EnemySpawner GameObjects to activate when the player enters.")]
-        [SerializeField] private EnemySpawner[] enemySpawners;
+        [Tooltip("Spawner components to activate when the player enters. Each component must implement IEncounterSpawnSource.")]
+        [SerializeField] private MonoBehaviour[] enemySpawners;
 
         [Header("Exit Blockers")]
         [Tooltip("GameObjects (walls, gates, barriers) that block the exit.")]
@@ -22,13 +21,14 @@ namespace NeonBlack.Gameplay.Modules.Encounters
         {
             GetComponent<BoxCollider>().isTrigger = true;
 
-            foreach (EnemySpawner spawner in enemySpawners)
+            foreach (MonoBehaviour spawnerBehaviour in enemySpawners)
             {
+                IEncounterSpawnSource spawner = ResolveSpawnSource(spawnerBehaviour);
                 if (spawner == null)
                     continue;
 
-                spawner.gameObject.SetActive(false);
-                spawner.EnemySpawned += RegisterEnemy;
+                spawnerBehaviour.gameObject.SetActive(false);
+                spawner.ActorSpawned += RegisterEnemy;
             }
 
             SetExitBlockersActive(false);
@@ -36,22 +36,24 @@ namespace NeonBlack.Gameplay.Modules.Encounters
 
         private void OnDestroy()
         {
-            foreach (EnemySpawner spawner in enemySpawners)
+            foreach (MonoBehaviour spawnerBehaviour in enemySpawners)
             {
+                IEncounterSpawnSource spawner = ResolveSpawnSource(spawnerBehaviour);
                 if (spawner != null)
-                    spawner.EnemySpawned -= RegisterEnemy;
+                    spawner.ActorSpawned -= RegisterEnemy;
             }
         }
 
         private void ActivateSpawners()
         {
-            foreach (EnemySpawner spawner in enemySpawners)
+            foreach (MonoBehaviour spawnerBehaviour in enemySpawners)
             {
+                IEncounterSpawnSource spawner = ResolveSpawnSource(spawnerBehaviour);
                 if (spawner == null)
                     continue;
 
                 RegisterTrackedSpawnerEnemies(spawner);
-                spawner.gameObject.SetActive(true);
+                spawnerBehaviour.gameObject.SetActive(true);
             }
         }
 
@@ -85,8 +87,9 @@ namespace NeonBlack.Gameplay.Modules.Encounters
 
         private bool AllSpawnersFinished()
         {
-            foreach (EnemySpawner spawner in enemySpawners)
+            foreach (MonoBehaviour spawnerBehaviour in enemySpawners)
             {
+                IEncounterSpawnSource spawner = ResolveSpawnSource(spawnerBehaviour);
                 if (spawner != null && !spawner.IsFinished)
                     return false;
             }
@@ -111,14 +114,19 @@ namespace NeonBlack.Gameplay.Modules.Encounters
             return true;
         }
 
-        private void RegisterTrackedSpawnerEnemies(EnemySpawner spawner)
+        private void RegisterTrackedSpawnerEnemies(IEncounterSpawnSource spawner)
         {
             if (spawner == null)
                 return;
 
-            IReadOnlyList<IActorHealthState> trackedEnemies = spawner.TrackedEnemies;
+            IReadOnlyList<IActorHealthState> trackedEnemies = spawner.TrackedActors;
             for (int i = 0; i < trackedEnemies.Count; i++)
                 RegisterEnemy(trackedEnemies[i]);
+        }
+
+        private static IEncounterSpawnSource ResolveSpawnSource(MonoBehaviour spawnerBehaviour)
+        {
+            return spawnerBehaviour as IEncounterSpawnSource;
         }
 
         /// <summary>Register an enemy that was spawned dynamically so the zone can track it.</summary>

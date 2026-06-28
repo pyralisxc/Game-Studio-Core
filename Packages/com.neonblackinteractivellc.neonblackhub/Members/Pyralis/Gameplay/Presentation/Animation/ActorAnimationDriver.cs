@@ -24,7 +24,7 @@ namespace NeonBlack.Gameplay.Presentation.Animation
         Surface = AuthoringContractSurface.RuntimeComponent
     )]
 [AddComponentMenu("NeonBlack/Gameplay/Animation/Actor Animation Driver")]
-    public class ActorAnimationDriver : MonoBehaviour, IActorAnimationController, IRuntimeValidationProvider
+    public class ActorAnimationDriver : MonoBehaviour, IActorAnimationController, IActorCombatResultReceiver, IRuntimeValidationProvider
     {
         public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
@@ -218,6 +218,31 @@ namespace NeonBlack.Gameplay.Presentation.Animation
 
                 ApplyBinding(binding, intValue, floatValue, boolValue, trigger: true);
             }
+        }
+
+        public void HandleCombatResult(in ActorCombatResult result)
+        {
+            if (result.Kind != ActorCombatResultKind.AttackStarted
+                && result.Kind != ActorCombatResultKind.ComboConfirmed
+                && result.Kind != ActorCombatResultKind.Finisher)
+                return;
+
+            int step = Mathf.Max(result.Step, 1);
+            if (!string.IsNullOrWhiteSpace(result.CustomAnimationKey))
+            {
+                TriggerCustom(result.CustomAnimationKey, intValue: step);
+            }
+            else if (result.AnimationSignal != ActorAnimationSignal.Custom)
+            {
+                SetIntSignal(result.AnimationSignal, step);
+                TriggerSignal(result.AnimationSignal, intValue: step);
+            }
+
+            if (result.IsFinisher)
+                TriggerCustom("ComboFinisher", intValue: step);
+
+            if (animator != null && result.AnimatorTriggerHash != 0)
+                animator.SetTrigger(result.AnimatorTriggerHash);
         }
 
         public void SetFacing(bool facingRight)

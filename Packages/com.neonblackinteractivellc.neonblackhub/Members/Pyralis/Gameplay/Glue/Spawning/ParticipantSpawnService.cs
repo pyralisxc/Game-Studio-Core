@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Glue.Participants;
 using NeonBlack.Gameplay.Glue.Spawning;
 using NeonBlack.Gameplay.Glue.Session;
-using NeonBlack.Gameplay.Modules.Character;
 using NeonBlack.Gameplay.Data.Participants;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Core.Contracts;

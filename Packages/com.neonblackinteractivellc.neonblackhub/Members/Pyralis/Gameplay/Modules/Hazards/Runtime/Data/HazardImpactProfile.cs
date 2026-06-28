@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Definitions.Combat;
 using NeonBlack.Gameplay.Core.Contracts;
-using NeonBlack.Gameplay.Modules.Combat;
 using NeonBlack.Gameplay.Modules.Hazards;
 using UnityEngine;
 

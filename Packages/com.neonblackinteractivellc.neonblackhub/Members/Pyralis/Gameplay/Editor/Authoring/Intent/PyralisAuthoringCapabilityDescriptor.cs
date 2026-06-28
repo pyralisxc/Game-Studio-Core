@@ -330,13 +330,13 @@ namespace NeonBlack.Gameplay.Editor
                 && HasExactRoleTag(descriptor, AuthoringContractRoleTags.CombatDefinitionRouteSupport))
                 return true;
 
-            bool featureModuleRoute =
+            bool moduleCapabilityRoute =
                 ContainsFamily(selectedFamilies, RuntimeCapabilityFamily.CharacterPawnGameplay)
                 || ContainsFamily(selectedFamilies, RuntimeCapabilityFamily.Combat)
                 || ContainsFamily(selectedFamilies, RuntimeCapabilityFamily.GunsProjectiles)
                 || ContainsFamily(selectedFamilies, RuntimeCapabilityFamily.ActionTargeting)
                 || ContainsFamily(selectedFamilies, RuntimeCapabilityFamily.BoardCardTabletop);
-            if (!featureModuleRoute || !HasExactRoleTag(descriptor, AuthoringContractRoleTags.FeatureModuleRouteSupport))
+            if (!moduleCapabilityRoute || !HasExactRoleTag(descriptor, AuthoringContractRoleTags.ModuleCapabilityRouteSupport))
                 return false;
 
             return descriptor.Family == RuntimeCapabilityFamily.Custom
@@ -1572,7 +1572,7 @@ namespace NeonBlack.Gameplay.Editor
                 || HasRoleTag(contract, AuthoringContractRoleTags.InputRouteSupport)
                 || HasRoleTag(contract, AuthoringContractRoleTags.NetworkRouteSupport)
                 || HasRoleTag(contract, AuthoringContractRoleTags.CombatDefinitionRouteSupport)
-                || HasRoleTag(contract, AuthoringContractRoleTags.FeatureModuleRouteSupport)
+                || HasRoleTag(contract, AuthoringContractRoleTags.ModuleCapabilityRouteSupport)
                 || HasRoleTag(contract, AuthoringContractRoleTags.AnimationDefinitionRouteSupport);
         }
 

@@ -3,7 +3,6 @@
     "references": [
         "NeonBlack.Gameplay.Core",
         "NeonBlack.Gameplay.Data",
-        "NeonBlack.Gameplay.Modules.Character",
         "Unity.TextMeshPro",
         "UnityEngine.UI",
         "VContainer"

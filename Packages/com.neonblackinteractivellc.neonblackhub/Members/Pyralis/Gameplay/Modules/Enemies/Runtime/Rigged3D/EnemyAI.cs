@@ -2,8 +2,8 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Enums;
-using NeonBlack.Gameplay.Modules.Combat;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace NeonBlack.Gameplay.Modules.Enemies
 {
@@ -16,11 +16,11 @@ namespace NeonBlack.Gameplay.Modules.Enemies
         Priority = AuthoringPriority.Primary,
         Lane = "AI",
         Relevance = "Canonical 3D/2.5D AI controller; handles patrol, detection, and attack states.",
-        AssignmentFields = new[] { nameof(moveSpeed), nameof(enemyFeatureProfile), nameof(patrolPoints) },
+        AssignmentFields = new[] { nameof(moveSpeed), nameof(enemyProfile), nameof(patrolPoints) },
         ProofTargetId = "proof.npc-enemy-behavior",
         Proof = "Place enemy and player in scene. Verify enemy enters 'Chase' state when player enters detection range.",
-        NativeSetup = new[] { "Add EnemyAI to 3D actor.", "Assign EnemyFeatureProfile.", "Configure Detection Module ranges." },
-        ExpertAdvice = "EnemyAI separates 'Tactics' and 'Steering'. Use 'EnemyFeatureProfile' to define shared stats like Aggro Range and Attack Cooldowns.",
+        NativeSetup = new[] { "Add EnemyAI to 3D actor.", "Assign EnemyProfile.", "Configure Detection Module ranges." },
+        ExpertAdvice = "EnemyAI separates 'Tactics' and 'Steering'. Use 'EnemyProfile' to define shared stats like Aggro Range and Attack Cooldowns.",
         Axioms = AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.Dimensions3D,
         DocumentationURL = "https://docs.neonblack.com/pyralis/enemy-ai",
         CapabilityPath = "Movement/Traversal/Enemy AI"
@@ -29,7 +29,6 @@ namespace NeonBlack.Gameplay.Modules.Enemies
     [RequireComponent(typeof(CharacterController))]
     [RequireComponent(typeof(EnemyMovementModule))]
     [RequireComponent(typeof(EnemyDetectionModule))]
-    [RequireComponent(typeof(EnemyCombatModule))]
     [RequireComponent(typeof(EnemyAnimationModule))]
     public partial class EnemyAI : MonoBehaviour, IActorMovementModifierReceiver, IActorCombatModifierReceiver, IEnemyActorState
     {
@@ -50,7 +49,8 @@ namespace NeonBlack.Gameplay.Modules.Enemies
         [SerializeField] private Camera presentationCamera;
 
         [Header("Profiles")]
-        [SerializeField] private EnemyFeatureProfile enemyFeatureProfile;
+        [FormerlySerializedAs("enemyFeatureProfile")]
+        [SerializeField] private EnemyProfile enemyProfile;
 
         private EnemyActorRuntimeReferences _runtime;
         private IEnemyReactionState _reactionState;
@@ -71,7 +71,10 @@ namespace NeonBlack.Gameplay.Modules.Enemies
 
         public EnemyMovementModule MovementModule => _runtime?.MovementModule;
         public EnemyDetectionModule DetectionModule => _runtime?.DetectionModule;
-        public EnemyCombatModule CombatModule => _runtime?.CombatModule;
+        public IActorCombatRequestReceiver CombatRequests => _runtime?.CombatRequestReceiver;
+        public IActorCombatRuntimeTickReceiver CombatTicker => _runtime?.CombatTickReceiver;
+        public IActorCombatTacticalState CombatTactics => _runtime?.CombatTacticalState;
+        public IActorCombatModifierReceiver CombatModifiers => _runtime?.CombatModifierReceiver;
         public EnemyAnimationModule AnimationModule => _runtime?.AnimationModule;
         public MovementMode MovementMode => movementMode;
         public float MoveSpeed => moveSpeed;
@@ -90,7 +93,7 @@ namespace NeonBlack.Gameplay.Modules.Enemies
             _states[EnemyState.Chase] = new ChaseState();
             _states[EnemyState.Attack] = new AttackState();
 
-            ApplyFeatureProfile(enemyFeatureProfile);
+            ApplyProfile(enemyProfile);
 
             _runtime.ConfigureBillboard(transform, visualRoot, presentationCamera, spriteDefaultFacesRight);
 
@@ -100,7 +103,7 @@ namespace NeonBlack.Gameplay.Modules.Enemies
                 _runtime.Health.Damaged += OnHit;
             }
 
-            InitializeFeatureModules();
+            ResolveDirectCapabilities();
         }
 
         private void OnDestroy()
@@ -122,7 +125,7 @@ namespace NeonBlack.Gameplay.Modules.Enemies
             if (_state == EnemyState.Dead) return;
 
             MovementModule.Tick(Time.deltaTime);
-            CombatModule.Tick(Time.deltaTime);
+            CombatTicker?.UpdateCombatTimers();
 
             if ((_reactionState != null && _reactionState.IsReactionLocked) || _statusActionLocked)
             {
@@ -177,7 +180,7 @@ namespace NeonBlack.Gameplay.Modules.Enemies
             _state = EnemyState.Dead;
             AnimationModule.TriggerDeath();
             _runtime.Controller.enabled = false;
-            CombatModule.DisableAllHitBoxes();
+            CombatTactics?.DisableAllHitBoxes();
         }
 
         private void OnHit(float damage)
@@ -189,8 +192,8 @@ namespace NeonBlack.Gameplay.Modules.Enemies
 
         public void SetStatusMoveSpeedMultiplier(float multiplier) => _statusMoveSpeedMultiplier = Mathf.Max(multiplier, 0f);
         public void SetStatusActionLock(bool locked) => _statusActionLocked = locked;
-        public void SetOutgoingDamageMultiplier(float multiplier) => CombatModule.SetOutgoingDamageMultiplier(multiplier);
-        public void SetOutgoingKnockbackMultiplier(float multiplier) => CombatModule.SetOutgoingKnockbackMultiplier(multiplier);
+        public void SetOutgoingDamageMultiplier(float multiplier) => CombatModifiers?.SetOutgoingDamageMultiplier(multiplier);
+        public void SetOutgoingKnockbackMultiplier(float multiplier) => CombatModifiers?.SetOutgoingKnockbackMultiplier(multiplier);
 
         public void SetPresentationCamera(Camera camera)
         {

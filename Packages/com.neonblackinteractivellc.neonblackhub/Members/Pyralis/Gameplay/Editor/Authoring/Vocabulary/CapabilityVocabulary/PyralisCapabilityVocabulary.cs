@@ -6,12 +6,11 @@ using NeonBlack.Gameplay.Data.Participants;
 using NeonBlack.Gameplay.Glue.Session;
 using NeonBlack.Gameplay.Glue.Spawning;
 using NeonBlack.Gameplay.Modules.Character;
-using NeonBlack.Gameplay.Modules.Tabletop.Runtime;
+using NeonBlack.Gameplay.Data.Tabletop;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Definitions.Rules;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Modules.Combat;
-using NeonBlack.Gameplay.Modules.Actor.Composition;
 using NeonBlack.Gameplay.Modules.Enemies;
 using NeonBlack.Gameplay.Modules.Feedback.UI;
 using NeonBlack.Gameplay.Modules.Spawning;
@@ -410,7 +409,7 @@ namespace NeonBlack.Gameplay.Editor
                 "One selectable command surface such as an interact prompt, menu command, board space, card, cursor target, or pawn action.",
                 "Use this when the player chooses what to do before the runtime resolves a command.",
                 new[] { "ActionDefinition" },
-                new[] { "InteractionFeatureProfile when using actor interaction" },
+                new[] { "InteractionProfile when using actor interaction" },
                 new[] { "UI button, board presenter, cursor bridge, raycast target, or interaction trigger" },
                 new[] { "Interaction runtime component or lane-specific action trigger when the source is a pawn" },
                 new[]
@@ -491,7 +490,7 @@ namespace NeonBlack.Gameplay.Editor
                 "An authored enemy or NPC actor that can appear in the scene, detect or patrol, take damage, attack, and participate in an encounter.",
                 "Use this after the player pawn and one attack path exist, when the proof needs ragers, opponents, NPCs, hazards, or encounter pressure.",
                 new[] { "EnemyAttack or project-owned NPC definition" },
-                new[] { "EnemyFeatureProfile", "EnemyCombatProfile", "EnemyReactionProfile", "PawnPresentationProfile or actor presentation profile" },
+                new[] { "EnemyProfile", "EnemyCombatProfile", "EnemyReactionProfile", "PawnPresentationProfile or actor presentation profile" },
                 new[] { "EnemySpawner", "ArenaZone when encounter gating matters", "spawn point Transforms", "optional exit blockers" },
                 new[] { "EnemyAI", "CharacterController", "HealthComponent", "KnockbackReceiver", "ActorAnimationDriver", "Animator", "HitBox child" },
                 new[]

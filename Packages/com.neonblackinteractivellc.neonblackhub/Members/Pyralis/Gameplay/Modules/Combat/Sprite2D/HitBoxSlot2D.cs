@@ -1,4 +1,5 @@
 using UnityEngine;
+using NeonBlack.Gameplay.Core.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Combat
 {
@@ -6,7 +7,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
     /// Named 2D hitbox slot used by the shared 2D combat controller.
     /// </summary>
     [System.Serializable]
-    public class HitBoxSlot2D
+    public class HitBoxSlot2D : IActorFacingMirrorTarget
     {
         public string zoneName = "Punch";
         public HitBox2D hitBox;

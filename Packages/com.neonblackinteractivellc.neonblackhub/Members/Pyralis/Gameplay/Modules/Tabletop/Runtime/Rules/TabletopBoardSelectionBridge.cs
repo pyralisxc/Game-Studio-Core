@@ -1,7 +1,7 @@
 using NeonBlack.Gameplay.Core.Actions;
-using NeonBlack.Gameplay.Modules.Actions.Runtime;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using NeonBlack.Gameplay.Data.Tabletop;
 
 namespace NeonBlack.Gameplay.Modules.Tabletop.Runtime
 {

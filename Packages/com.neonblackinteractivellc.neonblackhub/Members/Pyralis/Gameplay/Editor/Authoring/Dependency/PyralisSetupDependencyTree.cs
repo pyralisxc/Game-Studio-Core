@@ -20,7 +20,7 @@ namespace NeonBlack.Gameplay.Editor
         GameModeDefinition,
         Participant,
         PawnDefinition,
-        FeatureModule,
+        ModuleCapability,
         Profile,
         Prefab,
         BoardDefinition,
@@ -118,14 +118,12 @@ namespace NeonBlack.Gameplay.Editor
         public PawnDefinition FirstPawn { get; private set; }
         public IReadOnlyList<ParticipantDefinition> Participants => _participants;
         public IReadOnlyList<PawnDefinition> Pawns => _pawns;
-        public IReadOnlyList<FeatureModuleDefinition> FeatureModules => _featureModules;
         public IReadOnlyList<PyralisSetupDependencyNode> Nodes => _nodes;
         public IReadOnlyList<PyralisSetupDependencyEdge> Edges => _edges;
         public IReadOnlyList<PyralisSetupAssignmentRecord> AssignmentRecords => _assignments;
 
         private readonly List<ParticipantDefinition> _participants = new List<ParticipantDefinition>();
         private readonly List<PawnDefinition> _pawns = new List<PawnDefinition>();
-        private readonly List<FeatureModuleDefinition> _featureModules = new List<FeatureModuleDefinition>();
 
         public static PyralisSetupDependencyTree Build(UnityEngine.Object source)
         {
@@ -171,8 +169,6 @@ namespace NeonBlack.Gameplay.Editor
             Mode ??= FindFirstAssigned<GameModeDefinition>();
             AddAssignedObjects(_participants);
             AddAssignedObjects(_pawns);
-            AddAssignedObjects(_featureModules);
-
             AddDistinct(_participants, FirstParticipant);
             AddDistinct(_pawns, FirstPawn);
             FirstParticipant = FirstParticipant != null ? FirstParticipant : _participants.Count > 0 ? _participants[0] : null;
@@ -425,8 +421,6 @@ namespace NeonBlack.Gameplay.Editor
                 return PyralisSetupDependencyNodeKind.Participant;
             if (sourceObject is PawnDefinition)
                 return PyralisSetupDependencyNodeKind.PawnDefinition;
-            if (sourceObject is FeatureModuleDefinition)
-                return PyralisSetupDependencyNodeKind.FeatureModule;
             if (sourceObject is BoardDefinition)
                 return PyralisSetupDependencyNodeKind.BoardDefinition;
             if (sourceObject is TurnOrderDefinition)

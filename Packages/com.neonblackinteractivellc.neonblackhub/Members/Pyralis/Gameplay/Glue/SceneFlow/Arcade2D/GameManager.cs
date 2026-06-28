@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Modules.Character;
 using NeonBlack.Gameplay.Modules.Hazards;
-using NeonBlack.Gameplay.Modules.Pickups;
+using NeonBlack.Gameplay.Modules.Interaction;
 using NeonBlack.Gameplay.Modules.Scoring;
 using UnityEngine;
 using UnityEngine.Events;

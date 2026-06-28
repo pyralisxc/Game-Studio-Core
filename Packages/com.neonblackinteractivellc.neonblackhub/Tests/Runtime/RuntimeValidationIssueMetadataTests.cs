@@ -9,28 +9,6 @@ namespace NeonBlack.Gameplay.Tests.Runtime
     public class RuntimeValidationIssueMetadataTests
     {
         [Test]
-        public void PawnDefinition_PreservesFeatureModuleIssueCode()
-        {
-            FeatureModuleDefinition module = ScriptableObject.CreateInstance<FeatureModuleDefinition>();
-            module.moduleId = "test.module";
-            module.runtimePrefab = null;
-
-            PawnDefinition pawn = ScriptableObject.CreateInstance<PawnDefinition>();
-            pawn.featureModules = new[] { module };
-
-            PyralisRuntimeValidationIssue issue = pawn.GetRuntimeValidationIssues()
-                .FirstOrDefault(candidate => candidate.IssueCode.Contains("RuntimePrefab.Missing"));
-
-            Assert.That(issue, Is.Not.Null);
-            Assert.That(issue.IssueCode, Is.EqualTo("PawnDefinition.FeatureModule.test_module.FeatureModuleDefinition.RuntimePrefab.Missing"));
-            Assert.That(issue.FieldPath, Is.EqualTo("featureModules.runtimePrefab"));
-            Assert.That(issue.NativeAction, Does.Contain("runtimePrefab"));
-
-            Object.DestroyImmediate(pawn);
-            Object.DestroyImmediate(module);
-        }
-
-        [Test]
         public void RuntimeValidationIssueUtility_WithParentContext_PreservesChildMetadata()
         {
             PyralisRuntimeValidationIssue child = PyralisRuntimeValidationIssue.Recommended(

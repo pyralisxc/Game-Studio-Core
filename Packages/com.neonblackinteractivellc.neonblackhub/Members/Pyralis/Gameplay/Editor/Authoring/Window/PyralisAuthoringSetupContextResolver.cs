@@ -204,15 +204,6 @@ namespace NeonBlack.Gameplay.Editor
                 || selection == mode.boardDefinition)
                 return true;
 
-            if (mode.requiredFeatureModules != null)
-            {
-                for (int i = 0; i < mode.requiredFeatureModules.Length; i++)
-                {
-                    if (selection == mode.requiredFeatureModules[i])
-                        return true;
-                }
-            }
-
             if (mode.boardTerminalConditions != null)
             {
                 for (int i = 0; i < mode.boardTerminalConditions.Length; i++)
@@ -242,22 +233,7 @@ namespace NeonBlack.Gameplay.Editor
                     || selection == pawn.combatProfile
                     || selection == pawn.traversalProfile
                     || selection == pawn.presentationProfile
-                    || selection == pawn.animationProfile
-                    || PawnReferencesFeatureModule(pawn, selection));
-        }
-
-        private static bool PawnReferencesFeatureModule(PawnDefinition pawn, Object selection)
-        {
-            if (pawn == null || pawn.featureModules == null)
-                return false;
-
-            for (int i = 0; i < pawn.featureModules.Length; i++)
-            {
-                if (selection == pawn.featureModules[i])
-                    return true;
-            }
-
-            return false;
+                    || selection == pawn.animationProfile);
         }
 
         private static GameplaySessionBootstrap GetBootstrapReferencingSelectedTransform(Object selection)

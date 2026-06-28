@@ -2,8 +2,6 @@
     "name": "NeonBlack.Gameplay.Data",
     "references": [
         "NeonBlack.Gameplay.Core",
-        "NeonBlack.Gameplay.Modules.Rpg",
-        "NeonBlack.Gameplay.Modules.Tabletop",
         "Unity.InputSystem"
     ],
     "includePlatforms": [],

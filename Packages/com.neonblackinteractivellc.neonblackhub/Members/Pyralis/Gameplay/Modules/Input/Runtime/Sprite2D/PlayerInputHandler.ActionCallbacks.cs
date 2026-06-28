@@ -1,6 +1,5 @@
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Profiles;
-using NeonBlack.Gameplay.Modules.Character;
 using UnityEngine.InputSystem;
 
 namespace NeonBlack.Gameplay.Modules.Input
@@ -13,7 +12,7 @@ namespace NeonBlack.Gameplay.Modules.Input
             if (ctx.control.device is Keyboard && !_editorKeyboardInput) return;
             if (!IsGameplayActive()) return;
             if (!TryDispatchGameplayAction(GameplayInputActionRole.Jump))
-                _controller.Jump();
+                _movementInputReceiver?.Jump();
         }
 
         private void OnDashPerformed(InputAction.CallbackContext ctx)
@@ -58,7 +57,7 @@ namespace NeonBlack.Gameplay.Modules.Input
             if (ctx.control.device is Gamepad && !_gamepadEnabled) return;
             if (ctx.control.device is Keyboard && !_editorKeyboardInput) return;
             if (!IsGameplayActive()) return;
-            _combatInputReceiver?.HandlePrimaryAttackInput();
+            _combatRequestReceiver?.TryHandleCombatCommand(new ActorCombatCommand(ActorCombatCommandKind.PrimaryAttack, gameObject));
         }
 
         private void OnKickPerformed(InputAction.CallbackContext ctx)
@@ -66,7 +65,7 @@ namespace NeonBlack.Gameplay.Modules.Input
             if (ctx.control.device is Gamepad && !_gamepadEnabled) return;
             if (ctx.control.device is Keyboard && !_editorKeyboardInput) return;
             if (!IsGameplayActive()) return;
-            _combatInputReceiver?.HandleSecondaryAttackInput();
+            _combatRequestReceiver?.TryHandleCombatCommand(new ActorCombatCommand(ActorCombatCommandKind.SecondaryAttack, gameObject));
         }
 
         private void OnInteractPerformed(InputAction.CallbackContext ctx)

@@ -1,7 +1,6 @@
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Participants;
-using NeonBlack.Gameplay.Modules.Actor.Composition;
 using UnityEngine;
 using VContainer;
 
@@ -24,7 +23,7 @@ namespace NeonBlack.Gameplay.Modules.Character
         ProofTargetId = "proof.1p-pawn-movement",
         Proof = "Pawn responds to input in the scene. For top-down routes, verify Move drives X/Y on the map plane; for side-view routes, verify the ground check hits the correct layer.",
         RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay },
-        ExpertAdvice = "Top-down/no-gravity route: keep Movement Style as TopDownNoGravity so Rigidbody2D stays Kinematic and Move drives X/Y. If Jump should visually hop without physics gravity, install a TopDownHop feature module that consumes the Jump action. Side-view/gravity route: set Movement Style to SideViewGravity and enable Jump for Dynamic Rigidbody2D vertical motion. Leave camera-visible movement bounds off unless the camera view itself is the legal play area."
+        ExpertAdvice = "Top-down/no-gravity route: keep Movement Style as TopDownNoGravity so Rigidbody2D stays Kinematic and Move drives X/Y. If Jump should visually hop without physics gravity, add TopDownHopComponent and assign a TopDownHopProfile so it consumes the Jump action. Side-view/gravity route: set Movement Style to SideViewGravity and enable Jump for Dynamic Rigidbody2D vertical motion. Leave camera-visible movement bounds off unless the camera view itself is the legal play area."
     )]
 [AddComponentMenu("NeonBlack/Gameplay/Modules/Character/Sprite2D/Pawn 2D Movement Component")]
     [RequireComponent(typeof(Rigidbody2D))]

@@ -15,13 +15,13 @@ namespace NeonBlack.Gameplay.Modules.Enemies
                 return;
             }
 
-            if (dist <= ai.CombatModule.MinAttackRange * 1.5f)
+            if (ai.CombatTactics != null && dist <= ai.CombatTactics.MinAttackRange * 1.5f)
             {
                 ai.ChangeState(EnemyAI.EnemyState.Attack);
                 return;
             }
 
-            ai.MovementModule.MoveToward(ai.DetectionModule.PlayerPosition, ai.MoveSpeed, ai.StatusMoveSpeedMultiplier, ai.PresentationCamera, ai.VisualRoot, ai.SpriteDefaultFacesRight, ai.CombatModule.HitBoxZones);
+            ai.MovementModule.MoveToward(ai.DetectionModule.PlayerPosition, ai.MoveSpeed, ai.StatusMoveSpeedMultiplier, ai.PresentationCamera, ai.VisualRoot, ai.SpriteDefaultFacesRight, ai.CombatTactics?.FacingMirrorTargets);
         }
 
         public void OnExit(EnemyAI ai) { }

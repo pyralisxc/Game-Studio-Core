@@ -1,4 +1,3 @@
-using NeonBlack.Gameplay.Modules.Character;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Modules.Input;
 using NeonBlack.Gameplay.Data.Participants;
@@ -28,7 +27,6 @@ namespace NeonBlack.Gameplay.Modules.Input
     /// Add PlayerInput only when local device pairing is part of the proof.
 /// </summary>
 [AddComponentMenu("NeonBlack/Gameplay/Modules/Input/Sprite2D/Advanced Player Input Handler")]
-[RequireComponent(typeof(Motor2D))]
 [DefaultExecutionOrder(-10)] // Register before settings services push input values during Start().
 public partial class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver, IPawnInputModule, IPawnRuntimeServicesReceiver
 {
@@ -79,7 +77,7 @@ public partial class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver,
 
     // Runtime
 
-    private Motor2D _controller;
+    private IActorMovementInputReceiver2D _movementInputReceiver;
     private PlayerInput         _playerInput;
     private InputAction         _moveAction;
     private InputAction         _jumpAction;
@@ -88,7 +86,7 @@ public partial class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver,
     private InputAction         _kickAction;
     private InputAction         _interactAction;
     private InputAction         _blockAction;
-    private IPawnCombatInputReceiver2D _combatInputReceiver;
+    private IActorCombatRequestReceiver _combatRequestReceiver;
     private IActorInteractionInputReceiver2D _interactionInputReceiver;
     private IActorGuardInputReceiver2D _guardInputReceiver;
     private IActorGameplayActionReceiver[] _gameplayActionReceivers;
@@ -105,9 +103,9 @@ public partial class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver,
 
     private void Awake()
     {
-        _controller = GetComponent<Motor2D>();
+        _movementInputReceiver = GetComponent<IActorMovementInputReceiver2D>();
         _playerInput = GetComponent<PlayerInput>();
-        _combatInputReceiver = GetComponent<IPawnCombatInputReceiver2D>();
+        _combatRequestReceiver = GetComponent<IActorCombatRequestReceiver>();
         _interactionInputReceiver = GetComponent<IActorInteractionInputReceiver2D>();
         _guardInputReceiver = GetComponent<IActorGuardInputReceiver2D>();
         _gameplayActionReceivers = GetComponentsInChildren<IActorGameplayActionReceiver>(true);
@@ -187,12 +185,12 @@ public partial class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver,
 
     private void Update()
     {
-        if (_controller == null)
+        if (_movementInputReceiver == null)
             return;
 
-        if (_controller.IsDead)
+        if (_movementInputReceiver.IsDead)
         {
-            _controller.MoveDirection = Vector2.zero;
+            _movementInputReceiver.MoveDirection = Vector2.zero;
             return;
         }
 
@@ -205,7 +203,7 @@ public partial class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver,
 
         if (!isPlaying)
         {
-            _controller.MoveDirection = Vector2.zero;
+            _movementInputReceiver.MoveDirection = Vector2.zero;
             return;
         }
 
@@ -231,14 +229,14 @@ public partial class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver,
 
             if (gamepadRaw.sqrMagnitude > _gamepadDeadzone * _gamepadDeadzone)
             {
-                _controller.MoveDirection = Vector2.ClampMagnitude(gamepadRaw, 1f);
+                _movementInputReceiver.MoveDirection = Vector2.ClampMagnitude(gamepadRaw, 1f);
                 return;
             }
         }
 
         if (_editorKeyboardInput && activeIsKeyboard && hardwareRaw.sqrMagnitude > 0.01f)
         {
-            _controller.MoveDirection = hardwareRaw.normalized;
+            _movementInputReceiver.MoveDirection = hardwareRaw.normalized;
             return;
         }
 
@@ -247,18 +245,18 @@ public partial class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver,
             Vector2 joy = _joystick.Direction;
             if (joy.magnitude > _joystickDeadzone)
             {
-                _controller.MoveDirection = joy;
+                _movementInputReceiver.MoveDirection = joy;
                 return;
             }
         }
 
-        _controller.MoveDirection = Vector2.zero;
+        _movementInputReceiver.MoveDirection = Vector2.zero;
     }
 
     private void LateUpdate()
     {
-        if (_controller.MoveDirection.sqrMagnitude > 0.01f)
-            _lastNonZeroDir = _controller.MoveDirection;
+        if (_movementInputReceiver != null && _movementInputReceiver.MoveDirection.sqrMagnitude > 0.01f)
+            _lastNonZeroDir = _movementInputReceiver.MoveDirection;
     }
 
     private bool IsGameplayActive()
@@ -292,10 +290,13 @@ public partial class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver,
 
     private void TriggerDash()
     {
-        Vector2 dir = _controller.MoveDirection.sqrMagnitude > 0.01f
-            ? _controller.MoveDirection
+        if (_movementInputReceiver == null)
+            return;
+
+        Vector2 dir = _movementInputReceiver.MoveDirection.sqrMagnitude > 0.01f
+            ? _movementInputReceiver.MoveDirection
             : _lastNonZeroDir;
-        _controller.TryDash(dir);
+        _movementInputReceiver.TryDash(dir);
     }
 
     private Gamepad GetAssignedGamepad()

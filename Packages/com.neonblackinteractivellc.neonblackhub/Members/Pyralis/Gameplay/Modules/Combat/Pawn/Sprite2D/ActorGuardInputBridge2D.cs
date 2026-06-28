@@ -1,22 +1,19 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
-using NeonBlack.Gameplay.Modules.Character;
-using NeonBlack.Gameplay.Modules.Actor.Composition;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Modules.Combat
 {
     [AuthoringContract(
         Capability = AuthoringCapability.Combat | AuthoringCapability.Input,
-        Relevance = "Forwards 2D guard input into an installed Actor Guard feature on ActorFeatureHost.",
+        Relevance = "Forwards 2D guard input into a sibling actor guard controller.",
         NativeSetup = new[] 
         { 
-            "Add ActorFeatureHost to the same GameObject.",
-            "Install a module providing IActorGuardController.",
+            "Add a component that implements IActorGuardController to the same GameObject.",
             "Route input from an adapter into this bridge."
         },
         Proof = "Verify the guard feature activates when the guard input is triggered.",
-        ExpertAdvice = "Bridge only forwards input; it does not block damage by itself. Ensure the Guard feature is installed in PawnDefinition.",
+        ExpertAdvice = "Bridge only forwards input; it does not block damage by itself. Add ActorCombatReactionComponent or another guard controller directly to the pawn root.",
         CapabilityPath = "Combat/Actions/Actor Guard Input Bridge2D"
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Modules/Combat/Pawn/Sprite2D/Actor Guard Input Bridge 2D")]
@@ -24,15 +21,14 @@ namespace NeonBlack.Gameplay.Modules.Combat
     {
         public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            if (GetComponent<ActorFeatureHost>() == null)
-                yield return PyralisRuntimeValidationIssue.Required("ActorFeatureHost is missing. Feature input bridges need it.");
+            if (GetComponent<IActorGuardController>() == null)
+                yield return PyralisRuntimeValidationIssue.Required("No sibling IActorGuardController is available for guard input.");
         }
-        private ActorFeatureHost _featureHost;
         private IActorGuardController _guardFeature;
 
         private void Awake()
         {
-            _featureHost = GetComponent<ActorFeatureHost>();
+            _guardFeature = GetComponent<IActorGuardController>();
         }
 
         public void HandleGuardStartInput()
@@ -49,13 +45,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
 
         private void ResolveGuardFeature()
         {
-            _featureHost ??= GetComponent<ActorFeatureHost>();
-            if (_featureHost == null)
-                return;
-
-            _guardFeature ??= _featureHost.TryGetInstalledFeature(out IActorGuardController feature)
-                ? feature
-                : null;
+            _guardFeature ??= GetComponent<IActorGuardController>();
         }
     }
 }

@@ -1,10 +1,7 @@
-using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Data.Definitions.Combat;
 using NeonBlack.Gameplay.Modules.Combat;
-using NeonBlack.Gameplay.Modules.Actor.Composition;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Participants;
-using NeonBlack.Gameplay.Modules.Character;
 using UnityEngine;
 using VContainer;
 
@@ -30,7 +27,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
     [RequireComponent(typeof(PawnProjectileModule))]
     [RequireComponent(typeof(PawnBlockModule))]
     [RequireComponent(typeof(PawnWeaponModule))]
-    public partial class PawnCombatBehaviour : MonoBehaviour, IPawnCombatModule, IPawnCombatMovementContext, IActorCombatCommandReceiver, IActorGuardController, ICombatActionStateReader, IDamageModifier, IActorCombatModifierReceiver, IRuntimeValidationProvider
+    public partial class PawnCombatBehaviour : MonoBehaviour, IPawnCombatModule, IActorCombatMovementInfluence, IActorCombatRuntimeTickReceiver, IActorCombatRequestReceiver, IActorGuardController, ICombatActionStateReader, IDamageModifier, IActorCombatModifierReceiver, IRuntimeValidationProvider
     {
         private PawnCombatRuntimeReferences _runtime;
         private PawnComboProcessor _comboProcessor;
@@ -44,8 +41,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
         private float _aerialTimer;
         private float _combatTimer;
 
-        private ICharacterMotorState Motor => _runtime?.Motor;
-        private ActorAnimationDriver AnimationDriver => _runtime?.AnimationDriver;
+        private IActorCombatMovementState Motor => _runtime?.Motor;
         private IActorFeedbackPublisher FeedbackPublisher => _runtime?.FeedbackPublisher;
         private PawnHitBoxModule HitBoxModule => _runtime?.HitBoxModule;
         private PawnDamageModule DamageModule => _runtime?.DamageModule;
@@ -76,6 +72,16 @@ namespace NeonBlack.Gameplay.Modules.Combat
             _comboProcessor ??= new PawnComboProcessor();
 
             SubscribeHitBoxes();
+        }
+
+        private void PublishCombatResult(in ActorCombatResult result)
+        {
+            IActorCombatResultReceiver[] receivers = _runtime?.CombatResultReceivers;
+            if (receivers == null)
+                return;
+
+            for (int i = 0; i < receivers.Length; i++)
+                receivers[i]?.HandleCombatResult(result);
         }
 
         private void OnDestroy()
@@ -147,6 +153,30 @@ namespace NeonBlack.Gameplay.Modules.Combat
         public void BeginGuard() => HandleBlockStart();
         public void EndGuard() => HandleBlockEnd();
         public void CycleWeapon(int direction) => WeaponModule?.CycleWeapon(direction);
+
+        public bool TryHandleCombatCommand(in ActorCombatCommand command)
+        {
+            switch (command.Kind)
+            {
+                case ActorCombatCommandKind.PrimaryAttack:
+                    HandleAttack();
+                    return true;
+                case ActorCombatCommandKind.SecondaryAttack:
+                    HandleKick();
+                    return true;
+                case ActorCombatCommandKind.BlockStart:
+                    HandleBlockStart();
+                    return true;
+                case ActorCombatCommandKind.BlockEnd:
+                    HandleBlockEnd();
+                    return true;
+                case ActorCombatCommandKind.CycleWeapon:
+                    CycleWeapon(command.Direction);
+                    return true;
+                default:
+                    return false;
+            }
+        }
 
         public void ResetAttackCombo()
         {

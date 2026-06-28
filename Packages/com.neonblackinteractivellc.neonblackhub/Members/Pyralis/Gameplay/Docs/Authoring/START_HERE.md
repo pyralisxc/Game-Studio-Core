@@ -58,7 +58,7 @@ For the first-pass proof, use this native flow:
 The Authoring Window also shows a **Setup Chain** map for the current selection:
 
 ```text
-Bootstrap -> Session -> Game Mode -> Participants -> Pawns -> Feature Modules -> Contracts
+Bootstrap -> Session -> Game Mode -> Participants -> Pawns -> Module Capabilities -> Contracts
 ```
 
 Use it as a setup-prep surface, not as another Inspector. It diagnoses which part of the chain is ready, which part needs setup, and when a core link is missing it tells you the native Unity path to create the asset or object and which Inspector field owns the assignment. Use **Inspect Asset** only when you need to jump to the Inspector for field-level editing.
@@ -86,9 +86,9 @@ When a session/mode route is active, the Authoring Window keeps tab ownership st
 
 The Authoring Window guidance is route-aware:
 
-- `SessionDefinition`, `GameModeDefinition`, participants, pawns, feature modules, and contracts expose the route capabilities the graph can prove.
+- `SessionDefinition`, `GameModeDefinition`, participants, pawns, module-owned capabilities, and contracts expose the route capabilities the graph can prove.
 - Intent is the visible route-filtering surface. It narrows and explains the graph from route capability descriptors; it does not create assets, assign fields, or mutate gameplay objects.
-- `GameModeDefinition` contributes scene, rule, board, turn, playfield, camera, scoring, combat, respawn, and feature-module signals to the active route.
+- `GameModeDefinition` contributes scene, rule, board, turn, playfield, camera, scoring, combat, respawn, and module-owned capability signals to the active route.
 - `SessionDefinition` explains whether participants need pawns, input, seats, hands, factions, camera, cursor, or menu surfaces.
 - `GameplaySessionBootstrap` anchors the assigned session chain and hands off to the graph-backed Authoring Window.
 
@@ -130,7 +130,7 @@ Think of it this way: `GameplaySessionBootstrap` is the first runtime object. `S
 
 - Required:
   - one `Gameplay Root` with `GameplaySessionBootstrap` (+ optional `PyralisGameplayLifetimeScope`);
-  - `GameplaySessionBootstrap -> SessionDefinition -> GameModeDefinition -> participants/pawns/feature modules/contracts`;
+  - `GameplaySessionBootstrap -> SessionDefinition -> GameModeDefinition -> participants/pawns/module capabilities/contracts`;
   - one default participant with `Input Profile` and `Default Pawn`;
   - one pawn prefab with `PawnRoot`, `Motor2D` + `Motor2DInputAdapter` + `Pawn2DMovementComponent` + `Pawn2DPresentationComponent` (or 2.5D/3D equivalent);
   - one pawn visual `Animator` if animation is part of the proof; `PawnDefinition.animationProfile` supplies the runtime signal bindings.
@@ -182,7 +182,7 @@ Wire the assets in this order:
 2. Assign `GameModeDefinition` to `SessionDefinition.defaultGameMode`.
 3. Assign participant definitions to the `SessionDefinition`.
 4. For pawn games, assign each participant a `PawnDefinition`.
-5. Add feature modules, mode rules, profiles, and reflected contracts only when the route needs them.
+5. Add module-owned capabilities, mode rules, profiles, and reflected contracts only when the route needs them.
 
 Template or scaffold tooling is not the current first-test path. Use manual native authoring while validating the guide. After a route is proven repeatable, future tooling may capture that route as editable project assets, but it should never replace the manual proof that the setup chain is understandable.
 
@@ -284,7 +284,7 @@ When you do add one, keep the feedback loop small:
 
 ## Step 5: Decide Whether You Need A Pawn
 
-Use a pawn when a participant owns an actor body with movement, combat, health, animation, traversal, pickups, or feature modules.
+Use a pawn when a participant owns an actor body with movement, combat, health, animation, traversal, pickups, or module-owned capabilities.
 
 Do not use a pawn just because there is a player. Board games, card games, camera-only scenes, menu combat, and many turn-based games can start with no pawn prefab.
 

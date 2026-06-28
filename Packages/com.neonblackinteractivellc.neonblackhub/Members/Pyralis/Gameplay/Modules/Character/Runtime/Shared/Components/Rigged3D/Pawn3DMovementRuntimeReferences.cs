@@ -9,7 +9,7 @@ namespace NeonBlack.Gameplay.Modules.Character
         private Pawn3DMovementRuntimeReferences(
             CharacterController controller,
             IActorKnockbackController knockback,
-            IPawnCombatMovementContext combat)
+            IActorCombatMovementInfluence combat)
         {
             Controller = controller;
             Knockback = knockback;
@@ -18,7 +18,7 @@ namespace NeonBlack.Gameplay.Modules.Character
 
         public CharacterController Controller { get; }
         public IActorKnockbackController Knockback { get; }
-        public IPawnCombatMovementContext Combat { get; }
+        public IActorCombatMovementInfluence Combat { get; }
 
         public static Pawn3DMovementRuntimeReferences Capture(GameObject owner)
         {
@@ -29,7 +29,7 @@ namespace NeonBlack.Gameplay.Modules.Character
             return new Pawn3DMovementRuntimeReferences(
                 owner != null ? owner.GetComponent<CharacterController>() : null,
                 behaviours.OfType<IActorKnockbackController>().FirstOrDefault(),
-                behaviours.OfType<IPawnCombatMovementContext>().FirstOrDefault());
+                behaviours.OfType<IActorCombatMovementInfluence>().FirstOrDefault());
         }
     }
 }

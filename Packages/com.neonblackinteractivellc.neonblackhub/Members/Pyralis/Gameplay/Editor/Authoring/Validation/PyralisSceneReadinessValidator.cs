@@ -7,7 +7,6 @@ using NeonBlack.Gameplay.Glue.Spawning;
 using NeonBlack.Gameplay.Modules.Character;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Glue.InputRouting;
-using NeonBlack.Gameplay.Modules.Actor.Composition;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;

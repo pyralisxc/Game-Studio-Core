@@ -1,5 +1,6 @@
 using UnityEngine;
 using NeonBlack.Gameplay.Data.Definitions.Combat;
+using NeonBlack.Gameplay.Core.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Combat
 {
@@ -16,7 +17,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
 /// Example zone names: Punch, Kick, Aerial, Wide, High, Low
 /// </summary>
 [System.Serializable]
-public class HitBoxSlot
+public class HitBoxSlot : IActorFacingMirrorTarget
 {
     [Tooltip("Unique zone name. WeaponData.hitBoxZone must exactly match this to target this slot.\n" +
              "Examples: Punch, Kick, Aerial, Wide, High, Low")]

@@ -3,12 +3,7 @@
     "references": [
         "NeonBlack.Gameplay.Modules.Traversal",
         "NeonBlack.Gameplay.Editor",
-        "NeonBlack.Gameplay",
-        "NeonBlack.Gameplay.Core",
-        "NeonBlack.Gameplay.Data",
-        "NeonBlack.Gameplay.Modules.Character",
-        "NeonBlack.Gameplay.Modules.Actor.Composition",
-        "NeonBlack.Gameplay.Presentation"
+        "NeonBlack.Gameplay.Data"
     ],
     "includePlatforms": [
         "Editor"

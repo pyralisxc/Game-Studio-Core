@@ -1,6 +1,5 @@
-using NeonBlack.Gameplay.Modules.Actor.Composition;
-using NeonBlack.Gameplay.Modules.Interaction;
 using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Data.Participants;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -8,7 +7,7 @@ namespace NeonBlack.Gameplay.Modules.Character
 {
 /// <summary>
 /// Coordinator for a 3D pawn. Sequences four sibling modules each frame and exposes
-/// the <see cref="ICharacterMotorState"/> contract to sibling gameplay modules.
+/// a combat-facing movement state contract to sibling gameplay modules.
 /// </summary>
 [AuthoringContract(
     Capability = AuthoringCapability.KineticMotor3D,
@@ -25,7 +24,7 @@ namespace NeonBlack.Gameplay.Modules.Character
     },
     AssignmentFields = new[] { "Pawn3DInputModule", "Pawn3DMovementComponent", "Pawn3DTraversalComponent", "Pawn3DPresentationComponent" },
     Proof = "Pawn responds to Move input and plays walk animations. Optional traversal features such as ledge-climb can extend the explicit traversal sibling when installed.",
-    ExpertAdvice = "Motor3D is the explicit 3D pawn coordinator. It sequences sibling modules in a deterministic order; ActorFeatureHost may add optional capabilities, but it should not construct the pawn's core movement identity. Ensure CharacterController 'Skin Width' is at least 10% of the radius to prevent jitter on slopes.",
+    ExpertAdvice = "Motor3D is the explicit 3D pawn coordinator. It sequences sibling modules in a deterministic order; optional traversal, combat, and interaction capabilities should be visible direct components. Ensure CharacterController 'Skin Width' is at least 10% of the radius to prevent jitter on slopes.",
     DocumentationURL = "https://docs.neonblack.com/pyralis/movement",
     CapabilityPath = "Movement/Traversal/Motor3D"
 )]
@@ -34,7 +33,7 @@ namespace NeonBlack.Gameplay.Modules.Character
 [RequireComponent(typeof(Pawn3DInputModule))]
 [RequireComponent(typeof(Pawn3DMovementComponent))]
 [RequireComponent(typeof(Pawn3DPresentationComponent))]
-public partial class Motor3D : MonoBehaviour, ICharacterMotorState, IActorReactionResponder, IActorMovementModifierReceiver, IClimbTraversalActor
+public partial class Motor3D : MonoBehaviour, IActorCombatMovementState, IActorReactionResponder, IActorMovementModifierReceiver, IClimbTraversalActor, IActorMotionStateReader
 {
     private Motor3DRuntimeReferences _runtime;
     private float                     _reactionLockTimer;
@@ -44,14 +43,15 @@ public partial class Motor3D : MonoBehaviour, ICharacterMotorState, IActorReacti
     private Pawn3DMovementComponent Movement => _runtime?.Movement;
     private IPawnTraversalModule Traversal => _runtime?.Traversal;
     private Pawn3DPresentationComponent Presentation => _runtime?.Presentation;
-    private IActorCombatCommandReceiver Combat => _runtime?.Combat;
+    private IActorCombatRuntimeTickReceiver CombatTicker => _runtime?.CombatTicker;
+    private IActorCombatRequestReceiver CombatRequests => _runtime?.CombatRequests;
     private IActorHealthState Health => _runtime?.Health;
     private IActorDamageImmunityController DamageImmunity => _runtime?.DamageImmunity;
     private IActorTraversalFeature TraversalFeature => _runtime?.TraversalFeature;
-    private IActorInteractionFeature InteractionFeature => _runtime?.InteractionFeature;
+    private IActorInteractionRequestReceiver InteractionRequests => _runtime?.InteractionRequests;
     private IActorGuardController GuardFeature => _runtime?.GuardFeature;
 
-    //  ICharacterMotorState  //
+    //  Combat-facing movement state  //
     public bool IsGrounded  => Movement.State.IsGrounded;
     public bool IsAirborne  => !Movement.State.IsGrounded || Movement.State.VelocityY > 0f;
     public bool FacingRight => Movement.State.FacingRight;
@@ -70,6 +70,7 @@ public partial class Motor3D : MonoBehaviour, ICharacterMotorState, IActorReacti
     public bool     IsCrouching     => Movement.State.IsCrouching;
     public bool     IsSprinting     => Movement.State.IsSprinting;
     public Vector3  CurrentVelocity => new Vector3(Movement.State.VelocityX, Movement.State.VelocityY, Movement.State.VelocityZ);
+    public Vector3 MotionVelocity => CurrentVelocity;
 
     //  Unity lifecycle  //
     private void Awake()
@@ -102,9 +103,9 @@ public partial class Motor3D : MonoBehaviour, ICharacterMotorState, IActorReacti
     public void SetInputActions(InputActionAsset asset, bool overrideExisting = true) =>
         Input.SetInputActions(asset, overrideExisting);
 
-    private void ResolveFeatureModules()
+    private void ResolveDirectCapabilities()
     {
-        _runtime?.ResolveFeatureModules();
+        _runtime?.ResolveDirectCapabilities();
     }
 }
 }

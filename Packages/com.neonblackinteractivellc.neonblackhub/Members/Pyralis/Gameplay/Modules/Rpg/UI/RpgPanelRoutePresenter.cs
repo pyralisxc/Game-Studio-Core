@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
-using NeonBlack.Gameplay.Modules.Rpg.Runtime;
-using NeonBlack.Gameplay.Modules.Actor.Composition;
+using NeonBlack.Gameplay.Data.Rpg;
 using TMPro;
 using UnityEngine;
 

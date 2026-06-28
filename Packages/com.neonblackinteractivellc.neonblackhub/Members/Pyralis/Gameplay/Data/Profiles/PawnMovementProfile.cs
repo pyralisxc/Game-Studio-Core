@@ -60,7 +60,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
         [Range(0.1f, 3f)] public float dashCooldown = 0.8f;
 
         [Header("2D Jump")]
-        [Tooltip("Allows the built-in side-view jump fallback when Movement Style is SideViewGravity. Top-down/no-gravity visual hops should use a TopDownHop feature module that consumes the Jump action before this fallback.")]
+        [Tooltip("Allows the built-in side-view jump fallback when Movement Style is SideViewGravity. Top-down/no-gravity visual hops should use a TopDownHopComponent component that consumes the Jump action before this fallback.")]
         public bool allow2DJump = false;
         [Tooltip("Initial upward velocity applied when a grounded 2D side-view pawn jumps.")]
         public float jumpVelocity2D = 8f;

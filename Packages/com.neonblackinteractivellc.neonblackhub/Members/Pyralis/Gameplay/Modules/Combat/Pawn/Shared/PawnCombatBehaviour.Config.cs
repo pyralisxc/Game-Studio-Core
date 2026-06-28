@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Definitions.Combat;
 using NeonBlack.Gameplay.Data.Participants;
-using NeonBlack.Gameplay.Modules.Character;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Modules.Combat;
 using UnityEngine;

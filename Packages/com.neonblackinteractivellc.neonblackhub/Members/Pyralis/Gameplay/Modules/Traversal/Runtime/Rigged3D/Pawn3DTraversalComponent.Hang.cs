@@ -1,6 +1,6 @@
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Types.Animation;
-using NeonBlack.Gameplay.Modules.Character;
+using NeonBlack.Gameplay.Core.Types.Input;
 using NeonBlack.Gameplay.Presentation.Animation;
 using UnityEngine;
 
@@ -13,7 +13,7 @@ namespace NeonBlack.Gameplay.Modules.Traversal
             if (!EnsureDependencies())
                 return false;
 
-            if (!_movement.State.IsHanging)
+            if (!_movement.IsHanging)
                 return false;
 
             if (_hangZone == null)
@@ -22,7 +22,7 @@ namespace NeonBlack.Gameplay.Modules.Traversal
                 return false;
             }
 
-            bool climbPressed = _movement.State.JumpBufferCounter > 0f || frameInput.Move.y > 0.5f;
+            bool climbPressed = _movement.JumpBufferCounter > 0f || frameInput.Move.y > 0.5f;
             if (climbPressed)
             {
                 IClimbZone zone = _hangZone;
@@ -31,7 +31,7 @@ namespace NeonBlack.Gameplay.Modules.Traversal
                 return true;
             }
 
-            bool dropPressed = _movement.State.IsCrouching || frameInput.Move.y < -0.5f;
+            bool dropPressed = _movement.IsCrouching || frameInput.Move.y < -0.5f;
             if (dropPressed)
             {
                 DropFromHang();
@@ -62,7 +62,7 @@ namespace NeonBlack.Gameplay.Modules.Traversal
             if (!EnsureDependencies())
                 return;
 
-            if (!allowHang || zone == null || _movement.State.IsHanging || _movement.State.IsClimbing)
+            if (!allowHang || zone == null || _movement.IsHanging || _movement.IsClimbing)
                 return;
 
             _hangZone = zone;

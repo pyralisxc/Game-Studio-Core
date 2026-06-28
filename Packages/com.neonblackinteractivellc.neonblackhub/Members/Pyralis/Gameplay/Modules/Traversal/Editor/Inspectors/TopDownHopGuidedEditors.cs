@@ -16,7 +16,7 @@ namespace NeonBlack.Gameplay.Modules.Traversal.Editor
             PyralisInspectorHandoff.DrawAuthoringButton("Top Down Hop Profile", null);
 
             DrawDefaultInspector();
-            PyralisInspectorValidation.DrawValidationIssues(GetIssues((TopDownHopProfile)target), "Top-down hop profile is ready for a FeatureModuleDefinition.");
+            PyralisInspectorValidation.DrawValidationIssues(GetIssues((TopDownHopProfile)target), "Top-down hop profile is ready for direct TopDownHopComponent assignment.");
             serializedObject.ApplyModifiedProperties();
         }
 
@@ -35,17 +35,17 @@ namespace NeonBlack.Gameplay.Modules.Traversal.Editor
         }
     }
 
-    [CustomEditor(typeof(TopDownHopFeatureRuntime))]
-    public sealed class TopDownHopFeatureRuntimeEditor : UnityEditor.Editor
+    [CustomEditor(typeof(TopDownHopComponent))]
+    public sealed class TopDownHopComponentEditor : UnityEditor.Editor
     {
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
 
-            PyralisInspectorHandoff.DrawAuthoringButton("Top Down Hop Feature Runtime", null);
+            PyralisInspectorHandoff.DrawAuthoringButton("Top Down Hop Component", null);
 
             DrawDefaultInspector();
-            PyralisInspectorValidation.DrawValidationMessages(GetMessages(serializedObject), "Top-down hop runtime is ready for feature-module installation.");
+            PyralisInspectorValidation.DrawValidationMessages(GetMessages(serializedObject), "Top-down hop runtime is ready for direct pawn component setup.");
             serializedObject.ApplyModifiedProperties();
         }
 
@@ -56,7 +56,7 @@ namespace NeonBlack.Gameplay.Modules.Traversal.Editor
             SerializedProperty visual = serializedObject.FindProperty("visualTransform");
 
             if (profile != null && profile.objectReferenceValue == null)
-                messages.Add(PyralisInspectorValidationIssue.Optional("Hop Profile is empty. This is expected when FeatureModuleDefinition provides a TopDownHopProfile at runtime."));
+                messages.Add(PyralisInspectorValidationIssue.Required("Assign a TopDownHopProfile so this direct pawn component can run the hop action."));
 
             if (visual != null && visual.objectReferenceValue == null)
                 messages.Add(PyralisInspectorValidationIssue.Optional("Visual Transform is empty. Runtime will lift a child SpriteRenderer or Animator when possible. Assign this field when the pawn art lives under a specific child."));

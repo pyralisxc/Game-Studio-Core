@@ -34,7 +34,7 @@ namespace NeonBlack.Gameplay.Modules.Character
     [AddComponentMenu("NeonBlack/Gameplay/Modules/Character/Sprite2D/Motor 2D")]
     [RequireComponent(typeof(Pawn2DMovementComponent))]
     [RequireComponent(typeof(Pawn2DPresentationComponent))]
-    public sealed class Motor2D : MonoBehaviour, IActorReactionResponder, IActorMovementModifierReceiver, IFacingDirectionProvider
+    public sealed class Motor2D : MonoBehaviour, IActorReactionResponder, IActorMovementModifierReceiver, IFacingDirectionProvider, IActorHazardImpactTarget, IActorMotionStateReader, IActorMovementInputReceiver2D, IActorCombatMovementState
     {
         private Pawn2DMovementComponent movement;
         private Pawn2DPresentationComponent presentation;
@@ -50,11 +50,20 @@ namespace NeonBlack.Gameplay.Modules.Character
         }
 
         public Vector2 CurrentVelocity => movement != null ? movement.CurrentVelocity : Vector2.zero;
+        public Vector3 MotionVelocity => CurrentVelocity;
         public bool FacingRight => movement != null && movement.FacingRight;
         public bool IsDashing => movement != null && movement.IsDashing;
+        public bool IsHazardImpactImmune => IsDashing;
         public bool IsDead => movement != null && movement.IsDead;
+        public bool IsGrounded => movement != null && movement.IsGrounded;
+        public bool IsAirborne => movement != null && !movement.IsGrounded;
         public float DashCooldownRemaining => movement != null ? movement.DashCooldownRemaining : 0f;
         public bool IsActionLocked => movement != null && movement.IsActionLocked;
+        public bool IsActing
+        {
+            get => IsActionLocked;
+            set => SetActionLock(value);
+        }
 
         private void Awake()
         {

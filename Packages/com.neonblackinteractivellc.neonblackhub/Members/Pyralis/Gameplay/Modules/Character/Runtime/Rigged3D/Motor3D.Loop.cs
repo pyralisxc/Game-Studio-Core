@@ -1,3 +1,5 @@
+using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Core.Types.Input;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Modules.Character
@@ -6,7 +8,7 @@ namespace NeonBlack.Gameplay.Modules.Character
     {
         private void Update()
         {
-            ResolveFeatureModules();
+            ResolveDirectCapabilities();
 
             if (_reactionLockTimer > 0f || _statusActionLocked)
             {
@@ -15,7 +17,7 @@ namespace NeonBlack.Gameplay.Modules.Character
             }
 
             FrameInput frameInput = Input.CollectFrameInput();
-            Combat?.UpdateCombatTimers();
+            CombatTicker?.UpdateCombatTimers();
             Presentation.UpdateLookAround(frameInput);
 
             ApplyPostureInput(frameInput);
@@ -35,7 +37,7 @@ namespace NeonBlack.Gameplay.Modules.Character
             if (_reactionLockTimer > 0f)
                 _reactionLockTimer = Mathf.Max(0f, _reactionLockTimer - Time.deltaTime);
 
-            Combat?.UpdateCombatTimers();
+            CombatTicker?.UpdateCombatTimers();
             Movement.ApplyMovement(Vector3.zero);
             ApplyPresentation();
         }
@@ -52,15 +54,18 @@ namespace NeonBlack.Gameplay.Modules.Character
         private void DispatchActionInput(FrameInput frameInput)
         {
             if (frameInput.AttackPressed)
-                Combat?.HandleAttack();
+                CombatRequests?.TryHandleCombatCommand(new ActorCombatCommand(ActorCombatCommandKind.PrimaryAttack, gameObject));
             if (frameInput.KickPressed)
-                Combat?.HandleKick();
+                CombatRequests?.TryHandleCombatCommand(new ActorCombatCommand(ActorCombatCommandKind.SecondaryAttack, gameObject));
             if (frameInput.BlockPressed)
                 BeginGuardOrBlock();
             if (frameInput.BlockReleased)
                 EndGuardOrBlock();
             if (frameInput.WeaponCycleDelta != 0)
-                Combat?.CycleWeapon(frameInput.WeaponCycleDelta);
+                CombatRequests?.TryHandleCombatCommand(new ActorCombatCommand(
+                    ActorCombatCommandKind.CycleWeapon,
+                    gameObject,
+                    direction: frameInput.WeaponCycleDelta));
         }
 
         private void BeginGuardOrBlock()
@@ -68,7 +73,7 @@ namespace NeonBlack.Gameplay.Modules.Character
             if (GuardFeature != null)
                 GuardFeature.BeginGuard();
             else
-                Combat?.HandleBlockStart();
+                CombatRequests?.TryHandleCombatCommand(new ActorCombatCommand(ActorCombatCommandKind.BlockStart, gameObject));
         }
 
         private void EndGuardOrBlock()
@@ -76,7 +81,7 @@ namespace NeonBlack.Gameplay.Modules.Character
             if (GuardFeature != null)
                 GuardFeature.EndGuard();
             else
-                Combat?.HandleBlockEnd();
+                CombatRequests?.TryHandleCombatCommand(new ActorCombatCommand(ActorCombatCommandKind.BlockEnd, gameObject));
         }
 
         private void ApplyDodgeInput(FrameInput frameInput)
@@ -101,8 +106,8 @@ namespace NeonBlack.Gameplay.Modules.Character
 
             if (frameInput.InteractPressed)
             {
-                if (InteractionFeature != null)
-                    InteractionFeature.TryHandleInteraction();
+                if (InteractionRequests != null)
+                    InteractionRequests.TryHandleInteraction();
                 else
                     Traversal.HandleInteract();
             }

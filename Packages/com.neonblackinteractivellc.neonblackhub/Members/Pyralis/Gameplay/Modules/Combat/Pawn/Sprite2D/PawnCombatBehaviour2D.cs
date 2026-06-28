@@ -1,8 +1,6 @@
 using NeonBlack.Gameplay.Data.Profiles;
-using NeonBlack.Gameplay.Modules.Character;
 using NeonBlack.Gameplay.Data.Definitions.Combat;
 using NeonBlack.Gameplay.Modules.Combat;
-using NeonBlack.Gameplay.Modules.Actor.Composition;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Participants;
 using UnityEngine;
@@ -20,14 +18,14 @@ namespace NeonBlack.Gameplay.Modules.Combat
             "Assign CombatSequenceDefinition for authored combos.",
             "Assign Projectile Launcher for ranged attacks."
         },
+        RequiredComponentNames = new[] { "NeonBlack.Gameplay.Modules.Character.Motor2D" },
         AssignmentFields = new[] { nameof(hitBoxZones), nameof(equippedWeapons), nameof(startingWeaponIndex), nameof(attackCooldown), nameof(kickCooldown), nameof(projectileLauncher) },
         Proof = "Verify attacks trigger animations and hitboxes detect targets.",
         ExpertAdvice = "For 2D-only combat, prefer PawnCombatBehaviour2D. Do not leave hitbox zone names mismatched with WeaponData fallback zones.",
         CapabilityPath = "Combat/Actions/Pawn Combat Behaviour2D"
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Modules/Combat/Pawn/Sprite2D/Pawn Combat Behaviour 2D")]
-    [RequireComponent(typeof(Motor2D))]
-    public partial class PawnCombatBehaviour2D : MonoBehaviour, IPawnCombatModule, IPawnCombatInputReceiver2D, ICombatActionStateReader, IActorCombatModifierReceiver, IRuntimeValidationProvider
+    public partial class PawnCombatBehaviour2D : MonoBehaviour, IPawnCombatModule, IActorCombatRequestReceiver, ICombatActionStateReader, IActorCombatModifierReceiver, IRuntimeValidationProvider
     {
         [Header("Combo")]
         [SerializeField] private float comboResetTime = 1.5f;
@@ -90,6 +88,16 @@ namespace NeonBlack.Gameplay.Modules.Combat
             ApplyActiveWeapon();
         }
 
+        private void PublishCombatResult(in ActorCombatResult result)
+        {
+            IActorCombatResultReceiver[] receivers = Runtime.CombatResultReceivers;
+            if (receivers == null)
+                return;
+
+            for (int i = 0; i < receivers.Length; i++)
+                receivers[i]?.HandleCombatResult(result);
+        }
+
         private void OnDestroy()
         {
             UnsubscribeHitBoxes();
@@ -105,12 +113,12 @@ namespace NeonBlack.Gameplay.Modules.Combat
             _comboProcessor.Tick(Time.deltaTime, comboResetTime);
 
             if (_actingTimer <= 0f && Runtime.Motor != null)
-                Runtime.Motor.SetActionLock(false);
+                Runtime.Motor.IsActing = false;
 
             UpdateActionState();
         }
 
-        public void HandlePrimaryAttackInput()
+        private void HandlePrimaryAttackInput()
         {
             if (primarySequence != null && primarySequence.actions != null && primarySequence.actions.Length > 0)
             {
@@ -121,7 +129,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
             ExecuteFallbackAttack();
         }
 
-        public void HandleSecondaryAttackInput()
+        private void HandleSecondaryAttackInput()
         {
             if (secondarySequence != null && secondarySequence.actions != null && secondarySequence.actions.Length > 0)
             {
@@ -130,6 +138,21 @@ namespace NeonBlack.Gameplay.Modules.Combat
             }
 
             ExecuteFallbackKick();
+        }
+
+        public bool TryHandleCombatCommand(in ActorCombatCommand command)
+        {
+            switch (command.Kind)
+            {
+                case ActorCombatCommandKind.PrimaryAttack:
+                    HandlePrimaryAttackInput();
+                    return true;
+                case ActorCombatCommandKind.SecondaryAttack:
+                    HandleSecondaryAttackInput();
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         public void SetOutgoingDamageMultiplier(float multiplier)
@@ -156,7 +179,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
         private void UpdateActionState()
         {
             _actionStateMachine.ProjectFrom(
-                Runtime.Motor != null && Runtime.Motor.IsActionLocked,
+                Runtime.Motor != null && Runtime.Motor.IsActing,
                 Mathf.Max(_combatTimer, _actingTimer),
                 Mathf.Max(_attackTimer, _kickTimer));
         }

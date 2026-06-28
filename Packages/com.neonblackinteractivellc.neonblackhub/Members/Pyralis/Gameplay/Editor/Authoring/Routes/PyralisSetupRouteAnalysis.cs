@@ -548,12 +548,6 @@ namespace NeonBlack.Gameplay.Editor
 
             AddFamily(families, RuntimeCapabilityFamily.PlatformCore);
 
-            if (mode.requiredFeatureModules != null && mode.requiredFeatureModules.Length > 0)
-            {
-                for (int i = 0; i < mode.requiredFeatureModules.Length; i++)
-                    AddFamiliesFromFeatureModule(families, mode.requiredFeatureModules[i]);
-            }
-
             if (mode.enableCombat)
                 AddFamily(families, RuntimeCapabilityFamily.Combat);
             if (mode.enableScore)
@@ -615,28 +609,6 @@ namespace NeonBlack.Gameplay.Editor
                 AddFamily(families, RuntimeCapabilityFamily.Combat);
             if (pawn.presentationProfile != null || pawn.animationProfile != null)
                 AddFamily(families, RuntimeCapabilityFamily.AnimationPresentation);
-            if (pawn.featureModules != null)
-            {
-                for (int moduleIndex = 0; moduleIndex < pawn.featureModules.Length; moduleIndex++)
-                    AddFamiliesFromFeatureModule(families, pawn.featureModules[moduleIndex]);
-            }
-        }
-
-        private static void AddFamiliesFromFeatureModule(List<RuntimeCapabilityFamily> families, FeatureModuleDefinition module)
-        {
-            if (module == null)
-                return;
-
-            ResolvedAuthoringContract contract = ResolvedAuthoringContractRegistry.FindByModuleId(module.moduleId);
-            if (contract == null)
-                return;
-
-            RuntimeCapabilityFamily[] reflectedFamilies = contract.RuntimeFamilies;
-            for (int i = 0; i < reflectedFamilies.Length; i++)
-            {
-                if (reflectedFamilies[i] != RuntimeCapabilityFamily.Custom)
-                    AddFamily(families, reflectedFamilies[i]);
-            }
         }
 
         private static void AddFamily(List<RuntimeCapabilityFamily> families, RuntimeCapabilityFamily family)

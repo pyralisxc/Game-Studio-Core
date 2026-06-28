@@ -1,6 +1,4 @@
 using NeonBlack.Gameplay.Core.Contracts;
-using NeonBlack.Gameplay.Modules.Character;
-using NeonBlack.Gameplay.Modules.Actor.Composition;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Modules.Hazards
@@ -31,19 +29,19 @@ namespace NeonBlack.Gameplay.Modules.Hazards
             return references;
         }
 
-        public static Motor2D ResolveTargetMotor(Collider2D collider)
+        public static IActorHazardImpactTarget ResolveHazardImpactTarget(Collider2D collider)
         {
             if (collider == null)
                 return null;
 
-            Motor2D motor = collider.GetComponent<Motor2D>();
-            return motor != null ? motor : collider.GetComponentInParent<Motor2D>();
+            IActorHazardImpactTarget target = collider.GetComponent<IActorHazardImpactTarget>();
+            return target ?? collider.GetComponentInParent<IActorHazardImpactTarget>();
         }
 
         public static bool IsActorTarget(Collider2D collider)
         {
             return collider != null
-                && (collider.GetComponentInParent<Motor2D>() != null
+                && (collider.GetComponentInParent<IActorHazardImpactTarget>() != null
                     || collider.GetComponentInParent<IActorHealthState>() != null);
         }
 

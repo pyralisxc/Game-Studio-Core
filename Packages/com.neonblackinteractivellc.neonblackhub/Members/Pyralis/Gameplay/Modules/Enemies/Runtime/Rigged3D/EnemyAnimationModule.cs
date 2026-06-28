@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using NeonBlack.Gameplay.Data.Definitions.Combat;
 using UnityEngine;
 using NeonBlack.Gameplay.Core.Types.Animation;
 using NeonBlack.Gameplay.Presentation.Animation;
@@ -55,24 +53,5 @@ namespace NeonBlack.Gameplay.Modules.Enemies
             _animator?.SetTrigger(H_Hit);
         }
 
-        public void TriggerAttack(EnemyAttack atk, Dictionary<EnemyAttack, int> attackTriggerHashes)
-        {
-             if (atk == null) return;
-
-            if (_animationDriver != null)
-            {
-                int step = Mathf.Max(atk.animationStep, 1);
-                if (atk.useCustomAnimationKey && !string.IsNullOrWhiteSpace(atk.customAnimationKey))
-                    _animationDriver.TriggerCustom(atk.customAnimationKey, intValue: step);
-                else
-                {
-                    _animationDriver.SetIntSignal(atk.animationSignal, step);
-                    _animationDriver.TriggerSignal(atk.animationSignal, intValue: step);
-                }
-            }
-
-            if (!string.IsNullOrEmpty(atk.animatorTrigger) && attackTriggerHashes.TryGetValue(atk, out int hash))
-                _animator?.SetTrigger(hash);
-        }
     }
 }

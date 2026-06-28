@@ -33,7 +33,7 @@ namespace NeonBlack.Gameplay.Modules.Character
         [SerializeField, Range(0.1f, 3f)] private float dashCooldown = 0.8f;
 
         [Header("Jump")]
-        [SerializeField, Tooltip("Allows the built-in side-view jump fallback when Movement Style is SideViewGravity. Top-down visual hops should be handled by a TopDownHop feature module consuming the Jump action.")]
+        [SerializeField, Tooltip("Allows the built-in side-view jump fallback when Movement Style is SideViewGravity. Top-down visual hops should be handled by a TopDownHopComponent component consuming the Jump action.")]
         private bool jumpEnabled = false;
         [SerializeField, Tooltip("Initial upward velocity applied when Jump is requested while grounded.")]
         private float jumpVelocity = 8f;

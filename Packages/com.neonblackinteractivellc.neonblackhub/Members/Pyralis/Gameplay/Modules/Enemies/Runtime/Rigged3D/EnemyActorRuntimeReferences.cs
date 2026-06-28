@@ -1,7 +1,5 @@
-using NeonBlack.Gameplay.Modules.Character;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Profiles;
-using NeonBlack.Gameplay.Modules.Actor.Composition;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Modules.Enemies
@@ -15,10 +13,13 @@ namespace NeonBlack.Gameplay.Modules.Enemies
             CharacterController controller,
             EnemyMovementModule movementModule,
             EnemyDetectionModule detectionModule,
-            EnemyCombatModule combatModule,
+            IActorCombatRequestReceiver combatRequestReceiver,
+            IActorCombatRuntimeTickReceiver combatTickReceiver,
+            IActorCombatTacticalState combatTacticalState,
+            IActorCombatModifierReceiver combatModifierReceiver,
+            IEnemyCombatProfileReceiver combatProfileReceiver,
             EnemyAnimationModule animationModule,
             IActorHealthState health,
-            ActorFeatureHost featureHost,
             IActorKnockbackController knockback,
             EnemyActorPresentationReferences presentation)
         {
@@ -26,10 +27,13 @@ namespace NeonBlack.Gameplay.Modules.Enemies
             Controller = controller;
             MovementModule = movementModule;
             DetectionModule = detectionModule;
-            CombatModule = combatModule;
+            CombatRequestReceiver = combatRequestReceiver;
+            CombatTickReceiver = combatTickReceiver;
+            CombatTacticalState = combatTacticalState;
+            CombatModifierReceiver = combatModifierReceiver;
+            CombatProfileReceiver = combatProfileReceiver;
             AnimationModule = animationModule;
             Health = health;
-            FeatureHost = featureHost;
             Knockback = knockback;
             Presentation = presentation;
         }
@@ -37,10 +41,13 @@ namespace NeonBlack.Gameplay.Modules.Enemies
         public CharacterController Controller { get; }
         public EnemyMovementModule MovementModule { get; }
         public EnemyDetectionModule DetectionModule { get; }
-        public EnemyCombatModule CombatModule { get; }
+        public IActorCombatRequestReceiver CombatRequestReceiver { get; }
+        public IActorCombatRuntimeTickReceiver CombatTickReceiver { get; }
+        public IActorCombatTacticalState CombatTacticalState { get; }
+        public IActorCombatModifierReceiver CombatModifierReceiver { get; }
+        public IEnemyCombatProfileReceiver CombatProfileReceiver { get; }
         public EnemyAnimationModule AnimationModule { get; }
         public IActorHealthState Health { get; }
-        public ActorFeatureHost FeatureHost { get; private set; }
         public IActorKnockbackController Knockback { get; }
         public EnemyActorPresentationReferences Presentation { get; }
 
@@ -51,10 +58,13 @@ namespace NeonBlack.Gameplay.Modules.Enemies
                 owner.GetComponent<CharacterController>(),
                 owner.GetComponent<EnemyMovementModule>(),
                 owner.GetComponent<EnemyDetectionModule>(),
-                owner.GetComponent<EnemyCombatModule>(),
+                owner.GetComponent<IActorCombatRequestReceiver>(),
+                owner.GetComponent<IActorCombatRuntimeTickReceiver>(),
+                owner.GetComponent<IActorCombatTacticalState>(),
+                owner.GetComponent<IActorCombatModifierReceiver>(),
+                owner.GetComponent<IEnemyCombatProfileReceiver>(),
                 owner.GetComponent<EnemyAnimationModule>(),
                 owner.GetComponent<IActorHealthState>(),
-                owner.GetComponent<ActorFeatureHost>(),
                 owner.GetComponent<IActorKnockbackController>(),
                 EnemyActorPresentationReferences.Resolve(owner));
         }
@@ -73,18 +83,5 @@ namespace NeonBlack.Gameplay.Modules.Enemies
             Presentation?.SetPresentationCamera(camera);
         }
 
-        public ActorFeatureContext BuildFeatureContext(
-            EnemyFeatureProfile enemyFeatureProfile,
-            IEnemyActorState enemyActorState)
-        {
-            return new ActorFeatureContext(
-                _owner,
-                health: Health,
-                animation: Presentation?.AnimationDriver,
-                knockback: Knockback,
-                enemyActorState: enemyActorState,
-                presentationMode: Presentation != null ? Presentation.PresentationMode : EnemyActorPresentationReferences.DefaultPresentationMode,
-                authoredProfiles: new ScriptableObject[] { enemyFeatureProfile });
-        }
     }
 }

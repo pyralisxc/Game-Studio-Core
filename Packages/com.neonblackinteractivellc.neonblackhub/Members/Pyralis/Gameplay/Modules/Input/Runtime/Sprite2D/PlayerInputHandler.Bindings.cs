@@ -1,6 +1,6 @@
 using NeonBlack.Gameplay.Data.Participants;
-using NeonBlack.Gameplay.Modules.Character;
 using NeonBlack.Gameplay.Data.Profiles;
+using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -99,7 +99,7 @@ namespace NeonBlack.Gameplay.Modules.Input
                 return;
             }
 
-            _controller ??= GetComponent<Motor2D>();
+            _movementInputReceiver ??= GetComponent<IActorMovementInputReceiver2D>();
             _playerInput ??= GetComponent<PlayerInput>();
             inputProfile.Sanitize();
             _inputProfile = inputProfile;
@@ -193,8 +193,8 @@ namespace NeonBlack.Gameplay.Modules.Input
             if (_receivedParticipantInputProfile)
                 return false;
 
-            PawnRoot pawnRoot = GetComponentInParent<PawnRoot>();
-            return pawnRoot != null && pawnRoot.Participant == null;
+            IPawnParticipantStateReader participantState = GetComponentInParent<IPawnParticipantStateReader>();
+            return participantState != null && participantState.Participant == null;
         }
     }
 }

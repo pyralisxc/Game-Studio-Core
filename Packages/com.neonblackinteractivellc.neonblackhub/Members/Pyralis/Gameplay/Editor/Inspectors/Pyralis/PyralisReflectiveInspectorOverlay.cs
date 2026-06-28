@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Editor.Inspectors;
-using NeonBlack.Gameplay.Modules.Actor.Composition;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;

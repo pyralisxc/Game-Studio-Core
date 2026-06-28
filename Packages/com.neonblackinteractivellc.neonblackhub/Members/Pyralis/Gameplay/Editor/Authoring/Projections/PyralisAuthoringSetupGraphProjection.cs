@@ -1425,7 +1425,7 @@ namespace NeonBlack.Gameplay.Editor
             {
                 Row(graph, "Gameplay Root", "bootstrap.root", "Scene object that starts the session."),
                 Row(graph, "Session Definition", "session.definition", "Asset that names game rules and participants."),
-                Row(graph, "Game Mode", "mode.definition", "Ruleset that owns rule-level defaults and feature modules."),
+                Row(graph, "Game Mode", "mode.definition", "Ruleset that owns rule-level defaults and module-owned capabilities."),
                 BuildCapabilitiesRow(graph),
                 Row(graph, "Control Shape", "route.shape", "Participant ownership shape compiled from route evidence."),
                 Row(graph, "Join Policy", "route.participant-topology", "Participant topology, join policy, and spawn timing compiled from session/input/spawn evidence."),
@@ -2063,7 +2063,7 @@ namespace NeonBlack.Gameplay.Editor
                 questions.Add(new PyralisAuthoringRouteDiagnosticQuestionRow(
                     "Why is the route empty?",
                     graph == null || graph.Source == null
-                        ? "No active setup source was resolved and no Intent-projected route cards were generated. Select or pin a Bootstrap, SessionDefinition, GameModeDefinition, ParticipantDefinition, PawnDefinition, or FeatureModuleDefinition, or choose Intent settings that imply a proof."
+                        ? "No active setup source was resolved and no Intent-projected route cards were generated. Select or pin a Bootstrap, SessionDefinition, GameModeDefinition, ParticipantDefinition, PawnDefinition, component, or profile, or choose Intent settings that imply a proof."
                         : "No ordered setup cards were generated for the active graph. Check route analysis, proof target resolution, and critical-path projection metadata."));
             }
 
@@ -2161,7 +2161,7 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisAuthoringSelectedIntentStatus.MissingGraphEvidence,
                 "None",
                 PyralisAuthoringGraphEvidenceState.Unknown,
-                $"{descriptor.LeafLabel} is selected in Intent, but no concrete graph evidence is linked yet. Check whether the feature contract, reflection, or validation should expose setup evidence.",
+                $"{descriptor.LeafLabel} is selected in Intent, but no concrete graph evidence is linked yet. Check whether the capability contract, reflection, or validation should expose setup evidence.",
                 "Facts");
         }
 
@@ -4651,9 +4651,6 @@ namespace NeonBlack.Gameplay.Editor
 
         private static ResolvedAuthoringContract ResolveSelectionContract(Object selection)
         {
-            if (selection is FeatureModuleDefinition module && !string.IsNullOrWhiteSpace(module.moduleId))
-                return ResolvedAuthoringContractRegistry.FindByModuleId(module.moduleId);
-
             if (selection is Component component)
                 return ResolvedAuthoringContractRegistry.FindByType(component.GetType());
 
@@ -4669,10 +4666,9 @@ namespace NeonBlack.Gameplay.Editor
             {
                 GameplaySessionBootstrap => "Scene startup and core setup root.",
                 SessionDefinition => "Session contract for game rules, participants, local/network mode, and participant limits.",
-                GameModeDefinition => "Rules contract that owns rule-level defaults, feature modules, board/turn data, playfield, camera, and scene targets.",
+                GameModeDefinition => "Rules contract that owns rule-level defaults, system switches, board/turn data, playfield, camera, and scene targets.",
                 ParticipantDefinition => "Seat, player, NPC, hand, faction, or command owner in the session.",
-                PawnDefinition => "Pawn prefab, profiles, feature modules, and presentation setup.",
-                FeatureModuleDefinition => "Feature module contract selected by the route.",
+                PawnDefinition => "Pawn prefab, profiles, direct module components, and presentation setup.",
                 Component component => component is PawnRoot
                     ? "PawnRoot marks the prefab root that Pyralis treats as a pawn actor."
                     : "Runtime or authoring component participating in the selected GameObject.",
@@ -4697,9 +4693,9 @@ namespace NeonBlack.Gameplay.Editor
             {
                 GameplaySessionBootstrap => "Inspect session definition, spawn points, input manager, and camera rig references.",
                 SessionDefinition => "Inspect default game mode and default participants.",
-                GameModeDefinition => "Inspect required feature modules, playfield, camera, board/turn data, and rule flags.",
+                GameModeDefinition => "Inspect enabled systems, playfield, camera, board/turn data, and rule flags.",
                 ParticipantDefinition => "Inspect default pawn, input profile, seat index, and auto-join ownership.",
-                PawnDefinition => "Inspect pawn prefab, movement/input/presentation profiles, and feature modules.",
+                PawnDefinition => "Inspect pawn prefab and movement/input/presentation profiles.",
                 Component => "Use the Inspector for field values and Map for concrete scene/setup readiness issues.",
                 GameObject => "Select the most specific Pyralis component on this object when you need field-level meaning.",
                 _ => "Inspect the selected asset fields in Unity."

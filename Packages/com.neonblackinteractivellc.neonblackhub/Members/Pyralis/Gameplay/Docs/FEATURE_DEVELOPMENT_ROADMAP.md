@@ -25,7 +25,7 @@ Avoid adding guide-only systems, hidden runtime auto-wiring, or duplicated setup
 2. **Gameplay ownership simplification**
    - Keep input owned by `ParticipantDefinition`.
    - Keep physical pawn identity in explicit sibling components.
-   - Keep optional capabilities in feature modules.
+   - Keep optional capabilities as direct module-owned components/profiles.
    - Remove duplicate or hidden paths that hide missing authored setup.
 
 3. **Authoring graph quality**

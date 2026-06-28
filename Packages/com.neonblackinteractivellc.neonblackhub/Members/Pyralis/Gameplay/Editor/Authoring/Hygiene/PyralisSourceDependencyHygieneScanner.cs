@@ -41,12 +41,12 @@ namespace NeonBlack.Gameplay.Editor
         GameFlowRuntimeSurface,
         ContractReflectionSurface,
         PersistenceDataSurface,
-        ActorFeatureContext,
+        InteractionContext,
         SceneCameraRig,
         AuthoredDataAsset,
         HazardRuntimeSurface,
         DomainUtility,
-        FeatureModule,
+        ModuleCapability,
         AuthoredRuntimeSurface,
         EditorAudit,
         Vocabulary,
@@ -312,12 +312,12 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisSourceDependencyPressureKind.GameFlowRuntimeSurface => 34,
                 PyralisSourceDependencyPressureKind.ContractReflectionSurface => 35,
                 PyralisSourceDependencyPressureKind.PersistenceDataSurface => 36,
-                PyralisSourceDependencyPressureKind.ActorFeatureContext => 37,
+                PyralisSourceDependencyPressureKind.InteractionContext => 37,
                 PyralisSourceDependencyPressureKind.SceneCameraRig => 38,
                 PyralisSourceDependencyPressureKind.AuthoredDataAsset => 39,
                 PyralisSourceDependencyPressureKind.HazardRuntimeSurface => 40,
                 PyralisSourceDependencyPressureKind.DomainUtility => 41,
-                PyralisSourceDependencyPressureKind.FeatureModule => 42,
+                PyralisSourceDependencyPressureKind.ModuleCapability => 42,
                 PyralisSourceDependencyPressureKind.AuthoredRuntimeSurface => 43,
                 PyralisSourceDependencyPressureKind.ReferenceAssembly => 44,
                 PyralisSourceDependencyPressureKind.EditorAudit => 45,
@@ -542,7 +542,7 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisSourceDependencyPressureKind.CompatibilityBridge => "Source appears to contain compatibility or fallback repair behavior.",
                 PyralisSourceDependencyPressureKind.OldOwnerName => "Active file or source wording appears to reference an old ownership model.",
                 PyralisSourceDependencyPressureKind.NamespaceDependencyFanout => "Source imports more Pyralis namespaces than its owner budget allows.",
-                PyralisSourceDependencyPressureKind.DirectModuleCommunication => "Runtime source directly imports another feature module instead of a stable contract/event/state reader.",
+                PyralisSourceDependencyPressureKind.DirectModuleCommunication => "Runtime source directly imports another module instead of a stable contract/event/state reader.",
                 PyralisSourceDependencyPressureKind.LifecycleBooleanCluster => "Runtime source contains clustered lifecycle booleans without a focused state machine surface.",
                 PyralisSourceDependencyPressureKind.StateMachineMissing => "Runtime source appears to own explicit states without a focused state machine owner.",
                 PyralisSourceDependencyPressureKind.EventChannelOveruse => "Runtime source publishes or subscribes to many event-channel messages; verify the channel is not becoming hidden control flow.",
@@ -680,8 +680,8 @@ namespace NeonBlack.Gameplay.Editor
                 return PyralisSourceDependencyPressureKind.AuthoredDataAsset;
             }
 
-            if (string.Equals(fileName, "ActorFeatureContext.cs", StringComparison.Ordinal))
-                return PyralisSourceDependencyPressureKind.ActorFeatureContext;
+            if (string.Equals(fileName, "ActorInteractionContext.cs", StringComparison.Ordinal))
+                return PyralisSourceDependencyPressureKind.InteractionContext;
 
             if (string.Equals(fileName, "CinemachineCameraRigController.cs", StringComparison.Ordinal)
                 || normalized.Contains("/Presentation/Camera/", StringComparison.Ordinal))
@@ -757,7 +757,7 @@ namespace NeonBlack.Gameplay.Editor
                 return PyralisSourceDependencyPressureKind.RpgRuntimeSurface;
             }
 
-            if (normalized.Contains("/Modules/Actions/Runtime/", StringComparison.Ordinal))
+            if (normalized.Contains("/Core/Types/Actions/", StringComparison.Ordinal))
             {
                 return PyralisSourceDependencyPressureKind.ActionRuntimeSurface;
             }
@@ -803,10 +803,13 @@ namespace NeonBlack.Gameplay.Editor
                 return PyralisSourceDependencyPressureKind.HazardRuntimeSurface;
             }
 
-            if (fileName.Contains("FeatureRuntime", StringComparison.Ordinal)
-                || safeSource.Contains("IFeatureModuleRuntime", StringComparison.Ordinal))
+            if (safeSource.Contains("IFeatureModuleRuntime", StringComparison.Ordinal)
+                || safeSource.Contains("IModuleCapabilityRuntime", StringComparison.Ordinal))
+                return PyralisSourceDependencyPressureKind.OldOwnerName;
+
+            if (fileName.Contains("FeatureRuntime", StringComparison.Ordinal))
             {
-                return PyralisSourceDependencyPressureKind.FeatureModule;
+                return PyralisSourceDependencyPressureKind.ModuleCapability;
             }
 
             if (normalized.EndsWith("RuntimeReferences.cs", StringComparison.Ordinal)
@@ -1220,7 +1223,7 @@ namespace NeonBlack.Gameplay.Editor
                 "CreateAssignmentFact",
                 "relatedStableIds",
                 "BuildChecklist",
-                "FeatureModuleSetup",
+                "ModuleCapabilitySetup",
                 "Do Now:",
                 "Route Proof",
                 "proof.");
@@ -1277,7 +1280,7 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisSourceDependencyPressureKind.CompatibilityBridge => "Compatibility bridges should not quietly repair authoring setup. Prefer explicit contract/reflection/validator evidence and Map guidance.",
                 PyralisSourceDependencyPressureKind.OldOwnerName => "Old owner names make future work follow stale seams. Rename or document why the old concept is still active.",
                 PyralisSourceDependencyPressureKind.NamespaceDependencyFanout => "This script imports too many Pyralis namespaces for its owner. Split behavior, depend on smaller contracts/data/events, or move wiring to Glue instead of hiding it in a broad manager.",
-                PyralisSourceDependencyPressureKind.DirectModuleCommunication => "A runtime module directly imports another feature module. Prefer stable contracts, events, state readers, or a documented same-capability composition edge.",
+                PyralisSourceDependencyPressureKind.DirectModuleCommunication => "A runtime module directly imports another module. Prefer stable contracts, events, state readers, or a documented same-capability composition edge.",
                 PyralisSourceDependencyPressureKind.LifecycleBooleanCluster => "Several lifecycle booleans are clustered in one runtime source. Consider a focused state machine or state reader owned by this feature lane.",
                 PyralisSourceDependencyPressureKind.StateMachineMissing => "This source owns explicit state vocabulary without an obvious state machine owner. Extract transition rules into a plain state machine when lifecycle rules grow.",
                 PyralisSourceDependencyPressureKind.EventChannelOveruse => "The event channel should report typed facts, not hide control flow. Split broad publishers/subscribers into narrower handlers or state readers when pressure stays high.",
@@ -1304,12 +1307,12 @@ namespace NeonBlack.Gameplay.Editor
                 PyralisSourceDependencyPressureKind.GameFlowRuntimeSurface => "Expected pressure for a mode-specific game-flow surface. Review if it starts owning participant identity, pawn spawning, or shared session state instead of coordinating authored arcade flow.",
                 PyralisSourceDependencyPressureKind.ContractReflectionSurface => "Expected pressure for the reflective authoring contract spine. Review if feature-specific setup truth moves here instead of staying on contracts/reflection.",
                 PyralisSourceDependencyPressureKind.PersistenceDataSurface => "Expected pressure for serializable save/snapshot data. Review if runtime service behavior or scene discovery moves into the data surface.",
-                PyralisSourceDependencyPressureKind.ActorFeatureContext => "Expected pressure for the read-only context object passed into optional feature modules. Review if it begins resolving services or mutating gameplay state.",
+                PyralisSourceDependencyPressureKind.InteractionContext => "Expected pressure for the small read-only context object passed through interaction handlers. Review if it begins resolving services or mutating gameplay state.",
                 PyralisSourceDependencyPressureKind.SceneCameraRig => "Expected pressure for the scene-owned camera rig. Review if pawns or zones become camera owners instead of target/profile providers.",
                 PyralisSourceDependencyPressureKind.AuthoredDataAsset => "Expected pressure for definitions/profiles that describe authored data. Review if runtime behavior or scene discovery moves into the asset.",
                 PyralisSourceDependencyPressureKind.HazardRuntimeSurface => "Expected pressure for authored hazard runtime surfaces. Review if hazards own participant/session policy instead of applying configured hazard effects.",
                 PyralisSourceDependencyPressureKind.DomainUtility => "Expected pressure for a stateless domain helper. Review if it starts storing state, discovering scene objects broadly, or becoming a hidden service.",
-                PyralisSourceDependencyPressureKind.FeatureModule => "Expected pressure for an optional feature module or feature contract. Review if it becomes required pawn identity instead of an installable capability.",
+                PyralisSourceDependencyPressureKind.ModuleCapability => "Expected pressure for a module-owned component or capability contract. Review if it recreates a hidden installer instead of direct Unity composition.",
                 PyralisSourceDependencyPressureKind.AuthoredRuntimeSurface => "Expected pressure for authored runtime fields, profiles, validation, or gizmos. Review if setup meaning duplicates contracts or graph guidance.",
                 PyralisSourceDependencyPressureKind.EditorAudit => "Expected pressure for graph, evidence, or validator code; review for duplicated setup truth before splitting.",
                 PyralisSourceDependencyPressureKind.Vocabulary => "Vocabulary pressure is acceptable when it is wording only; move feature-specific setup meaning back to contracts/reflection.",

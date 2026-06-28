@@ -1,8 +1,10 @@
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Types.Animation;
+using NeonBlack.Gameplay.Core.Types.Input;
+using NeonBlack.Gameplay.Data.Definitions;
+using NeonBlack.Gameplay.Data.Interactions;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Data.Participants;
-using NeonBlack.Gameplay.Modules.Character;
 using NeonBlack.Gameplay.Presentation.Animation;
 using UnityEngine;
 
@@ -10,20 +12,33 @@ namespace NeonBlack.Gameplay.Modules.Traversal
 {
     [AuthoringContract(
         Capability = AuthoringCapability.Traversal,
-        Relevance = "3D traversal module; handles ledge climbing, hanging, and shimmying.",
-Axioms = AuthoringWorldAxiom.Dimensions3D,
-        NativeSetup = new[] { "Attach to a Pawn with Motor3D and Pawn3DMovementComponent.", "Configure Ledge Probe settings." },
-        AssignmentFields = new[] { nameof(allowClimb), nameof(allowHang), nameof(climbCooldown), nameof(ledgeProbe) },
+        Relevance = "3D traversal component; handles ledge climbing, hanging, shimmying, profile tuning, and traversal interaction.",
+        Axioms = AuthoringWorldAxiom.Dimensions3D,
+        ProfileType = typeof(PawnTraversalProfile),
+        RequiredInterfaces = new[] { typeof(IActorTraversalFeature), typeof(IActorInteractionHandler) },
+        RequiredComponentNames = new[] { "NeonBlack.Gameplay.Modules.Character.Motor3D", "NeonBlack.Gameplay.Modules.Character.Pawn3DMovementComponent" },
+        SupportedLanes = new[] { ActorPresentationMode.Billboard2_5D, ActorPresentationMode.ThirdPerson3D },
+        UnsupportedLanes = new[] { ActorPresentationMode.Sprite2D },
+        NativeSetup = new[]
+        {
+            "Attach Pawn3DTraversalComponent to a pawn with Motor3D and Pawn3DMovementComponent.",
+            "Assign a PawnTraversalProfile when reusable traversal tuning is needed.",
+            "Configure Ledge Probe settings.",
+            "Bind Jump or Interact in InputProfile."
+        },
+        AssignmentFields = new[] { nameof(traversalProfile), nameof(allowClimb), nameof(allowHang), nameof(climbCooldown), nameof(ledgeProbe) },
         Proof = "Verify the pawn can grab and climb ledges in Play Mode.",
         ExpertAdvice = "Traversal logic is separated from base movement. Ensure your Animator has 'Climb' and 'Hang' signals wired to valid animations.",
         DocumentationURL = "https://docs.neonblack.com/pyralis/traversal",
         CapabilityPath = "Movement/Traversal/Pawn3D Traversal Component"
     )]
 [AddComponentMenu("NeonBlack/Gameplay/Modules/Traversal/Rigged3D/Pawn 3D Traversal Component")]
-    [RequireComponent(typeof(Pawn3DMovementComponent))]
     [RequireComponent(typeof(CharacterController))]
-    public sealed partial class Pawn3DTraversalComponent : MonoBehaviour, IPawnTraversalModule
+    public sealed partial class Pawn3DTraversalComponent : MonoBehaviour, IPawnTraversalModule, IActorTraversalFeature, IActorInteractionHandler
     {
+        [Header("Profile")]
+        [SerializeField] private PawnTraversalProfile traversalProfile;
+
         [Header("Climb")]
         [SerializeField] private bool allowClimb;
         [SerializeField] private bool allowHang;
@@ -37,6 +52,13 @@ Axioms = AuthoringWorldAxiom.Dimensions3D,
         private float _shimmyVelocityX;
 
         public float ShimmyVelocityX => _shimmyVelocityX;
+
+        public void ProbeTraversal() => ProbeLedge();
+
+        public bool TryHandleInteraction(ActorInteractionContext context)
+        {
+            return TryHandleTraversalInteraction();
+        }
 
         private void OnDisable()
         {
@@ -62,15 +84,14 @@ Axioms = AuthoringWorldAxiom.Dimensions3D,
             if (!allowClimb && !allowHang)
                 return;
 
-            var state = _movement.State;
-            if (state.IsClimbing || state.IsHanging || state.ClimbTimer > 0f)
+            if (_movement.IsClimbing || _movement.IsHanging || _movement.ClimbTimer > 0f)
                 return;
 
-            IClimbZone found = ledgeProbe?.FindClimbZone(transform, state.VelocityY);
+            IClimbZone found = ledgeProbe?.FindClimbZone(transform, _movement.VelocityY);
             if (found != null)
             {
                 _currentClimbZone = found;
-                if (found.AutoGrab && !state.IsGrounded && state.VelocityY <= found.MaxGrabVelocityY)
+                if (found.AutoGrab && !_movement.IsGrounded && _movement.VelocityY <= found.MaxGrabVelocityY)
                 {
                     if (found.HangOnGrab && allowHang)
                         StartHang(found);
@@ -115,8 +136,7 @@ Axioms = AuthoringWorldAxiom.Dimensions3D,
             if (zone == null || !EnsureDependencies())
                 return;
 
-            var state = _movement.State;
-            if (state.IsGrounded || state.IsClimbing || state.IsHanging || state.ClimbTimer > 0f || state.VelocityY > maxVelocityY)
+            if (_movement.IsGrounded || _movement.IsClimbing || _movement.IsHanging || _movement.ClimbTimer > 0f || _movement.VelocityY > maxVelocityY)
                 return;
 
             if (zone.HangOnGrab && allowHang)

@@ -13,7 +13,6 @@ namespace NeonBlack.Gameplay.Modules.Enemies
         public static void Register(IContainerBuilder builder)
         {
             builder.Register<EnemyDetectionService>(Lifetime.Singleton);
-            builder.Register<EnemyCombatProcessor>(Lifetime.Singleton);
         }
     }
 }

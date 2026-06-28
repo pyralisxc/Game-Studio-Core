@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Data.Definitions.Combat;
 using NeonBlack.Gameplay.Data.Profiles;
-using NeonBlack.Gameplay.Modules.Combat;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Modules.Hazards.Zones
@@ -10,8 +10,8 @@ namespace NeonBlack.Gameplay.Modules.Hazards.Zones
     {
         public IActorHealthState health;
         public Component healthComponent;
-        public IActorStatusEffectReceiver statusReceiver;
-        public KnockbackReceiver knockback;
+        public IActorStatusEffectSink statusReceiver;
+        public IActorKnockbackController knockback;
         public float timer;
     }
 
@@ -67,8 +67,8 @@ namespace NeonBlack.Gameplay.Modules.Hazards.Zones
             {
                 health = health,
                 healthComponent = healthComponent,
-                statusReceiver = healthComponent.GetComponent<IActorStatusEffectReceiver>() ?? healthComponent.GetComponentInParent<IActorStatusEffectReceiver>(),
-                knockback = healthComponent.GetComponent<KnockbackReceiver>() ?? healthComponent.GetComponentInParent<KnockbackReceiver>(),
+                statusReceiver = healthComponent.GetComponent<IActorStatusEffectSink>() ?? healthComponent.GetComponentInParent<IActorStatusEffectSink>(),
+                knockback = healthComponent.GetComponent<IActorKnockbackController>() ?? healthComponent.GetComponentInParent<IActorKnockbackController>(),
                 timer = 0f
             });
             return true;

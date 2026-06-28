@@ -1,6 +1,4 @@
-using NeonBlack.Gameplay.Modules.Actor.Composition;
-using NeonBlack.Gameplay.Modules.Character;
-using NeonBlack.Gameplay.Presentation.Animation;
+using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Modules.Combat
@@ -8,8 +6,8 @@ namespace NeonBlack.Gameplay.Modules.Combat
     internal sealed class PawnCombatRuntimeReferences
     {
         private PawnCombatRuntimeReferences(
-            ICharacterMotorState motor,
-            ActorAnimationDriver animationDriver,
+            IActorCombatMovementState motor,
+            IActorCombatResultReceiver[] combatResultReceivers,
             IActorFeedbackPublisher feedbackPublisher,
             PawnHitBoxModule hitBoxModule,
             PawnDamageModule damageModule,
@@ -18,7 +16,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
             PawnWeaponModule weaponModule)
         {
             Motor = motor;
-            AnimationDriver = animationDriver;
+            CombatResultReceivers = combatResultReceivers;
             FeedbackPublisher = feedbackPublisher;
             HitBoxModule = hitBoxModule;
             DamageModule = damageModule;
@@ -27,8 +25,8 @@ namespace NeonBlack.Gameplay.Modules.Combat
             WeaponModule = weaponModule;
         }
 
-        public ICharacterMotorState Motor { get; }
-        public ActorAnimationDriver AnimationDriver { get; }
+        public IActorCombatMovementState Motor { get; }
+        public IActorCombatResultReceiver[] CombatResultReceivers { get; }
         public IActorFeedbackPublisher FeedbackPublisher { get; }
         public PawnHitBoxModule HitBoxModule { get; }
         public PawnDamageModule DamageModule { get; }
@@ -39,8 +37,8 @@ namespace NeonBlack.Gameplay.Modules.Combat
         public static PawnCombatRuntimeReferences Capture(Component owner)
         {
             return new PawnCombatRuntimeReferences(
-                owner.GetComponent<ICharacterMotorState>(),
-                owner.GetComponent<ActorAnimationDriver>(),
+                owner.GetComponent<IActorCombatMovementState>(),
+                owner.GetComponents<IActorCombatResultReceiver>(),
                 owner.GetComponent<IActorFeedbackPublisher>(),
                 owner.GetComponent<PawnHitBoxModule>(),
                 owner.GetComponent<PawnDamageModule>(),

@@ -2,7 +2,6 @@ using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Presentation.Visuals;
-using NeonBlack.Gameplay.Modules.Actor.Composition;
 using TMPro;
 using UnityEngine;
 

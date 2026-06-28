@@ -2,7 +2,7 @@
     "name": "NeonBlack.Gameplay.Modules.Tabletop",
     "references": [
         "NeonBlack.Gameplay.Core",
-        "NeonBlack.Gameplay.Modules.Actions"
+        "NeonBlack.Gameplay.Data"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -1,4 +1,4 @@
-using NeonBlack.Gameplay.Modules.Tabletop.Runtime;
+using NeonBlack.Gameplay.Data.Tabletop;
 using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
 using UnityEngine;

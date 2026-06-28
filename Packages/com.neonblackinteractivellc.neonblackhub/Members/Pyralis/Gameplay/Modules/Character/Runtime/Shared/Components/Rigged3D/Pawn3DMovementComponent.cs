@@ -1,6 +1,7 @@
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Enums;
-using NeonBlack.Gameplay.Modules.Character;
+using NeonBlack.Gameplay.Core.Types.Input;
+using NeonBlack.Gameplay.Data.Participants;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Modules.Character
@@ -30,7 +31,7 @@ namespace NeonBlack.Gameplay.Modules.Character
     )]
 [AddComponentMenu("NeonBlack/Gameplay/Modules/Character/Rigged3D/Pawn 3D Movement Component")]
     [RequireComponent(typeof(CharacterController))]
-    public sealed partial class Pawn3DMovementComponent : MonoBehaviour, IPawnMotor, IMovementModule, IPawnLocomotionStateReader
+    public sealed partial class Pawn3DMovementComponent : MonoBehaviour, IPawnMotor, IMovementModule, IPawnLocomotionStateReader, IPawnTraversalMovementController
     {
         //  Component references  //
         private Pawn3DMovementRuntimeReferences _runtime;
@@ -46,6 +47,13 @@ namespace NeonBlack.Gameplay.Modules.Character
         //  IMovementModule  //
         public float MoveSpeed  => _model.State.IsSprinting ? sprintSpeed : walkSpeed;
         public bool  IsGrounded => _model.State.IsGrounded;
+        public bool IsCrouching => _model.State.IsCrouching;
+        public bool IsClimbing => _model.State.IsClimbing;
+        public bool IsHanging => _model.State.IsHanging;
+        public bool IsActing => _model.State.IsActing;
+        public float VelocityY => _model.State.VelocityY;
+        public float JumpBufferCounter => _model.State.JumpBufferCounter;
+        public float ClimbTimer => _model.State.ClimbTimer;
 
         //  Exposed state (consumed by traversal and presentation modules)  //
         /// <summary>Read-only snapshot of current movement state.</summary>

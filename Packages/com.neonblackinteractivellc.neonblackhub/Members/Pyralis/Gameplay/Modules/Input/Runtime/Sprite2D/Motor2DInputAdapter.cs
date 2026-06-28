@@ -1,6 +1,5 @@
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
-using NeonBlack.Gameplay.Modules.Character;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Modules.Input
@@ -16,7 +15,7 @@ namespace NeonBlack.Gameplay.Modules.Input
     RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay },
     Relevance = "Primary input module for 2D characters. Translates participant input into Motor2D movement.",
     Axioms = AuthoringWorldAxiom.Dimensions2D,
-    RequiredComponents = new[] { typeof(Motor2D) },
+    RequiredComponentNames = new[] { "NeonBlack.Gameplay.Modules.Character.Motor2D" },
     RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.InputRouteSupport, "ParticipantInputConsumer", "Motor2DInput", "PawnInputAdapter" },
     Proof = "Verify that player input moves the pawn in 2D space and respects the active InputProfile.",
     Surface = AuthoringContractSurface.Adapter

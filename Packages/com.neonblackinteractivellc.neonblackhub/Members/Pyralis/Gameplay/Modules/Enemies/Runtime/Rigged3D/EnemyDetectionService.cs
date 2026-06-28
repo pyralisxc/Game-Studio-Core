@@ -1,6 +1,5 @@
 using UnityEngine;
 using NeonBlack.Gameplay.Data.Participants;
-using NeonBlack.Gameplay.Modules.Character;
 using NeonBlack.Gameplay.Core.Enums;
 
 namespace NeonBlack.Gameplay.Modules.Enemies

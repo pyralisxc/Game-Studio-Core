@@ -2,6 +2,7 @@ using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Participants;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Core.Types.Input;
 using NeonBlack.Gameplay.Glue.Participants;
 using NeonBlack.Gameplay.Modules.Character;
 using NeonBlack.Gameplay.Modules.Input;
@@ -107,7 +108,6 @@ namespace NeonBlack.Gameplay.Tests.Runtime
 
             PawnDefinition definition = ScriptableObject.CreateInstance<PawnDefinition>();
             definition.movementProfile = movementProfile;
-            definition.featureModules = new FeatureModuleDefinition[0];
 
             ParticipantHandle participant = BuildParticipant(definition, out GameObject rosterGo, out SessionDefinition session, out ParticipantDefinition participantDef);
 
@@ -136,7 +136,6 @@ namespace NeonBlack.Gameplay.Tests.Runtime
 
             PawnDefinition definition = ScriptableObject.CreateInstance<PawnDefinition>();
             definition.traversalProfile = traversalProfile;
-            definition.featureModules = new FeatureModuleDefinition[0];
 
             ParticipantHandle participant = BuildParticipant(definition, out GameObject rosterGo, out SessionDefinition session, out ParticipantDefinition participantDef);
 
@@ -164,7 +163,6 @@ namespace NeonBlack.Gameplay.Tests.Runtime
 
             PawnDefinition definition = ScriptableObject.CreateInstance<PawnDefinition>();
             definition.presentationProfile = presentationProfile;
-            definition.featureModules = new FeatureModuleDefinition[0];
 
             ParticipantHandle participant = BuildParticipant(definition, out GameObject rosterGo, out SessionDefinition session, out ParticipantDefinition participantDef);
 
@@ -193,7 +191,6 @@ namespace NeonBlack.Gameplay.Tests.Runtime
 
             PawnDefinition definition = ScriptableObject.CreateInstance<PawnDefinition>();
             definition.combatProfile = combatProfile;
-            definition.featureModules = new FeatureModuleDefinition[0];
 
             ParticipantHandle participant = BuildParticipant(definition, out GameObject rosterGo, out SessionDefinition session, out ParticipantDefinition participantDef);
 

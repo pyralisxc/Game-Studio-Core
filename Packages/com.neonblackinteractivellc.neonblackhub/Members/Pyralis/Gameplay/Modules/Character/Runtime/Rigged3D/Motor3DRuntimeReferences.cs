@@ -1,6 +1,5 @@
-using NeonBlack.Gameplay.Modules.Actor.Composition;
-using NeonBlack.Gameplay.Modules.Interaction;
 using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Data.Participants;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Modules.Character
@@ -15,34 +14,38 @@ namespace NeonBlack.Gameplay.Modules.Character
             Pawn3DMovementComponent movement,
             IPawnTraversalModule traversal,
             Pawn3DPresentationComponent presentation,
-            IActorCombatCommandReceiver combat,
+            IActorCombatRuntimeTickReceiver combatTicker,
+            IActorCombatRequestReceiver combatRequests,
             IActorHealthState health,
             IActorDamageImmunityController damageImmunity,
             IActorGuardController guardFeature,
-            ActorFeatureHost featureHost)
+            IActorTraversalFeature traversalFeature,
+            IActorInteractionRequestReceiver interactionRequests)
         {
             _owner = owner;
             Input = input;
             Movement = movement;
             Traversal = traversal;
             Presentation = presentation;
-            Combat = combat;
+            CombatTicker = combatTicker;
+            CombatRequests = combatRequests;
             Health = health;
             DamageImmunity = damageImmunity;
             GuardFeature = guardFeature;
-            FeatureHost = featureHost;
+            TraversalFeature = traversalFeature;
+            InteractionRequests = interactionRequests;
         }
 
         public Pawn3DInputModule Input { get; }
         public Pawn3DMovementComponent Movement { get; }
         public IPawnTraversalModule Traversal { get; }
         public Pawn3DPresentationComponent Presentation { get; }
-        public IActorCombatCommandReceiver Combat { get; }
+        public IActorCombatRuntimeTickReceiver CombatTicker { get; }
+        public IActorCombatRequestReceiver CombatRequests { get; }
         public IActorHealthState Health { get; }
         public IActorDamageImmunityController DamageImmunity { get; }
-        public ActorFeatureHost FeatureHost { get; private set; }
         public IActorTraversalFeature TraversalFeature { get; private set; }
-        public IActorInteractionFeature InteractionFeature { get; private set; }
+        public IActorInteractionRequestReceiver InteractionRequests { get; private set; }
         public IActorGuardController GuardFeature { get; private set; }
 
         public static Motor3DRuntimeReferences Capture(GameObject owner)
@@ -53,30 +56,23 @@ namespace NeonBlack.Gameplay.Modules.Character
                 owner != null ? owner.GetComponent<Pawn3DMovementComponent>() : null,
                 owner != null ? owner.GetComponent<IPawnTraversalModule>() : null,
                 owner != null ? owner.GetComponent<Pawn3DPresentationComponent>() : null,
-                owner != null ? owner.GetComponent<IActorCombatCommandReceiver>() : null,
+                owner != null ? owner.GetComponent<IActorCombatRuntimeTickReceiver>() : null,
+                owner != null ? owner.GetComponent<IActorCombatRequestReceiver>() : null,
                 owner != null ? owner.GetComponent<IActorHealthState>() : null,
                 owner != null ? owner.GetComponent<IActorDamageImmunityController>() : null,
                 owner != null ? owner.GetComponent<IActorGuardController>() : null,
-                owner != null ? owner.GetComponent<ActorFeatureHost>() : null);
+                owner != null ? owner.GetComponent<IActorTraversalFeature>() : null,
+                owner != null ? owner.GetComponent<IActorInteractionRequestReceiver>() : null);
         }
 
-        public void ResolveFeatureModules()
+        public void ResolveDirectCapabilities()
         {
-            if (FeatureHost == null && _owner != null)
-                FeatureHost = _owner.GetComponent<ActorFeatureHost>();
-
-            if (FeatureHost == null)
+            if (_owner == null)
                 return;
 
-            TraversalFeature ??= FeatureHost.TryGetInstalledFeature(out IActorTraversalFeature traversalFeature)
-                ? traversalFeature
-                : null;
-            InteractionFeature ??= FeatureHost.TryGetInstalledFeature(out IActorInteractionFeature interactionFeature)
-                ? interactionFeature
-                : null;
-            GuardFeature ??= FeatureHost.TryGetInstalledFeature(out IActorGuardController guardFeature)
-                ? guardFeature
-                : null;
+            TraversalFeature ??= _owner.GetComponent<IActorTraversalFeature>();
+            InteractionRequests ??= _owner.GetComponent<IActorInteractionRequestReceiver>();
+            GuardFeature ??= _owner.GetComponent<IActorGuardController>();
         }
     }
 }

@@ -1,4 +1,5 @@
 using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Data.Tabletop;
 
 namespace NeonBlack.Gameplay.Modules.Tabletop.Runtime
 {

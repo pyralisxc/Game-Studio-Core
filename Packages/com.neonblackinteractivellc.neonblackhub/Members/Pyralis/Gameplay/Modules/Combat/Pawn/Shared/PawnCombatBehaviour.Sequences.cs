@@ -1,6 +1,7 @@
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Data.Definitions.Combat;
 using NeonBlack.Gameplay.Modules.Combat;
+using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Types.Animation;
 
 namespace NeonBlack.Gameplay.Modules.Combat
@@ -24,8 +25,11 @@ namespace NeonBlack.Gameplay.Modules.Combat
 
             _aerialAttackCount++;
             _aerialTimer = attackCooldown;
-            AnimationDriver?.SetIntSignal(ActorAnimationSignal.AttackAerial, _aerialAttackCount);
-            AnimationDriver?.TriggerSignal(ActorAnimationSignal.AttackAerial, intValue: _aerialAttackCount);
+            PublishCombatResult(new ActorCombatResult(
+                ActorCombatResultKind.AttackStarted,
+                gameObject,
+                animationSignal: ActorAnimationSignal.AttackAerial,
+                step: _aerialAttackCount));
             ActivateHitBoxForZone(aerialHitBoxZone, WeaponModule.AerialWeapon);
         }
 
@@ -74,8 +78,11 @@ namespace NeonBlack.Gameplay.Modules.Combat
             _attackCount = (_attackCount % 3) + 1;
 
             Motor.ResetMoveToIdle();
-            AnimationDriver?.SetIntSignal(ActorAnimationSignal.AttackPrimary, _attackCount);
-            AnimationDriver?.TriggerSignal(ActorAnimationSignal.AttackPrimary, intValue: _attackCount);
+            PublishCombatResult(new ActorCombatResult(
+                ActorCombatResultKind.AttackStarted,
+                gameObject,
+                animationSignal: ActorAnimationSignal.AttackPrimary,
+                step: _attackCount));
 
             ActivateHitBoxForZone("Punch", WeaponModule.AttackWeapon);
         }
@@ -92,8 +99,11 @@ namespace NeonBlack.Gameplay.Modules.Combat
             _kickCount = (_kickCount % 3) + 1;
 
             Motor.ResetMoveToIdle();
-            AnimationDriver?.SetIntSignal(ActorAnimationSignal.AttackSecondary, _kickCount);
-            AnimationDriver?.TriggerSignal(ActorAnimationSignal.AttackSecondary, intValue: _kickCount);
+            PublishCombatResult(new ActorCombatResult(
+                ActorCombatResultKind.AttackStarted,
+                gameObject,
+                animationSignal: ActorAnimationSignal.AttackSecondary,
+                step: _kickCount));
 
             ActivateHitBoxForZone("Kick", WeaponModule.KickWeapon);
         }
@@ -103,11 +113,12 @@ namespace NeonBlack.Gameplay.Modules.Combat
             ActorAnimationSignal signal = action != null ? action.animationSignal : ResolveDefaultSignal(inputType);
             int comboStep = action != null ? action.comboStep : 1;
 
-            AnimationDriver?.SetIntSignal(signal, comboStep);
-            AnimationDriver?.TriggerSignal(signal, intValue: comboStep);
-
-            if (action != null && action.finisherResetsCombo)
-                AnimationDriver?.TriggerCustom("ComboFinisher", intValue: comboStep);
+            PublishCombatResult(new ActorCombatResult(
+                ActorCombatResultKind.AttackStarted,
+                gameObject,
+                animationSignal: signal,
+                step: comboStep,
+                isFinisher: action != null && action.finisherResetsCombo));
         }
 
         private static ActorAnimationSignal ResolveDefaultSignal(CombatInputType inputType)

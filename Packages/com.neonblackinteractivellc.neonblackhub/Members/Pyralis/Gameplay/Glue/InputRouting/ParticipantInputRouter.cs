@@ -7,7 +7,6 @@ using NeonBlack.Gameplay.Glue.Participants;
 using NeonBlack.Gameplay.Glue.Session;
 using NeonBlack.Gameplay.Glue.Spawning;
 using NeonBlack.Gameplay.Modules.Character;
-using NeonBlack.Gameplay.Modules.Actor.Composition;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using VContainer;

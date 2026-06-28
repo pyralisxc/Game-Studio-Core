@@ -1,8 +1,6 @@
 using UnityEngine;
 using NeonBlack.Gameplay.Core.Types.Animation;
 using NeonBlack.Gameplay.Presentation.Animation;
-using NeonBlack.Gameplay.Data.Participants;
-using NeonBlack.Gameplay.Modules.Character;
 using NeonBlack.Gameplay.Core.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Combat
@@ -25,7 +23,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
         [SerializeField] private float blockFrontalAngle = 90f;
 
         private ActorAnimationDriver _animationDriver;
-        private ICharacterMotorState _motor;
+        private IActorCombatMovementState _motor;
         private bool _isBlocking;
 
         public bool IsBlocking => _isBlocking;
@@ -35,7 +33,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
         private void Awake()
         {
             _animationDriver = GetComponent<ActorAnimationDriver>();
-            _motor = GetComponent<ICharacterMotorState>();
+            _motor = GetComponent<IActorCombatMovementState>();
         }
 
         public void HandleBlockStart()

@@ -1,5 +1,5 @@
 using System;
-using NeonBlack.Gameplay.Modules.Rpg.Runtime;
+using NeonBlack.Gameplay.Data.Rpg;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rpg
 {

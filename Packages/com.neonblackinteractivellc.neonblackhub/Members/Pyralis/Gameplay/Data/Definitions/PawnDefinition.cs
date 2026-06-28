@@ -19,7 +19,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
         Lane = "Entity",
         Relevance = "Core definition for a controllable entity, linking its prefab to movement, combat, and animation profiles.",
         RoleTags = new[] { "PawnDefinition", "PawnPrefab", "ActorBody" },
-        AssignmentFields = new[] { nameof(pawnPrefab), nameof(movementProfile), nameof(combatProfile), nameof(animationProfile), nameof(featureModules) },
+        AssignmentFields = new[] { nameof(pawnPrefab), nameof(movementProfile), nameof(combatProfile), nameof(traversalProfile), nameof(presentationProfile), nameof(animationProfile) },
         NativeSetup = new[] { "PawnRoot" },
         Proof = "Assign this Pawn Definition to the controlling ParticipantDefinition, then let ParticipantSpawnService place the spawned pawn at an authored spawn point.",
         ExpertAdvice = "PawnDefinition describes the actor body and prefab composition. ParticipantDefinition.inputProfile owns who controls this pawn; keep input off pawn definitions so seats, AI, hands, cursors, and pawn routes share one ownership rule.",
@@ -29,12 +29,11 @@ namespace NeonBlack.Gameplay.Data.Definitions
     public class PawnDefinition : ScriptableObject, IRuntimeValidationProvider
     {
         private const string ActorAnimationDriverTypeFullName = "NeonBlack.Gameplay.Presentation.Animation.ActorAnimationDriver";
-        private const string ActorFeatureHostTypeFullName = "NeonBlack.Gameplay.Modules.Actor.Composition.ActorFeatureHost";
         private const string PawnRootTypeFullName = "NeonBlack.Gameplay.Modules.Character.PawnRoot";
         private const string PawnMotorInterfaceFullName = "NeonBlack.Gameplay.Modules.Character.IPawnMotor";
-        private const string PawnInputModuleInterfaceFullName = "NeonBlack.Gameplay.Modules.Character.IPawnInputModule";
+        private const string PawnInputModuleInterfaceFullName = "NeonBlack.Gameplay.Data.Participants.IPawnInputModule";
         private const string PawnPresentationModuleInterfaceFullName = "NeonBlack.Gameplay.Modules.Character.IPawnPresentationModule";
-        private const string TopDownHopModuleId = "actor.traversal.topdown-hop";
+        private const string TopDownHopTypeFullName = "NeonBlack.Gameplay.Modules.Traversal.TopDownHopComponent";
 
         public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
@@ -47,7 +46,6 @@ namespace NeonBlack.Gameplay.Data.Definitions
         public PawnTraversalProfile traversalProfile;
         public PawnPresentationProfile presentationProfile;
         public PawnAnimationProfile animationProfile;
-        public FeatureModuleDefinition[] featureModules;
 
         public List<string> GetValidationIssues()
         {
@@ -77,71 +75,6 @@ namespace NeonBlack.Gameplay.Data.Definitions
                     "PawnDefinition.pawnPrefab references the prefab spawned for this participant.");
             }
 
-            ActorPresentationMode? mode = presentationProfile != null ? presentationProfile.presentationMode : null;
-            HashSet<string> moduleIds = new HashSet<string>();
-            if (featureModules != null)
-            {
-                for (int i = 0; i < featureModules.Length; i++)
-                {
-                    FeatureModuleDefinition module = featureModules[i];
-                    if (module == null)
-                    {
-                        AddRequired(
-                            issues,
-                            $"Feature Modules[{i}] is null.",
-                            "PawnDefinition.FeatureModule.Null",
-                            $"featureModules[{i}]");
-                        continue;
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(module.moduleId) && !moduleIds.Add(module.moduleId))
-                    {
-                        AddRequired(
-                            issues,
-                            $"Feature module `{module.moduleId}` is assigned more than once.",
-                            "PawnDefinition.FeatureModule.Duplicate",
-                            nameof(featureModules));
-                    }
-
-                    if (mode.HasValue && !module.SupportsPresentationMode(mode.Value))
-                    {
-                        AddRequired(
-                            issues,
-                            $"Feature module `{module.moduleId}` does not support `{mode.Value}` presentation mode.",
-                            "PawnDefinition.FeatureModule.UnsupportedPresentationMode",
-                            nameof(featureModules));
-                    }
-
-                    foreach (PyralisRuntimeValidationIssue moduleIssue in module.GetRuntimeValidationIssues())
-                    {
-                        PyralisRuntimeValidationIssue contextualIssue =
-                            PyralisRuntimeValidationIssueUtility.WithParentContext(
-                                moduleIssue,
-                                $"Feature `{module.moduleId}`: ",
-                                $"PawnDefinition.FeatureModule.{GetSafeIssueSegment(module.moduleId)}",
-                                nameof(featureModules),
-                                nameof(PawnDefinition),
-                                "Open the assigned FeatureModuleDefinition and resolve the named issue.",
-                                "PawnDefinition feature modules report no validation issues.");
-
-                        AddIfPresent(issues, contextualIssue);
-                    }
-
-                    if (pawnPrefab != null && mode.HasValue)
-                    {
-                        List<string> actorIssues = module.GetActorCompatibilityIssues(pawnPrefab, mode.Value);
-                        for (int issueIndex = 0; issueIndex < actorIssues.Count; issueIndex++)
-                        {
-                            AddRequired(
-                                issues,
-                                $"Feature `{module.moduleId}`: {actorIssues[issueIndex]}",
-                                $"PawnDefinition.FeatureModule.Compatibility.{GetSafeIssueSegment(module.moduleId)}.{issueIndex}",
-                                nameof(featureModules));
-                        }
-                    }
-                }
-            }
-
             if (pawnPrefab != null)
             {
                 AppendPawnPrefabCompositionIssues(pawnPrefab, issues);
@@ -159,9 +92,6 @@ namespace NeonBlack.Gameplay.Data.Definitions
                 AddRequired(issues, $"Pawn Prefab `{prefab.name}`: Add PawnRoot to the prefab root.", "PawnDefinition.PawnRoot.Missing");
             else if (!HasEnabledComponentOfTypeName(prefab, PawnRootTypeFullName))
                 AddRequired(issues, $"Pawn Prefab `{prefab.name}`: Enable PawnRoot on the prefab root before Play Mode.", "PawnDefinition.PawnRoot.Disabled");
-
-            if (HasEnabledFeatureModules() && !HasComponentOfTypeName(prefab, ActorFeatureHostTypeFullName))
-                AddRequired(issues, $"Pawn Prefab `{prefab.name}`: Add ActorFeatureHost to the prefab root because PawnDefinition.featureModules contains enabled optional modules.", "PawnDefinition.ActorFeatureHost.Missing");
 
             if (!HasComponentImplementing(prefab, PawnMotorInterfaceFullName))
                 AddRequired(issues, $"Pawn Prefab `{prefab.name}`: Add the lane motor component that implements IPawnMotor.", "PawnDefinition.PawnMotor.Missing");
@@ -222,15 +152,15 @@ namespace NeonBlack.Gameplay.Data.Definitions
                 return null;
             }
 
-            if (HasFeatureModule(TopDownHopModuleId))
+            if (pawnPrefab != null && HasComponentOfTypeName(pawnPrefab, TopDownHopTypeFullName))
                 return null;
 
             return PyralisRuntimeValidationIssue.Required(
-                $"PawnDefinition `{name}`: Top-down/no-gravity Jump is enabled, but no TopDownHop feature module is assigned to PawnDefinition.featureModules. Add a FeatureModuleDefinition with module id `{TopDownHopModuleId}` when Jump should lift the visual child, or turn off Allow 2D Jump when this pawn has no top-down hop action.",
-                nameof(featureModules),
+                $"PawnDefinition `{name}`: Top-down/no-gravity Jump is enabled, but the pawn prefab has no TopDownHopComponent component. Add TopDownHopComponent to the pawn root when Jump should lift the visual child, or turn off Allow 2D Jump when this pawn has no top-down hop action.",
+                nameof(pawnPrefab),
                 nameof(PawnDefinition),
-                "Assign a TopDownHop FeatureModuleDefinition to PawnDefinition.featureModules, or disable Allow 2D Jump on the movement profile.",
-                "Top-down/no-gravity jump has a feature module that can animate the visual child without world gravity.",
+                "Add TopDownHopComponent to the pawn prefab root, assign its TopDownHopProfile, or disable Allow 2D Jump on the movement profile.",
+                "Top-down/no-gravity jump has a direct pawn component that can animate the visual child without world gravity.",
                 "PawnDefinition.TopDownHop.Missing");
         }
 
@@ -259,36 +189,6 @@ namespace NeonBlack.Gameplay.Data.Definitions
         private static bool IsActorAnimationDriver(MonoBehaviour behaviour)
         {
             return behaviour != null && behaviour.GetType().FullName == ActorAnimationDriverTypeFullName;
-        }
-
-        private bool HasEnabledFeatureModules()
-        {
-            if (featureModules == null)
-                return false;
-
-            for (int i = 0; i < featureModules.Length; i++)
-            {
-                FeatureModuleDefinition module = featureModules[i];
-                if (module != null && module.enabledByDefault)
-                    return true;
-            }
-
-            return false;
-        }
-
-        private bool HasFeatureModule(string moduleId)
-        {
-            if (featureModules == null || string.IsNullOrWhiteSpace(moduleId))
-                return false;
-
-            for (int i = 0; i < featureModules.Length; i++)
-            {
-                FeatureModuleDefinition module = featureModules[i];
-                if (module != null && string.Equals(module.moduleId, moduleId, System.StringComparison.Ordinal))
-                    return true;
-            }
-
-            return false;
         }
 
         private static bool HasComponentOfTypeName(GameObject root, string fullTypeName)
@@ -407,21 +307,6 @@ namespace NeonBlack.Gameplay.Data.Definitions
                     ? successCheck
                     : "PawnDefinition and its pawn prefab report no validation issues.",
                 issueCode));
-        }
-
-        private static string GetSafeIssueSegment(string value)
-        {
-            if (string.IsNullOrWhiteSpace(value))
-                return "Unnamed";
-
-            char[] chars = value.ToCharArray();
-            for (int i = 0; i < chars.Length; i++)
-            {
-                if (!char.IsLetterOrDigit(chars[i]))
-                    chars[i] = '_';
-            }
-
-            return new string(chars);
         }
 
         private static T GetObjectProperty<T>(object instance, string propertyName) where T : Object

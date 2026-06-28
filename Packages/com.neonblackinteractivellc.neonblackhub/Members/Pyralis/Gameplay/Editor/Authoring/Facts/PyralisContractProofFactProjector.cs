@@ -286,7 +286,7 @@ namespace NeonBlack.Gameplay.Editor
                 actions.Add(new PyralisAuthoringNativeAction(
                     "Inspect",
                     PyralisAuthoringActionSurface.Inspector,
-                    !string.IsNullOrWhiteSpace(contract.DisplayName) ? contract.DisplayName : "feature contract",
+                    !string.IsNullOrWhiteSpace(contract.DisplayName) ? contract.DisplayName : "capability contract",
                     "review the contract-owned setup fields and evidence",
                     "the feature proof target has visible setup evidence"));
             }

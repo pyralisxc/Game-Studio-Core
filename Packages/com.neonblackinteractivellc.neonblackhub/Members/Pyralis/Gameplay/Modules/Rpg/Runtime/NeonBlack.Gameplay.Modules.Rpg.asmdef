@@ -2,6 +2,7 @@
     "name": "NeonBlack.Gameplay.Modules.Rpg",
     "references": [
         "NeonBlack.Gameplay.Core",
+        "NeonBlack.Gameplay.Data",
         "VContainer"
     ],
     "includePlatforms": [],

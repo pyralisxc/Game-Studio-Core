@@ -195,7 +195,7 @@ namespace NeonBlack.Gameplay.Editor
                     PyralisAuthoringFactSourceKind.Convention,
                     PyralisAuthoringConfidence.Explicit,
                     "A Rigged3D route where actors, cameras, interaction, enemies, projectiles, or traversal operate in 3D world space.",
-                    "Use this when the project needs 3D movement, rigged presentation, 3D camera composition, or 3D-friendly feature modules.",
+                    "Use this when the project needs 3D movement, rigged presentation, 3D camera composition, or 3D-friendly module capabilities.",
                     "One rigged or placeholder actor exists in 3D space, receives control or AI intent, and proves movement/camera/interaction before deeper systems.",
                     goalTags: new[]
                     {
@@ -364,7 +364,7 @@ namespace NeonBlack.Gameplay.Editor
                     assignmentFields: new[]
                     {
                         "Intent capability filter -> selected ingredients",
-                        "FeatureModuleDefinition -> custom reusable systems when they graduate into Pyralis",
+                        "Module-owned component/profile contracts -> custom reusable systems when they graduate into Pyralis",
                         "Proof target facts -> choose the first small observable chain"
                     },
                     customizationMoments: new[]

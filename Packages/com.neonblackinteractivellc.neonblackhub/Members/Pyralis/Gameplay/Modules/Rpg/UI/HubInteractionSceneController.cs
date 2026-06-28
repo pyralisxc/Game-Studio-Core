@@ -1,9 +1,10 @@
 using System;
 using System.Linq;
 using NeonBlack.Gameplay.Core.Contracts;
-using NeonBlack.Gameplay.Modules.Rpg.Runtime;
+using NeonBlack.Gameplay.Data.Interactions;
+using NeonBlack.Gameplay.Data.Rpg;
 using NeonBlack.Gameplay.Data.Definitions.Rpg;
-using NeonBlack.Gameplay.Modules.Actor.Composition;
+using NeonBlack.Gameplay.Modules.Rpg.Runtime;
 using UnityEngine;
 using VContainer;
 
@@ -101,7 +102,7 @@ namespace NeonBlack.Gameplay.Modules.Rpg.UI
             BindPresenter();
         }
 
-        public bool TryHandleInteraction(ActorFeatureContext context)
+        public bool TryHandleInteraction(ActorInteractionContext context)
         {
             if (context != null && context.Participant != null && string.IsNullOrWhiteSpace(ownerStableId) && !_hasRuntimeOwner)
                 _runtimeOwner = new RpgOwnerKey(RpgOwnerKind.Participant, $"seat-{context.Participant.SeatIndex + 1}");

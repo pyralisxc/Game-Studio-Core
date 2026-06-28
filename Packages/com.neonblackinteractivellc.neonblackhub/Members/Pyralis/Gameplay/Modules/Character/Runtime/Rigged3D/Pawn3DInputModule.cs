@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Core.Types.Input;
 using NeonBlack.Gameplay.Data.Participants;
 using NeonBlack.Gameplay.Modules.Character;
 

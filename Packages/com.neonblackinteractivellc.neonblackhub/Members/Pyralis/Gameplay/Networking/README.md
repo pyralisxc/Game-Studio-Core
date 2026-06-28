@@ -48,6 +48,6 @@ For a networked pawn-backed scene:
 3. Add/configure `UnityTransport` and assign it to `NetworkManager.NetworkConfig.NetworkTransport`.
 4. Add `NetworkObject` to every pawn prefab spawned by networked participants.
 5. Register those pawn prefabs in `NetworkManager.NetworkConfig.Prefabs`.
-6. Keep feature modules using Pyralis network metadata (`networkRole`, `replicationPolicyId`, ownership/server flags) rather than direct NGO types.
+6. Keep module-owned capabilities using Pyralis network metadata (`networkRole`, `replicationPolicyId`, ownership/server flags) rather than direct NGO types.
 
 Local multiplayer remains a separate PlayerInputManager/participant-spawn route. Installing NGO and Transport does not automatically make a scene networked.

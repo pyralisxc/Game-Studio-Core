@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Participants;
-using NeonBlack.Gameplay.Modules.Character;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 

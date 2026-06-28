@@ -18,8 +18,9 @@ namespace NeonBlack.Gameplay.Modules.Spawning
     CapabilityPath = "Combat/Actions/Enemy Spawner"
 )]
 [AddComponentMenu("NeonBlack/Gameplay/Spawning/Enemy Spawner")]
-public class EnemySpawner : MonoBehaviour
+public class EnemySpawner : MonoBehaviour, IEncounterSpawnSource
 {
+    public event Action<IActorHealthState> ActorSpawned;
     public event Action<IActorHealthState> EnemySpawned;
 
     [Header("Enemy Prefabs")]
@@ -75,6 +76,7 @@ public class EnemySpawner : MonoBehaviour
 
     /// <summary>Currently tracked live enemies owned by this spawner.</summary>
     public IReadOnlyList<IActorHealthState> TrackedEnemies => _trackedEnemies;
+    public IReadOnlyList<IActorHealthState> TrackedActors => _trackedEnemies;
 
     private void Start()
     {
@@ -165,6 +167,7 @@ public class EnemySpawner : MonoBehaviour
 
         _trackedEnemies.Add(health);
         health.Died += () => HandleTrackedEnemyDeath(health);
+        ActorSpawned?.Invoke(health);
         EnemySpawned?.Invoke(health);
     }
 

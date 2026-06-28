@@ -1,20 +1,28 @@
 {
-    "name": "NeonBlack.Gameplay.Modules.Feedback",
-    "references": [
-        "NeonBlack.Gameplay.Core",
-        "NeonBlack.Gameplay.Data",
-        "NeonBlack.Gameplay.Modules.Combat",
-        "NeonBlack.Gameplay.Modules.Actor.Composition",
-        "Unity.TextMeshPro",
-        "UnityEngine.UI",
-        "VContainer"
-    ],
-    "includePlatforms": [],
-    "excludePlatforms": [],
-    "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
-    "autoReferenced": true,
-    "defineConstraints": [],
-    "versionDefines": []
+    "name":  "NeonBlack.Gameplay.Modules.Feedback",
+    "references":  [
+                       "NeonBlack.Gameplay.Core",
+                       "NeonBlack.Gameplay.Data",
+                       "Unity.TextMeshPro",
+                       "UnityEngine.UI",
+                       "VContainer"
+                   ],
+    "includePlatforms":  [
+
+                         ],
+    "excludePlatforms":  [
+
+                         ],
+    "allowUnsafeCode":  false,
+    "overrideReferences":  false,
+    "precompiledReferences":  [
+
+                              ],
+    "autoReferenced":  true,
+    "defineConstraints":  [
+
+                          ],
+    "versionDefines":  [
+
+                       ]
 }

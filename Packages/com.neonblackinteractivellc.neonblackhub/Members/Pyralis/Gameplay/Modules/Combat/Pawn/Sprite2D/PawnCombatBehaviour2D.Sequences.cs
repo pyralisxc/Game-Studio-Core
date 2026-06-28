@@ -1,6 +1,7 @@
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Data.Definitions.Combat;
 using NeonBlack.Gameplay.Modules.Combat;
+using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Types.Animation;
 using UnityEngine;
 
@@ -26,7 +27,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
                 comboResetTime,
                 combatWindow,
                 ref _combatTimer,
-                Runtime.Motor.IsActionLocked,
+                Runtime.Motor.IsActing,
                 cooldownTimer,
                 out int _,
                 out CombatActionDefinition action))
@@ -38,7 +39,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
             cooldownTimer = ResolveActionCooldown(action, resolvedWeapon, fallbackCooldown);
 
             Runtime.Motor.ResetMoveToIdle();
-            Runtime.Motor.SetActionLock(true);
+            Runtime.Motor.IsActing = true;
             _actingTimer = Mathf.Max(resolvedWeapon != null ? resolvedWeapon.hitDelay + resolvedWeapon.hitDuration : hitDelay + hitDuration, 0.05f);
             UpdateActionState();
 
@@ -50,35 +51,41 @@ namespace NeonBlack.Gameplay.Modules.Combat
 
         private void ExecuteFallbackAttack()
         {
-            if (Runtime.Motor == null || !CombatActionStateMachine.CanStartActionFrom(Runtime.Motor.IsActionLocked, _attackTimer))
+            if (Runtime.Motor == null || !CombatActionStateMachine.CanStartActionFrom(Runtime.Motor.IsActing, _attackTimer))
                 return;
 
             _attackTimer = attackCooldown;
             _combatTimer = combatWindow;
             _attackCount = (_attackCount % 3) + 1;
             Runtime.Motor.ResetMoveToIdle();
-            Runtime.Motor.SetActionLock(true);
+            Runtime.Motor.IsActing = true;
             _actingTimer = Mathf.Max(attackWeapon != null ? attackWeapon.hitDelay + attackWeapon.hitDuration : hitDelay + hitDuration, 0.05f);
             UpdateActionState();
-            Runtime.AnimationDriver?.SetIntSignal(ActorAnimationSignal.AttackPrimary, _attackCount);
-            Runtime.AnimationDriver?.TriggerSignal(ActorAnimationSignal.AttackPrimary, intValue: _attackCount);
+            PublishCombatResult(new ActorCombatResult(
+                ActorCombatResultKind.AttackStarted,
+                gameObject,
+                animationSignal: ActorAnimationSignal.AttackPrimary,
+                step: _attackCount));
             ActivateHitBoxForZone("Punch", attackWeapon);
         }
 
         private void ExecuteFallbackKick()
         {
-            if (Runtime.Motor == null || !CombatActionStateMachine.CanStartActionFrom(Runtime.Motor.IsActionLocked, _kickTimer))
+            if (Runtime.Motor == null || !CombatActionStateMachine.CanStartActionFrom(Runtime.Motor.IsActing, _kickTimer))
                 return;
 
             _kickTimer = kickCooldown;
             _combatTimer = combatWindow;
             _kickCount = (_kickCount % 3) + 1;
             Runtime.Motor.ResetMoveToIdle();
-            Runtime.Motor.SetActionLock(true);
+            Runtime.Motor.IsActing = true;
             _actingTimer = Mathf.Max(kickWeapon != null ? kickWeapon.hitDelay + kickWeapon.hitDuration : hitDelay + hitDuration, 0.05f);
             UpdateActionState();
-            Runtime.AnimationDriver?.SetIntSignal(ActorAnimationSignal.AttackSecondary, _kickCount);
-            Runtime.AnimationDriver?.TriggerSignal(ActorAnimationSignal.AttackSecondary, intValue: _kickCount);
+            PublishCombatResult(new ActorCombatResult(
+                ActorCombatResultKind.AttackStarted,
+                gameObject,
+                animationSignal: ActorAnimationSignal.AttackSecondary,
+                step: _kickCount));
             ActivateHitBoxForZone("Kick", kickWeapon);
         }
 
@@ -87,11 +94,12 @@ namespace NeonBlack.Gameplay.Modules.Combat
             ActorAnimationSignal signal = action != null ? action.animationSignal : ResolveDefaultSignal(inputType);
             int comboStep = action != null ? action.comboStep : 1;
 
-            Runtime.AnimationDriver?.SetIntSignal(signal, comboStep);
-            Runtime.AnimationDriver?.TriggerSignal(signal, intValue: comboStep);
-
-            if (action != null && action.finisherResetsCombo)
-                Runtime.AnimationDriver?.TriggerCustom("ComboFinisher", intValue: comboStep);
+            PublishCombatResult(new ActorCombatResult(
+                ActorCombatResultKind.AttackStarted,
+                gameObject,
+                animationSignal: signal,
+                step: comboStep,
+                isFinisher: action != null && action.finisherResetsCombo));
         }
 
         private static ActorAnimationSignal ResolveDefaultSignal(CombatInputType inputType)

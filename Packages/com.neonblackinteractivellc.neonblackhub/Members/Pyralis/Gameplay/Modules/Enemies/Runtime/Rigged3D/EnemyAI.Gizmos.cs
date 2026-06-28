@@ -13,7 +13,7 @@ namespace NeonBlack.Gameplay.Modules.Enemies
             Gizmos.color = new Color(1f, 0.5f, 0f, 0.4f);
             Gizmos.DrawWireSphere(transform.position, DetectionModule.LeashRange);
             Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(transform.position, CombatModule != null ? CombatModule.MinAttackRange : 1f);
+            Gizmos.DrawWireSphere(transform.position, CombatTactics != null ? CombatTactics.MinAttackRange : 1f);
         }
 #endif
     }

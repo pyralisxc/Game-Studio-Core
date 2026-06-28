@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
-using NeonBlack.Gameplay.Modules.Character;
 using UnityEngine;
 using VContainer;
 
@@ -13,8 +12,8 @@ namespace NeonBlack.Gameplay.Modules.Scoring
     /// The timer resets the moment the player moves above the velocity threshold.
     ///
     /// Setup:
-    ///   1. Attach to the Player GameObject alongside Motor2D.
-    ///   2. Wire _motor in the Inspector (or leave empty - auto-fetched in Awake).
+    ///   1. Attach to the Player GameObject alongside a component implementing IActorMotionStateReader.
+    ///   2. Tune the reward timing and point values in the Inspector.
     ///   3. Optionally assign _bonusClip for an audio cue on reward.
     ///   4. Tune _collectiblesPerBonus and _stillnessInterval in the Inspector.
     /// </summary>
@@ -24,7 +23,7 @@ namespace NeonBlack.Gameplay.Modules.Scoring
         NativeSetup = new[] 
         { 
             "Attach to the Player GameObject.",
-            "Ensure a Motor2D is present.",
+            "Ensure a component implementing IActorMotionStateReader is present.",
             "Tune reward timing and point values."
         },
         AssignmentFields = new[] { nameof(_collectiblesPerBonus), nameof(_stillnessInterval), nameof(_stillnessThreshold), nameof(_bonusClip) },
@@ -32,7 +31,6 @@ namespace NeonBlack.Gameplay.Modules.Scoring
         ExpertAdvice = "Set the stillness threshold high enough to ignore micro-movement or drift. Runtime scoring and gameplay state are normally supplied by the session scope; use the source fields only for standalone custom orchestration.",
         CapabilityPath = "Goals & Scoring/Bonuses/Stillness Bonus 2D"
     )]
-    [RequireComponent(typeof(Motor2D))]
     [AddComponentMenu("NeonBlack/Gameplay/Modules/Scoring/Stillness Bonus 2D")]
     public class StillnessBonus2D : MonoBehaviour, IRuntimeValidationProvider
     {
@@ -71,7 +69,8 @@ namespace NeonBlack.Gameplay.Modules.Scoring
         private float _baseVolume = 0.8f;
 
         // References
-        private Motor2D _motor;
+        private IActorMotionStateReader _motionState;
+        private IActorHealthState _healthState;
         private AudioSource _audioSource;
         private ISessionScoreAwardSink _scoreAwardSink;
         private IGameplayStateReader _gameplayStateReader;
@@ -88,7 +87,8 @@ namespace NeonBlack.Gameplay.Modules.Scoring
 
         private void Awake()
         {
-            _motor = GetComponent<Motor2D>();
+            _motionState = GetComponent<IActorMotionStateReader>();
+            _healthState = GetComponent<IActorHealthState>();
 
             _audioSource = GetComponent<AudioSource>();
             if (_audioSource == null)
@@ -136,13 +136,13 @@ namespace NeonBlack.Gameplay.Modules.Scoring
                 return;
             }
 
-            if (_motor == null || _motor.IsDead)
+            if (_motionState == null || (_healthState != null && _healthState.IsDead))
             {
                 _stillTimer = 0f;
                 return;
             }
 
-            bool isStill = _motor.CurrentVelocity.magnitude < _stillnessThreshold;
+            bool isStill = _motionState.MotionVelocity.magnitude < _stillnessThreshold;
 
             if (!isStill)
             {

@@ -1,5 +1,4 @@
 using NeonBlack.Gameplay.Data.Participants;
-using NeonBlack.Gameplay.Modules.Character;
 using NeonBlack.Gameplay.Data.Profiles;
 
 namespace NeonBlack.Gameplay.Modules.Combat

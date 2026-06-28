@@ -4,6 +4,7 @@ using NeonBlack.Gameplay.Modules.Combat;
 using NeonBlack.Gameplay.Modules.Enemies;
 using NeonBlack.Gameplay.Modules.Feedback;
 using NeonBlack.Gameplay.Glue.SceneFlow.Arcade2D;
+using NeonBlack.Gameplay.Data.Rpg;
 using NeonBlack.Gameplay.Modules.Rpg.Runtime;
 using NeonBlack.Gameplay.Modules.Scoring;
 using UnityEngine;

@@ -1,39 +1,42 @@
 {
-    "name": "NeonBlack.Gameplay.Editor",
-    "references": [
-        "NeonBlack.Gameplay.Modules.Character",
-        "NeonBlack.Gameplay",
-        "NeonBlack.Gameplay.Core",
-        "NeonBlack.Gameplay.Data",
-        "NeonBlack.Gameplay.Modules.Combat",
-        "NeonBlack.Gameplay.Modules.Encounters",
-        "NeonBlack.Gameplay.Modules.Enemies",
-        "NeonBlack.Gameplay.Modules.Feedback",
-        "NeonBlack.Gameplay.Modules.Hazards",
-        "NeonBlack.Gameplay.Modules.Interaction",
-        "NeonBlack.Gameplay.Modules.Pickups",
-        "NeonBlack.Gameplay.Modules.Scoring",
-        "NeonBlack.Gameplay.Modules.Settings",
-        "NeonBlack.Gameplay.Modules.Spawning",
-        "NeonBlack.Gameplay.Modules.Actions",
-        "NeonBlack.Gameplay.Modules.Tabletop",
-        "NeonBlack.Gameplay.Modules.Tabletop.UI",
-        "NeonBlack.Gameplay.Modules.Traversal",
-        "NeonBlack.Gameplay.Modules.Actor.Composition",
-        "NeonBlack.Gameplay.Presentation",
-        "Unity.InputSystem",
-        "Unity.Cinemachine",
-        "UnityEngine.UI",
-        "VContainer"
-    ],
-    "includePlatforms": [
-        "Editor"
-    ],
-    "excludePlatforms": [],
-    "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
-    "autoReferenced": false,
-    "defineConstraints": [],
-    "versionDefines": []
+    "name":  "NeonBlack.Gameplay.Editor",
+    "references":  [
+                       "NeonBlack.Gameplay.Modules.Character",
+                       "NeonBlack.Gameplay",
+                       "NeonBlack.Gameplay.Core",
+                       "NeonBlack.Gameplay.Data",
+                       "NeonBlack.Gameplay.Modules.Combat",
+                       "NeonBlack.Gameplay.Modules.Encounters",
+                       "NeonBlack.Gameplay.Modules.Enemies",
+                       "NeonBlack.Gameplay.Modules.Feedback",
+                       "NeonBlack.Gameplay.Modules.Hazards",
+                       "NeonBlack.Gameplay.Modules.Interaction",
+                       "NeonBlack.Gameplay.Modules.Settings",
+                       "NeonBlack.Gameplay.Modules.Spawning",
+                       "NeonBlack.Gameplay.Modules.Tabletop",
+                       "NeonBlack.Gameplay.Modules.Tabletop.UI",
+                       "NeonBlack.Gameplay.Presentation",
+                       "Unity.InputSystem",
+                       "Unity.Cinemachine",
+                       "UnityEngine.UI",
+                       "VContainer"
+                   ],
+    "includePlatforms":  [
+                             "Editor"
+                         ],
+    "excludePlatforms":  [
+
+                         ],
+    "allowUnsafeCode":  false,
+    "overrideReferences":  false,
+    "precompiledReferences":  [
+
+                              ],
+    "autoReferenced":  false,
+    "defineConstraints":  [
+
+                          ],
+    "versionDefines":  [
+
+                       ]
 }

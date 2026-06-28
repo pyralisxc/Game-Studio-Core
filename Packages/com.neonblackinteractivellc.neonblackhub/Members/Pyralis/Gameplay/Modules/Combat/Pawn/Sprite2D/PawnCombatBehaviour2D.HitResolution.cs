@@ -3,7 +3,6 @@ using NeonBlack.Gameplay.Data.Definitions.Combat;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Modules.Combat;
-using NeonBlack.Gameplay.Modules.Actor.Composition;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Modules.Combat
@@ -114,7 +113,12 @@ namespace NeonBlack.Gameplay.Modules.Combat
         {
             _comboProcessor.HandleHitConfirmed(comboResetTime, (step, isFinisher) =>
             {
-                Runtime.AnimationDriver?.TriggerCustom("ComboConfirm", intValue: step);
+                PublishCombatResult(new ActorCombatResult(
+                    ActorCombatResultKind.ComboConfirmed,
+                    gameObject,
+                    customAnimationKey: "ComboConfirm",
+                    step: step,
+                    isFinisher: isFinisher));
                 Runtime.FeedbackPublisher?.PublishCombo(step);
                 if (isFinisher)
                     Runtime.FeedbackPublisher?.PublishFinisher(step);

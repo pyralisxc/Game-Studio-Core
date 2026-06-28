@@ -1,8 +1,9 @@
 using System.Collections.Generic;
-using NeonBlack.Gameplay.Modules.Actions.Runtime;
-using NeonBlack.Gameplay.Modules.Tabletop.Runtime;
+using NeonBlack.Gameplay.Core.Actions;
+using NeonBlack.Gameplay.Data.Tabletop;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions.Rules;
+using NeonBlack.Gameplay.Modules.Tabletop.Runtime;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Modules.Tabletop

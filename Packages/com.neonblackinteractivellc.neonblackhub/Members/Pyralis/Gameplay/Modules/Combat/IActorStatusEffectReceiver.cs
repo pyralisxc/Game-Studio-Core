@@ -3,7 +3,6 @@ using NeonBlack.Gameplay.Data.Definitions.Combat;
 using UnityEngine;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Profiles;
-using NeonBlack.Gameplay.Modules.Actor.Composition;
 using NeonBlack.Gameplay.Core.Types.Animation;
 
 namespace NeonBlack.Gameplay.Modules.Combat
@@ -12,11 +11,10 @@ namespace NeonBlack.Gameplay.Modules.Combat
         Capability = AuthoringCapability.Combat | AuthoringCapability.Stats,
         ModuleId = "actor.status",
         Relevance = "Handles the application and management of combat status effects and stat modifiers on actors.",
-        ExpertAdvice = "Receives timed effects like Burn or Slow. Pair with ActorStatusEffectFeatureRuntime for implementation.",
+        ExpertAdvice = "Receives timed effects like Burn or Slow. Pair with ActorStatusEffectComponent for implementation.",
         ProfileType = typeof(ActorStatusEffectProfile),
         RequiredInterfaces = new Type[]
         {
-            typeof(IFeatureModuleRuntime),
             typeof(IActorStatusEffectReceiver),
             typeof(IDamageModifier)
         },
@@ -28,11 +26,8 @@ namespace NeonBlack.Gameplay.Modules.Combat
         },
         NativeSetup = new[]
         {
-            "create ActorStatusEffectProfile",
-            "create FeatureModuleDefinition",
-            "assign runtime prefab with ActorStatusEffectFeatureRuntime",
-            "assign profile asset",
-            "add module to PawnDefinition.featureModules or enemy actor module list",
+            "add ActorStatusEffectComponent to the actor root",
+            "assign ActorStatusEffectProfile",
             "ensure HealthComponent and status modifier receivers are present on actors that consume status effects"
         },
         Proof = "Apply a status effect to an actor and verify it appears in the active effect list.",
@@ -40,11 +35,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
         DocumentationURL = "https://docs.neonblack.com/pyralis/actor-status",
         AssignmentFields = new[]
         {
-            "FeatureModuleDefinition.moduleId",
-            "FeatureModuleDefinition.runtimePrefab",
-            "FeatureModuleDefinition.profileAsset",
-            "FeatureModuleDefinition.supportedPresentationModes",
-            "PawnDefinition.featureModules"
+            "ActorStatusEffectComponent.statusProfile"
         },
         CustomizationMoments = new[]
         {
@@ -54,8 +45,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
             "StatusEffectDefinition.effectKind",
             "StatusEffectDefinition.stackMode"
         })]
-    public interface IActorStatusEffectReceiver
+    public interface IActorStatusEffectReceiver : IActorStatusEffectSink
     {
-        void ApplyStatusEffect(StatusEffectDefinition effectDefinition, GameObject source = null);
     }
 }

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using NeonBlack.Gameplay.Modules.Actor.Composition;
 using NeonBlack.Gameplay.Core.Contracts;
 using TMPro;
 using UnityEngine;

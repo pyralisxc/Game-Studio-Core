@@ -1,5 +1,6 @@
 using NeonBlack.Gameplay.Modules.Combat;
 using NeonBlack.Gameplay.Data.Definitions.Combat;
+using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Modules.Combat
@@ -39,7 +40,12 @@ namespace NeonBlack.Gameplay.Modules.Combat
         {
             _comboProcessor.HandleHitConfirmed(comboResetTime, (step, isFinisher) =>
             {
-                AnimationDriver?.TriggerCustom("ComboConfirm", intValue: step);
+                PublishCombatResult(new ActorCombatResult(
+                    ActorCombatResultKind.ComboConfirmed,
+                    gameObject,
+                    customAnimationKey: "ComboConfirm",
+                    step: step,
+                    isFinisher: isFinisher));
                 FeedbackPublisher?.PublishCombo(step);
                 if (isFinisher)
                     FeedbackPublisher?.PublishFinisher(step);

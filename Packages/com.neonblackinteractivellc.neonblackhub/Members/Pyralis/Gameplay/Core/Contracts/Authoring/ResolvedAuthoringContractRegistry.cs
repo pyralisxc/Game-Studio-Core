@@ -289,7 +289,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
                 return new[] { $"Create or assign a {displayName} asset in the project-owned setup folder." };
 
             if (type.IsInterface)
-                return new[] { $"Provide a concrete {displayName} implementation through the active setup or feature module." };
+                return new[] { $"Provide a concrete {displayName} implementation through the active setup or a direct module-owned component." };
 
             return new[] { $"Reference {displayName} from the setup object, definition, or feature that owns this route." };
         }

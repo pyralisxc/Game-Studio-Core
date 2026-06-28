@@ -8,7 +8,7 @@ The scene object is `GameplaySessionBootstrap`. It is the first runtime object t
 
 The top-level asset is `SessionDefinition`. It is the first authoring asset the bootstrap reads.
 
-Everything else hangs from that handoff: the bootstrap creates or connects runtime services, then those services read definitions, profiles, participants, pawns, feature modules, and runtime components.
+Everything else hangs from that handoff: the bootstrap creates or connects runtime services, then those services read definitions, profiles, participants, pawns, module-owned components/profiles, and runtime components.
 
 ## The Mental Model
 
@@ -24,13 +24,13 @@ Runtime components answer: "What actually runs in the scene?"
 
 Unity authoring is the layer where code, assets, prefabs, scenes, and Inspector guidance meet. It is not just "dragging references around." In a maintainable Unity project, authoring is the public workflow for configuring runtime behavior without editing code.
 
-Internal product lanes such as Phyreal should consume this authoring contract before asking for new grammar. Pyralis/Game Studio Core owns reusable capability meaning: participants, pawns, routes, profiles, feature modules, input, camera, presentation lanes, interactions, facts, validation, and proof evidence. A product lane can layer its own metadata on top for product identity, governance, library adoption, world-pack release, safety, and renderer-agnostic manifest fields, but it should not fork the authoring model unless the existing contract cannot represent the needed capability.
+Internal product lanes such as Phyreal should consume this authoring contract before asking for new grammar. Pyralis/Game Studio Core owns reusable capability meaning: participants, pawns, routes, profiles, direct module-owned capabilities, input, camera, presentation lanes, interactions, facts, validation, and proof evidence. A product lane can layer its own metadata on top for product identity, governance, library adoption, world-pack release, safety, and renderer-agnostic manifest fields, but it should not fork the authoring model unless the existing contract cannot represent the needed capability.
 
 For Pyralis, good authoring means a person can:
 
 - select the `GameplaySessionBootstrap` scene object
 - open the assigned `SessionDefinition`
-- follow the chain into `GameModeDefinition`, participants, pawns, profiles, feature modules, reflected contracts, and grammar wording
+- follow the chain into `GameModeDefinition`, participants, pawns, profiles, direct module components, reflected contracts, and grammar wording
 - see validation warnings near the assets or components that need attention
 - understand which fields are required, optional, route-specific, or safe to leave empty
 
@@ -54,12 +54,12 @@ From there, the authored asset chain is:
 ```text
 SessionDefinition
   -> GameModeDefinition
-      -> mode rules, required feature modules, board/turn definitions, playfield/camera profiles
+      -> mode rules, enabled systems, board/turn definitions, playfield/camera profiles
   -> ParticipantDefinition[]
       -> PawnDefinition optional
           -> pawn prefab
           -> pawn profiles
-          -> feature modules
+          -> module-owned components on the pawn prefab
 ```
 
 In plain English:
@@ -73,13 +73,13 @@ In plain English:
 - `PyralisSetupDependencyTree` owns serialized setup/reference discovery.
 - `PyralisAuthoringSetupGraph` compiles contracts, dependency-tree references, validators, grammar, and selected Unity context into the readiness/proof model consumed by the Authoring Window.
 - Empty required asset and prefab references are graph `AssignmentField` evidence when reflection can identify the owner and field. The active route should say "assign `ParticipantDefinition.inputProfile`" or "assign `PawnDefinition.pawnPrefab`" from the graph, not from a parallel hand-written setup card.
-- Route shape is the ownership skeleton only: participants and, for pawn-backed routes, `ParticipantDefinition.defaultPawn`. Pawn prefab assignment, lane motor, input adapter, presentation, animation, feature modules, and profile references belong to reflected assignment/component evidence and validators.
+- Route shape is the ownership skeleton only: participants and, for pawn-backed routes, `ParticipantDefinition.defaultPawn`. Pawn prefab assignment, lane motor, input adapter, presentation, animation, module-owned components, and profile references belong to reflected assignment/component evidence and validators.
 - First-proof cards describe the Play Mode proof and success signal. Setup actions and customization details should appear as route steps before the proof, not inside the proof card itself.
 - Convention facts stay as explicit source calls from the main fact registry. Do not add a parallel provider-discovery layer unless a new spine capability genuinely needs extension-point behavior.
 - `GameplaySessionBootstrap` is the runtime startup object in the scene.
 - `SessionDefinition` is the whole play session.
 - `GameModeDefinition` is the active mode or ruleset for that session.
-- The setup route is inferred from `SessionDefinition`, `GameModeDefinition`, participants, pawns, feature modules, scene evidence, and contracts/reflection. Grammar vocabulary supplies wording, not route truth.
+- The setup route is inferred from `SessionDefinition`, `GameModeDefinition`, participants, pawns, module-owned components/profiles, scene evidence, and contracts/reflection. Grammar vocabulary supplies wording, not route truth.
 - Route capabilities are the beginner-facing capability signals. Intent filters those graph signals through route descriptors that prefer contracts, dependency evidence, and reflected metadata, then use vocabulary only for generic wording. Runtime families should be inferred from reflected runtime surfaces when structure proves them; add `RuntimeFamilies` to contracts only for semantic route meaning reflection cannot infer.
 - `ParticipantDefinition` describes a player, AI, seat, team, or participant slot.
 - `PawnDefinition` is used only when a participant needs an actor body.
@@ -101,10 +101,9 @@ Definitions are identity and relationship assets.
 | Asset | Owns | Points to | Use it when |
 |---|---|---|---|
 | `SessionDefinition` | session name, max participants, join/camera defaults | default `GameModeDefinition`, `SettingsProfile`, participant list | every playable setup |
-| `GameModeDefinition` | scene names, enabled systems, mode rules | `PlayfieldProfile`, `CameraRigProfile`, required feature modules, board and turn definitions | every playable mode |
+| `GameModeDefinition` | scene names, enabled systems, mode rules | `PlayfieldProfile`, `CameraRigProfile`, board and turn definitions | every playable mode |
 | `ParticipantDefinition` | display name, team, seat, auto-join defaults | default `PawnDefinition`, participant `InputProfile` | each player, AI, seat, faction, hand, or participant slot |
-| `PawnDefinition` | one actor body setup | pawn prefab, pawn profiles, feature modules | only when the participant owns an actor body |
-| `FeatureModuleDefinition` | reusable actor/pawn capability or ability declaration | runtime prefab, profile asset, supported presentation modes | adding modular abilities such as pickups, feedback, status, interaction, traversal, guard/reaction, or custom actor modules |
+| `PawnDefinition` | one actor body setup | pawn prefab and pawn profiles | only when the participant owns an actor body |
 | `ActionDefinition` | target rules and action costs | none directly | reusable actions for turn/menu, cards, board moves, abilities, or commands |
 | `ActorAnimationDefinition` | animation signal bindings | Animator parameters through `ActorAnimationBinding` | mapping gameplay signals to an Animator |
 | `ProjectileDefinition` | projectile or hitscan payload | `ActionDefinition`, `ProjectileImpactDefinition`, projectile prefab | bullets, spells, traps, turrets, scripted shots |
@@ -116,7 +115,7 @@ Definitions are identity and relationship assets.
 
 Rule of thumb: if the asset names a gameplay thing or links other assets together, it is probably a definition.
 
-For pawn-authored abilities, use `FeatureModuleDefinition` assets assigned to `PawnDefinition.featureModules`. For enemy-authored abilities, assign feature modules through `EnemyFeatureProfile.featureModules`. Controller profiles define the actor's baseline body and input feel; feature modules define optional reusable capabilities that can vary per pawn or enemy archetype. If feature modules are enabled, the actor prefab root should visibly include `ActorFeatureHost`; authored prefab composition is visible in Unity rather than repaired by hidden runtime setup.
+For pawn-authored abilities, add the owning module component directly to the pawn prefab and assign its owning profile or definition. For enemy-authored abilities, use enemy components plus `EnemyProfile` fields. Controller profiles define the actor's baseline body and input feel; module-owned components define optional reusable capabilities that can vary per pawn or enemy archetype. Authored prefab composition should be visible in Unity rather than repaired by hidden runtime setup.
 
 ## Profiles
 
@@ -133,15 +132,15 @@ Profiles are tuning assets. They tell runtime components how to behave.
 | `PawnTraversalProfile` | traversal behavior such as climb, hang, ledge rules | `PawnDefinition` |
 | `PawnPresentationProfile` | 2D, 2.5D, or rigged 3D presentation | `PawnDefinition` |
 | `PawnAnimationProfile` | Animator controller and animation definition | `PawnDefinition` |
-| `ActorFeedbackProfile` | actor feedback behavior | feature modules or feedback runtimes |
-| `ActorCombatReactionProfile` | block, hurt, stagger reactions | combat reaction feature module |
-| `ActorStatusEffectProfile` | starting effects and status behavior | status-effect feature module |
-| `PickupFeatureProfile` | pickup collection behavior | pickup feature module |
-| `InteractionFeatureProfile` | interaction radius/cooldowns | interaction feature module |
-| `EnemyFeatureProfile` | enemy combat, reaction, and modules | enemy runtime setup |
+| `ActorFeedbackProfile` | actor feedback behavior | feedback runtime components |
+| `ActorCombatReactionProfile` | block, hurt, stagger reactions | combat reaction component |
+| `ActorStatusEffectProfile` | starting effects and status behavior | status-effect component |
+| `PickupProfile` | pickup collection behavior | interaction collector components |
+| `InteractionProfile` | interaction radius/cooldowns | interaction runtime component |
+| `EnemyProfile` | enemy combat, reaction, and ambient profile links | enemy runtime setup |
 | `EnemyCombatProfile` | enemy attacks and AI combat tuning | enemy runtime setup |
 | `EnemyReactionProfile` | enemy hurt/stagger/camera shake feedback | enemy runtime setup |
-| `EnemyAmbientFeatureProfile` | ambient enemy behavior | enemy feature module |
+| `EnemyAmbientProfile` | ambient enemy behavior | enemy ambient component |
 | `HazardImpactProfile` | damage, knockback, status effects for hazards | `HazardData` |
 | `HazardFeedbackProfile` | hazard popups/flash feedback | `HazardData` |
 
@@ -166,7 +165,7 @@ For mode responsibilities, evidence model, implementation phases, and maintenanc
 
 The window keeps an **Active Setup** at the top. When no setup is pinned, the active setup follows the current Unity selection whenever the selection can infer a `GameplaySessionBootstrap`, `SessionDefinition`, `GameModeDefinition`, `ParticipantDefinition`, or `PawnDefinition`. When nothing is selected and exactly one `GameplaySessionBootstrap` exists in the open scene, the Authoring Window treats that scene root as the active setup instead of falling back to an empty state. When a loose newly-created setup asset is selected and the remembered or single scene setup still needs that asset assigned to its next field, the active setup stays on the scene setup story so the guide does not skip past the wiring step. When a setup is pinned, **Overview** and **Map** keep using that steady setup route while **Guide** continues to explain the current selection. This lets guided users click through prefabs, child objects, and component fields, or clear selection entirely, without losing the main setup story.
 
-The native Project-window Create path should stay beginner ordered under `NeonBlack`. In `NeonBlack > Definitions`, `Session Definition` comes first because it is the first setup asset a new route needs, followed by Game Mode, Participant, Pawn, Feature Module, Action, and Animation definitions. In `NeonBlack > Profiles`, setup-chain profiles come first: Input, Playfield, Camera Rig, Pawn Movement, Pawn Traversal, Pawn Presentation, Pawn Animation, Pawn Combat, then Settings before broader feature profiles. Do not move first-route setup behind preset/profile paths.
+The native Project-window Create path should stay beginner ordered under `NeonBlack`. In `NeonBlack > Definitions`, `Session Definition` comes first because it is the first setup asset a new route needs, followed by Game Mode, Participant, Pawn, Action, and Animation definitions. In `NeonBlack > Profiles`, setup-chain profiles come first: Input, Playfield, Camera Rig, Pawn Movement, Pawn Traversal, Pawn Presentation, Pawn Animation, Pawn Combat, then Settings before broader feature profiles. Do not move first-route setup behind preset/profile paths.
 
 Unity's built-in dock tabs such as Project, Hierarchy, Inspector, Scene, and Game are native Editor chrome, not Pyralis UI. The authoring color system should still guide users toward those surfaces, but prefer durable semantic labels, field guidance, inspector beacons, overlays, or optional window-focus aids over unsupported Unity skin/layout hacks that repaint built-in tab text.
 
@@ -271,7 +270,7 @@ The Authoring Window should keep the core setup chain understandable whenever it
 GameplaySessionBootstrap
   -> SessionDefinition
       -> GameModeDefinition
-          -> mode rules, required feature modules, reflected contracts and grammar wording
+          -> mode rules, module-owned capabilities, reflected contracts and grammar wording
       -> ParticipantDefinition[]
           -> PawnDefinition optional
 ```
@@ -281,7 +280,7 @@ When one of those core links is missing, the window should point to the native U
 The core chain uses route-aware shared guidance:
 
 - Capability grammar explains reusable wording for control surfaces, presentation lanes, and first-proof scene/service evidence when contracts or reflection do not provide more specific facts.
-- Reflected route analysis combines session, mode, participant, pawn, feature-module, contract, and scene evidence before explaining the next setup route.
+- Reflected route analysis combines session, mode, participant, pawn, module-owned capability, contract, and scene evidence before explaining the next setup route.
 - `GameModeDefinition` contributes mode fields before guidance recommends camera, playfield, feature, combat, scoring, or respawn wiring.
 - `SessionDefinition` explains participants, pawn/no-pawn expectations, and whether shared input is only optional.
 - `GameplaySessionBootstrap` inspects the assigned session graph and reports scene-level next steps.
@@ -309,11 +308,11 @@ Scene root
   -> Bootstrap
       -> SessionDefinition
           -> GameModeDefinition
-              -> mode rules, required feature modules, reflected contracts and grammar wording
+              -> mode rules, module-owned capabilities, reflected contracts and grammar wording
           -> ParticipantDefinition[]
               -> PawnDefinition optional
                   -> Profiles
-                  -> FeatureModuleDefinition[]
+                  -> direct module-owned components on prefab
 ```
 
 Unhealthy authoring feels like this:
@@ -345,11 +344,11 @@ Common costs:
 
 For Pyralis, the highest-value authoring improvements are:
 
-- keep session, mode, participant, pawn, feature-module, contract/reflection, and scene evidence visible before prefab wiring starts
+- keep session, mode, participant, pawn, module-owned capability, contract/reflection, and scene evidence visible before prefab wiring starts
 - make the Authoring Window the live setup checklist and keep `GameplaySessionBootstrap` Inspector guidance compact
 - prefer explicit participant/session references over tag searches or hidden global discovery
 - keep route guidance centralized in the shared authoring models
-- add validation for missing scene roots, missing pawn components, invalid feature-module prefabs, and unsupported pawn/non-pawn setup combinations
+- add validation for missing scene roots, missing pawn components, invalid module-owned capability setup, and unsupported pawn/non-pawn setup combinations
 - split large authoring inspectors only when there is a clear user workflow boundary
 
 ### How To Think About The Main Unity Pieces
@@ -396,7 +395,7 @@ Runtime components live on GameObjects. They do the work.
 | `ActorAnimationDriver` | `PawnAnimationProfile`, `ActorAnimationDefinition` |
 | `CinemachineCameraRigController` | `CameraRigProfile`, participant roster; reads `PlayfieldProfile` only to clamp camera focus |
 | `CameraShake` | optional target transform, impact calls from combat/projectiles/hazards |
-| feature runtimes | `FeatureModuleDefinition`, assigned profile asset, platform services |
+| module-owned runtime components | assigned profile asset, platform services, sibling components |
 
 ## Pawn-Backed Setup
 
@@ -434,7 +433,7 @@ Minimum authoring chain:
 ```text
 SessionDefinition
   -> GameModeDefinition
-      -> board, turn, camera, UI, scoring, and feature-module fields as needed
+      -> board, turn, camera, UI, scoring, and module-owned capability fields as needed
   -> ParticipantDefinition
 ```
 
@@ -448,45 +447,41 @@ Minimum scene:
 - `Playfield Root` for board spaces, card zones, anchors, or selectors
 - `Scoring Root` only if the game tracks points, victory points, timers, or resources
 
-## Feature Module Setup
+## Module-Owned Capability Setup
 
-Feature modules are optional capability bundles.
+Module-owned capabilities are optional behavior bundles that stay visible on the prefab or scene object.
 
 The chain is:
 
 ```text
-FeatureModuleDefinition
-  -> profileAsset when the feature contract requires one
-  -> runtimePrefab with the feature runtime component
-
-PawnDefinition
-  -> featureModules[]
+Actor prefab or scene object
+  -> owning module component
+      -> profile or definition field when the capability needs one
 ```
 
 At runtime:
 
 1. `PawnRoot` initializes the pawn.
-2. `ActorFeatureHost` reads the feature module definitions.
-3. Each module creates or uses a runtime component.
-4. The runtime receives a context containing the pawn, participant, game mode, services, and profiles.
+2. Direct sibling components read their assigned profiles or receive pawn profiles from `PawnRoot`.
+3. Each module owns its local behavior and communicates through Core/Data seams, handlers, sinks, or state readers.
 
-Use feature modules when you want a capability to be reusable across multiple pawns or game types.
+Use module-owned capability components when you want a capability to be reusable across multiple pawns or game types.
 
-Do not create a feature module for one-off scene wiring. Use a normal component first.
+Do not create a new abstraction for one-off scene wiring. Use a normal component first.
 
-`FeatureModuleDefinition.runtimePrefab` is the prefab for the feature runtime, not the pawn prefab. For example, a top-down hop module should point to a small prefab whose root has `TopDownHopFeatureRuntime`; the pawn prefab still belongs on `PawnDefinition.pawnPrefab`.
+For example, a top-down hop route adds `TopDownHopComponent` directly to the pawn prefab and assigns `TopDownHopProfile` on that component. The pawn prefab still belongs on `PawnDefinition.pawnPrefab`.
 
-Feature-module actor compatibility checks only the components, interfaces, and lane rules required by that feature contract. Local validation from pawn prefab components such as animation, presentation, combat, or UI providers is reported once by the pawn or scene owner so setup guidance does not attribute unrelated prefab issues to the selected feature module.
+Capability compatibility checks only the components, interfaces, and lane rules required by the owning contract. Local validation from pawn prefab components such as animation, presentation, combat, or UI providers is reported once by the pawn or scene owner so setup guidance does not attribute unrelated prefab issues to an unrelated capability.
 
 ### Feature-Owned Authoring Contracts
 
-Every reusable `FeatureModuleDefinition` module with known setup rules should have a feature-owned `[AuthoringContract]` on the runtime, interface, profile, or component type that owns the capability. The registry discovers contracts by reflection across loaded assemblies, so do not add central lists of feature module ids.
+Every reusable module capability with known setup rules should have a feature-owned `[AuthoringContract]` on the runtime, interface, profile, or component type that owns the capability. The registry discovers contracts by reflection across loaded assemblies, so do not add central lists of feature ids.
 
-A feature contract is the source of truth for:
+A capability contract is the source of truth for:
 
-- stable feature id and `FeatureModuleDefinition.moduleId`
+- stable capability id or setup node id when graph joins need one
 - required profile type
-- required runtime prefab interfaces
+- required runtime interfaces or components
 - supported and unsupported `ActorPresentationMode` lanes
 - unsupported-lane message
 - consumed input/action roles
@@ -497,15 +492,15 @@ A feature contract is the source of truth for:
 
 Contracts should not repeat Unity metadata that reflection already owns. If a `ScriptableObject` has `CreateAssetMenu`, the Project-window create action is generated from that attribute. If a `MonoBehaviour` has `AddComponentMenu`, the Inspector Add Component action is generated from that attribute. Use contract `NativeSetup` only for setup meaning that Unity metadata cannot infer, such as which authored field to connect, which Inspector tool to use, or what route-specific choice the creator should make after the object exists.
 
-The Authoring Window, fact registry, feature-module Inspector, contract validator, and proof guidance all read this contract data. If a feature-specific rule appears in a central switch or hand-authored setup row, move it into the feature contract unless the rule is truly generic to every feature module.
+The Authoring Window, fact registry, local inspectors, validators, and proof guidance all read this contract data. If a feature-specific rule appears in a central switch or hand-authored setup row, move it into the capability contract unless the rule is truly generic to every module-owned capability.
 
-New feature module checklist:
+New module capability checklist:
 
-1. Add or update the runtime module, runtime prefab/component, profile, and any shared interfaces.
+1. Add or update the runtime module component, profile, and any shared interfaces.
 2. Add or update `[AuthoringContract]` on the capability owner.
 3. Declare required profile, runtime interfaces/components, lane support, unsupported lane cautions, action roles, native setup, assignment fields, customization moments, and developer first-proof guidance.
 4. Add Unity `.meta` files for new scripts, asmdefs, assets, prefabs, and folders.
-5. Add registry/fact/validator/proof tests for the module.
+5. Add registry/fact/validator/proof tests for the capability.
 6. Refresh or run Unity validation before trusting generated project files.
 7. Update setup docs only when the feature changes durable authoring behavior.
 
@@ -567,7 +562,7 @@ Board/card/tabletop routes can stay no-pawn when players control seats, hands, c
 
 Input follows the same pattern. `InputProfile` should point at the project's Unity Input Action Asset, name the primary action map, and list the gameplay action rows this setup actually uses. The authored owner is `ParticipantDefinition.inputProfile`, because the participant is the player, AI, seat, hand, faction, cursor, or command owner that controls the route. Built-in rows such as Move, Look, Jump, Dash, Attack, Interact, Block, Sprint, Crouch, Roll, Previous, and Next unlock Pyralis features. Custom rows let creators add project-specific actions that can feed custom gameplay or animation wiring without changing Pyralis code. The 2D and 3D pawn input modules read those rows from the participant profile after the participant spawns. In a 1P auto-join proof, the profile action asset can be the runtime fallback. In local multiplayer, each joined `PlayerInput` owns the runtime action instance paired to its controller; `InputProfile.actions` is only the template and naming source. A local co-op route should use `PlayerInputManager` with a player prefab that contains `PlayerInput` and `PawnRoot`/`IPawnParticipantInitializer`, so each controller maps to one participant and one pawn.
 
-For 2D pawns, movement actions should stay explicit. A required Move row feeds the pawn motor. Jump, Dash, Interact, Attack, and Custom rows are semantic requests. `PawnMovementProfile.movementStyle` is the authoring-readable physics split: `TopDownNoGravity` means Move drives free X/Y movement through a Kinematic Rigidbody2D moved by script, while `SideViewGravity` means Move drives horizontal X and an unclaimed Jump row can request vertical motion through a Dynamic Rigidbody2D with gravity and ground checks. `allow2DJump` enables only that built-in side-view fallback; it does not switch the pawn into gravity mode. Installed feature modules can consume action requests first, so a top-down route should use `TopDownHopFeatureRuntime` when Jump should lift the visual child while the pawn root remains on the map plane. `PawnMovementProfile` and `Pawn2DMovementComponent` decide whether dash is allowed and how it feels, while a Dash row decides which hardware action triggers dash. Leave Dash absent for games with no keyboard/gamepad dash, map Dash to `Jump` only when a top-down 2D game intentionally wants jump-button dash instead of a hop feature, map it to `Roll` or `Dash` for a dedicated dodge, or use a Custom row when dash is part of an ability-specific input.
+For 2D pawns, movement actions should stay explicit. A required Move row feeds the pawn motor. Jump, Dash, Interact, Attack, and Custom rows are semantic requests. `PawnMovementProfile.movementStyle` is the authoring-readable physics split: `TopDownNoGravity` means Move drives free X/Y movement through a Kinematic Rigidbody2D moved by script, while `SideViewGravity` means Move drives horizontal X and an unclaimed Jump row can request vertical motion through a Dynamic Rigidbody2D with gravity and ground checks. `allow2DJump` enables only that built-in side-view fallback; it does not switch the pawn into gravity mode. Direct module-owned capability components can consume action requests first, so a top-down route should use `TopDownHopComponent` when Jump should lift the visual child while the pawn root remains on the map plane. `PawnMovementProfile` and `Pawn2DMovementComponent` decide whether dash is allowed and how it feels, while a Dash row decides which hardware action triggers dash. Leave Dash absent for games with no keyboard/gamepad dash, map Dash to `Jump` only when a top-down 2D game intentionally wants jump-button dash instead of a hop feature, map it to `Roll` or `Dash` for a dedicated dodge, or use a Custom row when dash is part of an ability-specific input.
 
 Keep shared scene systems out of pawn prefabs unless the prefab is intentionally self-contained. A pawn prefab can carry its movement, presentation, combat, input adapter, and feature host, but the scene/session normally owns `CinemachineCameraRigController`, the physical `Main Camera`, the Cinemachine Camera, participant roster, gameplay state, spawn points, and playfield bounds. Authoring should explain which empty prefab fields are runtime-supplied instead of forcing users to wire a camera into every pawn prefab.
 
@@ -580,7 +575,7 @@ For a pawn-backed prototype:
 3. Create or assign `GameModeDefinition`.
 4. Create or assign `ParticipantDefinition`.
 5. Create `PawnDefinition` and pawn profiles.
-6. Add feature modules, mode fields, reflected contracts that describe the route, and vocabulary only for reusable wording.
+6. Add module-owned capability components, mode fields, reflected contracts that describe the route, and vocabulary only for reusable wording.
 7. Wire scene roots and prefab references only when the monitor asks for them.
 
 For a non-pawn prototype:
@@ -589,7 +584,7 @@ For a non-pawn prototype:
 2. Create or assign `SessionDefinition`.
 3. Create or assign `GameModeDefinition`.
 4. Create or assign `ParticipantDefinition`.
-5. Add board, card, turn, camera, UI, scoring, feature-module, contract, and scene evidence that describes the route.
+5. Add board, card, turn, camera, UI, scoring, module-owned capability, contract, and scene evidence that describes the route.
 6. Add UI/camera/playfield/scoring scene roots only when the reflected route needs them.
 7. Add board/card/turn-specific runtime components as the selected proof route needs them.
 
@@ -612,7 +607,7 @@ Intent-focused proofs prioritize the selected ingredient's smallest observable b
 
 The reflected setup route is not one asset.
 
-- The setup route is inferred from session, mode, participants, pawns, feature modules, scene evidence, and contracts/reflection. Grammar vocabulary phrases that route for humans.
+- The setup route is inferred from session, mode, participants, pawns, module-owned capabilities, scene evidence, and contracts/reflection. Grammar vocabulary phrases that route for humans.
 - The game mode says which scenes, systems, playfield, camera, and rules are active.
 
 `ParticipantDefinition` is not the same as `PawnDefinition`.
@@ -642,5 +637,5 @@ If you are lost, walk the chain from top to bottom:
 3. What participants exist?
 4. Does each participant need a pawn?
 5. Which profiles tune that pawn or scene system?
-6. Which feature modules, contracts, and scene evidence add route meaning, and which vocabulary only explains it?
+6. Which module-owned capabilities, contracts, and scene evidence add route meaning, and which vocabulary only explains it?
 7. Which runtime components read those assets?

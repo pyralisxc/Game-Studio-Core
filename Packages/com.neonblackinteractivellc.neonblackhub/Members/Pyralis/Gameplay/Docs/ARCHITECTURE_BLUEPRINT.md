@@ -32,21 +32,21 @@ The shared-core startup path is built from these concrete building blocks:
 - `CameraRigProfile`
 - `InputProfile`
 - `SettingsProfile`
-- feature module definitions and pawn-module interfaces
+- module-owned component/profile capabilities and pawn-module interfaces
 - `ResolvedAuthoringContractRegistry` discovery for `[AuthoringContract]` metadata
 
 New gameplay and authoring work should extend this Inspector-driven shared-core startup path.
 
 `SessionStateService` is the shared gameplay-active state owner. Feature systems that need to know whether gameplay is running should consume `IGameplayStateReader`. Mode-specific flow orchestrators, such as the 2D `GameManager`, should expose their own flow contract for panels, scoring, and arcade transitions, then drive the shared session phase rather than implementing a second gameplay-state source.
 
-Runtime folder ownership is part of the architecture contract. `Core` owns runtime-visible contracts and tiny shared type vocabulary only. `Data` owns authored definitions, profiles, config, and shared profile helpers, including combat definitions such as weapons, sequences, projectiles, fire modes, and status effects. `Modules` own reusable gameplay capability. `Glue` owns route/session composition, bootstrap, lifetime, participant services, input routing, service registration, and spawn coordination. `Presentation` owns camera, animation, visual, and HUD infrastructure. `Feedback` owns feedback-display gameplay modules such as damage numbers, floating feedback receivers, and participant feedback relays. Module assemblies should not reference `Glue`; glue composes modules through contracts, data, and explicit service registration. The `.asmdef` graph should remain acyclic.
+Runtime folder ownership is part of the architecture contract. `Core` owns runtime-visible contracts and tiny shared type vocabulary only. `Data` owns authored definitions, profiles, config, shared profile helpers, and data-backed runtime handoff contracts, including combat definitions such as weapons, sequences, projectiles, fire modes, status effects, participant handoffs, and interaction dispatch context. `Modules` own reusable gameplay capability. `Glue` owns route/session composition, bootstrap, lifetime, participant services, input routing, service registration, and spawn coordination. `Presentation` owns camera, animation, visual, and HUD infrastructure. `Feedback` owns feedback-display gameplay modules such as damage numbers, floating feedback receivers, and participant feedback relays. Module assemblies should not reference `Glue`; glue composes modules through contracts, data, and explicit service registration. The `.asmdef` graph should remain acyclic.
 
 Namespace fan-out is also architecture evidence. A focused runtime script should import very few `NeonBlack.Gameplay.*` namespaces because broad imports usually mean the script is owning too much gameplay knowledge. Pure data/model scripts should usually need `0-1` Pyralis namespaces, leaf gameplay MonoBehaviours `1-2`, feature runtime modules `2-3`, and presentation scripts `1-2`. Explicit `Glue/*` composition files may import more because they wire systems together, but they still become review targets when they start carrying feature behavior instead of composition. Hygiene flags files that exceed their owner budget as `NamespaceDependencyFanout`; outside Glue, more than three Pyralis namespaces is audit pressure and more than five is a cleanup target. Do not hide coupling in managers to satisfy the count. Shrink the count by moving behavior to the true owner, depending on smaller contracts/data/events, or keeping cross-domain wiring in Glue.
 
 Runtime communication should follow the same ownership discipline as the authoring graph. Authoring compiles scattered setup evidence into graph truth and then projects typed views; runtime should expose typed communication seams instead of letting modules directly know every concrete collaborator. The supported communication lanes are:
 
-- **commands** for requested work, such as spawn participant, request attack, request interaction, submit input action, or start proof attempt
-- **events** for facts that happened, such as participant joined, pawn spawned, damage applied, pickup collected, score changed, or proof state changed
+- **commands** for requested work, such as spawn participant, request attack with `ActorCombatCommand`, request interaction, submit input action, or start proof attempt
+- **events/results** for facts that happened, such as participant joined, pawn spawned, combat attack started through `ActorCombatResult`, damage applied, pickup collected, score changed, or proof state changed
 - **state readers** for current domain state exposed without exposing the concrete service or feature owner
 - **handlers and sinks** for module-owned responders that consume stable contracts
 - **state machines** for lifecycle owners that answer what mode a thing is in and which transitions are allowed
@@ -56,7 +56,9 @@ VContainer wires dependencies; it is not the runtime communication model. A clas
 
 Use focused state machines where lifecycle is real. Do not create one global `PyralisStateMachine`. Prefer small owners such as `SessionStateMachine`, `ParticipantStateMachine`, `PawnLocomotionStateMachine`, `CombatActionStateMachine`, and authoring/proof state flow. Each state machine should be a plain lifecycle model with explicit transitions; MonoBehaviours and services may host or observe it, but the transition rules should not be scattered across unrelated booleans, validators, and inspector guidance. State machines live in the lane that owns the meaning: session and participant flow in Glue, pawn locomotion in Character, combat action phase in Combat.
 
-Direct module imports are allowed only when the dependency is a genuine same-subsystem composition edge or a stable contract owned by that module. For example, Combat may depend on Character when pawn combat consumes pawn motor and input contracts, and Traversal may depend on Character when traversal implements a character-owned traversal contract. Character should not import Combat just to host combat behavior; pawn combat implementation belongs in Combat. Cross-subsystem behavior such as pickups awarding score, hazards applying combat reactions, enemies driving combat, UI observing session state, or scene flow reacting to gameplay outcomes should prefer commands, events, state readers, handlers, or narrow sinks before importing concrete feature modules. If a direct module import remains, it should be easy to explain in one sentence as ownership, not convenience. Do not import a module solely to name data assets that live under `Data`, or to display feedback that can be expressed through a `Core` sink contract such as `IDamageNumberSink`.
+Direct module imports are allowed only when the dependency is a genuine same-subsystem composition edge or a stable contract owned by that module. Character should not import Combat just to host combat behavior; pawn combat implementation belongs in Combat. Combat should not import Character just to read facing, airborne, or action-lock state; that flows through `IActorCombatMovementState`. Character should not import Combat just to read attack timers or combat movement multipliers; that flows through `IActorCombatMovementInfluence`. Traversal should not import Character just to coordinate the 3D pawn movement sibling; traversal-facing movement state flows through `IPawnTraversalMovementController`, traversal profile application flows through `IPawnTraversalModule`, and optional feature discovery flows through `IActorTraversalFeature`. Traversal and RPG should not import Interaction just to implement an interaction handler; `Data.Interactions.ActorInteractionContext` and `Data.Interactions.IActorInteractionHandler` are the shared handler seam, while Interaction owns the concrete dispatcher and pickup collectors. Input should not import Character, Combat, or Interaction just to drive a pawn; participant/profile handoff belongs to `Data.Participants`, and move/combat/guard/interaction requests should flow through `Core` command or receiver seams. Cross-subsystem behavior such as pickups awarding score, hazards applying combat reactions, enemies driving combat, UI observing session state, or scene flow reacting to gameplay outcomes should prefer commands, events, state readers, handlers, or narrow sinks before importing concrete module behavior. If a direct module import remains, it should be easy to explain in one sentence as ownership, not convenience. Do not import a module solely to name data assets that live under `Data`, to check a movement component when a `Core` state reader can answer the question, or to display feedback that can be expressed through a `Core` sink or publisher contract such as `IDamageNumberSink` or `IActorFeedbackPublisher`.
+
+Editor ownership follows the same rule. A feature editor may hand users to Authoring and validate local fields, but it should not become a combined inspector for another module's implementation fields. Enemy AI editor owns enemy AI fields; enemy attack and hitbox tuning belongs to the Combat-owned `EnemyCombatModuleEditor`.
 
 ## Core Architectural Principles
 
@@ -102,7 +104,7 @@ The maintainable path is:
 
 - one obvious scene entrypoint,
 - one obvious top-level session asset,
-- visible links from session, mode, participants, pawns, feature modules, scene evidence, and reflected contracts, with vocabulary supplying labels and generic wording only,
+- visible links from session, mode, participants, pawns, module-owned components/profiles, scene evidence, and reflected contracts, with vocabulary supplying labels and generic wording only,
 - validation messages near the fields that caused them,
 - feature-owned authoring contracts that feed setup guidance, validation, facts, and proof targets.
 
@@ -110,14 +112,14 @@ Inspectors should stay tactical. They can show local field integrity, local vali
 
 ### 3.5. Feature Contracts Own Feature Setup Truth
 
-Reusable feature modules declare their authoring requirements on the owning feature type with `[AuthoringContract]`. `ResolvedAuthoringContractRegistry` discovers those attributes reflectively. Central authoring code aggregates and displays contracts; it should not maintain parallel switch statements or manual module-id lists for feature-specific profile, lane, action, runtime-interface, or first-proof rules.
+Reusable module components and profiles declare their authoring requirements on the owning feature type with `[AuthoringContract]`. `ResolvedAuthoringContractRegistry` discovers those attributes reflectively. Central authoring code aggregates and displays contracts; it should not maintain parallel switch statements or manual lists for feature-specific profile, lane, action, runtime-interface, or proof rules.
 
-A complete feature contract names:
+A complete capability contract names:
 
-- `FeatureModuleDefinition.moduleId`
 - contract `Surface`, so selectable gameplay ingredients are separated from route essentials, setup glue, profiles, services, adapters, presenters, runtime components, and vocabulary-only facts
+- stable capability id or setup node id when the graph needs to join evidence across sources
 - required profile type
-- required runtime prefab interfaces
+- required runtime interfaces or components
 - supported and unsupported presentation lanes
 - consumed action roles
 - native setup actions
@@ -133,11 +135,11 @@ The supported pawn stacks now implement pawn interfaces directly on focused comp
 
 For the 3D brawler, `Motor3D` is the composition root. It coordinates focused sibling components: `Pawn3DInputModule`, `Pawn3DMovementComponent`, Traversal-owned `Pawn3DTraversalComponent`, and `Pawn3DPresentationComponent`. Each implements the corresponding pawn interface directly.
 
-For the 2D stack, `Motor2D` is the shared 2D pawn motor surface. Focused ownership lives in `Motor2DInputAdapter`, `PlayerInputHandler`, `PawnCombatBehaviour2D`, `Pawn2DMovementComponent`, and `Pawn2DPresentationComponent`. `PawnCombatBehaviour2D` uses the shared `PawnComboProcessor` for combo state while keeping 2D hitbox/projectile application local. `Pawn2DMovementComponent` currently keeps one beginner-facing component while naming its two internal lanes: top-down/no-gravity uses a Kinematic Rigidbody2D, and side-view/gravity uses a Dynamic Rigidbody2D. `Pawn2DPresentationComponent` follows the same facade rule: sprite facing/tint, animation signals, deformation, and feedback audio are named internal lanes until a route earns separate presenter scripts.
+For the 2D stack, `Motor2D` is the shared 2D pawn motor surface. Focused ownership lives in `Motor2DInputAdapter`, `PlayerInputHandler`, `PawnCombatBehaviour2D`, `Pawn2DMovementComponent`, and `Pawn2DPresentationComponent`. `Motor2D` exposes neutral runtime state through `IActorMotionStateReader`, `IActorHazardImpactTarget`, facing, reaction, and movement modifier contracts so scoring, hazards, presentation, and other modules do not need to import Character internals. `PawnCombatBehaviour2D` uses the shared `PawnComboProcessor` for combo state while keeping 2D hitbox/projectile application local. `Pawn2DMovementComponent` currently keeps one beginner-facing component while naming its two internal lanes: top-down/no-gravity uses a Kinematic Rigidbody2D, and side-view/gravity uses a Dynamic Rigidbody2D. `Pawn2DPresentationComponent` follows the same facade rule: sprite facing/tint, animation signals, deformation, and feedback audio are named internal lanes until a route earns separate presenter scripts.
 
 `Motor2DInputAdapter` is the supported Add Component surface for new player-controlled 2D pawns. `PlayerInputHandler` remains the lower-level reader behind that route and is only a direct setup surface for custom input experiments.
 
-Shared pawn contracts live with the Character module when they describe what a pawn exposes, even if another module provides the concrete behavior. For example, Character can consume `IPawnTraversalModule`, while Traversal owns `Pawn3DTraversalComponent` and concrete climb/ledge/hop behavior. Character also owns pawn-facing combat contracts such as `IPawnCombatModule`, `IPawnCombatMovementContext`, and 2D combat input receiver interfaces; Combat owns the concrete pawn combat components that implement them. Presentation owns `PawnCameraTarget` and camera rigs, because those are camera-routing surfaces rather than character logic. This keeps Character, Combat, Traversal, and Presentation independently navigable while still allowing a prefab to compose them as siblings.
+Shared pawn contracts live with the narrowest stable owner. Profile-application handoff contracts such as `IPawnInputModule`, `IPawnCombatModule`, `IPawnTraversalModule`, and `IActorTraversalFeature` live under `Data.Participants` because `PawnRoot` and sibling components apply authored participant/pawn profile data through them. Traversal-facing movement state also lives behind the Data-owned `IPawnTraversalMovementController` seam because traversal needs profile-backed movement coordination without importing Character. Traversal owns `Pawn3DTraversalComponent` and concrete climb/ledge/hop behavior. Combat owns the concrete pawn combat components, consumes `IActorCombatMovementState` for pawn-facing motor state, and exposes `IActorCombatMovementInfluence` when movement needs combat timing or multipliers. Presentation owns `PawnCameraTarget` and camera rigs, because those are camera-routing surfaces rather than character logic. This keeps Character, Combat, Traversal, and Presentation independently navigable while still allowing a prefab to compose them as siblings.
 
 ### 4.5. Runtime Composition Registers Core First, Features By Evidence
 
@@ -156,7 +158,7 @@ For solo local routes, `ParticipantInputRouter` may auto-register default partic
 
 The proof should match the current Intent focus. When a selected gameplay ingredient declares a proof target, that focused proof wins; participant topology, pawn ownership, input, spawn, camera, and movement setup become prerequisites for proving that selected behavior. If no selected ingredient declares a proof target, solo pawn routes fall back to one participant, one pawn, one input path, while local join pawn routes fall back to one joined `PlayerInput` per participant, one pawn per joined seat, isolated controller input, authored spawn points, and camera focus after pawn assignment. These requirements are inferred from authored session/input/spawn graph evidence, not selected through a preset.
 
-Feature services are not core by default. Combat, enemy, RPG, game-flow, scoring, and feedback services register when the authored route asks for them through `GameModeDefinition`, participant pawns, resolved feature contracts, or actual loaded scene components.
+Feature services are not core by default. Combat, enemy, RPG, game-flow, scoring, and feedback services register when the authored route asks for them through `GameModeDefinition`, participant pawns, resolved capability contracts, or actual loaded scene components.
 
 Feature-specific service lists should not expand the composition root. `PyralisGameplayLifetimeScope` owns the visible service graph entrypoint; `PyralisRuntimeFeatureServicePolicy` owns route and loaded-scene activation evidence; the platform feature-service installer owns common registration mechanics; and feature installers such as RPG's runtime composition installer own concrete feature lists when a domain is broad enough to justify its own local seam. This keeps the lifetime scope readable without creating a second setup path.
 
@@ -170,15 +172,15 @@ This keeps a focused proof from carrying unrelated RPG, enemy, combat, scoring, 
 
 Optional feature domains can be broad without becoming core engine spine. RPG is the current example:
 
-- domain models, contracts, and services live under `Modules/Rpg/Runtime`,
+- value/domain models and definition-facing contracts live under `Data/Rpg`,
 - `Data/Definitions/Rpg` owns authored ScriptableObject assets,
-- `Modules/Rpg/Runtime/Composition` owns RPG service registration,
+- `Modules/Rpg/Runtime` owns RPG runtime services and runtime composition,
 - `Modules/Rpg/UI` owns scene and panel presenters,
 - `Modules/Rpg/Editor` owns RPG-specific editor tools.
 
 Shared authoring should discover RPG through contracts, reflection, dependency evidence, and graph projections. It should not carry a separate RPG setup system, and the universal `Editor/Authoring` folder should stay focused on the graph spine rather than feature-specific creative tools.
 
-The same rule applies to other broad optional domains. `Modules/Tabletop/Runtime` owns board, turn, selection, and tabletop rule types. `Modules/Actions/Runtime` owns queued action execution. Core only keeps stable contracts and tiny shared type vocabulary in `Core/Types` when multiple feature/data assemblies need the same value language, such as action values, movement modes, presentation lanes, and animation signals. Authored config assets live in `Data/Config`, participant input setup lives in `InputProfile`, and runtime session context lives in `Glue/Lifetime`. Scene flow and menu shell navigation belong to `Glue/SceneFlow/Navigation`, not Core.
+The same rule applies to other broad optional domains. `Data/Tabletop/Rules` owns board and turn value contracts that authored definitions can reference without pulling in runtime behavior. `Modules/Tabletop/Runtime` owns tabletop action resolvers, selection bridges, and runtime service seams. Core owns the small shared action queue language and in-memory queue implementation in `Core/Types/Actions`; feature modules provide resolvers instead of importing an Actions module. Core only keeps stable contracts, tiny shared type vocabulary, and neutral utilities when multiple feature/data assemblies need the same value language, such as action values, movement modes, presentation lanes, and animation signals. Authored config assets live in `Data/Config`, participant input setup lives in `InputProfile`, and runtime session context lives in `Glue/Lifetime`. Scene flow and menu shell navigation belong to `Glue/SceneFlow/Navigation`, not Core.
 
 ### 5. Runtime Is Transport-Agnostic
 
@@ -291,9 +293,9 @@ Examples:
 - arena lock,
 - stage progression rails.
 
-### Feature Module
+### Module-Owned Capability
 
-A reusable behavior package that can be enabled or disabled by composition.
+A reusable behavior package that can be enabled or disabled by visible Unity composition.
 
 Examples:
 
@@ -372,7 +374,7 @@ Defines:
 - combat profile,
 - traversal profile,
 - presentation profile,
-- default feature modules.
+- default module-owned capability components and profiles.
 
 ### GameModeDefinition
 
@@ -398,15 +400,15 @@ Defines:
 - companion and cautionary capability relationships,
 - first-proof vocabulary and graph proof evidence.
 
-Route capability data is inferred from `SessionDefinition`, `GameModeDefinition`, participants, pawns, feature modules, scene evidence, and contracts/reflection. Authoring vocabulary may label or phrase the result, but it must not invent selectable capability paths, route-essential roles, runtime families, or proof ownership. Route capability data is reusable setup vocabulary, not an exclusive game-type label or a separate gameplay/runtime data asset.
+Route capability data is inferred from `SessionDefinition`, `GameModeDefinition`, participants, pawns, module-owned components/profiles, scene evidence, and contracts/reflection. Authoring vocabulary may label or phrase the result, but it must not invent selectable capability paths, route-essential roles, runtime families, or proof ownership. Route capability data is reusable setup vocabulary, not an exclusive game-type label or a separate gameplay/runtime data asset.
 
 ### Reflected Setup Route
 
 Defines:
 
-- the route capabilities inferred from session, mode, participants, pawns, feature modules, scene evidence, and contracts/reflection,
+- the route capabilities inferred from session, mode, participants, pawns, module-owned components/profiles, scene evidence, and contracts/reflection,
 - setup notes from graph vocabulary, facts, and reflected contracts,
-- validation for missing route evidence, pawn/non-pawn mismatch, invalid feature modules, and cautionary combinations.
+- validation for missing route evidence, pawn/non-pawn mismatch, invalid module-owned capability setup, and cautionary combinations.
 
 Future wizards, sample generators, and setup validators should read the reflected route graph before creating or inspecting scene content.
 
@@ -441,13 +443,13 @@ Defines:
 - rebinding rules,
 - touch or gamepad presentation hints.
 
-### FeatureModuleDefinition
+### Module-Owned Components And Profiles
 
 Defines:
 
-- module enablement,
-- module-specific tunables,
-- data references for a reusable capability.
+- direct component enablement on the prefab or scene object,
+- module-specific profiles and tunables,
+- data references for a reusable capability owned by that module.
 
 ### Future ActionDefinition
 
@@ -474,12 +476,12 @@ The 3D brawler pawn is fully decomposed. `Motor3D` is the composition root - it 
 
 Mode-specific differences are applied through profiles and optional modules.
 
-Core pawn identity stays Unity-native and visible on the prefab. `ActorFeatureHost` extends an authored actor with optional capability modules; it does not construct the actor's base movement identity. A creator inspecting a 2D or 3D pawn prefab should see the core motor, input, movement, traversal, presentation, health, and combat pieces directly when that route requires them. Optional traversal, guard, pickup, feedback, status, and interaction modules can be installed through feature definitions, but they should query or modify the explicit sibling stack instead of becoming the only owner of movement, input, or presentation state.
+Core pawn identity stays Unity-native and visible on the prefab. A creator inspecting a 2D or 3D pawn prefab should see the core motor, input, movement, traversal, presentation, health, combat, interaction, feedback, status, and route-specific capability pieces directly when that route requires them. Optional traversal, guard, pickup, feedback, status, and interaction behaviors are module-owned components and profiles that query or modify the explicit sibling stack instead of hiding behind a central installer.
 
 Ownership shorthand:
 
 - siblings describe what a pawn is,
-- feature modules describe what a pawn can do,
+- module-owned capabilities describe what a pawn can do,
 - participants describe who is driving,
 - scene camera rigs describe what is watching.
 
@@ -593,7 +595,7 @@ Avoid:
 - tag searches as the preferred player/participant lookup
 - scene-only wiring that cannot be recreated from definitions and profiles
 - expanding singleton managers when the session or participant model should own the behavior
-- adding fields to large MonoBehaviours when a profile or feature module would make the choice reusable
+- adding fields to large MonoBehaviours when a profile or module-owned capability would make the choice reusable
 
 The practical test is simple: a designer or future developer should be able to inspect a scene root, follow the assigned assets, and understand why the runtime behaves the way it does. If they must inspect several static singletons or search for objects by tag to understand the scene, the authoring path is carrying maintenance debt.
 

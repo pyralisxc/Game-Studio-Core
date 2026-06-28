@@ -2,7 +2,6 @@ using UnityEngine;
 using NeonBlack.Gameplay.Core.Enums;
 using NeonBlack.Gameplay.Presentation.Visuals;
 using NeonBlack.Gameplay.Core.Contracts;
-using NeonBlack.Gameplay.Modules.Combat;
 
 namespace NeonBlack.Gameplay.Modules.Enemies
 {
@@ -60,7 +59,7 @@ public class EnemyMovementModule : MonoBehaviour
             _verticalVel += gravity * deltaTime;
         }
 
-        public void MoveToward(Vector3 worldTarget, float speed, float statusMoveSpeedMultiplier, Camera cam, Transform visualRoot, bool spriteDefaultFacesRight, HitBoxSlot[] hitBoxZones)
+        public void MoveToward(Vector3 worldTarget, float speed, float statusMoveSpeedMultiplier, Camera cam, Transform visualRoot, bool spriteDefaultFacesRight, IActorFacingMirrorTarget[] facingMirrorTargets)
         {
             Vector3 dir = worldTarget - transform.position;
             dir.y = 0f;
@@ -78,7 +77,7 @@ public class EnemyMovementModule : MonoBehaviour
             Vector3 move = dir * speed * statusMoveSpeedMultiplier;
             _controller.Move(new Vector3(move.x + kb.x, _verticalVel + kb.y, move.z + kb.z) * Time.deltaTime);
 
-            FaceTarget(worldTarget, cam, visualRoot, spriteDefaultFacesRight, hitBoxZones);
+            FaceTarget(worldTarget, cam, visualRoot, spriteDefaultFacesRight, facingMirrorTargets);
         }
 
         public void ApplyStationaryMotion(float deltaTime)
@@ -87,7 +86,7 @@ public class EnemyMovementModule : MonoBehaviour
             _controller.Move(new Vector3(kb.x, _verticalVel + kb.y, kb.z) * deltaTime);
         }
 
-        public void FaceTarget(Vector3 worldTarget, Camera cam, Transform visualRoot, bool spriteDefaultFacesRight, HitBoxSlot[] hitBoxZones)
+        public void FaceTarget(Vector3 worldTarget, Camera cam, Transform visualRoot, bool spriteDefaultFacesRight, IActorFacingMirrorTarget[] facingMirrorTargets)
         {
             Vector3 toTarget = worldTarget - transform.position;
             toTarget.y = 0f;
@@ -125,8 +124,8 @@ public class EnemyMovementModule : MonoBehaviour
                     sr.flipX = spriteDefaultFacesRight ? !faceRight : faceRight;
             }
 
-            if (hitBoxZones != null)
-                foreach (var slot in hitBoxZones)
+            if (facingMirrorTargets != null)
+                foreach (var slot in facingMirrorTargets)
                     slot.MirrorToSide(transform, faceRight);
         }
     }

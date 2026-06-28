@@ -1,4 +1,4 @@
-using NeonBlack.Gameplay.Modules.Tabletop.Runtime;
+using NeonBlack.Gameplay.Data.Tabletop;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Modules.Tabletop

@@ -10,7 +10,7 @@ using NeonBlack.Gameplay.Editor;
 using NeonBlack.Gameplay.Editor.Inspectors;
 using NeonBlack.Gameplay.Modules.Character;
 using NeonBlack.Gameplay.Modules.Input;
-using NeonBlack.Gameplay.Modules.Pickups;
+using NeonBlack.Gameplay.Modules.Interaction;
 using NeonBlack.Gameplay.Glue.InputRouting;
 using NeonBlack.Gameplay.Glue.Spawning;
 using NeonBlack.Gameplay.Presentation.Camera;
@@ -283,7 +283,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(inferredEssentials, Does.Contain("Participant Spawn Service"));
             Assert.That(inferredEssentials, Does.Contain("Pawn Root"));
             Assert.That(inferredEssentials, Does.Contain("2 D  Motor  Input  Adapter"));
-            Assert.That(inferredEssentials, Does.Contain("Feature Module Definition"));
+            Assert.That(inferredEssentials, Does.Contain("Top Down Hop Component"));
 
             Assert.That(inferredEssentials, Does.Not.Contain("Networked Participant Spawn Service"));
             Assert.That(inferredEssentials, Does.Not.Contain("Networked Session State Service"));
@@ -411,7 +411,8 @@ namespace NeonBlack.Gameplay.Tests.Editor
                     && descriptor.SelectableIntent
                     && !string.IsNullOrWhiteSpace(descriptor.CapabilityPath)), Is.True);
             Assert.That(descriptors.Any(descriptor =>
-                descriptor.DisplayName.Contains("IFeatureModuleRuntime", System.StringComparison.Ordinal)), Is.False);
+                descriptor.DisplayName.Contains("IFeatureModuleRuntime", System.StringComparison.Ordinal)
+                || descriptor.DisplayName.Contains("IModuleCapabilityRuntime", System.StringComparison.Ordinal)), Is.False);
         }
 
         [Test]
@@ -638,39 +639,6 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(mapJson, Does.Contain("\"authoredParticipantCount\": 4"));
             Assert.That(mapJson, Does.Contain("\"desiredParticipantCount\": 2"));
             Assert.That(guideJson, Does.Contain("4 authored in SessionDefinition, 2 requested by Intent"));
-        }
-
-        [Test]
-        public void RuntimeValidation_SmokeRequiresAuthoredFeatureHostForEnabledPawnModules()
-        {
-            GameObject pawnPrefab = new GameObject("Pawn Prefab");
-            pawnPrefab.AddComponent<PawnRoot>();
-            pawnPrefab.AddComponent<SmokePawnMotor>();
-            pawnPrefab.AddComponent<SmokePawnInput>();
-            pawnPrefab.AddComponent<SmokePawnPresentation>();
-
-            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
-            ParticipantDefinition participant = ScriptableObject.CreateInstance<ParticipantDefinition>();
-            PawnDefinition pawn = ScriptableObject.CreateInstance<PawnDefinition>();
-            FeatureModuleDefinition module = ScriptableObject.CreateInstance<FeatureModuleDefinition>();
-
-            module.moduleId = "feature.test";
-            module.enabledByDefault = true;
-            pawn.pawnPrefab = pawnPrefab;
-            pawn.featureModules = new[] { module };
-            participant.defaultPawn = pawn;
-            session.defaultParticipants = new[] { participant };
-
-            IReadOnlyList<PyralisRuntimeValidationIssue> issues = pawn.GetRuntimeValidationIssues().ToArray();
-
-            Assert.That(issues.Any(issue =>
-                string.Equals(issue.IssueCode, "PawnDefinition.ActorFeatureHost.Missing", System.StringComparison.Ordinal)), Is.True);
-
-            Object.DestroyImmediate(module);
-            Object.DestroyImmediate(pawn);
-            Object.DestroyImmediate(participant);
-            Object.DestroyImmediate(session);
-            Object.DestroyImmediate(pawnPrefab);
         }
 
         [Test]
@@ -1915,7 +1883,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
         [Test]
         public void Guide_SmokeSelectedIntentProofTargetWinsOverPawnFallback()
         {
-            string actorFeatureHostId = "feature.NeonBlack.Gameplay.Modules.Actor.Composition.ActorFeatureHost";
+            string interactionBridgeId = "feature.NeonBlack.Gameplay.Modules.Character.ActorInteractionInputBridge2D";
             PyralisAuthoringIntentSelection intent = new PyralisAuthoringIntentSelection(
                 RuntimeCapabilityLaneTag.Sprite2D,
                 AuthoringCapability.Session
@@ -1926,7 +1894,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
                 AuthoringWorldAxiom.Dimensions2D
                 | AuthoringWorldAxiom.GravityNone
                 | AuthoringWorldAxiom.Realtime,
-                new[] { actorFeatureHostId },
+                new[] { interactionBridgeId },
                 PyralisIntentParticipantRoute.SoloLocal);
 
             PyralisAuthoringSetupGraph graph = PyralisAuthoringSetupGraphBuilder.Build(null, intent);
@@ -2027,7 +1995,7 @@ namespace NeonBlack.Gameplay.Tests.Editor
             Assert.That(traceJson, Does.Contain("Pawn2D Movement Component"));
             Assert.That(traceJson, Does.Not.Contain("Pawn3D Presentation Component"));
             Assert.That(traceJson, Does.Not.Contain("Enemy Spawner"));
-            Assert.That(traceJson, Does.Not.Contain("Enemy Reaction Feature Runtime"));
+            Assert.That(traceJson, Does.Not.Contain("Enemy Reaction Component"));
         }
 
         [Test]

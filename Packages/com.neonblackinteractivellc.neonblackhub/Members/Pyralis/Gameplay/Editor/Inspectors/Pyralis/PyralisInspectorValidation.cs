@@ -1,7 +1,6 @@
 using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
 using System.Text;
-using NeonBlack.Gameplay.Modules.Actor.Composition;
 using UnityEditor;
 
 namespace NeonBlack.Gameplay.Editor.Inspectors
@@ -101,47 +100,4 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
         }
     }
 
-    public static class ResolvedAuthoringContractInspectorText
-    {
-        public static string FeatureModuleSetup(IFeatureModuleRuntime runtime)
-        {
-            return FeatureModuleSetup(runtime != null ? runtime.ModuleId : null);
-        }
-
-        public static string FeatureModuleSetup(string moduleId)
-        {
-            NeonBlack.Gameplay.Core.Contracts.ResolvedAuthoringContract contract = NeonBlack.Gameplay.Core.Contracts.ResolvedAuthoringContractRegistry.FindByModuleId(moduleId);
-if (contract == null)
-                return string.IsNullOrWhiteSpace(moduleId)
-                    ? "Use a FeatureModuleDefinition whose module id matches this feature runtime."
-                    : "Use a FeatureModuleDefinition with module id `" + moduleId + "`.";
-
-            string profileName = RequiredProfileName(contract, null);
-            if (string.IsNullOrWhiteSpace(profileName))
-                return "Use a FeatureModuleDefinition with module id `" + contract.StableId + "`.";
-
-            return "Use a FeatureModuleDefinition with module id `" + contract.StableId + "` and a " + profileName + ".";
-        }
-
-        public static string RequiredProfileName(IFeatureModuleRuntime runtime, string fallback)
-        {
-            string moduleId = runtime != null ? runtime.ModuleId : null;
-            NeonBlack.Gameplay.Core.Contracts.ResolvedAuthoringContract contract = NeonBlack.Gameplay.Core.Contracts.ResolvedAuthoringContractRegistry.FindByModuleId(moduleId);
-return RequiredProfileName(contract, fallback);
-        }
-
-        public static string RequiredProfileName(string moduleId, string fallback)
-        {
-            NeonBlack.Gameplay.Core.Contracts.ResolvedAuthoringContract contract = NeonBlack.Gameplay.Core.Contracts.ResolvedAuthoringContractRegistry.FindByModuleId(moduleId);
-return RequiredProfileName(contract, fallback);
-        }
-
-        private static string RequiredProfileName(NeonBlack.Gameplay.Core.Contracts.ResolvedAuthoringContract contract, string fallback)
-        {
-            if (contract != null && contract.RequiredProfileType != null)
-                return contract.RequiredProfileType.Name;
-
-            return fallback ?? string.Empty;
-        }
-    }
 }

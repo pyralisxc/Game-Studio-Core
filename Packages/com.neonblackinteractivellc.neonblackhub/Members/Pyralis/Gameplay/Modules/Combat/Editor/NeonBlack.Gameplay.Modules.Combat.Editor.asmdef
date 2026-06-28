@@ -4,9 +4,7 @@
         "NeonBlack.Gameplay.Modules.Combat",
         "NeonBlack.Gameplay.Editor",
         "NeonBlack.Gameplay.Core",
-        "NeonBlack.Gameplay.Data",
-        "NeonBlack.Gameplay.Modules.Actor.Composition",
-        "NeonBlack.Gameplay.Presentation"
+        "NeonBlack.Gameplay.Data"
     ],
     "includePlatforms": [
         "Editor"
