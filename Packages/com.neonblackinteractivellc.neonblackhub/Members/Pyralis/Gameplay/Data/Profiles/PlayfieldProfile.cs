@@ -10,12 +10,19 @@ namespace NeonBlack.Gameplay.Data.Profiles
     /// Defines gameplay-space rules independent from camera framing.
     /// </summary>
     [AuthoringContract(
+        StableId = "playfield.profile",
         Category = "Movement, Setup",
         CapabilityPath = "Movement/Profiles/Playfield Profile",
         Surface = AuthoringSurface.Profile,
         Summary = "Project-window creation path for movement space, bounds, wrap, and arena-depth rules.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/core",
         RequiredFields = new[] { nameof(movementMode), nameof(minBounds), nameof(maxBounds) },
+        PrerequisiteStableIds = new[] { "mode.definition" },
+        RouteStage = "Game Mode Asset",
+        RouteOrder = 35,
+        SetupDomain = "Playfield",
+        ProofTarget = "PlayfieldProfile defines the active movement bounds for the mode.",
+        NativeActionKind = AuthoringActionKind.CreateAsset,
         SuccessChecks = new[] { "Verify that actors are clamped to the defined bounds in-game." },
         Tags = new[] { "capability:Movement", "capability:Setup", "runtime:CharacterPawnGameplay" },
         Selectable = false

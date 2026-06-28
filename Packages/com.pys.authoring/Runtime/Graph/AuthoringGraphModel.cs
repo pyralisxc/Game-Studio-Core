@@ -28,6 +28,7 @@ namespace Pys.Authoring.Contracts
         Implements,
         SerializedField,
         RequiredComponent,
+        ContractPrerequisite,
         ContractDeclares,
         ValidatorReports,
         SceneContains,

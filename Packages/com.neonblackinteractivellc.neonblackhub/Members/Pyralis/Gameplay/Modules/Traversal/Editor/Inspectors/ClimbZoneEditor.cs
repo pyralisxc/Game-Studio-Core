@@ -1,4 +1,3 @@
-using NeonBlack.Gameplay.Editor.Inspectors;
 using UnityEditor;
 using UnityEngine;
 
@@ -39,8 +38,6 @@ namespace NeonBlack.Gameplay.Modules.Traversal.Editor
         {
             EnsureStyles();
             serializedObject.Update();
-
-            PyralisInspectorHandoff.DrawAuthoringButton("Climb Zone", null);
 
             DrawDefaultInspector();
             DrawGrabDetectorSetup();

@@ -116,12 +116,19 @@ namespace NeonBlack.Gameplay.Data.Profiles
     /// Authoring profile for participant input ownership and preferred control schemes.
     /// </summary>
     [AuthoringContract(
+        StableId = "input.profile",
         Category = "Input",
         CapabilityPath = "Core Setup/Input/Participant Input Profile",
         Surface = AuthoringSurface.Profile,
         Summary = "Maps participant-owned gameplay actions (Move, Jump, Interact) to Unity Input System actions.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/input",
         RequiredFields = new[] { nameof(actions), nameof(actionBindings), nameof(primaryActionMap) },
+        PrerequisiteStableIds = new[] { "participant.default" },
+        RouteStage = "Participant Asset",
+        RouteOrder = 55,
+        SetupDomain = "Input",
+        ProofTarget = "InputProfile maps participant input into the selected control surface.",
+        NativeActionKind = AuthoringActionKind.CreateAsset,
         SetupSteps = new[] 
         { 
             "Create an InputProfile asset.",

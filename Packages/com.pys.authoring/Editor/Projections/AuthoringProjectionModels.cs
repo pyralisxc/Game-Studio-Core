@@ -33,6 +33,8 @@ namespace Pys.Authoring.Editor.Projections
         public string StableId;
         public string SourceType;
         public string SourcePath;
+        public string OrganizationPattern;
+        public int DependencyCount;
     }
 
     public sealed class FactsProjection
@@ -128,5 +130,9 @@ namespace Pys.Authoring.Editor.Projections
         public string NativeAction;
         public string SuccessCheck;
         public bool BlocksProof;
+        public string StableId;
+        public string RouteStage;
+        public int RouteOrder;
+        public string SetupDomain;
     }
 }

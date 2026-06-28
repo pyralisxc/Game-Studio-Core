@@ -19,12 +19,19 @@ namespace NeonBlack.Gameplay.Glue.InputRouting
     /// This keeps the session local-first while matching an N-participant model.
     /// </summary>
     [AuthoringContract(
+        StableId = "participant.input-router",
         Category = "Input, Setup",
         CapabilityPath = "Core Setup/Input/Participant Input Router",
         Surface = AuthoringSurface.RequiredSetup,
         Summary = "Routes physical input device events to the correct participant; participant definitions own the InputProfile that pawn and non-pawn control surfaces consume.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/input",
-        RequiredFields = new[] { nameof(sessionDefinition), nameof(rosterService), nameof(playerInputManager) },
+        RequiredFields = new[] { nameof(autoRegisterDefaultParticipantsWithoutPlayerInput) },
+        PrerequisiteStableIds = new[] { "participant.default", "input.profile" },
+        RouteStage = "Scene Services",
+        RouteOrder = 60,
+        SetupDomain = "Input",
+        ProofTarget = "Participant input routing registers the intended local participant before Play Mode proof.",
+        NativeActionKind = AuthoringActionKind.AddComponent,
         SetupSteps = new[] 
         { 
             "Add ParticipantInputRouter to the Gameplay Root or a Gameplay Root child.",

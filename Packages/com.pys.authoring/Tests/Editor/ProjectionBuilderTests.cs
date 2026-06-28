@@ -1,8 +1,11 @@
+using System.Collections.Generic;
+using System.Reflection;
 using NUnit.Framework;
 using Pys.Authoring.Contracts;
 using Pys.Authoring.Editor.Exports;
 using Pys.Authoring.Editor.Hygiene;
 using Pys.Authoring.Editor.Projections;
+using Pys.Authoring.Editor.Scanning;
 
 namespace Pys.Authoring.Editor.Tests
 {
@@ -63,6 +66,58 @@ namespace Pys.Authoring.Editor.Tests
         }
 
         [Test]
+        public void BuildIntent_ProjectsGoalPatternsInsteadOfSetupInventory()
+        {
+            AuthoringGraph graph = new AuthoringGraph();
+            AuthoringGraphNode session = Contract("contract:session", "Session", "setup.session", "Core", 10);
+            session.Metadata["selectable"] = "true";
+            session.Metadata["surface"] = AuthoringSurface.RequiredSetup.ToString();
+            AuthoringGraphNode input = Contract("contract:input", "Input", "setup.input", "Input", 20);
+            input.Metadata["selectable"] = "true";
+            input.Metadata["surface"] = AuthoringSurface.Profile.ToString();
+            input.Metadata["prerequisiteStableIds"] = "setup.session";
+            AuthoringGraphNode combat = Contract("contract:combat", "Combat", "proof.combat", "Combat", 30);
+            combat.Metadata["selectable"] = "true";
+            combat.Metadata["surface"] = AuthoringSurface.RuntimeComponent.ToString();
+            combat.Metadata["capabilityPath"] = "Combat/Proof";
+            combat.Metadata["prerequisiteStableIds"] = "setup.input";
+            combat.Metadata["proofTarget"] = "Combat proof";
+            graph.Nodes.Add(session);
+            graph.Nodes.Add(input);
+            graph.Nodes.Add(combat);
+
+            IntentProjection intent = AuthoringProjectionBuilder.BuildIntent(graph);
+
+            Assert.That(intent.Rows, Has.Count.EqualTo(1));
+            Assert.That(intent.Rows[0].ContractId, Is.EqualTo("contract:combat"));
+            Assert.That(intent.Rows[0].OrganizationPattern, Is.EqualTo("Proof target"));
+            Assert.That(intent.Rows[0].DependencyCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void BuildIntent_UsesRouteTerminalWhenNoExplicitGoalExists()
+        {
+            AuthoringGraph graph = new AuthoringGraph();
+            AuthoringGraphNode session = Contract("contract:session", "Session", "setup.session", "Core", 10);
+            session.Metadata["selectable"] = "true";
+            AuthoringGraphNode input = Contract("contract:input", "Input", "setup.input", "Input", 20);
+            input.Metadata["selectable"] = "true";
+            input.Metadata["prerequisiteStableIds"] = "setup.session";
+            AuthoringGraphNode assembled = Contract("contract:assembled", "Assembled Setup", "setup.assembled", "Proof", 30);
+            assembled.Metadata["selectable"] = "true";
+            assembled.Metadata["prerequisiteStableIds"] = "setup.input";
+            graph.Nodes.Add(session);
+            graph.Nodes.Add(input);
+            graph.Nodes.Add(assembled);
+
+            IntentProjection intent = AuthoringProjectionBuilder.BuildIntent(graph);
+
+            Assert.That(intent.Rows, Has.Count.EqualTo(1));
+            Assert.That(intent.Rows[0].ContractId, Is.EqualTo("contract:assembled"));
+            Assert.That(intent.Rows[0].OrganizationPattern, Is.EqualTo("Route terminal"));
+        }
+
+        [Test]
         public void BuildIntent_DoesNotMixDuplicateStableIdContracts()
         {
             AuthoringGraph graph = new AuthoringGraph();
@@ -102,16 +157,103 @@ namespace Pys.Authoring.Editor.Tests
         }
 
         [Test]
+        public void ReflectiveRuntimeValidationObserver_NormalizesDefaultRuntimeValidationMethod()
+        {
+            RuntimeValidationComponent component = new RuntimeValidationComponent();
+            List<AuthoringIssue> issues = new List<AuthoringIssue>();
+
+            ReflectiveRuntimeValidationObserver.AddValidationIssues(component, null, issues);
+
+            Assert.That(issues, Has.Count.EqualTo(1));
+            Assert.That(issues[0].IssueCode, Is.EqualTo("Runtime.Health.Missing"));
+            Assert.That(issues[0].Message, Is.EqualTo("Assign health profile."));
+            Assert.That(issues[0].Severity, Is.EqualTo(AuthoringIssueSeverity.Required));
+            Assert.That(issues[0].FieldPath, Is.EqualTo("healthProfile"));
+            Assert.That(issues[0].TargetLabel, Is.EqualTo("Enemy"));
+            Assert.That(issues[0].NativeAction, Is.EqualTo("Assign a health profile."));
+            Assert.That(issues[0].SuccessCheck, Is.EqualTo("Health profile is assigned."));
+            Assert.That(issues[0].ActionKind, Is.EqualTo(AuthoringActionKind.AssignField));
+            Assert.That(issues[0].OwnerStableId, Is.EqualTo("proof.enemy-health"));
+            Assert.That(issues[0].RelatedStableIds, Is.EqualTo(new[] { "setup.enemy" }));
+        }
+
+        [Test]
+        public void ReflectiveRuntimeValidationObserver_UsesConfiguredMethodNames()
+        {
+            UnityCodebaseScanRequest request = new UnityCodebaseScanRequest("Assets");
+            request.RuntimeValidationMethodNames.Clear();
+            request.RuntimeValidationMethodNames.Add("CollectSetupIssues");
+
+            IReadOnlyList<MethodInfo> methods = ReflectiveRuntimeValidationObserver.FindValidationMethods(typeof(ConfiguredValidationComponent), request.RuntimeValidationMethodNames);
+
+            Assert.That(methods, Has.Count.EqualTo(1));
+            Assert.That(methods[0].Name, Is.EqualTo("CollectSetupIssues"));
+        }
+
+        [Test]
+        public void DependencyGraphProjection_RecordsReflectiveValidationProviderEvidence()
+        {
+            UnityTypeObservation observation = new UnityTypeObservation(typeof(RuntimeValidationComponent), "Assets/RuntimeValidationComponent.cs");
+            observation.HasRuntimeValidationMethod = true;
+            observation.RuntimeValidationMethods.Add("GetRuntimeValidationIssues");
+
+            AuthoringGraph graph = DependencyGraphProjection.BuildTypeObservationGraph(new[] { observation });
+
+            AuthoringGraphNode validator = FindFirstNode(graph, AuthoringGraphNodeKind.Validator);
+            Assert.That(validator, Is.Not.Null);
+            Assert.That(validator.Metadata["validationSource"], Is.EqualTo("ReflectiveRuntimeValidation"));
+            Assert.That(validator.Metadata["methods"], Is.EqualTo("GetRuntimeValidationIssues"));
+        }
+
+        [Test]
+        public void ObservedValidationEvidence_FlowsThroughGuideOverviewFactsAndHygiene()
+        {
+            UnityCodebaseScanResult scanResult = new UnityCodebaseScanResult();
+            UnityTypeObservation typeObservation = new UnityTypeObservation(typeof(RuntimeValidationComponent), "Assets/RuntimeValidationComponent.cs");
+            typeObservation.HasRuntimeValidationMethod = true;
+            typeObservation.RuntimeValidationMethods.Add("GetRuntimeValidationIssues");
+            typeObservation.Contracts.Add(new ResolvedAuthoringContract("proof.enemy-health", typeof(RuntimeValidationComponent).FullName)
+            {
+                DisplayName = "Enemy Health Proof",
+                Surface = AuthoringSurface.Goal,
+                ProofTarget = "Enemy health proof",
+                Selectable = true
+            });
+            scanResult.Types.Add(typeObservation);
+
+            UnityObjectObservation sceneObject = new UnityObjectObservation("scene:Test:Enemy", "Enemy", "Assets/Test.unity", "GameObject");
+            ReflectiveRuntimeValidationObserver.AddValidationIssues(new RuntimeValidationComponent(), null, sceneObject.Issues);
+            ReflectiveRuntimeValidationObserver.AddValidationIssues(new IncompleteRuntimeValidationComponent(), null, sceneObject.Issues);
+            scanResult.SceneObjects.Add(sceneObject);
+
+            AuthoringGraph graph = DependencyGraphProjection.Build(scanResult);
+            GuideProjection guide = AuthoringProjectionBuilder.BuildGuide(graph, "contract:proof.enemy-health");
+            OverviewProjection overview = AuthoringProjectionBuilder.BuildOverview(graph, guide);
+            FactsProjection facts = AuthoringProjectionBuilder.BuildFacts(graph);
+            HygieneProjection hygiene = HygieneProjectionBuilder.Build(graph);
+
+            Assert.That(guide.Rows, Has.Some.Matches<GuideRow>(row => row.OwnerId.Contains("Runtime.Health.Missing")));
+            Assert.That(overview.NextAction, Is.EqualTo("Assign a health profile."));
+            Assert.That(facts.IssueCount, Is.EqualTo(2));
+            Assert.That(hygiene.Rows, Has.Some.Matches<HygieneRow>(row => row.IssueCode == "Validation.Metadata.Incomplete"));
+        }
+
+        [Test]
         public void BuildOverview_ReportsIssueAsNextAction()
         {
             AuthoringGraph graph = new AuthoringGraph();
+            AuthoringGraphNode contract = new AuthoringGraphNode("contract:test", "Test Contract", AuthoringGraphNodeKind.Contract);
+            contract.Metadata["stableId"] = "test";
+            graph.Nodes.Add(contract);
             AuthoringGraphNode issue = new AuthoringGraphNode("issue:test", "Fix Me", AuthoringGraphNodeKind.Issue);
             issue.Metadata["issueCode"] = "Example.Issue";
             issue.Metadata["nativeAction"] = "Inspect the object.";
             issue.Metadata["actionKind"] = AuthoringActionKind.InspectObject.ToString();
             graph.Nodes.Add(issue);
+            graph.Edges.Add(new AuthoringGraphEdge("contract:test", "issue:test", AuthoringGraphEdgeKind.ValidatorReports));
 
-            OverviewProjection overview = AuthoringProjectionBuilder.BuildOverview(graph);
+            GuideProjection guide = AuthoringProjectionBuilder.BuildGuide(graph, "contract:test");
+            OverviewProjection overview = AuthoringProjectionBuilder.BuildOverview(graph, guide);
 
             Assert.That(overview.IssueCount, Is.EqualTo(1));
             Assert.That(overview.NextAction, Is.EqualTo("Inspect the object."));
@@ -132,6 +274,83 @@ namespace Pys.Authoring.Editor.Tests
             Assert.That(overview.SelectedIntent, Is.EqualTo("Test Contract"));
             Assert.That(overview.NextAction, Is.EqualTo("Assign the data asset."));
             Assert.That(overview.Readiness, Is.EqualTo("Blocked"));
+        }
+
+        [Test]
+        public void BuildGuide_NoSelectedIntentReportsNoIntentSelected()
+        {
+            AuthoringGraph graph = new AuthoringGraph();
+            graph.Nodes.Add(new AuthoringGraphNode("contract:setup", "Setup", AuthoringGraphNodeKind.Contract));
+
+            GuideProjection guide = AuthoringProjectionBuilder.BuildGuide(graph);
+            OverviewProjection overview = AuthoringProjectionBuilder.BuildOverview(graph, guide);
+
+            Assert.That(guide.SelectedDisplayName, Is.EqualTo("No intent selected"));
+            Assert.That(guide.ProofReady, Is.False);
+            Assert.That(overview.SelectedIntent, Is.EqualTo("No intent selected"));
+            Assert.That(overview.Readiness, Is.EqualTo("No intent selected"));
+            Assert.That(overview.Reason, Is.EqualTo("No intent selected"));
+        }
+
+        [Test]
+        public void BuildGuide_OrdersSelectedContractDependencyClosure()
+        {
+            AuthoringGraph graph = new AuthoringGraph();
+            AuthoringGraphNode session = Contract("contract:session", "Session", "setup.session", "Core", 10);
+            session.Metadata["setupSteps"] = "Create session asset.";
+            AuthoringGraphNode input = Contract("contract:input", "Input", "setup.input", "Input", 20);
+            input.Metadata["prerequisiteStableIds"] = "setup.session";
+            input.Metadata["setupSteps"] = "Assign input profile.";
+            AuthoringGraphNode combat = Contract("contract:combat", "Combat", "proof.combat", "Combat", 30);
+            combat.Metadata["prerequisiteStableIds"] = "setup.input";
+            combat.Metadata["setupSteps"] = "Assign combat profile.";
+            combat.Metadata["proofTarget"] = "Combat proof";
+            combat.Metadata["successChecks"] = "Enter Play Mode.";
+            graph.Nodes.Add(combat);
+            graph.Nodes.Add(input);
+            graph.Nodes.Add(session);
+
+            GuideProjection guide = AuthoringProjectionBuilder.BuildGuide(graph, "contract:combat");
+
+            Assert.That(guide.ProofTarget, Is.EqualTo("Combat proof"));
+            Assert.That(guide.Rows[0].OwnerId, Is.EqualTo("contract:session"));
+            Assert.That(guide.Rows[0].RouteStage, Is.EqualTo("Core"));
+            Assert.That(guide.Rows[1].OwnerId, Is.EqualTo("contract:input"));
+            Assert.That(guide.Rows[2].OwnerId, Is.EqualTo("contract:combat"));
+            Assert.That(guide.Rows[3].Role, Is.EqualTo("ProofCheck"));
+        }
+
+        [Test]
+        public void BuildGuide_IncludesValidatorIssuesForSelectedDependencyClosureOnly()
+        {
+            AuthoringGraph graph = new AuthoringGraph();
+            AuthoringGraphNode selected = Contract("contract:combat", "Combat", "proof.combat", "Combat", 20);
+            selected.Metadata["prerequisiteStableIds"] = "setup.input";
+            AuthoringGraphNode dependency = Contract("contract:input", "Input", "setup.input", "Input", 10);
+            AuthoringGraphNode unrelated = Contract("contract:rpg", "RPG", "feature.rpg", "RPG", 10);
+            graph.Nodes.Add(selected);
+            graph.Nodes.Add(dependency);
+            graph.Nodes.Add(unrelated);
+
+            AuthoringGraphNode dependencyIssue = new AuthoringGraphNode("issue:input", "Assign input asset", AuthoringGraphNodeKind.Issue);
+            dependencyIssue.Metadata["issueCode"] = "Input.Missing";
+            dependencyIssue.Metadata["nativeAction"] = "Assign the input asset.";
+            dependencyIssue.Metadata["actionKind"] = AuthoringActionKind.AssignField.ToString();
+            graph.Nodes.Add(dependencyIssue);
+            graph.Edges.Add(new AuthoringGraphEdge("contract:input", "issue:input", AuthoringGraphEdgeKind.ValidatorReports));
+
+            AuthoringGraphNode unrelatedIssue = new AuthoringGraphNode("issue:rpg", "Assign RPG asset", AuthoringGraphNodeKind.Issue);
+            unrelatedIssue.Metadata["issueCode"] = "Rpg.Missing";
+            graph.Nodes.Add(unrelatedIssue);
+            graph.Edges.Add(new AuthoringGraphEdge("contract:rpg", "issue:rpg", AuthoringGraphEdgeKind.ValidatorReports));
+
+            GuideProjection guide = AuthoringProjectionBuilder.BuildGuide(graph, "contract:combat");
+            OverviewProjection overview = AuthoringProjectionBuilder.BuildOverview(graph, guide);
+
+            Assert.That(guide.Rows, Has.Some.Matches<GuideRow>(row => row.OwnerId == "issue:input"));
+            Assert.That(guide.Rows, Has.None.Matches<GuideRow>(row => row.OwnerId == "issue:rpg"));
+            Assert.That(overview.NextAction, Is.EqualTo("Assign the input asset."));
+            Assert.That(overview.Reason, Is.EqualTo("Input.Missing"));
         }
 
         [Test]
@@ -164,14 +383,18 @@ namespace Pys.Authoring.Editor.Tests
         public void BuildGuide_ProjectsActionKindAndLabel()
         {
             AuthoringGraph graph = new AuthoringGraph();
+            AuthoringGraphNode contract = new AuthoringGraphNode("contract:test", "Test Contract", AuthoringGraphNodeKind.Contract);
+            contract.Metadata["stableId"] = "test";
+            graph.Nodes.Add(contract);
             AuthoringGraphNode issue = new AuthoringGraphNode("issue:test", "Assign Thing", AuthoringGraphNodeKind.Issue);
             issue.Metadata["issueCode"] = "Example.Assign";
             issue.Metadata["nativeAction"] = "Assign a field.";
             issue.Metadata["successCheck"] = "Field is assigned.";
             issue.Metadata["actionKind"] = AuthoringActionKind.AssignField.ToString();
             graph.Nodes.Add(issue);
+            graph.Edges.Add(new AuthoringGraphEdge("contract:test", "issue:test", AuthoringGraphEdgeKind.ValidatorReports));
 
-            GuideProjection guide = AuthoringProjectionBuilder.BuildGuide(graph);
+            GuideProjection guide = AuthoringProjectionBuilder.BuildGuide(graph, "contract:test");
 
             Assert.That(guide.Rows, Has.Count.EqualTo(1));
             Assert.That(guide.Rows[0].ActionKind, Is.EqualTo("AssignField"));
@@ -404,6 +627,78 @@ namespace Pys.Authoring.Editor.Tests
             contract.Metadata["metadataGaps"] = "category";
             graph.Nodes.Add(contract);
             return graph;
+        }
+
+        private static AuthoringGraphNode FindFirstNode(AuthoringGraph graph, AuthoringGraphNodeKind kind)
+        {
+            for (int i = 0; i < graph.Nodes.Count; i++)
+            {
+                if (graph.Nodes[i].Kind == kind)
+                    return graph.Nodes[i];
+            }
+
+            return null;
+        }
+
+        private static AuthoringGraphNode Contract(string id, string label, string stableId, string routeStage, int routeOrder)
+        {
+            AuthoringGraphNode node = new AuthoringGraphNode(id, label, AuthoringGraphNodeKind.Contract);
+            node.Metadata["stableId"] = stableId;
+            node.Metadata["routeStage"] = routeStage;
+            node.Metadata["routeOrder"] = routeOrder.ToString();
+            node.Metadata["setupDomain"] = routeStage;
+            node.Metadata["actionKind"] = AuthoringActionKind.InspectObject.ToString();
+            return node;
+        }
+
+        private sealed class RuntimeValidationComponent
+        {
+            public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
+            {
+                yield return new RuntimeValidationIssue();
+            }
+        }
+
+        private sealed class ConfiguredValidationComponent
+        {
+            public IEnumerable<RuntimeValidationIssue> CollectSetupIssues()
+            {
+                yield return new RuntimeValidationIssue();
+            }
+
+            public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
+            {
+                yield return new RuntimeValidationIssue();
+            }
+        }
+
+        private sealed class IncompleteRuntimeValidationComponent
+        {
+            public IEnumerable<IncompleteRuntimeValidationIssue> GetRuntimeValidationIssues()
+            {
+                yield return new IncompleteRuntimeValidationIssue();
+            }
+        }
+
+        private sealed class RuntimeValidationIssue
+        {
+            public string IssueCode { get; } = "Runtime.Health.Missing";
+            public string Message { get; } = "Assign health profile.";
+            public string Severity { get; } = "Required";
+            public string FieldPath { get; } = "healthProfile";
+            public string TargetLabel { get; } = "Enemy";
+            public string NativeAction { get; } = "Assign a health profile.";
+            public string SuccessCheck { get; } = "Health profile is assigned.";
+            public string ActionKind { get; } = "AssignField";
+            public string OwnerStableId { get; } = "proof.enemy-health";
+            public string[] RelatedStableIds { get; } = { "setup.enemy" };
+        }
+
+        private sealed class IncompleteRuntimeValidationIssue
+        {
+            public string IssueCode { get; } = "Runtime.Metadata.Incomplete";
+            public string Message { get; } = "Validation metadata is incomplete.";
+            public string NativeAction { get; } = "Inspect validation metadata.";
         }
     }
 }

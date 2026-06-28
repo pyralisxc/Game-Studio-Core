@@ -1,33 +1,34 @@
 using System;
 using System.Collections.Generic;
+using NeonBlack.Gameplay.Core.Actions;
 using NeonBlack.Gameplay.Core.Contracts;
 using Pys.Authoring.Contracts;
 
-namespace NeonBlack.Gameplay.Core.Actions
+namespace NeonBlack.Gameplay.Modules.Tabletop.Runtime
 {
     /// <summary>
-    /// In-memory FIFO action queue for rules-driven and menu-driven gameplay.
+    /// Tabletop-owned in-memory FIFO action queue for rules-driven board actions.
     /// </summary>
     [AuthoringContract(
-        Category = "Session",
-        CapabilityPath = "Core Setup/Actions/Action Queue Service",
+        Category = "Tabletop",
+        CapabilityPath = "Tabletop/Actions/Tabletop Action Queue Service",
         Surface = AuthoringSurface.Service,
-        Summary = "Processes action execution requests and resolves them via registered resolvers.",
+        Summary = "Processes tabletop action execution requests and resolves them via registered tabletop resolvers.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/actions",
         RequiredFields = new[] { nameof(_pendingActions), nameof(_resolvers) },
         RequiredInterfaces = new[] { typeof(IActionQueueService) },
-        SetupSteps = new[] { "Add ActionQueueService to the session dependency container.", "Register one or more IActionResolver implementations." },
+        SetupSteps = new[] { "Create TabletopActionQueueService when the tabletop board presenter builds runtime state.", "Register one or more tabletop IActionResolver implementations." },
         SuccessChecks = new[] { "PendingCount increments when an action is successfully enqueued." },
-        Tags = new[] { "capability:Session", "axiom:TurnBased", "axiom:Realtime" },
+        Tags = new[] { "capability:Tabletop", "axiom:TurnBased" },
         Selectable = false
     )]
-    public sealed class ActionQueueService : IActionQueueService
+    public sealed class TabletopActionQueueService : IActionQueueService
     {
         private readonly List<QueuedAction> _pendingActions;
         private readonly List<IActionResolver> _resolvers;
         private long _nextSequenceId;
 
-        public ActionQueueService(IEnumerable<IActionResolver> resolvers = null)
+        public TabletopActionQueueService(IEnumerable<IActionResolver> resolvers = null)
         {
             _pendingActions = new List<QueuedAction>();
             _resolvers = new List<IActionResolver>();

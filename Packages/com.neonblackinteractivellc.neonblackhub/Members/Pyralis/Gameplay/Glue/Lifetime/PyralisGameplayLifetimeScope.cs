@@ -32,11 +32,17 @@ namespace NeonBlack.Gameplay.Glue.Lifetime
     [AddComponentMenu("NeonBlack/Gameplay/Setup/Pyralis Gameplay Lifetime Scope")]
     [DisallowMultipleComponent]
     [AuthoringContract(
+        StableId = "lifetime.scope",
         Category = "Setup",
         CapabilityPath = "Core Setup/Composition/Pyralis Gameplay Lifetime Scope",
         Surface = AuthoringSurface.Goal,
         Summary = "Inspector Add Component path for the visible Pyralis runtime composition scope.",
         RequiredFields = new[] { nameof(InjectLoadedScenesOnBuild) },
+        RouteStage = "Scene Root",
+        RouteOrder = 5,
+        SetupDomain = "Composition",
+        ProofTarget = "Visible runtime composition scope exists on the gameplay root.",
+        NativeActionKind = AuthoringActionKind.AddComponent,
         SetupSteps = new[] { "Configure VContainer Resolver" },
         SuccessChecks = new[] { "Check the VContainer debugger to ensure all gameplay services are correctly registered in the scope." },
         RoleTags = new[] { "IntentRouteEssential", "CoreRouteAnchor" },

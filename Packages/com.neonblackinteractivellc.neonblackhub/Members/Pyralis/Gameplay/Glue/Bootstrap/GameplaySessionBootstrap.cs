@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Glue.Participants;
 using NeonBlack.Gameplay.Glue.Spawning;
@@ -29,7 +30,13 @@ namespace NeonBlack.Gameplay.Glue.Bootstrap
         Surface = AuthoringSurface.Goal,
         Summary = "Primary entry point for gameplay sessions; wires the authored session, visible runtime services, input join, and camera setup.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/bootstrap",
-        RequiredFields = new[] { nameof(sessionDefinition), nameof(cameraRigController), nameof(playerInputManager) },
+        RequiredFields = new[] { nameof(sessionDefinition) },
+        PrerequisiteStableIds = new[] { "lifetime.scope" },
+        RouteStage = "Scene Root",
+        RouteOrder = 10,
+        SetupDomain = "Session",
+        ProofTarget = "Gameplay session starts from the authored scene root.",
+        NativeActionKind = AuthoringActionKind.AddComponent,
         SetupSteps = new[]
         {
             "Add GameplaySessionBootstrap to the first scene of your game.",
@@ -44,8 +51,33 @@ namespace NeonBlack.Gameplay.Glue.Bootstrap
     [AddComponentMenu("NeonBlack/Gameplay/Setup/Gameplay Session Bootstrap")]
     [DefaultExecutionOrder(-1100)]
     [RequireComponent(typeof(PyralisGameplayLifetimeScope))]
-    public class GameplaySessionBootstrap : MonoBehaviour
+    public class GameplaySessionBootstrap : MonoBehaviour, IRuntimeValidationProvider
     {
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        {
+            if (sessionDefinition == null)
+            {
+                yield return PyralisRuntimeValidationIssue.Required(
+                    "Session Definition is unassigned.",
+                    nameof(sessionDefinition),
+                    nameof(GameplaySessionBootstrap),
+                    "Assign the SessionDefinition asset on GameplaySessionBootstrap.",
+                    "GameplaySessionBootstrap references the session asset before Play Mode.",
+                    "GameplaySessionBootstrap.SessionDefinition.Missing");
+            }
+
+            if (cameraRigController == null)
+            {
+                yield return PyralisRuntimeValidationIssue.Recommended(
+                    "Camera Rig Controller is unassigned. This is fine for non-camera proofs, but pawn proofs should author camera focus.",
+                    nameof(cameraRigController),
+                    nameof(GameplaySessionBootstrap),
+                    "Assign the scene CinemachineCameraRigController when the selected route needs camera follow.",
+                    "GameplaySessionBootstrap can hand the participant roster and game mode to the camera rig.",
+                    "GameplaySessionBootstrap.CameraRig.Optional");
+            }
+        }
+
         [Header("Session")]
         [SerializeField] private SessionDefinition sessionDefinition;
         [Header("Behavior")]

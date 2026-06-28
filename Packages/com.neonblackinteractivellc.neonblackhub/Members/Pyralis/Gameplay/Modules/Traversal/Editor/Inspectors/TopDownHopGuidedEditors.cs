@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Editor.Inspectors;
+using NeonBlack.Gameplay.Data.Profiles;
 using UnityEditor;
 using UnityEngine;
 
@@ -12,8 +12,6 @@ namespace NeonBlack.Gameplay.Modules.Traversal.Editor
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
-
-            PyralisInspectorHandoff.DrawAuthoringButton("Top Down Hop Profile", null);
 
             DrawDefaultInspector();
             PyralisInspectorValidation.DrawValidationIssues(GetIssues((TopDownHopProfile)target), "Top-down hop profile is ready for direct TopDownHopComponent assignment.");
@@ -41,8 +39,6 @@ namespace NeonBlack.Gameplay.Modules.Traversal.Editor
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
-
-            PyralisInspectorHandoff.DrawAuthoringButton("Top Down Hop Component", null);
 
             DrawDefaultInspector();
             PyralisInspectorValidation.DrawValidationMessages(GetMessages(serializedObject), "Top-down hop runtime is ready for direct pawn component setup.");

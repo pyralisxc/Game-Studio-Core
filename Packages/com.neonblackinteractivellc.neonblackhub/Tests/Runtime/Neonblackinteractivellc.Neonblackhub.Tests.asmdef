@@ -5,16 +5,10 @@
                        "NeonBlack.Gameplay",
                        "NeonBlack.Gameplay.Core",
                        "NeonBlack.Gameplay.Data",
-                       "NeonBlack.Gameplay.Presentation",
                        "NeonBlack.Gameplay.Modules.Combat",
-                       "NeonBlack.Gameplay.Modules.Feedback",
                        "NeonBlack.Gameplay.Modules.Input",
                        "NeonBlack.Gameplay.Modules.Interaction",
-                       "NeonBlack.Gameplay.Modules.Traversal",
-                       "NeonBlack.Gameplay.Networking",
-                       "Unity.Netcode.Runtime",
-                       "Unity.InputSystem",
-                       "VContainer"
+                       "Unity.InputSystem"
                    ],
     "optionalUnityReferences":  [
                                     "TestAssemblies"

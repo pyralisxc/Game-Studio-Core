@@ -43,7 +43,7 @@ namespace NeonBlack.Gameplay.Modules.Tabletop
         private readonly List<TabletopBoardPieceView> _pieceViews = new List<TabletopBoardPieceView>();
         private BoardRuntimeState _boardState;
         private TurnRuntimeState _turnState;
-        private ActionQueueService _actionQueue;
+        private TabletopActionQueueService _actionQueue;
 
         public IReadOnlyList<TabletopBoardSpaceView> SpaceViews => _spaceViews;
         public IReadOnlyList<TabletopBoardPieceView> PieceViews => _pieceViews;
@@ -167,7 +167,7 @@ namespace NeonBlack.Gameplay.Modules.Tabletop
             }
 
             BoardMoveActionResolver resolver = new BoardMoveActionResolver(_boardState, _turnState, movePolicy);
-            _actionQueue = new ActionQueueService(new IActionResolver[] { resolver });
+            _actionQueue = new TabletopActionQueueService(new IActionResolver[] { resolver });
             if (!TryResolveSelectionBridge(out issue))
                 return false;
 

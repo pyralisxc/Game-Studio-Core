@@ -19,9 +19,7 @@
     "Unity.InputSystem",
     "Unity.Cinemachine",
     "UnityEngine.UI",
-    "VContainer",
-    "Pys.Authoring.Contracts",
-    "Pys.Authoring.Editor"
+    "VContainer"
   ],
   "includePlatforms": [
     "Editor"

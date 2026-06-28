@@ -8,7 +8,6 @@ using Pys.Authoring.Contracts;
 namespace NeonBlack.Gameplay.Modules.Combat
 {
     [AuthoringContract(
-        StableId = "combat.projectile-launcher.base",
         Category = "Ranged Flow",
         CapabilityPath = "Combat/Projectiles/Projectile Launcher Base",
         Surface = AuthoringSurface.Goal,

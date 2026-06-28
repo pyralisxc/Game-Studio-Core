@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Editor.Inspectors;
+using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Modules.Enemies;
 using UnityEditor;
 using UnityEngine;
@@ -13,8 +13,6 @@ namespace NeonBlack.Gameplay.Modules.Enemies.Editor
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
-
-            PyralisInspectorHandoff.DrawAuthoringButton("Enemy Ambient Component", null);
 
             DrawDefaultInspector();
             PyralisInspectorValidation.DrawValidationMessages(GetProfileMessages(serializedObject, "ambientProfile", "EnemyAmbientProfile"), "EnemyAmbientComponent is ready for direct enemy ambient setup.");
@@ -38,8 +36,6 @@ namespace NeonBlack.Gameplay.Modules.Enemies.Editor
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
-
-            PyralisInspectorHandoff.DrawAuthoringButton("Enemy Reaction Component", null);
 
             DrawDefaultInspector();
             PyralisInspectorValidation.DrawValidationMessages(GetProfileMessages(serializedObject), "EnemyReactionComponent is ready for direct enemy reaction setup.");

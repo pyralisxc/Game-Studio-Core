@@ -14,8 +14,6 @@ namespace NeonBlack.Gameplay.Modules.Hazards.Editor
         {
             serializedObject.Update();
 
-            PyralisInspectorHandoff.DrawAuthoringButton("Hazard Feedback Runtime", null);
-
             DrawDefaultInspector();
             PyralisInspectorValidation.DrawValidationMessages(GetHazardFeedbackMessages(serializedObject), "HazardFeedbackRuntime is ready for hazard feedback profiles.");
             serializedObject.ApplyModifiedProperties();
@@ -44,8 +42,6 @@ namespace NeonBlack.Gameplay.Modules.Hazards.Editor
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
-
-            PyralisInspectorHandoff.DrawAuthoringButton("Damage Zone 2D", null);
 
             DrawDefaultInspector();
             PyralisInspectorValidation.DrawValidationMessages(GetDamageZoneMessages(serializedObject, (DamageZone2D)target), "DamageZone2D is ready for 2D hazard damage routing.");

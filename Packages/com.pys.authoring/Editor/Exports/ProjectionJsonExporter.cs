@@ -119,6 +119,8 @@ namespace Pys.Authoring.Editor.Exports
             public string stableId;
             public string sourceType;
             public string sourcePath;
+            public string organizationPattern;
+            public int dependencyCount;
 
             public static IntentRowDto FromRow(IntentRow row)
             {
@@ -134,7 +136,9 @@ namespace Pys.Authoring.Editor.Exports
                     disabledReason = row != null ? row.DisabledReason : string.Empty,
                     stableId = row != null ? row.StableId : string.Empty,
                     sourceType = row != null ? row.SourceType : string.Empty,
-                    sourcePath = row != null ? row.SourcePath : string.Empty
+                    sourcePath = row != null ? row.SourcePath : string.Empty,
+                    organizationPattern = row != null ? row.OrganizationPattern : string.Empty,
+                    dependencyCount = row != null ? row.DependencyCount : 0
                 };
             }
         }
@@ -322,6 +326,10 @@ namespace Pys.Authoring.Editor.Exports
             public string nativeAction;
             public string successCheck;
             public bool blocksProof;
+            public string stableId;
+            public string routeStage;
+            public int routeOrder;
+            public string setupDomain;
 
             public static GuideRowDto FromRow(GuideRow row)
             {
@@ -336,7 +344,11 @@ namespace Pys.Authoring.Editor.Exports
                     actionLabel = row != null ? row.ActionLabel : string.Empty,
                     nativeAction = row != null ? row.NativeAction : string.Empty,
                     successCheck = row != null ? row.SuccessCheck : string.Empty,
-                    blocksProof = row != null && row.BlocksProof
+                    blocksProof = row != null && row.BlocksProof,
+                    stableId = row != null ? row.StableId : string.Empty,
+                    routeStage = row != null ? row.RouteStage : string.Empty,
+                    routeOrder = row != null ? row.RouteOrder : 0,
+                    setupDomain = row != null ? row.SetupDomain : string.Empty
                 };
             }
         }

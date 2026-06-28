@@ -1,4 +1,3 @@
-using NeonBlack.Gameplay.Editor.Inspectors;
 using NeonBlack.Gameplay.Modules.Tabletop;
 using UnityEditor;
 
@@ -10,8 +9,6 @@ namespace NeonBlack.Gameplay.Editor
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
-
-            PyralisInspectorHandoff.DrawAuthoringButton("Tabletop Turn Status Presenter", null);
 
             DrawDefaultInspector();
             serializedObject.ApplyModifiedProperties();

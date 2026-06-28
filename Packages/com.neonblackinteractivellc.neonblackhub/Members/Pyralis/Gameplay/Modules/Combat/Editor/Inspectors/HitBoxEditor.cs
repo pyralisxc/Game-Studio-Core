@@ -1,4 +1,3 @@
-using NeonBlack.Gameplay.Editor.Inspectors;
 using NeonBlack.Gameplay.Data.Definitions.Combat;
 using NeonBlack.Gameplay.Modules.Combat;
 using UnityEditor;
@@ -39,8 +38,6 @@ public class HitBoxEditor : Editor
     public override void OnInspectorGUI()
     {
         serializedObject.Update();
-
-        PyralisInspectorHandoff.DrawAuthoringButton("HitBox", null);
 
         EditorGUILayout.LabelField("Owner", EditorStyles.boldLabel);
         EditorGUILayout.PropertyField(_owner);

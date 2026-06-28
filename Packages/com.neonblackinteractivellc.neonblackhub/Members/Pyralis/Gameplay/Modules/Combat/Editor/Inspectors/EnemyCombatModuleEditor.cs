@@ -1,4 +1,3 @@
-using NeonBlack.Gameplay.Editor.Inspectors;
 using UnityEditor;
 using UnityEngine;
 
@@ -41,10 +40,6 @@ namespace NeonBlack.Gameplay.Modules.Combat.Editor
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
-
-            PyralisInspectorHandoff.DrawAuthoringButton(
-                "Enemy Combat Module",
-                "Edit enemy attack sequencing and hitbox setup here. EnemyAI owns detection, movement, patrol, and target selection.");
 
             EditorGUILayout.LabelField("Combat Profile", EditorStyles.boldLabel);
             EditorGUILayout.PropertyField(_combatProfile);

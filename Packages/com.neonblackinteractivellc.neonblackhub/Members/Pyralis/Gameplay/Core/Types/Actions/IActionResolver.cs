@@ -8,7 +8,7 @@ namespace NeonBlack.Gameplay.Core.Actions
         Surface = AuthoringSurface.Goal,
         Summary = "Resolves gameplay actions like movement, attacks, or logic triggers.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/action-resolvers",
-        SetupSteps = new[] { "Implement IActionResolver in a new class.", "Register the implementation with the ActionQueueService." },
+        SetupSteps = new[] { "Implement IActionResolver in a new class.", "Register the implementation with an IActionQueueService owner." },
         SuccessChecks = new[] { "Check if CanResolve returns true for its intended ActionId." },
         Tags = new[] { "capability:Session" }
     )]

@@ -9,9 +9,12 @@ namespace Pys.Authoring.Editor.Scanning
         public UnityCodebaseScanRequest(string scriptsRoot)
         {
             ScriptsRoot = scriptsRoot ?? "Assets";
+            RuntimeValidationMethodNames = new List<string> { "GetRuntimeValidationIssues" };
         }
 
         public string ScriptsRoot { get; }
+
+        public List<string> RuntimeValidationMethodNames { get; }
     }
 
     public sealed class UnityTypeObservation
@@ -47,7 +50,9 @@ namespace Pys.Authoring.Editor.Scanning
 
         public List<ResolvedAuthoringContract> Contracts { get; }
 
-        public bool ImplementsAuthoringValidationProvider { get; set; }
+        public bool HasRuntimeValidationMethod { get; set; }
+
+        public List<string> RuntimeValidationMethods { get; } = new List<string>();
     }
 
     public sealed class AssemblyDefinitionObservation

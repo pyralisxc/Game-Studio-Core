@@ -12,7 +12,7 @@ namespace Pys.Authoring.Editor.Scanning
             result.Types.AddRange(UnityTypeScanner.Scan(request));
             result.AssemblyDefinitions.AddRange(SourceDependencyScanner.ScanAssemblyDefinitions(request));
             result.SourceDependencies.AddRange(SourceDependencyScanner.ScanSourceDependencies(request));
-            result.SceneObjects.AddRange(UnityObjectScanner.ScanActiveSceneObjects());
+            result.SceneObjects.AddRange(UnityObjectScanner.ScanActiveSceneObjects(request));
             result.Prefabs.AddRange(UnityObjectScanner.ScanPrefabs(request));
             result.Assets.AddRange(UnityAssetScanner.ScanAssets(request));
             return result;

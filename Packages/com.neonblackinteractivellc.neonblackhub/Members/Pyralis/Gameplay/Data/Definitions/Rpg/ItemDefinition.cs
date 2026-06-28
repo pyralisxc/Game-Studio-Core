@@ -7,7 +7,6 @@ using Pys.Authoring.Contracts;
 namespace NeonBlack.Gameplay.Data.Definitions.Rpg
 {
     [AuthoringContract(
-        StableId = "feature.rpg.item",
         Category = "Inventory",
         CapabilityPath = "RPG/Inventory/Definitions/Item Definition",
         Surface = AuthoringSurface.Goal,
