@@ -3,18 +3,20 @@ using NeonBlack.Gameplay.Data.Definitions.Combat;
 using System;
 using NeonBlack.Gameplay.Core.Actions;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Combat
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.RangedFlow,
-        Relevance = "Logic for planning projectile trajectories based on fire modes and spread rules.",
-        AssignmentFields = new[] { nameof(ProjectileFireRequest.Projectile), nameof(ProjectileFireRequest.FireMode), nameof(ProjectileFireRequest.Origin), nameof(ProjectileFireRequest.Direction) },
-        ExpertAdvice = "This class produces ProjectileSpawnCommands but does not execute them. Use it in conjunction with a Launcher to decouple firing logic from physical spawning.",
-        Proof = "Fire mode settings produce the expected projectile command pattern.",
-        ProofTargetId = "proof.custom-object-effect",
-        NativeSetup = new[] { "Ensure FireModeDefinition spread values are configured.", "Call BuildCommands from weapon or action logic." },
-        DocumentationURL = "https://docs.neonblack.com/pyralis/combat/projectiles"
+        StableId = "proof.custom-object-effect",
+        Category = "Ranged Flow",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Logic for planning projectile trajectories based on fire modes and spread rules.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/combat/projectiles",
+        RequiredFields = new[] { nameof(ProjectileFireRequest.Projectile), nameof(ProjectileFireRequest.FireMode), nameof(ProjectileFireRequest.Origin), nameof(ProjectileFireRequest.Direction) },
+        SetupSteps = new[] { "Ensure FireModeDefinition spread values are configured.", "Call BuildCommands from weapon or action logic." },
+        SuccessChecks = new[] { "Fire mode settings produce the expected projectile command pattern." },
+        Tags = new[] { "capability:RangedFlow" }
     )]
     public static class ProjectileFirePlanner
     {

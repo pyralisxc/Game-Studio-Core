@@ -8,17 +8,18 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Rpg.UI
 {
     [AuthoringContract(
-        ModuleId = "rpg.vendor.ui",
-        Capability = AuthoringCapability.Inventory,
-        Lane = "RPG",
-        RequiredComponentNames = new[] { "TMPro.TextMeshProUGUI" },
-        Proof = "Verify that the vendor panel displays offers and correctly calculates total prices.",
+        StableId = "feature.rpg.vendor.ui",
+        Category = "Inventory",
         CapabilityPath = "RPG/Vendors/UI/Vendor Panel Presenter",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
+        Surface = AuthoringSurface.Goal,
+        RequiredComponentNames = new[] { "TMPro.TextMeshProUGUI" },
+        SuccessChecks = new[] { "Verify that the vendor panel displays offers and correctly calculates total prices." },
+        Tags = new[] { "capability:Inventory", "runtime:CharacterPawnGameplay", "lane:RPG" }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/RPG/UI/RPG Vendor Panel Presenter")]
     public sealed class RpgVendorPanelPresenter : MonoBehaviour, IRuntimeValidationProvider

@@ -4,6 +4,7 @@ using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Glue.SceneFlow.Navigation
 {
@@ -11,22 +12,22 @@ namespace NeonBlack.Gameplay.Glue.SceneFlow.Navigation
     /// Scene navigation service that handles transitions with a generated fade canvas.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Setup,
-        Relevance = "Simple ISceneNavigator implementation that fades with a generated runtime canvas. Use SceneFader for menu/game-shell flows that need loading-screen routing.",
-        Axioms = AuthoringWorldAxiom.None,
+        Category = "Setup",
+        CapabilityPath = "Core Setup/Navigation/Scene Loader",
+        Surface = AuthoringSurface.Service,
+        Summary = "Simple ISceneNavigator implementation that fades with a generated runtime canvas. Use SceneFader for menu/game-shell flows that need loading-screen routing.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/navigation",
+        RequiredFields = new[] { nameof(fadeDuration) },
         RequiredInterfaces = new[] { typeof(ISceneNavigator) },
-        NativeSetup = new[] 
+        SetupSteps = new[] 
         { 
             "Add to a Bootstrap child GameObject or assign to GameplaySessionBootstrap.",
             "Configure Fade Duration.",
             "Prefer one navigation owner per menu flow. SceneFader is the current game-shell route; SceneLoader remains a lightweight generated-canvas fallback."
         },
-        AssignmentFields = new[] { nameof(fadeDuration) },
-        Proof = "Transitioning between scenes triggers a smooth fade out and fade in.",
-        ExpertAdvice = "Inject ISceneNavigator to trigger transitions. Keep Fade Duration non-negative; zero gives an instant cut with the generated fade canvas. Do not place SceneLoader and SceneFader in the same scene unless one is intentionally unused.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/navigation",
-        CapabilityPath = "Core Setup/Navigation/Scene Loader",
-        Surface = AuthoringContractSurface.Service
+        SuccessChecks = new[] { "Transitioning between scenes triggers a smooth fade out and fade in." },
+        Tags = new[] { "capability:Setup" },
+        Selectable = false
     )]
     public class SceneLoader : MonoBehaviour, ISceneNavigator
     {

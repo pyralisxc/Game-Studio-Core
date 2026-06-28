@@ -3,6 +3,7 @@ using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Types.Animation;
 using NeonBlack.Gameplay.Presentation.Animation;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Traversal
 {
@@ -12,36 +13,27 @@ namespace NeonBlack.Gameplay.Modules.Traversal
     /// </summary>
     [AddComponentMenu("NeonBlack/Gameplay/Traversal/Top Down Hop Component")]
     [AuthoringContract(
-        ModuleId = "actor.traversal.topdown-hop",
-        Capability = AuthoringCapability.Movement | AuthoringCapability.Traversal,
+        StableId = "feature.actor.traversal.topdown-hop",
+        Category = "Movement, Traversal",
         CapabilityPath = "Movement/Traversal/FakeGravityJump",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay },
-        Surface = AuthoringContractSurface.GameplayIngredient,
-        Axioms = AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone | AuthoringWorldAxiom.Realtime,
-        Relevance = "Enables fake-gravity jump actions where a Sprite2D or billboard actor arcs visually while maintaining map-plane position.",
-        Lane = "Traversal",
-        ProfileType = typeof(TopDownHopProfile),
+        Surface = AuthoringSurface.Goal,
+        Summary = "Enables fake-gravity jump actions where a Sprite2D or billboard actor arcs visually while maintaining map-plane position.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/traversal",
+        RequiredFields = new[]
+        {
+            "TopDownHopComponent.hopProfile",
+            "InputProfile.gameplayActions"
+        },
         RequiredInterfaces = new[] { typeof(IActorGameplayActionReceiver) },
-        SupportedLanes = new[] { ActorPresentationMode.Sprite2D, ActorPresentationMode.Billboard2_5D },
-        UnsupportedLanes = new[] { ActorPresentationMode.ThirdPerson3D },
-        UnsupportedLaneMessage = "Rigged3D actors should use the 3D traversal jump path instead of the top-down visual-hop module.",
-        ConsumedRoles = new[] { "Jump" },
-        RoleTags = new[] { "VisualHop", "FakeGravityJump", "JumpConsumer" },
-        NativeSetup = new[]
+        SetupSteps = new[]
         {
             "add TopDownHopComponent to the pawn root",
             "assign TopDownHopProfile",
             "bind Jump in InputProfile"
         },
-        Proof = "Press the Jump key and verify the actor performs a visual hop animation.",
-        ProofTargetId = "proof.1p-pawn-movement",
-        AssignmentFields = new[]
-        {
-            "TopDownHopComponent.hopProfile",
-            "InputProfile.gameplayActions"
-        },
-        ExpertAdvice = "A purely visual traversal module. It does not change the physical collider position, making it perfect for Tilemap-based games where depth jitter must be avoided.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/traversal"
+        SuccessChecks = new[] { "Press the Jump key and verify the actor performs a visual hop animation." },
+        RoleTags = new[] { "VisualHop", "FakeGravityJump", "JumpConsumer" },
+        Tags = new[] { "capability:Movement", "capability:Traversal", "runtime:CharacterPawnGameplay", "axiom:Dimensions2D", "axiom:GravityNone", "axiom:Realtime", "lane:Traversal" }
     )]
 public sealed class TopDownHopComponent : MonoBehaviour, IActorGameplayActionReceiver
 {

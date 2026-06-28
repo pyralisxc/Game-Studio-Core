@@ -4,19 +4,21 @@ using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Types.Animation;
 using System.Collections.Generic;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Profiles
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat,
-        Relevance = "The central configuration for an enemy; binds combat and reaction profiles together.",
-        NativeSetup = new[] { "Assign Combat and Reaction profiles.", "Add optional enemy module components directly to the enemy prefab." },
-        AssignmentFields = new[] { nameof(combatProfile), nameof(reactionProfile) },
-        Proof = "Confirm the enemy uses all assigned profiles in its runtime behavior.",
-        ExpertAdvice = "Use modular profiles to share behaviors across multiple enemy types while keeping the root profile unique per archetype.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/enemies",
+        Category = "Combat",
         CapabilityPath = "Combat/Actions/Enemy Profile",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.Combat }
+        Surface = AuthoringSurface.Profile,
+        Summary = "The central configuration for an enemy; binds combat and reaction profiles together.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/enemies",
+        RequiredFields = new[] { nameof(combatProfile), nameof(reactionProfile) },
+        SetupSteps = new[] { "Assign Combat and Reaction profiles.", "Add optional enemy module components directly to the enemy prefab." },
+        SuccessChecks = new[] { "Confirm the enemy uses all assigned profiles in its runtime behavior." },
+        Tags = new[] { "capability:Combat", "runtime:Combat" },
+        Selectable = false
     )]
 [CreateAssetMenu(menuName = "NeonBlack/Profiles/Enemy Profile", fileName = "EnemyProfile")]
     public class EnemyProfile : ScriptableObject, IRuntimeValidationProvider

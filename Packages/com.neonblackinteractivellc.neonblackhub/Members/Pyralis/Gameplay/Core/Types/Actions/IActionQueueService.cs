@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Core.Actions
 {
@@ -7,10 +8,12 @@ namespace NeonBlack.Gameplay.Core.Actions
     /// Service boundary for queued action selection and rules resolution.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.TurnBased,
-        Relevance = "Interface for queuing and resolving discrete gameplay actions.",
-        ExpertAdvice = "Use IActionQueueService to manage the order of operations in turn-based games or command-heavy realtime systems. Resolvers must be registered to handle specific ActionIds.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/core"
+        Category = "Turn Based",
+        Surface = AuthoringSurface.RequiredSetup,
+        Summary = "Interface for queuing and resolving discrete gameplay actions.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/core",
+        Tags = new[] { "capability:TurnBased" },
+        Selectable = false
     )]
     public interface IActionQueueService
     {

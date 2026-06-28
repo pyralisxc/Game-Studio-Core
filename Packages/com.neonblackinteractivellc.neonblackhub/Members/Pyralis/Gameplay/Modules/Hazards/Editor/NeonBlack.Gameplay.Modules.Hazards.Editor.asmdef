@@ -1,17 +1,17 @@
 {
-    "name": "NeonBlack.Gameplay.Modules.Hazards.Editor",
-    "references": [
-        "NeonBlack.Gameplay.Modules.Hazards",
-        "NeonBlack.Gameplay.Editor"
-    ],
-    "includePlatforms": [
-        "Editor"
-    ],
-    "excludePlatforms": [],
-    "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
-    "autoReferenced": false,
-    "defineConstraints": [],
-    "versionDefines": []
+  "name": "NeonBlack.Gameplay.Modules.Hazards.Editor",
+  "references": [
+    "NeonBlack.Gameplay.Modules.Hazards",
+    "NeonBlack.Gameplay.Editor"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": []
 }

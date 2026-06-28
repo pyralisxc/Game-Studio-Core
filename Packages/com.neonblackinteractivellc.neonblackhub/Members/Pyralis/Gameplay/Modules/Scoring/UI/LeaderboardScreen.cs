@@ -5,6 +5,7 @@ using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Scoring
 {
@@ -13,18 +14,19 @@ namespace NeonBlack.Gameplay.Modules.Scoring
     /// matching the pattern used by SettingsScreen.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.UI,
-        Relevance = "UI screen for displaying top scores from a leaderboard service.",
-        NativeSetup = new[] 
+        Category = "U I",
+        CapabilityPath = "UI/HUD/Leaderboard Screen",
+        Surface = AuthoringSurface.Goal,
+        Summary = "UI screen for displaying top scores from a leaderboard service.",
+        RequiredFields = new[] { nameof(_mainMenuPage), nameof(_leaderboardPage), nameof(_backButton), nameof(_rowContainer), nameof(_rowPrefab), nameof(_statusLabel) },
+        SetupSteps = new[] 
         { 
             "Wire Main Menu Page and Leaderboard Page.",
             "Assign Row Prefab with Rank/Name/Score labels.",
             "Assign Row Container."
         },
-        AssignmentFields = new[] { nameof(_mainMenuPage), nameof(_leaderboardPage), nameof(_backButton), nameof(_rowContainer), nameof(_rowPrefab), nameof(_statusLabel) },
-        Proof = "Open the leaderboard in the menu and verify the 'Fetching scores...' status appears.",
-        ExpertAdvice = "Ensure the Row Prefab has exactly three TMP labels in order: Rank, Name, Score.",
-        CapabilityPath = "UI/HUD/Leaderboard Screen"
+        SuccessChecks = new[] { "Open the leaderboard in the menu and verify the 'Fetching scores...' status appears." },
+        Tags = new[] { "capability:UI" }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Scoring/Leaderboard Screen")]
     public class LeaderboardScreen : MonoBehaviour, IRuntimeValidationProvider

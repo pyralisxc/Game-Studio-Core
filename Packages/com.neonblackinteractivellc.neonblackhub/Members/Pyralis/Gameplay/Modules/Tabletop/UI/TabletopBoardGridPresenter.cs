@@ -5,6 +5,7 @@ using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions.Rules;
 using NeonBlack.Gameplay.Modules.Tabletop.Runtime;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Tabletop
 {
@@ -12,15 +13,16 @@ namespace NeonBlack.Gameplay.Modules.Tabletop
     /// Scene-facing presenter that turns an authored board definition into selectable board objects.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Tabletop | AuthoringCapability.Grid, 
-        Relevance = "Inspector Add Component path for a board presenter that can build selectable tabletop spaces.",
-        AssignmentFields = new[] { nameof(boardDefinition), nameof(movePolicyDefinition), nameof(turnOrderDefinition), nameof(selectionBridge), nameof(spacePrefab), nameof(piecePrefab) },
-        ProofTargetId = "proof.board-card-action",
-        Proof = "Click 'Rebuild Board' in the inspector and verify the grid is generated.",
-        NativeSetup = new[] { "Add TabletopBoardGridPresenter and TabletopBoardSelectionBridge to the same scene object.", "Assign Board, Move Policy, Turn Order, and Selection Bridge references.", "Assign Space and Piece prefabs." },
-        ExpertAdvice = "Bridges the abstract BoardDefinition to scene objects. It handles coordinate mapping (X,Y) to world positions. Ensure your cell size matches your visual assets.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/tabletop",
-        CapabilityPath = "Tabletop/Board/Tabletop Board Grid Presenter"
+        StableId = "proof.board-card-action",
+        Category = "Tabletop, Grid",
+        CapabilityPath = "Tabletop/Board/Tabletop Board Grid Presenter",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Inspector Add Component path for a board presenter that can build selectable tabletop spaces.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/tabletop",
+        RequiredFields = new[] { nameof(boardDefinition), nameof(movePolicyDefinition), nameof(turnOrderDefinition), nameof(selectionBridge), nameof(spacePrefab), nameof(piecePrefab) },
+        SetupSteps = new[] { "Add TabletopBoardGridPresenter and TabletopBoardSelectionBridge to the same scene object.", "Assign Board, Move Policy, Turn Order, and Selection Bridge references.", "Assign Space and Piece prefabs." },
+        SuccessChecks = new[] { "Click 'Rebuild Board' in the inspector and verify the grid is generated." },
+        Tags = new[] { "capability:Tabletop", "capability:Grid" }
     )]
     [RequireComponent(typeof(TabletopBoardSelectionBridge))]
     [AddComponentMenu("NeonBlack/Gameplay/Tabletop/Tabletop Board Grid Presenter")]

@@ -3,17 +3,19 @@ using System;
 using NeonBlack.Gameplay.Core.Actions;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Combat
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat, 
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.GunsProjectiles, RuntimeCapabilityFamily.Combat },
+        Category = "Combat",
         CapabilityPath = "Combat/Projectiles/Projectile Definition",
-        Relevance = "Project-window creation path for projectile behavior.",
-        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.CombatDefinitionRouteSupport },
-        AssignmentFields = new[] { nameof(projectileId), nameof(projectilePrefab), nameof(speed) },
-        Proof = "Spawn the projectile and verify it travels at the correct speed and deals damage."
+        Surface = AuthoringSurface.Goal,
+        Summary = "Project-window creation path for projectile behavior.",
+        RequiredFields = new[] { nameof(projectileId), nameof(projectilePrefab), nameof(speed) },
+        SuccessChecks = new[] { "Spawn the projectile and verify it travels at the correct speed and deals damage." },
+        RoleTags = new[] { "IntentRouteEssential", "CombatDefinitionRouteSupport" },
+        Tags = new[] { "capability:Combat", "runtime:GunsProjectiles", "runtime:Combat" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Combat/Projectile Definition", fileName = "ProjectileDefinition")]
     public class ProjectileDefinition : ScriptableObject, IRuntimeValidationProvider

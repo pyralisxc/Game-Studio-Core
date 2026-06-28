@@ -2,28 +2,26 @@ using System;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Rpg;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Rpg.Runtime
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Dialogue,
-        Priority = AuthoringPriority.Primary,
-        Lane = "RPG",
-        Relevance = "Manages narrative flow and branching dialogue sessions with condition and effect support.",
-        ExpertAdvice = "Dialogue graphs can trigger world effects via IDialogueEffectSink. Mention event hooks: Graphs can trigger quest updates or item grants through effects. Use the custom condition resolver for complex narrative gates.",
-        Axioms = AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.TurnBased,
+        Category = "Dialogue",
+        CapabilityPath = "RPG/Dialogue/Dialogue Service",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Manages narrative flow and branching dialogue sessions with condition and effect support.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/rpg/dialogue",
+        RequiredFields = new[] { nameof(_progression), nameof(_inventory), nameof(_quests), nameof(_skills) },
         RequiredInterfaces = new[] { typeof(IDialogueConditionResolver), typeof(IDialogueEffectSink) },
-        NativeSetup = new[]
+        SetupSteps = new[]
         {
             "register dialogue nodes in graph",
             "configure NPC profile with start graph",
             "bind dialogue UI to DialogueService events"
         },
-        AssignmentFields = new[] { nameof(_progression), nameof(_inventory), nameof(_quests), nameof(_skills) },
-        Proof = "A dialogue session starts and displays the correct starting node text.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/rpg/dialogue",
-        CapabilityPath = "RPG/Dialogue/Dialogue Service",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
+        SuccessChecks = new[] { "A dialogue session starts and displays the correct starting node text." },
+        Tags = new[] { "capability:Dialogue", "runtime:CharacterPawnGameplay", "axiom:Realtime", "axiom:TurnBased", "lane:RPG", "priority:Primary" }
     )]
     public sealed class DialogueService : IDialogueService
 {

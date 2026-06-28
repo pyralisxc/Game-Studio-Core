@@ -3,18 +3,19 @@ using NeonBlack.Gameplay.Data.Definitions.Combat;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Modules.Hazards;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Profiles
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat,
-        Relevance = "Defines the damage, knockback, and status effects applied by a hazard on contact.",
-        NativeSetup = new[] { "Set Damage and Tick Interval.", "Configure Targeting." },
-        AssignmentFields = new[] { nameof(effectId), nameof(damagePerTick) },
-        Proof = "Verify the hazard applies the correct damage and status effects to targets.",
-        ExpertAdvice = "Use destroyCollectiblesOnContact for obstacle hazards that should 'eat' powerups.",
+        Category = "Combat",
         CapabilityPath = "Combat/Actions/Hazard Impact Profile",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.Combat }
+        Surface = AuthoringSurface.Goal,
+        Summary = "Defines the damage, knockback, and status effects applied by a hazard on contact.",
+        RequiredFields = new[] { nameof(effectId), nameof(damagePerTick) },
+        SetupSteps = new[] { "Set Damage and Tick Interval.", "Configure Targeting." },
+        SuccessChecks = new[] { "Verify the hazard applies the correct damage and status effects to targets." },
+        Tags = new[] { "capability:Combat", "runtime:Combat" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Hazard Impact Profile", fileName = "HazardImpactProfile")]
     public class HazardImpactProfile : ScriptableObject, IRuntimeValidationProvider

@@ -2,36 +2,30 @@ using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Types.Animation;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Combat
 {
     [AddComponentMenu("NeonBlack/Gameplay/Combat/Actor Combat Reaction Component")]
     [AuthoringContract(
-        ModuleId = "actor.combat.reaction",
-        Capability = AuthoringCapability.Combat,
-        Relevance = "Adds guard, parry, damage modification, hurt/stagger locks, and combat reaction feedback for an actor.",
-        Lane = "Combat",
-        ProfileType = typeof(ActorCombatReactionProfile),
+        StableId = "feature.actor.combat.reaction",
+        Category = "Combat",
+        Surface = AuthoringSurface.Profile,
+        Summary = "Adds guard, parry, damage modification, hurt/stagger locks, and combat reaction feedback for an actor.",
+        RequiredFields = new[] { nameof(reactionProfile) },
+        RequiredComponentNames = new[] { "NeonBlack.Gameplay.Modules.Combat.HealthComponent" },
         RequiredInterfaces = new[] { typeof(IActorGuardController), typeof(IDamageModifier) },
         RequiredInterfaceNames = new[] { "NeonBlack.Gameplay.Core.Contracts.IActorReactionResponder" },
-        RequiredComponentNames = new[] { "NeonBlack.Gameplay.Modules.Combat.HealthComponent" },
-        ConsumedRoles = new[] { "Guard" },
-        NativeSetup = new[]
+        SetupSteps = new[]
         {
             "Create ActorCombatReactionProfile.",
             "Add ActorCombatReactionComponent to the actor root.",
             "Assign ActorCombatReactionProfile.",
             "Bind Guard in InputProfile."
         },
-        Proof = "Enter Play Mode and verify guard/parry triggers correctly against enemy attacks.",
-        AssignmentFields = new[] { nameof(reactionProfile) },
-        ExpertAdvice = "Pair the actor root with HealthComponent, a movement/reaction responder, KnockbackReceiver when knockback is used, ActorAnimationDriver for guard/hurt/stagger signals, and impact feedback sinks when hit pause or camera shake is enabled.",
-        CustomizationMoments = new[]
-        {
-            "ActorCombatReactionProfile.blockDamageReduction",
-            "ActorCombatReactionProfile.parryWindowDuration",
-            "ActorCombatReactionProfile.staggerDamageThreshold"
-        }
+        SuccessChecks = new[] { "Enter Play Mode and verify guard/parry triggers correctly against enemy attacks." },
+        Tags = new[] { "capability:Combat", "lane:Combat" },
+        Selectable = false
     )]
     public class ActorCombatReactionComponent : MonoBehaviour, IDamageModifier, IActorGuardController
 {

@@ -2,17 +2,19 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Actions;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Definitions
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Session | AuthoringCapability.TurnBased, 
-        Relevance = "Project-window creation path for one selectable command or resolver-backed action.",
-        AssignmentFields = new[] { nameof(actionId), nameof(displayName), nameof(targetRule) },
-        Proof = "Verify the action is selectable in the character menu or action bar.",
+        Category = "Session, Turn Based",
         CapabilityPath = "Core Setup/Input/Action Definition",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.BoardCardTabletop },
-        Surface = AuthoringContractSurface.SetupOnly
+        Surface = AuthoringSurface.RequiredSetup,
+        Summary = "Project-window creation path for one selectable command or resolver-backed action.",
+        RequiredFields = new[] { nameof(actionId), nameof(displayName), nameof(targetRule) },
+        SuccessChecks = new[] { "Verify the action is selectable in the character menu or action bar." },
+        Tags = new[] { "capability:Session", "capability:TurnBased", "runtime:BoardCardTabletop" },
+        Selectable = false
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Definitions/Action Definition", fileName = "ActionDefinition", order = 60)]
     public class ActionDefinition : ScriptableObject, IRuntimeValidationProvider

@@ -1,19 +1,21 @@
 using System.Collections.Generic;
 using UnityEngine;
 using NeonBlack.Gameplay.Core.Contracts;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Profiles
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat, 
-        Relevance = "Defines how an actor reacts to combat events (guard, parry, block, shield break).",
-        NativeSetup = new[] { "Configure parry and guard windows.", "Set shield break durations." },
-        AssignmentFields = new[] { nameof(enableGuard), nameof(enableParry), nameof(blockDamageReduction) },
-        Proof = "Trigger a parry in-game and verify the reaction lock is applied.",
-        ExpertAdvice = "Use parryReactionLockDuration to stun the attacker when a parry is successful.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/combat",
+        Category = "Combat",
         CapabilityPath = "Combat/Actions/Actor Combat Reaction Profile",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.Combat }
+        Surface = AuthoringSurface.Profile,
+        Summary = "Defines how an actor reacts to combat events (guard, parry, block, shield break).",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/combat",
+        RequiredFields = new[] { nameof(enableGuard), nameof(enableParry), nameof(blockDamageReduction) },
+        SetupSteps = new[] { "Configure parry and guard windows.", "Set shield break durations." },
+        SuccessChecks = new[] { "Trigger a parry in-game and verify the reaction lock is applied." },
+        Tags = new[] { "capability:Combat", "runtime:Combat" },
+        Selectable = false
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Actor Combat Reaction Profile", fileName = "ActorCombatReactionProfile")]
     public class ActorCombatReactionProfile : ScriptableObject, IRuntimeValidationProvider

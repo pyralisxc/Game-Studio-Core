@@ -4,24 +4,26 @@ using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Types.Animation;
 using NeonBlack.Gameplay.Presentation.Visuals;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Presentation.Animation
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Animation, 
-        Relevance = "Bridges Pyralis signals (Move, Jump, Attack) to Animator parameters, plus sprite/billboard facing.",
-        NativeSetup = new[] 
+        Category = "Animation",
+        CapabilityPath = "Presentation/Feedback/Actor Animation Driver",
+        Surface = AuthoringSurface.RuntimeComponent,
+        Summary = "Bridges Pyralis signals (Move, Jump, Attack) to Animator parameters, plus sprite/billboard facing.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/animation",
+        RequiredFields = new[] { nameof(animator), nameof(presentationProfile), nameof(animationProfile), nameof(visualRoot), nameof(billboardTarget), nameof(cameraOverride) },
+        SetupSteps = new[] 
         { 
             "Assign Animator component (searches children if empty).",
             "Assign Presentation Profile for mode defaults (2D vs 3D).",
             "Assign Animation Profile with signal-to-parameter bindings."
         },
-        AssignmentFields = new[] { nameof(animator), nameof(presentationProfile), nameof(animationProfile), nameof(visualRoot), nameof(billboardTarget), nameof(cameraOverride) },
-        Proof = "Enter Play Mode. Verify the 'Speed' and 'IsGrounded' parameters on the Animator react to pawn movement.",
-        ExpertAdvice = "The Animation Driver is a 'Signal Bridge'. It decouples logic from visual state. If using sprites, ensure 'Visual Root' is assigned so the driver can flip the localScale for facing direction logic.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/animation",
-        CapabilityPath = "Presentation/Feedback/Actor Animation Driver",
-        Surface = AuthoringContractSurface.RuntimeComponent
+        SuccessChecks = new[] { "Enter Play Mode. Verify the 'Speed' and 'IsGrounded' parameters on the Animator react to pawn movement." },
+        Tags = new[] { "capability:Animation" },
+        Selectable = false
     )]
 [AddComponentMenu("NeonBlack/Gameplay/Animation/Actor Animation Driver")]
     public class ActorAnimationDriver : MonoBehaviour, IActorAnimationController, IActorCombatResultReceiver, IRuntimeValidationProvider

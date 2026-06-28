@@ -2,6 +2,7 @@ using NeonBlack.Gameplay.Data.Tabletop;
 using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rules
 {
@@ -27,12 +28,13 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
     /// Designer-authored movement policy for board and tabletop pieces.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Tabletop | AuthoringCapability.Grid, 
-        Relevance = "Project-window creation path for tabletop legal-move policy.",
-        AssignmentFields = new[] { nameof(policyId), nameof(shape), nameof(maxDistance) },
-        Proof = "Verify that pieces can only move according to the shape and distance defined in this policy.",
+        Category = "Tabletop, Grid",
         CapabilityPath = "Tabletop/Board/Board Move Policy Definition",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.BoardCardTabletop }
+        Surface = AuthoringSurface.Goal,
+        Summary = "Project-window creation path for tabletop legal-move policy.",
+        RequiredFields = new[] { nameof(policyId), nameof(shape), nameof(maxDistance) },
+        SuccessChecks = new[] { "Verify that pieces can only move according to the shape and distance defined in this policy." },
+        Tags = new[] { "capability:Tabletop", "capability:Grid", "runtime:BoardCardTabletop" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Rules/Board Move Policy", fileName = "BoardMovePolicy", order = -80)]
     public class BoardMovePolicyDefinition : ScriptableObject, IRuntimeValidationProvider

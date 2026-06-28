@@ -4,6 +4,7 @@ using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Glue.SceneFlow.Navigation
 {
@@ -11,18 +12,19 @@ namespace NeonBlack.Gameplay.Glue.SceneFlow.Navigation
     /// Scene navigation service that fades the screen before and after loading scenes.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Setup,
-        Relevance = "Persistent ISceneNavigator that fades to black, optionally routes through the loading screen, and restores time scale.",
-        NativeSetup = new[] 
+        Category = "Setup",
+        CapabilityPath = "Core Setup/Navigation/Scene Fader",
+        Surface = AuthoringSurface.Service,
+        Summary = "Persistent ISceneNavigator that fades to black, optionally routes through the loading screen, and restores time scale.",
+        RequiredFields = new[] { nameof(_fadeOutDuration), nameof(_fadeInDuration) },
+        SetupSteps = new[] 
         { 
             "Place one SceneFader in the bootstrap or first navigation scene.",
             "Use FadeToSceneViaLoader when the LoadingScreen scene should show progress."
         },
-        AssignmentFields = new[] { nameof(_fadeOutDuration), nameof(_fadeInDuration) },
-        Proof = "Initiate a scene transition and verify the screen fades smoothly to black.",
-        ExpertAdvice = "Do not load multiple SceneFaders; Awake keeps one active transition service and destroys duplicates. Do not use FadeToSceneViaLoader unless SceneNames.LoadingScreen is in Build Settings.",
-        CapabilityPath = "Core Setup/Navigation/Scene Fader",
-        Surface = AuthoringContractSurface.Service
+        SuccessChecks = new[] { "Initiate a scene transition and verify the screen fades smoothly to black." },
+        Tags = new[] { "capability:Setup" },
+        Selectable = false
     )]
     [DefaultExecutionOrder(-40)]
     public class SceneFader : MonoBehaviour, ISceneNavigator

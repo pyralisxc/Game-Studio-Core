@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Types.Animation;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Combat
 {
@@ -9,14 +10,14 @@ namespace NeonBlack.Gameplay.Data.Definitions.Combat
     /// Authored shared combat move that can be reused by 2D, 2.5D, and rigged 3D actors.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat | AuthoringCapability.Animation, 
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.Combat, RuntimeCapabilityFamily.AnimationPresentation },
+        Category = "Combat, Animation",
         CapabilityPath = "Combat/Actions/Combat Action Definition",
-        Relevance = "Project-window creation path for one combat action.",
-        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.CombatDefinitionRouteSupport },
-        AssignmentFields = new[] { nameof(displayName), nameof(inputType), nameof(animationSignal) },
-        Proof = "Verify the combat action triggers the correct animation and applies damage/weapon effects.",
-        ExpertAdvice = "Use comboStep to sequence multi-hit attacks. Use cooldownOverride if this move should be slower or faster than the weapon default."
+        Surface = AuthoringSurface.Goal,
+        Summary = "Project-window creation path for one combat action.",
+        RequiredFields = new[] { nameof(displayName), nameof(inputType), nameof(animationSignal) },
+        SuccessChecks = new[] { "Verify the combat action triggers the correct animation and applies damage/weapon effects." },
+        RoleTags = new[] { "IntentRouteEssential", "CombatDefinitionRouteSupport" },
+        Tags = new[] { "capability:Combat", "capability:Animation", "runtime:Combat", "runtime:AnimationPresentation" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Combat/Combat Action Definition", fileName = "CombatActionDefinition")]
     public class CombatActionDefinition : ScriptableObject, IRuntimeValidationProvider

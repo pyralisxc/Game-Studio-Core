@@ -4,6 +4,7 @@ using NeonBlack.Gameplay.Data.Definitions;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Networking.Runtime
 {
@@ -11,9 +12,12 @@ namespace NeonBlack.Gameplay.Networking.Runtime
     /// Shared validation for the NGO-backed Pyralis runtime lane.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Networking,
-        Relevance = "Shared validation for the NGO-backed Pyralis runtime lane.",
-        RequiredComponentNames = new[] { nameof(NetworkManager), nameof(UnityTransport) }
+        Category = "Networking",
+        Surface = AuthoringSurface.RequiredSetup,
+        Summary = "Shared validation for the NGO-backed Pyralis runtime lane.",
+        RequiredComponentNames = new[] { nameof(NetworkManager), nameof(UnityTransport) },
+        Tags = new[] { "capability:Networking" },
+        Selectable = false
     )]
     public static class PyralisNetworkSetupValidator
     {

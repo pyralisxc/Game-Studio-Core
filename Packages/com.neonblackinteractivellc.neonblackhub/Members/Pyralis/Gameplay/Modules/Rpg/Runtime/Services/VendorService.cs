@@ -1,25 +1,23 @@
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Rpg;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Rpg.Runtime
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Vendors,
-        Priority = AuthoringPriority.Primary,
-        Lane = "RPG",
-        Relevance = "Facilitates item transactions (buying and selling) between characters and vendors using currency.",
-        ExpertAdvice = "Vendor offers require valid Item IDs from the catalog. Ensure currency items are configured in the inventory service and catalog. Common pitfalls include missing item IDs or incorrect currency configuration.",
-        Axioms = AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.TurnBased,
+        Category = "Vendors",
+        CapabilityPath = "RPG/Vendors/Vendor Service",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Facilitates item transactions (buying and selling) between characters and vendors using currency.",
         RequiredInterfaces = new[] { typeof(IVendorDefinition) },
-        Proof = "Verify that TryBuy correctly subtracts currency and adds the item to the owner's inventory.",
-        NativeSetup = new[]
+        SetupSteps = new[]
         {
             "create VendorDefinitions",
             "assign ItemCatalog to vendor",
             "link vendor to Hub interactable"
         },
-        CapabilityPath = "RPG/Vendors/Vendor Service",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
+        SuccessChecks = new[] { "Verify that TryBuy correctly subtracts currency and adds the item to the owner's inventory." },
+        Tags = new[] { "capability:Vendors", "runtime:CharacterPawnGameplay", "axiom:Realtime", "axiom:TurnBased", "lane:RPG", "priority:Primary" }
     )]
     public sealed class VendorService : IVendorService
 {

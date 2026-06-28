@@ -3,6 +3,7 @@ using NeonBlack.Gameplay.Core.Enums;
 using NeonBlack.Gameplay.Core.Types.Input;
 using NeonBlack.Gameplay.Data.Participants;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Character
 {
@@ -19,15 +20,14 @@ namespace NeonBlack.Gameplay.Modules.Character
     ///    Assign the ground layer mask to match your terrain layer.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Movement,
-        PriorityValueOverride = 50,
-        Relevance = "Core 3D movement motor; handles walking, jumping, gravity, and ground detection.",
-        Axioms = AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.Dimensions3D,
-        NativeSetup = new[] { "Attach to a Pawn root with CharacterController.", "Assign Ground Layer mask." },
-        AssignmentFields = new[] { nameof(movementMode), nameof(groundLayer), nameof(walkSpeed), nameof(jumpHeight) },
-        Proof = "Verify the pawn can walk and jump in Play Mode.",
-        ExpertAdvice = "Movement Component uses CharacterController.Move(). Ensure the Ground Layer mask does not include the 'Player' layer to prevent the pawn from trying to ground itself on its own collider.",
-        CapabilityPath = "Movement/Traversal/Pawn3D Movement Component"
+        Category = "Movement",
+        CapabilityPath = "Movement/Traversal/Pawn3D Movement Component",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Core 3D movement motor; handles walking, jumping, gravity, and ground detection.",
+        RequiredFields = new[] { nameof(movementMode), nameof(groundLayer), nameof(walkSpeed), nameof(jumpHeight) },
+        SetupSteps = new[] { "Attach to a Pawn root with CharacterController.", "Assign Ground Layer mask." },
+        SuccessChecks = new[] { "Verify the pawn can walk and jump in Play Mode." },
+        Tags = new[] { "capability:Movement", "axiom:Realtime", "axiom:Dimensions3D" }
     )]
 [AddComponentMenu("NeonBlack/Gameplay/Modules/Character/Rigged3D/Pawn 3D Movement Component")]
     [RequireComponent(typeof(CharacterController))]

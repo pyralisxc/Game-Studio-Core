@@ -4,6 +4,7 @@ using NeonBlack.Gameplay.Data.Definitions;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Profiles
 {
@@ -115,25 +116,22 @@ namespace NeonBlack.Gameplay.Data.Profiles
     /// Authoring profile for participant input ownership and preferred control schemes.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Input,
+        Category = "Input",
         CapabilityPath = "Core Setup/Input/Participant Input Profile",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.ActionTargeting },
-        Priority = AuthoringPriority.AuxiliaryDefault,
-        Lane = "Input",
-        Relevance = "Maps participant-owned gameplay actions (Move, Jump, Interact) to Unity Input System actions.",
-        Axioms = AuthoringWorldAxiom.None,
-        ProfileType = typeof(InputProfile),
-        RoleTags = new[] { "ParticipantInput", "InputProfile", "InputActions" },
-        AssignmentFields = new[] { nameof(actions), nameof(actionBindings), nameof(primaryActionMap) },
-        Proof = "Verify that input actions mapped in this profile correctly drive character movement and actions.",
-        ExpertAdvice = "InputProfile is assigned from ParticipantDefinition.inputProfile. The participant owns who is controlling the route; pawn input modules only consume the resolved profile.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/input",
-        NativeSetup = new[] 
+        Surface = AuthoringSurface.Profile,
+        Summary = "Maps participant-owned gameplay actions (Move, Jump, Interact) to Unity Input System actions.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/input",
+        RequiredFields = new[] { nameof(actions), nameof(actionBindings), nameof(primaryActionMap) },
+        SetupSteps = new[] 
         { 
             "Create an InputProfile asset.",
             "Assign a Unity Input Action Asset.",
             "Use Input Actions Sync in the inspector to populate gameplay action rows from the assigned asset, then customize required/optional roles."
-        }
+        },
+        SuccessChecks = new[] { "Verify that input actions mapped in this profile correctly drive character movement and actions." },
+        RoleTags = new[] { "ParticipantInput", "InputProfile", "InputActions" },
+        Tags = new[] { "capability:Input", "runtime:ActionTargeting", "lane:Input", "priority:AuxiliaryDefault" },
+        Selectable = false
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Input Profile", fileName = "InputProfile", order = -90)]
     public class InputProfile : ScriptableObject, IRuntimeValidationProvider

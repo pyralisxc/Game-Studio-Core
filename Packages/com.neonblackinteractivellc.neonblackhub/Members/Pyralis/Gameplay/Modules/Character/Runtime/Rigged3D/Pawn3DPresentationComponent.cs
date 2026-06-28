@@ -6,20 +6,20 @@ using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Modules.Character;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Character
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Animation,
-        Relevance = "3D presentation module; maps movement state to Animator signals and handles billboarding.",
-        Axioms = AuthoringWorldAxiom.Dimensions3D,
-        NativeSetup = new[] { "Attach to a Pawn with ActorAnimationDriver.", "Ensure Animator parameters match signal names." },
-        AssignmentFields = new[] { nameof(showDebugHUD) },
-        CustomizationMoments = new[] { "Animator signal mapping", "Billboard presentation", "debug HUD visibility" },
-        Proof = "Move the 3D pawn and verify Animator signals follow movement and combat state.",
-        ProofTargetId = "proof.1p-pawn-movement",
-        ExpertAdvice = "Presentation logic should be visual-only. It reads from movement/combat state and writes to the Animator. Use Billboarding settings if your 3D pawn uses 2D sprites.",
-        CapabilityPath = "Presentation/Feedback/Pawn3D Presentation Component"
+        StableId = "presentation.pawn.3d",
+        Category = "Animation",
+        CapabilityPath = "Presentation/Feedback/Pawn3D Presentation Component",
+        Surface = AuthoringSurface.Goal,
+        Summary = "3D presentation module; maps movement state to Animator signals and handles billboarding.",
+        RequiredFields = new[] { nameof(showDebugHUD) },
+        SetupSteps = new[] { "Attach to a Pawn with ActorAnimationDriver.", "Ensure Animator parameters match signal names." },
+        SuccessChecks = new[] { "Move the 3D pawn and verify Animator signals follow movement and combat state." },
+        Tags = new[] { "capability:Animation", "axiom:Dimensions3D" }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Modules/Character/Rigged3D/Pawn 3D Presentation Component")]
     [RequireComponent(typeof(ActorAnimationDriver))]

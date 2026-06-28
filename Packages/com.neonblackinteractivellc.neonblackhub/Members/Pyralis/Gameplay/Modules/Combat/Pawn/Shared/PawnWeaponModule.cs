@@ -2,18 +2,20 @@ using UnityEngine;
 using NeonBlack.Gameplay.Data.Definitions.Combat;
 using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Core.Contracts;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Combat
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat | AuthoringCapability.Inventory,
-        Relevance = "Pawn module for managing equipped weapon data and animation overrides.",
-        NativeSetup = new[] { "Attach to the pawn root that owns combat animation.", "Assign WeaponData assets for the attacks this pawn can perform." },
-        AssignmentFields = new[] { nameof(attackWeapon), nameof(kickWeapon), nameof(aerialWeapon), nameof(equippedWeapons) },
-        Proof = "Assign a weapon and verify the pawn's animator controller is overridden at runtime.",
-        ExpertAdvice = "WeaponData assets can override the base animator controller. Ensure your weapon assets have the correct 'overrideController' assigned.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/combat",
-        CapabilityPath = "Combat/Actions/Pawn Weapon Module"
+        Category = "Combat, Inventory",
+        CapabilityPath = "Combat/Actions/Pawn Weapon Module",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Pawn module for managing equipped weapon data and animation overrides.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/combat",
+        RequiredFields = new[] { nameof(attackWeapon), nameof(kickWeapon), nameof(aerialWeapon), nameof(equippedWeapons) },
+        SetupSteps = new[] { "Attach to the pawn root that owns combat animation.", "Assign WeaponData assets for the attacks this pawn can perform." },
+        SuccessChecks = new[] { "Assign a weapon and verify the pawn's animator controller is overridden at runtime." },
+        Tags = new[] { "capability:Combat", "capability:Inventory" }
     )]
     public class PawnWeaponModule : MonoBehaviour
 {

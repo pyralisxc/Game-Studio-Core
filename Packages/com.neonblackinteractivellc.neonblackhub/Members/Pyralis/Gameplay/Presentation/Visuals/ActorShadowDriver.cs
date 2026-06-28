@@ -4,23 +4,25 @@ using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Types.Animation;
 using UnityEngine;
 using UnityEngine.Rendering;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Presentation.Visuals
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Animation,
-        Relevance = "Applies shadow presentation (blob or renderer) based on PawnPresentationProfile.",
-        NativeSetup = new[] 
+        Category = "Animation",
+        CapabilityPath = "Presentation/Feedback/Actor Shadow Driver",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Applies shadow presentation (blob or renderer) based on PawnPresentationProfile.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/visuals",
+        RequiredFields = new[] { nameof(visualRoot), nameof(shadowRoot), nameof(shadowSpriteRenderer), nameof(modelRenderers), nameof(presentationProfile) },
+        SetupSteps = new[] 
         { 
             "Add to the actor root or visual root.",
             "Assign Shadow Sprite Renderer for blob shadows.",
             "Assign Model Renderers for 3D shadow control."
         },
-        AssignmentFields = new[] { nameof(visualRoot), nameof(shadowRoot), nameof(shadowSpriteRenderer), nameof(modelRenderers), nameof(presentationProfile) },
-        Proof = "Verify a shadow appears under the actor and scales correctly with height.",
-        ExpertAdvice = "Use Blob mode for 2D and 2.5D games. Renderer mode is only supported for Rigged3D actors.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/visuals",
-        CapabilityPath = "Presentation/Feedback/Actor Shadow Driver"
+        SuccessChecks = new[] { "Verify a shadow appears under the actor and scales correctly with height." },
+        Tags = new[] { "capability:Animation" }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Visuals/Actor Shadow Driver")]
     public class ActorShadowDriver : MonoBehaviour, IRuntimeValidationProvider

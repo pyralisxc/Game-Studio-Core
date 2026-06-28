@@ -1,27 +1,18 @@
 {
-    "name":  "NeonBlack.Gameplay.Modules.Enemies",
-    "references":  [
-                       "NeonBlack.Gameplay.Core",
-                       "NeonBlack.Gameplay.Data",
-                       "NeonBlack.Gameplay.Presentation",
-                       "VContainer"
-                   ],
-    "includePlatforms":  [
-
-                         ],
-    "excludePlatforms":  [
-
-                         ],
-    "allowUnsafeCode":  false,
-    "overrideReferences":  false,
-    "precompiledReferences":  [
-
-                              ],
-    "autoReferenced":  true,
-    "defineConstraints":  [
-
-                          ],
-    "versionDefines":  [
-
-                       ]
+  "name": "NeonBlack.Gameplay.Modules.Enemies",
+  "references": [
+    "NeonBlack.Gameplay.Core",
+    "NeonBlack.Gameplay.Data",
+    "NeonBlack.Gameplay.Presentation",
+    "VContainer",
+    "Pys.Authoring.Contracts"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": []
 }

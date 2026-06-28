@@ -1,15 +1,16 @@
 {
-    "name": "NeonBlack.Gameplay.Modules.Tabletop",
-    "references": [
-        "NeonBlack.Gameplay.Core",
-        "NeonBlack.Gameplay.Data"
-    ],
-    "includePlatforms": [],
-    "excludePlatforms": [],
-    "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
-    "autoReferenced": true,
-    "defineConstraints": [],
-    "versionDefines": []
+  "name": "NeonBlack.Gameplay.Modules.Tabletop",
+  "references": [
+    "NeonBlack.Gameplay.Core",
+    "NeonBlack.Gameplay.Data",
+    "Pys.Authoring.Contracts"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": []
 }

@@ -4,6 +4,7 @@ using NeonBlack.Gameplay.Glue.Session;
 using NeonBlack.Gameplay.Glue.Spawning;
 using NeonBlack.Gameplay.Modules.Character;
 using Unity.Netcode;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Networking.Participants
 {
@@ -12,13 +13,14 @@ namespace NeonBlack.Gameplay.Networking.Participants
     /// Starts the configured NGO role when <see cref="NeonBlack.Gameplay.Data.Definitions.SessionDefinition.autoStartHost"/> is true.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Networking,
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.Networking },
+        Category = "Networking",
         CapabilityPath = "Networking/Session/Networked Session State Service",
-        Relevance = "Drop-in replacement for SessionStateService in online sessions. Handles NGO role startup.",
-        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.NetworkRouteSupport },
-        AssignmentFields = new[] { "networkMode", "autoStartHost" },
-        Proof = "Entering the scene correctly triggers the NGO role (Host/Client/Server) defined in the SessionDefinition."
+        Surface = AuthoringSurface.Goal,
+        Summary = "Drop-in replacement for SessionStateService in online sessions. Handles NGO role startup.",
+        RequiredFields = new[] { "networkMode", "autoStartHost" },
+        SuccessChecks = new[] { "Entering the scene correctly triggers the NGO role (Host/Client/Server) defined in the SessionDefinition." },
+        RoleTags = new[] { "IntentRouteEssential", "NetworkRouteSupport" },
+        Tags = new[] { "capability:Networking", "runtime:Networking" }
     )]
     public class NetworkedSessionStateService : SessionStateService
     {

@@ -7,30 +7,29 @@ using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Data.Participants;
 using NeonBlack.Gameplay.Presentation.Animation;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Traversal
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Traversal,
-        Relevance = "3D traversal component; handles ledge climbing, hanging, shimmying, profile tuning, and traversal interaction.",
-        Axioms = AuthoringWorldAxiom.Dimensions3D,
-        ProfileType = typeof(PawnTraversalProfile),
-        RequiredInterfaces = new[] { typeof(IActorTraversalFeature), typeof(IActorInteractionHandler) },
+        Category = "Traversal",
+        CapabilityPath = "Movement/Traversal/Pawn3D Traversal Component",
+        Surface = AuthoringSurface.Profile,
+        Summary = "3D traversal component; handles ledge climbing, hanging, shimmying, profile tuning, and traversal interaction.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/traversal",
+        RequiredFields = new[] { nameof(traversalProfile), nameof(allowClimb), nameof(allowHang), nameof(climbCooldown), nameof(ledgeProbe) },
         RequiredComponentNames = new[] { "NeonBlack.Gameplay.Modules.Character.Motor3D", "NeonBlack.Gameplay.Modules.Character.Pawn3DMovementComponent" },
-        SupportedLanes = new[] { ActorPresentationMode.Billboard2_5D, ActorPresentationMode.ThirdPerson3D },
-        UnsupportedLanes = new[] { ActorPresentationMode.Sprite2D },
-        NativeSetup = new[]
+        RequiredInterfaces = new[] { typeof(IActorTraversalFeature), typeof(IActorInteractionHandler) },
+        SetupSteps = new[]
         {
             "Attach Pawn3DTraversalComponent to a pawn with Motor3D and Pawn3DMovementComponent.",
             "Assign a PawnTraversalProfile when reusable traversal tuning is needed.",
             "Configure Ledge Probe settings.",
             "Bind Jump or Interact in InputProfile."
         },
-        AssignmentFields = new[] { nameof(traversalProfile), nameof(allowClimb), nameof(allowHang), nameof(climbCooldown), nameof(ledgeProbe) },
-        Proof = "Verify the pawn can grab and climb ledges in Play Mode.",
-        ExpertAdvice = "Traversal logic is separated from base movement. Ensure your Animator has 'Climb' and 'Hang' signals wired to valid animations.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/traversal",
-        CapabilityPath = "Movement/Traversal/Pawn3D Traversal Component"
+        SuccessChecks = new[] { "Verify the pawn can grab and climb ledges in Play Mode." },
+        Tags = new[] { "capability:Traversal", "axiom:Dimensions3D" },
+        Selectable = false
     )]
 [AddComponentMenu("NeonBlack/Gameplay/Modules/Traversal/Rigged3D/Pawn 3D Traversal Component")]
     [RequireComponent(typeof(CharacterController))]

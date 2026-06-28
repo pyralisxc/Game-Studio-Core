@@ -4,6 +4,7 @@ using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Participants;
 using UnityEngine;
 using VContainer;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Interaction
 {
@@ -16,20 +17,20 @@ namespace NeonBlack.Gameplay.Modules.Interaction
 /// Assign _crumbPrefab (a prefab with Collectible2D component) in the Inspector.
 /// </summary>
 [AuthoringContract(
-    Capability = AuthoringCapability.Session,
-    Relevance = "Manages the collectible object pool and spawn logic for 2D sessions.",
-    Axioms = AuthoringWorldAxiom.Dimensions2D,
-    NativeSetup = new[] 
+        Category = "Session",
+        CapabilityPath = "Interaction/Collectibles/Spawning/Collectible Spawner 2D",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Manages the collectible object pool and spawn logic for 2D sessions.",
+        RequiredFields = new[] { nameof(_crumbPrefab), nameof(_poolSize), nameof(_initialCrumbCount), nameof(_spawnInterval), nameof(_minimumOnScreen), nameof(_spawnMargin) },
+        SetupSteps = new[] 
     { 
         "Add to the scene Spawners root.",
         "Assign a Collectible2D prefab.",
         "Tune pool, spawn, and minimum-on-screen values."
     },
-    AssignmentFields = new[] { nameof(_crumbPrefab), nameof(_poolSize), nameof(_initialCrumbCount), nameof(_spawnInterval), nameof(_minimumOnScreen), nameof(_spawnMargin) },
-    Proof = "Enter Play Mode and verify collectibles appear across the screen.",
-    ExpertAdvice = "Use a pool size that covers the maximum expected collectibles. Higher minimum-on-screen counts ensure the player always has something to collect. Gameplay state and camera bounds are normally supplied by GameManager or the Pyralis runtime scope; assign those fields directly only for standalone spawner tests.",
-    CapabilityPath = "Interaction/Collectibles/Spawning/Collectible Spawner 2D"
-)]
+        SuccessChecks = new[] { "Enter Play Mode and verify collectibles appear across the screen." },
+        Tags = new[] { "capability:Session", "axiom:Dimensions2D" }
+    )]
 [DefaultExecutionOrder(-10)]
 [AddComponentMenu("NeonBlack/Gameplay/Interaction/Collectibles/Collectible Spawner 2D")]
 public class CollectibleSpawner2D : MonoBehaviour, IPickupSpawnSurface, IPickupBurstSpawnSurface, IRuntimeValidationProvider

@@ -1,27 +1,25 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Rpg;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Rpg.Runtime
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.SkillTree,
-        Priority = AuthoringPriority.Primary,
-        ModuleId = "rpg.skilltree",
-        Lane = "RPG",
-        Relevance = "Manages character skill nodes, unlocks, and prerequisite validation.",
-        ExpertAdvice = "Rely on RpgOwnerKey for unique progression. Nodes must have unique IDs.",
-        Axioms = AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.TurnBased,
+        StableId = "feature.rpg.skilltree",
+        Category = "Skill Tree",
+        CapabilityPath = "RPG/Skill Tree/Skill Tree Service",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Manages character skill nodes, unlocks, and prerequisite validation.",
         RequiredInterfaces = new[] { typeof(ISkillTree) },
-        Proof = "Unlock a skill and verify that its stat modifiers are applied to the character.",
-        NativeSetup = new[]
+        SetupSteps = new[]
         {
             "create SkillTree assets",
             "link SkillNodes to StatModifiers or Abilities",
             "assign skill tree to ProgressionService"
         },
-        CapabilityPath = "RPG/Skill Tree/Skill Tree Service",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
+        SuccessChecks = new[] { "Unlock a skill and verify that its stat modifiers are applied to the character." },
+        Tags = new[] { "capability:SkillTree", "runtime:CharacterPawnGameplay", "axiom:Realtime", "axiom:TurnBased", "lane:RPG", "priority:Primary" }
     )]
     public sealed class SkillTreeService : ISkillTreeService
 {

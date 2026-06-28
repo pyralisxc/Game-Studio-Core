@@ -1,6 +1,7 @@
 using System.Collections;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Presentation.Visuals
 {
@@ -9,21 +10,21 @@ namespace NeonBlack.Gameplay.Presentation.Visuals
     /// Add one to the bootstrap or camera rig; assign Target Transform for a custom rig.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.VFX,
-        Relevance = "Canonical camera shake service for gameplay impact feedback.",
-        Axioms = AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.Dimensions3D,
+        Category = "V F X",
+        CapabilityPath = "Presentation/Feedback/Camera Shake",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Canonical camera shake service for gameplay impact feedback.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/visuals",
+        RequiredFields = new[] { nameof(targetTransform), nameof(defaultShakeMode), nameof(positionInfluence), nameof(rotationInfluence) },
         RequiredInterfaces = new[] { typeof(ICameraShakeSink) },
-        NativeSetup = new[]
+        SetupSteps = new[]
         {
             "Add CameraShake to a Bootstrap child GameObject or assign to GameplaySessionBootstrap.",
             "Assign Target Transform (camera rig root or main camera).",
             "Set Default Shake Mode (Planar2D for most games)."
         },
-        AssignmentFields = new[] { nameof(targetTransform), nameof(defaultShakeMode), nameof(positionInfluence), nameof(rotationInfluence) },
-        Proof = "Calling Shake(intensity, duration) causes the target transform to vibrate.",
-        ExpertAdvice = "2D path: use Planar2D and mostly position influence. 3D path: use Spatial3D or PositionAndRotation with lower intensity.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/visuals",
-        CapabilityPath = "Presentation/Feedback/Camera Shake"
+        SuccessChecks = new[] { "Calling Shake(intensity, duration) causes the target transform to vibrate." },
+        Tags = new[] { "capability:VFX", "axiom:Dimensions2D", "axiom:Dimensions3D" }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Camera/Camera Shake")]
     public class CameraShake : MonoBehaviour, ICameraShakeSink

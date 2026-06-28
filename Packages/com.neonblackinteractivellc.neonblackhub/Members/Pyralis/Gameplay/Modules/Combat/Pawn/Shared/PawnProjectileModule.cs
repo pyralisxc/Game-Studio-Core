@@ -2,17 +2,19 @@ using UnityEngine;
 using NeonBlack.Gameplay.Data.Definitions.Combat;
 using NeonBlack.Gameplay.Core.Enums;
 using NeonBlack.Gameplay.Core.Contracts;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Combat
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat | AuthoringCapability.RangedFlow,
-        Relevance = "Pawn module for spawning and launching projectiles from weapons.",
-        AssignmentFields = new[] { nameof(projectileSpawnPoint), nameof(projectileLauncher) },
-        Proof = "Fire a ranged weapon and verify a projectile is spawned at the spawn point.",
-        ExpertAdvice = "The projectile spawn point should be positioned at the weapon muzzle. If null, the module defaults to a point above the pawn's feet.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/combat",
-        CapabilityPath = "Combat/Actions/Pawn Projectile Module"
+        Category = "Combat, Ranged Flow",
+        CapabilityPath = "Combat/Actions/Pawn Projectile Module",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Pawn module for spawning and launching projectiles from weapons.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/combat",
+        RequiredFields = new[] { nameof(projectileSpawnPoint), nameof(projectileLauncher) },
+        SuccessChecks = new[] { "Fire a ranged weapon and verify a projectile is spawned at the spawn point." },
+        Tags = new[] { "capability:Combat", "capability:RangedFlow" }
     )]
     public class PawnProjectileModule : MonoBehaviour
 {

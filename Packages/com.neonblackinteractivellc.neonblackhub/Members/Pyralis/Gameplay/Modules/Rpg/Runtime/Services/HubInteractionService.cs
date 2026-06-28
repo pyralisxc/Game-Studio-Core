@@ -2,23 +2,25 @@ using System;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Rpg;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Rpg.Runtime
 {
     [AuthoringContract(
-        ModuleId = "rpg.hub",
-        Capability = AuthoringCapability.Dialogue | AuthoringCapability.Puzzle,
-        Relevance = "Handles RPG hub interactions, including NPC dialogue, quest triggers, and scene navigation.",
-        Lane = "RPG",
+        StableId = "feature.rpg.hub",
+        Category = "Dialogue, Puzzle",
+        CapabilityPath = "RPG/Dialogue/Hub Interaction Service",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Handles RPG hub interactions, including NPC dialogue, quest triggers, and scene navigation.",
         RequiredInterfaces = new[] { typeof(IHubDefinition), typeof(IHubConditionResolver), typeof(IHubEffectSink) },
-        NativeSetup = new[]
+        SetupSteps = new[]
         {
             "create HubDefinition assets",
             "configure HubInteractables",
             "place HubInteractionSceneController in scene"
         },
-        Proof = "Interact with an NPC in the hub and verify the dialogue or interaction flow begins.",
-        CapabilityPath = "RPG/Dialogue/Hub Interaction Service"
+        SuccessChecks = new[] { "Interact with an NPC in the hub and verify the dialogue or interaction flow begins." },
+        Tags = new[] { "capability:Dialogue", "capability:Puzzle", "lane:RPG" }
     )]
     public sealed class HubInteractionService : IHubInteractionService
 {

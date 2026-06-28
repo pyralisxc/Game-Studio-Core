@@ -9,16 +9,18 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 using VContainer;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Rpg.UI
 {
     [AuthoringContract(
-        ModuleId = "rpg.quest.ui",
-        Capability = AuthoringCapability.Dialogue,
-        Lane = "RPG",
+        StableId = "feature.rpg.quest.ui",
+        Category = "Dialogue",
+        CapabilityPath = "RPG/Quests/UI/Quest Board Panel Presenter",
+        Surface = AuthoringSurface.Goal,
         RequiredComponentNames = new[] { "TMPro.TextMeshProUGUI" },
-        Proof = "Verify that the quest board displays the list of quests and correctly handles quest selection.",
-        CapabilityPath = "RPG/Quests/UI/Quest Board Panel Presenter"
+        SuccessChecks = new[] { "Verify that the quest board displays the list of quests and correctly handles quest selection." },
+        Tags = new[] { "capability:Dialogue", "lane:RPG" }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/RPG/UI/RPG Quest Board Panel Presenter")]
     public sealed class RpgQuestBoardPanelPresenter : MonoBehaviour, IRuntimeValidationProvider

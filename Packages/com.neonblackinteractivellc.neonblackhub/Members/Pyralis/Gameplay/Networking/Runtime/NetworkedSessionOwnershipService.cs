@@ -1,6 +1,7 @@
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Contracts.Networking;
 using Unity.Netcode;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Networking.Runtime
 {
@@ -8,20 +9,20 @@ namespace NeonBlack.Gameplay.Networking.Runtime
     /// NGO-backed session ownership policy used by networked Pyralis sessions.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Networking,
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.Networking },
+        Category = "Networking",
         CapabilityPath = "Networking/Session/Session Ownership Service",
-        Relevance = "NGO-backed session ownership policy used by networked Pyralis sessions.",
-        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.NetworkRouteSupport },
-        NativeSetup = new[]
+        Surface = AuthoringSurface.Goal,
+        Summary = "NGO-backed session ownership policy used by networked Pyralis sessions.",
+        RequiredInterfaceNames = new[] { nameof(ISessionOwnershipService) },
+        SetupSteps = new[]
         {
             "Add a Unity Netcode NetworkManager to the scene.",
             "Assign transport and session ownership references through the Inspector.",
             "Enter Play Mode and start host from the networked session surface."
         },
-        RequiredInterfaceNames = new[] { nameof(ISessionOwnershipService) },
-        Proof = "StartHost correctly triggers the NGO NetworkManager to begin listening.",
-        ExpertAdvice = "This service enforces server-authoritative logic for the session lifecycle."
+        SuccessChecks = new[] { "StartHost correctly triggers the NGO NetworkManager to begin listening." },
+        RoleTags = new[] { "IntentRouteEssential", "NetworkRouteSupport" },
+        Tags = new[] { "capability:Networking", "runtime:Networking" }
     )]
     public sealed class NetworkedSessionOwnershipService : ISessionOwnershipService
     {

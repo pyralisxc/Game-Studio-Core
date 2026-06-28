@@ -4,17 +4,18 @@ using System.Linq;
 using NeonBlack.Gameplay.Data.Rpg;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rpg
 {
     [AuthoringContract(
-        ModuleId = "rpg.quest.definition",
-        Capability = AuthoringCapability.Dialogue,
-        Lane = "RPG",
-        AssignmentFields = new[] { nameof(questId), nameof(displayName), nameof(objectives), nameof(rewards) },
-        Proof = "Proof that the quest can be tracked and rewards are correctly defined.",
+        StableId = "feature.rpg.quest.definition",
+        Category = "Dialogue",
         CapabilityPath = "RPG/Dialogue/Definitions/Quest Definition",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
+        Surface = AuthoringSurface.Goal,
+        RequiredFields = new[] { nameof(questId), nameof(displayName), nameof(objectives), nameof(rewards) },
+        SuccessChecks = new[] { "Proof that the quest can be tracked and rewards are correctly defined." },
+        Tags = new[] { "capability:Dialogue", "runtime:CharacterPawnGameplay", "lane:RPG" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Quest", fileName = "QuestDefinition")]
     public class QuestDefinition : ScriptableObject, IQuestDefinition, IRuntimeValidationProvider

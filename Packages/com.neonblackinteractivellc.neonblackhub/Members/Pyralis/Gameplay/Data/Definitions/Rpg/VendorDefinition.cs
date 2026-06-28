@@ -4,17 +4,18 @@ using System.Linq;
 using NeonBlack.Gameplay.Data.Rpg;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rpg
 {
     [AuthoringContract(
-        ModuleId = "rpg.vendor.definition",
-        Capability = AuthoringCapability.Inventory,
-        Lane = "RPG",
-        AssignmentFields = new[] { nameof(vendorId), nameof(displayName), nameof(offers) },
-        Proof = "Proof that the vendor offers valid items and prices are correctly defined.",
+        StableId = "feature.rpg.vendor.definition",
+        Category = "Inventory",
         CapabilityPath = "RPG/Inventory/Definitions/Vendor Definition",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
+        Surface = AuthoringSurface.Goal,
+        RequiredFields = new[] { nameof(vendorId), nameof(displayName), nameof(offers) },
+        SuccessChecks = new[] { "Proof that the vendor offers valid items and prices are correctly defined." },
+        Tags = new[] { "capability:Inventory", "runtime:CharacterPawnGameplay", "lane:RPG" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Vendor", fileName = "VendorDefinition")]
     public class VendorDefinition : ScriptableObject, IVendorDefinition, IRuntimeValidationProvider

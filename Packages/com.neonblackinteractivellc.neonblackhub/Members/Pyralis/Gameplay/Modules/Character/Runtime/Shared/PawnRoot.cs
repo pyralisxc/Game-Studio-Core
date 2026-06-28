@@ -2,6 +2,7 @@ using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Participants;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Character
 {
@@ -9,16 +10,16 @@ namespace NeonBlack.Gameplay.Modules.Character
     /// Composition root for participant-owned pawns.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Movement | AuthoringCapability.Session,
-        SetupNodeId = "pawn.definition",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay },
+        StableId = "pawn.root",
+        Category = "Movement, Session",
         CapabilityPath = "Character/Pawn Gameplay/Pawn Root",
-        Relevance = "The root coordinator for participant-owned pawns. Handles profile application after a participant spawns the pawn prefab.",
-        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.ParticipantRouteSupport, "PawnRoot" },
-        NativeSetup = new[] { "Add to Pawn prefab root" },
-        Proof = "Pawn spawns and receives its defined movement/combat profiles.",
-        ExpertAdvice = "PawnDefinition owns the prefab reference. PawnRoot receives the participant's PawnDefinition during spawn; assign the local field only when placing a pawn directly in a scene without ParticipantSpawnService.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/pawns"
+        Surface = AuthoringSurface.Goal,
+        Summary = "The root coordinator for participant-owned pawns. Handles profile application after a participant spawns the pawn prefab.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/pawns",
+        SetupSteps = new[] { "Add to Pawn prefab root" },
+        SuccessChecks = new[] { "Pawn spawns and receives its defined movement/combat profiles." },
+        RoleTags = new[] { "IntentRouteEssential", "ParticipantRouteSupport", "PawnRoot" },
+        Tags = new[] { "capability:Movement", "capability:Session", "runtime:CharacterPawnGameplay" }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Characters/Pawn Root")]
     public partial class PawnRoot : MonoBehaviour, IPawnParticipantInitializer, IPawnParticipantStateReader

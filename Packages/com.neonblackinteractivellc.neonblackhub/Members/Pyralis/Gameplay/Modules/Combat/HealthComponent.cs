@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using NeonBlack.Gameplay.Core.Contracts;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Combat
 {
@@ -9,23 +10,21 @@ namespace NeonBlack.Gameplay.Modules.Combat
     /// Universal health component - attach to any GameObject that can be damaged.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.CombatState,
-        Priority = AuthoringPriority.Primary,
-        Lane = "Combat",
-        Relevance = "Universal health component for players, enemies, and destructible props.",
-        NativeSetup = new[]
+        StableId = "combat.health-component",
+        Category = "Combat State",
+        CapabilityPath = "Combat/State/Health Component",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Universal health component for players, enemies, and destructible props.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/health",
+        RequiredFields = new[] { nameof(maxHealth), nameof(faction), nameof(iFrameDuration) },
+        SetupSteps = new[]
         {
             "Add to the actor or prop root.",
             "Set Max Health and Faction.",
             "Wire OnDamaged, OnHealed, or OnDeath UnityEvents for visual feedback (HitFlash, UI)."
         },
-        AssignmentFields = new[] { nameof(maxHealth), nameof(faction), nameof(iFrameDuration) },
-        Proof = "Damage changes health state and raises configured feedback events.",
-        ProofTargetId = "proof.npc-enemy-behavior",
-        ExpertAdvice = "HealthComponent is a neutral actor. Use Faction to prevent friendly fire. Attach HitFlash or HitPause listeners to the OnDamaged event for standard combat feel. Use Faction.Neutral for props that should be destructible by everyone.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/health",
-        Axioms = AuthoringWorldAxiom.Realtime,
-        CapabilityPath = "Combat/State/Health Component"
+        SuccessChecks = new[] { "Damage changes health state and raises configured feedback events." },
+        Tags = new[] { "capability:CombatState", "axiom:Realtime", "lane:Combat", "priority:Primary" }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Combat/Health Component")]
     public class HealthComponent : MonoBehaviour, IActorHealthModifierReceiver, IActorHealthState, IActorDamageImmunityController, IRuntimeValidationProvider

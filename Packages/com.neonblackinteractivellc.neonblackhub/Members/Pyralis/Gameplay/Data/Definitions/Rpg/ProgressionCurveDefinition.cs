@@ -2,17 +2,18 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Rpg;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rpg
 {
     [AuthoringContract(
-        ModuleId = "rpg.progression.curve",
-        Capability = AuthoringCapability.Stats,
-        Lane = "RPG",
-        AssignmentFields = new[] { nameof(curveId), nameof(displayName), nameof(levelExperienceThresholds), nameof(skillPointGrants) },
-        Proof = "Proof that the curve correctly resolves levels from experience points.",
+        StableId = "feature.rpg.progression.curve",
+        Category = "Stats",
         CapabilityPath = "RPG/Stats/Definitions/Progression Curve Definition",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
+        Surface = AuthoringSurface.Goal,
+        RequiredFields = new[] { nameof(curveId), nameof(displayName), nameof(levelExperienceThresholds), nameof(skillPointGrants) },
+        SuccessChecks = new[] { "Proof that the curve correctly resolves levels from experience points." },
+        Tags = new[] { "capability:Stats", "runtime:CharacterPawnGameplay", "lane:RPG" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Progression Curve", fileName = "ProgressionCurveDefinition")]
     public class ProgressionCurveDefinition : ScriptableObject, IProgressionCurve, IRuntimeValidationProvider

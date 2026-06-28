@@ -3,6 +3,7 @@ using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Participants;
 using UnityEngine;
 using UnityEngine.Events;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Scoring
 {
@@ -14,20 +15,20 @@ namespace NeonBlack.Gameplay.Modules.Scoring
     /// </summary>
     [AddComponentMenu("NeonBlack/Gameplay/Scoring/Participant Score Service")]
     [AuthoringContract(
-        Capability = AuthoringCapability.Scoring,
-        Relevance = "Canonical scoring service; tracks participant scores, session points, survival time, and high-score persistence.",
-        Axioms = AuthoringWorldAxiom.None,
+        StableId = "proof.ui-hud-menu",
+        Category = "Scoring",
+        CapabilityPath = "Goals & Scoring/Rules/Participant Score Service",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Canonical scoring service; tracks participant scores, session points, survival time, and high-score persistence.",
+        RequiredFields = new[] { nameof(OnPointsChanged), nameof(OnHighScoreBeaten) },
         RequiredInterfaces = new[] { typeof(IGameService), typeof(ISessionScoreService) },
-        NativeSetup = new[]
+        SetupSteps = new[]
         {
             "Add ParticipantScoreService to a global service GameObject in the scene.",
             "Reference the service from HUD or GameMode presenters to show score."
         },
-        Proof = "Trigger one score change and verify the service raises score events for a HUD or presenter.",
-        ProofTargetId = "proof.ui-hud-menu",
-        AssignmentFields = new[] { nameof(OnPointsChanged), nameof(OnHighScoreBeaten) },
-        ExpertAdvice = "The Scoring service stores high scores in PlayerPrefs. Use ISessionScoreService for cross-feature point collection and IParticipantRoster for multiplayer leaderboards.",
-        CapabilityPath = "Goals & Scoring/Rules/Participant Score Service"
+        SuccessChecks = new[] { "Trigger one score change and verify the service raises score events for a HUD or presenter." },
+        Tags = new[] { "capability:Scoring" }
     )]
     [DefaultExecutionOrder(-30)]
     public class ParticipantScoreService : MonoBehaviour, IGameService, ISessionScoreService, IParticipantScoreAwardSink, IRuntimeValidationProvider

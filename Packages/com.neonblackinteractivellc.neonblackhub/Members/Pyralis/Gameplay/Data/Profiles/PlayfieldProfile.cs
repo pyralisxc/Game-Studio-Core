@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Enums;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Profiles
 {
@@ -9,15 +10,15 @@ namespace NeonBlack.Gameplay.Data.Profiles
     /// Defines gameplay-space rules independent from camera framing.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Movement | AuthoringCapability.Setup,
-        Relevance = "Project-window creation path for movement space, bounds, wrap, and arena-depth rules.",
-        AssignmentFields = new[] { nameof(movementMode), nameof(minBounds), nameof(maxBounds) },
-        Proof = "Verify that actors are clamped to the defined bounds in-game.",
-        ExpertAdvice = "The Playfield defines the physical boundaries of the simulation. Use 'Clamp To Bounds' for arena-style games to keep participants within the playable area.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/core",
+        Category = "Movement, Setup",
         CapabilityPath = "Movement/Profiles/Playfield Profile",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay },
-        Surface = AuthoringContractSurface.Profile
+        Surface = AuthoringSurface.Profile,
+        Summary = "Project-window creation path for movement space, bounds, wrap, and arena-depth rules.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/core",
+        RequiredFields = new[] { nameof(movementMode), nameof(minBounds), nameof(maxBounds) },
+        SuccessChecks = new[] { "Verify that actors are clamped to the defined bounds in-game." },
+        Tags = new[] { "capability:Movement", "capability:Setup", "runtime:CharacterPawnGameplay" },
+        Selectable = false
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Playfield Profile", fileName = "PlayfieldProfile", order = -80)]
     public class PlayfieldProfile : ScriptableObject, IRuntimeValidationProvider, IPlayfieldBoundsProvider

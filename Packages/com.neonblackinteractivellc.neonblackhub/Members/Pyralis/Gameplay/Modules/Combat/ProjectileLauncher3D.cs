@@ -2,18 +2,19 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Definitions.Combat;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Combat
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat,
-        Relevance = "3D projectile launcher; supports physics-based projectiles and raycast hitscan.",
-        Axioms = AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.Dimensions3D,
-        NativeSetup = new[] { "Add to a 3D scene.", "Configure Hit Mask for world geometry." },
-        AssignmentFields = new[] { nameof(hitMask) },
-        Proof = "Fire a hitscan attack and verify it registers on a 3D HealthComponent.",
-        ExpertAdvice = "Set Hit Mask to exclude the shooter's layer. Ensure projectile prefabs have a Rigidbody or IProjectileRuntimeBody for movement.",
-        CapabilityPath = "Combat/Actions/Projectile Launcher3D"
+        Category = "Combat",
+        CapabilityPath = "Combat/Actions/Projectile Launcher3D",
+        Surface = AuthoringSurface.Goal,
+        Summary = "3D projectile launcher; supports physics-based projectiles and raycast hitscan.",
+        RequiredFields = new[] { nameof(hitMask) },
+        SetupSteps = new[] { "Add to a 3D scene.", "Configure Hit Mask for world geometry." },
+        SuccessChecks = new[] { "Fire a hitscan attack and verify it registers on a 3D HealthComponent." },
+        Tags = new[] { "capability:Combat", "axiom:Realtime", "axiom:Dimensions3D" }
     )]
     public sealed class ProjectileLauncher3D : ProjectileLauncherBase, IRuntimeValidationProvider
     {

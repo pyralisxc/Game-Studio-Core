@@ -2,6 +2,7 @@ using NeonBlack.Gameplay.Data.Participants;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using VContainer;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Interaction
 {
@@ -20,19 +21,20 @@ namespace NeonBlack.Gameplay.Modules.Interaction
 ///      Both systems are repositioned to the collectible's world position before Play() is called.
 /// </summary>
 [AuthoringContract(
-    Capability = AuthoringCapability.Audio | AuthoringCapability.VFX,
-    Relevance = "Manages audio and visual feedback (particles/sounds) for collectible actions.",
-    NativeSetup = new[] 
+        Category = "Audio, V F X",
+        CapabilityPath = "Interaction/Collectibles/Feedback/Collectible Feedback2D",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Manages audio and visual feedback (particles/sounds) for collectible actions.",
+        RequiredFields = new[] { nameof(_collectClip), nameof(_collectFX), nameof(_destroyClip), nameof(_destroyFX) },
+        SetupSteps = new[] 
     { 
         "Attach to a FeedbackManager or Spawner GameObject.",
         "Assign AudioClips and ParticleSystems.",
         "Ensure AudioSource is routed to the SFX mixer group."
     },
-    AssignmentFields = new[] { nameof(_collectClip), nameof(_collectFX), nameof(_destroyClip), nameof(_destroyFX) },
-    Proof = "Collect a pickup and verify the sparkle particles play and the collection sound triggers.",
-    ExpertAdvice = "Set SFX spatial blend to 0 (2D) for consistent UI-style feedback. Runtime score awards are normally injected by the session scope; use Score Award Source only for standalone/custom award routing.",
-    CapabilityPath = "Interaction/Collectibles/Feedback/Collectible Feedback2D"
-)]
+        SuccessChecks = new[] { "Collect a pickup and verify the sparkle particles play and the collection sound triggers." },
+        Tags = new[] { "capability:Audio", "capability:VFX" }
+    )]
 [AddComponentMenu("NeonBlack/Gameplay/Interaction/Collectibles/Collectible Feedback 2D")]
 public partial class CollectibleFeedback2D : MonoBehaviour, IPickupAwardSink, IRuntimeValidationProvider
 {

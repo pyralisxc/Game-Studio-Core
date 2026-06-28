@@ -4,19 +4,20 @@ using System.Linq;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Types.Animation;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Definitions
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Animation,
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.AnimationPresentation },
+        Category = "Animation",
         CapabilityPath = "Animation/Definitions/Actor Animation Definition",
-        Relevance = "Defines the animation signal contract supported by an actor setup.",
-        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.AnimationDefinitionRouteSupport },
-        NativeSetup = new[] { "Set supported presentation modes.", "Optionally list supported signals." },
-        AssignmentFields = new[] { nameof(supportsSprite2D), nameof(supportsBillboard2_5D), nameof(supportsRigged3D) },
-        Proof = "Verify animation signals trigger correctly in the prefab's Animator.",
-        ExpertAdvice = "Leave Supported Signals empty to accept all standard signals. Use specific signals only if the animator is restricted."
+        Surface = AuthoringSurface.Goal,
+        Summary = "Defines the animation signal contract supported by an actor setup.",
+        RequiredFields = new[] { nameof(supportsSprite2D), nameof(supportsBillboard2_5D), nameof(supportsRigged3D) },
+        SetupSteps = new[] { "Set supported presentation modes.", "Optionally list supported signals." },
+        SuccessChecks = new[] { "Verify animation signals trigger correctly in the prefab's Animator." },
+        RoleTags = new[] { "IntentRouteEssential", "AnimationDefinitionRouteSupport" },
+        Tags = new[] { "capability:Animation", "runtime:AnimationPresentation" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Definitions/Actor Animation Definition", fileName = "ActorAnimationDefinition", order = 70)]
     public class ActorAnimationDefinition : ScriptableObject, IRuntimeValidationProvider

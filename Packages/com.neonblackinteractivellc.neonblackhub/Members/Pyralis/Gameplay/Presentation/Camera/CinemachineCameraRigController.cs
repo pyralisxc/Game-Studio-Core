@@ -6,6 +6,7 @@ using NeonBlack.Gameplay.Data.Participants;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using VContainer;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Presentation.Camera
 {
@@ -15,12 +16,14 @@ namespace NeonBlack.Gameplay.Presentation.Camera
     /// playfield bounds clamping, runtime profile switching, and optional scroll zoom.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Camera,
+        StableId = "proof.camera-cursor-world",
+        Category = "Camera",
         CapabilityPath = "World & Meta/Camera/Cinemachine Rig",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CameraInput },
-        Relevance = "Cinemachine Camera Rig Controller is the Pyralis scene camera runtime. Use this Inspector for assigned references and tuning values.",
-        RoleTags = new[] { "CameraRig", "Cinemachine", "ParticipantFollow" },
-        NativeSetup = new[] 
+        Surface = AuthoringSurface.Goal,
+        Summary = "Cinemachine Camera Rig Controller is the Pyralis scene camera runtime. Use this Inspector for assigned references and tuning values.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/camera",
+        RequiredFields = new[] { nameof(cameraRigProfile), nameof(sharedCameraBehaviour), nameof(targetCamera), nameof(explicitFocusTarget) },
+        SetupSteps = new[] 
         { 
             "Add to CameraRig root.",
             "Assign Target Camera (physical Unity Camera with Cinemachine Brain).",
@@ -28,11 +31,9 @@ namespace NeonBlack.Gameplay.Presentation.Camera
             "Assign Shared Camera Behaviour (Cinemachine virtual camera).",
             "For pawn-follow cameras, add PawnCameraTarget to the pawn prefab or use the pawn root fallback."
         },
-        AssignmentFields = new[] { nameof(cameraRigProfile), nameof(sharedCameraBehaviour), nameof(targetCamera), nameof(explicitFocusTarget) },
-        ProofTargetId = "proof.camera-cursor-world",
-        Proof = "Enter Play Mode. Verify the camera rig frames the spawned player pawn automatically. In Split-Screen, verify two viewports are created.",
-        ExpertAdvice = "Pyralis chooses the gameplay focus target; Cinemachine composes the view. Use Manual Cinemachine when you want scene-authored Follow/LookAt, Participant Group for shared pawn framing, Participant Pawns for per-participant cameras, Playfield Center for board/menu/playfield views, and Explicit Scene Target for a hand-authored anchor.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/camera"
+        SuccessChecks = new[] { "Enter Play Mode. Verify the camera rig frames the spawned player pawn automatically. In Split-Screen, verify two viewports are created." },
+        RoleTags = new[] { "CameraRig", "Cinemachine", "ParticipantFollow" },
+        Tags = new[] { "capability:Camera", "runtime:CameraInput" }
     )]
 [AddComponentMenu("NeonBlack/Gameplay/Camera/Cinemachine Camera Rig Controller")]
     [ExecuteAlways]

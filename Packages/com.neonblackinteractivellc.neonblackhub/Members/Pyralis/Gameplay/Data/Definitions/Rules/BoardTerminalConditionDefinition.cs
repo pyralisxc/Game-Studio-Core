@@ -2,6 +2,7 @@ using NeonBlack.Gameplay.Data.Tabletop;
 using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rules
 {
@@ -9,12 +10,13 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
     /// Designer-authored terminal condition for board and tabletop games.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Tabletop | AuthoringCapability.Grid, 
-        Relevance = "Project-window creation path for tabletop round or game-end conditions.",
-        AssignmentFields = new[] { nameof(conditionId), nameof(kind), nameof(observedSeat), nameof(winningSeat) },
-        Proof = "Verify the game ends correctly when this condition is met.",
+        Category = "Tabletop, Grid",
         CapabilityPath = "Tabletop/Board/Board Terminal Condition Definition",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.BoardCardTabletop }
+        Surface = AuthoringSurface.Goal,
+        Summary = "Project-window creation path for tabletop round or game-end conditions.",
+        RequiredFields = new[] { nameof(conditionId), nameof(kind), nameof(observedSeat), nameof(winningSeat) },
+        SuccessChecks = new[] { "Verify the game ends correctly when this condition is met." },
+        Tags = new[] { "capability:Tabletop", "capability:Grid", "runtime:BoardCardTabletop" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Rules/Board Terminal Condition", fileName = "BoardTerminalCondition", order = -50)]
     public class BoardTerminalConditionDefinition : ScriptableObject, IRuntimeValidationProvider

@@ -1,5 +1,6 @@
 using UnityEngine;
 using NeonBlack.Gameplay.Core.Contracts;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Profiles
 {
@@ -8,17 +9,16 @@ namespace NeonBlack.Gameplay.Data.Profiles
     /// while its visual presentation lifts on an arc.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Movement | AuthoringCapability.Traversal,
+        Category = "Movement, Traversal",
         CapabilityPath = "Movement/Traversal/FakeGravityJump",
-        Axioms = AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.GravityNone | AuthoringWorldAxiom.Realtime,
-        Relevance = "Tuning asset for fake-gravity visual jumps where the pawn sprite or visual child arcs without changing collider position.",
+        Surface = AuthoringSurface.Profile,
+        Summary = "Tuning asset for fake-gravity visual jumps where the pawn sprite or visual child arcs without changing collider position.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/movement",
+        RequiredFields = new[] { nameof(actionRole), nameof(duration), nameof(height), nameof(cooldown) },
+        SuccessChecks = new[] { "Perform a hop in a top-down scene and verify the shadow stays on the ground while the sprite arcs up." },
         RoleTags = new[] { "VisualHop", "FakeGravityJump", "JumpProfile" },
-        AssignmentFields = new[] { nameof(actionRole), nameof(duration), nameof(height), nameof(cooldown) },
-        Proof = "Perform a hop in a top-down scene and verify the shadow stays on the ground while the sprite arcs up.",
-        ExpertAdvice = "This is a purely visual/presentation hop. It does not change the physical collider height. Best used for 'Jump' actions in isometric RPGs.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/movement",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay },
-        Surface = AuthoringContractSurface.Profile
+        Tags = new[] { "capability:Movement", "capability:Traversal", "runtime:CharacterPawnGameplay", "axiom:Dimensions2D", "axiom:GravityNone", "axiom:Realtime" },
+        Selectable = false
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Top Down Hop Profile", fileName = "TopDownHopProfile")]
 public class TopDownHopProfile : ScriptableObject

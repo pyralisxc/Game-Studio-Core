@@ -2,16 +2,18 @@ using UnityEngine;
 using NeonBlack.Gameplay.Core.Types.Animation;
 using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Core.Contracts;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Enemies
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Animation,
-        Relevance = "Binds enemy gameplay states to visual signals and animator triggers.",
-        Proof = "Verify enemy plays walk, hurt, and attack animations.",
-        ExpertAdvice = "Ensure the child Animator has 'IsMoving' and 'IsGrounded' parameters.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/visuals",
-        CapabilityPath = "Presentation/Feedback/Enemy Animation Module"
+        Category = "Animation",
+        CapabilityPath = "Presentation/Feedback/Enemy Animation Module",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Binds enemy gameplay states to visual signals and animator triggers.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/visuals",
+        SuccessChecks = new[] { "Verify enemy plays walk, hurt, and attack animations." },
+        Tags = new[] { "capability:Animation" }
     )]
     public class EnemyAnimationModule : MonoBehaviour
 {

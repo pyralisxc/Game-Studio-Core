@@ -1,17 +1,19 @@
 using UnityEngine;
 using NeonBlack.Gameplay.Core.Enums;
 using NeonBlack.Gameplay.Core.Contracts;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Enemies
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.CombatSensors,
-        Relevance = "Handles enemy line-of-sight and proximity detection.",
-        AssignmentFields = new[] { nameof(aggroRange), nameof(leashRange), nameof(requireLineOfSight), nameof(obstacleMask) },
-        Proof = "Enemy should enter Aggro state when player enters aggroRange.",
-        ExpertAdvice = "Increase leashRange to prevent enemies from resetting too early in large arenas.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/enemies",
-        CapabilityPath = "Combat/Sensors/Enemy Detection Module"
+        Category = "Combat Sensors",
+        CapabilityPath = "Combat/Sensors/Enemy Detection Module",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Handles enemy line-of-sight and proximity detection.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/enemies",
+        RequiredFields = new[] { nameof(aggroRange), nameof(leashRange), nameof(requireLineOfSight), nameof(obstacleMask) },
+        SuccessChecks = new[] { "Enemy should enter Aggro state when player enters aggroRange." },
+        Tags = new[] { "capability:CombatSensors" }
     )]
     public class EnemyDetectionModule : MonoBehaviour
 {

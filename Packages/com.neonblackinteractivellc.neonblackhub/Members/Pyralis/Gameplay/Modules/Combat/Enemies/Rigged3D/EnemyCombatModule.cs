@@ -3,17 +3,19 @@ using NeonBlack.Gameplay.Data.Definitions.Combat;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Combat
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat,
-        Relevance = "Manages enemy combat AI, attack sequencing, and hitboxes.",
-        AssignmentFields = new[] { nameof(combatProfile), nameof(hitBoxZones), nameof(attackSequence), nameof(attackMode) },
-        Proof = "Verify enemy attacks when player is in range.",
-        ExpertAdvice = "Use attackRangeOverride if the calculated hitbox range is inaccurate. Sequential mode is best for simple bosses.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/enemies",
-        CapabilityPath = "Combat/Actions/Enemy Combat Module"
+        Category = "Combat",
+        CapabilityPath = "Combat/Actions/Enemy Combat Module",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Manages enemy combat AI, attack sequencing, and hitboxes.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/enemies",
+        RequiredFields = new[] { nameof(combatProfile), nameof(hitBoxZones), nameof(attackSequence), nameof(attackMode) },
+        SuccessChecks = new[] { "Verify enemy attacks when player is in range." },
+        Tags = new[] { "capability:Combat" }
     )]
     public partial class EnemyCombatModule : MonoBehaviour, IActorCombatRequestReceiver, IActorCombatTacticalState, IActorCombatModifierReceiver, IEnemyCombatProfileReceiver
 {

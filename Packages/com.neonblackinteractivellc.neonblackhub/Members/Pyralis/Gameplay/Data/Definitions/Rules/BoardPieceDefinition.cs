@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rules
 {
@@ -8,12 +9,13 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
     /// Designer-authored logical board piece identity.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Tabletop | AuthoringCapability.Grid, 
-        Relevance = "Project-window creation path for tabletop board pieces.",
-        AssignmentFields = new[] { nameof(pieceId), nameof(displayName), nameof(visualPrefab) },
-        Proof = "Verify the piece is instantiated correctly on the board with the assigned visual prefab.",
+        Category = "Tabletop, Grid",
         CapabilityPath = "Tabletop/Board/Board Piece Definition",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.BoardCardTabletop }
+        Surface = AuthoringSurface.Goal,
+        Summary = "Project-window creation path for tabletop board pieces.",
+        RequiredFields = new[] { nameof(pieceId), nameof(displayName), nameof(visualPrefab) },
+        SuccessChecks = new[] { "Verify the piece is instantiated correctly on the board with the assigned visual prefab." },
+        Tags = new[] { "capability:Tabletop", "capability:Grid", "runtime:BoardCardTabletop" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Rules/Board Piece Definition", fileName = "BoardPieceDefinition", order = -90)]
     public class BoardPieceDefinition : ScriptableObject, IRuntimeValidationProvider

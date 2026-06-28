@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Presentation.Camera
 {
@@ -9,19 +10,20 @@ namespace NeonBlack.Gameplay.Presentation.Camera
 /// and a tracked target. Attach to the same GameObject as your Main Camera.
 /// </summary>
 [AuthoringContract(
-    Capability = AuthoringCapability.Camera,
-    Relevance = "Fades renderers that block the line of sight between the camera and a tracked target.",
-    NativeSetup = new[] 
+        Category = "Camera",
+        CapabilityPath = "World & Meta/Camera/Camera Occlusion Fader",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Fades renderers that block the line of sight between the camera and a tracked target.",
+        RequiredFields = new[] { nameof(target), nameof(fadeAlpha), nameof(fadeDistance), nameof(occlusionMask) },
+        SetupSteps = new[] 
     { 
         "Attach to your Main Camera.",
         "Drag the player Transform into Target (or set at runtime).",
         "Limit Occlusion Mask to world geometry layers."
     },
-    AssignmentFields = new[] { nameof(target), nameof(fadeAlpha), nameof(fadeDistance), nameof(occlusionMask) },
-    Proof = "Walk the player behind world geometry and verify it fades out.",
-    ExpertAdvice = "Keep the player layer out of Occlusion Mask. Use this for 3D line-of-sight fading; 2D sprite visibility is usually handled via sorting layers.",
-    CapabilityPath = "World & Meta/Camera/Camera Occlusion Fader"
-)]
+        SuccessChecks = new[] { "Walk the player behind world geometry and verify it fades out." },
+        Tags = new[] { "capability:Camera" }
+    )]
 [AddComponentMenu("NeonBlack/Gameplay/Camera/Camera Occlusion Fader 3D")]
 public class CameraOcclusionFader : MonoBehaviour
 {

@@ -1,6 +1,7 @@
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Input
 {
@@ -10,16 +11,16 @@ namespace NeonBlack.Gameplay.Modules.Input
 /// It translates Unity Input System actions into movement direction for the 2D motor.
 /// </summary>
 [AuthoringContract(
-    Capability = AuthoringCapability.Input | AuthoringCapability.Movement, 
-    CapabilityPath = "Core Setup/Input/Sprite2D Motor Input Adapter",
-    RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay },
-    Relevance = "Primary input module for 2D characters. Translates participant input into Motor2D movement.",
-    Axioms = AuthoringWorldAxiom.Dimensions2D,
-    RequiredComponentNames = new[] { "NeonBlack.Gameplay.Modules.Character.Motor2D" },
-    RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.InputRouteSupport, "ParticipantInputConsumer", "Motor2DInput", "PawnInputAdapter" },
-    Proof = "Verify that player input moves the pawn in 2D space and respects the active InputProfile.",
-    Surface = AuthoringContractSurface.Adapter
-)]
+        Category = "Input, Movement",
+        CapabilityPath = "Core Setup/Input/Sprite2D Motor Input Adapter",
+        Surface = AuthoringSurface.Adapter,
+        Summary = "Primary input module for 2D characters. Translates participant input into Motor2D movement.",
+        RequiredComponentNames = new[] { "NeonBlack.Gameplay.Modules.Character.Motor2D" },
+        SuccessChecks = new[] { "Verify that player input moves the pawn in 2D space and respects the active InputProfile." },
+        RoleTags = new[] { "IntentRouteEssential", "InputRouteSupport", "ParticipantInputConsumer", "Motor2DInput", "PawnInputAdapter" },
+        Tags = new[] { "capability:Input", "capability:Movement", "runtime:CharacterPawnGameplay", "axiom:Dimensions2D" },
+        Selectable = false
+    )]
 [AddComponentMenu("NeonBlack/Gameplay/Modules/Input/Sprite2D/Motor Input Adapter")]
 public class Motor2DInputAdapter : PlayerInputHandler
 {

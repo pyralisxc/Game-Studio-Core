@@ -1,5 +1,6 @@
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine.SceneManagement;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Glue.SceneFlow.Navigation
 {
@@ -9,11 +10,12 @@ namespace NeonBlack.Gameplay.Glue.SceneFlow.Navigation
     /// prefer explicit ISceneNavigator references.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Setup,
-        Relevance = "Static fallback for direct SceneManager loads when no authored ISceneNavigator route exists.",
-        Proof = "Calling LoadScene correctly changes the active Unity scene.",
-        ExpertAdvice = "SceneNavigator is a static bypass for utility scripts. User-facing runtime components should depend on ISceneNavigator, with SceneFader as the current menu/game-shell route and SceneLoader as a lightweight fallback.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/navigation"
+        Category = "Setup",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Static fallback for direct SceneManager loads when no authored ISceneNavigator route exists.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/navigation",
+        SuccessChecks = new[] { "Calling LoadScene correctly changes the active Unity scene." },
+        Tags = new[] { "capability:Setup" }
     )]
     public static class SceneNavigator
     {

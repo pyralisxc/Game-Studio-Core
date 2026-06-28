@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.Video;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Glue.SceneFlow.Navigation
 {
@@ -11,18 +12,19 @@ namespace NeonBlack.Gameplay.Glue.SceneFlow.Navigation
     /// Drives the company splash/intro scene.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Setup | AuthoringCapability.UI,
-        Relevance = "Drives the optional intro scene, plays a video or static fallback, preloads the next scene, and fades out.",
-        NativeSetup = new[] 
+        Category = "Setup, U I",
+        CapabilityPath = "UI/HUD/Splash Screen Controller",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Drives the optional intro scene, plays a video or static fallback, preloads the next scene, and fades out.",
+        RequiredFields = new[] { nameof(_nextSceneName), nameof(_blackOverlay), nameof(_videoClip), nameof(_videoPlayer), nameof(_videoDisplay) },
+        SetupSteps = new[] 
         { 
             "Assign Next Scene Name to the menu or target gameplay scene.",
             "Assign Black Overlay if the splash should fade to black before activation.",
             "For video splash, assign Video Player, Video Display, and Video Clip together."
         },
-        AssignmentFields = new[] { nameof(_nextSceneName), nameof(_blackOverlay), nameof(_videoClip), nameof(_videoPlayer), nameof(_videoDisplay) },
-        Proof = "Verify the intro splash plays and transitions to the main menu successfully.",
-        ExpertAdvice = "Do not leave Next Scene Name blank; async loading will fail. Do not assign a video display without a video clip unless a static image is intentionally shown.",
-        CapabilityPath = "UI/HUD/Splash Screen Controller"
+        SuccessChecks = new[] { "Verify the intro splash plays and transitions to the main menu successfully." },
+        Tags = new[] { "capability:Setup", "capability:UI" }
     )]
     public class SplashScreenController : MonoBehaviour
     {

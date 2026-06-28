@@ -5,6 +5,7 @@ using NeonBlack.Gameplay.Glue.Session;
 using NeonBlack.Gameplay.Glue.Spawning;
 using NeonBlack.Gameplay.Modules.Character;
 using Unity.Netcode;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Networking.Participants
 {
@@ -13,12 +14,13 @@ namespace NeonBlack.Gameplay.Networking.Participants
     /// Resolves the NGO <see cref="Unity.Netcode.NetworkManager.LocalClientId"/> for participant ownership.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Networking,
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.Networking },
+        Category = "Networking",
         CapabilityPath = "Networking/Participants/Networked Participant Roster Service",
-        Relevance = "Drop-in replacement for ParticipantRosterService in online sessions. Resolves NGO Client IDs.",
-        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.NetworkRouteSupport },
-        Proof = "The participant roster correctly reflects the NetworkManager.LocalClientId for the local player."
+        Surface = AuthoringSurface.Goal,
+        Summary = "Drop-in replacement for ParticipantRosterService in online sessions. Resolves NGO Client IDs.",
+        SuccessChecks = new[] { "The participant roster correctly reflects the NetworkManager.LocalClientId for the local player." },
+        RoleTags = new[] { "IntentRouteEssential", "NetworkRouteSupport" },
+        Tags = new[] { "capability:Networking", "runtime:Networking" }
     )]
     public class NetworkedParticipantRosterService : ParticipantRosterService
     {

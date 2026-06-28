@@ -3,36 +3,30 @@ using NeonBlack.Gameplay.Core.Types.Animation;
 using NeonBlack.Gameplay.Data.Interactions;
 using NeonBlack.Gameplay.Data.Profiles;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Interaction
 {
     [AddComponentMenu("NeonBlack/Gameplay/Interaction/Collectibles/Actor Pickup Collector Feature 3D")]
     [AuthoringContract(
-        ModuleId = "actor.interaction.collectibles.3d",
-        Capability = AuthoringCapability.Inventory,
-        Relevance = "Allows 3D actors to detect and collect pickups using spherical overlap detection.",
-        Lane = "Interaction",
-        ProfileType = typeof(PickupProfile),
+        StableId = "feature.actor.interaction.collectibles.3d",
+        Category = "Inventory",
+        Surface = AuthoringSurface.Profile,
+        Summary = "Allows 3D actors to detect and collect pickups using spherical overlap detection.",
+        RequiredFields = new[]
+        {
+            "ActorPickupCollector3D.pickupProfile"
+        },
+        RequiredComponentNames = new[] { "UnityEngine.Collider" },
         RequiredInterfaces = new[] { typeof(IActorInteractionHandler) },
-        RequiredComponentNames = new[] { "UnityEngine.Collider" }, // Or CharacterController
-        SupportedLanes = new[] { ActorPresentationMode.Billboard2_5D, ActorPresentationMode.ThirdPerson3D },
-        UnsupportedLanes = new[] { ActorPresentationMode.Sprite2D },
-        NativeSetup = new[]
+        SetupSteps = new[]
         {
             "add ActorPickupCollector3D to the actor root",
             "assign PickupProfile"
         },
-        Proof = "Walk a 3D actor into a pickup and verify it is collected.",
-        AssignmentFields = new[]
-        {
-            "ActorPickupCollector3D.pickupProfile"
-        },
-        CustomizationMoments = new[]
-        {
-            "PickupProfile.enableAutoCollect",
-            "PickupProfile.enableInteractionCollect",
-            "PickupProfile.collectibleLayers3D"
-        }
+        SuccessChecks = new[] { "Walk a 3D actor into a pickup and verify it is collected." },
+        Tags = new[] { "capability:Inventory", "lane:Interaction" },
+        Selectable = false
     )]
     public class ActorPickupCollector3D : MonoBehaviour, IActorInteractionHandler
 {

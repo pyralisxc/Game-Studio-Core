@@ -21,6 +21,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using VContainer;
 using VContainer.Unity;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Glue.Lifetime
 {
@@ -31,15 +32,15 @@ namespace NeonBlack.Gameplay.Glue.Lifetime
     [AddComponentMenu("NeonBlack/Gameplay/Setup/Pyralis Gameplay Lifetime Scope")]
     [DisallowMultipleComponent]
     [AuthoringContract(
-        Capability = AuthoringCapability.Setup, 
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.PlatformCore },
-        Relevance = "Inspector Add Component path for the visible Pyralis runtime composition scope.", 
-        Axioms = AuthoringWorldAxiom.None,
+        Category = "Setup",
         CapabilityPath = "Core Setup/Composition/Pyralis Gameplay Lifetime Scope",
-        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.CoreRouteAnchor },
-        AssignmentFields = new[] { nameof(InjectLoadedScenesOnBuild) },
-        Proof = "Check the VContainer debugger to ensure all gameplay services are correctly registered in the scope.",
-        NativeSetup = new[] { "Configure VContainer Resolver" }
+        Surface = AuthoringSurface.Goal,
+        Summary = "Inspector Add Component path for the visible Pyralis runtime composition scope.",
+        RequiredFields = new[] { nameof(InjectLoadedScenesOnBuild) },
+        SetupSteps = new[] { "Configure VContainer Resolver" },
+        SuccessChecks = new[] { "Check the VContainer debugger to ensure all gameplay services are correctly registered in the scope." },
+        RoleTags = new[] { "IntentRouteEssential", "CoreRouteAnchor" },
+        Tags = new[] { "capability:Setup", "runtime:PlatformCore" }
     )]
     public class PyralisGameplayLifetimeScope : LifetimeScope
     {

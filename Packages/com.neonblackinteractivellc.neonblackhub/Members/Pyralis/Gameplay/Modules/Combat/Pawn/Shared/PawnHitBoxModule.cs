@@ -3,17 +3,19 @@ using System.Collections.Generic;
 using UnityEngine;
 using NeonBlack.Gameplay.Modules.Combat;
 using NeonBlack.Gameplay.Core.Contracts;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Combat
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat | AuthoringCapability.CombatSensors,
-        Relevance = "Pawn module for managing and triggering melee hitboxes by zone name.",
-        AssignmentFields = new[] { nameof(hitBoxZones) },
-        Proof = "Verify hitboxes are correctly mirrored when the pawn flips direction.",
-        ExpertAdvice = "Each HitBoxSlot maps a 'Zone Name' to a physical HitBox component. Ensure the zone names match your attack definitions.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/combat",
-        CapabilityPath = "Combat/Sensors/Pawn Hit Box Module"
+        Category = "Combat, Combat Sensors",
+        CapabilityPath = "Combat/Sensors/Pawn Hit Box Module",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Pawn module for managing and triggering melee hitboxes by zone name.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/combat",
+        RequiredFields = new[] { nameof(hitBoxZones) },
+        SuccessChecks = new[] { "Verify hitboxes are correctly mirrored when the pawn flips direction." },
+        Tags = new[] { "capability:Combat", "capability:CombatSensors" }
     )]
     public class PawnHitBoxModule : MonoBehaviour
 {

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions.Combat;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Profiles
 {
@@ -9,17 +10,16 @@ namespace NeonBlack.Gameplay.Data.Profiles
     /// Shared combat authoring profile for pawn composition.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat,
-        Priority = AuthoringPriority.AuxiliaryDefault,
-        Lane = "Combat",
-        Relevance = "Defines the core combat parameters for a pawn archetype.",
-        NativeSetup = new[] { "Set base damage and cooldowns.", "Configure block reduction." },
-        AssignmentFields = new[] { nameof(baseDamage), nameof(attackCooldown), nameof(attackWeapon), nameof(primarySequence) },
-        Proof = "Verify the pawn can attack and take damage in-game.",
-        ExpertAdvice = "Use comboResetTime to control the window for continuing a combo. Assign a WeaponData asset to define the hitboxes and visual effects of the attack.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/combat",
+        Category = "Combat",
         CapabilityPath = "Combat/Actions/Pawn Combat Profile",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.Combat }
+        Surface = AuthoringSurface.Profile,
+        Summary = "Defines the core combat parameters for a pawn archetype.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/combat",
+        RequiredFields = new[] { nameof(baseDamage), nameof(attackCooldown), nameof(attackWeapon), nameof(primarySequence) },
+        SetupSteps = new[] { "Set base damage and cooldowns.", "Configure block reduction." },
+        SuccessChecks = new[] { "Verify the pawn can attack and take damage in-game." },
+        Tags = new[] { "capability:Combat", "runtime:Combat", "lane:Combat", "priority:AuxiliaryDefault" },
+        Selectable = false
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Pawn Combat Profile", fileName = "PawnCombatProfile", order = -20)]
     public class PawnCombatProfile : ScriptableObject, IRuntimeValidationProvider

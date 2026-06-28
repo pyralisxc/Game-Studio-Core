@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Glue.SceneFlow.Navigation
 {
@@ -11,19 +12,20 @@ namespace NeonBlack.Gameplay.Glue.SceneFlow.Navigation
     /// Drives the optional LoadingScreen intermediate scene.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.UI | AuthoringCapability.Setup,
-        Relevance = "LoadingScreenController reads SceneFader.PendingScene and shows optional progress UI.",
-        NativeSetup = new[] 
+        Category = "U I, Setup",
+        CapabilityPath = "Core Setup/Navigation/Loading Screen Controller",
+        Surface = AuthoringSurface.RequiredSetup,
+        Summary = "LoadingScreenController reads SceneFader.PendingScene and shows optional progress UI.",
+        RequiredFields = new[] { nameof(_progressBar), nameof(_label) },
+        SetupSteps = new[] 
         { 
             "Use this only in the loading scene referenced by SceneNames.LoadingScreen.",
             "Route into it through SceneFader.FadeToSceneViaLoader so PendingScene is set.",
             "Assign Progress Bar and Label when the loading scene should display progress."
         },
-        AssignmentFields = new[] { nameof(_progressBar), nameof(_label) },
-        Proof = "Load a scene via SceneFader and verify the loading screen displays progress before activation.",
-        ExpertAdvice = "Do not open the loading scene directly unless falling back to MainMenu is acceptable. Do not put gameplay-only startup logic here; this scene should remain transitional.",
-        CapabilityPath = "Core Setup/Navigation/Loading Screen Controller",
-        Surface = AuthoringContractSurface.SetupOnly
+        SuccessChecks = new[] { "Load a scene via SceneFader and verify the loading screen displays progress before activation." },
+        Tags = new[] { "capability:UI", "capability:Setup" },
+        Selectable = false
     )]
     public class LoadingScreenController : MonoBehaviour
     {

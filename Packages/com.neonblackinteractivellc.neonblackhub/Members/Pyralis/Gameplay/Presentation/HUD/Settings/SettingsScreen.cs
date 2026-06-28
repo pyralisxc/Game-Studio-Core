@@ -2,6 +2,7 @@ using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Presentation.HUD.Settings
 {
@@ -9,20 +10,21 @@ namespace NeonBlack.Gameplay.Presentation.HUD.Settings
 /// Controls the Settings screen as a full canvas page swap.
 /// </summary>
 [AuthoringContract(
-    Capability = AuthoringCapability.UI | AuthoringCapability.Setup,
-    Relevance = "Swaps between a main menu page and a settings page, forwards slider/toggle values to a settings service, and can pause gameplay.",
-    NativeSetup = new[] 
+        Category = "U I, Setup",
+        CapabilityPath = "Settings/UI/Settings Screen",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Swaps between a main menu page and a settings page, forwards slider/toggle values to a settings service, and can pause gameplay.",
+        RequiredFields = new[] { nameof(_mainMenuPage), nameof(_settingsPage), nameof(_settingsSource), nameof(_backButton) },
+        SetupSteps = new[] 
     { 
         "Assign Main Menu Page and Settings Page roots from the same Canvas.",
         "Assign Settings Source to SettingsManager.",
         "Assign the Back Button so Close can save values.",
         "Start the Settings Page inactive."
     },
-    AssignmentFields = new[] { nameof(_mainMenuPage), nameof(_settingsPage), nameof(_settingsSource), nameof(_backButton) },
-    Proof = "Open settings from the menu and verify it pauses gameplay and populates sliders correctly.",
-    ExpertAdvice = "Do not assign child controls as page roots; page swapping should hide whole panels. Sliders will not save unless Settings Source is assigned.",
-    CapabilityPath = "Settings/UI/Settings Screen"
-)]
+        SuccessChecks = new[] { "Open settings from the menu and verify it pauses gameplay and populates sliders correctly." },
+        Tags = new[] { "capability:UI", "capability:Setup" }
+    )]
 public class SettingsScreen : MonoBehaviour
 {
     [Header("Pages")]

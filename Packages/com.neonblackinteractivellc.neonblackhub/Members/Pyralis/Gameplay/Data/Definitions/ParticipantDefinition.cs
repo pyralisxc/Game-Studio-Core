@@ -1,6 +1,7 @@
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Definitions
 {
@@ -8,17 +9,17 @@ namespace NeonBlack.Gameplay.Data.Definitions
     /// Authored seat/participant defaults used by sessions and local join flows.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Participants, 
+        StableId = "participant.default",
+        Category = "Participants",
         CapabilityPath = "Core Setup/Participants/Participant Definition",
-        SetupNodeId = "participant.default",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.PlatformCore, RuntimeCapabilityFamily.CharacterPawnGameplay },
-        Relevance = "Defines a player, AI, seat, hand, faction, or command owner within a session, including the preferred input profile and optional default pawn.",
-        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.ParticipantRouteSupport, "Participant", "InputOwner", "PawnOwner" },
-        AssignmentFields = new[] { nameof(displayName), nameof(defaultPawn), nameof(inputProfile), nameof(teamIndex) },
-        Proof = "Add this Participant Definition to the 'Default Participants' array in a Session Definition.",
-        ExpertAdvice = "ParticipantDefinitions represent seats or control owners. Put the InputProfile here when this participant is who controls the route. Assign a PawnDefinition only for pawn-backed actors; no-pawn routes can control boards, hands, cursors, cameras, factions, menus, or action surfaces.",
-        NativeSetup = new[] { "Assign an InputProfile when this participant receives player input.", "Assign a PawnDefinition only for pawn-backed routes." },
-        DocumentationURL = "https://docs.neonblack.com/pyralis/session"
+        Surface = AuthoringSurface.Goal,
+        Summary = "Defines a player, AI, seat, hand, faction, or command owner within a session, including the preferred input profile and optional default pawn.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/session",
+        RequiredFields = new[] { nameof(displayName), nameof(defaultPawn), nameof(inputProfile), nameof(teamIndex) },
+        SetupSteps = new[] { "Assign an InputProfile when this participant receives player input.", "Assign a PawnDefinition only for pawn-backed routes." },
+        SuccessChecks = new[] { "Add this Participant Definition to the 'Default Participants' array in a Session Definition." },
+        RoleTags = new[] { "IntentRouteEssential", "ParticipantRouteSupport", "Participant", "InputOwner", "PawnOwner" },
+        Tags = new[] { "capability:Participants", "runtime:PlatformCore", "runtime:CharacterPawnGameplay" }
     )]
 [CreateAssetMenu(menuName = "NeonBlack/Definitions/Participant Definition", fileName = "ParticipantDefinition", order = 20)]
     public class ParticipantDefinition : ScriptableObject

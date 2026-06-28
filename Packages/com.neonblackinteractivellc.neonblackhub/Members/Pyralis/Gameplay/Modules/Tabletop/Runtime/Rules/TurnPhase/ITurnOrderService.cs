@@ -1,5 +1,6 @@
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Tabletop;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Tabletop.Runtime
 {
@@ -7,13 +8,13 @@ namespace NeonBlack.Gameplay.Modules.Tabletop.Runtime
     /// Service boundary for turn-based features and UI.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Tabletop | AuthoringCapability.TurnBased, 
-        Relevance = "Manages turn sequence and active participant in turn-based games.", 
-        Axioms = AuthoringWorldAxiom.TurnBased,
-        Proof = "Verify that TryAdvanceTurn cycles the turn order correctly.",
-        NativeSetup = new[] { "Implement interface in a service component" },
-        ExpertAdvice = "Central authority for whose turn it is. Use this to gate player input and trigger AI decision phases in Tabletop modes.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/tabletop"
+        Category = "Tabletop, Turn Based",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Manages turn sequence and active participant in turn-based games.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/tabletop",
+        SetupSteps = new[] { "Implement interface in a service component" },
+        SuccessChecks = new[] { "Verify that TryAdvanceTurn cycles the turn order correctly." },
+        Tags = new[] { "capability:Tabletop", "capability:TurnBased", "axiom:TurnBased" }
     )]
 public interface ITurnOrderService
 {

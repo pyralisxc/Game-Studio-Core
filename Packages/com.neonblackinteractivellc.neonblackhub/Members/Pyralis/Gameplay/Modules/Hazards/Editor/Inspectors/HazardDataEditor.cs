@@ -129,7 +129,7 @@ public class HazardDataEditor : Editor
 
         PyralisInspectorHandoff.DrawAuthoringButton(
             "Hazard Data",
-            "Edit this hazard asset's behavior, timing, sprites, audio, feedback, and modifiers here. Use Pyralis Authoring for route setup and proof guidance.");
+            "Edit this hazard asset's behavior, timing, sprites, audio, feedback, and modifiers here. Use PYS Authoring for route setup and proof guidance.");
 
         var type    = (HazardData.HazardType)_pType.enumValueIndex;
         var variant = (HazardData.CrossingVariant)_pVariant.enumValueIndex;

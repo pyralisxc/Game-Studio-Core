@@ -2,17 +2,18 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Rpg;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rpg
 {
     [AuthoringContract(
-        ModuleId = "rpg.skilltree.definition",
-        Capability = AuthoringCapability.Stats,
-        Lane = "RPG",
-        AssignmentFields = new[] { nameof(treeId), nameof(displayName), nameof(nodes) },
-        Proof = "Proof that the skill tree contains valid nodes and prerequisites are correctly linked.",
+        StableId = "feature.rpg.skilltree.definition",
+        Category = "Stats",
         CapabilityPath = "RPG/Stats/Definitions/Skill Tree Definition",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
+        Surface = AuthoringSurface.Goal,
+        RequiredFields = new[] { nameof(treeId), nameof(displayName), nameof(nodes) },
+        SuccessChecks = new[] { "Proof that the skill tree contains valid nodes and prerequisites are correctly linked." },
+        Tags = new[] { "capability:Stats", "runtime:CharacterPawnGameplay", "lane:RPG" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Skill Tree", fileName = "SkillTreeDefinition")]
     public class SkillTreeDefinition : ScriptableObject, ISkillTree, IRuntimeValidationProvider

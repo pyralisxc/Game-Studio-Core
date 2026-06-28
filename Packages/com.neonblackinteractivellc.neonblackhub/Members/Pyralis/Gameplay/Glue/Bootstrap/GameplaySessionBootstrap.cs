@@ -15,6 +15,7 @@ using NeonBlack.Gameplay.Glue.SceneServices;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Glue.Bootstrap
 {
@@ -22,25 +23,23 @@ namespace NeonBlack.Gameplay.Glue.Bootstrap
     /// Single supported startup path for NeonBlack Gameplay scenes.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Setup,
-        Priority = AuthoringPriority.Primary,
-        SetupNodeId = "bootstrap.root",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.PlatformCore },
+        StableId = "bootstrap.root",
+        Category = "Setup",
         CapabilityPath = "Core Setup/Session/Gameplay Session Bootstrap",
-        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.CoreRouteAnchor },
-        Relevance = "Primary entry point for gameplay sessions; wires the authored session, visible runtime services, input join, and camera setup.",
-        Axioms = AuthoringWorldAxiom.None,
-        NativeSetup = new[]
+        Surface = AuthoringSurface.Goal,
+        Summary = "Primary entry point for gameplay sessions; wires the authored session, visible runtime services, input join, and camera setup.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/bootstrap",
+        RequiredFields = new[] { nameof(sessionDefinition), nameof(cameraRigController), nameof(playerInputManager) },
+        SetupSteps = new[]
         {
             "Add GameplaySessionBootstrap to the first scene of your game.",
             "Assign a SessionDefinition asset.",
             "Author core runtime service components under the Gameplay Root or assign explicit overrides.",
             "Configure camera rig controller and core service references."
         },
-        AssignmentFields = new[] { nameof(sessionDefinition), nameof(cameraRigController), nameof(playerInputManager) },
-        Proof = "Enter Play Mode and confirm the session initializes, core services run, and the camera frames the active route.",
-        ExpertAdvice = "The Bootstrap is the Unity-facing session entry point. Add the core runtime service components under the Gameplay Root or assign explicit override fields so the LifetimeScope can register authored scene objects instead of creating hidden services. ParticipantSpawnService owns pawn spawn points.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/bootstrap"
+        SuccessChecks = new[] { "Enter Play Mode and confirm the session initializes, core services run, and the camera frames the active route." },
+        RoleTags = new[] { "IntentRouteEssential", "CoreRouteAnchor" },
+        Tags = new[] { "capability:Setup", "runtime:PlatformCore", "priority:Primary" }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Setup/Gameplay Session Bootstrap")]
     [DefaultExecutionOrder(-1100)]

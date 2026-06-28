@@ -2,34 +2,30 @@ using NeonBlack.Gameplay.Data.Definitions.Combat;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Feedback
 {
     [AddComponentMenu("NeonBlack/Gameplay/Feedback/Actor Feedback Component")]
     [AuthoringContract(
-        ModuleId = "actor.feedback",
-        Capability = AuthoringCapability.VFX,
-        Relevance = "Listens to actor health and publishes damage, heal, death, status, score, combo, parry, stagger, guard-break, and finisher events to feedback receivers.",
-        Lane = "Feedback",
-        ProfileType = typeof(ActorFeedbackProfile),
+        StableId = "feature.actor.feedback",
+        Category = "V F X",
+        Surface = AuthoringSurface.Profile,
+        Summary = "Listens to actor health and publishes damage, heal, death, status, score, combo, parry, stagger, guard-break, and finisher events to feedback receivers.",
+        RequiredFields = new[] { nameof(feedbackProfile) },
+        RequiredComponentNames = new[] { "NeonBlack.Gameplay.Modules.Combat.HealthComponent" },
         RequiredInterfaces = new[] { typeof(IActorFeedbackPublisher) },
         RequiredInterfaceNames = new[] { "NeonBlack.Gameplay.Modules.Feedback.IActorFeedbackReceiver" },
-        RequiredComponentNames = new[] { "NeonBlack.Gameplay.Modules.Combat.HealthComponent" },
-        NativeSetup = new[]
+        SetupSteps = new[]
         {
             "Create ActorFeedbackProfile.",
             "Add ActorFeedbackComponent to the actor root.",
             "Assign ActorFeedbackProfile.",
             "Add at least one IActorFeedbackReceiver in the actor hierarchy."
         },
-        Proof = "Trigger a damage event and verify visual feedback (flash, popup) occurs.",
-        AssignmentFields = new[] { nameof(feedbackProfile) },
-        ExpertAdvice = "Add at least one IActorFeedbackReceiver, such as ActorFloatingFeedbackReceiver or ParticipantFeedbackRelay, in the actor hierarchy.",
-        CustomizationMoments = new[]
-        {
-            "ActorFeedbackProfile.publishDamageEvents",
-            "ActorFeedbackProfile.publishScoreEvents"
-        }
+        SuccessChecks = new[] { "Trigger a damage event and verify visual feedback (flash, popup) occurs." },
+        Tags = new[] { "capability:VFX", "lane:Feedback" },
+        Selectable = false
     )]
     public class ActorFeedbackComponent : MonoBehaviour, IActorFeedbackPublisher
     {

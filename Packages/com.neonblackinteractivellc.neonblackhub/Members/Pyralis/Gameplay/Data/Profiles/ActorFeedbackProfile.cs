@@ -1,19 +1,21 @@
 using System.Collections.Generic;
 using UnityEngine;
 using NeonBlack.Gameplay.Core.Contracts;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Profiles
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.UI | AuthoringCapability.VFX, 
-        Relevance = "Configures which gameplay events (damage, death, score) trigger visual feedback or HUD notifications.",
-        NativeSetup = new[] { "Toggle desired event publications." },
-        AssignmentFields = new[] { nameof(publishDamageEvents), nameof(publishDeathEvents), nameof(publishScoreEvents) },
-        Proof = "Verify that damage events trigger floating text or HUD updates.",
-        ExpertAdvice = "Use these toggles to silence feedback for specific actor archetypes (e.g., destructible props vs. bosses).",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/visuals",
+        Category = "U I, V F X",
         CapabilityPath = "Presentation/Feedback/Actor Feedback Profile",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.AnimationPresentation }
+        Surface = AuthoringSurface.Profile,
+        Summary = "Configures which gameplay events (damage, death, score) trigger visual feedback or HUD notifications.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/visuals",
+        RequiredFields = new[] { nameof(publishDamageEvents), nameof(publishDeathEvents), nameof(publishScoreEvents) },
+        SetupSteps = new[] { "Toggle desired event publications." },
+        SuccessChecks = new[] { "Verify that damage events trigger floating text or HUD updates." },
+        Tags = new[] { "capability:UI", "capability:VFX", "runtime:AnimationPresentation" },
+        Selectable = false
     )]
 [CreateAssetMenu(menuName = "NeonBlack/Profiles/Actor Feedback Profile", fileName = "ActorFeedbackProfile")]
     public class ActorFeedbackProfile : ScriptableObject, IRuntimeValidationProvider

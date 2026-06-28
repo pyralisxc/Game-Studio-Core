@@ -8,6 +8,7 @@ using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Glue.Spawning
 {
@@ -15,18 +16,17 @@ namespace NeonBlack.Gameplay.Glue.Spawning
     /// Spawns and assigns pawns for registered participants using authored PawnDefinitions and service-owned spawn points.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Setup | AuthoringCapability.Session,
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.PlatformCore, RuntimeCapabilityFamily.CharacterPawnGameplay },
+        Category = "Setup, Session",
         CapabilityPath = "Core Setup/Participants/Participant Spawn Service",
-        Relevance = "Single owner for participant pawn spawning. It resolves each ParticipantDefinition default pawn, places it at authored spawn points, and reports pawn assignment through the roster.",
-        Axioms = AuthoringWorldAxiom.None,
-        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.ParticipantRouteSupport },
+        Surface = AuthoringSurface.Goal,
+        Summary = "Single owner for participant pawn spawning. It resolves each ParticipantDefinition default pawn, places it at authored spawn points, and reports pawn assignment through the roster.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/participants",
+        RequiredFields = new[] { nameof(rosterService), nameof(sessionStateService), nameof(spawnPoints) },
         RequiredInterfaces = new[] { typeof(IGameService) },
-        AssignmentFields = new[] { nameof(rosterService), nameof(sessionStateService), nameof(spawnPoints) },
-        Proof = "Register a participant and confirm ParticipantSpawnService creates or reuses the pawn, attaches it to the roster, and places it at the expected spawn point.",
-        NativeSetup = new[] { "Add as a child service under GameplaySessionBootstrap.", "Assign Spawn Points on ParticipantSpawnService for pawn-backed routes." },
-        ExpertAdvice = "Keep spawn points here, not on GameplaySessionBootstrap. Non-pawn routes can leave spawn points empty and disable Spawn On Register.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/participants"
+        SetupSteps = new[] { "Add as a child service under GameplaySessionBootstrap.", "Assign Spawn Points on ParticipantSpawnService for pawn-backed routes." },
+        SuccessChecks = new[] { "Register a participant and confirm ParticipantSpawnService creates or reuses the pawn, attaches it to the roster, and places it at the expected spawn point." },
+        RoleTags = new[] { "IntentRouteEssential", "ParticipantRouteSupport" },
+        Tags = new[] { "capability:Setup", "capability:Session", "runtime:PlatformCore", "runtime:CharacterPawnGameplay" }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Setup/Participant Spawn Service")]
     public class ParticipantSpawnService : MonoBehaviour, IGameService, IRuntimeValidationProvider

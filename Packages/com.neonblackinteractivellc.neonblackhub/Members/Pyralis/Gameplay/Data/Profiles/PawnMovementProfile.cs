@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Enums;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Profiles
 {
@@ -15,17 +16,16 @@ namespace NeonBlack.Gameplay.Data.Profiles
     /// Shared movement authoring profile for pawn composition.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Movement, 
-        Priority = AuthoringPriority.AuxiliaryDefault,
-        Lane = "Movement",
-        Relevance = "Defines the movement feel, speed, acceleration, and damping for a pawn archetype.",
-        AssignmentFields = new[] { nameof(walkSpeed), nameof(acceleration), nameof(dashSpeed), nameof(movementMode), nameof(movementStyle), nameof(useCharacterController) },
-        Proof = "Move the pawn in play mode and verify speed feel.",
-        ExpertAdvice = "The movement profile is your 'steering wheel'. It defines the responsiveness and agility of your actor. For 2D games, set 'Use 2D Physics' to enable Rigidbody2D interaction.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/movement",
-        NativeSetup = new[] { "Assign to a PawnDefinition." },
+        Category = "Movement",
         CapabilityPath = "Movement/Traversal/Pawn Movement Profile",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
+        Surface = AuthoringSurface.Profile,
+        Summary = "Defines the movement feel, speed, acceleration, and damping for a pawn archetype.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/movement",
+        RequiredFields = new[] { nameof(walkSpeed), nameof(acceleration), nameof(dashSpeed), nameof(movementMode), nameof(movementStyle), nameof(useCharacterController) },
+        SetupSteps = new[] { "Assign to a PawnDefinition." },
+        SuccessChecks = new[] { "Move the pawn in play mode and verify speed feel." },
+        Tags = new[] { "capability:Movement", "runtime:CharacterPawnGameplay", "lane:Movement", "priority:AuxiliaryDefault" },
+        Selectable = false
     )]
 [CreateAssetMenu(menuName = "NeonBlack/Profiles/Pawn Movement Profile", fileName = "PawnMovementProfile", order = -60)]
     public class PawnMovementProfile : ScriptableObject, IRuntimeValidationProvider

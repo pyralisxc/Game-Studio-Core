@@ -2,17 +2,19 @@ using UnityEngine;
 using NeonBlack.Gameplay.Core.Types.Animation;
 using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Core.Contracts;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Combat
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat | AuthoringCapability.TacticsDefensive,
-        Relevance = "Pawn module for blocking and damage reduction.",
-        AssignmentFields = new[] { nameof(blockDamageReduction), nameof(blockFrontalAngle) },
-        Proof = "Hold the block button and verify damage from the front is reduced.",
-        ExpertAdvice = "Block frontal angle defines the 'safe zone' for incoming damage. 90 degrees covers the entire forward hemisphere.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/combat",
-        CapabilityPath = "Combat/Actions/Pawn Block Module"
+        Category = "Combat, Tactics Defensive",
+        CapabilityPath = "Combat/Actions/Pawn Block Module",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Pawn module for blocking and damage reduction.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/combat",
+        RequiredFields = new[] { nameof(blockDamageReduction), nameof(blockFrontalAngle) },
+        SuccessChecks = new[] { "Hold the block button and verify damage from the front is reduced." },
+        Tags = new[] { "capability:Combat", "capability:TacticsDefensive" }
     )]
     public class PawnBlockModule : MonoBehaviour
 {

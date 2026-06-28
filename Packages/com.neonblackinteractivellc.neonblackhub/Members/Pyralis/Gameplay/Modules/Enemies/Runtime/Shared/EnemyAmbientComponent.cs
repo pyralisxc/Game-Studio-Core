@@ -2,31 +2,27 @@ using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Types.Animation;
 using NeonBlack.Gameplay.Data.Profiles;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Enemies
 {
     [AddComponentMenu("NeonBlack/Gameplay/Enemies/Enemy Ambient Component")]
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat | AuthoringCapability.Animation,
-        ModuleId = "enemy.ambient",
-        Lane = "Enemy",
-        ProfileType = typeof(EnemyAmbientProfile),
-        RequiredInterfaces = new[] { typeof(EnemyAmbientComponent) },
+        StableId = "enemy.ambient.component",
+        Category = "Combat, Animation",
+        CapabilityPath = "Combat/Actions/Enemy Ambient Component",
+        Surface = AuthoringSurface.Profile,
+        RequiredFields = new[] { nameof(ambientProfile) },
         RequiredComponentNames = new[] { "NeonBlack.Gameplay.Modules.Enemies.EnemyAI" },
-        AssignmentFields = new[] { nameof(ambientProfile) },
-        Proof = "Verify that the enemy performs ambient look-around animations while patrolling.",
-        ProofTargetId = "proof.npc-enemy-behavior",
-        NativeSetup = new[]
+        RequiredInterfaces = new[] { typeof(EnemyAmbientComponent) },
+        SetupSteps = new[]
         {
             "add EnemyAmbientComponent to the enemy root",
             "assign EnemyAmbientProfile"
         },
-        CustomizationMoments = new[]
-        {
-            "EnemyAmbientProfile.enableAmbientLookAround",
-            "EnemyAmbientProfile.lookAroundInterval"
-        },
-        CapabilityPath = "Combat/Actions/Enemy Ambient Component"
+        SuccessChecks = new[] { "Verify that the enemy performs ambient look-around animations while patrolling." },
+        Tags = new[] { "capability:Combat", "capability:Animation", "lane:Enemy" },
+        Selectable = false
     )]
     public class EnemyAmbientComponent : MonoBehaviour
 {

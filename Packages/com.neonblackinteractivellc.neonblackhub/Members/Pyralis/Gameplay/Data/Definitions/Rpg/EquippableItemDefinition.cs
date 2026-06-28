@@ -3,18 +3,19 @@ using System.Linq;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Rpg;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rpg
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Inventory | AuthoringCapability.Stats,
-        Relevance = "Extends standard items with equipment slots and stat modifiers.",
-        NativeSetup = new[] { "Add Allowed Slot Ids.", "Add Stat Modifiers." },
-        AssignmentFields = new[] { nameof(allowedSlotIds) },
-        Proof = "Verify the item can be equipped into the specified slots and correctly modifies stats.",
-        ExpertAdvice = "Use stat modifiers to provide meaningful progression and customization through equipment.",
+        Category = "Inventory, Stats",
         CapabilityPath = "RPG/Inventory/Definitions/Equippable Item Definition",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
+        Surface = AuthoringSurface.Goal,
+        Summary = "Extends standard items with equipment slots and stat modifiers.",
+        RequiredFields = new[] { nameof(allowedSlotIds) },
+        SetupSteps = new[] { "Add Allowed Slot Ids.", "Add Stat Modifiers." },
+        SuccessChecks = new[] { "Verify the item can be equipped into the specified slots and correctly modifies stats." },
+        Tags = new[] { "capability:Inventory", "capability:Stats", "runtime:CharacterPawnGameplay" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Equippable Item", fileName = "EquippableItemDefinition")]
     public class EquippableItemDefinition : ItemDefinition, IEquippableItem, IRuntimeValidationProvider

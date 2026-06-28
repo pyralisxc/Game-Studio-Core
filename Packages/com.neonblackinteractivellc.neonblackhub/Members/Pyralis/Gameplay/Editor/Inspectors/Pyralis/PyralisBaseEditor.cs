@@ -1,4 +1,6 @@
-using NeonBlack.Gameplay.Core.Contracts;
+using System.Linq;
+using Pys.Authoring.Contracts;
+using Pys.Authoring.Editor.Contracts;
 using UnityEditor;
 
 namespace NeonBlack.Gameplay.Editor
@@ -15,7 +17,7 @@ namespace NeonBlack.Gameplay.Editor
         protected virtual void OnEnable()
         {
             if (target == null) return;
-            _contract = ResolvedAuthoringContractRegistry.FindByType(target.GetType());
+            _contract = AuthoringContractResolver.Resolve(target.GetType()).FirstOrDefault();
             _checkedContract = true;
         }
 

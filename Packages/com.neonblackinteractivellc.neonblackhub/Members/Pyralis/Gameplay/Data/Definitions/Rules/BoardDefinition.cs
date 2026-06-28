@@ -2,6 +2,7 @@ using NeonBlack.Gameplay.Data.Tabletop;
 using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rules
 {
@@ -9,12 +10,13 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
     /// Designer-authored board layout for tabletop and grid-based rules.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Tabletop | AuthoringCapability.Grid, 
-        Relevance = "Project-window creation path for tabletop board layouts and starting pieces.",
-        AssignmentFields = new[] { nameof(width), nameof(height), nameof(startingPieces) },
-        Proof = "Verify the board dimensions and starting pieces are correct in the Board Presenter.",
+        Category = "Tabletop, Grid",
         CapabilityPath = "Tabletop/Board/Board Definition",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.BoardCardTabletop }
+        Surface = AuthoringSurface.Goal,
+        Summary = "Project-window creation path for tabletop board layouts and starting pieces.",
+        RequiredFields = new[] { nameof(width), nameof(height), nameof(startingPieces) },
+        SuccessChecks = new[] { "Verify the board dimensions and starting pieces are correct in the Board Presenter." },
+        Tags = new[] { "capability:Tabletop", "capability:Grid", "runtime:BoardCardTabletop" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Rules/Board Definition", fileName = "BoardDefinition", order = -100)]
     public class BoardDefinition : ScriptableObject, IRuntimeValidationProvider

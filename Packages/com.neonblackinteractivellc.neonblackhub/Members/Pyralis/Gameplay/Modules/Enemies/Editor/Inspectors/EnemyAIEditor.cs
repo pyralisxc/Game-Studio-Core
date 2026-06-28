@@ -7,7 +7,7 @@ using UnityEngine;
 
 /// <summary>
 /// Custom inspector for EnemyAI. Keeps runtime fields grouped while the
-/// Pyralis Authoring Window owns route setup and first-proof guidance.
+/// PYS Authoring owns route setup and proof guidance.
 /// </summary>
 [CustomEditor(typeof(EnemyAI))]
 public class EnemyAIEditor : Editor
@@ -68,7 +68,7 @@ public class EnemyAIEditor : Editor
         bool is3D = _movementMode.enumValueIndex == (int)MovementMode.ThreeD;
         PyralisInspectorHandoff.DrawAuthoringButton(
             "Enemy AI",
-            "Edit detection, movement, combat, and feature fields here. Use Pyralis Authoring for route setup and proof guidance.");
+            "Edit detection, movement, combat, and feature fields here. Use PYS Authoring for route setup and proof guidance.");
 
         if (_detectionSerialized != null)
         {

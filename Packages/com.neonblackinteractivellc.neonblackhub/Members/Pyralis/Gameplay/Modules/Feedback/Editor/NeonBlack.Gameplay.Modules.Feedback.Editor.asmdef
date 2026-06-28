@@ -1,17 +1,17 @@
 {
-    "name": "NeonBlack.Gameplay.Modules.Feedback.Editor",
-    "references": [
-        "NeonBlack.Gameplay.Modules.Feedback",
-        "NeonBlack.Gameplay.Editor"
-    ],
-    "includePlatforms": [
-        "Editor"
-    ],
-    "excludePlatforms": [],
-    "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
-    "autoReferenced": true,
-    "defineConstraints": [],
-    "versionDefines": []
+  "name": "NeonBlack.Gameplay.Modules.Feedback.Editor",
+  "references": [
+    "NeonBlack.Gameplay.Modules.Feedback",
+    "NeonBlack.Gameplay.Editor"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": []
 }

@@ -4,22 +4,20 @@ using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Participants;
 using UnityEngine;
 using VContainer;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Combat
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.MeleeFlow,
-        Priority = AuthoringPriority.Primary,
-        Lane = "Combat",
-        Relevance = "Primary pawn combat controller; handles sequences, combos, and delegates to modules.",
-        Axioms = AuthoringWorldAxiom.Realtime,
+        Category = "Melee Flow",
+        CapabilityPath = "Combat/Actions/Pawn Combat Behaviour",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Primary pawn combat controller; handles sequences, combos, and delegates to modules.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/combat",
+        RequiredFields = new[] { nameof(primarySequence), nameof(secondarySequence), nameof(aerialSequence), nameof(attackCooldown), nameof(kickCooldown), nameof(maxAerialAttacks) },
         RequiredInterfaces = new[] { typeof(IPawnCombatModule) },
-        ConsumedRoles = new[] { "AttackPrimary", "AttackSecondary", "Block" },
-        AssignmentFields = new[] { nameof(primarySequence), nameof(secondarySequence), nameof(aerialSequence), nameof(attackCooldown), nameof(kickCooldown), nameof(maxAerialAttacks) },
-        Proof = "Perform an attack combo in Play Mode and verify that 'HitBox.Fire()' is called via animation events and damage is applied.",
-        ExpertAdvice = "PawnCombatBehaviour is sequence-driven. If attacks feel floaty or don't land, check that your Animation Sequence assets have the 'FireHitBox' event timed precisely with the swing frame.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/combat",
-        CapabilityPath = "Combat/Actions/Pawn Combat Behaviour"
+        SuccessChecks = new[] { "Perform an attack combo in Play Mode and verify that 'HitBox.Fire()' is called via animation events and damage is applied." },
+        Tags = new[] { "capability:MeleeFlow", "axiom:Realtime", "lane:Combat", "priority:Primary" }
     )]
 [AddComponentMenu("NeonBlack/Gameplay/Modules/Combat/Pawn/Pawn Combat Behaviour")]
     [RequireComponent(typeof(PawnHitBoxModule))]

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Types.Animation;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Combat
 {
@@ -31,14 +32,14 @@ namespace NeonBlack.Gameplay.Data.Definitions.Combat
     }
 
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat,
-        Relevance = "Defines a status effect (buff or debuff) that can be applied to actors.",
-        NativeSetup = new[] { "Set Effect Kind and Duration.", "Configure stack mode." },
-        AssignmentFields = new[] { nameof(effectId), nameof(displayName), nameof(duration) },
-        Proof = "Apply the effect to an actor and verify its magnitude and duration match the definition.",
-        ExpertAdvice = "Use tickInterval for effects that apply over time (e.g., Poison, Heal).",
+        Category = "Combat",
         CapabilityPath = "Combat/Actions/Status Effect Definition",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.Combat }
+        Surface = AuthoringSurface.Goal,
+        Summary = "Defines a status effect (buff or debuff) that can be applied to actors.",
+        RequiredFields = new[] { nameof(effectId), nameof(displayName), nameof(duration) },
+        SetupSteps = new[] { "Set Effect Kind and Duration.", "Configure stack mode." },
+        SuccessChecks = new[] { "Apply the effect to an actor and verify its magnitude and duration match the definition." },
+        Tags = new[] { "capability:Combat", "runtime:Combat" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Combat/Status Effect", fileName = "StatusEffectDefinition")]
     public class StatusEffectDefinition : ScriptableObject, IRuntimeValidationProvider

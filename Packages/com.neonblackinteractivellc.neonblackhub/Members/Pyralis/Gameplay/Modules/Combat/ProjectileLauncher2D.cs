@@ -2,18 +2,19 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Definitions.Combat;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Combat
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat,
-        Relevance = "2D projectile launcher; supports 2D physics projectiles and circlecast/raycast hitscan.",
-        Axioms = AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.Dimensions2D,
-        NativeSetup = new[] { "Add to a 2D scene.", "Configure Hit Mask for 2D colliders." },
-        AssignmentFields = new[] { nameof(hitMask) },
-        Proof = "Fire a 2D projectile and verify it impacts a 2D HealthComponent.",
-        ExpertAdvice = "Set Hit Mask to exclude the shooter's layer. Use Hitscan for instant weapons (bullets) and Prefab for traveling projectiles (missiles, fireballs).",
-        CapabilityPath = "Combat/Actions/Projectile Launcher2D"
+        Category = "Combat",
+        CapabilityPath = "Combat/Actions/Projectile Launcher2D",
+        Surface = AuthoringSurface.Goal,
+        Summary = "2D projectile launcher; supports 2D physics projectiles and circlecast/raycast hitscan.",
+        RequiredFields = new[] { nameof(hitMask) },
+        SetupSteps = new[] { "Add to a 2D scene.", "Configure Hit Mask for 2D colliders." },
+        SuccessChecks = new[] { "Fire a 2D projectile and verify it impacts a 2D HealthComponent." },
+        Tags = new[] { "capability:Combat", "axiom:Realtime", "axiom:Dimensions2D" }
     )]
     public sealed class ProjectileLauncher2D : ProjectileLauncherBase, IRuntimeValidationProvider
     {

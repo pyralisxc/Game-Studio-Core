@@ -3,22 +3,23 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using NeonBlack.Gameplay.Data.Rpg;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Rpg.Runtime
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Session | AuthoringCapability.Environment,
-        ModuleId = "rpg.openzone",
-        Lane = "RPG",
-        Proof = "Verify that zone state (flags, pickups) is persisted after exiting and re-entering a zone.",
-        NativeSetup = new[]
+        StableId = "feature.rpg.openzone",
+        Category = "Session, Environment",
+        CapabilityPath = "RPG/Runtime/Rpg Open Zone Service",
+        Surface = AuthoringSurface.Goal,
+        SetupSteps = new[]
         {
             "configure WorldZone flags",
             "link EncounterRestoration to zone entry",
             "register persistent zone state"
         },
-        CapabilityPath = "RPG/Runtime/Rpg Open Zone Service",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.PlatformCore }
+        SuccessChecks = new[] { "Verify that zone state (flags, pickups) is persisted after exiting and re-entering a zone." },
+        Tags = new[] { "capability:Session", "capability:Environment", "runtime:PlatformCore", "lane:RPG" }
     )]
     public sealed class RpgOpenZoneService
 {

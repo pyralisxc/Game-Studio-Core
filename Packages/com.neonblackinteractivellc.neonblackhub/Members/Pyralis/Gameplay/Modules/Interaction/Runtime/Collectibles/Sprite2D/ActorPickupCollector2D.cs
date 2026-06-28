@@ -3,39 +3,31 @@ using NeonBlack.Gameplay.Core.Types.Animation;
 using NeonBlack.Gameplay.Data.Interactions;
 using NeonBlack.Gameplay.Data.Profiles;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Interaction
 {
     [AddComponentMenu("NeonBlack/Gameplay/Interaction/Collectibles/Actor Pickup Collector Feature 2D")]
     [AuthoringContract(
-        ModuleId = "actor.interaction.collectibles.2d",
-        Capability = AuthoringCapability.Inventory,
-        Relevance = "Allows 2D actors to detect and collect pickups using 2D collider overlap detection.",
-        ExpertAdvice = "Optimized for Sprite2D pawns. Uses 2D collider overlap for zero-effort collection setup.",
-        Lane = "Interaction",
-        ProfileType = typeof(PickupProfile),
-        RequiredInterfaces = new[] { typeof(IActorInteractionHandler) },
+        StableId = "feature.actor.interaction.collectibles.2d",
+        Category = "Inventory",
+        Surface = AuthoringSurface.Profile,
+        Summary = "Allows 2D actors to detect and collect pickups using 2D collider overlap detection.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/actor-pickups",
+        RequiredFields = new[]
+        {
+            "ActorPickupCollector2D.pickupProfile"
+        },
         RequiredComponentNames = new[] { "UnityEngine.Collider2D" },
-        SupportedLanes = new[] { ActorPresentationMode.Sprite2D },
-        UnsupportedLanes = new[] { ActorPresentationMode.Billboard2_5D, ActorPresentationMode.ThirdPerson3D },
-        ConsumedRoles = new[] { "Interact" },
-        NativeSetup = new[]
+        RequiredInterfaces = new[] { typeof(IActorInteractionHandler) },
+        SetupSteps = new[]
         {
             "add ActorPickupCollector2D to the actor root",
             "assign PickupProfile"
         },
-        Proof = "Walk a 2D actor into a pickup and verify it is collected.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/actor-pickups",
-        AssignmentFields = new[]
-        {
-            "ActorPickupCollector2D.pickupProfile"
-        },
-        CustomizationMoments = new[]
-        {
-            "PickupProfile.enableAutoCollect",
-            "PickupProfile.enableInteractionCollect",
-            "PickupProfile.collectibleLayers"
-        }
+        SuccessChecks = new[] { "Walk a 2D actor into a pickup and verify it is collected." },
+        Tags = new[] { "capability:Inventory", "lane:Interaction" },
+        Selectable = false
     )]
     public class ActorPickupCollector2D : MonoBehaviour, IActorInteractionHandler
 {

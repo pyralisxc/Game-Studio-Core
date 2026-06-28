@@ -4,21 +4,21 @@ using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Profiles
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Animation,
-        Priority = AuthoringPriority.AuxiliaryDefault,
-        Lane = "Animation",
-        Relevance = "Maps high-level gameplay signals to Unity Animator parameters for a specific character visual.",
-        AssignmentFields = new[] { nameof(animationDefinition), nameof(baseController), nameof(bindings) },
-        Proof = "Verify the character animates correctly in play mode using the assigned controller.",
-        ExpertAdvice = "Use the Controller Mapping Wizard in the custom inspector to quickly align your animator with Pyralis signals. This profile acts as the bridge between gameplay logic and visual feedback.",
-        NativeSetup = new[] { "Assign Animation Definition.", "Assign Base Controller.", "Map bindings." },
-        DocumentationURL = "https://docs.neonblack.com/pyralis/animation",
+        Category = "Animation",
         CapabilityPath = "Presentation/Feedback/Pawn Animation Profile",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.AnimationPresentation }
+        Surface = AuthoringSurface.Profile,
+        Summary = "Maps high-level gameplay signals to Unity Animator parameters for a specific character visual.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/animation",
+        RequiredFields = new[] { nameof(animationDefinition), nameof(baseController), nameof(bindings) },
+        SetupSteps = new[] { "Assign Animation Definition.", "Assign Base Controller.", "Map bindings." },
+        SuccessChecks = new[] { "Verify the character animates correctly in play mode using the assigned controller." },
+        Tags = new[] { "capability:Animation", "runtime:AnimationPresentation", "lane:Animation", "priority:AuxiliaryDefault" },
+        Selectable = false
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Pawn Animation Profile", fileName = "PawnAnimationProfile", order = -30)]
     public class PawnAnimationProfile : ScriptableObject, IRuntimeValidationProvider

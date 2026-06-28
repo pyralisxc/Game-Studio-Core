@@ -1,5 +1,6 @@
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Character
 {
@@ -10,14 +11,14 @@ namespace NeonBlack.Gameplay.Modules.Character
     /// concrete controller type.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Movement, 
-        Relevance = "Calculates actor translation and velocity based on input and physical rules.", 
-        Axioms = AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.Dimensions3D,
-        AssignmentFields = new[] { nameof(IMovementModule.MoveSpeed), nameof(IMovementModule.IsGrounded) },
-        Proof = "Call Move and verify the character's world position changes.",
-        NativeSetup = new[] { "Implement interface in a movement component" },
-        ExpertAdvice = "The universal runtime contract for movement. High-level systems (AI/Network) use this to drive the actor without knowing if it's 2D or 3D. Implement this to provide 'Velocity' and 'Grounded' data.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/movement"
+        Category = "Movement",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Calculates actor translation and velocity based on input and physical rules.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/movement",
+        RequiredFields = new[] { nameof(IMovementModule.MoveSpeed), nameof(IMovementModule.IsGrounded) },
+        SetupSteps = new[] { "Implement interface in a movement component" },
+        SuccessChecks = new[] { "Call Move and verify the character's world position changes." },
+        Tags = new[] { "capability:Movement", "axiom:Dimensions2D", "axiom:Dimensions3D" }
     )]
 public interface IMovementModule
 {

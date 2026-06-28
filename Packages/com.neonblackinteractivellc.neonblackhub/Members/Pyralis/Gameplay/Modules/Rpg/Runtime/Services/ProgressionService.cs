@@ -1,28 +1,26 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Rpg;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Rpg.Runtime
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Progression,
-        Priority = AuthoringPriority.Primary,
-        ModuleId = "rpg.progression",
-        Lane = "RPG",
-        Relevance = "Manages character progression, including experience points, leveling up, and skill point grants.",
-        ExpertAdvice = "Progression curves define how XP maps to levels. Ensure your curves are assigned to the service for automatic level-up handling. You can also grant skill points directly for non-XP milestones.",
-        Axioms = AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.TurnBased,
+        StableId = "feature.rpg.progression",
+        Category = "Progression",
+        CapabilityPath = "RPG/Progression/Progression Service",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Manages character progression, including experience points, leveling up, and skill point grants.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/rpg",
         RequiredInterfaces = new[] { typeof(IProgressionCurve) },
-        NativeSetup = new[]
+        SetupSteps = new[]
         {
             "define progression curves for Level/XP",
             "assign curves to ProgressionService",
             "configure StatSheets for classes"
         },
-        Proof = "Grant experience to an actor and verify they level up according to the progression curve.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/rpg",
-        CapabilityPath = "RPG/Progression/Progression Service",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
+        SuccessChecks = new[] { "Grant experience to an actor and verify they level up according to the progression curve." },
+        Tags = new[] { "capability:Progression", "runtime:CharacterPawnGameplay", "axiom:Realtime", "axiom:TurnBased", "lane:RPG", "priority:Primary" }
     )]
     public sealed class ProgressionService : IProgressionService
 {

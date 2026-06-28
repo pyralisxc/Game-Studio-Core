@@ -1,19 +1,20 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Combat
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat | AuthoringCapability.VFX,
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.GunsProjectiles, RuntimeCapabilityFamily.Combat },
+        Category = "Combat, V F X",
         CapabilityPath = "Combat/Projectiles/Projectile Impact Definition",
-        Relevance = "Controls hit/miss VFX, audio, and impact feel for projectiles.",
-        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.CombatDefinitionRouteSupport },
-        NativeSetup = new[] { "Assign Hit/Miss effects.", "Set impact intensity." },
-        AssignmentFields = new[] { nameof(impactId), nameof(hitEffectPrefab) },
-        Proof = "Verify hit effects spawn at the correct location with correct audio.",
-        ExpertAdvice = "Use small hitPauseDuration to add 'weight' to physical impacts."
+        Surface = AuthoringSurface.Goal,
+        Summary = "Controls hit/miss VFX, audio, and impact feel for projectiles.",
+        RequiredFields = new[] { nameof(impactId), nameof(hitEffectPrefab) },
+        SetupSteps = new[] { "Assign Hit/Miss effects.", "Set impact intensity." },
+        SuccessChecks = new[] { "Verify hit effects spawn at the correct location with correct audio." },
+        RoleTags = new[] { "IntentRouteEssential", "CombatDefinitionRouteSupport" },
+        Tags = new[] { "capability:Combat", "capability:VFX", "runtime:GunsProjectiles", "runtime:Combat" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Combat/Projectile Impact Definition", fileName = "ProjectileImpactDefinition")]
     public class ProjectileImpactDefinition : ScriptableObject, IRuntimeValidationProvider

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Core.Actions
 {
@@ -8,18 +9,17 @@ namespace NeonBlack.Gameplay.Core.Actions
     /// In-memory FIFO action queue for rules-driven and menu-driven gameplay.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Session,
-        Relevance = "Processes action execution requests and resolves them via registered resolvers.",
-        Axioms = AuthoringWorldAxiom.TurnBased | AuthoringWorldAxiom.Realtime,
-        RequiredInterfaces = new[] { typeof(IActionQueueService) },
-        SatisfactionReason = "Provides the central queue for processing gameplay actions.",
-        AssignmentFields = new[] { nameof(_pendingActions), nameof(_resolvers) },
-        ExpertAdvice = "Register custom IActionResolvers to extend the engine's action vocabulary. The queue handles FIFO execution and validation.",
-        Proof = "PendingCount increments when an action is successfully enqueued.",
-        NativeSetup = new[] { "Add ActionQueueService to the session dependency container.", "Register one or more IActionResolver implementations." },
-        DocumentationURL = "https://docs.neonblack.com/pyralis/actions",
+        Category = "Session",
         CapabilityPath = "Core Setup/Actions/Action Queue Service",
-        Surface = AuthoringContractSurface.Service
+        Surface = AuthoringSurface.Service,
+        Summary = "Processes action execution requests and resolves them via registered resolvers.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/actions",
+        RequiredFields = new[] { nameof(_pendingActions), nameof(_resolvers) },
+        RequiredInterfaces = new[] { typeof(IActionQueueService) },
+        SetupSteps = new[] { "Add ActionQueueService to the session dependency container.", "Register one or more IActionResolver implementations." },
+        SuccessChecks = new[] { "PendingCount increments when an action is successfully enqueued." },
+        Tags = new[] { "capability:Session", "axiom:TurnBased", "axiom:Realtime" },
+        Selectable = false
     )]
     public sealed class ActionQueueService : IActionQueueService
     {

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rules
 {
@@ -8,12 +9,13 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
     /// Designer-authored phase within a turn.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Tabletop | AuthoringCapability.TurnBased, 
-        Relevance = "Project-window creation path for turn phase rules.",
-        AssignmentFields = new[] { nameof(phaseId), nameof(displayName), nameof(allowsActionSelection) },
-        Proof = "Verify that the phase allows or restricts actions as defined.",
+        Category = "Tabletop, Turn Based",
         CapabilityPath = "Tabletop/Board/Phase Definition",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.BoardCardTabletop }
+        Surface = AuthoringSurface.Goal,
+        Summary = "Project-window creation path for turn phase rules.",
+        RequiredFields = new[] { nameof(phaseId), nameof(displayName), nameof(allowsActionSelection) },
+        SuccessChecks = new[] { "Verify that the phase allows or restricts actions as defined." },
+        Tags = new[] { "capability:Tabletop", "capability:TurnBased", "runtime:BoardCardTabletop" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Rules/Phase Definition", fileName = "PhaseDefinition", order = -60)]
     public class PhaseDefinition : ScriptableObject, IRuntimeValidationProvider

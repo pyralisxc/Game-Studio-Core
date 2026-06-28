@@ -2,6 +2,7 @@ using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Participants;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Character
 {
@@ -10,24 +11,22 @@ namespace NeonBlack.Gameplay.Modules.Character
 /// a combat-facing movement state contract to sibling gameplay modules.
 /// </summary>
 [AuthoringContract(
-    Capability = AuthoringCapability.KineticMotor3D,
-    Priority = AuthoringPriority.Primary,
-    Lane = "Pawn3D",
-    Relevance = "Canonical 3D pawn motor; sequences input, movement, traversal, and presentation sibling modules.",
-    Axioms = AuthoringWorldAxiom.Dimensions3D | AuthoringWorldAxiom.Realtime,
-    NativeSetup = new[]
+        Category = "Kinetic Motor3 D",
+        CapabilityPath = "Movement/Traversal/Motor3D",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Canonical 3D pawn motor; sequences input, movement, traversal, and presentation sibling modules.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/movement",
+        RequiredFields = new[] { "Pawn3DInputModule", "Pawn3DMovementComponent", "Pawn3DTraversalComponent", "Pawn3DPresentationComponent" },
+        SetupSteps = new[]
     {
         "Attach Motor3D to the 3D pawn root.",
         "Add all required 3D pawn modules (Input, Movement, Traversal, Presentation).",
         "Assign the InputSystem_Actions asset on Pawn3DInputModule.",
         "Ensure an Animator with the required parameters is present."
     },
-    AssignmentFields = new[] { "Pawn3DInputModule", "Pawn3DMovementComponent", "Pawn3DTraversalComponent", "Pawn3DPresentationComponent" },
-    Proof = "Pawn responds to Move input and plays walk animations. Optional traversal features such as ledge-climb can extend the explicit traversal sibling when installed.",
-    ExpertAdvice = "Motor3D is the explicit 3D pawn coordinator. It sequences sibling modules in a deterministic order; optional traversal, combat, and interaction capabilities should be visible direct components. Ensure CharacterController 'Skin Width' is at least 10% of the radius to prevent jitter on slopes.",
-    DocumentationURL = "https://docs.neonblack.com/pyralis/movement",
-    CapabilityPath = "Movement/Traversal/Motor3D"
-)]
+        SuccessChecks = new[] { "Pawn responds to Move input and plays walk animations. Optional traversal features such as ledge-climb can extend the explicit traversal sibling when installed." },
+        Tags = new[] { "capability:KineticMotor3D", "axiom:Dimensions3D", "axiom:Realtime", "lane:Pawn3D", "priority:Primary" }
+    )]
 [AddComponentMenu("NeonBlack/Gameplay/Runtime 3D/Motor 3D")]
 [RequireComponent(typeof(CharacterController))]
 [RequireComponent(typeof(Pawn3DInputModule))]

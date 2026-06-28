@@ -2,6 +2,7 @@ using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Glue.SceneFlow.Navigation
 {
@@ -9,16 +10,17 @@ namespace NeonBlack.Gameplay.Glue.SceneFlow.Navigation
     /// Destroys duplicate EventSystems and AudioListeners during scene transitions.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Setup,
-        Relevance = "Lightweight scene-transition cleanup helper that destroys duplicate active EventSystems and AudioListeners at Awake.",
-        NativeSetup = new[] 
+        Category = "Setup",
+        CapabilityPath = "Core Setup/Navigation/Scene Guard",
+        Surface = AuthoringSurface.RequiredSetup,
+        Summary = "Lightweight scene-transition cleanup helper that destroys duplicate active EventSystems and AudioListeners at Awake.",
+        SetupSteps = new[] 
         { 
             "Place this in scenes that may be loaded after a persistent UI or camera bootstrap."
         },
-        Proof = "Load a scene with a duplicate EventSystem and verify SceneGuard destroys it in the console.",
-        ExpertAdvice = "Keep one active EventSystem and one active AudioListener as the expected final state. Use it as cleanup support, not as a substitute for clean scene ownership.",
-        CapabilityPath = "Core Setup/Navigation/Scene Guard",
-        Surface = AuthoringContractSurface.SetupOnly
+        SuccessChecks = new[] { "Load a scene with a duplicate EventSystem and verify SceneGuard destroys it in the console." },
+        Tags = new[] { "capability:Setup" },
+        Selectable = false
     )]
     public class SceneGuard : MonoBehaviour
     {

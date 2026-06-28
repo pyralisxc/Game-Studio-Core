@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Glue.SceneFlow.Navigation
 {
@@ -17,16 +18,16 @@ namespace NeonBlack.Gameplay.Glue.SceneFlow.Navigation
     /// </summary>
     [CreateAssetMenu(menuName = "NeonBlack/Scene Flow/Level Data", fileName = "LevelData_New")]
     [AuthoringContract(
-        Capability = AuthoringCapability.Setup | AuthoringCapability.Environment,
-        Relevance = "Data container for level configuration, including display names and scene references.",
-        AssignmentFields = new[] { nameof(sceneName), nameof(displayName), nameof(previewImage) },
-        Proof = "Verify the level is selectable in the menu and loads the correct scene.",
-        NativeSetup = new[] { "Set SceneName to match Build Settings.", "Assign Preview Image." },
-        ExpertAdvice = "LevelData assets are primarily used by the LevelRegistry to build the world-select UI. Ensure the SceneName exactly matches the entry in File -> Build Settings.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/navigation",
+        Category = "Setup, Environment",
         CapabilityPath = "Core Setup/Navigation/Level Data",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.PlatformCore },
-        Surface = AuthoringContractSurface.SetupOnly
+        Surface = AuthoringSurface.RequiredSetup,
+        Summary = "Data container for level configuration, including display names and scene references.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/navigation",
+        RequiredFields = new[] { nameof(sceneName), nameof(displayName), nameof(previewImage) },
+        SetupSteps = new[] { "Set SceneName to match Build Settings.", "Assign Preview Image." },
+        SuccessChecks = new[] { "Verify the level is selectable in the menu and loads the correct scene." },
+        Tags = new[] { "capability:Setup", "capability:Environment", "runtime:PlatformCore" },
+        Selectable = false
     )]
     public class LevelData : ScriptableObject, IRuntimeValidationProvider
     {

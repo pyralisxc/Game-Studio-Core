@@ -4,31 +4,27 @@ using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Presentation.Visuals;
 using TMPro;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Hazards
 {
     [AddComponentMenu("NeonBlack/Gameplay/Hazards/Hazard Feedback Runtime")]
     [AuthoringContract(
-        ModuleId = "hazard.feedback",
-        Capability = AuthoringCapability.VFX | AuthoringCapability.Combat,
-        Relevance = "Provides visual feedback (flashes, popups) for hazard states like activation, explosion, and collection.",
-        Lane = "Hazard",
-        ProfileType = typeof(HazardFeedbackProfile),
+        StableId = "feature.hazard.feedback",
+        Category = "V F X, Combat",
+        CapabilityPath = "Combat/Actions/Hazard Feedback Runtime",
+        Surface = AuthoringSurface.Profile,
+        Summary = "Provides visual feedback (flashes, popups) for hazard states like activation, explosion, and collection.",
         RequiredComponentNames = new[] { "NeonBlack.Gameplay.Presentation.Visuals.SpriteFlasher" },
-        NativeSetup = new[]
+        SetupSteps = new[]
         {
             "create HazardFeedbackProfile",
             "attach HazardFeedbackRuntime to Hazard GameObject",
             "assign profile asset to Hazard"
         },
-        Proof = "Activate a hazard and verify the activation flash and popup appear.",
-        CustomizationMoments = new[]
-        {
-            "HazardFeedbackProfile.flashOnActivation",
-            "HazardFeedbackProfile.showActivationPopup",
-            "HazardFeedbackProfile.popupLifetime"
-        },
-        CapabilityPath = "Combat/Actions/Hazard Feedback Runtime"
+        SuccessChecks = new[] { "Activate a hazard and verify the activation flash and popup appear." },
+        Tags = new[] { "capability:VFX", "capability:Combat", "lane:Hazard" },
+        Selectable = false
     )]
     public class HazardFeedbackRuntime : MonoBehaviour, IRuntimeValidationProvider
 {

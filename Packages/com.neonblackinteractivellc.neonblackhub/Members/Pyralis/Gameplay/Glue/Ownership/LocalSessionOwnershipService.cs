@@ -1,5 +1,6 @@
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Contracts.Networking;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Glue.Ownership
 {
@@ -7,16 +8,16 @@ namespace NeonBlack.Gameplay.Glue.Ownership
     /// Default local/offline ownership policy used until an online backend overrides it.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Networking,
-        Relevance = "Provides the local-only ownership model for game sessions, used in offline modes.",
-        Axioms = AuthoringWorldAxiom.None,
-        RequiredInterfaces = new[] { typeof(ISessionOwnershipService) },
-        Proof = "Start a local session and verify the server-authoritative flag is false.",
-        NativeSetup = new[] { "Register through the scene/session composition root when offline session ownership is needed." },
-        ExpertAdvice = "Enforces that the local machine owns the game world for offline and local split-screen routes. Use a networked ownership service when synchronization authority belongs to an online backend.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/session",
+        Category = "Networking",
         CapabilityPath = "Core Setup/Session/Local Ownership Service",
-        Surface = AuthoringContractSurface.Service
+        Surface = AuthoringSurface.Service,
+        Summary = "Provides the local-only ownership model for game sessions, used in offline modes.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/session",
+        RequiredInterfaces = new[] { typeof(ISessionOwnershipService) },
+        SetupSteps = new[] { "Register through the scene/session composition root when offline session ownership is needed." },
+        SuccessChecks = new[] { "Start a local session and verify the server-authoritative flag is false." },
+        Tags = new[] { "capability:Networking" },
+        Selectable = false
     )]
     public sealed class LocalSessionOwnershipService : ISessionOwnershipService
 {

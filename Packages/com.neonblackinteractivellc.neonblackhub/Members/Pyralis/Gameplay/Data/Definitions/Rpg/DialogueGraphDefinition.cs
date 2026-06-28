@@ -4,17 +4,18 @@ using System.Linq;
 using NeonBlack.Gameplay.Data.Rpg;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rpg
 {
     [AuthoringContract(
-        ModuleId = "rpg.dialogue.graph",
-        Capability = AuthoringCapability.Dialogue,
-        Lane = "RPG",
-        AssignmentFields = new[] { nameof(graphId), nameof(displayName), nameof(startNodeId), nameof(nodes) },
-        Proof = "Proof that the dialogue graph can be traversed and contains at least one terminal node.",
+        StableId = "feature.rpg.dialogue.graph",
+        Category = "Dialogue",
         CapabilityPath = "RPG/Dialogue/Definitions/Dialogue Graph Definition",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
+        Surface = AuthoringSurface.Goal,
+        RequiredFields = new[] { nameof(graphId), nameof(displayName), nameof(startNodeId), nameof(nodes) },
+        SuccessChecks = new[] { "Proof that the dialogue graph can be traversed and contains at least one terminal node." },
+        Tags = new[] { "capability:Dialogue", "runtime:CharacterPawnGameplay", "lane:RPG" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Dialogue Graph", fileName = "DialogueGraphDefinition")]
     public class DialogueGraphDefinition : ScriptableObject, IDialogueGraph, IRuntimeValidationProvider

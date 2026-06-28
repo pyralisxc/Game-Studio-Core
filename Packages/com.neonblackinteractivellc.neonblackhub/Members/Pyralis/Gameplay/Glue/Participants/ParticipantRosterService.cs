@@ -7,6 +7,7 @@ using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using VContainer;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Glue.Participants
 {
@@ -15,16 +16,16 @@ namespace NeonBlack.Gameplay.Glue.Participants
     /// participant through IPlayerProvider for systems that need a single focus handle.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Session,
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.PlatformCore },
+        Category = "Session",
         CapabilityPath = "Core Setup/Participants/Participant Roster Service",
-        Relevance = "Authoritative runtime roster of participants. Exposes a default participant handle only for systems that need a single focus handle.",
-        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.ParticipantRouteSupport },
-        AssignmentFields = new[] { nameof(sessionDefinition) },
-        Proof = "Enter Play Mode and spawn a pawn. Verify the 'Participants' list reflects the character.",
-        NativeSetup = new[] { "Add to GameplaySessionBootstrap child." },
-        ExpertAdvice = "Source of truth for all active participants. Bridges Unity's PlayerInput system to the Pyralis participant model. Use the roster for participant iteration and authority-aware lookup instead of assuming player one.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/participants"
+        Surface = AuthoringSurface.Goal,
+        Summary = "Authoritative runtime roster of participants. Exposes a default participant handle only for systems that need a single focus handle.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/participants",
+        RequiredFields = new[] { nameof(sessionDefinition) },
+        SetupSteps = new[] { "Add to GameplaySessionBootstrap child." },
+        SuccessChecks = new[] { "Enter Play Mode and spawn a pawn. Verify the 'Participants' list reflects the character." },
+        RoleTags = new[] { "IntentRouteEssential", "ParticipantRouteSupport" },
+        Tags = new[] { "capability:Session", "runtime:PlatformCore" }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Setup/Participant Roster Service")]
     public class ParticipantRosterService : MonoBehaviour, IParticipantRoster, IPlayerProvider, IRuntimeValidationProvider

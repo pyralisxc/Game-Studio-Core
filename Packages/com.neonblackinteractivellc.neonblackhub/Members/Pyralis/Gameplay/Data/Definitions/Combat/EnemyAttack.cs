@@ -2,18 +2,19 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Types.Animation;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Combat
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat,
-        Relevance = "Defines the selection criteria and execution of a specific AI attack.",
-        NativeSetup = new[] { "Assign animation signal.", "Set Range and Priority." },
-        AssignmentFields = new[] { nameof(animationSignal), nameof(hitBoxZone), nameof(attackRange), nameof(aiPriority) },
-        Proof = "Verify the enemy triggers this attack when within the specified range.",
-        ExpertAdvice = "Set Priority higher for 'punish' or 'finisher' moves. Use weight for random selection within the same priority.",
+        Category = "Combat",
         CapabilityPath = "Combat/Actions/Enemy Attack",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.Combat }
+        Surface = AuthoringSurface.Goal,
+        Summary = "Defines the selection criteria and execution of a specific AI attack.",
+        RequiredFields = new[] { nameof(animationSignal), nameof(hitBoxZone), nameof(attackRange), nameof(aiPriority) },
+        SetupSteps = new[] { "Assign animation signal.", "Set Range and Priority." },
+        SuccessChecks = new[] { "Verify the enemy triggers this attack when within the specified range." },
+        Tags = new[] { "capability:Combat", "runtime:Combat" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Combat/Enemy Attack", fileName = "NewEnemyAttack")]
     public class EnemyAttack : ScriptableObject, IRuntimeValidationProvider

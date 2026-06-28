@@ -1,18 +1,19 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Combat
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat,
-        Relevance = "The primary definition for an actor's weapon; defines damage, timing, range, and presentation.",
-        NativeSetup = new[] { "Set Weapon Type.", "Assign Projectile or Hitbox Zone." },
-        AssignmentFields = new[] { nameof(weaponName), nameof(damage), nameof(attackCooldown) },
-        Proof = "Assign to a Pawn or Enemy and verify attacks trigger animations and deal damage.",
-        ExpertAdvice = "Use overrideController to change actor animations when this weapon is equipped.",
+        Category = "Combat",
         CapabilityPath = "Combat/Actions/Weapon Data",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.Combat }
+        Surface = AuthoringSurface.Goal,
+        Summary = "The primary definition for an actor's weapon; defines damage, timing, range, and presentation.",
+        RequiredFields = new[] { nameof(weaponName), nameof(damage), nameof(attackCooldown) },
+        SetupSteps = new[] { "Set Weapon Type.", "Assign Projectile or Hitbox Zone." },
+        SuccessChecks = new[] { "Assign to a Pawn or Enemy and verify attacks trigger animations and deal damage." },
+        Tags = new[] { "capability:Combat", "runtime:Combat" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Combat/Weapon Data", fileName = "NewWeapon")]
     public class WeaponData : ScriptableObject, IRuntimeValidationProvider

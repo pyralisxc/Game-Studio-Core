@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Spawning
 {
@@ -8,20 +9,20 @@ namespace NeonBlack.Gameplay.Modules.Spawning
 /// General-purpose prefab and sprite spawner with optional patrol movement.
 /// </summary>
 [AuthoringContract(
-    Capability = AuthoringCapability.Environment,
-    Relevance = "Optional scene utility for spawning authored prefabs or sprite presentation objects. This is not the participant pawn spawn path.",
-    SelectableIntent = false,
-    Axioms = AuthoringWorldAxiom.None,
-    NativeSetup = new[] 
+        Category = "Environment",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Optional scene utility for spawning authored prefabs or sprite presentation objects. This is not the participant pawn spawn path.",
+        RequiredFields = new[] { nameof(prefabs), nameof(sprites), nameof(spawnRadius), nameof(spawnInterval), nameof(maxAlive), nameof(maxTotal), nameof(patrolDistance), nameof(patrolSpeed) },
+        SetupSteps = new[] 
     { 
         "Add Spawner only when this scene needs generic content spawning.",
         "Assign prefabs or sprites.",
         "Enable Patrol if movement is needed."
     },
-    Proof = "Enable Auto Spawn and enter Play Mode. Verify objects appear at the spawner's location.",
-    AssignmentFields = new[] { nameof(prefabs), nameof(sprites), nameof(spawnRadius), nameof(spawnInterval), nameof(maxAlive), nameof(maxTotal), nameof(patrolDistance), nameof(patrolSpeed) },
-    ExpertAdvice = "Participant pawns spawn through ParticipantSpawnService. Use this generic Spawner only for optional scene content, effects, or prototype objects."
-)]
+        SuccessChecks = new[] { "Enable Auto Spawn and enter Play Mode. Verify objects appear at the spawner's location." },
+        Tags = new[] { "capability:Environment" },
+        Selectable = false
+    )]
 public class Spawner : MonoBehaviour, IRuntimeValidationProvider
 {
     public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
@@ -253,12 +254,13 @@ public class Spawner : MonoBehaviour, IRuntimeValidationProvider
 /// Spawner can track how many are still alive without needing a list.
 /// </summary>
 [AuthoringContract(
-    Capability = AuthoringCapability.Environment,
-    Relevance = "Tracks destruction of spawned objects for Spawner accounting.",
-    NativeSetup = new[] { "Automatically added by Spawner at runtime." },
-    SelectableIntent = false,
-    ExpertAdvice = "Do not add this component manually to scene objects unless you are implementing custom generic spawn tracking."
-)]
+        Category = "Environment",
+        Surface = AuthoringSurface.RequiredSetup,
+        Summary = "Tracks destruction of spawned objects for Spawner accounting.",
+        SetupSteps = new[] { "Automatically added by Spawner at runtime." },
+        Tags = new[] { "capability:Environment" },
+        Selectable = false
+    )]
 public class SpawnTracker : MonoBehaviour, IRuntimeValidationProvider
 {
     public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Glue.SceneFlow.Navigation
 {
@@ -10,16 +11,16 @@ namespace NeonBlack.Gameplay.Glue.SceneFlow.Navigation
     /// </summary>
     [CreateAssetMenu(menuName = "NeonBlack/Scene Flow/Level Registry", fileName = "LevelRegistry")]
     [AuthoringContract(
-        Capability = AuthoringCapability.Setup,
-        Relevance = "Ordered list of all playable worlds. Referenced by menu and session flow.",
-        AssignmentFields = new[] { nameof(LevelRegistry.levels) },
-        Proof = "The Level Registry is correctly discovered by the Session and Menu services.",
-        NativeSetup = new[] { "Populate the Levels array with LevelData assets." },
-        ExpertAdvice = "The Registry is the source of truth for the level selector UI. Use it to centralize world definitions across the project.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/navigation",
+        Category = "Setup",
         CapabilityPath = "Core Setup/Navigation/Level Registry",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.PlatformCore },
-        Surface = AuthoringContractSurface.SetupOnly
+        Surface = AuthoringSurface.RequiredSetup,
+        Summary = "Ordered list of all playable worlds. Referenced by menu and session flow.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/navigation",
+        RequiredFields = new[] { nameof(LevelRegistry.levels) },
+        SetupSteps = new[] { "Populate the Levels array with LevelData assets." },
+        SuccessChecks = new[] { "The Level Registry is correctly discovered by the Session and Menu services." },
+        Tags = new[] { "capability:Setup", "runtime:PlatformCore" },
+        Selectable = false
     )]
     public class LevelRegistry : ScriptableObject, IRuntimeValidationProvider
     {

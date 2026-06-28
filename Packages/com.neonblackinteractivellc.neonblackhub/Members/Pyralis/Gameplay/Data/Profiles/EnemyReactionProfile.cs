@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Profiles
 {
@@ -8,15 +9,16 @@ namespace NeonBlack.Gameplay.Data.Profiles
     /// Shared reaction and presentation feedback tuning for enemies.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat,
-        Relevance = "Configures stagger, hit-stun, and death reaction timing for enemies.",
-        NativeSetup = new[] { "Set hit stun and death delays.", "Assign to an EnemyProfile." },
-        AssignmentFields = new[] { nameof(hurtLockDuration), nameof(staggerDamageThreshold) },
-        Proof = "Hit the enemy and verify it enters a hit-stun state for the specified duration.",
-        ExpertAdvice = "Balance hit stun to prevent 'infinite' combos by the player while still providing satisfying weight to attacks.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/enemies",
+        Category = "Combat",
         CapabilityPath = "Combat/Actions/Enemy Reaction Profile",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.Combat }
+        Surface = AuthoringSurface.Profile,
+        Summary = "Configures stagger, hit-stun, and death reaction timing for enemies.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/enemies",
+        RequiredFields = new[] { nameof(hurtLockDuration), nameof(staggerDamageThreshold) },
+        SetupSteps = new[] { "Set hit stun and death delays.", "Assign to an EnemyProfile." },
+        SuccessChecks = new[] { "Hit the enemy and verify it enters a hit-stun state for the specified duration." },
+        Tags = new[] { "capability:Combat", "runtime:Combat" },
+        Selectable = false
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Enemy Reaction Profile", fileName = "EnemyReactionProfile")]
     public class EnemyReactionProfile : ScriptableObject, IRuntimeValidationProvider

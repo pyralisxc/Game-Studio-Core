@@ -1,6 +1,7 @@
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Contracts.Networking;
 using UnityEngine.InputSystem;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Glue.Ownership
 {
@@ -8,16 +9,16 @@ namespace NeonBlack.Gameplay.Glue.Ownership
     /// Default local authority model for offline and same-machine sessions.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Networking,
-        Relevance = "Provides the local-only authority model for participants.",
-        Axioms = AuthoringWorldAxiom.None,
-        RequiredInterfaces = new[] { typeof(IParticipantAuthorityService) },
-        Proof = "Verify that local participants are treated as locally controlled in an offline or same-machine session.",
-        NativeSetup = new[] { "Register through the scene/session composition root when an offline authority service is needed." },
-        ExpertAdvice = "The Local Authority service is a pass-through for offline and same-machine play. It identifies participant input as local. Use a networked authority service when ownership comes from an online backend.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/authority",
+        Category = "Networking",
         CapabilityPath = "Core Setup/Participants/Local Authority Service",
-        Surface = AuthoringContractSurface.Service
+        Surface = AuthoringSurface.Service,
+        Summary = "Provides the local-only authority model for participants.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/authority",
+        RequiredInterfaces = new[] { typeof(IParticipantAuthorityService) },
+        SetupSteps = new[] { "Register through the scene/session composition root when an offline authority service is needed." },
+        SuccessChecks = new[] { "Verify that local participants are treated as locally controlled in an offline or same-machine session." },
+        Tags = new[] { "capability:Networking" },
+        Selectable = false
     )]
     public sealed class LocalParticipantAuthorityService : IParticipantAuthorityService
 {

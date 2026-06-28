@@ -4,16 +4,18 @@ using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Types.Animation;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Combat
 {
     [AddComponentMenu("NeonBlack/Gameplay/Combat/Actor Status Effect Component")]
     [AuthoringContract(
-        ModuleId = "actor.status",
-        Capability = AuthoringCapability.Combat,
-        Relevance = "Applies timed status effects, damage/heal ticks, action locks, movement modifiers, combat multipliers, and shield-style damage modifiers.",
-        Lane = "Combat",
-        ProfileType = typeof(ActorStatusEffectProfile),
+        StableId = "combat.status-effect.component",
+        Category = "Combat",
+        Surface = AuthoringSurface.Profile,
+        Summary = "Applies timed status effects, damage/heal ticks, action locks, movement modifiers, combat multipliers, and shield-style damage modifiers.",
+        RequiredFields = new[] { nameof(statusProfile) },
+        RequiredComponentNames = new[] { "NeonBlack.Gameplay.Modules.Combat.HealthComponent" },
         RequiredInterfaces = new[] { typeof(IActorStatusEffectReceiver), typeof(IDamageModifier) },
         RequiredInterfaceNames = new[] 
         { 
@@ -21,21 +23,15 @@ namespace NeonBlack.Gameplay.Modules.Combat
             "NeonBlack.Gameplay.Core.Contracts.IActorCombatModifierReceiver",
             "NeonBlack.Gameplay.Modules.Combat.IActorHealthModifierReceiver"
         },
-        RequiredComponentNames = new[] { "NeonBlack.Gameplay.Modules.Combat.HealthComponent" },
-        NativeSetup = new[]
+        SetupSteps = new[]
         {
             "Create ActorStatusEffectProfile.",
             "Add ActorStatusEffectComponent to the actor root.",
             "Assign ActorStatusEffectProfile."
         },
-        Proof = "Apply a status effect at runtime and verify it modifies actor stats as expected.",
-        AssignmentFields = new[] { nameof(statusProfile) },
-        ExpertAdvice = "Core implementation for status effects. Requires receivers for movement and combat multipliers to take effect.",
-        CustomizationMoments = new[]
-        {
-            "ActorStatusEffectProfile.startingEffects",
-            "ActorStatusEffectProfile.defaultShieldDamageReduction"
-        }
+        SuccessChecks = new[] { "Apply a status effect at runtime and verify it modifies actor stats as expected." },
+        Tags = new[] { "capability:Combat", "lane:Combat" },
+        Selectable = false
     )]
     public class ActorStatusEffectComponent : MonoBehaviour, IActorStatusEffectReceiver, IDamageModifier
 {

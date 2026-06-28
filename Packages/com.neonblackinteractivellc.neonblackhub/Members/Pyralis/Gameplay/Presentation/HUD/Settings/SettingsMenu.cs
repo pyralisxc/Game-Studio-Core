@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using VContainer;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Presentation.HUD.Settings
 {
@@ -10,19 +11,20 @@ namespace NeonBlack.Gameplay.Presentation.HUD.Settings
 /// Settings panel controller for the 3D main menu.
 /// </summary>
 [AuthoringContract(
-    Capability = AuthoringCapability.UI | AuthoringCapability.Setup,
-    Relevance = "Drives the 3D main-menu settings panel: volume sliders, fullscreen state, and resolution selection.",
-    NativeSetup = new[] 
+        Category = "U I, Setup",
+        CapabilityPath = "Settings/UI/Settings Menu",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Drives the 3D main-menu settings panel: volume sliders, fullscreen state, and resolution selection.",
+        RequiredFields = new[] { nameof(settingsSource), nameof(masterSlider), nameof(musicSlider), nameof(sfxSlider), nameof(fullscreenToggle), nameof(resolutionDropdown) },
+        SetupSteps = new[] 
     { 
         "Place this on the settings panel that is shown from the main menu.",
         "Assign Settings Source to SettingsManager or another IGameplaySettingsApplier.",
         "Assign any sliders, toggle, and dropdown the panel actually exposes."
     },
-    AssignmentFields = new[] { nameof(settingsSource), nameof(masterSlider), nameof(musicSlider), nameof(sfxSlider), nameof(fullscreenToggle), nameof(resolutionDropdown) },
-    Proof = "Open the settings panel and verify sliders modify volume and the resolution dropdown updates display.",
-    ExpertAdvice = "Do not leave every control empty; the panel will open but cannot change settings. Wire the resolution dropdown On Value Changed event only if another script needs to observe it; this script adds its own listener on enable.",
-    CapabilityPath = "Settings/UI/Settings Menu"
-)]
+        SuccessChecks = new[] { "Open the settings panel and verify sliders modify volume and the resolution dropdown updates display." },
+        Tags = new[] { "capability:UI", "capability:Setup" }
+    )]
 public class SettingsMenu : MonoBehaviour
 {
     private const string KEY_FULLSCREEN = "Fullscreen";

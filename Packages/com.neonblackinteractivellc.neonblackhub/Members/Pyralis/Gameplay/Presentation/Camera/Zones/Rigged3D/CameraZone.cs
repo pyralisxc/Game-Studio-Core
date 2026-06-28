@@ -5,6 +5,7 @@ using NeonBlack.Gameplay.Data.Participants;
 using UnityEngine;
 using UnityEngine.Events;
 using VContainer;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Presentation.Camera.Zones
 {
@@ -13,20 +14,21 @@ namespace NeonBlack.Gameplay.Presentation.Camera.Zones
 /// CameraRigProfile when the player enters.
 /// </summary>
 [AuthoringContract(
-    Capability = AuthoringCapability.Camera | AuthoringCapability.Puzzle,
-    Relevance = "3D trigger volume that switches CameraRigProfile when the player enters.",
-    NativeSetup = new[] 
+        Category = "Camera, Puzzle",
+        CapabilityPath = "World & Meta/Camera/Camera Zone",
+        Surface = AuthoringSurface.Goal,
+        Summary = "3D trigger volume that switches CameraRigProfile when the player enters.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/camera",
+        RequiredFields = new[] { nameof(onEnterProfile), nameof(onExitProfile), nameof(transitionDuration), nameof(_playerTag) },
+        SetupSteps = new[] 
     { 
         "Assign On Enter Profile to the camera framing this zone should activate.",
         "Assign Camera Rig Controller manually, or let dependency injection provide it.",
         "Set Player Tag to the tag used by entering pawn objects."
     },
-    AssignmentFields = new[] { nameof(onEnterProfile), nameof(onExitProfile), nameof(transitionDuration), nameof(_playerTag) },
-    Proof = "Enter the trigger volume with a Player-tagged object and verify the camera switches profiles.",
-    ExpertAdvice = "Combat arena path: enter a tighter profile and exit back to the default profile. Cutscene path: enable One Shot and leave On Exit Profile empty. Exploration path: use wider profiles for overlooks or large platforming spaces.",
-    DocumentationURL = "https://docs.neonblack.com/pyralis/camera",
-    CapabilityPath = "World & Meta/Camera/Camera Zone"
-)]
+        SuccessChecks = new[] { "Enter the trigger volume with a Player-tagged object and verify the camera switches profiles." },
+        Tags = new[] { "capability:Camera", "capability:Puzzle" }
+    )]
 [AddComponentMenu("NeonBlack/Gameplay/Camera/Camera Zone 3D")]
 [RequireComponent(typeof(BoxCollider))]
 public partial class CameraZone : MonoBehaviour

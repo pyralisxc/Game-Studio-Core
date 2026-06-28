@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Definitions.Combat;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Profiles
 {
@@ -9,15 +10,16 @@ namespace NeonBlack.Gameplay.Data.Profiles
     /// Shared combat authoring profile for enemy attack selection and timing.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat,
-        Relevance = "Defines how an AI enemy chooses and sequences its attacks.",
-        NativeSetup = new[] { "Add EnemyAttacks to the attackSequence array.", "Set Attack Mode." },
-        AssignmentFields = new[] { nameof(attackSequence), nameof(attackMode) },
-        Proof = "Verify the enemy cycles through the defined attacks during combat.",
-        ExpertAdvice = "Use Sequential mode for boss phases or predictable combos. Use Priority or Weighted for dynamic combat behavior.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/enemies",
+        Category = "Combat",
         CapabilityPath = "Combat/Actions/Enemy Combat Profile",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.Combat }
+        Surface = AuthoringSurface.Profile,
+        Summary = "Defines how an AI enemy chooses and sequences its attacks.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/enemies",
+        RequiredFields = new[] { nameof(attackSequence), nameof(attackMode) },
+        SetupSteps = new[] { "Add EnemyAttacks to the attackSequence array.", "Set Attack Mode." },
+        SuccessChecks = new[] { "Verify the enemy cycles through the defined attacks during combat." },
+        Tags = new[] { "capability:Combat", "runtime:Combat" },
+        Selectable = false
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Enemy Combat Profile", fileName = "EnemyCombatProfile")]
     public class EnemyCombatProfile : ScriptableObject, IRuntimeValidationProvider

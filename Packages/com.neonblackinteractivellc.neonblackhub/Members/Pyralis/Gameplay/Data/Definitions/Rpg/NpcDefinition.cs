@@ -4,17 +4,18 @@ using System.Linq;
 using NeonBlack.Gameplay.Data.Rpg;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rpg
 {
     [AuthoringContract(
-        ModuleId = "rpg.npc",
-        Capability = AuthoringCapability.Dialogue,
-        Lane = "RPG",
-        AssignmentFields = new[] { nameof(npcId), nameof(displayName), nameof(role), nameof(tags), nameof(factionId), nameof(actorLinkId) },
-        Proof = "Proof that the NPC can initiate dialogue and has a valid profile.",
+        StableId = "feature.rpg.npc",
+        Category = "Dialogue",
         CapabilityPath = "RPG/Dialogue/Definitions/Npc Definition",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
+        Surface = AuthoringSurface.Goal,
+        RequiredFields = new[] { nameof(npcId), nameof(displayName), nameof(role), nameof(tags), nameof(factionId), nameof(actorLinkId) },
+        SuccessChecks = new[] { "Proof that the NPC can initiate dialogue and has a valid profile." },
+        Tags = new[] { "capability:Dialogue", "runtime:CharacterPawnGameplay", "lane:RPG" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/NPC", fileName = "NpcDefinition")]
     public class NpcDefinition : ScriptableObject, INpcProfile, IRuntimeValidationProvider

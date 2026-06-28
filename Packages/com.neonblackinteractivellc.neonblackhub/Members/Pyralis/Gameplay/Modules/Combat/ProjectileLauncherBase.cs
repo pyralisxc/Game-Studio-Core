@@ -3,22 +3,25 @@ using NeonBlack.Gameplay.Data.Definitions.Combat;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Combat
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.RangedFlow,
-        Relevance = "Base component for firing projectiles and hitscan attacks with built-in pooling and feedback routing.",
-        ExpertAdvice = "Extend this class to create custom 2D or 3D launchers. It handles the low-level spawning and impact feedback routing via IHitPauseSink and ICameraShakeSink.",
-        NativeSetup = new[] 
+        StableId = "combat.projectile-launcher.base",
+        Category = "Ranged Flow",
+        CapabilityPath = "Combat/Projectiles/Projectile Launcher Base",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Base component for firing projectiles and hitscan attacks with built-in pooling and feedback routing.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/combat/projectiles",
+        RequiredFields = new[] { nameof(usePrefabPooling), nameof(maxPoolSizePerPrefab) },
+        SetupSteps = new[] 
         { 
             "Add ProjectileLauncher2D or 3D to a scene coordinator.", 
             "Assign a Projectile Parent transform and configure pooling settings." 
         },
-        Proof = "A configured launcher spawns projectile commands and routes impact feedback.",
-        ProofTargetId = "proof.npc-enemy-behavior",
-        AssignmentFields = new[] { nameof(usePrefabPooling), nameof(maxPoolSizePerPrefab) },
-        DocumentationURL = "https://docs.neonblack.com/pyralis/combat/projectiles"
+        SuccessChecks = new[] { "A configured launcher spawns projectile commands and routes impact feedback." },
+        Tags = new[] { "capability:RangedFlow" }
     )]
     public abstract class ProjectileLauncherBase : MonoBehaviour
     {

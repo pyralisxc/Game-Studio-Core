@@ -16,6 +16,12 @@
         "com.unity.ugui": "2.0.0"
       }
     },
+    "com.pys.authoring": {
+      "version": "file:com.pys.authoring",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
     "com.unity.2d.sprite": {
       "version": "1.0.0",
       "depth": 1,

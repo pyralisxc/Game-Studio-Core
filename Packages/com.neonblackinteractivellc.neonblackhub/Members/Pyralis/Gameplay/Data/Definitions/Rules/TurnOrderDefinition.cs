@@ -2,6 +2,7 @@ using NeonBlack.Gameplay.Data.Tabletop;
 using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rules
 {
@@ -9,12 +10,13 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
     /// Designer-authored seat order and phase list for turn-based rules.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Tabletop | AuthoringCapability.TurnBased, 
-        Relevance = "Project-window creation path for tabletop and turn/menu action order.",
-        AssignmentFields = new[] { nameof(participantSeats), nameof(phases) },
-        Proof = "Verify the turn sequence in the Tabletop Board Grid Presenter.",
+        Category = "Tabletop, Turn Based",
         CapabilityPath = "Tabletop/Board/Turn Order Definition",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.BoardCardTabletop }
+        Surface = AuthoringSurface.Goal,
+        Summary = "Project-window creation path for tabletop and turn/menu action order.",
+        RequiredFields = new[] { nameof(participantSeats), nameof(phases) },
+        SuccessChecks = new[] { "Verify the turn sequence in the Tabletop Board Grid Presenter." },
+        Tags = new[] { "capability:Tabletop", "capability:TurnBased", "runtime:BoardCardTabletop" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Rules/Turn Order Definition", fileName = "TurnOrderDefinition", order = -70)]
     public class TurnOrderDefinition : ScriptableObject, IRuntimeValidationProvider

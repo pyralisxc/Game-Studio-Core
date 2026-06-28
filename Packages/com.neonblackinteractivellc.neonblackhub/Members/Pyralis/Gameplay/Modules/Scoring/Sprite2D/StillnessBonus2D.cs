@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using VContainer;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Scoring
 {
@@ -18,18 +19,19 @@ namespace NeonBlack.Gameplay.Modules.Scoring
     ///   4. Tune _collectiblesPerBonus and _stillnessInterval in the Inspector.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Session,
-        Relevance = "Awards points to the player for remaining stationary.",
-        NativeSetup = new[] 
+        Category = "Session",
+        CapabilityPath = "Goals & Scoring/Bonuses/Stillness Bonus 2D",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Awards points to the player for remaining stationary.",
+        RequiredFields = new[] { nameof(_collectiblesPerBonus), nameof(_stillnessInterval), nameof(_stillnessThreshold), nameof(_bonusClip) },
+        SetupSteps = new[] 
         { 
             "Attach to the Player GameObject.",
             "Ensure a component implementing IActorMotionStateReader is present.",
             "Tune reward timing and point values."
         },
-        AssignmentFields = new[] { nameof(_collectiblesPerBonus), nameof(_stillnessInterval), nameof(_stillnessThreshold), nameof(_bonusClip) },
-        Proof = "Stay still for 3 seconds and verify the score increases.",
-        ExpertAdvice = "Set the stillness threshold high enough to ignore micro-movement or drift. Runtime scoring and gameplay state are normally supplied by the session scope; use the source fields only for standalone custom orchestration.",
-        CapabilityPath = "Goals & Scoring/Bonuses/Stillness Bonus 2D"
+        SuccessChecks = new[] { "Stay still for 3 seconds and verify the score increases." },
+        Tags = new[] { "capability:Session" }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Modules/Scoring/Stillness Bonus 2D")]
     public class StillnessBonus2D : MonoBehaviour, IRuntimeValidationProvider

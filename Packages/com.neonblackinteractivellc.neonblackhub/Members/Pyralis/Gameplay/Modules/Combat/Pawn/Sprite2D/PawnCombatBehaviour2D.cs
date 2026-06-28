@@ -4,25 +4,26 @@ using NeonBlack.Gameplay.Modules.Combat;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Participants;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Combat
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat,
-        Relevance = "2D pawn combat; receives attack input, resolves combos, activates HitBox2D, and fires projectiles.",
-        Axioms = AuthoringWorldAxiom.Dimensions2D,
-        NativeSetup = new[] 
+        Category = "Combat",
+        CapabilityPath = "Combat/Actions/Pawn Combat Behaviour2D",
+        Surface = AuthoringSurface.Goal,
+        Summary = "2D pawn combat; receives attack input, resolves combos, activates HitBox2D, and fires projectiles.",
+        RequiredFields = new[] { nameof(hitBoxZones), nameof(equippedWeapons), nameof(startingWeaponIndex), nameof(attackCooldown), nameof(kickCooldown), nameof(projectileLauncher) },
+        RequiredComponentNames = new[] { "NeonBlack.Gameplay.Modules.Character.Motor2D" },
+        SetupSteps = new[] 
         { 
             "Attach to the same root as Motor2D.",
             "Assign HitBox2D zones for melee attacks.",
             "Assign CombatSequenceDefinition for authored combos.",
             "Assign Projectile Launcher for ranged attacks."
         },
-        RequiredComponentNames = new[] { "NeonBlack.Gameplay.Modules.Character.Motor2D" },
-        AssignmentFields = new[] { nameof(hitBoxZones), nameof(equippedWeapons), nameof(startingWeaponIndex), nameof(attackCooldown), nameof(kickCooldown), nameof(projectileLauncher) },
-        Proof = "Verify attacks trigger animations and hitboxes detect targets.",
-        ExpertAdvice = "For 2D-only combat, prefer PawnCombatBehaviour2D. Do not leave hitbox zone names mismatched with WeaponData fallback zones.",
-        CapabilityPath = "Combat/Actions/Pawn Combat Behaviour2D"
+        SuccessChecks = new[] { "Verify attacks trigger animations and hitboxes detect targets." },
+        Tags = new[] { "capability:Combat", "axiom:Dimensions2D" }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Modules/Combat/Pawn/Sprite2D/Pawn Combat Behaviour 2D")]
     public partial class PawnCombatBehaviour2D : MonoBehaviour, IPawnCombatModule, IActorCombatRequestReceiver, ICombatActionStateReader, IActorCombatModifierReceiver, IRuntimeValidationProvider

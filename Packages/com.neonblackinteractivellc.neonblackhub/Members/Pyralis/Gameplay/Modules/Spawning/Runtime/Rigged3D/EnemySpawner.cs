@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Spawning
 {
@@ -10,13 +11,15 @@ namespace NeonBlack.Gameplay.Modules.Spawning
 /// Enemy spawner with two modes: Continuous and Waves.
 /// </summary>
 [AuthoringContract(
-    Capability = AuthoringCapability.Combat | AuthoringCapability.Session, 
-    Relevance = "Inspector Add Component path for scene-authored enemy spawning.",
-    AssignmentFields = new[] { "enemyPrefabs", "spawnPoints", "mode" },
-    Proof = "Verify that enemies are spawned according to the selected mode (Continuous/Waves).",
-    NativeSetup = new[] { "Configure Spawn Points" },
-    CapabilityPath = "Combat/Actions/Enemy Spawner"
-)]
+        Category = "Combat, Session",
+        CapabilityPath = "Combat/Actions/Enemy Spawner",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Inspector Add Component path for scene-authored enemy spawning.",
+        RequiredFields = new[] { "enemyPrefabs", "spawnPoints", "mode" },
+        SetupSteps = new[] { "Configure Spawn Points" },
+        SuccessChecks = new[] { "Verify that enemies are spawned according to the selected mode (Continuous/Waves)." },
+        Tags = new[] { "capability:Combat", "capability:Session" }
+    )]
 [AddComponentMenu("NeonBlack/Gameplay/Spawning/Enemy Spawner")]
 public class EnemySpawner : MonoBehaviour, IEncounterSpawnSource
 {

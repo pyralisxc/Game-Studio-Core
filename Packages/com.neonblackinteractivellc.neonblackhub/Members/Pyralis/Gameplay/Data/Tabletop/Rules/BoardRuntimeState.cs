@@ -1,5 +1,6 @@
 using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Tabletop
 {
@@ -7,10 +8,12 @@ namespace NeonBlack.Gameplay.Data.Tabletop
     /// Authoritative logical board state for tabletop-style games.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Tabletop | AuthoringCapability.Grid,
-        Relevance = "Authoritative logical board state for tabletop-style games.",
-        Proof = "Board state correctly tracks piece occupancy and coordinate mapping at runtime.",
-        CapabilityPath = "Tabletop/Board/Board Runtime State"
+        Category = "Tabletop, Grid",
+        CapabilityPath = "Tabletop/Board/Board Runtime State",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Authoritative logical board state for tabletop-style games.",
+        SuccessChecks = new[] { "Board state correctly tracks piece occupancy and coordinate mapping at runtime." },
+        Tags = new[] { "capability:Tabletop", "capability:Grid" }
     )]
     public sealed class BoardRuntimeState : IBoardStateService
     {

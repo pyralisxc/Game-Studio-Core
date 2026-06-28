@@ -2,17 +2,19 @@ using UnityEngine;
 using NeonBlack.Gameplay.Core.Enums;
 using NeonBlack.Gameplay.Presentation.Visuals;
 using NeonBlack.Gameplay.Core.Contracts;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Enemies
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Movement,
-        Relevance = "Coordinates 3D movement for enemy actors, including gravity and target facing.",
-        AssignmentFields = new[] { nameof(movementMode), nameof(gravity), nameof(groundCheckRadius), nameof(groundLayer) },
-        Proof = "Verify enemy can move toward a target and stay grounded.",
-        ExpertAdvice = "Adjust gravity and ground check radius if the enemy jitters or floats on uneven terrain.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/enemies",
-        CapabilityPath = "Movement/Traversal/Enemy Movement Module"
+        Category = "Movement",
+        CapabilityPath = "Movement/Traversal/Enemy Movement Module",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Coordinates 3D movement for enemy actors, including gravity and target facing.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/enemies",
+        RequiredFields = new[] { nameof(movementMode), nameof(gravity), nameof(groundCheckRadius), nameof(groundLayer) },
+        SuccessChecks = new[] { "Verify enemy can move toward a target and stay grounded." },
+        Tags = new[] { "capability:Movement" }
     )]
     [RequireComponent(typeof(CharacterController))]
 public class EnemyMovementModule : MonoBehaviour

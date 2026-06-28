@@ -1,18 +1,19 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rpg
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Stats,
-        Relevance = "Defines a reusable RPG stat (e.g., Strength, Wisdom, Health).",
-        NativeSetup = new[] { "Set Stat Id and Display Name.", "Choose Category." },
-        AssignmentFields = new[] { nameof(statId), nameof(displayName), nameof(category) },
-        Proof = "Verify the stat is correctly displayed in character profiles and modified by equipment.",
-        ExpertAdvice = "Use categories to group related stats (e.g., 'Primary', 'Combat', 'Social') in UI and tools.",
+        Category = "Stats",
         CapabilityPath = "RPG/Stats/Definitions/Stat Definition",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
+        Surface = AuthoringSurface.Goal,
+        Summary = "Defines a reusable RPG stat (e.g., Strength, Wisdom, Health).",
+        RequiredFields = new[] { nameof(statId), nameof(displayName), nameof(category) },
+        SetupSteps = new[] { "Set Stat Id and Display Name.", "Choose Category." },
+        SuccessChecks = new[] { "Verify the stat is correctly displayed in character profiles and modified by equipment." },
+        Tags = new[] { "capability:Stats", "runtime:CharacterPawnGameplay" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Stat Definition", fileName = "StatDefinition")]
     public class StatDefinition : ScriptableObject, IRuntimeValidationProvider

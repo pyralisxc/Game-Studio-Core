@@ -2,28 +2,26 @@ using System;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Rpg;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Rpg.Runtime
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Quests,
-        Priority = AuthoringPriority.Primary,
-        ModuleId = "rpg.quest",
-        Lane = "RPG",
-        Relevance = "Manages quest lifecycles, objective tracking, and reward distribution.",
-        ExpertAdvice = "Quest rewards can grant XP, items, or skill points. Use objectives to gate progression. Objectives are tracked by ID and should match the events reported by other systems.",
-        Axioms = AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.TurnBased,
-        NativeSetup = new[]
+        StableId = "feature.rpg.quest",
+        Category = "Quests",
+        CapabilityPath = "RPG/Quests/Quest Service",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Manages quest lifecycles, objective tracking, and reward distribution.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/rpg",
+        RequiredFields = new[] { nameof(_progression), nameof(_inventory) },
+        SetupSteps = new[]
         {
             "create QuestDefinitions",
             "define QuestObjectives",
             "link quest start/end to Dialogue or Hub interaction"
         },
-        AssignmentFields = new[] { nameof(_progression), nameof(_inventory) },
-        Proof = "Quests can be started and objectives can be progressed.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/rpg",
-        CapabilityPath = "RPG/Quests/Quest Service",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
+        SuccessChecks = new[] { "Quests can be started and objectives can be progressed." },
+        Tags = new[] { "capability:Quests", "runtime:CharacterPawnGameplay", "axiom:Realtime", "axiom:TurnBased", "lane:RPG", "priority:Primary" }
     )]
     public sealed class QuestService : IQuestService
 {

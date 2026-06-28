@@ -2,19 +2,21 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Presentation.Visuals;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Profiles
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.VFX | AuthoringCapability.UI,
-        Relevance = "Defines the visual feedback (flashes, popups) for hazard activation and explosion.",
-        NativeSetup = new[] { "Assign Flash presets.", "Configure popup text and colors." },
-        AssignmentFields = new[] { nameof(activationFlashPreset), nameof(explosionFlashPreset) },
-        Proof = "Trigger a hazard and verify the flashes and popups match the profile.",
-        ExpertAdvice = "Use popupFontSize to ensure warnings are visible at the game's camera distance.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/visuals",
+        Category = "V F X, U I",
         CapabilityPath = "Presentation/Feedback/Hazard Feedback Profile",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.AnimationPresentation }
+        Surface = AuthoringSurface.Profile,
+        Summary = "Defines the visual feedback (flashes, popups) for hazard activation and explosion.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/visuals",
+        RequiredFields = new[] { nameof(activationFlashPreset), nameof(explosionFlashPreset) },
+        SetupSteps = new[] { "Assign Flash presets.", "Configure popup text and colors." },
+        SuccessChecks = new[] { "Trigger a hazard and verify the flashes and popups match the profile." },
+        Tags = new[] { "capability:VFX", "capability:UI", "runtime:AnimationPresentation" },
+        Selectable = false
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Hazard Feedback Profile", fileName = "HazardFeedbackProfile")]
     public class HazardFeedbackProfile : ScriptableObject, IRuntimeValidationProvider

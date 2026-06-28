@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using NeonBlack.Gameplay.Core.Contracts;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Glue.SceneFlow.Navigation
 {
@@ -8,20 +9,21 @@ namespace NeonBlack.Gameplay.Glue.SceneFlow.Navigation
     /// Main menu controller for a panel-driven gameplay menu scene.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.UI | AuthoringCapability.Setup,
-        Relevance = "Main menu controller for a panel-driven gameplay menu scene; handles play/load/exit navigation.",
-        NativeSetup = new[] 
+        Category = "U I, Setup",
+        CapabilityPath = "Core Setup/Navigation/Main Menu Manager",
+        Surface = AuthoringSurface.RequiredSetup,
+        Summary = "Main menu controller for a panel-driven gameplay menu scene; handles play/load/exit navigation.",
+        RequiredFields = new[] { nameof(mainPanel), nameof(newGameButton), nameof(exitButton), nameof(gameSceneName), nameof(sceneNavigatorSource) },
+        SetupSteps = new[] 
         { 
             "Assign Main Panel and every main menu button that should be clickable.",
             "Assign Game Scene Name to the scene loaded by New Game.",
             "Assign Scene Navigator Source to SceneFader or SceneLoader.",
             "Assign each panel Back button so they can return to Main Panel."
         },
-        AssignmentFields = new[] { nameof(mainPanel), nameof(newGameButton), nameof(exitButton), nameof(gameSceneName), nameof(sceneNavigatorSource) },
-        Proof = "Menu buttons correctly navigate between panels or trigger scene transitions.",
-        ExpertAdvice = "Do not leave New Game, Settings, or Exit buttons empty unless disabled. Navigation services cannot load an unnamed scene. Ensure the Scene Navigator Source is present in the menu scene.",
-        CapabilityPath = "Core Setup/Navigation/Main Menu Manager",
-        Surface = AuthoringContractSurface.SetupOnly
+        SuccessChecks = new[] { "Menu buttons correctly navigate between panels or trigger scene transitions." },
+        Tags = new[] { "capability:UI", "capability:Setup" },
+        Selectable = false
     )]
     public class MainMenuManager : MonoBehaviour
     {

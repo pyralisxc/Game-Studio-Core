@@ -2,22 +2,23 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using VContainer;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Interaction
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Inventory,
-        Relevance = "3D collectible item that awards points and bobs in world space.",
-        Axioms = AuthoringWorldAxiom.Dimensions3D,
-        NativeSetup = new[] 
+        Category = "Inventory",
+        CapabilityPath = "Interaction/Collectibles/Collectible 3D",
+        Surface = AuthoringSurface.Goal,
+        Summary = "3D collectible item that awards points and bobs in world space.",
+        RequiredFields = new[] { nameof(bobSpeed), nameof(bobHeight) },
+        SetupSteps = new[] 
         { 
             "Add to a 3D prefab with a Collider (Is Trigger).",
             "Tune collectible bobbing and score value."
         },
-        Proof = "Walk an actor into the collectible and verify it disappears and awards points.",
-        ExpertAdvice = "Runtime award routing is normally injected by the session scope. Use Award Sink Source only for standalone/custom award routing.",
-        AssignmentFields = new[] { nameof(bobSpeed), nameof(bobHeight) },
-        CapabilityPath = "Interaction/Collectibles/Collectible 3D"
+        SuccessChecks = new[] { "Walk an actor into the collectible and verify it disappears and awards points." },
+        Tags = new[] { "capability:Inventory", "axiom:Dimensions3D" }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Interaction/Collectibles/Collectible 3D")]
     [RequireComponent(typeof(Collider))]

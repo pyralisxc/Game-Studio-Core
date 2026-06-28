@@ -1,19 +1,21 @@
 using System.Collections.Generic;
 using UnityEngine;
 using NeonBlack.Gameplay.Core.Contracts;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Profiles
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Puzzle | AuthoringCapability.Inventory, 
-        Relevance = "Tuning asset for the actor-level pickup collection feature.",
-        AssignmentFields = new[] { nameof(enableAutoCollect), nameof(interactionRadius), nameof(collectibleLayers) },
-        Proof = "Walk over a pickup and verify it is collected.",
-        NativeSetup = new[] { "Assign to a Pawn or Interaction component." },
-        ExpertAdvice = "Enable 'preferNearestPickup' for precise interaction in dense item clusters. Auto-collect is best for currency, while interaction-collect is better for loot crates.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/inventory",
+        Category = "Puzzle, Inventory",
         CapabilityPath = "RPG/Inventory/Profiles/Pickup Profile",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
+        Surface = AuthoringSurface.Profile,
+        Summary = "Tuning asset for the actor-level pickup collection feature.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/inventory",
+        RequiredFields = new[] { nameof(enableAutoCollect), nameof(interactionRadius), nameof(collectibleLayers) },
+        SetupSteps = new[] { "Assign to a Pawn or Interaction component." },
+        SuccessChecks = new[] { "Walk over a pickup and verify it is collected." },
+        Tags = new[] { "capability:Puzzle", "capability:Inventory", "runtime:CharacterPawnGameplay" },
+        Selectable = false
     )]
 [CreateAssetMenu(menuName = "NeonBlack/Profiles/Pickup Profile", fileName = "PickupProfile")]
     public class PickupProfile : ScriptableObject, IRuntimeValidationProvider

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Definitions
 {
@@ -17,18 +18,17 @@ namespace NeonBlack.Gameplay.Data.Definitions
     /// Top-level session definition for local-first, N-participant-ready gameplay startup.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Session, 
-        Priority = AuthoringPriority.Primary,
-        SetupNodeId = "session.definition",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.PlatformCore },
+        StableId = "session.definition",
+        Category = "Session",
         CapabilityPath = "Core Setup/Session/Session Definition",
-        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.CoreRouteAnchor },
-        Relevance = "Root configuration for a gameplay session. Defines the boundary of your game world and network authority.",
-        AssignmentFields = new[] { nameof(sessionName), nameof(defaultGameMode), nameof(defaultParticipants), nameof(networkMode), nameof(maxParticipants) },
-        NativeSetup = new[] { "GameplaySessionBootstrap" },
-        Proof = "Assign this to a GameplaySessionBootstrap in a new scene. It should be the first asset you create.",
-        ExpertAdvice = "SessionDefinition is your session boundary. For local-only prototypes, keep Local First checked to bypass networking overhead. ParticipantDefinition.inputProfile owns who controls each route.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/session"
+        Surface = AuthoringSurface.Goal,
+        Summary = "Root configuration for a gameplay session. Defines the boundary of your game world and network authority.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/session",
+        RequiredFields = new[] { nameof(sessionName), nameof(defaultGameMode), nameof(defaultParticipants), nameof(networkMode), nameof(maxParticipants) },
+        SetupSteps = new[] { "GameplaySessionBootstrap" },
+        SuccessChecks = new[] { "Assign this to a GameplaySessionBootstrap in a new scene. It should be the first asset you create." },
+        RoleTags = new[] { "IntentRouteEssential", "CoreRouteAnchor" },
+        Tags = new[] { "capability:Session", "runtime:PlatformCore", "priority:Primary" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Definitions/Session Definition", fileName = "SessionDefinition", order = 0)]
     public class SessionDefinition : ScriptableObject, IRuntimeValidationProvider

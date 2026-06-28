@@ -6,6 +6,7 @@ using NeonBlack.Gameplay.Core.Contracts.Networking;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using VContainer;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Glue.Session
 {
@@ -16,17 +17,17 @@ namespace NeonBlack.Gameplay.Glue.Session
     /// Service for tracking and reading the high-level state of the gameplay session (e.g., Playing, Paused).
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Session,
-        Relevance = "Global service for tracking high-level gameplay session states (Playing, Paused, Lobby).",
-        Axioms = AuthoringWorldAxiom.None,
-        RequiredInterfaces = new[] { typeof(IGameService), typeof(IGameplayStateReader) },
-        AssignmentFields = new[] { nameof(sessionDefinition) },
-        Proof = "Verify the session transitions from Boot to Gameplay state upon startup.",
-        ExpertAdvice = "SessionStateService tracks the high-level flow (Lobby -> Gameplay). Inject IGameplayStateReader to listen for phase changes in your UI or Game Logic scripts.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/session",
-        NativeSetup = new[] { "Add to GameplaySessionBootstrap child." },
+        Category = "Session",
         CapabilityPath = "Core Setup/Session/Session State Service",
-        Surface = AuthoringContractSurface.Service
+        Surface = AuthoringSurface.Service,
+        Summary = "Global service for tracking high-level gameplay session states (Playing, Paused, Lobby).",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/session",
+        RequiredFields = new[] { nameof(sessionDefinition) },
+        RequiredInterfaces = new[] { typeof(IGameService), typeof(IGameplayStateReader) },
+        SetupSteps = new[] { "Add to GameplaySessionBootstrap child." },
+        SuccessChecks = new[] { "Verify the session transitions from Boot to Gameplay state upon startup." },
+        Tags = new[] { "capability:Session" },
+        Selectable = false
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Setup/Session State Service")]
     public class SessionStateService : MonoBehaviour, IGameService, IGameplayStateReader, IRuntimeValidationProvider

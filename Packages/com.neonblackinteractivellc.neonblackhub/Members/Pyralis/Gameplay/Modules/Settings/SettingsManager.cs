@@ -3,6 +3,7 @@ using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using UnityEngine.Audio;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Settings
 {
@@ -23,15 +24,16 @@ namespace NeonBlack.Gameplay.Modules.Settings
 ///   3. Optionally override the Mixer field directly if the profile mixer is unavailable.
 /// </summary>
 [AuthoringContract(
-    Capability = AuthoringCapability.Audio | AuthoringCapability.UI,
-    Relevance = "Manages global audio volume levels and mixer integration. Connects settings profiles to the active Unity AudioMixer.",
-    NativeSetup = new[] { "Attach to a persistent root GameObject.", "Assign a SettingsProfile asset." },
-    AssignmentFields = new[] { nameof(settingsProfile), nameof(_mixerOverride) },
-    Proof = "Verify AudioMixer parameters 'MusicVolume' and 'SFXVolume' change when sliders are moved in the Settings UI.",
-    ExpertAdvice = "Ensure your AudioMixer has exposed parameters named 'MusicVolume' and 'SFXVolume' (case sensitive) for the manager to drive. This component persists across scenes if placed on a DontDestroyOnLoad root.",
-    DocumentationURL = "https://docs.neonblack.com/pyralis/settings",
-    CapabilityPath = "Settings/Runtime/Settings Manager"
-)]
+        Category = "Audio, U I",
+        CapabilityPath = "Settings/Runtime/Settings Manager",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Manages global audio volume levels and mixer integration. Connects settings profiles to the active Unity AudioMixer.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/settings",
+        RequiredFields = new[] { nameof(settingsProfile), nameof(_mixerOverride) },
+        SetupSteps = new[] { "Attach to a persistent root GameObject.", "Assign a SettingsProfile asset." },
+        SuccessChecks = new[] { "Verify AudioMixer parameters 'MusicVolume' and 'SFXVolume' change when sliders are moved in the Settings UI." },
+        Tags = new[] { "capability:Audio", "capability:UI" }
+    )]
 [DefaultExecutionOrder(-40)]
 public class SettingsManager : MonoBehaviour, IGameplaySettingsApplier, IInputSettingsRegistrar, IRuntimeValidationProvider
 {

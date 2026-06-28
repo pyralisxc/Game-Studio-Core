@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Presentation.Visuals
 {
@@ -9,21 +10,21 @@ namespace NeonBlack.Gameplay.Presentation.Visuals
 /// This component owns visual orientation only; gameplay movement and hitbox logic stay elsewhere.
 /// </summary>
 [AuthoringContract(
-    Capability = AuthoringCapability.Animation,
-    Relevance = "Forces a 3D object to face the camera and supports left/right mirroring.",
-    Axioms = AuthoringWorldAxiom.Dimensions3D,
-    NativeSetup = new[] 
+        Category = "Animation",
+        CapabilityPath = "Presentation/Feedback/Billboard Facing3D",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Forces a 3D object to face the camera and supports left/right mirroring.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/visuals",
+        RequiredFields = new[] { nameof(target), nameof(mirroredVisualRoot), nameof(spriteRenderer), nameof(cameraOverride), nameof(facingMode) },
+        SetupSteps = new[] 
     { 
         "Attach to a 3D visual object.",
         "Assign Target (usually this Transform).",
         "Assign Camera Override (optional)."
     },
-    AssignmentFields = new[] { nameof(target), nameof(mirroredVisualRoot), nameof(spriteRenderer), nameof(cameraOverride), nameof(facingMode) },
-    Proof = "Move the camera and verify the object rotates to face it.",
-    ExpertAdvice = "Use Y-Axis only for ground-based actors. Use Full Facing for projectiles or floating items.",
-    DocumentationURL = "https://docs.neonblack.com/pyralis/visuals",
-    CapabilityPath = "Presentation/Feedback/Billboard Facing3D"
-)]
+        SuccessChecks = new[] { "Move the camera and verify the object rotates to face it." },
+        Tags = new[] { "capability:Animation", "axiom:Dimensions3D" }
+    )]
 [AddComponentMenu("NeonBlack/Gameplay/Runtime 3D/Presentation/Billboard Facing 3D")]
 public class BillboardFacing3D : MonoBehaviour, IRuntimeValidationProvider
 {

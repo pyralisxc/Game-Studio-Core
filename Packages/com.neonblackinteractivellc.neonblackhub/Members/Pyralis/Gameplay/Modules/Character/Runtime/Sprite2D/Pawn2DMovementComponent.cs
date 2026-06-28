@@ -3,27 +3,26 @@ using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Participants;
 using UnityEngine;
 using VContainer;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Character
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Movement, 
+        StableId = "movement.pawn.2d",
+        Category = "Movement",
         CapabilityPath = "Movement/Sprite2D/Movement Component",
-        PriorityValueOverride = 50,
-        Relevance = "Tunable 2D movement module supporting top-down and side-view modes. PlayfieldProfile owns normal movement bounds; camera-visible bounds are an explicit arcade option.",
-        Axioms = AuthoringWorldAxiom.Dimensions2D,
-        RoleTags = new[] { "Movement2D", "TopDownNoGravity", "SideViewGravity" },
-        NativeSetup = new[] 
+        Surface = AuthoringSurface.Goal,
+        Summary = "Tunable 2D movement module supporting top-down and side-view modes. PlayfieldProfile owns normal movement bounds; camera-visible bounds are an explicit arcade option.",
+        RequiredFields = new[] { nameof(movementStyle), nameof(moveSpeed), nameof(dashEnabled), nameof(dashSpeed), nameof(dashCooldown), nameof(jumpEnabled), nameof(jumpVelocity), nameof(groundLayer), nameof(inputZones) },
+        SetupSteps = new[] 
         { 
             "Add Rigidbody2D and Collider2D.",
             "Keep on the same root as Motor2D.",
             "Set Movement Style to SideViewGravity only for platformer-style gravity and ground checks."
         },
-        AssignmentFields = new[] { nameof(movementStyle), nameof(moveSpeed), nameof(dashEnabled), nameof(dashSpeed), nameof(dashCooldown), nameof(jumpEnabled), nameof(jumpVelocity), nameof(groundLayer), nameof(inputZones) },
-        ProofTargetId = "proof.1p-pawn-movement",
-        Proof = "Pawn responds to input in the scene. For top-down routes, verify Move drives X/Y on the map plane; for side-view routes, verify the ground check hits the correct layer.",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay },
-        ExpertAdvice = "Top-down/no-gravity route: keep Movement Style as TopDownNoGravity so Rigidbody2D stays Kinematic and Move drives X/Y. If Jump should visually hop without physics gravity, add TopDownHopComponent and assign a TopDownHopProfile so it consumes the Jump action. Side-view/gravity route: set Movement Style to SideViewGravity and enable Jump for Dynamic Rigidbody2D vertical motion. Leave camera-visible movement bounds off unless the camera view itself is the legal play area."
+        SuccessChecks = new[] { "Pawn responds to input in the scene. For top-down routes, verify Move drives X/Y on the map plane; for side-view routes, verify the ground check hits the correct layer." },
+        RoleTags = new[] { "Movement2D", "TopDownNoGravity", "SideViewGravity" },
+        Tags = new[] { "capability:Movement", "runtime:CharacterPawnGameplay", "axiom:Dimensions2D" }
     )]
 [AddComponentMenu("NeonBlack/Gameplay/Modules/Character/Sprite2D/Pawn 2D Movement Component")]
     [RequireComponent(typeof(Rigidbody2D))]

@@ -1,18 +1,18 @@
 {
-    "name": "NeonBlack.Gameplay.Modules.Traversal.Editor",
-    "references": [
-        "NeonBlack.Gameplay.Modules.Traversal",
-        "NeonBlack.Gameplay.Editor",
-        "NeonBlack.Gameplay.Data"
-    ],
-    "includePlatforms": [
-        "Editor"
-    ],
-    "excludePlatforms": [],
-    "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
-    "autoReferenced": false,
-    "defineConstraints": [],
-    "versionDefines": []
+  "name": "NeonBlack.Gameplay.Modules.Traversal.Editor",
+  "references": [
+    "NeonBlack.Gameplay.Modules.Traversal",
+    "NeonBlack.Gameplay.Editor",
+    "NeonBlack.Gameplay.Data"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": []
 }

@@ -4,17 +4,18 @@ using System.Linq;
 using NeonBlack.Gameplay.Data.Rpg;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rpg
 {
     [AuthoringContract(
-        ModuleId = "rpg.hub.definition",
-        Capability = AuthoringCapability.Session,
-        Lane = "RPG",
-        AssignmentFields = new[] { nameof(hubId), nameof(displayName), nameof(sceneId), nameof(interactables) },
-        Proof = "Proof that the hub contains valid interactables and correctly links to a scene.",
+        StableId = "feature.rpg.hub.definition",
+        Category = "Session",
         CapabilityPath = "RPG/Hubs/Definitions/Hub Definition",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.PlatformCore }
+        Surface = AuthoringSurface.Goal,
+        RequiredFields = new[] { nameof(hubId), nameof(displayName), nameof(sceneId), nameof(interactables) },
+        SuccessChecks = new[] { "Proof that the hub contains valid interactables and correctly links to a scene." },
+        Tags = new[] { "capability:Session", "runtime:PlatformCore", "lane:RPG" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Hub Definition", fileName = "HubDefinition")]
     public class HubDefinition : ScriptableObject, IHubDefinition, IRuntimeValidationProvider

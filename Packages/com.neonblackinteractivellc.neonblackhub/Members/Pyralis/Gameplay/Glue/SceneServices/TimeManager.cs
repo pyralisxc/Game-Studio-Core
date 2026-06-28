@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Glue.SceneServices
 {
@@ -9,16 +10,16 @@ namespace NeonBlack.Gameplay.Glue.SceneServices
     /// Runtime service for global time-scale effects such as hit pause.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Setup,
-        Relevance = "Manages global time scale effects such as hit-pause and game freeze.",
-        Axioms = AuthoringWorldAxiom.Realtime,
-        RequiredInterfaces = new[] { typeof(IHitPauseSink) },
-        NativeSetup = new[] { "Add to a Bootstrap child GameObject or assign to GameplaySessionBootstrap." },
-        Proof = "Calling Freeze(duration) pauses the game for the specified time.",
-        ExpertAdvice = "Use TimeManager to create dramatic pauses during combat or UI events. It manages the global Unity Time.timeScale safely and resets it on disable.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/time",
+        Category = "Setup",
         CapabilityPath = "Core Setup/Runtime/Time Manager",
-        Surface = AuthoringContractSurface.Service
+        Surface = AuthoringSurface.Service,
+        Summary = "Manages global time scale effects such as hit-pause and game freeze.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/time",
+        RequiredInterfaces = new[] { typeof(IHitPauseSink) },
+        SetupSteps = new[] { "Add to a Bootstrap child GameObject or assign to GameplaySessionBootstrap." },
+        SuccessChecks = new[] { "Calling Freeze(duration) pauses the game for the specified time." },
+        Tags = new[] { "capability:Setup", "axiom:Realtime" },
+        Selectable = false
     )]
     public class TimeManager : MonoBehaviour, IHitPauseSink
     {

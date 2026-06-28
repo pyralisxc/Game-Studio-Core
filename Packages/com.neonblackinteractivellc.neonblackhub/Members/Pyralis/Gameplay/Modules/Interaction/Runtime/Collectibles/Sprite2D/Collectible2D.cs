@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using VContainer;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Interaction
 {
@@ -14,20 +15,20 @@ namespace NeonBlack.Gameplay.Modules.Interaction
 /// overlap detection, and Circle is an order of magnitude cheaper in Physics2D.
 /// </summary>
 [AuthoringContract(
-    Capability = AuthoringCapability.Inventory,
-    Relevance = "2D collectible item that awards points and triggers feedback on collection.",
-    Axioms = AuthoringWorldAxiom.Dimensions2D,
-    NativeSetup = new[] 
+        Category = "Inventory",
+        CapabilityPath = "Interaction/Collectibles/Collectible 2D",
+        Surface = AuthoringSurface.Goal,
+        Summary = "2D collectible item that awards points and triggers feedback on collection.",
+        RequiredFields = new[] { nameof(_bobSpeed), nameof(_bobHeight) },
+        SetupSteps = new[] 
     { 
         "Create a prefab with SpriteRenderer and CircleCollider2D (Is Trigger).",
         "Add this component.",
         "Ensure CollectibleSpawner2D is configured to spawn this prefab."
     },
-    Proof = "Walk the player into the collectible and verify points are added to the score service.",
-    ExpertAdvice = "Use CircleCollider2D for optimal performance. Collectibles bob vertically based on local time to avoid visual synchronization.",
-    AssignmentFields = new[] { nameof(_bobSpeed), nameof(_bobHeight) },
-    CapabilityPath = "Interaction/Collectibles/Collectible 2D"
-)]
+        SuccessChecks = new[] { "Walk the player into the collectible and verify points are added to the score service." },
+        Tags = new[] { "capability:Inventory", "axiom:Dimensions2D" }
+    )]
 [AddComponentMenu("NeonBlack/Gameplay/Interaction/Collectibles/Collectible 2D")]
 [RequireComponent(typeof(CircleCollider2D))]
 public class Collectible2D : MonoBehaviour, IPickupCollectible, IRuntimeValidationProvider

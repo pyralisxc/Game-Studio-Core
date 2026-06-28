@@ -6,6 +6,7 @@ using NeonBlack.Gameplay.Glue.Spawning;
 using NeonBlack.Gameplay.Modules.Character;
 using Unity.Netcode;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Networking.Participants
 {
@@ -14,12 +15,13 @@ namespace NeonBlack.Gameplay.Networking.Participants
     /// Registers spawned pawns with NGO and despawns them cleanly on removal.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Networking,
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.Networking },
+        Category = "Networking",
         CapabilityPath = "Networking/Participants/Networked Participant Spawn Service",
-        Relevance = "Drop-in replacement for ParticipantSpawnService in online sessions. Registers pawns with NGO.",
-        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.NetworkRouteSupport },
-        Proof = "Spawned pawns have a valid NetworkObject and are correctly replicated to clients."
+        Surface = AuthoringSurface.Goal,
+        Summary = "Drop-in replacement for ParticipantSpawnService in online sessions. Registers pawns with NGO.",
+        SuccessChecks = new[] { "Spawned pawns have a valid NetworkObject and are correctly replicated to clients." },
+        RoleTags = new[] { "IntentRouteEssential", "NetworkRouteSupport" },
+        Tags = new[] { "capability:Networking", "runtime:Networking" }
     )]
     public class NetworkedParticipantSpawnService : ParticipantSpawnService
     {

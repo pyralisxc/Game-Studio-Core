@@ -3,6 +3,7 @@ using NeonBlack.Gameplay.Data.Participants;
 using NeonBlack.Gameplay.Modules.Character;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Character
 {
@@ -11,25 +12,22 @@ namespace NeonBlack.Gameplay.Modules.Character
     /// Movement, presentation, and reaction ownership live in dedicated 2D components.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.KineticMotor2D,
+        Category = "Kinetic Motor2 D",
         CapabilityPath = "Movement/Sprite2D/Kinetic Motor",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay },
-        Priority = AuthoringPriority.Primary,
-        Lane = "Sprite2D",
-        Relevance = "Canonical 2D pawn motor; coordinates movement, animations, and reactions.",
-        Axioms = AuthoringWorldAxiom.Dimensions2D | AuthoringWorldAxiom.Realtime,
+        Surface = AuthoringSurface.Goal,
+        Summary = "Canonical 2D pawn motor; coordinates movement, animations, and reactions.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/movement",
+        RequiredFields = new[] { nameof(movement), nameof(presentation) },
         RequiredComponents = new[] { typeof(Pawn2DMovementComponent), typeof(Pawn2DPresentationComponent) },
-        RoleTags = new[] { "Motor2D", "PawnRoot", "PhysicalIdentity" },
-        NativeSetup = new[]
+        SetupSteps = new[]
         {
             "Attach Motor2D to the 2D pawn root.",
             "Ensure Pawn2DMovementComponent and Pawn2DPresentationComponent are present.",
             "Wire sprite renderers and animators into the presentation component."
         },
-        AssignmentFields = new[] { nameof(movement), nameof(presentation) },
-        Proof = "Enter Play Mode and move the character. Verify the pawn responds to input and flips facing direction correctly.",
-        ExpertAdvice = "Ensure your Rigidbody2D is set to 'Interpolate' for smooth camera follow. If using Top-Down, set Gravity Scale to 0. Motor2D delegates to Movement and Presentation modules.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/movement"
+        SuccessChecks = new[] { "Enter Play Mode and move the character. Verify the pawn responds to input and flips facing direction correctly." },
+        RoleTags = new[] { "Motor2D", "PawnRoot", "PhysicalIdentity" },
+        Tags = new[] { "capability:KineticMotor2D", "runtime:CharacterPawnGameplay", "axiom:Dimensions2D", "axiom:Realtime", "lane:Sprite2D", "priority:Primary" }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Modules/Character/Sprite2D/Motor 2D")]
     [RequireComponent(typeof(Pawn2DMovementComponent))]

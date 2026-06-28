@@ -10,6 +10,7 @@ using NeonBlack.Gameplay.Modules.Character;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using VContainer;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Glue.InputRouting
 {
@@ -18,22 +19,21 @@ namespace NeonBlack.Gameplay.Glue.InputRouting
     /// This keeps the session local-first while matching an N-participant model.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Input | AuthoringCapability.Setup,
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.PlatformCore },
+        Category = "Input, Setup",
         CapabilityPath = "Core Setup/Input/Participant Input Router",
-        Relevance = "Routes physical input device events to the correct participant; participant definitions own the InputProfile that pawn and non-pawn control surfaces consume.",
-        Axioms = AuthoringWorldAxiom.None,
-        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.InputRouteSupport },
-        AssignmentFields = new[] { nameof(sessionDefinition), nameof(rosterService), nameof(playerInputManager) },
-        Proof = "Join a new player and verify they are correctly assigned to a participant seat in the roster.",
-        NativeSetup = new[] 
+        Surface = AuthoringSurface.RequiredSetup,
+        Summary = "Routes physical input device events to the correct participant; participant definitions own the InputProfile that pawn and non-pawn control surfaces consume.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/input",
+        RequiredFields = new[] { nameof(sessionDefinition), nameof(rosterService), nameof(playerInputManager) },
+        SetupSteps = new[] 
         { 
             "Add ParticipantInputRouter to the Gameplay Root or a Gameplay Root child.",
             "Ensure it is wired to the ParticipantRosterService."
         },
-        Surface = AuthoringContractSurface.RouteEssential,
-        ExpertAdvice = "The Input Router watches PlayerInput join/leave events for local join. For 1P auto-join, no PlayerInputManager is required; ParticipantDefinition.inputProfile remains the single authored input owner.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/input"
+        SuccessChecks = new[] { "Join a new player and verify they are correctly assigned to a participant seat in the roster." },
+        RoleTags = new[] { "IntentRouteEssential", "InputRouteSupport" },
+        Tags = new[] { "capability:Input", "capability:Setup", "runtime:PlatformCore" },
+        Selectable = false
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Setup/Participant Input Router")]
     public class ParticipantInputRouter : MonoBehaviour, IRuntimeValidationProvider

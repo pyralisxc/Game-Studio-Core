@@ -1,16 +1,18 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Editor.Inspectors;
+using Pys.Authoring.Contracts;
+using Pys.Authoring.Editor.Contracts;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
-
 namespace NeonBlack.Gameplay.Editor
 {
     /// <summary>
-    /// Global inspector overlay that reflectively injects Pyralis authoring guidance
-    /// into any MonoBehavior or ScriptableObject that has an [AuthoringContract].
+    /// Global inspector overlay that reflectively injects local authoring guidance
+    /// into any MonoBehaviour or ScriptableObject that has a PYS authoring contract.
     /// </summary>
     [CustomEditor(typeof(Object), true)]
     [CanEditMultipleObjects]
@@ -23,7 +25,7 @@ namespace NeonBlack.Gameplay.Editor
         {
             if (target == null) return;
             
-            _contract = ResolvedAuthoringContractRegistry.FindByType(target.GetType());
+            _contract = AuthoringContractResolver.Resolve(target.GetType()).FirstOrDefault();
             _checkedContract = true;
         }
 
@@ -50,11 +52,11 @@ namespace NeonBlack.Gameplay.Editor
         public static void DrawHeader(ResolvedAuthoringContract contract)
         {
             string context = string.IsNullOrWhiteSpace(contract.DisplayName)
-                ? "Pyralis Authoring"
+                ? "PYS Authoring"
                 : contract.DisplayName;
             PyralisInspectorHandoff.DrawAuthoringButton(
                 context,
-                "Local contract surface. Use Pyralis Authoring for route guidance and proof readiness.");
+                "Local contract surface. Use PYS Authoring for route guidance and proof readiness.");
         }
 
         public static void DrawValidationFooter(ResolvedAuthoringContract contract, Object target, SerializedObject serializedObject)
@@ -62,9 +64,9 @@ namespace NeonBlack.Gameplay.Editor
             List<string> errors = new List<string>();
             List<string> warnings = new List<string>();
 
-            if (contract.AssignmentFields != null && contract.AssignmentFields.Length > 0)
+            if (contract.RequiredFields != null && contract.RequiredFields.Count > 0)
             {
-                foreach (var field in contract.AssignmentFields)
+                foreach (var field in contract.RequiredFields)
                 {
                     SerializedProperty prop = serializedObject.FindProperty(field);
                     if (prop == null) continue;

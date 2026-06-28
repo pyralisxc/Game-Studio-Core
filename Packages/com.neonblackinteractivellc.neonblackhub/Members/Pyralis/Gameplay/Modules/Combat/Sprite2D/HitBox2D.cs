@@ -4,6 +4,7 @@ using System.Collections;
 using System;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Combat
 {
@@ -20,16 +21,16 @@ namespace NeonBlack.Gameplay.Modules.Combat
 ///   6. Call Enable() / Disable() from PlayerActions2D or via Coroutine.
 /// </summary>
 [AuthoringContract(
-    Capability = AuthoringCapability.CombatSensors,
-    Relevance = "Trigger-based 2D hitbox for melee attacks in Tilemap or 2D physics scenes.",
-    Axioms = AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.Dimensions2D,
-    NativeSetup = new[] { "Add to a child GameObject of a 2D actor.", "Assign a Trigger Collider2D." },
-    AssignmentFields = new[] { nameof(owner), nameof(weapon), nameof(hitFXPrefab), nameof(hitSFX), nameof(hitPauseSink) },
-    Proof = "The 2D hitbox damages a valid target during its active window.",
-    ProofTargetId = "proof.npc-enemy-behavior",
-    ExpertAdvice = "HitBox2D uses OnTriggerEnter2D. Ensure the root actor has a Rigidbody2D and correct LayerMasks to detect the intended targets. Use 'Freeze Frame Duration' for impact weight.",
-    CapabilityPath = "Combat/Sensors/Hit Box2D"
-)]
+        StableId = "combat.hitbox.2d",
+        Category = "Combat Sensors",
+        CapabilityPath = "Combat/Sensors/Hit Box2D",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Trigger-based 2D hitbox for melee attacks in Tilemap or 2D physics scenes.",
+        RequiredFields = new[] { nameof(owner), nameof(weapon), nameof(hitFXPrefab), nameof(hitSFX), nameof(hitPauseSink) },
+        SetupSteps = new[] { "Add to a child GameObject of a 2D actor.", "Assign a Trigger Collider2D." },
+        SuccessChecks = new[] { "The 2D hitbox damages a valid target during its active window." },
+        Tags = new[] { "capability:CombatSensors", "axiom:Realtime", "axiom:Dimensions2D" }
+    )]
 [RequireComponent(typeof(Collider2D))]
 public class HitBox2D : MonoBehaviour
 {

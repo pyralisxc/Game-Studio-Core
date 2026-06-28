@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Hazards
 {
@@ -8,15 +9,15 @@ namespace NeonBlack.Gameplay.Modules.Hazards
 /// A named catalogue of HazardData assets for quick designer access.
 /// </summary>
 [AuthoringContract(
-    Capability = AuthoringCapability.Combat,
-    Relevance = "A designer-facing catalogue of hazard presets for quick assignment and lookup.",
-    NativeSetup = new[] { "Add HazardData entries.", "Set unique preset names." },
-    AssignmentFields = new[] { nameof(presets) },
-    Proof = "Verify that hazards can be correctly looked up by name from this library.",
-    ExpertAdvice = "Use this to manage a large variety of hazards without cluttering scene references.",
-    CapabilityPath = "Combat/Actions/Hazard Preset Library",
-    RuntimeFamilies = new[] { RuntimeCapabilityFamily.Combat }
-)]
+        Category = "Combat",
+        CapabilityPath = "Combat/Actions/Hazard Preset Library",
+        Surface = AuthoringSurface.Goal,
+        Summary = "A designer-facing catalogue of hazard presets for quick assignment and lookup.",
+        RequiredFields = new[] { nameof(presets) },
+        SetupSteps = new[] { "Add HazardData entries.", "Set unique preset names." },
+        SuccessChecks = new[] { "Verify that hazards can be correctly looked up by name from this library." },
+        Tags = new[] { "capability:Combat", "runtime:Combat" }
+    )]
 [CreateAssetMenu(fileName = "HazardPresetLibrary", menuName = "NeonBlack/Hazards/Hazard Preset Library")]
 public class HazardPresetLibrary : ScriptableObject, IRuntimeValidationProvider
 {

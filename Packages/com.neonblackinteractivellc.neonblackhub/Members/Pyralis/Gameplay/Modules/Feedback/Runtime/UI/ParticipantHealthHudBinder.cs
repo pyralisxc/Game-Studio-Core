@@ -4,16 +4,19 @@ using NeonBlack.Gameplay.Data.Participants;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Feedback.UI
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.UI,
-        Relevance = "Binds participant health state to UI elements like labels and progress bars.",
-        NativeSetup = new[] { "Attach to HUD canvas element", "Assign health label or fill image" },
-        AssignmentFields = new[] { nameof(healthLabel), nameof(healthFillImage), nameof(healthPanels) },
-        Proof = "The health bar updates when the tracked participant takes damage.",
-        CapabilityPath = "UI/HUD/Participant Health Hud Binder"
+        Category = "U I",
+        CapabilityPath = "UI/HUD/Participant Health Hud Binder",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Binds participant health state to UI elements like labels and progress bars.",
+        RequiredFields = new[] { nameof(healthLabel), nameof(healthFillImage), nameof(healthPanels) },
+        SetupSteps = new[] { "Attach to HUD canvas element", "Assign health label or fill image" },
+        SuccessChecks = new[] { "The health bar updates when the tracked participant takes damage." },
+        Tags = new[] { "capability:UI" }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Feedback/UI/Participant Health HUD Binder")]
     public class ParticipantHealthHudBinder : ParticipantHudTargetBinding, IRuntimeValidationProvider

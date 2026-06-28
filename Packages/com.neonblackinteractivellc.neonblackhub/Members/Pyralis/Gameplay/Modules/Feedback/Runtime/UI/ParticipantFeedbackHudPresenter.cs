@@ -3,16 +3,19 @@ using NeonBlack.Gameplay.Core.Contracts;
 using TMPro;
 using UnityEngine;
 using VContainer;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Feedback.UI
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.UI,
-        Relevance = "Displays participant-specific feedback (combos, status, scores) in the HUD.",
-        NativeSetup = new[] { "Attach to HUD canvas element", "Assign TMP labels or timed panels" },
-        AssignmentFields = new[] { nameof(comboLabel), nameof(statusLabel), nameof(scorePopupLabel) },
-        Proof = "Feedback messages (e.g. status applied) appear in the UI.",
-        CapabilityPath = "UI/HUD/Participant Feedback Hud Presenter"
+        Category = "U I",
+        CapabilityPath = "UI/HUD/Participant Feedback Hud Presenter",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Displays participant-specific feedback (combos, status, scores) in the HUD.",
+        RequiredFields = new[] { nameof(comboLabel), nameof(statusLabel), nameof(scorePopupLabel) },
+        SetupSteps = new[] { "Attach to HUD canvas element", "Assign TMP labels or timed panels" },
+        SuccessChecks = new[] { "Feedback messages (e.g. status applied) appear in the UI." },
+        Tags = new[] { "capability:UI" }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Feedback/UI/Participant Feedback HUD Presenter")]
     public class ParticipantFeedbackHudPresenter : ParticipantHudTargetBinding, IRuntimeValidationProvider

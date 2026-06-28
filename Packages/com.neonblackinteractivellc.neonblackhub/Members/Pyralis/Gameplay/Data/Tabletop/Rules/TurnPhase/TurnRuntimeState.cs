@@ -1,6 +1,7 @@
 using NeonBlack.Gameplay.Core.Contracts;
 using System;
 using System.Collections.Generic;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Tabletop
 {
@@ -9,13 +10,13 @@ namespace NeonBlack.Gameplay.Data.Tabletop
     /// </summary>
     [Serializable]
     [AuthoringContract(
-        Capability = AuthoringCapability.TurnBased,
-        Relevance = "Runtime cursor for seat-based turn order tracking.",
-        Proof = "Advancing the turn correctly moves the active seat index through the defined order.",
-        ExpertAdvice = "Pure data class representing the cursor in a round. It handles the wrap-around logic from the last participant back to the first.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/tabletop",
+        Category = "Turn Based",
         CapabilityPath = "Tabletop/Board/Turn Runtime State",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.BoardCardTabletop }
+        Surface = AuthoringSurface.Goal,
+        Summary = "Runtime cursor for seat-based turn order tracking.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/tabletop",
+        SuccessChecks = new[] { "Advancing the turn correctly moves the active seat index through the defined order." },
+        Tags = new[] { "capability:TurnBased", "runtime:BoardCardTabletop" }
     )]
 public sealed class TurnRuntimeState
     {

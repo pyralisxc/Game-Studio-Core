@@ -2,24 +2,25 @@ using System;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Rpg;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Rpg.Runtime
 {
     [AuthoringContract(
-        ModuleId = "rpg.equipment",
-        Capability = AuthoringCapability.Inventory,
-        Relevance = "Manages RPG equipment slots and loadouts for actors, allowing items to be equipped and unequipped.",
-        Lane = "RPG",
+        StableId = "feature.rpg.equipment",
+        Category = "Inventory",
+        CapabilityPath = "RPG/Inventory/Equipment Service",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Manages RPG equipment slots and loadouts for actors, allowing items to be equipped and unequipped.",
         RequiredInterfaces = new[] { typeof(IEquipmentSlot) },
-        NativeSetup = new[]
+        SetupSteps = new[]
         {
             "define EquipmentSlotDefinitions",
             "tag items as Equippable",
             "configure equipment visual mapping"
         },
-        Proof = "Equip an item to an actor and verify its stats or visuals update accordingly.",
-        CapabilityPath = "RPG/Inventory/Equipment Service",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
+        SuccessChecks = new[] { "Equip an item to an actor and verify its stats or visuals update accordingly." },
+        Tags = new[] { "capability:Inventory", "runtime:CharacterPawnGameplay", "lane:RPG" }
     )]
     public sealed class EquipmentService : IEquipmentService
 {

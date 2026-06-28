@@ -14,7 +14,7 @@ The current source of truth is a shared gameplay stack built around:
 - scene-owned Cinemachine routing through `CameraRigProfile.focusMode`
 - explicit pawn sibling components for physical identity
 - direct module-owned components and profiles for optional gameplay capabilities
-- contracts, reflection, dependency-tree discovery, validators, and the resolved authoring graph
+- PYS authoring contracts, reflection, dependency discovery, validators, and graph projections
 
 Core motto:
 
@@ -24,7 +24,7 @@ Core motto:
 - Dependency analysis discovers setup relationships.
 - Validators witness local semantic readiness.
 - The graph compiles understanding.
-- Authoring renders guidance.
+- PYS Authoring renders guidance.
 
 ## Supported pawn presentation targets
 
@@ -44,13 +44,13 @@ Rigged 3D support is Animator-driven and intended for both `Generic` and `Humano
 - Participant topology describes how control enters the session: solo auto-start, Unity `PlayerInputManager` local join, network authority, or hybrid local/networked join.
 - Camera profiles describe what is **watched**: participant pawn socket, participant group, playfield center, explicit scene anchor, or manual Cinemachine.
 - Scenes own scene-scale direction: bootstrap, lifetime scope, camera rig, spawners, scene services, and proof-specific objects.
-- Authoring reads contracts/reflection/dependency evidence and projects the resolved graph; it does not create hidden presets or duplicate setup truth.
+- PYS Authoring reads contracts/reflection/dependency evidence and projects the resolved graph; it does not create hidden presets or duplicate setup truth.
 
 ## Verification rule of thumb
 
 - Manual Unity play proofs test gameplay feel and whether the authored route actually works.
-- Automated tests protect data transfer, ownership, routing, contracts, graph projections, exports, and refactor seams.
-- Authoring JSON exports show what the system currently understands and where the next cleanup pressure lives.
+- Automated tests protect data transfer, ownership, routing, PYS contract consumption, and refactor seams.
+- PYS Authoring JSON exports show what the system currently understands and where the next cleanup pressure lives.
 
 Do not keep broad optional domain matrices or documentation audits in the active suite. The default gate should catch broken seams without pretending to replace manual proof play.
 
@@ -58,7 +58,7 @@ Do not keep broad optional domain matrices or documentation audits in the active
 
 - `Core/`: stable contracts plus tiny shared type vocabulary such as movement modes, presentation lanes, animation signals, action value language, and narrow optional sinks/publishers
 - `Data/`: ScriptableObject definitions, profiles, config assets such as `GameConfig`, and data-backed handoff contracts such as participant and interaction dispatch context; authored combat data lives here, not in the Combat runtime namespace
-- `Editor/`: shared authoring helpers and custom inspectors
+- `Editor/`: tactical custom inspectors and handoffs into PYS Authoring
 - `Glue/`: bootstrap, lifetime scope, session services, participant services, input routing, participant spawning, route composition, and service-registration wiring that makes authored modules run
 - `Modules/`: reusable gameplay capability families such as character, combat, traversal, hazards, enemies, encounters, environment, interaction/collectibles, feedback, scoring, tabletop, settings, input, spawning, and RPG
 - `Networking/`: ownership, authority, and backend-facing runtime contracts
@@ -94,8 +94,9 @@ For participant-spawned pawns, profile fields belong on `PawnDefinition`; prefab
 
 - `Docs/CURRENT_STATE_AUDIT.md` for current health, risks, Hygiene baseline, and verification posture.
 - `Docs/ARCHITECTURE_BLUEPRINT.md` for runtime ownership, folderbase, and system boundaries.
-- `Docs/Authoring/START_HERE.md` for the first human setup path.
-- `Docs/Authoring/AUTHORING_BLUEPRINT.md` for Authoring Window behavior.
-- `Docs/Authoring/AUTHORING_MODEL.md` for asset/profile/runtime relationships.
+- `Docs/Authoring/START_HERE.md` for the PYS Authoring integration path.
+- `Docs/Authoring/AUTHORING_BLUEPRINT.md` for Pyralis/PYS ownership boundaries.
+- `Docs/Authoring/AUTHORING_MODEL.md` for contract and validation evidence rules.
 - `Docs/Authoring/CANONICAL_SETUP.md` for the technical setup contract.
+- `Packages/com.pys.authoring/Docs/PROJECTION_CONTRACTS.md` for tab behavior and export rules.
 - `Docs/FEATURE_DEVELOPMENT_ROADMAP.md` for current expansion priorities.

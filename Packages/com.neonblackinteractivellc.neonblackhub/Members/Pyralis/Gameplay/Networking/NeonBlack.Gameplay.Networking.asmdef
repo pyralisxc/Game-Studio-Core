@@ -1,19 +1,20 @@
 {
-    "name": "NeonBlack.Gameplay.Networking",
-    "references": [
-        "NeonBlack.Gameplay.Core",
-        "NeonBlack.Gameplay.Modules.Character",
-        "NeonBlack.Gameplay.Data",
-        "NeonBlack.Gameplay",
-        "Unity.Netcode.Runtime",
-        "Unity.InputSystem"
-    ],
-    "includePlatforms": [],
-    "excludePlatforms": [],
-    "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
-    "autoReferenced": true,
-    "defineConstraints": [],
-    "versionDefines": []
+  "name": "NeonBlack.Gameplay.Networking",
+  "references": [
+    "NeonBlack.Gameplay.Core",
+    "NeonBlack.Gameplay.Modules.Character",
+    "NeonBlack.Gameplay.Data",
+    "NeonBlack.Gameplay",
+    "Unity.Netcode.Runtime",
+    "Unity.InputSystem",
+    "Pys.Authoring.Contracts"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": []
 }

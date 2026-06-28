@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Combat
 {
@@ -9,14 +10,14 @@ namespace NeonBlack.Gameplay.Data.Definitions.Combat
     /// Authored ordered combo or action chain for one neutral combat lane.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat,
-        Relevance = "Defines a sequence of combat actions (combos) triggered by a specific input type.",
-        NativeSetup = new[] { "Set Input Type.", "Add CombatActionDefinitions to the actions array." },
-        AssignmentFields = new[] { nameof(inputType), nameof(actions) },
-        Proof = "Verify the actor performs the sequence of animations and attacks in order.",
-        ExpertAdvice = "Use sequences to build multi-hit brawler combos. Each action in the list must correspond to the correct combo step.",
+        Category = "Combat",
         CapabilityPath = "Combat/Actions/Combat Sequence Definition",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.Combat }
+        Surface = AuthoringSurface.Goal,
+        Summary = "Defines a sequence of combat actions (combos) triggered by a specific input type.",
+        RequiredFields = new[] { nameof(inputType), nameof(actions) },
+        SetupSteps = new[] { "Set Input Type.", "Add CombatActionDefinitions to the actions array." },
+        SuccessChecks = new[] { "Verify the actor performs the sequence of animations and attacks in order." },
+        Tags = new[] { "capability:Combat", "runtime:Combat" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Combat/Combat Sequence Definition", fileName = "CombatSequenceDefinition")]
     public class CombatSequenceDefinition : ScriptableObject, IRuntimeValidationProvider

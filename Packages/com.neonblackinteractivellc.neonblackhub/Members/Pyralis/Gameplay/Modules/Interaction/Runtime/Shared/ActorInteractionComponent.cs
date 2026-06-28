@@ -3,36 +3,29 @@ using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Data.Interactions;
 using NeonBlack.Gameplay.Core.Types.Animation;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Interaction
 {
     [AddComponentMenu("NeonBlack/Gameplay/Interaction/Actor Interaction Component")]
     [AuthoringContract(
-        Capability = AuthoringCapability.Puzzle | AuthoringCapability.Input,
-        ModuleId = "actor.interaction",
-        Relevance = "Receives interaction input and delegates it to IActorInteractionHandler sibling components.",
-        Lane = "Interaction",
-        ProfileType = typeof(InteractionProfile),
+        StableId = "feature.actor.interaction",
+        Category = "Puzzle, Input",
+        CapabilityPath = "Interaction/Runtime/Actor Interaction Component",
+        Surface = AuthoringSurface.Profile,
+        Summary = "Receives interaction input and delegates it to IActorInteractionHandler sibling components.",
         RequiredInterfaces = new[] { typeof(IActorInteractionRequestReceiver) },
-        RequiredInterfaceNames = new[] { "NeonBlack.Gameplay.Core.Contracts.IActorInteractionInputReceiver2D" }, // Required for Sprite2D lane
-        AssignmentFields = new[] { nameof(interactionProfile) },
-        Proof = "Verify that TryHandleInteraction triggers one of the attached IActorInteractionHandlers.",
-        NativeSetup = new[]
+        RequiredInterfaceNames = new[] { "NeonBlack.Gameplay.Core.Contracts.IActorInteractionInputReceiver2D" },
+        SetupSteps = new[]
         {
             "Create InteractionProfile.",
             "Add ActorInteractionComponent to the actor root.",
             "Assign InteractionProfile.",
             "Add IActorInteractionHandler components for interactable behaviors."
         },
-        ExpertAdvice = "Sprite2D actors usually also need ActorInteractionInputBridge2D on the actor root so pawn input can reach this feature.",
-        CustomizationMoments = new[]
-        {
-            "InteractionProfile.enableInteraction",
-            "interactionCooldown",
-            "triggerInteractAnimationWhenUnhandled"
-        },
-        ConsumedRoles = new[] { "Interact" },
-        CapabilityPath = "Interaction/Runtime/Actor Interaction Component"
+        SuccessChecks = new[] { "Verify that TryHandleInteraction triggers one of the attached IActorInteractionHandlers." },
+        Tags = new[] { "capability:Puzzle", "capability:Input", "lane:Interaction" },
+        Selectable = false
     )]
     public class ActorInteractionComponent : MonoBehaviour, IActorInteractionRequestReceiver
     {

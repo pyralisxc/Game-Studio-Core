@@ -2,17 +2,19 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using TMPro;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Feedback.UI
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.UI,
-        Relevance = "Displays temporary text messages (e.g., 'Level Up', 'K.O.') on the HUD.",
-        Axioms = AuthoringWorldAxiom.None,
-        NativeSetup = new[] { "Attach to a UI panel inside a Canvas." },
-        AssignmentFields = new[] { nameof(label) },
-        Proof = "Call ShowText() from a script and verify the label appears on screen.",
-        CapabilityPath = "UI/HUD/Participant Timed Text Panel"
+        Category = "U I",
+        CapabilityPath = "UI/HUD/Participant Timed Text Panel",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Displays temporary text messages (e.g., 'Level Up', 'K.O.') on the HUD.",
+        RequiredFields = new[] { nameof(label) },
+        SetupSteps = new[] { "Attach to a UI panel inside a Canvas." },
+        SuccessChecks = new[] { "Call ShowText() from a script and verify the label appears on screen." },
+        Tags = new[] { "capability:UI" }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Feedback/UI/Participant Timed Text Panel")]
     public class ParticipantTimedTextPanel : MonoBehaviour, IRuntimeValidationProvider

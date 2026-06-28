@@ -1,14 +1,15 @@
 {
-    "name": "NeonBlack.Gameplay.Modules.Spawning",
-    "references": [
-        "NeonBlack.Gameplay.Core"
-    ],
-    "includePlatforms": [],
-    "excludePlatforms": [],
-    "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
-    "autoReferenced": true,
-    "defineConstraints": [],
-    "versionDefines": []
+  "name": "NeonBlack.Gameplay.Modules.Spawning",
+  "references": [
+    "NeonBlack.Gameplay.Core",
+    "Pys.Authoring.Contracts"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": []
 }

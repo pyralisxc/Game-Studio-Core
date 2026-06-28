@@ -8,6 +8,7 @@ using NeonBlack.Gameplay.Modules.Interaction;
 using NeonBlack.Gameplay.Modules.Scoring;
 using UnityEngine;
 using UnityEngine.Events;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Glue.SceneFlow.Arcade2D
 {
@@ -15,22 +16,22 @@ namespace NeonBlack.Gameplay.Glue.SceneFlow.Arcade2D
 /// Central game orchestrator for the current 2D score-loop runtime.
 /// </summary>
 [AuthoringContract(
-    Capability = AuthoringCapability.Setup | AuthoringCapability.Session,
-    Relevance = "2D arcade flow orchestrator; coordinates scoring, difficulty, hazards, pickups, and arcade states while SessionStateService owns shared gameplay-active state.",
-    Axioms = AuthoringWorldAxiom.Dimensions2D,
-    RequiredInterfaces = new[] { typeof(IGameplaySessionFlow), typeof(IHazardOutcomeSink) },
-    NativeSetup = new[] 
+        Category = "Setup, Session",
+        CapabilityPath = "Core Setup/Session/Game Manager",
+        Surface = AuthoringSurface.RequiredSetup,
+        Summary = "2D arcade flow orchestrator; coordinates scoring, difficulty, hazards, pickups, and arcade states while SessionStateService owns shared gameplay-active state.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/gameflow",
+        RequiredFields = new[] { nameof(scoreManager), nameof(hazardSpawner), nameof(pickupSpawner), nameof(difficultyManager) },
+        RequiredInterfaces = new[] { typeof(IGameplaySessionFlow), typeof(IHazardOutcomeSink) },
+        SetupSteps = new[] 
     { 
         "Wire system references (Score, Hazards, Pickups, etc.).",
         "For participant-spawned pawns, let the roster provide active controllers. Use explicit Player Controllers only for intentionally standalone scene-authored tests."
     },
-    Proof = "Start the game and verify the session initializes and transitions to the Playing state.",
-    AssignmentFields = new[] { nameof(scoreManager), nameof(hazardSpawner), nameof(pickupSpawner), nameof(difficultyManager) },
-    ExpertAdvice = "The GameManager is the 2D arcade orchestrator. SessionStateService remains the normal IGameplayStateReader for movement/input/spawner activity. Prefer participant roster pawns for active players; use explicit Player Controllers only for intentionally standalone scene-authored tests.",
-    DocumentationURL = "https://docs.neonblack.com/pyralis/gameflow",
-    CapabilityPath = "Core Setup/Session/Game Manager",
-    Surface = AuthoringContractSurface.SetupOnly
-)]
+        SuccessChecks = new[] { "Start the game and verify the session initializes and transitions to the Playing state." },
+        Tags = new[] { "capability:Setup", "capability:Session", "axiom:Dimensions2D" },
+        Selectable = false
+    )]
 [AddComponentMenu("NeonBlack/Gameplay/Glue/SceneFlow/Arcade2D/Game Manager")]
 [DefaultExecutionOrder(-20)]
 public partial class GameManager : MonoBehaviour,

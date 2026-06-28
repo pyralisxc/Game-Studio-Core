@@ -2,28 +2,26 @@ using System;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Rpg;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Rpg.Runtime
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Inventory,
-        Priority = AuthoringPriority.Primary,
-        ModuleId = "rpg.inventory",
-        Lane = "RPG",
-        Relevance = "Tracks and manages items for RPG owners, handling stack sizes and catalog validation.",
-        ExpertAdvice = "Works with RpgOwnerKey. Ensure item catalog stack sizes are respected.",
-        Axioms = AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.TurnBased,
+        StableId = "feature.rpg.inventory",
+        Category = "Inventory",
+        CapabilityPath = "RPG/Inventory/Inventory Service",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Tracks and manages items for RPG owners, handling stack sizes and catalog validation.",
+        RequiredFields = new[] { nameof(_catalog) },
         RequiredInterfaces = new[] { typeof(IItemCatalog) },
-        NativeSetup = new[]
+        SetupSteps = new[]
         {
             "create ItemCatalogDefinition",
             "define ItemDefinitions",
             "assign catalog to InventoryService"
         },
-        AssignmentFields = new[] { nameof(_catalog) },
-        Proof = "Items can be added to and removed from a participant's inventory.",
-        CapabilityPath = "RPG/Inventory/Inventory Service",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
+        SuccessChecks = new[] { "Items can be added to and removed from a participant's inventory." },
+        Tags = new[] { "capability:Inventory", "runtime:CharacterPawnGameplay", "axiom:Realtime", "axiom:TurnBased", "lane:RPG", "priority:Primary" }
     )]
     public sealed class InventoryService : IInventoryService
 {

@@ -1,6 +1,7 @@
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using UnityEngine.UI;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Presentation.HUD.UI
 {
@@ -9,21 +10,20 @@ namespace NeonBlack.Gameplay.Presentation.HUD.UI
     /// Add this to any Canvas child that needs orientation-specific layout.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.UI,
-        Relevance = "Maintains UI layout integrity across portrait and landscape device orientations.",
-        Axioms = AuthoringWorldAxiom.None,
+        Category = "U I",
+        CapabilityPath = "UI/HUD/UI Orientation Handler",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Maintains UI layout integrity across portrait and landscape device orientations.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/ui",
+        RequiredFields = new[] { nameof(portrait), nameof(landscape) },
         RequiredComponents = new[] { typeof(RectTransform) },
-        AssignmentFields = new[] { nameof(portrait), nameof(landscape) },
-        Proof = "Rotate the device/screen and verify the UI element repositions to the captured layout.",
-        NativeSetup = new[] 
+        SetupSteps = new[] 
         { 
             "Add UIOrientationHandler to a UI element.",
             "Capture Portrait and Landscape layouts in the Inspector."
         },
-        ExpertAdvice = "Captures the current RectTransform state. Position your UI for one orientation, hit Capture, then repeat for the other. Use with CanvasScaler in 'Match' mode for best results.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/ui",
-        CapabilityPath = "UI/HUD/UI Orientation Handler",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.PlatformCore }
+        SuccessChecks = new[] { "Rotate the device/screen and verify the UI element repositions to the captured layout." },
+        Tags = new[] { "capability:UI", "runtime:PlatformCore" }
     )]
 [RequireComponent(typeof(RectTransform))]
     public class UIOrientationHandler : MonoBehaviour

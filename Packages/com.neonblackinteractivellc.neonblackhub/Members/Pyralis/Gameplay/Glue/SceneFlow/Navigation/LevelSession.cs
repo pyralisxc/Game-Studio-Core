@@ -1,4 +1,5 @@
 using NeonBlack.Gameplay.Core.Contracts;
+using Pys.Authoring.Contracts;
 namespace NeonBlack.Gameplay.Glue.SceneFlow.Navigation
 {
 
@@ -7,14 +8,15 @@ namespace NeonBlack.Gameplay.Glue.SceneFlow.Navigation
 /// Set by MainMenuController before loading a game scene.
 /// </summary>
 [AuthoringContract(
-    Capability = AuthoringCapability.Setup,
-    Relevance = "Lightweight static cross-scene contract for level selection metadata.",
-    ExpertAdvice = "Set ChosenSceneName before triggering a SceneManager.LoadScene call.",
-    Proof = "Verify ChosenSceneName is set correctly in the destination scene's Start method.",
-    AssignmentFields = new[] { nameof(ChosenSceneName), nameof(IsRandom) },
-    NativeSetup = new[] { "Set LevelSession.ChosenSceneName from the UI or mission selector.", "Clear the session using LevelSession.Clear() when returning to the menu." },
-    DocumentationURL = "https://docs.neonblack.com/pyralis/level-session"
-)]
+        Category = "Setup",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Lightweight static cross-scene contract for level selection metadata.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/level-session",
+        RequiredFields = new[] { nameof(ChosenSceneName), nameof(IsRandom) },
+        SetupSteps = new[] { "Set LevelSession.ChosenSceneName from the UI or mission selector.", "Clear the session using LevelSession.Clear() when returning to the menu." },
+        SuccessChecks = new[] { "Verify ChosenSceneName is set correctly in the destination scene's Start method." },
+        Tags = new[] { "capability:Setup" }
+    )]
     public static class LevelSession
 {
     public static string ChosenSceneName { get; set; }

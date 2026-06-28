@@ -2,6 +2,7 @@ using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Contracts.Networking;
 using Unity.Netcode;
 using UnityEngine.InputSystem;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Networking.Runtime
 {
@@ -9,15 +10,15 @@ namespace NeonBlack.Gameplay.Networking.Runtime
     /// Resolves participant authority from the active NGO local client.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Networking,
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.Networking },
+        Category = "Networking",
         CapabilityPath = "Networking/Participants/Participant Authority Service",
-        Relevance = "Resolves participant authority from the active Netcode for GameObjects (NGO) local client.",
-        RoleTags = new[] { AuthoringContractRoleTags.IntentRouteEssential, AuthoringContractRoleTags.NetworkRouteSupport },
-        Proof = "The local client is correctly identified as the owner in a networked session.",
-        NativeSetup = new[] { "Register as the participant authority service for networked sessions.", "Use with NetworkManager and Unity PlayerInput seating." },
+        Surface = AuthoringSurface.Goal,
+        Summary = "Resolves participant authority from the active Netcode for GameObjects (NGO) local client.",
         RequiredInterfaceNames = new[] { nameof(IParticipantAuthorityService) },
-        ExpertAdvice = "Use this service when you want to bridge Unity Input System seating to NGO Client IDs automatically."
+        SetupSteps = new[] { "Register as the participant authority service for networked sessions.", "Use with NetworkManager and Unity PlayerInput seating." },
+        SuccessChecks = new[] { "The local client is correctly identified as the owner in a networked session." },
+        RoleTags = new[] { "IntentRouteEssential", "NetworkRouteSupport" },
+        Tags = new[] { "capability:Networking", "runtime:Networking" }
     )]
     public sealed class NetworkedParticipantAuthorityService : IParticipantAuthorityService
     {

@@ -4,6 +4,7 @@ using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Enums;
 using UnityEngine;
 using UnityEngine.Serialization;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Enemies
 {
@@ -12,18 +13,16 @@ namespace NeonBlack.Gameplay.Modules.Enemies
     /// Decomposed into specific modules for movement, combat, detection, and animation.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.TacticsAggressive | AuthoringCapability.Steering3D, 
-        Priority = AuthoringPriority.Primary,
-        Lane = "AI",
-        Relevance = "Canonical 3D/2.5D AI controller; handles patrol, detection, and attack states.",
-        AssignmentFields = new[] { nameof(moveSpeed), nameof(enemyProfile), nameof(patrolPoints) },
-        ProofTargetId = "proof.npc-enemy-behavior",
-        Proof = "Place enemy and player in scene. Verify enemy enters 'Chase' state when player enters detection range.",
-        NativeSetup = new[] { "Add EnemyAI to 3D actor.", "Assign EnemyProfile.", "Configure Detection Module ranges." },
-        ExpertAdvice = "EnemyAI separates 'Tactics' and 'Steering'. Use 'EnemyProfile' to define shared stats like Aggro Range and Attack Cooldowns.",
-        Axioms = AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.Dimensions3D,
-        DocumentationURL = "https://docs.neonblack.com/pyralis/enemy-ai",
-        CapabilityPath = "Movement/Traversal/Enemy AI"
+        StableId = "enemy.ai.3d",
+        Category = "Tactics Aggressive, Steering3 D",
+        CapabilityPath = "Movement/Traversal/Enemy AI",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Canonical 3D/2.5D AI controller; handles patrol, detection, and attack states.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/enemy-ai",
+        RequiredFields = new[] { nameof(moveSpeed), nameof(enemyProfile), nameof(patrolPoints) },
+        SetupSteps = new[] { "Add EnemyAI to 3D actor.", "Assign EnemyProfile.", "Configure Detection Module ranges." },
+        SuccessChecks = new[] { "Place enemy and player in scene. Verify enemy enters 'Chase' state when player enters detection range." },
+        Tags = new[] { "capability:TacticsAggressive", "capability:Steering3D", "axiom:Realtime", "axiom:Dimensions3D", "lane:AI", "priority:Primary" }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Enemies/Enemy AI")]
     [RequireComponent(typeof(CharacterController))]

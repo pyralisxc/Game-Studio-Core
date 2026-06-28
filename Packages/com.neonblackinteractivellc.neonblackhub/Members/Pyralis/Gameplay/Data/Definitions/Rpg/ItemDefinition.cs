@@ -2,17 +2,18 @@ using System.Collections.Generic;
 using System.Linq;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rpg
 {
     [AuthoringContract(
-        ModuleId = "rpg.item",
-        Capability = AuthoringCapability.Inventory,
-        Lane = "RPG",
-        AssignmentFields = new[] { nameof(itemId), nameof(displayName), nameof(category), nameof(rarity), nameof(maxStackSize), nameof(tags) },
-        Proof = "Proof that the item can exist in an inventory and has correct display properties.",
+        StableId = "feature.rpg.item",
+        Category = "Inventory",
         CapabilityPath = "RPG/Inventory/Definitions/Item Definition",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
+        Surface = AuthoringSurface.Goal,
+        RequiredFields = new[] { nameof(itemId), nameof(displayName), nameof(category), nameof(rarity), nameof(maxStackSize), nameof(tags) },
+        SuccessChecks = new[] { "Proof that the item can exist in an inventory and has correct display properties." },
+        Tags = new[] { "capability:Inventory", "runtime:CharacterPawnGameplay", "lane:RPG" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Item Definition", fileName = "ItemDefinition")]
     public class ItemDefinition : ScriptableObject, IRuntimeValidationProvider

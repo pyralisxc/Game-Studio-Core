@@ -2,17 +2,18 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Rpg;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Definitions.Rpg
 {
     [AuthoringContract(
-        ModuleId = "rpg.equipment.slot",
-        Capability = AuthoringCapability.Inventory,
-        Lane = "RPG",
-        AssignmentFields = new[] { nameof(slotId), nameof(displayName), nameof(slotFamily) },
-        Proof = "Proof that the equipment slot has a valid id and display properties.",
+        StableId = "feature.rpg.equipment.slot",
+        Category = "Inventory",
         CapabilityPath = "RPG/Inventory/Definitions/Equipment Slot Definition",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
+        Surface = AuthoringSurface.Goal,
+        RequiredFields = new[] { nameof(slotId), nameof(displayName), nameof(slotFamily) },
+        SuccessChecks = new[] { "Proof that the equipment slot has a valid id and display properties." },
+        Tags = new[] { "capability:Inventory", "runtime:CharacterPawnGameplay", "lane:RPG" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Equipment Slot", fileName = "EquipmentSlotDefinition")]
     public class EquipmentSlotDefinition : ScriptableObject, IEquipmentSlot, IRuntimeValidationProvider

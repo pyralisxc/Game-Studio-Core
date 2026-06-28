@@ -1,14 +1,16 @@
 using UnityEngine;
 using NeonBlack.Gameplay.Core.Contracts;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Combat
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat | AuthoringCapability.CombatState,
-        Relevance = "Pawn module for managing outgoing damage and knockback multipliers.",
-        ExpertAdvice = "This module coordinates with the PawnDamageHandler to apply status-effect-based multipliers to all outgoing attacks.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/combat",
-        CapabilityPath = "Combat/Actions/Pawn Damage Module"
+        Category = "Combat, Combat State",
+        CapabilityPath = "Combat/Actions/Pawn Damage Module",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Pawn module for managing outgoing damage and knockback multipliers.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/combat",
+        Tags = new[] { "capability:Combat", "capability:CombatState" }
     )]
     public class PawnDamageModule : MonoBehaviour, IDamageModifier, IActorCombatModifierReceiver
 {

@@ -9,20 +9,20 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 using VContainer;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Rpg.UI
 {
     [AuthoringContract(
-        ModuleId = "rpg.dialogue.ui",
-        Capability = AuthoringCapability.Dialogue,
-        Lane = "RPG",
-        RequiredComponentNames = new[] { "TMPro.TextMeshProUGUI" },
-        NativeSetup = new[] { "Add to a Canvas-backed RPG dialogue panel.", "Assign speaker, line, choice, and issue labels from the UI hierarchy." },
-        AssignmentFields = new[] { nameof(routePresenter), nameof(dialogueGraphs), nameof(npcProfiles), nameof(speakerLabel), nameof(lineLabel), nameof(choiceButtons) },
-        Proof = "Open one RPG dialogue panel and verify speaker, line, choices, and validation issues render from authored dialogue data.",
-        ProofTargetId = "proof.ui-hud-menu",
+        StableId = "feature.rpg.dialogue.ui",
+        Category = "Dialogue",
         CapabilityPath = "RPG/Dialogue/UI/Dialogue Panel Presenter",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
+        Surface = AuthoringSurface.Goal,
+        RequiredFields = new[] { nameof(routePresenter), nameof(dialogueGraphs), nameof(npcProfiles), nameof(speakerLabel), nameof(lineLabel), nameof(choiceButtons) },
+        RequiredComponentNames = new[] { "TMPro.TextMeshProUGUI" },
+        SetupSteps = new[] { "Add to a Canvas-backed RPG dialogue panel.", "Assign speaker, line, choice, and issue labels from the UI hierarchy." },
+        SuccessChecks = new[] { "Open one RPG dialogue panel and verify speaker, line, choices, and validation issues render from authored dialogue data." },
+        Tags = new[] { "capability:Dialogue", "runtime:CharacterPawnGameplay", "lane:RPG" }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/RPG/UI/RPG Dialogue Panel Presenter")]
     public sealed class RpgDialoguePanelPresenter : MonoBehaviour, IRuntimeValidationProvider

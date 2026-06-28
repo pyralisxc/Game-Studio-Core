@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Scoring
 {
@@ -12,14 +13,15 @@ namespace NeonBlack.Gameplay.Modules.Scoring
 /// no-op service so the rest of the gameplay package can still compile and run.
 /// </summary>
 [AuthoringContract(
-    Capability = AuthoringCapability.Session,
-    Relevance = "No-op bridge for leaderboard services. Replace with a package-specific manager for online scores.",
-    NativeSetup = new[] { "Place in the menu or bootstrap scene.", "Set Leaderboard ID." },
-    AssignmentFields = new[] { nameof(_leaderboardId), nameof(_topScoresFetchLimit) },
-    Proof = "Verify 'Leaderboard services not installed' warning appears in console when submitting score.",
-    ExpertAdvice = "Use this bridge to keep code compiling without backend dependencies. Ensure the Leaderboard ID matches your online configuration.",
-    CapabilityPath = "Goals & Scoring/Leaderboard/Leaderboard Manager"
-)]
+        Category = "Session",
+        CapabilityPath = "Goals & Scoring/Leaderboard/Leaderboard Manager",
+        Surface = AuthoringSurface.Goal,
+        Summary = "No-op bridge for leaderboard services. Replace with a package-specific manager for online scores.",
+        RequiredFields = new[] { nameof(_leaderboardId), nameof(_topScoresFetchLimit) },
+        SetupSteps = new[] { "Place in the menu or bootstrap scene.", "Set Leaderboard ID." },
+        SuccessChecks = new[] { "Verify 'Leaderboard services not installed' warning appears in console when submitting score." },
+        Tags = new[] { "capability:Session" }
+    )]
 [AddComponentMenu("NeonBlack/Gameplay/Scoring/Leaderboard Manager")]
 [DefaultExecutionOrder(-50)]
 public class LeaderboardManager : MonoBehaviour, ILeaderboardService, IRuntimeValidationProvider

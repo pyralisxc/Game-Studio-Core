@@ -3,19 +3,20 @@ using NeonBlack.Gameplay.Modules.Hazards;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using UnityEngine.Events;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Hazards.Zones
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat | AuthoringCapability.Puzzle, 
-        Axioms = AuthoringWorldAxiom.Dimensions2D,
-        Relevance = "2D trigger volume that repeatedly damages overlapping actors.",
-        AssignmentFields = new[] { nameof(impactProfile), nameof(damagePerTick), nameof(tickInterval), nameof(knockbackForce), nameof(targeting) },
-        Proof = "Walk an actor into the zone and verify it takes repeated damage.",
-        NativeSetup = new[] { "Place on a 2D volume.", "Assign Collider2D (Awake forces Is Trigger).", "Assign Hazard Impact Profile or use fallback fields." },
-        ExpertAdvice = "Use for floor spikes, poison gas, or area-of-effect hazards. Set Tick Interval to 0.5s for standard 'lava' feel. Ensure actors have a Rigidbody2D to trigger 2D physics events.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/combat/hazards",
-        CapabilityPath = "Combat/Actions/Damage Zone2D"
+        Category = "Combat, Puzzle",
+        CapabilityPath = "Combat/Actions/Damage Zone2D",
+        Surface = AuthoringSurface.Goal,
+        Summary = "2D trigger volume that repeatedly damages overlapping actors.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/combat/hazards",
+        RequiredFields = new[] { nameof(impactProfile), nameof(damagePerTick), nameof(tickInterval), nameof(knockbackForce), nameof(targeting) },
+        SetupSteps = new[] { "Place on a 2D volume.", "Assign Collider2D (Awake forces Is Trigger).", "Assign Hazard Impact Profile or use fallback fields." },
+        SuccessChecks = new[] { "Walk an actor into the zone and verify it takes repeated damage." },
+        Tags = new[] { "capability:Combat", "capability:Puzzle", "axiom:Dimensions2D" }
     )]
 [RequireComponent(typeof(Collider2D))]
     [AddComponentMenu("NeonBlack/Gameplay/Zones/Damage Zone 2D")]

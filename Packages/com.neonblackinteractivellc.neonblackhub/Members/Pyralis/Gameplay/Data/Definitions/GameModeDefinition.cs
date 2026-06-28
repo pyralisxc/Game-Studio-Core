@@ -3,6 +3,7 @@ using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Profiles;
 using System.Collections.Generic;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Definitions
 {
@@ -10,17 +11,15 @@ namespace NeonBlack.Gameplay.Data.Definitions
     /// Data-authored game mode composition and session rules.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Rules, 
-        Priority = AuthoringPriority.Primary,
-        SetupNodeId = "mode.definition",
-        Lane = "Rules",
-        Relevance = "Defines the project-owned rules, system switches, and scene targets for a gameplay session.",
-        AssignmentFields = new[] { nameof(playfieldProfile), nameof(cameraRigProfile), nameof(gameplayScene) },
-        Proof = "Assign this Game Mode Definition to a Session Definition asset.",
-        ExpertAdvice = "Start neutral, then enable only the systems this route actually uses. Add module-owned components and profiles to the prefabs that use them; keep GameModeDefinition focused on session-level rules.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/game-mode",
+        StableId = "mode.definition",
+        Category = "Rules",
         CapabilityPath = "Goals & Scoring/Rules/Game Mode Definition",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.ScoringObjectives }
+        Surface = AuthoringSurface.Goal,
+        Summary = "Defines the project-owned rules, system switches, and scene targets for a gameplay session.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/game-mode",
+        RequiredFields = new[] { nameof(playfieldProfile), nameof(cameraRigProfile), nameof(gameplayScene) },
+        SuccessChecks = new[] { "Assign this Game Mode Definition to a Session Definition asset." },
+        Tags = new[] { "capability:Rules", "runtime:ScoringObjectives", "lane:Rules", "priority:Primary" }
     )]
 [CreateAssetMenu(menuName = "NeonBlack/Definitions/Game Mode Definition", fileName = "GameModeDefinition", order = 10)]
     public class GameModeDefinition : ScriptableObject, IRuntimeValidationProvider

@@ -3,6 +3,7 @@ using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Modules.Hazards;
 using UnityEngine;
 using UnityEngine.Events;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Hazards.Zones
 {
@@ -12,20 +13,20 @@ namespace NeonBlack.Gameplay.Modules.Hazards.Zones
     /// HazardImpactProfile so 2D and 3D hazards use the same authored payload.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat | AuthoringCapability.Puzzle,
-        Axioms = AuthoringWorldAxiom.Dimensions3D,
-        Relevance = "3D trigger volume that repeatedly damages overlapping actors.",
-        NativeSetup = new[] 
+        Category = "Combat, Puzzle",
+        CapabilityPath = "Combat/Actions/Damage Zone",
+        Surface = AuthoringSurface.Goal,
+        Summary = "3D trigger volume that repeatedly damages overlapping actors.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/combat/hazards",
+        RequiredFields = new[] { nameof(impactProfile), nameof(damagePerTick), nameof(tickInterval), nameof(knockbackForce) },
+        SetupSteps = new[] 
         { 
             "Place on a 3D volume.",
             "Assign BoxCollider (Awake forces Is Trigger).",
             "Assign Hazard Impact Profile for shared data, or use fallback fields."
         },
-        AssignmentFields = new[] { nameof(impactProfile), nameof(damagePerTick), nameof(tickInterval), nameof(knockbackForce) },
-        Proof = "Walk an actor into the zone and verify it takes repeated damage.",
-        ExpertAdvice = "Do not set Tick Interval too low. Ensure target actors expose an actor health contract. Use Hazard Impact Profile if you want this hazard to behave identically to others.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/combat/hazards",
-        CapabilityPath = "Combat/Actions/Damage Zone"
+        SuccessChecks = new[] { "Walk an actor into the zone and verify it takes repeated damage." },
+        Tags = new[] { "capability:Combat", "capability:Puzzle", "axiom:Dimensions3D" }
     )]
     [RequireComponent(typeof(BoxCollider))]
     public partial class DamageZone : MonoBehaviour, IRuntimeValidationProvider

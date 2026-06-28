@@ -3,6 +3,7 @@ using NeonBlack.Gameplay.Data.Participants;
 using System;
 using UnityEngine;
 using UnityEngine.Events;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Feedback
 {
@@ -12,12 +13,13 @@ namespace NeonBlack.Gameplay.Modules.Feedback
     /// Service for publishing and streaming feedback events (e.g., scoring, health changes) to participants.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.VFX,
-        Relevance = "Global service for streaming feedback events (scoring, health) to participants for UI/SFX triggers.",
-        Axioms = AuthoringWorldAxiom.None,
+        Category = "V F X",
+        CapabilityPath = "Presentation/Feedback/Participant Feedback Service",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Global service for streaming feedback events (scoring, health) to participants for UI/SFX triggers.",
         RequiredInterfaces = new[] { typeof(IGameService), typeof(IParticipantFeedbackStream), typeof(IParticipantFeedbackPublisher) },
-        Proof = "Publish a score event via the service and verify it is received by registered UI listeners.",
-        CapabilityPath = "Presentation/Feedback/Participant Feedback Service"
+        SuccessChecks = new[] { "Publish a score event via the service and verify it is received by registered UI listeners." },
+        Tags = new[] { "capability:VFX" }
     )]
     public class ParticipantFeedbackService : MonoBehaviour, IGameService, IParticipantFeedbackStream, IParticipantFeedbackPublisher
 {

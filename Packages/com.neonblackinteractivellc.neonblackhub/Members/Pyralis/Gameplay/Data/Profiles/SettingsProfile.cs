@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
 using NeonBlack.Gameplay.Core.Contracts;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Profiles
 {
@@ -9,14 +10,15 @@ namespace NeonBlack.Gameplay.Data.Profiles
     /// Shared defaults for save-backed user settings and runtime presentation choices.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.UI, 
-        Relevance = "Project-window creation path for settings and menu defaults.",
-        AssignmentFields = new[] { nameof(mixer), nameof(defaultMusicVolume), nameof(defaultSfxVolume) },
-        Proof = "Check that volumes are applied correctly in the main menu.",
-        ExpertAdvice = "SettingsProfile provides initial values for the user's preferences. Ensure your AudioMixer has parameters exposed with the names 'MusicVolume' and 'SfxVolume'.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/core",
+        Category = "U I",
         CapabilityPath = "Settings/Profiles/Settings Profile",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.PlatformCore }
+        Surface = AuthoringSurface.Profile,
+        Summary = "Project-window creation path for settings and menu defaults.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/core",
+        RequiredFields = new[] { nameof(mixer), nameof(defaultMusicVolume), nameof(defaultSfxVolume) },
+        SuccessChecks = new[] { "Check that volumes are applied correctly in the main menu." },
+        Tags = new[] { "capability:UI", "runtime:PlatformCore" },
+        Selectable = false
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Settings Profile", fileName = "SettingsProfile", order = -10)]
     public class SettingsProfile : ScriptableObject, IRuntimeValidationProvider

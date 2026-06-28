@@ -1,18 +1,19 @@
 {
-    "name": "NeonBlack.Gameplay.Modules.Input",
-    "references": [
-        "NeonBlack.Gameplay.Core",
-        "NeonBlack.Gameplay.Data",
-        "Unity.InputSystem",
-        "UnityEngine.UI",
-        "VContainer"
-    ],
-    "includePlatforms": [],
-    "excludePlatforms": [],
-    "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
-    "autoReferenced": true,
-    "defineConstraints": [],
-    "versionDefines": []
+  "name": "NeonBlack.Gameplay.Modules.Input",
+  "references": [
+    "NeonBlack.Gameplay.Core",
+    "NeonBlack.Gameplay.Data",
+    "Unity.InputSystem",
+    "UnityEngine.UI",
+    "VContainer",
+    "Pys.Authoring.Contracts"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": []
 }

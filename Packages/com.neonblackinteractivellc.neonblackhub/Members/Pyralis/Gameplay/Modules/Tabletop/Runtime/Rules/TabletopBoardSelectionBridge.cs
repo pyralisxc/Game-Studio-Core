@@ -2,6 +2,7 @@ using NeonBlack.Gameplay.Core.Actions;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using NeonBlack.Gameplay.Data.Tabletop;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Tabletop.Runtime
 {
@@ -9,12 +10,14 @@ namespace NeonBlack.Gameplay.Modules.Tabletop.Runtime
     /// Unity-facing bridge between a project-owned board presenter and queued board actions.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Tabletop,
-        Relevance = "Bridge between a board presenter and queued board actions (e.g. piece selection and movement).",
-        NativeSetup = new[] { "Add to Tabletop board root", "Initialize with BoardRuntimeState and ActionQueue" },
-        AssignmentFields = new[] { nameof(resolveQueuedMoveImmediately) },
-        Proof = "Selecting a piece and a destination enqueues and resolves a move action.",
-        CapabilityPath = "Tabletop/Board/Tabletop Board Selection Bridge"
+        Category = "Tabletop",
+        CapabilityPath = "Tabletop/Board/Tabletop Board Selection Bridge",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Bridge between a board presenter and queued board actions (e.g. piece selection and movement).",
+        RequiredFields = new[] { nameof(resolveQueuedMoveImmediately) },
+        SetupSteps = new[] { "Add to Tabletop board root", "Initialize with BoardRuntimeState and ActionQueue" },
+        SuccessChecks = new[] { "Selecting a piece and a destination enqueues and resolves a move action." },
+        Tags = new[] { "capability:Tabletop" }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Tabletop/Tabletop Board Selection Bridge")]
     public sealed class TabletopBoardSelectionBridge : MonoBehaviour

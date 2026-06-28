@@ -1,6 +1,7 @@
 using TMPro;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Tabletop
 {
@@ -8,12 +9,14 @@ namespace NeonBlack.Gameplay.Modules.Tabletop
     /// Lightweight UI binding for local tabletop turn proofs.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Tabletop,
-        Relevance = "LIGHTWEIGHT UI binding that shows which tabletop seat acts next.",
-        NativeSetup = new[] { "Add to Tabletop HUD", "Assign BoardPresenter and TMP Label" },
-        AssignmentFields = new[] { nameof(boardPresenter), nameof(label), nameof(seatZeroName), nameof(seatOneName) },
-        Proof = "The HUD label correctly displays the name of the active participant's seat.",
-        CapabilityPath = "Tabletop/Board/Tabletop Turn Status Presenter"
+        Category = "Tabletop",
+        CapabilityPath = "Tabletop/Board/Tabletop Turn Status Presenter",
+        Surface = AuthoringSurface.Goal,
+        Summary = "LIGHTWEIGHT UI binding that shows which tabletop seat acts next.",
+        RequiredFields = new[] { nameof(boardPresenter), nameof(label), nameof(seatZeroName), nameof(seatOneName) },
+        SetupSteps = new[] { "Add to Tabletop HUD", "Assign BoardPresenter and TMP Label" },
+        SuccessChecks = new[] { "The HUD label correctly displays the name of the active participant's seat." },
+        Tags = new[] { "capability:Tabletop" }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Tabletop/Tabletop Turn Status Presenter")]
     public sealed class TabletopTurnStatusPresenter : MonoBehaviour

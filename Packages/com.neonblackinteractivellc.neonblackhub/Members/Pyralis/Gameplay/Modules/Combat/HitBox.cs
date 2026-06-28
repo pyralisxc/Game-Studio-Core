@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Presentation.Visuals;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Combat
 {
@@ -12,18 +13,16 @@ namespace NeonBlack.Gameplay.Modules.Combat
     /// is used as a sizing volume and gizmo only; it is disabled at runtime.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.CombatSensors,
-        Priority = AuthoringPriority.Primary,
-        Lane = "Combat",
-        Relevance = "One-shot overlap query hitbox for melee and projectile impacts.",
-        Axioms = AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.Dimensions3D,
-        NativeSetup = new[] { "Add to a child GameObject of a combat actor.", "Assign a Box or Sphere collider (it will be disabled at runtime)." },
-        AssignmentFields = new[] { nameof(owner), nameof(hitFXPrefab), nameof(hitPauseSink), nameof(cameraShakeSink) },
-        Proof = "The hitbox damages a valid target and plays impact feedback.",
-        ProofTargetId = "proof.npc-enemy-behavior",
-        ExpertAdvice = "HitBoxes are disabled colliders used only for overlap queries. Ensure the owner is set for correct knockback calculation. Use hitPauseSink for juicy combat feel.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/hitbox",
-        CapabilityPath = "Combat/Sensors/Hit Box"
+        StableId = "combat.hitbox.3d",
+        Category = "Combat Sensors",
+        CapabilityPath = "Combat/Sensors/Hit Box",
+        Surface = AuthoringSurface.Goal,
+        Summary = "One-shot overlap query hitbox for melee and projectile impacts.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/hitbox",
+        RequiredFields = new[] { nameof(owner), nameof(hitFXPrefab), nameof(hitPauseSink), nameof(cameraShakeSink) },
+        SetupSteps = new[] { "Add to a child GameObject of a combat actor.", "Assign a Box or Sphere collider (it will be disabled at runtime)." },
+        SuccessChecks = new[] { "The hitbox damages a valid target and plays impact feedback." },
+        Tags = new[] { "capability:CombatSensors", "axiom:Realtime", "axiom:Dimensions3D", "lane:Combat", "priority:Primary" }
     )]
     [RequireComponent(typeof(Collider))]
     public class HitBox : MonoBehaviour

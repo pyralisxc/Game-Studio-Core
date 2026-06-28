@@ -5,6 +5,7 @@ using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Types.Input;
 using NeonBlack.Gameplay.Data.Participants;
 using NeonBlack.Gameplay.Modules.Character;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Character
 {
@@ -22,15 +23,15 @@ namespace NeonBlack.Gameplay.Modules.Character
     ///     configure it at runtime from the participant's <see cref="InputProfile"/>.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Input,
-        Relevance = "Translates Unity Input System actions into Pawn-readable FrameInput data.",
-        Axioms = AuthoringWorldAxiom.Realtime | AuthoringWorldAxiom.Dimensions3D,
-        NativeSetup = new[] { "Attach to the same root as Motor3D.", "Assign an InputActionAsset." },
-        AssignmentFields = new[] { nameof(inputActions) },
-        Proof = "Verify movement and actions respond in Play Mode with the assigned Input Asset.",
-        ExpertAdvice = "Converts hardware signals into FrameInput. It uses the InputProfile to find action names. Ensure your InputActionAsset has the 'Player' map (or as defined in your profile).",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/input",
-        CapabilityPath = "Input/Pawn/Pawn3D Input Module"
+        Category = "Input",
+        CapabilityPath = "Input/Pawn/Pawn3D Input Module",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Translates Unity Input System actions into Pawn-readable FrameInput data.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/input",
+        RequiredFields = new[] { nameof(inputActions) },
+        SetupSteps = new[] { "Attach to the same root as Motor3D.", "Assign an InputActionAsset." },
+        SuccessChecks = new[] { "Verify movement and actions respond in Play Mode with the assigned Input Asset." },
+        Tags = new[] { "capability:Input", "axiom:Realtime", "axiom:Dimensions3D" }
     )]
 [AddComponentMenu("NeonBlack/Gameplay/Modules/Character/Rigged3D/Pawn 3D Input Module")]
     public sealed class Pawn3DInputModule : MonoBehaviour, IPawnInputModule

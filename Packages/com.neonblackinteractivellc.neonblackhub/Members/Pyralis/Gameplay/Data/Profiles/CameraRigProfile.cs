@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using NeonBlack.Gameplay.Core.Contracts;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Profiles
 {
@@ -8,17 +9,16 @@ namespace NeonBlack.Gameplay.Data.Profiles
     /// Defines camera presentation choices for shared or split participant views.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Camera, 
+        Category = "Camera",
         CapabilityPath = "World & Meta/Camera/Camera Rig Profile",
-        Priority = AuthoringPriority.AuxiliaryDefault,
-        Lane = "Camera",
-        Relevance = "Project-window creation path for camera framing, follow, zoom, and 2D orthographic route choices.",
+        Surface = AuthoringSurface.Profile,
+        Summary = "Project-window creation path for camera framing, follow, zoom, and 2D orthographic route choices.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/camera",
+        RequiredFields = new[] { nameof(presentationMode), nameof(focusMode), nameof(useCinemachine), nameof(followOffset), nameof(orthographic), nameof(minZoom), nameof(maxZoom) },
+        SuccessChecks = new[] { "Verify Cinemachine follows the profile's selected focus target at the specified framing." },
         RoleTags = new[] { "CameraProfile", "ParticipantFollow", "PlayfieldView" },
-        AssignmentFields = new[] { nameof(presentationMode), nameof(focusMode), nameof(useCinemachine), nameof(followOffset), nameof(orthographic), nameof(minZoom), nameof(maxZoom) },
-        Proof = "Verify Cinemachine follows the profile's selected focus target at the specified framing.",
-        ExpertAdvice = "CameraRigProfile chooses the focus route and framing; Cinemachine composes the actual view. For 2D games, check Orthographic. Use Participant Group for shared pawn cameras, Participant Pawns for split-screen/per-participant cameras, Playfield Center for board/menu views, Explicit Scene Target for authored anchors, and Manual Cinemachine when the scene owns Follow/LookAt directly.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/camera",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CameraInput }
+        Tags = new[] { "capability:Camera", "runtime:CameraInput", "lane:Camera", "priority:AuxiliaryDefault" },
+        Selectable = false
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Camera Rig Profile", fileName = "CameraRigProfile", order = -70)]
     public class CameraRigProfile : ScriptableObject, IRuntimeValidationProvider

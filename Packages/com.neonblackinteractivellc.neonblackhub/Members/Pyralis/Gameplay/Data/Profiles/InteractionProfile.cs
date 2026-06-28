@@ -1,19 +1,21 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Profiles
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Puzzle | AuthoringCapability.Session,
-        Relevance = "Defines how an actor interacts with world objects.",
-        NativeSetup = new[] { "Set Interaction Cooldown." },
-        AssignmentFields = new[] { nameof(enableInteraction) },
-        Proof = "Verify the actor can trigger interaction events on compatible world objects.",
-        ExpertAdvice = "Use interactionCooldown to prevent rapid-fire interaction spamming.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/interaction",
+        Category = "Puzzle, Session",
         CapabilityPath = "Interaction/Profiles/Interaction Profile",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
+        Surface = AuthoringSurface.Profile,
+        Summary = "Defines how an actor interacts with world objects.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/interaction",
+        RequiredFields = new[] { nameof(enableInteraction) },
+        SetupSteps = new[] { "Set Interaction Cooldown." },
+        SuccessChecks = new[] { "Verify the actor can trigger interaction events on compatible world objects." },
+        Tags = new[] { "capability:Puzzle", "capability:Session", "runtime:CharacterPawnGameplay" },
+        Selectable = false
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Interaction Profile", fileName = "InteractionProfile")]
     public class InteractionProfile : ScriptableObject, IRuntimeValidationProvider

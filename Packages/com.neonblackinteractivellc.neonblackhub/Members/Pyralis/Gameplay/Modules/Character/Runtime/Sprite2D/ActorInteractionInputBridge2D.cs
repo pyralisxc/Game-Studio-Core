@@ -1,20 +1,22 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Character
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Puzzle | AuthoringCapability.Input,
-        Relevance = "Forwards interact input into a sibling actor interaction receiver.",
-        NativeSetup = new[] 
+        Category = "Puzzle, Input",
+        CapabilityPath = "Input/Pawn/Actor Interaction Input Bridge2D",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Forwards interact input into a sibling actor interaction receiver.",
+        SetupSteps = new[] 
         { 
             "Add a component that implements IActorInteractionRequestReceiver to the same GameObject.",
             "Route input from an adapter into this bridge."
         },
-        Proof = "Verify interaction triggers the installed feature.",
-        ExpertAdvice = "Bridge only forwards input. Add ActorInteractionComponent or another interaction receiver directly to the pawn root.",
-        CapabilityPath = "Input/Pawn/Actor Interaction Input Bridge2D"
+        SuccessChecks = new[] { "Verify interaction triggers the installed feature." },
+        Tags = new[] { "capability:Puzzle", "capability:Input" }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Interaction/Actor Interaction Input Bridge 2D")]
     public class ActorInteractionInputBridge2D : MonoBehaviour, IActorInteractionInputReceiver2D, IRuntimeValidationProvider

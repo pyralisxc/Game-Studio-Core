@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 using VContainer;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Presentation.HUD.GameFlow
 {
@@ -12,21 +13,21 @@ namespace NeonBlack.Gameplay.Presentation.HUD.GameFlow
 /// Manages all UI panels: HUD (live score + time) and Game Over screen.
 /// </summary>
 [AuthoringContract(
-    Capability = AuthoringCapability.UI,
-    Relevance = "Manages gameplay UI: HUD, game over screen, and settings navigation.",
-    Axioms = AuthoringWorldAxiom.None,
-    NativeSetup = new[] 
+        Category = "U I",
+        CapabilityPath = "UI/HUD/UI Manager",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Manages gameplay UI: HUD, game over screen, and settings navigation.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/ui",
+        RequiredFields = new[] { "_hudPanel", "_gameOverPanel", "_scoreLabel", "_timeLabel" },
+        SetupSteps = new[] 
     { 
         "Add UIManager to the UI Canvas.",
         "Wire panel GameObjects and TMP labels.",
         "Assign session flow, gameplay state, and score service sources."
     },
-    AssignmentFields = new[] { "_hudPanel", "_gameOverPanel", "_scoreLabel", "_timeLabel" },
-    Proof = "The HUD shows points and survival time when the game starts.",
-    ExpertAdvice = "The UIManager is a high-level presentation layer. It listens to IGameplaySessionFlow for arcade panels and IGameplayStateReader for active-time updates.",
-    DocumentationURL = "https://docs.neonblack.com/pyralis/ui",
-    CapabilityPath = "UI/HUD/UI Manager"
-)]
+        SuccessChecks = new[] { "The HUD shows points and survival time when the game starts." },
+        Tags = new[] { "capability:UI" }
+    )]
 [DefaultExecutionOrder(-10)]
 public class UIManager : MonoBehaviour
 {

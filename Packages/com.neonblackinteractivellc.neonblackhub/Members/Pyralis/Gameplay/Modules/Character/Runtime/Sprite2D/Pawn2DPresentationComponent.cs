@@ -4,18 +4,19 @@ using NeonBlack.Gameplay.Core.Types.Animation;
 using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Character
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Animation | AuthoringCapability.VFX, 
-        Relevance = "2D pawn presentation facade; maps movement state into sprite facing/tint, animation signals, squash/stretch, tilt, and dash/death feedback.",
-        Axioms = AuthoringWorldAxiom.Dimensions2D,
-        NativeSetup = new[] { "Add on the same root as Motor2D.", "Assign SpriteRenderer." },
-        AssignmentFields = new[] { nameof(spriteRenderer), nameof(movingTint), nameof(tiltEnabled), nameof(stretchAmount), nameof(squashSnapSpeed), nameof(tiltSpeed) },
-        Proof = "Move the pawn and verify the sprite tilts and tints according to velocity.",
-        ExpertAdvice = "Keep this as the single 2D presentation facade for beginner prefabs. Sprite facing/tint, animation parameters, deformation, and feedback audio are separate internal lanes and can later become dedicated presenter scripts when a route needs deeper specialization.",
-        CapabilityPath = "Presentation/Feedback/Pawn2D Presentation Component"
+        Category = "Animation, V F X",
+        CapabilityPath = "Presentation/Feedback/Pawn2D Presentation Component",
+        Surface = AuthoringSurface.Goal,
+        Summary = "2D pawn presentation facade; maps movement state into sprite facing/tint, animation signals, squash/stretch, tilt, and dash/death feedback.",
+        RequiredFields = new[] { nameof(spriteRenderer), nameof(movingTint), nameof(tiltEnabled), nameof(stretchAmount), nameof(squashSnapSpeed), nameof(tiltSpeed) },
+        SetupSteps = new[] { "Add on the same root as Motor2D.", "Assign SpriteRenderer." },
+        SuccessChecks = new[] { "Move the pawn and verify the sprite tilts and tints according to velocity." },
+        Tags = new[] { "capability:Animation", "capability:VFX", "axiom:Dimensions2D" }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Modules/Character/Sprite2D/Pawn 2D Presentation Component")]
     [RequireComponent(typeof(Pawn2DMovementComponent))]

@@ -1,17 +1,18 @@
 {
-    "name": "NeonBlack.Gameplay.Modules.Tabletop.UI",
-    "references": [
-        "NeonBlack.Gameplay.Core",
-        "NeonBlack.Gameplay.Data",
-        "NeonBlack.Gameplay.Modules.Tabletop",
-        "Unity.TextMeshPro"
-    ],
-    "includePlatforms": [],
-    "excludePlatforms": [],
-    "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
-    "autoReferenced": true,
-    "defineConstraints": [],
-    "versionDefines": []
+  "name": "NeonBlack.Gameplay.Modules.Tabletop.UI",
+  "references": [
+    "NeonBlack.Gameplay.Core",
+    "NeonBlack.Gameplay.Data",
+    "NeonBlack.Gameplay.Modules.Tabletop",
+    "Unity.TextMeshPro",
+    "Pys.Authoring.Contracts"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": []
 }

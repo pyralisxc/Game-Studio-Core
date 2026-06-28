@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Participants;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Hazards
 {
@@ -37,21 +38,21 @@ namespace NeonBlack.Gameplay.Modules.Hazards
 /// </summary>
 [AddComponentMenu("NeonBlack/Gameplay/Modules/Hazards/Sprite2D/Hazard")]
 [AuthoringContract(
-    Capability = AuthoringCapability.Combat,
-    Relevance = "Primary controller for 2D hazards, handling movement, targeting, and impact sequences.",
-    Axioms = AuthoringWorldAxiom.Dimensions2D,
-    NativeSetup = new[]
+        Category = "Combat",
+        CapabilityPath = "Combat/Actions/Hazard",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Primary controller for 2D hazards, handling movement, targeting, and impact sequences.",
+        RequiredFields = new[] { nameof(_data), nameof(_hitColliders), nameof(_shadowRenderer) },
+        SetupSteps = new[]
     {
         "Attach Hazard script to a GameObject.",
         "Assign a HazardData ScriptableObject.",
         "Wire the Shadow SpriteRenderer and Hit Colliders required by this hazard prefab.",
         "Wire optional Outline, Lane, Explosion, feedback, and service overrides only when the selected HazardData uses those modifiers."
     },
-    Proof = "Place a hazard in the scene and verify it executes its sequence (Slam, Crossing, etc.) on start.",
-    AssignmentFields = new[] { nameof(_data), nameof(_hitColliders), nameof(_shadowRenderer) },
-    ExpertAdvice = "Ensure a Kinematic Rigidbody2D is on the root for explosive hazards. Keep Shadow and Outline renderers on separate child objects.",
-    CapabilityPath = "Combat/Actions/Hazard"
-)]
+        SuccessChecks = new[] { "Place a hazard in the scene and verify it executes its sequence (Slam, Crossing, etc.) on start." },
+        Tags = new[] { "capability:Combat", "axiom:Dimensions2D" }
+    )]
 public partial class Hazard : MonoBehaviour, IRuntimeValidationProvider
 {
     [Header("Child Renderers")]

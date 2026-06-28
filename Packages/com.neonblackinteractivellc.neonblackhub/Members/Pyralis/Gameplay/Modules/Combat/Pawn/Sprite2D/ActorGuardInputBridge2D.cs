@@ -1,20 +1,22 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Combat
 {
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat | AuthoringCapability.Input,
-        Relevance = "Forwards 2D guard input into a sibling actor guard controller.",
-        NativeSetup = new[] 
+        Category = "Combat, Input",
+        CapabilityPath = "Combat/Actions/Actor Guard Input Bridge2D",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Forwards 2D guard input into a sibling actor guard controller.",
+        SetupSteps = new[] 
         { 
             "Add a component that implements IActorGuardController to the same GameObject.",
             "Route input from an adapter into this bridge."
         },
-        Proof = "Verify the guard feature activates when the guard input is triggered.",
-        ExpertAdvice = "Bridge only forwards input; it does not block damage by itself. Add ActorCombatReactionComponent or another guard controller directly to the pawn root.",
-        CapabilityPath = "Combat/Actions/Actor Guard Input Bridge2D"
+        SuccessChecks = new[] { "Verify the guard feature activates when the guard input is triggered." },
+        Tags = new[] { "capability:Combat", "capability:Input" }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Modules/Combat/Pawn/Sprite2D/Actor Guard Input Bridge 2D")]
     public class ActorGuardInputBridge2D : MonoBehaviour, IActorGuardInputReceiver2D, IRuntimeValidationProvider

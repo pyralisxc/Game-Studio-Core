@@ -33,9 +33,9 @@ The shared-core startup path is built from these concrete building blocks:
 - `InputProfile`
 - `SettingsProfile`
 - module-owned component/profile capabilities and pawn-module interfaces
-- `ResolvedAuthoringContractRegistry` discovery for `[AuthoringContract]` metadata
+- PYS Authoring discovery for `Pys.Authoring.Contracts.AuthoringContractAttribute` metadata
 
-New gameplay and authoring work should extend this Inspector-driven shared-core startup path.
+New gameplay work should extend this Inspector-driven shared-core startup path and expose authoring evidence through PYS contracts or validation providers.
 
 `SessionStateService` is the shared gameplay-active state owner. Feature systems that need to know whether gameplay is running should consume `IGameplayStateReader`. Mode-specific flow orchestrators, such as the 2D `GameManager`, should expose their own flow contract for panels, scoring, and arcade transitions, then drive the shared session phase rather than implementing a second gameplay-state source.
 
@@ -43,7 +43,7 @@ Runtime folder ownership is part of the architecture contract. `Core` owns runti
 
 Namespace fan-out is also architecture evidence. A focused runtime script should import very few `NeonBlack.Gameplay.*` namespaces because broad imports usually mean the script is owning too much gameplay knowledge. Pure data/model scripts should usually need `0-1` Pyralis namespaces, leaf gameplay MonoBehaviours `1-2`, feature runtime modules `2-3`, and presentation scripts `1-2`. Explicit `Glue/*` composition files may import more because they wire systems together, but they still become review targets when they start carrying feature behavior instead of composition. Hygiene flags files that exceed their owner budget as `NamespaceDependencyFanout`; outside Glue, more than three Pyralis namespaces is audit pressure and more than five is a cleanup target. Do not hide coupling in managers to satisfy the count. Shrink the count by moving behavior to the true owner, depending on smaller contracts/data/events, or keeping cross-domain wiring in Glue.
 
-Runtime communication should follow the same ownership discipline as the authoring graph. Authoring compiles scattered setup evidence into graph truth and then projects typed views; runtime should expose typed communication seams instead of letting modules directly know every concrete collaborator. The supported communication lanes are:
+Runtime communication should follow the same ownership discipline as PYS Authoring. PYS compiles scattered setup evidence into graph truth and then projects typed views; runtime should expose typed communication seams instead of letting modules directly know every concrete collaborator. The supported communication lanes are:
 
 - **commands** for requested work, such as spawn participant, request attack with `ActorCombatCommand`, request interaction, submit input action, or start proof attempt
 - **events/results** for facts that happened, such as participant joined, pawn spawned, combat attack started through `ActorCombatResult`, damage applied, pickup collected, score changed, or proof state changed
@@ -58,7 +58,7 @@ Use focused state machines where lifecycle is real. Do not create one global `Py
 
 Direct module imports are allowed only when the dependency is a genuine same-subsystem composition edge or a stable contract owned by that module. Character should not import Combat just to host combat behavior; pawn combat implementation belongs in Combat. Combat should not import Character just to read facing, airborne, or action-lock state; that flows through `IActorCombatMovementState`. Character should not import Combat just to read attack timers or combat movement multipliers; that flows through `IActorCombatMovementInfluence`. Traversal should not import Character just to coordinate the 3D pawn movement sibling; traversal-facing movement state flows through `IPawnTraversalMovementController`, traversal profile application flows through `IPawnTraversalModule`, and optional feature discovery flows through `IActorTraversalFeature`. Traversal and RPG should not import Interaction just to implement an interaction handler; `Data.Interactions.ActorInteractionContext` and `Data.Interactions.IActorInteractionHandler` are the shared handler seam, while Interaction owns the concrete dispatcher and pickup collectors. Input should not import Character, Combat, or Interaction just to drive a pawn; participant/profile handoff belongs to `Data.Participants`, and move/combat/guard/interaction requests should flow through `Core` command or receiver seams. Cross-subsystem behavior such as pickups awarding score, hazards applying combat reactions, enemies driving combat, UI observing session state, or scene flow reacting to gameplay outcomes should prefer commands, events, state readers, handlers, or narrow sinks before importing concrete module behavior. If a direct module import remains, it should be easy to explain in one sentence as ownership, not convenience. Do not import a module solely to name data assets that live under `Data`, to check a movement component when a `Core` state reader can answer the question, or to display feedback that can be expressed through a `Core` sink or publisher contract such as `IDamageNumberSink` or `IActorFeedbackPublisher`.
 
-Editor ownership follows the same rule. A feature editor may hand users to Authoring and validate local fields, but it should not become a combined inspector for another module's implementation fields. Enemy AI editor owns enemy AI fields; enemy attack and hitbox tuning belongs to the Combat-owned `EnemyCombatModuleEditor`.
+Editor ownership follows the same rule. A feature editor may hand users to PYS Authoring and validate local fields, but it should not become a combined inspector for another module's implementation fields. Enemy AI editor owns enemy AI fields; enemy attack and hitbox tuning belongs to the Combat-owned `EnemyCombatModuleEditor`.
 
 ## Core Architectural Principles
 
@@ -108,11 +108,11 @@ The maintainable path is:
 - validation messages near the fields that caused them,
 - feature-owned authoring contracts that feed setup guidance, validation, facts, and proof targets.
 
-Inspectors should stay tactical. They can show local field integrity, local validation messages, a handoff button into Pyralis Authoring, and asset-local utilities that operate on the inspected object. They should not become parallel route guides, preset pickers, first-proof cards, or hidden setup paths. If a user needs to understand where an object fits in the route, Authoring should explain it from the graph.
+Inspectors should stay tactical. They can show local field integrity, local validation messages, a handoff button into PYS Authoring, and asset-local utilities that operate on the inspected object. They should not become parallel route guides, preset pickers, proof cards, or hidden setup paths. If a user needs to understand where an object fits in the route, PYS Authoring should explain it from the graph.
 
 ### 3.5. Feature Contracts Own Feature Setup Truth
 
-Reusable module components and profiles declare their authoring requirements on the owning feature type with `[AuthoringContract]`. `ResolvedAuthoringContractRegistry` discovers those attributes reflectively. Central authoring code aggregates and displays contracts; it should not maintain parallel switch statements or manual lists for feature-specific profile, lane, action, runtime-interface, or proof rules.
+Reusable module components and profiles declare their authoring requirements on the owning feature type with `Pys.Authoring.Contracts.AuthoringContractAttribute`. PYS Authoring discovers those attributes reflectively. Central authoring code lives in `com.pys.authoring`; Pyralis should not maintain parallel switch statements or manual lists for feature-specific profile, lane, action, runtime-interface, or proof rules.
 
 A complete capability contract names:
 
@@ -127,7 +127,7 @@ A complete capability contract names:
 - customization moments
 - first route proof target
 
-This keeps feature ownership local while allowing the Authoring Window, inspectors, validators, facts, and proof workflow to agree on the same data.
+This keeps feature ownership local while allowing PYS Authoring, inspectors, validators, facts, and proof workflow to agree on the same data.
 
 ### 4. Pawn Composition Uses Direct Module Ownership
 
@@ -162,7 +162,7 @@ Feature services are not core by default. Combat, enemy, RPG, game-flow, scoring
 
 Feature-specific service lists should not expand the composition root. `PyralisGameplayLifetimeScope` owns the visible service graph entrypoint; `PyralisRuntimeFeatureServicePolicy` owns route and loaded-scene activation evidence; the platform feature-service installer owns common registration mechanics; and feature installers such as RPG's runtime composition installer own concrete feature lists when a domain is broad enough to justify its own local seam. This keeps the lifetime scope readable without creating a second setup path.
 
-**Strict Authoring Rule:** `GameplaySessionBootstrap` uses Unity's `RequireComponent` path to keep `PyralisGameplayLifetimeScope` visible, and runtime systems must not autospawn GameObjects or create presets to fix missing scene references. Missing core services stay null at runtime and log a clear error, while the Authoring Window and Map/Scene Readiness guide the user to manually add the missing objects in the scene. Hygiene can audit the graph pressure, but concrete scene repair belongs in Map. This keeps the scene hierarchy as the singular source of truth and prevents hidden systems-on-top-of-systems complexity.
+**Strict Authoring Rule:** `GameplaySessionBootstrap` uses Unity's `RequireComponent` path to keep `PyralisGameplayLifetimeScope` visible, and runtime systems must not autospawn GameObjects or create presets to fix missing scene references. Missing core services stay null at runtime and log a clear error, while PYS Authoring Map/Guide evidence guides the user to manually add the missing objects in the scene. Hygiene can audit the graph pressure, but concrete scene repair belongs in Map. This keeps the scene hierarchy as the singular source of truth and prevents hidden systems-on-top-of-systems complexity.
 
 Runtime creation is allowed when it is gameplay output, not setup repair. Examples that may create objects at runtime include spawned participant pawns, projectiles, pooled effects, world-space popups, fade overlays, generated board/pickup views, and camera focus helper transforms. These objects are outputs of authored systems. Runtime code should not create missing session services, camera rigs, managers, profiles, setup assets, or scene roots to make a route appear configured.
 
@@ -178,7 +178,7 @@ Optional feature domains can be broad without becoming core engine spine. RPG is
 - `Modules/Rpg/UI` owns scene and panel presenters,
 - `Modules/Rpg/Editor` owns RPG-specific editor tools.
 
-Shared authoring should discover RPG through contracts, reflection, dependency evidence, and graph projections. It should not carry a separate RPG setup system, and the universal `Editor/Authoring` folder should stay focused on the graph spine rather than feature-specific creative tools.
+PYS Authoring should discover RPG through contracts, reflection, dependency evidence, and graph projections. Pyralis should not carry a separate RPG setup system or restore a universal `Editor/Authoring` graph spine.
 
 The same rule applies to other broad optional domains. `Data/Tabletop/Rules` owns board and turn value contracts that authored definitions can reference without pulling in runtime behavior. `Modules/Tabletop/Runtime` owns tabletop action resolvers, selection bridges, and runtime service seams. Core owns the small shared action queue language and in-memory queue implementation in `Core/Types/Actions`; feature modules provide resolvers instead of importing an Actions module. Core only keeps stable contracts, tiny shared type vocabulary, and neutral utilities when multiple feature/data assemblies need the same value language, such as action values, movement modes, presentation lanes, and animation signals. Authored config assets live in `Data/Config`, participant input setup lives in `InputProfile`, and runtime session context lives in `Glue/Lifetime`. Scene flow and menu shell navigation belong to `Glue/SceneFlow/Navigation`, not Core.
 
@@ -586,7 +586,7 @@ Prefer:
 - `ScriptableObject` profiles for tuning, numbers, curves, effects, and presentation choices
 - prefabs for reusable runtime object composition
 - one bootstrap root per playable scene
-- local inspectors that show field integrity and hand off route setup to Pyralis Authoring
+- local inspectors that show field integrity and hand off route setup to PYS Authoring
 - validation that catches missing references before Play Mode
 
 Avoid:

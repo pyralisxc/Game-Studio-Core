@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Participants;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Hazards
 {
@@ -12,19 +13,19 @@ namespace NeonBlack.Gameplay.Modules.Hazards
     /// and spawn-shape responsibilities in smaller helpers.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat | AuthoringCapability.Session,
-        Relevance = "Orchestrates pooling and spawning of 2D hazards based on difficulty pacing.",
-        Axioms = AuthoringWorldAxiom.Dimensions2D,
-        NativeSetup = new[]
+        Category = "Combat, Session",
+        CapabilityPath = "Combat/Actions/Hazard Spawner",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Orchestrates pooling and spawning of 2D hazards based on difficulty pacing.",
+        RequiredFields = new[] { nameof(_hazardEntries), nameof(_difficultyManager) },
+        SetupSteps = new[]
         {
             "Add HazardSpawner to a scene GameObject.",
             "Wire DifficultyManager if this scene owns pacing directly.",
             "Populate Hazard Entries with prefabs and weights."
         },
-        Proof = "Start the game and verify hazards begin spawning around the play area.",
-        AssignmentFields = new[] { nameof(_hazardEntries), nameof(_difficultyManager) },
-        ExpertAdvice = "Gameplay state, camera bounds, outcome sinks, and pickup burst surfaces are normally supplied by GameManager or the Pyralis runtime scope. Assign those service fields directly only for standalone test scenes or specialized custom orchestration.",
-        CapabilityPath = "Combat/Actions/Hazard Spawner"
+        SuccessChecks = new[] { "Start the game and verify hazards begin spawning around the play area." },
+        Tags = new[] { "capability:Combat", "capability:Session", "axiom:Dimensions2D" }
     )]
     [DefaultExecutionOrder(-10)]
     public class HazardSpawner : MonoBehaviour, IRuntimeValidationProvider

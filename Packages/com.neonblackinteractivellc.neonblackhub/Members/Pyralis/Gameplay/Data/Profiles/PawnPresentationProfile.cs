@@ -3,6 +3,7 @@ using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Types.Animation;
 using NeonBlack.Gameplay.Presentation.Visuals;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Profiles
 {
@@ -10,15 +11,15 @@ namespace NeonBlack.Gameplay.Data.Profiles
     /// Shared presentation authoring profile for pawn visuals and camera-facing behavior.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Animation | AuthoringCapability.VFX, 
-        Relevance = "Project-window creation path for pawn presentation lane and visual setup choices.",
-        AssignmentFields = new[] { nameof(presentationMode), nameof(hudPrefab), nameof(primaryTint) },
-        Proof = "Change the primary tint and see it reflected on the pawn in the scene.",
-        ExpertAdvice = "The presentation profile decides how the actor is rendered. Use 'Billboard2_5D' for sprites that face the camera in 3D space. 'Shadow Mode' determines if a blob shadow is auto-generated.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/visuals",
+        Category = "Animation, V F X",
         CapabilityPath = "Presentation/Feedback/Pawn Presentation Profile",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.AnimationPresentation },
-        Surface = AuthoringContractSurface.Profile
+        Surface = AuthoringSurface.Profile,
+        Summary = "Project-window creation path for pawn presentation lane and visual setup choices.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/visuals",
+        RequiredFields = new[] { nameof(presentationMode), nameof(hudPrefab), nameof(primaryTint) },
+        SuccessChecks = new[] { "Change the primary tint and see it reflected on the pawn in the scene." },
+        Tags = new[] { "capability:Animation", "capability:VFX", "runtime:AnimationPresentation" },
+        Selectable = false
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Pawn Presentation Profile", fileName = "PawnPresentationProfile", order = -40)]
     public class PawnPresentationProfile : ScriptableObject, IRuntimeValidationProvider

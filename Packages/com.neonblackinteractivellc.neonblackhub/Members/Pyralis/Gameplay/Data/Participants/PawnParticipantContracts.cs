@@ -1,6 +1,7 @@
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Profiles;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Participants
 {
@@ -42,11 +43,12 @@ namespace NeonBlack.Gameplay.Data.Participants
     }
 
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat,
-        Relevance = "Applies pawn combat profile data to a runtime combat module.",
-        Axioms = AuthoringWorldAxiom.None,
-        Proof = "Verify that ApplyCombatProfile is called when the pawn is initialized.",
-        NativeSetup = new[] { "Implement interface in a combat module" }
+        Category = "Combat",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Applies pawn combat profile data to a runtime combat module.",
+        SetupSteps = new[] { "Implement interface in a combat module" },
+        SuccessChecks = new[] { "Verify that ApplyCombatProfile is called when the pawn is initialized." },
+        Tags = new[] { "capability:Combat" }
     )]
     public interface IPawnCombatModule
     {

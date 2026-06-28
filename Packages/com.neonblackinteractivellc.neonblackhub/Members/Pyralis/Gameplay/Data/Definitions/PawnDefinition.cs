@@ -4,6 +4,7 @@ using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Types.Animation;
 using System.Collections.Generic;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Definitions
 {
@@ -11,19 +12,17 @@ namespace NeonBlack.Gameplay.Data.Definitions
     /// Primary authored definition for a controllable or simulated pawn.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Movement | AuthoringCapability.Combat, 
+        StableId = "pawn.definition",
+        Category = "Movement, Combat",
         CapabilityPath = "Character / Pawn Gameplay/Pawn Definition",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay, RuntimeCapabilityFamily.Combat },
-        Priority = AuthoringPriority.Primary,
-        SetupNodeId = "pawn.definition",
-        Lane = "Entity",
-        Relevance = "Core definition for a controllable entity, linking its prefab to movement, combat, and animation profiles.",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Core definition for a controllable entity, linking its prefab to movement, combat, and animation profiles.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/pawn",
+        RequiredFields = new[] { nameof(pawnPrefab), nameof(movementProfile), nameof(combatProfile), nameof(traversalProfile), nameof(presentationProfile), nameof(animationProfile) },
+        SetupSteps = new[] { "PawnRoot" },
+        SuccessChecks = new[] { "Assign this Pawn Definition to the controlling ParticipantDefinition, then let ParticipantSpawnService place the spawned pawn at an authored spawn point." },
         RoleTags = new[] { "PawnDefinition", "PawnPrefab", "ActorBody" },
-        AssignmentFields = new[] { nameof(pawnPrefab), nameof(movementProfile), nameof(combatProfile), nameof(traversalProfile), nameof(presentationProfile), nameof(animationProfile) },
-        NativeSetup = new[] { "PawnRoot" },
-        Proof = "Assign this Pawn Definition to the controlling ParticipantDefinition, then let ParticipantSpawnService place the spawned pawn at an authored spawn point.",
-        ExpertAdvice = "PawnDefinition describes the actor body and prefab composition. ParticipantDefinition.inputProfile owns who controls this pawn; keep input off pawn definitions so seats, AI, hands, cursors, and pawn routes share one ownership rule.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/pawn"
+        Tags = new[] { "capability:Movement", "capability:Combat", "runtime:CharacterPawnGameplay", "runtime:Combat", "lane:Entity", "priority:Primary" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Definitions/Pawn Definition", fileName = "PawnDefinition", order = 30)]
     public class PawnDefinition : ScriptableObject, IRuntimeValidationProvider

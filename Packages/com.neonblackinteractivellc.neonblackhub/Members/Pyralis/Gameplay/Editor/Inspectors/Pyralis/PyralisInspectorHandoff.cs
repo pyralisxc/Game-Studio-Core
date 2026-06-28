@@ -6,8 +6,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
 {
     public static class PyralisInspectorHandoff
     {
-        private const string AuthoringDocsRoot = "Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/Authoring/";
-        private const string InspectorHandoffText = "Inspector owns local field edits. Pyralis Authoring owns route setup, next steps, and proof guidance.";
+        private const string InspectorHandoffText = "Inspector owns local field edits. PYS Authoring owns graph projections, next steps, and proof guidance.";
 
         public static void DrawAuthoringButton()
         {
@@ -20,7 +19,7 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 string label = string.IsNullOrWhiteSpace(context)
-                    ? "Pyralis Authoring"
+                    ? "PYS Authoring"
                     : context;
                 EditorGUILayout.LabelField(label, EditorStyles.miniBoldLabel);
                 EditorGUILayout.LabelField(
@@ -28,18 +27,16 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
                     EditorStyles.wordWrappedMiniLabel);
 
                 GUIContent button = new GUIContent(
-                    "Open Pyralis Authoring",
-                    "Open the graph-backed Pyralis Authoring Window for route setup, next steps, and proof readiness.");
+                    "Open PYS Authoring",
+                    "Open the graph-backed PYS Authoring Window for route setup, next steps, and proof readiness.");
                 if (GUILayout.Button(button))
-                    NeonBlack.Gameplay.Editor.PyralisAuthoringWindow.Open();
+                    EditorApplication.ExecuteMenuItem("Tools/PYS/Authoring");
             }
         }
 
         public static string AuthoringDocPath(string relativePath)
         {
-            return string.IsNullOrWhiteSpace(relativePath)
-                ? AuthoringDocsRoot + "START_HERE.md"
-                : AuthoringDocsRoot + relativePath;
+            return string.Empty;
         }
 
         public static string InspectorHandoffSummary => InspectorHandoffText;

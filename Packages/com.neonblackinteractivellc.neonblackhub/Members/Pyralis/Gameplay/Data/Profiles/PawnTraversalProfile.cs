@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Profiles
 {
@@ -8,15 +9,16 @@ namespace NeonBlack.Gameplay.Data.Profiles
     /// Shared traversal authoring profile for jumps, dodge, and climb-like features.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Movement,
-        Relevance = "Defines the jumping, dodging, and climbing capabilities of a pawn.",
-        NativeSetup = new[] { "Assign to a PawnDefinition.", "Enable desired traversal features." },
-        AssignmentFields = new[] { nameof(allowJump), nameof(jumpHeight), nameof(gravity), nameof(allowDodge), nameof(dodgeDistance) },
-        Proof = "Verify the pawn can jump and crouch correctly in-game.",
-        ExpertAdvice = "Use jumpHeight and gravity to tune the arc of the jump. If 'allowJump' is off, the actor will be grounded unless a separate 'Hop' feature is installed.",
-        DocumentationURL = "https://docs.neonblack.com/pyralis/traversal",
+        Category = "Movement",
         CapabilityPath = "Movement/Traversal/Pawn Traversal Profile",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.CharacterPawnGameplay }
+        Surface = AuthoringSurface.Profile,
+        Summary = "Defines the jumping, dodging, and climbing capabilities of a pawn.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/traversal",
+        RequiredFields = new[] { nameof(allowJump), nameof(jumpHeight), nameof(gravity), nameof(allowDodge), nameof(dodgeDistance) },
+        SetupSteps = new[] { "Assign to a PawnDefinition.", "Enable desired traversal features." },
+        SuccessChecks = new[] { "Verify the pawn can jump and crouch correctly in-game." },
+        Tags = new[] { "capability:Movement", "runtime:CharacterPawnGameplay" },
+        Selectable = false
     )]
 [CreateAssetMenu(menuName = "NeonBlack/Profiles/Pawn Traversal Profile", fileName = "PawnTraversalProfile", order = -50)]
     public class PawnTraversalProfile : ScriptableObject, IRuntimeValidationProvider

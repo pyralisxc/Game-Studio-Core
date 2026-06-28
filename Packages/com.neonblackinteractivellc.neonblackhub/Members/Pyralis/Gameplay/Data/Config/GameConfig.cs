@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Data.Config
 {
@@ -11,15 +12,15 @@ namespace NeonBlack.Gameplay.Data.Config
     /// and <see cref="PawnDefinition"/>; prefer those for all new game setup.
     /// </summary>
     [AuthoringContract(
-        Capability = AuthoringCapability.Setup,
-        Relevance = "The master wiring point for the game project; defines the entry session and service prefabs.",
-        NativeSetup = new[] { "Assign Session Definition.", "Set Scene names." },
-        AssignmentFields = new[] { nameof(sessionDefinition), nameof(mainMenuScene) },
-        Proof = "Verify the game boots into the specified main menu scene.",
-        ExpertAdvice = "Use service prefabs only if you need custom logic for core services like Time or Scene Loading.",
+        Category = "Setup",
         CapabilityPath = "Configuration/Game Config",
-        RuntimeFamilies = new[] { RuntimeCapabilityFamily.PlatformCore },
-        Surface = AuthoringContractSurface.SetupOnly
+        Surface = AuthoringSurface.RequiredSetup,
+        Summary = "The master wiring point for the game project; defines the entry session and service prefabs.",
+        RequiredFields = new[] { nameof(sessionDefinition), nameof(mainMenuScene) },
+        SetupSteps = new[] { "Assign Session Definition.", "Set Scene names." },
+        SuccessChecks = new[] { "Verify the game boots into the specified main menu scene." },
+        Tags = new[] { "capability:Setup", "runtime:PlatformCore" },
+        Selectable = false
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Pyralis/Game Config", fileName = "GameConfig")]
     public class GameConfig : ScriptableObject, IRuntimeValidationProvider

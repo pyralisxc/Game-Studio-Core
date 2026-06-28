@@ -2,31 +2,27 @@ using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Types.Animation;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Enemies
 {
     [AddComponentMenu("NeonBlack/Gameplay/Enemies/Enemy Reaction Component")]
     [AuthoringContract(
-        Capability = AuthoringCapability.Combat,
-        ModuleId = "enemy.reaction",
-        Lane = "Enemy",
-        ProfileType = typeof(EnemyReactionProfile),
-        RequiredInterfaces = new[] { typeof(IEnemyReactionState) },
+        StableId = "enemy.reaction.component",
+        Category = "Combat",
+        CapabilityPath = "Combat/Actions/Enemy Reaction Component",
+        Surface = AuthoringSurface.Profile,
+        RequiredFields = new[] { nameof(reactionProfile), nameof(hitPauseSink), nameof(cameraShakeSink) },
         RequiredComponentNames = new[] { "NeonBlack.Gameplay.Modules.Enemies.EnemyAI", "NeonBlack.Gameplay.Modules.Combat.HealthComponent" },
-        AssignmentFields = new[] { nameof(reactionProfile), nameof(hitPauseSink), nameof(cameraShakeSink) },
-        Proof = "Verify that hit pause and camera shake are triggered when the enemy takes damage.",
-        NativeSetup = new[]
+        RequiredInterfaces = new[] { typeof(IEnemyReactionState) },
+        SetupSteps = new[]
         {
             "add EnemyReactionComponent to the enemy root",
             "assign EnemyReactionProfile"
         },
-        CustomizationMoments = new[]
-        {
-            "EnemyReactionProfile.enableReactions",
-            "EnemyReactionProfile.staggerDamageThreshold",
-            "EnemyReactionProfile.hitPauseDuration"
-        },
-        CapabilityPath = "Combat/Actions/Enemy Reaction Component"
+        SuccessChecks = new[] { "Verify that hit pause and camera shake are triggered when the enemy takes damage." },
+        Tags = new[] { "capability:Combat", "lane:Enemy" },
+        Selectable = false
     )]
     public partial class EnemyReactionComponent : MonoBehaviour, IEnemyReactionState
 {

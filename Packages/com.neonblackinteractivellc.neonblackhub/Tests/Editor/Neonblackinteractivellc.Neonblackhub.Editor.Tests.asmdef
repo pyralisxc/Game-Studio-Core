@@ -1,33 +1,33 @@
 {
-    "name":  "NeonBlack.Gameplay.Editor.Tests",
-    "references":  [
-                       "NeonBlack.Gameplay.Modules.Character",
-                       "NeonBlack.Gameplay.Editor",
-                       "NeonBlack.Gameplay",
-                       "NeonBlack.Gameplay.Core",
-                       "NeonBlack.Gameplay.Data",
-                       "NeonBlack.Gameplay.Presentation",
-                       "NeonBlack.Gameplay.Modules.Combat",
-                       "NeonBlack.Gameplay.Modules.Combat.Editor",
-                       "NeonBlack.Gameplay.Modules.Enemies",
-                       "NeonBlack.Gameplay.Modules.Enemies.Editor",
-                       "NeonBlack.Gameplay.Modules.Feedback",
-                       "NeonBlack.Gameplay.Modules.Hazards",
-                       "NeonBlack.Gameplay.Modules.Input",
-                       "NeonBlack.Gameplay.Modules.Interaction",
-                       "NeonBlack.Gameplay.Modules.Rpg.Editor",
-                       "NeonBlack.Gameplay.Modules.Scoring",
-                       "NeonBlack.Gameplay.Modules.Traversal",
-                       "NeonBlack.Gameplay.Modules.Traversal.Editor",
-                       "Unity.InputSystem"
-                   ],
-    "optionalUnityReferences":  [
-                                    "TestAssemblies"
-                                ],
-    "includePlatforms":  [
-                             "Editor"
-                         ],
-    "excludePlatforms":  [
-
-                         ]
+  "name": "NeonBlack.Gameplay.Editor.Tests",
+  "references": [
+    "NeonBlack.Gameplay.Modules.Character",
+    "NeonBlack.Gameplay.Editor",
+    "NeonBlack.Gameplay",
+    "NeonBlack.Gameplay.Core",
+    "NeonBlack.Gameplay.Data",
+    "NeonBlack.Gameplay.Presentation",
+    "NeonBlack.Gameplay.Modules.Combat",
+    "NeonBlack.Gameplay.Modules.Combat.Editor",
+    "NeonBlack.Gameplay.Modules.Enemies",
+    "NeonBlack.Gameplay.Modules.Enemies.Editor",
+    "NeonBlack.Gameplay.Modules.Feedback",
+    "NeonBlack.Gameplay.Modules.Hazards",
+    "NeonBlack.Gameplay.Modules.Input",
+    "NeonBlack.Gameplay.Modules.Interaction",
+    "NeonBlack.Gameplay.Modules.Rpg.Editor",
+    "NeonBlack.Gameplay.Modules.Scoring",
+    "NeonBlack.Gameplay.Modules.Traversal",
+    "NeonBlack.Gameplay.Modules.Traversal.Editor",
+    "Unity.InputSystem",
+    "Pys.Authoring.Contracts",
+    "Pys.Authoring.Editor"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": []
 }
