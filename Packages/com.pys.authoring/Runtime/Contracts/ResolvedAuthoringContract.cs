@@ -19,6 +19,12 @@ namespace Pys.Authoring.Contracts
             RequiredFields = new List<string>();
             RequiredComponents = new List<string>();
             RequiredInterfaces = new List<string>();
+            PrerequisiteStableIds = new List<string>();
+            RouteStage = string.Empty;
+            RouteOrder = 0;
+            SetupDomain = string.Empty;
+            ProofTarget = string.Empty;
+            NativeActionKind = AuthoringActionKind.None;
             SetupSteps = new List<string>();
             SuccessChecks = new List<string>();
             OwnershipClaims = new List<string>();
@@ -51,6 +57,18 @@ namespace Pys.Authoring.Contracts
         public List<string> RequiredComponents { get; }
 
         public List<string> RequiredInterfaces { get; }
+
+        public List<string> PrerequisiteStableIds { get; }
+
+        public string RouteStage { get; set; }
+
+        public int RouteOrder { get; set; }
+
+        public string SetupDomain { get; set; }
+
+        public string ProofTarget { get; set; }
+
+        public AuthoringActionKind NativeActionKind { get; set; }
 
         public List<string> SetupSteps { get; }
 

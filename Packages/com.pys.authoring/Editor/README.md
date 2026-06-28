@@ -13,6 +13,6 @@ It may inspect:
 - required components
 - implemented interfaces
 - optional `Pys.Authoring.Contracts` metadata
-- optional `IAuthoringValidationProvider` records
+- target-owned runtime validation issue records returned by public instance validation methods
 
 It must not reference target project gameplay assemblies directly.

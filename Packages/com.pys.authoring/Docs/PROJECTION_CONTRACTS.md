@@ -15,23 +15,28 @@ Allowed payload:
 - selected scripts folder
 - scan command
 - export folder display/open command
+- observer evidence counts
+- authoring guide readiness status
+- missing evidence hints such as goal contracts, route metadata, or runtime validation methods
 
 Forbidden payload:
 
 - graph rows
 - setup guidance
-- target-project conclusions
+- target-project conclusions beyond observed-evidence readiness
 - code audit findings
 
 Native actions: yes, only settings/window actions.
 
-Desired target data: no.
+Desired target data: only readiness hints derived from observed evidence.
 
-Current scene/setup reality: no.
+Current scene/setup reality: summary counts only.
 
 Code audit pressure: no.
 
 Export rule: Settings does not export a separate packet. It supplies the scripts root included in every exported projection.
+
+Projection controls: tab-owned controls may filter the rendered packet for that tab. If a control changes visible rows, export writes that same filtered packet.
 
 ## Intent
 
@@ -39,18 +44,27 @@ Question: What selectable authoring goal is the user steering toward?
 
 Allowed payload:
 
-- selectable contract rows
+- selectable goal option rows inferred from contract organization evidence
 - selected contract ID and display name
 - disabled reason when selected metadata is incomplete
 - category, capability path, surface, and summary from contract evidence
 - stable ID, source type, and source file provenance for each contract row
 - duplicate stable ID select-block reason when graph evidence reports a collision
+- organization pattern and dependency count for each projected Intent candidate
+
+Intent candidate inference:
+
+- `Surface = Goal`, `ProofTarget`, or `SuccessChecks` make an explicit goal candidate.
+- If no explicit goal exists, the terminal contract of a prerequisite chain may become the route goal candidate.
+- If no organization pattern exists, Intent falls back to selectable contract rows so sparse target projects remain usable.
+- Setup, profile, service, presenter, adapter, runtime component, and vocabulary contracts are supporting route evidence unless they match one of the goal patterns above.
 
 Forbidden payload:
 
 - scene repair steps
 - proof instructions
-- raw graph rows that are not selectable contract evidence
+- raw graph rows that are not goal or fallback contract evidence
+- full visible contract inventory tables
 - product-specific meaning not supplied by contracts or vocabulary providers
 
 Native actions: no.
@@ -61,7 +75,7 @@ Current scene/setup reality: no.
 
 Code audit pressure: no.
 
-Export rule: export mirrors the Intent projection fields, including the selected contract.
+Export rule: export mirrors the rendered Intent projection fields, including active candidate visibility controls and the selected contract.
 
 ## Overview
 
@@ -103,9 +117,11 @@ Allowed payload:
 - selected contract ID and display name
 - proof target
 - proof readiness
+- selected contract dependency closure, ordered by generic route metadata
 - ordered rows
 - row role
 - proof-blocking status
+- route stable ID, route stage, route order, and setup domain per row
 - issue rows
 - owner IDs
 - issue details
@@ -114,13 +130,14 @@ Allowed payload:
 - native actions
 - success checks
 - selected contract setup steps
+- prerequisite contract setup steps
 - contract metadata completion rows
 
 Forbidden payload:
 
 - local setup invention
 - target-project workflow assumptions
-- raw graph nodes without a guide role
+- raw graph nodes outside the selected contract dependency closure
 - Hygiene-only ownership pressure
 
 Native actions: yes, from validation records or generic contract metadata gaps.
@@ -131,7 +148,7 @@ Current scene/setup reality: issue-linked only.
 
 Code audit pressure: no, except contract metadata rows needed for projection readiness.
 
-Export rule: export mirrors the Guide projection fields and rows.
+Export rule: export mirrors the rendered Guide projection fields and rows, including active row filters.
 
 ## Map
 
@@ -163,7 +180,7 @@ Current scene/setup reality: yes.
 
 Code audit pressure: no.
 
-Export rule: export mirrors the Map projection rows.
+Export rule: export mirrors the rendered Map projection rows, including active row filters.
 
 ## Hygiene
 
@@ -194,7 +211,7 @@ Current scene/setup reality: only as audit evidence.
 
 Code audit pressure: yes.
 
-Export rule: export mirrors the Hygiene projection, including all lens packets and rows.
+Export rule: export mirrors the rendered Hygiene projection, including the active lens packet and rows.
 
 ## Facts
 
@@ -232,4 +249,4 @@ Current scene/setup reality: counts and observed fact rows only.
 
 Code audit pressure: no.
 
-Export rule: export mirrors the Facts projection counts and rows.
+Export rule: export mirrors the rendered Facts projection counts and rows, including active row filters.

@@ -7,10 +7,8 @@ This folder intentionally stays small. Active docs describe supported architectu
 - `CURRENT_STATE_AUDIT.md` - current health, risks, Hygiene baseline, and verification posture.
 - `ARCHITECTURE_BLUEPRINT.md` - runtime ownership, folderbase, vocabulary, and system boundaries.
 - `FEATURE_DEVELOPMENT_ROADMAP.md` - current feature expansion priorities.
-- `Authoring/START_HERE.md` - human first-setup path.
-- `Authoring/AUTHORING_BLUEPRINT.md` - Authoring Window behavior, tab ownership, graph projection, and hygiene rules.
-- `Authoring/AUTHORING_MODEL.md` - asset/profile/runtime relationship map.
-- `Authoring/CANONICAL_SETUP.md` - technical setup-chain contract.
+
+PYS Authoring package documentation lives under `Packages/com.pys.authoring/Docs`, not in Pyralis Gameplay.
 
 ## Maintenance Rule
 

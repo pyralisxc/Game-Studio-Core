@@ -14,8 +14,6 @@ namespace NeonBlack.Gameplay.Modules.Combat.Editor
         {
             serializedObject.Update();
 
-            PyralisInspectorHandoff.DrawAuthoringButton("HitBox 2D", null);
-
             DrawDefaultInspector();
             PyralisInspectorValidation.DrawValidationMessages(GetHitBox2DMessages(serializedObject, (HitBox2D)target), "HitBox2D is ready for timed 2D attack contact.");
             serializedObject.ApplyModifiedProperties();
@@ -72,8 +70,6 @@ namespace NeonBlack.Gameplay.Modules.Combat.Editor
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
-
-            PyralisInspectorHandoff.DrawAuthoringButton("Projectile", null);
 
             DrawDefaultInspector();
             PyralisInspectorValidation.DrawValidationMessages(GetProjectileMessages(serializedObject, (Projectile)target), "Projectile is ready for ranged combat launch.");
@@ -138,8 +134,6 @@ namespace NeonBlack.Gameplay.Modules.Combat.Editor
         {
             serializedObject.Update();
 
-            PyralisInspectorHandoff.DrawAuthoringButton("Projectile 2D", null);
-
             DrawDefaultInspector();
             PyralisInspectorValidation.DrawValidationMessages(GetProjectile2DMessages((Projectile2D)target), "Projectile2D is ready for 2D projectile prefab delivery.");
             serializedObject.ApplyModifiedProperties();
@@ -170,8 +164,6 @@ namespace NeonBlack.Gameplay.Modules.Combat.Editor
         {
             serializedObject.Update();
 
-            PyralisInspectorHandoff.DrawAuthoringButton("Knockback Receiver", null);
-
             DrawDefaultInspector();
             PyralisInspectorValidation.DrawValidationMessages(GetKnockbackMessages(serializedObject, (KnockbackReceiver)target), "KnockbackReceiver is ready for 3D actor knockback.");
             serializedObject.ApplyModifiedProperties();
@@ -200,8 +192,6 @@ namespace NeonBlack.Gameplay.Modules.Combat.Editor
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
-
-            PyralisInspectorHandoff.DrawAuthoringButton("Hit Flash", null);
 
             DrawDefaultInspector();
             PyralisInspectorValidation.DrawValidationMessages(GetHitFlashMessages(serializedObject, (HitFlash)target), "HitFlash is ready for 2D damage feedback.");

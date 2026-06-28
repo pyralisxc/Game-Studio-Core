@@ -39,10 +39,16 @@ namespace Pys.Authoring.Editor.Contracts
                 Surface = attribute.Surface,
                 Summary = attribute.Summary ?? string.Empty,
                 DocumentationUrl = attribute.DocumentationUrl ?? string.Empty,
+                RouteStage = attribute.RouteStage ?? string.Empty,
+                RouteOrder = attribute.RouteOrder,
+                SetupDomain = attribute.SetupDomain ?? string.Empty,
+                ProofTarget = attribute.ProofTarget ?? string.Empty,
+                NativeActionKind = attribute.NativeActionKind,
                 Selectable = attribute.Selectable
             };
 
             AddRange(contract.Tags, attribute.Tags);
+            AddRange(contract.PrerequisiteStableIds, attribute.PrerequisiteStableIds);
             AddRange(contract.RequiredFields, attribute.RequiredFields);
             AddTypeRange(contract.RequiredComponents, attribute.RequiredComponents);
             AddRange(contract.RequiredComponents, attribute.RequiredComponentNames);

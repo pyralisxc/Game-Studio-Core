@@ -14,6 +14,12 @@ namespace NeonBlack.Gameplay.Modules.Character
         Surface = AuthoringSurface.Goal,
         Summary = "2D pawn presentation facade; maps movement state into sprite facing/tint, animation signals, squash/stretch, tilt, and dash/death feedback.",
         RequiredFields = new[] { nameof(spriteRenderer), nameof(movingTint), nameof(tiltEnabled), nameof(stretchAmount), nameof(squashSnapSpeed), nameof(tiltSpeed) },
+        PrerequisiteStableIds = new[] { "pawn.root", "movement.pawn.2d", "camera.rig.profile" },
+        RouteStage = "Pawn Prefab",
+        RouteOrder = 100,
+        SetupDomain = "Presentation",
+        ProofTarget = "Pawn visuals react to movement and animation signals.",
+        NativeActionKind = AuthoringActionKind.AddComponent,
         SetupSteps = new[] { "Add on the same root as Motor2D.", "Assign SpriteRenderer." },
         SuccessChecks = new[] { "Move the pawn and verify the sprite tilts and tints according to velocity." },
         Tags = new[] { "capability:Animation", "capability:VFX", "axiom:Dimensions2D" }

@@ -31,6 +31,18 @@ namespace Pys.Authoring.Contracts
 
         public string[] RequiredInterfaceNames { get; set; }
 
+        public string[] PrerequisiteStableIds { get; set; }
+
+        public string RouteStage { get; set; }
+
+        public int RouteOrder { get; set; }
+
+        public string SetupDomain { get; set; }
+
+        public string ProofTarget { get; set; }
+
+        public AuthoringActionKind NativeActionKind { get; set; } = AuthoringActionKind.None;
+
         public string[] SetupSteps { get; set; }
 
         public string[] SuccessChecks { get; set; }

@@ -1,4 +1,3 @@
-using NeonBlack.Gameplay.Editor.Inspectors;
 using NeonBlack.Gameplay.Data.Profiles;
 using UnityEditor;
 using UnityEngine;
@@ -31,8 +30,6 @@ public class InputZoneSetEditor : Editor
         InputZoneSet asset = (InputZoneSet)target;
         if (asset == null)
             return;
-
-        PyralisInspectorHandoff.DrawAuthoringButton("Input Zone Set", null);
 
         EditorGUILayout.Space(10f);
         EditorGUILayout.LabelField("Scene-View Zone Editor", EditorStyles.boldLabel);

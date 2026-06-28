@@ -12,8 +12,6 @@ namespace NeonBlack.Gameplay.Modules.Feedback.Editor
         {
             serializedObject.Update();
 
-            PyralisInspectorHandoff.DrawAuthoringButton("Damage Number", null);
-
             DrawDefaultInspector();
             PyralisInspectorValidation.DrawValidationMessages(GetDamageNumberMessages(serializedObject), "DamageNumber is ready for pooled floating feedback.");
             serializedObject.ApplyModifiedProperties();
@@ -51,8 +49,6 @@ namespace NeonBlack.Gameplay.Modules.Feedback.Editor
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
-
-            PyralisInspectorHandoff.DrawAuthoringButton("Damage Number Spawner", null);
 
             DrawDefaultInspector();
             PyralisInspectorValidation.DrawValidationMessages(GetSpawnerMessages(serializedObject), "DamageNumberSpawner is ready as an explicit damage-number sink.");

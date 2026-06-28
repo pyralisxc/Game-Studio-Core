@@ -25,8 +25,6 @@ public class WorldHealthBarEditor : Editor
     {
         serializedObject.Update();
 
-        PyralisInspectorHandoff.DrawAuthoringButton("World Health Bar", null);
-
         SerializedProperty prop = serializedObject.GetIterator();
         bool enterChildren = true;
         while (prop.NextVisible(enterChildren))

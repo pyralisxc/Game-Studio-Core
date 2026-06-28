@@ -10,7 +10,6 @@ namespace NeonBlack.Gameplay.Editor.Inspectors
         {
             serializedObject.Update();
             DrawDefaultInspector();
-            PyralisInspectorHandoff.DrawAuthoringButton();
             serializedObject.ApplyModifiedProperties();
         }
     }

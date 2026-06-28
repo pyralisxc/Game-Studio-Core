@@ -18,12 +18,10 @@ namespace Pys.Authoring.Editor.Projections
             if (graph == null)
                 return projection;
 
-            for (int i = 0; i < graph.Nodes.Count; i++)
+            List<AuthoringGraphNode> intentCandidates = FindIntentCandidateContracts(graph);
+            for (int i = 0; i < intentCandidates.Count; i++)
             {
-                AuthoringGraphNode node = graph.Nodes[i];
-                if (node.Kind != AuthoringGraphNodeKind.Contract)
-                    continue;
-
+                AuthoringGraphNode node = intentCandidates[i];
                 node.Metadata.TryGetValue("selectable", out string selectableText);
                 bool selectable = selectableText == "true";
                 node.Metadata.TryGetValue("category", out string category);
@@ -61,7 +59,9 @@ namespace Pys.Authoring.Editor.Projections
                     DisabledReason = disabledReason,
                     StableId = stableId ?? string.Empty,
                     SourceType = sourceType ?? string.Empty,
-                    SourcePath = sourcePath ?? string.Empty
+                    SourcePath = sourcePath ?? string.Empty,
+                    OrganizationPattern = IntentOrganizationPattern(graph, node),
+                    DependencyCount = ContractDependencyCount(node)
                 });
 
                 if (node.Id == projection.SelectedContractId)
@@ -72,6 +72,120 @@ namespace Pys.Authoring.Editor.Projections
             }
 
             return projection;
+        }
+
+        private static List<AuthoringGraphNode> FindIntentCandidateContracts(AuthoringGraph graph)
+        {
+            List<AuthoringGraphNode> contracts = ContractNodes(graph);
+            List<AuthoringGraphNode> explicitGoals = new List<AuthoringGraphNode>();
+            for (int i = 0; i < contracts.Count; i++)
+            {
+                if (IsExplicitIntentGoal(contracts[i]))
+                    explicitGoals.Add(contracts[i]);
+            }
+
+            if (explicitGoals.Count > 0)
+                return explicitGoals;
+
+            List<AuthoringGraphNode> routeTerminals = new List<AuthoringGraphNode>();
+            for (int i = 0; i < contracts.Count; i++)
+            {
+                AuthoringGraphNode contract = contracts[i];
+                if (ContractDependencyCount(contract) == 0)
+                    continue;
+
+                if (IsContractPrerequisiteForAnother(graph, contract))
+                    continue;
+
+                routeTerminals.Add(contract);
+            }
+
+            if (routeTerminals.Count > 0)
+                return routeTerminals;
+
+            return contracts;
+        }
+
+        private static List<AuthoringGraphNode> ContractNodes(AuthoringGraph graph)
+        {
+            List<AuthoringGraphNode> contracts = new List<AuthoringGraphNode>();
+            if (graph == null)
+                return contracts;
+
+            for (int i = 0; i < graph.Nodes.Count; i++)
+            {
+                AuthoringGraphNode node = graph.Nodes[i];
+                if (node.Kind == AuthoringGraphNodeKind.Contract)
+                    contracts.Add(node);
+            }
+
+            return contracts;
+        }
+
+        private static bool IsExplicitIntentGoal(AuthoringGraphNode contract)
+        {
+            if (contract == null)
+                return false;
+
+            string surface = Metadata(contract, "surface");
+            if (surface == AuthoringSurface.Goal.ToString())
+                return true;
+
+            if (!string.IsNullOrWhiteSpace(Metadata(contract, "proofTarget")))
+                return true;
+
+            return !string.IsNullOrWhiteSpace(Metadata(contract, "successChecks"));
+        }
+
+        private static bool IsContractPrerequisiteForAnother(AuthoringGraph graph, AuthoringGraphNode contract)
+        {
+            if (graph == null || contract == null)
+                return false;
+
+            string stableId = StableIdFor(contract);
+            if (string.IsNullOrWhiteSpace(stableId))
+                return false;
+
+            for (int i = 0; i < graph.Nodes.Count; i++)
+            {
+                AuthoringGraphNode node = graph.Nodes[i];
+                if (node.Kind != AuthoringGraphNodeKind.Contract || node.Id == contract.Id)
+                    continue;
+
+                string[] prerequisites = MetadataList(node, "prerequisiteStableIds");
+                for (int prerequisiteIndex = 0; prerequisiteIndex < prerequisites.Length; prerequisiteIndex++)
+                {
+                    if (prerequisites[prerequisiteIndex] == stableId)
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static string IntentOrganizationPattern(AuthoringGraph graph, AuthoringGraphNode contract)
+        {
+            if (contract == null)
+                return string.Empty;
+
+            if (Metadata(contract, "surface") == AuthoringSurface.Goal.ToString())
+                return "Goal surface";
+
+            if (!string.IsNullOrWhiteSpace(Metadata(contract, "proofTarget")))
+                return "Proof target";
+
+            if (!string.IsNullOrWhiteSpace(Metadata(contract, "successChecks")))
+                return "Success checks";
+
+            if (ContractDependencyCount(contract) > 0 && !IsContractPrerequisiteForAnother(graph, contract))
+                return "Route terminal";
+
+            return "Selectable contract";
+        }
+
+        private static int ContractDependencyCount(AuthoringGraphNode contract)
+        {
+            return MetadataList(contract, "prerequisiteStableIds").Length;
         }
 
         public static FactsProjection BuildFacts(AuthoringGraph graph)
@@ -178,6 +292,15 @@ namespace Pys.Authoring.Editor.Projections
             projection.IssueCount = issueCount;
             projection.SelectedIntent = guide != null ? guide.SelectedDisplayName ?? string.Empty : string.Empty;
             projection.ProofTarget = guide != null ? guide.ProofTarget ?? string.Empty : string.Empty;
+            if (guide != null && guide.SelectedDisplayName == "No intent selected")
+            {
+                projection.Summary = "No intent selected.";
+                projection.NextAction = "Select an Intent contract to build a Guide path.";
+                projection.Reason = "No intent selected";
+                projection.Readiness = "No intent selected";
+                return projection;
+            }
+
             projection.Readiness = guide != null && guide.ProofReady ? "Ready" : "Blocked";
 
             GuideRow activeRow = FindFirstBlockingGuideRow(guide);
@@ -217,37 +340,16 @@ namespace Pys.Authoring.Editor.Projections
                 return projection;
 
             AuthoringGraphNode selectedContract = FindSelectedContract(graph, selectedContractId);
-            if (selectedContract != null)
-                AddSelectedContractRows(selectedContract, projection);
-
-            for (int i = 0; i < graph.Nodes.Count; i++)
+            if (selectedContract == null)
             {
-                AuthoringGraphNode node = graph.Nodes[i];
-                if (node.Kind != AuthoringGraphNodeKind.Issue)
-                    continue;
-
-                node.Metadata.TryGetValue("nativeAction", out string nativeAction);
-                node.Metadata.TryGetValue("successCheck", out string successCheck);
-                node.Metadata.TryGetValue("issueCode", out string issueCode);
-                node.Metadata.TryGetValue("actionKind", out string actionKind);
-                string actionLabel = ActionLabel(actionKind);
-
-                projection.Rows.Add(new GuideRow
-                {
-                    Order = projection.Rows.Count + 1,
-                    Role = "Issue",
-                    OwnerId = node.Id,
-                    Title = node.Label,
-                    Detail = issueCode ?? string.Empty,
-                    ActionKind = actionKind ?? string.Empty,
-                    ActionLabel = actionLabel,
-                    NativeAction = nativeAction ?? string.Empty,
-                    SuccessCheck = successCheck ?? string.Empty,
-                    BlocksProof = true
-                });
+                projection.SelectedDisplayName = "No intent selected";
+                projection.ProofTarget = string.Empty;
+                projection.ProofReady = false;
+                return projection;
             }
 
-            AddContractSetupRows(graph, projection);
+            List<AuthoringGraphNode> routeContracts = BuildDependencyClosure(graph, selectedContract);
+            AddRouteContractRows(graph, routeContracts, selectedContract, projection);
             projection.ProofReady = FindFirstBlockingGuideRow(projection) == null;
             return projection;
         }
@@ -304,6 +406,229 @@ namespace Pys.Authoring.Editor.Projections
 
             AddLinesAsGuideRows(projection, contract.Id, setupSteps, "SetupStep", AuthoringActionKind.InspectObject.ToString(), true);
             AddLinesAsGuideRows(projection, contract.Id, successChecks, "ProofCheck", AuthoringActionKind.RunPlayModeCheck.ToString(), false);
+        }
+
+        private static List<AuthoringGraphNode> BuildDependencyClosure(AuthoringGraph graph, AuthoringGraphNode selectedContract)
+        {
+            List<AuthoringGraphNode> closure = new List<AuthoringGraphNode>();
+            HashSet<string> visiting = new HashSet<string>();
+            HashSet<string> visited = new HashSet<string>();
+            AddDependencyClosureNode(graph, selectedContract, closure, visiting, visited);
+            closure.Sort(CompareRouteContracts);
+            return closure;
+        }
+
+        private static void AddDependencyClosureNode(
+            AuthoringGraph graph,
+            AuthoringGraphNode contract,
+            List<AuthoringGraphNode> closure,
+            HashSet<string> visiting,
+            HashSet<string> visited)
+        {
+            if (graph == null || contract == null || visited.Contains(contract.Id) || visiting.Contains(contract.Id))
+                return;
+
+            visiting.Add(contract.Id);
+            string[] prerequisiteStableIds = MetadataList(contract, "prerequisiteStableIds");
+            for (int i = 0; i < prerequisiteStableIds.Length; i++)
+            {
+                List<AuthoringGraphNode> prerequisites = FindContractsByStableId(graph, prerequisiteStableIds[i]);
+                for (int prerequisiteIndex = 0; prerequisiteIndex < prerequisites.Count; prerequisiteIndex++)
+                    AddDependencyClosureNode(graph, prerequisites[prerequisiteIndex], closure, visiting, visited);
+            }
+
+            visiting.Remove(contract.Id);
+            visited.Add(contract.Id);
+            closure.Add(contract);
+        }
+
+        private static int CompareRouteContracts(AuthoringGraphNode left, AuthoringGraphNode right)
+        {
+            int leftOrder = MetadataInt(left, "routeOrder");
+            int rightOrder = MetadataInt(right, "routeOrder");
+            if (leftOrder != rightOrder)
+                return leftOrder.CompareTo(rightOrder);
+
+            string leftStage = Metadata(left, "routeStage");
+            string rightStage = Metadata(right, "routeStage");
+            int stageComparison = string.CompareOrdinal(leftStage, rightStage);
+            if (stageComparison != 0)
+                return stageComparison;
+
+            return string.CompareOrdinal(left != null ? left.Label : string.Empty, right != null ? right.Label : string.Empty);
+        }
+
+        private static void AddRouteContractRows(
+            AuthoringGraph graph,
+            List<AuthoringGraphNode> routeContracts,
+            AuthoringGraphNode selectedContract,
+            GuideProjection projection)
+        {
+            if (projection == null || routeContracts == null || selectedContract == null)
+                return;
+
+            projection.SelectedDisplayName = selectedContract.Label;
+            projection.ProofTarget = FirstNonEmpty(Metadata(selectedContract, "proofTarget"), selectedContract.Label);
+            HashSet<string> addedIssueIds = new HashSet<string>();
+
+            for (int i = 0; i < routeContracts.Count; i++)
+            {
+                AuthoringGraphNode contract = routeContracts[i];
+                AddContractIdentityAndMetadataRows(contract, projection);
+                AddIssueRowsForContract(graph, routeContracts, contract, projection, addedIssueIds);
+                AddContractSetupStepRows(contract, projection);
+            }
+
+            AddContractProofCheckRows(selectedContract, projection);
+        }
+
+        private static void AddContractIdentityAndMetadataRows(AuthoringGraphNode contract, GuideProjection projection)
+        {
+            string duplicateStableId = Metadata(contract, "duplicateStableId");
+            string stableId = StableIdFor(contract);
+            string sourceType = Metadata(contract, "sourceType");
+            string sourcePath = Metadata(contract, "sourcePath");
+
+            if (duplicateStableId == "true")
+            {
+                AddGuideRow(projection, contract, "ContractIdentity", "Resolve duplicate StableId", stableId, AuthoringActionKind.ReviewCode.ToString(), "Give this contract a StableId that is unique inside the selected scripts folder.", "Only one contract reports this StableId after scanning. Source: " + sourceType + " " + sourcePath, true);
+            }
+
+            string gaps = Metadata(contract, "metadataGaps");
+            if (!string.IsNullOrWhiteSpace(gaps))
+            {
+                AddGuideRow(projection, contract, "ContractMetadata", "Complete contract metadata", gaps, AuthoringActionKind.ReviewCode.ToString(), "Edit the contract metadata inside the selected scripts folder.", "The contract metadata gap no longer appears after scanning.", true);
+            }
+        }
+
+        private static void AddIssueRowsForContract(
+            AuthoringGraph graph,
+            List<AuthoringGraphNode> routeContracts,
+            AuthoringGraphNode contract,
+            GuideProjection projection,
+            HashSet<string> addedIssueIds)
+        {
+            if (graph == null || contract == null)
+                return;
+
+            for (int i = 0; i < graph.Nodes.Count; i++)
+            {
+                AuthoringGraphNode issue = graph.Nodes[i];
+                if (issue.Kind != AuthoringGraphNodeKind.Issue || addedIssueIds.Contains(issue.Id))
+                    continue;
+
+                if (!IssueBelongsToContract(graph, routeContracts, contract, issue))
+                    continue;
+
+                addedIssueIds.Add(issue.Id);
+                string actionKind = Metadata(issue, "actionKind");
+                AddGuideRow(
+                    projection,
+                    issue,
+                    "Issue",
+                    issue.Label,
+                    Metadata(issue, "issueCode"),
+                    actionKind,
+                    Metadata(issue, "nativeAction"),
+                    Metadata(issue, "successCheck"),
+                    true,
+                    contract);
+            }
+        }
+
+        private static bool IssueBelongsToContract(
+            AuthoringGraph graph,
+            List<AuthoringGraphNode> routeContracts,
+            AuthoringGraphNode contract,
+            AuthoringGraphNode issue)
+        {
+            if (HasEdge(graph, contract.Id, issue.Id, AuthoringGraphEdgeKind.ValidatorReports))
+                return true;
+
+            string contractStableId = StableIdFor(contract);
+            string ownerStableId = Metadata(issue, "ownerStableId");
+            if (!string.IsNullOrWhiteSpace(ownerStableId) && ownerStableId == contractStableId)
+                return true;
+
+            string[] relatedStableIds = MetadataList(issue, "relatedStableIds");
+            for (int i = 0; i < relatedStableIds.Length; i++)
+            {
+                if (relatedStableIds[i] == contractStableId)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static void AddContractSetupStepRows(AuthoringGraphNode contract, GuideProjection projection)
+        {
+            string actionKind = Metadata(contract, "actionKind");
+            if (string.IsNullOrWhiteSpace(actionKind) || actionKind == AuthoringActionKind.None.ToString())
+                actionKind = AuthoringActionKind.InspectObject.ToString();
+
+            string setupSteps = Metadata(contract, "setupSteps");
+            if (string.IsNullOrWhiteSpace(setupSteps))
+                return;
+
+            string[] split = setupSteps.Split('\n');
+            for (int i = 0; i < split.Length; i++)
+            {
+                string line = split[i].Trim();
+                if (string.IsNullOrWhiteSpace(line))
+                    continue;
+
+                AddGuideRow(projection, contract, "SetupStep", "Complete setup step", line, actionKind, line, "The setup step is represented by validation evidence after scanning.", true);
+            }
+        }
+
+        private static void AddContractProofCheckRows(AuthoringGraphNode contract, GuideProjection projection)
+        {
+            string successChecks = Metadata(contract, "successChecks");
+            if (string.IsNullOrWhiteSpace(successChecks))
+                return;
+
+            string[] split = successChecks.Split('\n');
+            for (int i = 0; i < split.Length; i++)
+            {
+                string line = split[i].Trim();
+                if (string.IsNullOrWhiteSpace(line))
+                    continue;
+
+                AddGuideRow(projection, contract, "ProofCheck", "Verify proof target", line, AuthoringActionKind.RunPlayModeCheck.ToString(), line, line, false);
+            }
+        }
+
+        private static void AddGuideRow(
+            GuideProjection projection,
+            AuthoringGraphNode owner,
+            string role,
+            string title,
+            string detail,
+            string actionKind,
+            string nativeAction,
+            string successCheck,
+            bool blocksProof,
+            AuthoringGraphNode routeContract = null)
+        {
+            AuthoringGraphNode routeSource = routeContract ?? owner;
+            string normalizedActionKind = string.IsNullOrWhiteSpace(actionKind) ? string.Empty : actionKind;
+            projection.Rows.Add(new GuideRow
+            {
+                Order = projection.Rows.Count + 1,
+                Role = role ?? string.Empty,
+                OwnerId = owner != null ? owner.Id : string.Empty,
+                Title = title ?? string.Empty,
+                Detail = detail ?? string.Empty,
+                ActionKind = normalizedActionKind,
+                ActionLabel = ActionLabel(normalizedActionKind),
+                NativeAction = nativeAction ?? string.Empty,
+                SuccessCheck = successCheck ?? string.Empty,
+                BlocksProof = blocksProof,
+                StableId = StableIdFor(routeSource),
+                RouteStage = Metadata(routeSource, "routeStage"),
+                RouteOrder = MetadataInt(routeSource, "routeOrder"),
+                SetupDomain = Metadata(routeSource, "setupDomain")
+            });
         }
 
         private static void AddLinesAsGuideRows(
@@ -549,6 +874,69 @@ namespace Pys.Authoring.Editor.Projections
             }
 
             return null;
+        }
+
+        private static List<AuthoringGraphNode> FindContractsByStableId(AuthoringGraph graph, string stableId)
+        {
+            List<AuthoringGraphNode> contracts = new List<AuthoringGraphNode>();
+            if (graph == null || string.IsNullOrWhiteSpace(stableId))
+                return contracts;
+
+            for (int i = 0; i < graph.Nodes.Count; i++)
+            {
+                AuthoringGraphNode node = graph.Nodes[i];
+                if (node.Kind == AuthoringGraphNodeKind.Contract && StableIdFor(node) == stableId)
+                    contracts.Add(node);
+            }
+
+            return contracts;
+        }
+
+        private static bool HasEdge(AuthoringGraph graph, string fromNodeId, string toNodeId, AuthoringGraphEdgeKind kind)
+        {
+            if (graph == null)
+                return false;
+
+            for (int i = 0; i < graph.Edges.Count; i++)
+            {
+                AuthoringGraphEdge edge = graph.Edges[i];
+                if (edge.FromNodeId == fromNodeId && edge.ToNodeId == toNodeId && edge.Kind == kind)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static string Metadata(AuthoringGraphNode node, string key)
+        {
+            if (node == null || string.IsNullOrWhiteSpace(key))
+                return string.Empty;
+
+            return node.Metadata.TryGetValue(key, out string value) ? value ?? string.Empty : string.Empty;
+        }
+
+        private static int MetadataInt(AuthoringGraphNode node, string key)
+        {
+            string value = Metadata(node, key);
+            return int.TryParse(value, out int parsed) ? parsed : 0;
+        }
+
+        private static string[] MetadataList(AuthoringGraphNode node, string key)
+        {
+            string value = Metadata(node, key);
+            if (string.IsNullOrWhiteSpace(value))
+                return new string[0];
+
+            string[] raw = value.Split(new[] { ',' }, System.StringSplitOptions.RemoveEmptyEntries);
+            for (int i = 0; i < raw.Length; i++)
+                raw[i] = raw[i].Trim();
+
+            return raw;
+        }
+
+        private static string FirstNonEmpty(string preferred, string fallback)
+        {
+            return !string.IsNullOrWhiteSpace(preferred) ? preferred : fallback ?? string.Empty;
         }
 
         private static string StableIdFor(AuthoringGraphNode node)

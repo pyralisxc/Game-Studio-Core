@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using NeonBlack.Gameplay.Data.Participants;
 using NeonBlack.Gameplay.Editor.Inspectors;
+using NeonBlack.Gameplay.Data.Participants;
 using UnityEditor;
 using UnityEngine;
 
@@ -12,8 +12,6 @@ namespace NeonBlack.Gameplay.Modules.Traversal.Editor
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
-
-            PyralisInspectorHandoff.DrawAuthoringButton("Pawn 3D Traversal Component", null);
 
             DrawDefaultInspector();
             PyralisInspectorValidation.DrawValidationMessages(GetMessages(serializedObject, (Pawn3DTraversalComponent)target), "Pawn3DTraversalComponent is ready for direct 3D pawn traversal setup.");

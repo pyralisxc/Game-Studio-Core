@@ -1,6 +1,6 @@
 using System.Linq;
 using NeonBlack.Gameplay.Core.Contracts;
-using NeonBlack.Gameplay.Data.Definitions;
+using NeonBlack.Gameplay.Glue.Bootstrap;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -35,6 +35,26 @@ namespace NeonBlack.Gameplay.Tests.Runtime
             Assert.That(parent.NativeAction, Is.EqualTo("Fix the child."));
             Assert.That(parent.SuccessCheck, Is.EqualTo("Child is fixed."));
             Assert.That(parent.Severity, Is.EqualTo(PyralisRuntimeValidationSeverity.Recommended));
+        }
+
+        [Test]
+        public void GameplaySessionBootstrap_ReportsPyralisOwnedRuntimeValidationIssues()
+        {
+            GameObject gameObject = new GameObject("Runtime Validation Bootstrap Test");
+            try
+            {
+                GameplaySessionBootstrap bootstrap = gameObject.AddComponent<GameplaySessionBootstrap>();
+                IRuntimeValidationProvider provider = bootstrap;
+                PyralisRuntimeValidationIssue[] issues = provider.GetRuntimeValidationIssues().ToArray();
+
+                Assert.That(issues.Select(issue => issue.IssueCode), Does.Contain("GameplaySessionBootstrap.SessionDefinition.Missing"));
+                Assert.That(issues.Any(issue => issue.Severity == PyralisRuntimeValidationSeverity.Required), Is.True);
+                Assert.That(issues.All(issue => !string.IsNullOrWhiteSpace(issue.Message)), Is.True);
+            }
+            finally
+            {
+                Object.DestroyImmediate(gameObject);
+            }
         }
     }
 }

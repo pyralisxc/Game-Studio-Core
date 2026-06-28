@@ -21,11 +21,7 @@ Before product, architecture, or package-maintenance decisions, start with the s
 
 Read deeper only when changing that surface:
 
-- `Packages\com.neonblackinteractivellc.neonblackhub\Members\Pyralis\Gameplay\Docs\Authoring\START_HERE.md` for the PYS Authoring integration path.
-- `Packages\com.neonblackinteractivellc.neonblackhub\Members\Pyralis\Gameplay\Docs\Authoring\AUTHORING_BLUEPRINT.md` for Pyralis/PYS ownership boundaries.
-- `Packages\com.neonblackinteractivellc.neonblackhub\Members\Pyralis\Gameplay\Docs\Authoring\AUTHORING_MODEL.md` for PYS contract and validation evidence rules.
-- `Packages\com.neonblackinteractivellc.neonblackhub\Members\Pyralis\Gameplay\Docs\Authoring\CANONICAL_SETUP.md` for setup-chain contract details.
-- `Packages\com.pys.authoring\Docs\PROJECTION_CONTRACTS.md` for PYS tab behavior and export rules.
+- `Packages\com.pys.authoring\Docs` for PYS Authoring package behavior, projection contracts, exports, and integration rules.
 - `Packages\com.neonblackinteractivellc.neonblackhub\Members\Pyralis\Gameplay\Docs\FEATURE_DEVELOPMENT_ROADMAP.md` for current feature expansion priorities.
 
 Do not use dated audits, migration notes, or old setup guides as source truth. If onboarding density rises, fold the current rule into this file, the package README, or the relevant living doc, then delete the stale source.
@@ -39,7 +35,7 @@ Do not use dated audits, migration notes, or old setup guides as source truth. I
   - Dependency analysis discovers setup relationships.
   - Validators witness local semantic readiness.
   - The graph compiles understanding.
-  - PYS Authoring renders guidance.
+  - PYS Authoring observes Pyralis contract evidence from its own package lane.
 - Treat gameplay mechanics as shared platform capabilities by default.
 - Check how mechanics apply to `Sprite2D`, `Billboard2_5D`, `Rigged3D`, non-pawn participants, and networking/authority when relevant.
 - Prefer Unity packages, Unity ecosystem packages, and credible free/open packages before writing custom infrastructure.

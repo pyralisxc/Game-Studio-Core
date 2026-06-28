@@ -13,7 +13,7 @@ It can scan a target scripts root and infer:
 - required components
 - implemented interfaces
 - optional authoring contracts
-- optional validation providers
+- observed runtime validation issue records
 - scene, prefab, and asset evidence
 
 It does not carry target-project product language. Product-specific wording may enter the graph only as observed evidence from:

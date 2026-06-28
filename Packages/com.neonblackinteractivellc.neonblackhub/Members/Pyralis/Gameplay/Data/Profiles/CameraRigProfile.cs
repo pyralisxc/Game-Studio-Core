@@ -9,12 +9,19 @@ namespace NeonBlack.Gameplay.Data.Profiles
     /// Defines camera presentation choices for shared or split participant views.
     /// </summary>
     [AuthoringContract(
+        StableId = "camera.rig.profile",
         Category = "Camera",
         CapabilityPath = "World & Meta/Camera/Camera Rig Profile",
         Surface = AuthoringSurface.Profile,
         Summary = "Project-window creation path for camera framing, follow, zoom, and 2D orthographic route choices.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/camera",
         RequiredFields = new[] { nameof(presentationMode), nameof(focusMode), nameof(useCinemachine), nameof(followOffset), nameof(orthographic), nameof(minZoom), nameof(maxZoom) },
+        PrerequisiteStableIds = new[] { "mode.definition" },
+        RouteStage = "Game Mode Asset",
+        RouteOrder = 40,
+        SetupDomain = "Camera",
+        ProofTarget = "CameraRigProfile frames the active participant or playfield route.",
+        NativeActionKind = AuthoringActionKind.CreateAsset,
         SuccessChecks = new[] { "Verify Cinemachine follows the profile's selected focus target at the specified framing." },
         RoleTags = new[] { "CameraProfile", "ParticipantFollow", "PlayfieldView" },
         Tags = new[] { "capability:Camera", "runtime:CameraInput", "lane:Camera", "priority:AuxiliaryDefault" },

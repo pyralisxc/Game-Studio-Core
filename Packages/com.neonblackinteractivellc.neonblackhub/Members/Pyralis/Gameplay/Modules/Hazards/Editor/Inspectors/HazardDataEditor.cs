@@ -1,6 +1,5 @@
 using NeonBlack.Gameplay.Modules.Hazards;
 using NeonBlack.Gameplay.Editor;
-using NeonBlack.Gameplay.Editor.Inspectors;
 using UnityEngine;
 using UnityEditor;
 
@@ -126,10 +125,6 @@ public class HazardDataEditor : Editor
     public override void OnInspectorGUI()
     {
         serializedObject.Update();
-
-        PyralisInspectorHandoff.DrawAuthoringButton(
-            "Hazard Data",
-            "Edit this hazard asset's behavior, timing, sprites, audio, feedback, and modifiers here. Use PYS Authoring for route setup and proof guidance.");
 
         var type    = (HazardData.HazardType)_pType.enumValueIndex;
         var variant = (HazardData.CrossingVariant)_pVariant.enumValueIndex;

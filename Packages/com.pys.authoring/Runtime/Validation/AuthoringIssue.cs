@@ -18,7 +18,9 @@ namespace Pys.Authoring.Contracts
             string targetLabel = null,
             string nativeAction = null,
             string successCheck = null,
-            AuthoringActionKind actionKind = AuthoringActionKind.None)
+            AuthoringActionKind actionKind = AuthoringActionKind.None,
+            string ownerStableId = null,
+            string[] relatedStableIds = null)
         {
             IssueCode = issueCode ?? string.Empty;
             Message = message ?? string.Empty;
@@ -28,6 +30,8 @@ namespace Pys.Authoring.Contracts
             NativeAction = nativeAction ?? string.Empty;
             SuccessCheck = successCheck ?? string.Empty;
             ActionKind = actionKind;
+            OwnerStableId = ownerStableId ?? string.Empty;
+            RelatedStableIds = relatedStableIds ?? new string[0];
         }
 
         public string IssueCode { get; }
@@ -45,5 +49,9 @@ namespace Pys.Authoring.Contracts
         public string SuccessCheck { get; }
 
         public AuthoringActionKind ActionKind { get; }
+
+        public string OwnerStableId { get; }
+
+        public string[] RelatedStableIds { get; }
     }
 }

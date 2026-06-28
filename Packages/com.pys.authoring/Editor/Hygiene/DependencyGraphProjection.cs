@@ -20,6 +20,7 @@ namespace Pys.Authoring.Editor.Hygiene
             AddUnityObjects(graph, scanResult.SceneObjects, AuthoringGraphNodeKind.SceneObject, AuthoringGraphEdgeKind.SceneContains, vocabulary);
             AddUnityObjects(graph, scanResult.Prefabs, AuthoringGraphNodeKind.Prefab, AuthoringGraphEdgeKind.PrefabContains, vocabulary);
             AddAssets(graph, scanResult.Assets, vocabulary);
+            AddContractPrerequisiteEdges(graph);
             return graph;
         }
 
@@ -52,18 +53,20 @@ namespace Pys.Authoring.Editor.Hygiene
                 typeNode.Metadata["assembly"] = observation.AssemblyName;
                 typeNode.Metadata["assetPath"] = observation.AssetPath;
                 typeNode.Metadata["inScope"] = "true";
-                if (observation.ImplementsAuthoringValidationProvider)
-                    typeNode.Metadata["validationProvider"] = "true";
+                if (observation.HasRuntimeValidationMethod)
+                    typeNode.Metadata["runtimeValidationMethods"] = string.Join(",", observation.RuntimeValidationMethods);
 
                 AddEdges(graph, typeId, observation.ImplementedInterfaces, "interface:", AuthoringGraphNodeKind.Type, AuthoringGraphEdgeKind.Implements, vocabulary);
                 AddEdges(graph, typeId, observation.SerializedFields, "field:" + observation.FullName + ".", AuthoringGraphNodeKind.Field, AuthoringGraphEdgeKind.SerializedField, vocabulary);
                 AddEdges(graph, typeId, observation.RequiredComponents, "component:", AuthoringGraphNodeKind.Component, AuthoringGraphEdgeKind.RequiredComponent, vocabulary);
                 AddContracts(graph, typeId, observation.AssetPath, observation.Contracts, stableIdCounts, stableIdIndexes, vocabulary);
 
-                if (observation.ImplementsAuthoringValidationProvider)
+                if (observation.HasRuntimeValidationMethod)
                 {
                     string validatorId = "validator:" + observation.FullName;
-                    GetOrAddNode(graph, validatorId, observation.DisplayName, AuthoringGraphNodeKind.Validator, vocabulary);
+                    AuthoringGraphNode validatorNode = GetOrAddNode(graph, validatorId, observation.DisplayName, AuthoringGraphNodeKind.Validator, vocabulary);
+                    validatorNode.Metadata["validationSource"] = "ReflectiveRuntimeValidation";
+                    validatorNode.Metadata["methods"] = string.Join(",", observation.RuntimeValidationMethods);
                     graph.Edges.Add(new AuthoringGraphEdge(typeId, validatorId, AuthoringGraphEdgeKind.Implements));
                 }
             }
@@ -182,6 +185,8 @@ namespace Pys.Authoring.Editor.Hygiene
                 issueNode.Metadata["successCheck"] = issue.SuccessCheck;
                 issueNode.Metadata["severity"] = issue.Severity.ToString();
                 issueNode.Metadata["actionKind"] = issue.ActionKind.ToString();
+                issueNode.Metadata["ownerStableId"] = issue.OwnerStableId;
+                issueNode.Metadata["relatedStableIds"] = string.Join(",", issue.RelatedStableIds);
                 graph.Edges.Add(new AuthoringGraphEdge(ownerId, issueId, AuthoringGraphEdgeKind.ValidatorReports));
             }
         }
@@ -215,6 +220,12 @@ namespace Pys.Authoring.Editor.Hygiene
                 contractNode.Metadata["selectable"] = contract.Selectable ? "true" : "false";
                 contractNode.Metadata["summary"] = contract.Summary;
                 contractNode.Metadata["metadataGaps"] = string.Join(",", contract.MetadataGaps);
+                contractNode.Metadata["prerequisiteStableIds"] = string.Join(",", contract.PrerequisiteStableIds);
+                contractNode.Metadata["routeStage"] = contract.RouteStage;
+                contractNode.Metadata["routeOrder"] = contract.RouteOrder.ToString();
+                contractNode.Metadata["setupDomain"] = contract.SetupDomain;
+                contractNode.Metadata["proofTarget"] = contract.ProofTarget;
+                contractNode.Metadata["actionKind"] = contract.NativeActionKind.ToString();
                 contractNode.Metadata["setupSteps"] = string.Join("\n", contract.SetupSteps);
                 contractNode.Metadata["successChecks"] = string.Join("\n", contract.SuccessChecks);
                 contractNode.Metadata["roleTags"] = string.Join(",", contract.RoleTags);
@@ -228,6 +239,57 @@ namespace Pys.Authoring.Editor.Hygiene
                 AddEdges(graph, contractId, contract.RequiredComponents, "component:", AuthoringGraphNodeKind.Component, AuthoringGraphEdgeKind.RequiredComponent, vocabulary);
                 AddEdges(graph, contractId, contract.RequiredInterfaces, "interface:", AuthoringGraphNodeKind.Type, AuthoringGraphEdgeKind.Implements, vocabulary);
                 AddMetadataGapIssues(graph, contractId, contract.MetadataGaps, vocabulary);
+            }
+        }
+
+        private static void AddContractPrerequisiteEdges(AuthoringGraph graph)
+        {
+            if (graph == null)
+                return;
+
+            Dictionary<string, List<string>> idsByStableId = new Dictionary<string, List<string>>();
+            for (int i = 0; i < graph.Nodes.Count; i++)
+            {
+                AuthoringGraphNode node = graph.Nodes[i];
+                if (node == null || node.Kind != AuthoringGraphNodeKind.Contract)
+                    continue;
+
+                string stableId = StableIdFor(node);
+                if (string.IsNullOrWhiteSpace(stableId))
+                    continue;
+
+                if (!idsByStableId.TryGetValue(stableId, out List<string> ids))
+                {
+                    ids = new List<string>();
+                    idsByStableId[stableId] = ids;
+                }
+
+                ids.Add(node.Id);
+            }
+
+            for (int i = 0; i < graph.Nodes.Count; i++)
+            {
+                AuthoringGraphNode node = graph.Nodes[i];
+                if (node == null || node.Kind != AuthoringGraphNodeKind.Contract)
+                    continue;
+
+                if (!node.Metadata.TryGetValue("prerequisiteStableIds", out string prerequisiteText))
+                    continue;
+
+                string[] prerequisites = SplitMetadataList(prerequisiteText);
+                for (int prerequisiteIndex = 0; prerequisiteIndex < prerequisites.Length; prerequisiteIndex++)
+                {
+                    string prerequisite = prerequisites[prerequisiteIndex];
+                    if (string.IsNullOrWhiteSpace(prerequisite) || !idsByStableId.TryGetValue(prerequisite, out List<string> targetIds))
+                        continue;
+
+                    for (int targetIndex = 0; targetIndex < targetIds.Count; targetIndex++)
+                    {
+                        AuthoringGraphEdge edge = new AuthoringGraphEdge(node.Id, targetIds[targetIndex], AuthoringGraphEdgeKind.ContractPrerequisite);
+                        edge.Metadata["stableId"] = prerequisite;
+                        graph.Edges.Add(edge);
+                    }
+                }
             }
         }
 
@@ -295,6 +357,25 @@ namespace Pys.Authoring.Editor.Hygiene
                 .Replace('/', '.')
                 .Replace('\\', '.')
                 .Replace(':', '.');
+        }
+
+        private static string StableIdFor(AuthoringGraphNode node)
+        {
+            if (node == null)
+                return string.Empty;
+
+            if (node.Metadata.TryGetValue("stableId", out string stableId) && !string.IsNullOrWhiteSpace(stableId))
+                return stableId;
+
+            const string Prefix = "contract:";
+            return node.Id.StartsWith(Prefix) ? node.Id.Substring(Prefix.Length) : string.Empty;
+        }
+
+        private static string[] SplitMetadataList(string value)
+        {
+            return string.IsNullOrWhiteSpace(value)
+                ? new string[0]
+                : value.Split(new[] { ',' }, System.StringSplitOptions.RemoveEmptyEntries);
         }
 
         private static void AddMetadataGapIssues(

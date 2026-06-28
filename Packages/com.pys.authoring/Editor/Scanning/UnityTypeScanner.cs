@@ -29,7 +29,10 @@ namespace Pys.Authoring.Editor.Scanning
                 AddSerializedFields(type, observation);
                 AddRequiredComponents(type, observation);
                 AddContracts(type, observation);
-                observation.ImplementsAuthoringValidationProvider = typeof(IAuthoringValidationProvider).IsAssignableFrom(type);
+                IReadOnlyList<MethodInfo> validationMethods = ReflectiveRuntimeValidationObserver.FindValidationMethods(type, request.RuntimeValidationMethodNames);
+                observation.HasRuntimeValidationMethod = validationMethods.Count > 0;
+                for (int methodIndex = 0; methodIndex < validationMethods.Count; methodIndex++)
+                    observation.RuntimeValidationMethods.Add(validationMethods[methodIndex].Name);
                 observations.Add(observation);
             }
 

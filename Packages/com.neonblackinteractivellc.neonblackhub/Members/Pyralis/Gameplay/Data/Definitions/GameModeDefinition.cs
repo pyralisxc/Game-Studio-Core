@@ -18,6 +18,12 @@ namespace NeonBlack.Gameplay.Data.Definitions
         Summary = "Defines the project-owned rules, system switches, and scene targets for a gameplay session.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/game-mode",
         RequiredFields = new[] { nameof(playfieldProfile), nameof(cameraRigProfile), nameof(gameplayScene) },
+        PrerequisiteStableIds = new[] { "session.definition" },
+        RouteStage = "Session Asset",
+        RouteOrder = 30,
+        SetupDomain = "Game Mode",
+        ProofTarget = "GameModeDefinition is assigned to the active SessionDefinition.",
+        NativeActionKind = AuthoringActionKind.CreateAsset,
         SuccessChecks = new[] { "Assign this Game Mode Definition to a Session Definition asset." },
         Tags = new[] { "capability:Rules", "runtime:ScoringObjectives", "lane:Rules", "priority:Primary" }
     )]

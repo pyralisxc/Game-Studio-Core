@@ -41,27 +41,27 @@ Participant topology is graph evidence, not networking vocabulary. `SessionDefin
 
 ## Current Authoring State
 
-Pyralis now consumes the standalone `com.pys.authoring` package instead of owning a project-specific authoring spine. The active flow is:
+Pyralis exposes gameplay setup evidence through the runtime-safe `Pys.Authoring.Contracts` assembly. The standalone `com.pys.authoring` package owns all authoring UI, graph, projection, export, vocabulary, and hygiene behavior.
 
 ```text
 Pyralis scripts/assets
-  -> PYS contracts, validation providers, reflection, and Unity asset evidence
-    -> PYS graph
-      -> PYS Settings / Intent / Overview / Guide / Map / Hygiene / Facts projections and exports
+  -> PYS contract attributes and local validation providers
+    -> observed by com.pys.authoring outside the gameplay package
 ```
 
 Pyralis owns gameplay meaning and local evidence only:
 
 - runtime-safe `Pys.Authoring.Contracts.AuthoringContractAttribute` metadata on the scripts that own capability meaning
 - PYS validation providers where a script or asset owns semantic readiness
+- typed setup-flow metadata such as prerequisite stable IDs, route stage/order, setup domain, proof target, and native action kind on the contracts that form the route spine
 - Unity-native fields, components, interfaces, definitions, profiles, prefabs, and scene objects
-- tactical custom inspectors that edit local fields and open PYS Authoring
+- tactical custom inspectors that edit local fields
 
-PYS owns the Authoring Window, graph compilation, projection packets, Hygiene/Facts lenses, tab rendering, and JSON exports. Do not rebuild those owners under `Editor/Authoring`, and do not restore runtime authoring metadata under `Core/Contracts/Authoring`. If a projection cannot express a Pyralis setup concept, the fix belongs in the PYS package or in clearer Pyralis contract/validation evidence, not in a Pyralis-specific adapter.
+PYS owns the Authoring Window, graph compilation, projection packets, Hygiene/Facts lenses, tab rendering, JSON exports, and package vocabulary. Do not rebuild those owners under Pyralis Gameplay, and do not add Pyralis-specific adapters around the PYS package. If a projection cannot express a Pyralis setup concept, the fix belongs in the PYS package or in clearer Pyralis contract/validation evidence.
 
-Inspectors are local integrity surfaces, not setup guides. They may show field-local contract issues, local validation warnings, an **Open PYS Authoring** handoff, or small asset-local utilities such as syncing an `InputProfile` from its assigned Unity Input Action Asset. They should not carry route setup cards, genre/preset buttons, alternate proof guidance, projection rows, or export logic.
+Inspectors are local integrity surfaces, not setup guides. They may show field-local contract issues, local validation warnings, or small asset-local utilities such as syncing an `InputProfile` from its assigned Unity Input Action Asset. They should not carry route setup cards, genre/preset buttons, alternate proof guidance, projection rows, handoff adapters, or export logic.
 
-PYS exports are read-only diagnostics from the exact projection packet the UI renders. Current package docs for tab contracts, hygiene lenses, target-project integration, and validation live under `Packages/com.pys.authoring/Docs`.
+PYS exports are external read-only diagnostics from the exact projection packet the PYS UI renders. Current package docs for tab contracts, hygiene lenses, target-project integration, and validation live under `Packages/com.pys.authoring/Docs`.
 
 ## Platform Health
 
@@ -84,7 +84,7 @@ The main engineering risks are:
 - descriptors or exports reintroducing behavior-affecting display-text inference instead of using typed graph metadata, contract role tags, dependency evidence, and validator records
 - large public media returning to the always-imported package path instead of explicit samples, Addressables, or route-owned content packages
 
-Optional broad domains are feature-owned rather than mandatory engine spine. RPG value/domain models and definition-facing contracts compile through `Data/Rpg`, while RPG runtime services compile through the RPG runtime module, RPG UI/panel presenters compile through the RPG UI module, and RPG-specific editor tooling lives with the RPG feature instead of the universal Authoring Window. Tabletop board and turn value rules compile through `Data/Tabletop/Rules`, while tabletop runtime action resolvers, selection bridges, and service seams compile through the Tabletop runtime module using Core action contracts, and tabletop scene-facing views compile through the Tabletop UI module. The former one-file Actions module has been collapsed into `Core/Types/Actions`; feature modules provide `IActionResolver` implementations instead of importing an Actions assembly. Core keeps only small cross-feature type language and neutral utility implementations, with no top-level source files. Current static boundary checks expect zero `Data` imports from RPG/Tabletop runtime modules, zero module-to-Glue imports, zero module scripts falling back into the aggregate root assembly, and an acyclic `.asmdef` graph; runtime/UI asmdef splits are valid when they prevent `Data` and view dependencies from cycling through runtime. If those checks fail, treat it as architecture drift, not a harmless compile detail. Hygiene also audits namespace fan-out now: scripts outside explicit Glue/composition should normally stay at three or fewer `NeonBlack.Gameplay.*` imports, and files above that budget are ownership pressure even when the assembly graph still compiles.
+Optional broad domains are feature-owned rather than mandatory engine spine. RPG value/domain models and definition-facing contracts compile through `Data/Rpg`, while RPG runtime services compile through the RPG runtime module, RPG UI/panel presenters compile through the RPG UI module, and RPG-specific editor tooling lives with the RPG feature instead of the universal Authoring Window. Tabletop board and turn value rules compile through `Data/Tabletop/Rules`, while tabletop runtime action resolvers, the current in-memory action queue implementation, selection bridges, and service seams compile through the Tabletop runtime module using Core action contracts, and tabletop scene-facing views compile through the Tabletop UI module. The former one-file Actions module has been collapsed into `Core/Types/Actions`; feature modules provide concrete queue/resolver behavior instead of importing an Actions assembly. Core keeps only small cross-feature type language and neutral utility implementations, with no top-level source files. Current static boundary checks expect zero `Data` imports from RPG/Tabletop runtime modules, zero module-to-Glue imports, zero module scripts falling back into the aggregate root assembly, and an acyclic `.asmdef` graph; runtime/UI asmdef splits are valid when they prevent `Data` and view dependencies from cycling through runtime. If those checks fail, treat it as architecture drift, not a harmless compile detail. Hygiene also audits namespace fan-out now: scripts outside explicit Glue/composition should normally stay at three or fewer `NeonBlack.Gameplay.*` imports, and files above that budget are ownership pressure even when the assembly graph still compiles.
 
 Direct module references are not automatically wrong, but they now require a clear ownership reason. Same-subsystem composition edges and stable module-owned contracts can remain. Cross-subsystem coordination such as pickup-to-score, hazard-to-combat, enemy-to-combat, UI-to-session, and scene-flow-to-gameplay outcomes should move toward typed commands, events, state readers, handlers, or narrow sinks. Do not hide coupling in a generic manager to reduce import counts; the cleanup target is clearer runtime meaning, not prettier metrics.
 

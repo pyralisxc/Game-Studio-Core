@@ -1,13 +1,11 @@
 using NeonBlack.Gameplay.Core.Enums;
 using NeonBlack.Gameplay.Data.Profiles;
-using NeonBlack.Gameplay.Editor.Inspectors;
 using NeonBlack.Gameplay.Modules.Enemies;
 using UnityEditor;
 using UnityEngine;
 
 /// <summary>
-/// Custom inspector for EnemyAI. Keeps runtime fields grouped while the
-/// PYS Authoring owns route setup and proof guidance.
+/// Custom inspector for EnemyAI. Keeps local runtime fields grouped.
 /// </summary>
 [CustomEditor(typeof(EnemyAI))]
 public class EnemyAIEditor : Editor
@@ -66,9 +64,6 @@ public class EnemyAIEditor : Editor
         _detectionSerialized?.Update();
 
         bool is3D = _movementMode.enumValueIndex == (int)MovementMode.ThreeD;
-        PyralisInspectorHandoff.DrawAuthoringButton(
-            "Enemy AI",
-            "Edit detection, movement, combat, and feature fields here. Use PYS Authoring for route setup and proof guidance.");
 
         if (_detectionSerialized != null)
         {

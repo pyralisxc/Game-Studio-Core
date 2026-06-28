@@ -14,7 +14,7 @@ The current source of truth is a shared gameplay stack built around:
 - scene-owned Cinemachine routing through `CameraRigProfile.focusMode`
 - explicit pawn sibling components for physical identity
 - direct module-owned components and profiles for optional gameplay capabilities
-- PYS authoring contracts, reflection, dependency discovery, validators, and graph projections
+- PYS contract metadata on gameplay scripts that own setup meaning
 
 Core motto:
 
@@ -24,7 +24,7 @@ Core motto:
 - Dependency analysis discovers setup relationships.
 - Validators witness local semantic readiness.
 - The graph compiles understanding.
-- PYS Authoring renders guidance.
+- PYS Authoring observes Pyralis contract evidence from its own package lane.
 
 ## Supported pawn presentation targets
 
@@ -44,13 +44,13 @@ Rigged 3D support is Animator-driven and intended for both `Generic` and `Humano
 - Participant topology describes how control enters the session: solo auto-start, Unity `PlayerInputManager` local join, network authority, or hybrid local/networked join.
 - Camera profiles describe what is **watched**: participant pawn socket, participant group, playfield center, explicit scene anchor, or manual Cinemachine.
 - Scenes own scene-scale direction: bootstrap, lifetime scope, camera rig, spawners, scene services, and proof-specific objects.
-- PYS Authoring reads contracts/reflection/dependency evidence and projects the resolved graph; it does not create hidden presets or duplicate setup truth.
+- Pyralis exposes setup evidence through gameplay contracts; PYS Authoring reads that evidence from its own package.
 
 ## Verification rule of thumb
 
 - Manual Unity play proofs test gameplay feel and whether the authored route actually works.
 - Automated tests protect data transfer, ownership, routing, PYS contract consumption, and refactor seams.
-- PYS Authoring JSON exports show what the system currently understands and where the next cleanup pressure lives.
+- PYS Authoring JSON exports can be used as external diagnostics for contract evidence.
 
 Do not keep broad optional domain matrices or documentation audits in the active suite. The default gate should catch broken seams without pretending to replace manual proof play.
 
@@ -58,7 +58,7 @@ Do not keep broad optional domain matrices or documentation audits in the active
 
 - `Core/`: stable contracts plus tiny shared type vocabulary such as movement modes, presentation lanes, animation signals, action value language, and narrow optional sinks/publishers
 - `Data/`: ScriptableObject definitions, profiles, config assets such as `GameConfig`, and data-backed handoff contracts such as participant and interaction dispatch context; authored combat data lives here, not in the Combat runtime namespace
-- `Editor/`: tactical custom inspectors and handoffs into PYS Authoring
+- `Editor/`: tactical custom inspectors for local gameplay fields
 - `Glue/`: bootstrap, lifetime scope, session services, participant services, input routing, participant spawning, route composition, and service-registration wiring that makes authored modules run
 - `Modules/`: reusable gameplay capability families such as character, combat, traversal, hazards, enemies, encounters, environment, interaction/collectibles, feedback, scoring, tabletop, settings, input, spawning, and RPG
 - `Networking/`: ownership, authority, and backend-facing runtime contracts
@@ -76,7 +76,7 @@ Participant-facing pawn handoff contracts such as `IPawnParticipantInitializer`,
 
 Enemy AI follows the same command seam as participant input. Enemy decisions issue `ActorCombatCommand` through `IActorCombatRequestReceiver`; enemy reaction reads health, knockback, feedback, hit pause, and camera shake through Core contracts and sinks. Enemy-owned inspectors should edit detection, movement, patrol, targeting, and enemy feature profiles only. Combat-owned enemy attack setup belongs on `EnemyCombatModule` and its Combat editor, not inside `EnemyAIEditor`.
 
-Module folders own their local runtime composition, lane-specific implementation, scene-facing presenters, and feature-specific editor tooling when the logic is not part of the universal authoring spine. Module code should be covered by feature-owned runtime, UI, and editor asmdefs instead of falling into the aggregate root assembly. A module's runtime asmdef should sit high enough to cover runtime-owned behavior without pulling in feature UI/view code that depends back on authored `Data`; feature UI/view asmdefs may sit beside runtime to keep those cycles explicit and acyclic. Nested `Editor` asmdefs own editor-only tools. Lane folders use `Sprite2D`, `Billboard2_5D`, and `Rigged3D` instead of shorthand folder names. Character owns pawn identity, movement, and pawn-facing behavior contracts; Combat owns pawn combat behavior, hitbox/damage/projectile/block/weapon modules, combat action state, and its feature service installer. For example, RPG value/domain models and definition-facing contracts live under `Data/Rpg`, RPG runtime services and service registration live under `Modules/Rpg/Runtime`, and RPG UI presenters compile through `Modules/Rpg/UI`. Tabletop board/turn value rules live under `Data/Tabletop/Rules`, while tabletop runtime action resolvers, selection bridges, and turn-order service seams live under `Modules/Tabletop/Runtime`; tabletop scene-facing views compile through `Modules/Tabletop/UI`. The shared in-memory action queue is part of `Core/Types/Actions` because it has no feature-specific behavior; feature modules provide resolvers. The RPG narrative editor lives under `Modules/Rpg/Editor/Tools`. Cross-feature display helpers live under `Presentation`, such as generic HUD orientation code in `Presentation/HUD/UI`, settings panels in `Presentation/HUD/Settings`, and camera trigger zones in `Presentation/Camera/Zones`. Route-specific mode orchestration and scene loading belong under `Glue/SceneFlow`.
+Module folders own their local runtime composition, lane-specific implementation, scene-facing presenters, and feature-specific editor tooling when the logic is not part of the universal authoring spine. Module code should be covered by feature-owned runtime, UI, and editor asmdefs instead of falling into the aggregate root assembly. A module's runtime asmdef should sit high enough to cover runtime-owned behavior without pulling in feature UI/view code that depends back on authored `Data`; feature UI/view asmdefs may sit beside runtime to keep those cycles explicit and acyclic. Nested `Editor` asmdefs own editor-only tools. Lane folders use `Sprite2D`, `Billboard2_5D`, and `Rigged3D` instead of shorthand folder names. Character owns pawn identity, movement, and pawn-facing behavior contracts; Combat owns pawn combat behavior, hitbox/damage/projectile/block/weapon modules, combat action state, and its feature service installer. For example, RPG value/domain models and definition-facing contracts live under `Data/Rpg`, RPG runtime services and service registration live under `Modules/Rpg/Runtime`, and RPG UI presenters compile through `Modules/Rpg/UI`. Tabletop board/turn value rules live under `Data/Tabletop/Rules`, while tabletop runtime action resolvers, action queue implementation, selection bridges, and turn-order service seams live under `Modules/Tabletop/Runtime`; tabletop scene-facing views compile through `Modules/Tabletop/UI`. Core keeps the shared action contracts and value language under `Core/Types/Actions`; feature modules own concrete queue/resolver behavior. The RPG narrative editor lives under `Modules/Rpg/Editor/Tools`. Cross-feature display helpers live under `Presentation`, such as generic HUD orientation code in `Presentation/HUD/UI`, settings panels in `Presentation/HUD/Settings`, and camera trigger zones in `Presentation/Camera/Zones`. Route-specific mode orchestration and scene loading belong under `Glue/SceneFlow`.
 
 ## Current pawn animation architecture
 
@@ -94,9 +94,5 @@ For participant-spawned pawns, profile fields belong on `PawnDefinition`; prefab
 
 - `Docs/CURRENT_STATE_AUDIT.md` for current health, risks, Hygiene baseline, and verification posture.
 - `Docs/ARCHITECTURE_BLUEPRINT.md` for runtime ownership, folderbase, and system boundaries.
-- `Docs/Authoring/START_HERE.md` for the PYS Authoring integration path.
-- `Docs/Authoring/AUTHORING_BLUEPRINT.md` for Pyralis/PYS ownership boundaries.
-- `Docs/Authoring/AUTHORING_MODEL.md` for contract and validation evidence rules.
-- `Docs/Authoring/CANONICAL_SETUP.md` for the technical setup contract.
-- `Packages/com.pys.authoring/Docs/PROJECTION_CONTRACTS.md` for tab behavior and export rules.
+- `Packages/com.pys.authoring/Docs` for PYS Authoring behavior, projections, exports, and target-project integration.
 - `Docs/FEATURE_DEVELOPMENT_ROADMAP.md` for current expansion priorities.
