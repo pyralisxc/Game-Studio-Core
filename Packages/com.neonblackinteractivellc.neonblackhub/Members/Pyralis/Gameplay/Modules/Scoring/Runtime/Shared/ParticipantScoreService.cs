@@ -11,7 +11,7 @@ namespace NeonBlack.Gameplay.Modules.Scoring
     /// Canonical scoring service for NeonBlack gameplay sessions.
     /// Tracks per-participant scores in multi-player scenarios, and session-level
     /// points, survival time, and high-score persistence for single-player scenarios.
-    /// Register this service through the Pyralis gameplay composition root and resolve it via DI.
+    /// Register this service through the gameplay composition root and resolve it via DI.
     /// </summary>
     [AddComponentMenu("NeonBlack/Gameplay/Scoring/Participant Score Service")]
     [AuthoringContract(
@@ -35,10 +35,10 @@ namespace NeonBlack.Gameplay.Modules.Scoring
     {
         private static int _activeInstanceCount;
 
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (_activeInstanceCount > 1)
-                yield return PyralisRuntimeValidationIssue.Required("Multiple ParticipantScoreService instances found. Only one global scoring service should be active.");
+                yield return RuntimeValidationIssue.Required("Multiple ParticipantScoreService instances found. Only one global scoring service should be active.");
         }
         // PlayerPrefs keys.
         public const string HighScorePointsKey   = "HighScore_Points";

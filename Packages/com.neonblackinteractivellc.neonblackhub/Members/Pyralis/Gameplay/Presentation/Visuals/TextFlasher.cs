@@ -8,7 +8,7 @@ namespace NeonBlack.Gameplay.Presentation.Visuals
 {
 /// <summary>
 /// Coroutine-driven color flash effects on one or more TMP_Text components.
-/// Reuses FlashPresetSO assets so the same preset works on both SpriteFlasher and TextFlasher.
+/// Reuses FlashEffectProfile assets so the same profile works on both SpriteFlasher and TextFlasher.
 /// Drives TMP_Text.color directly, which reflects alpha, works with standard SDF materials,
 /// and avoids material-instance mutation issues from driving _FaceColor directly.
 /// </summary>
@@ -20,10 +20,10 @@ public class TextFlasher : MonoBehaviour
     [SerializeField, Tooltip("If true and _texts is empty, finds all TMP_Text components on this GameObject and its children on Awake.")]
     private bool _autoFindTexts = true;
 
-    [Header("Default Preset")]
-    [SerializeField, Tooltip("Preset used when Play() is called with no argument, and when Play On Start is enabled.")]
-    private FlashPresetSO _defaultPreset;
-    [SerializeField, Tooltip("If true, plays the default preset automatically from Start.")]
+    [Header("Default Profile")]
+    [SerializeField, Tooltip("profile used when Play() is called with no argument, and when Play On Start is enabled.")]
+    private FlashEffectProfile _defaultProfile;
+    [SerializeField, Tooltip("If true, plays the default profile automatically from Start.")]
     private bool _playOnStart = false;
 
     [Header("Events")]
@@ -42,14 +42,14 @@ public class TextFlasher : MonoBehaviour
     private void Start()
     {
         _hasStarted = true;
-        if (_playOnStart && _defaultPreset != null)
-            Play(_defaultPreset);
+        if (_playOnStart && _defaultProfile != null)
+            Play(_defaultProfile);
     }
 
     private void OnEnable()
     {
-        if (_hasStarted && _playOnStart && _defaultPreset != null)
-            Play(_defaultPreset);
+        if (_hasStarted && _playOnStart && _defaultProfile != null)
+            Play(_defaultProfile);
     }
 
     private void OnDisable()
@@ -58,13 +58,13 @@ public class TextFlasher : MonoBehaviour
         _initialized = false;
     }
 
-    public void Play() => Play(_defaultPreset);
+    public void Play() => Play(_defaultProfile);
 
-    public void Play(FlashPresetSO preset)
+    public void Play(FlashEffectProfile profile)
     {
-        if (preset == null)
+        if (profile == null)
         {
-            Debug.LogWarning("[TextFlasher] Play called with no preset.", this);
+            Debug.LogWarning("[TextFlasher] Play called with no profile.", this);
             return;
         }
 
@@ -72,20 +72,20 @@ public class TextFlasher : MonoBehaviour
         if (!_initialized)
             Initialize();
 
-        int loops = preset.loopCount < 0 ? -1 : Mathf.Max(1, preset.loopCount);
-        _routine = StartCoroutine(FlashRoutine(preset, loops));
+        int loops = profile.loopCount < 0 ? -1 : Mathf.Max(1, profile.loopCount);
+        _routine = StartCoroutine(FlashRoutine(profile, loops));
     }
 
-    public void PlayOneShot(FlashPresetSO preset)
+    public void PlayOneShot(FlashEffectProfile profile)
     {
-        if (preset == null)
+        if (profile == null)
             return;
 
         Stop();
         if (!_initialized)
             Initialize();
 
-        _routine = StartCoroutine(FlashRoutine(preset, 1));
+        _routine = StartCoroutine(FlashRoutine(profile, 1));
     }
 
     public void Stop()
@@ -125,26 +125,26 @@ public class TextFlasher : MonoBehaviour
             _originalColors[i] = _texts[i] != null ? _texts[i].color : Color.white;
     }
 
-    private IEnumerator FlashRoutine(FlashPresetSO preset, int loops)
+    private IEnumerator FlashRoutine(FlashEffectProfile profile, int loops)
     {
-        Color[] baseColors = CaptureBaseColors(preset);
+        Color[] baseColors = CaptureBaseColors(profile);
         int played = 0;
 
         while (loops < 0 || played < loops)
         {
-            switch (preset.mode)
+            switch (profile.mode)
             {
-                case FlashPresetSO.FlashMode.Pulse:
-                    yield return PulseRoutine(preset, baseColors);
+                case FlashEffectProfile.FlashMode.Pulse:
+                    yield return PulseRoutine(profile, baseColors);
                     break;
-                case FlashPresetSO.FlashMode.Strobe:
-                    yield return StrobeRoutine(preset, baseColors);
+                case FlashEffectProfile.FlashMode.Strobe:
+                    yield return StrobeRoutine(profile, baseColors);
                     break;
-                case FlashPresetSO.FlashMode.Blink:
-                    yield return BlinkRoutine(preset, baseColors);
+                case FlashEffectProfile.FlashMode.Blink:
+                    yield return BlinkRoutine(profile, baseColors);
                     break;
-                case FlashPresetSO.FlashMode.ColorCycle:
-                    yield return ColorCycleRoutine(preset, baseColors);
+                case FlashEffectProfile.FlashMode.ColorCycle:
+                    yield return ColorCycleRoutine(profile, baseColors);
                     break;
             }
 
@@ -152,11 +152,11 @@ public class TextFlasher : MonoBehaviour
                 played++;
 
             bool moreLoops = loops < 0 || played < loops;
-            if (moreLoops && preset.cycleDelay > 0f)
+            if (moreLoops && profile.cycleDelay > 0f)
             {
-                if (preset.mode != FlashPresetSO.FlashMode.ColorCycle)
+                if (profile.mode != FlashEffectProfile.FlashMode.ColorCycle)
                     RestoreToCapture(baseColors);
-                yield return new WaitForSeconds(preset.cycleDelay);
+                yield return new WaitForSeconds(profile.cycleDelay);
             }
         }
 
@@ -164,54 +164,54 @@ public class TextFlasher : MonoBehaviour
         _onFlashComplete?.Invoke();
     }
 
-    private IEnumerator PulseRoutine(FlashPresetSO preset, Color[] baseColors)
+    private IEnumerator PulseRoutine(FlashEffectProfile profile, Color[] baseColors)
     {
-        Color flash = WithAlpha(preset.flashColor, preset.overrideAlpha, preset.flashAlpha, baseColors);
-        yield return LerpAllRoutine(baseColors, flash, preset.flashDuration, preset.easeIn);
-        yield return LerpAllRoutine(flash, baseColors, preset.flashDuration, preset.easeOut);
+        Color flash = WithAlpha(profile.flashColor, profile.overrideAlpha, profile.flashAlpha, baseColors);
+        yield return LerpAllRoutine(baseColors, flash, profile.flashDuration, profile.easeIn);
+        yield return LerpAllRoutine(flash, baseColors, profile.flashDuration, profile.easeOut);
     }
 
-    private IEnumerator StrobeRoutine(FlashPresetSO preset, Color[] baseColors)
+    private IEnumerator StrobeRoutine(FlashEffectProfile profile, Color[] baseColors)
     {
-        Color flash = WithAlpha(preset.flashColor, preset.overrideAlpha, preset.flashAlpha, baseColors);
+        Color flash = WithAlpha(profile.flashColor, profile.overrideAlpha, profile.flashAlpha, baseColors);
         SetAll(flash);
-        yield return new WaitForSeconds(preset.flashDuration);
+        yield return new WaitForSeconds(profile.flashDuration);
         RestoreToCapture(baseColors);
-        if (preset.interval > 0f)
-            yield return new WaitForSeconds(preset.interval);
+        if (profile.interval > 0f)
+            yield return new WaitForSeconds(profile.interval);
     }
 
-    private IEnumerator BlinkRoutine(FlashPresetSO preset, Color[] baseColors)
+    private IEnumerator BlinkRoutine(FlashEffectProfile profile, Color[] baseColors)
     {
-        float fadeTime = preset.flashDuration * 0.25f;
-        float holdTime = preset.flashDuration * 0.50f;
-        Color flash = WithAlpha(preset.flashColor, preset.overrideAlpha, preset.flashAlpha, baseColors);
+        float fadeTime = profile.flashDuration * 0.25f;
+        float holdTime = profile.flashDuration * 0.50f;
+        Color flash = WithAlpha(profile.flashColor, profile.overrideAlpha, profile.flashAlpha, baseColors);
 
-        yield return LerpAllRoutine(baseColors, flash, fadeTime, preset.easeIn);
+        yield return LerpAllRoutine(baseColors, flash, fadeTime, profile.easeIn);
         yield return new WaitForSeconds(holdTime);
-        yield return LerpAllRoutine(flash, baseColors, fadeTime, preset.easeOut);
+        yield return LerpAllRoutine(flash, baseColors, fadeTime, profile.easeOut);
 
-        if (preset.interval > 0f)
-            yield return new WaitForSeconds(preset.interval);
+        if (profile.interval > 0f)
+            yield return new WaitForSeconds(profile.interval);
     }
 
-    private IEnumerator ColorCycleRoutine(FlashPresetSO preset, Color[] baseColors)
+    private IEnumerator ColorCycleRoutine(FlashEffectProfile profile, Color[] baseColors)
     {
-        if (preset.cycleColors == null || preset.cycleColors.Length == 0)
+        if (profile.cycleColors == null || profile.cycleColors.Length == 0)
         {
             Debug.LogWarning("[TextFlasher] ColorCycle mode selected but cycleColors is empty.", this);
             yield break;
         }
 
-        foreach (Color color in preset.cycleColors)
+        foreach (Color color in profile.cycleColors)
         {
-            Color stepped = preset.overrideAlpha ? new Color(color.r, color.g, color.b, preset.flashAlpha) : color;
+            Color stepped = profile.overrideAlpha ? new Color(color.r, color.g, color.b, profile.flashAlpha) : color;
             SetAll(stepped);
-            yield return new WaitForSeconds(preset.flashDuration);
+            yield return new WaitForSeconds(profile.flashDuration);
         }
     }
 
-    private IEnumerator LerpAllRoutine(Color[] from, Color to, float duration, FlashPresetSO.FlashEase ease)
+    private IEnumerator LerpAllRoutine(Color[] from, Color to, float duration, FlashEffectProfile.FlashEase ease)
     {
         float elapsed = 0f;
         while (elapsed < duration)
@@ -227,7 +227,7 @@ public class TextFlasher : MonoBehaviour
         SetAll(to);
     }
 
-    private IEnumerator LerpAllRoutine(Color from, Color[] to, float duration, FlashPresetSO.FlashEase ease)
+    private IEnumerator LerpAllRoutine(Color from, Color[] to, float duration, FlashEffectProfile.FlashEase ease)
     {
         float elapsed = 0f;
         while (elapsed < duration)
@@ -243,7 +243,7 @@ public class TextFlasher : MonoBehaviour
         RestoreToCapture(to);
     }
 
-    private Color[] CaptureBaseColors(FlashPresetSO preset)
+    private Color[] CaptureBaseColors(FlashEffectProfile profile)
     {
         Color[] colors = new Color[_texts.Count];
         for (int i = 0; i < _texts.Count; i++)
@@ -254,9 +254,9 @@ public class TextFlasher : MonoBehaviour
                 continue;
             }
 
-            colors[i] = preset.useRendererColorAsBase ? _texts[i].color : preset.baseColor;
-            if (preset.overrideAlpha)
-                colors[i].a = preset.baseAlpha;
+            colors[i] = profile.useRendererColorAsBase ? _texts[i].color : profile.baseColor;
+            if (profile.overrideAlpha)
+                colors[i].a = profile.baseAlpha;
         }
 
         return colors;
@@ -292,27 +292,27 @@ public class TextFlasher : MonoBehaviour
         return color;
     }
 
-    private static float ApplyEase(FlashPresetSO.FlashEase ease, float t)
+    private static float ApplyEase(FlashEffectProfile.FlashEase ease, float t)
     {
         switch (ease)
         {
-            case FlashPresetSO.FlashEase.Linear:
+            case FlashEffectProfile.FlashEase.Linear:
                 return t;
-            case FlashPresetSO.FlashEase.InSine:
+            case FlashEffectProfile.FlashEase.InSine:
                 return 1f - Mathf.Cos(t * Mathf.PI * 0.5f);
-            case FlashPresetSO.FlashEase.OutSine:
+            case FlashEffectProfile.FlashEase.OutSine:
                 return Mathf.Sin(t * Mathf.PI * 0.5f);
-            case FlashPresetSO.FlashEase.InOutSine:
+            case FlashEffectProfile.FlashEase.InOutSine:
                 return -(Mathf.Cos(Mathf.PI * t) - 1f) * 0.5f;
-            case FlashPresetSO.FlashEase.InQuad:
+            case FlashEffectProfile.FlashEase.InQuad:
                 return t * t;
-            case FlashPresetSO.FlashEase.OutQuad:
+            case FlashEffectProfile.FlashEase.OutQuad:
                 return 1f - (1f - t) * (1f - t);
-            case FlashPresetSO.FlashEase.InOutQuad:
+            case FlashEffectProfile.FlashEase.InOutQuad:
                 return t < 0.5f ? 2f * t * t : 1f - Mathf.Pow(-2f * t + 2f, 2f) * 0.5f;
-            case FlashPresetSO.FlashEase.InCubic:
+            case FlashEffectProfile.FlashEase.InCubic:
                 return t * t * t;
-            case FlashPresetSO.FlashEase.OutCubic:
+            case FlashEffectProfile.FlashEase.OutCubic:
                 return 1f - Mathf.Pow(1f - t, 3f);
             default:
                 return Mathf.SmoothStep(0f, 1f, t);

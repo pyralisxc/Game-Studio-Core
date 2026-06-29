@@ -27,13 +27,13 @@ namespace NeonBlack.Gameplay.Presentation.Visuals
     [AddComponentMenu("NeonBlack/Gameplay/Visuals/Actor Shadow Driver")]
     public class ActorShadowDriver : MonoBehaviour, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (presentationProfile == null)
-                yield return PyralisRuntimeValidationIssue.Required("Presentation Profile is missing. Expected to be assigned by presentation stack at runtime.");
+                yield return RuntimeValidationIssue.Required("Presentation Profile is missing. Expected to be assigned by presentation stack at runtime.");
             
             if (shadowSpriteRenderer == null && (modelRenderers == null || modelRenderers.Length == 0))
-                yield return PyralisRuntimeValidationIssue.Required("No shadow renderer or model renderers assigned. Shadow will be invisible.");
+                yield return RuntimeValidationIssue.Required("No shadow renderer or model renderers assigned. Shadow will be invisible.");
         }
         [Header("Scene References")]
         [SerializeField] private Transform visualRoot;

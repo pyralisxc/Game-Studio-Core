@@ -3,6 +3,7 @@
   "references": [
     "NeonBlack.Gameplay.Core",
     "NeonBlack.Gameplay.Modules.Combat",
+    "NeonBlack.Gameplay.Modules.Combat.UI",
     "NeonBlack.Gameplay.Editor"
   ],
   "includePlatforms": [

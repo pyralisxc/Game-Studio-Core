@@ -20,7 +20,7 @@ namespace NeonBlack.Gameplay.Presentation.Camera
         Category = "Camera",
         CapabilityPath = "World & Meta/Camera/Cinemachine Rig",
         Surface = AuthoringSurface.Goal,
-        Summary = "Cinemachine Camera Rig Controller is the Pyralis scene camera runtime. Use this Inspector for assigned references and tuning values.",
+        Summary = "Cinemachine Camera Rig Controller is the scene camera runtime. Use this Inspector for assigned references and tuning values.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/camera",
         RequiredFields = new[] { nameof(cameraRigProfile), nameof(sharedCameraBehaviour), nameof(targetCamera), nameof(explicitFocusTarget) },
         SetupSteps = new[] 

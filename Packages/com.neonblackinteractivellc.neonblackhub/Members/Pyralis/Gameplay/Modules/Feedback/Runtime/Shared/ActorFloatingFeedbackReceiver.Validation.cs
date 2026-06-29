@@ -6,7 +6,7 @@ namespace NeonBlack.Gameplay.Modules.Feedback
 {
     public partial class ActorFloatingFeedbackReceiver
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (!showDamageNumbers
                 && !showHealNumbers
@@ -15,7 +15,7 @@ namespace NeonBlack.Gameplay.Modules.Feedback
                 && !showStatusPopups
                 && !showCombatAlertPopups)
             {
-                yield return PyralisRuntimeValidationIssue.Required("`ActorFloatingFeedbackReceiver` is configured to hide every feedback category.");
+                yield return RuntimeValidationIssue.Required("`ActorFloatingFeedbackReceiver` is configured to hide every feedback category.");
             }
         }
     }

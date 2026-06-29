@@ -6,16 +6,16 @@ namespace NeonBlack.Gameplay.Modules.Combat
 {
     public partial class PawnCombatBehaviour2D
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (hitBoxZones == null || hitBoxZones.Length == 0)
-                yield return PyralisRuntimeValidationIssue.Required("Hit Box Zones is empty. Melee attacks need HitBox2D slots.");
+                yield return RuntimeValidationIssue.Required("Hit Box Zones is empty. Melee attacks need HitBox2D slots.");
             if (!HasActions(primarySequence))
-                yield return PyralisRuntimeValidationIssue.Required("Primary Sequence needs at least one CombatActionDefinition. PawnCombatBehaviour2D does not invent local primary attacks.");
+                yield return RuntimeValidationIssue.Required("Primary Sequence needs at least one CombatActionDefinition. PawnCombatBehaviour2D does not invent local primary attacks.");
             if (!HasActions(secondarySequence))
-                yield return PyralisRuntimeValidationIssue.Required("Secondary Sequence needs at least one CombatActionDefinition. PawnCombatBehaviour2D does not invent local secondary attacks.");
+                yield return RuntimeValidationIssue.Required("Secondary Sequence needs at least one CombatActionDefinition. PawnCombatBehaviour2D does not invent local secondary attacks.");
             if (attackCooldown < 0f)
-                yield return PyralisRuntimeValidationIssue.Required("Attack Cooldown cannot be negative.");
+                yield return RuntimeValidationIssue.Required("Attack Cooldown cannot be negative.");
         }
 
         private static bool HasActions(NeonBlack.Gameplay.Data.Definitions.Combat.CombatSequenceDefinition sequence)

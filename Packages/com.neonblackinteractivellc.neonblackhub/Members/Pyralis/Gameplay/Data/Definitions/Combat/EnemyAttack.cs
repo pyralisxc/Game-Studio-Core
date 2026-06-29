@@ -19,10 +19,10 @@ namespace NeonBlack.Gameplay.Data.Definitions.Combat
     [CreateAssetMenu(menuName = "NeonBlack/Combat/Enemy Attack", fileName = "NewEnemyAttack")]
     public class EnemyAttack : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            if (attackRange < 0f) yield return PyralisRuntimeValidationIssue.Required("Attack Range cannot be negative.");
-            if (damage < 0f) yield return PyralisRuntimeValidationIssue.Required("Damage cannot be negative.");
+            if (attackRange < 0f) yield return RuntimeValidationIssue.Required("Attack Range cannot be negative.");
+            if (damage < 0f) yield return RuntimeValidationIssue.Required("Damage cannot be negative.");
         }
 
         [Header("Animation")]

@@ -28,18 +28,18 @@ namespace NeonBlack.Gameplay.Modules.Combat
         [SerializeField] private CombatSequenceDefinition aerialSequence;
         [SerializeField] private string aerialHitBoxZone = "Aerial";
 
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (!HasActions(primarySequence))
-                yield return PyralisRuntimeValidationIssue.Required("Primary Sequence needs at least one CombatActionDefinition. PawnCombatBehaviour does not invent local primary attacks.");
+                yield return RuntimeValidationIssue.Required("Primary Sequence needs at least one CombatActionDefinition. PawnCombatBehaviour does not invent local primary attacks.");
             if (!HasActions(secondarySequence))
-                yield return PyralisRuntimeValidationIssue.Required("Secondary Sequence needs at least one CombatActionDefinition. PawnCombatBehaviour does not invent local secondary attacks.");
+                yield return RuntimeValidationIssue.Required("Secondary Sequence needs at least one CombatActionDefinition. PawnCombatBehaviour does not invent local secondary attacks.");
             if (maxAerialAttacks > 0 && !HasActions(aerialSequence))
-                yield return PyralisRuntimeValidationIssue.Required("Aerial Sequence needs at least one CombatActionDefinition when Max Aerial Attacks is greater than zero.");
+                yield return RuntimeValidationIssue.Required("Aerial Sequence needs at least one CombatActionDefinition when Max Aerial Attacks is greater than zero.");
             if (attackCooldown < 0f)
-                yield return PyralisRuntimeValidationIssue.Required("Attack Cooldown cannot be negative.");
+                yield return RuntimeValidationIssue.Required("Attack Cooldown cannot be negative.");
             if (maxAerialAttacks < 0)
-                yield return PyralisRuntimeValidationIssue.Required("Max Aerial Attacks cannot be negative.");
+                yield return RuntimeValidationIssue.Required("Max Aerial Attacks cannot be negative.");
         }
 
         private static bool HasActions(CombatSequenceDefinition sequence)

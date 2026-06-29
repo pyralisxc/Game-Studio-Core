@@ -8,7 +8,7 @@ using Pys.Authoring.Contracts;
 namespace NeonBlack.Gameplay.Modules.Character
 {
     /// <summary>
-    /// Movement module for a 3D pawn. Owns the <see cref="BrawlerMovementModel"/>,
+    /// Movement module for a 3D pawn. Owns the <see cref="Rigged3DMovementModel"/>,
     /// drives the <see cref="CharacterController"/>, and manages crouch capsule resizing.
     ///
     /// Implements <see cref="IPawnMotor"/> so <see cref="PawnRoot"/> discovers it without a wrapper.
@@ -40,7 +40,7 @@ namespace NeonBlack.Gameplay.Modules.Character
         private float               _externalSpeedMultiplier = 1f;
 
         //  Movement model  //
-        private readonly BrawlerMovementModel _model        = new BrawlerMovementModel();
+        private readonly Rigged3DMovementModel _model        = new Rigged3DMovementModel();
         private          MovementPhysicsFrame _physicsFrame = MovementPhysicsFrame.Default;
         private          MovementConfig       _config;
 

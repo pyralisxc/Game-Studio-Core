@@ -44,10 +44,10 @@ namespace NeonBlack.Gameplay.Modules.Feedback.UI
             _timer = duration > 0f ? duration : defaultDisplayTime;
         }
 
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (label == null)
-                yield return PyralisRuntimeValidationIssue.Required("`ParticipantTimedTextPanel` should reference a TextMeshProUGUI label.");
+                yield return RuntimeValidationIssue.Required("`ParticipantTimedTextPanel` should reference a TextMeshProUGUI label.");
         }
     }
 }

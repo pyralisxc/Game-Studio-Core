@@ -4,12 +4,12 @@ Use this project file as the local instruction anchor for the Game Studio Core p
 
 ## Required Skills
 
-- Use `game-studio-core-unity-agent` for all Game Studio Core, NeonBlack Gameplay, Pyralis, shared mechanics, package maintenance, setup validation, and 2D/2.5D/3D runtime-lane work.
+- Use `game-studio-core-unity-agent` for all Game Studio Core, NeonBlack Gameplay, NeonBlack Gameplay, shared mechanics, package maintenance, setup validation, and 2D/2.5D/3D runtime-lane work.
 - Pair it with `unity-project-stewardship`, `agentic-project-stewardship`, `library-first-feature-development`, and `long-running-process-stewardship` when their triggers apply.
 
 ## Project Context
 
-Pyralis lives at:
+NeonBlack Gameplay lives at:
 
 `Packages\com.neonblackinteractivellc.neonblackhub\Members\Pyralis\Gameplay`
 
@@ -30,25 +30,25 @@ Do not use dated audits, migration notes, or old setup guides as source truth. I
 
 - Keep the core motto visible in every architecture choice:
   - Unity owns engine behavior.
-  - Pyralis owns gameplay meaning.
+  - NeonBlack Gameplay owns gameplay meaning.
   - Reflection discovers structure.
   - Dependency analysis discovers setup relationships.
   - Validators witness local semantic readiness.
   - The graph compiles understanding.
-  - PYS Authoring observes Pyralis contract evidence from its own package lane.
+  - PYS Authoring observes gameplay contract evidence from its own package lane.
 - Treat gameplay mechanics as shared platform capabilities by default.
 - Check how mechanics apply to `Sprite2D`, `Billboard2_5D`, `Rigged3D`, non-pawn participants, and networking/authority when relevant.
 - Prefer Unity packages, Unity ecosystem packages, and credible free/open packages before writing custom infrastructure.
 - Treat code, folder, package, docs, and validation maintenance as part of each slice, not as deferred cleanup.
 - Skip Unity generated/cache/build files for normal context. Treat `.meta` files as identity/reference files: preserve and create them with assets/scripts, inspect them only when GUID/reference/import behavior matters, and never blanket-ignore them during moves or package changes.
-- Keep `GameplaySessionBootstrap`, `PyralisGameplayLifetimeScope`, participant/session services, authored definitions/profiles, PYS contracts/reflection, dependency evidence, validators, and PYS graph projections as the current source of truth.
+- Keep `GameplaySessionBootstrap`, `GameplayLifetimeScope`, participant/session services, authored definitions/profiles, PYS contracts/reflection, dependency evidence, validators, and PYS graph projections as the current source of truth.
 - Do not reintroduce hidden singleton service lookups, first-player assumptions, or compatibility bridges unless preserving committed content requires it.
 - Keep the runtime simple and Unity-native: explicit pawn sibling components describe what a pawn is, direct module-owned components describe optional capabilities, and `ParticipantDefinition` owns input for the participant driving the pawn.
 - Keep active docs focused on present truth and intended direction. Remove stale legacy/history commentary from setup and architecture docs unless it protects active migration, shipped compatibility, or project data; move useful history to an archive, changelog, migration note, or audit file.
 
-### PYS Authoring Proof Semantics For Pyralis
+### PYS Authoring Proof Semantics For NeonBlack Gameplay
 
-For PYS Authoring while observing Pyralis, a proof is not the earliest technical Play Mode baseline. A proof is the successful Play Mode attempt that satisfies the selected Intent. If no Intent exists, or the authored setup has moved beyond the selected Intent, the active proof should come from the next meaningful Map/topology-derived route.
+For PYS Authoring while observing NeonBlack Gameplay, a proof is not the earliest technical Play Mode baseline. A proof is the successful Play Mode attempt that satisfies the selected Intent. If no Intent exists, or the authored setup has moved beyond the selected Intent, the active proof should come from the next meaningful Map/topology-derived route.
 
 Prerequisites are not proof completion. Movement, input, camera, session, participant, or pawn setup can be required setup for a combat/traversal/presentation proof, but they must not replace the chosen proof target.
 
@@ -63,7 +63,7 @@ Before changing PYS Authoring tabs, projections, or exports, state the affected 
 - whether it may show code/ownership audit pressure
 - whether its export saves the same projection the UI renders
 
-Intent, Overview, and Guide form the user-driven development path workbench. Map is the scene/setup reality workbench. Facts and Hygiene are codebase/system audit workbenches with separate ownership. Route Proof Trace is Guide's exported route projection, not a separate tab or proof engine. PYS owns these projections; Pyralis supplies target-project contracts, validation records, and Unity evidence.
+Intent, Overview, and Guide form the user-driven development path workbench. Map is the scene/setup reality workbench. Facts and Hygiene are codebase/system audit workbenches with separate ownership. Route Proof Trace is Guide's exported route projection, not a separate tab or proof engine. PYS owns these projections; NeonBlack Gameplay supplies target-project contracts, validation records, and Unity evidence.
 
 ## Validation
 
@@ -83,7 +83,7 @@ Do not commit or rely on machine-local absolute paths, `.codex`, Unity layout pa
 
 ### Authoring Validation Protocol
 
-When validating the Pyralis authoring path, use Computer Use to drive the Unity Editor like a beginner-to-adaptable user would: open PYS Authoring from `Tools/PYS/Authoring`, follow its guidance, use the Project window Create menu, Hierarchy, Inspector, Add Component, object picker, scene view, and Play Mode. The point is to prove the user can create and customize their own setup from the guidance.
+When validating the gameplay authoring path, use Computer Use to drive the Unity Editor like a beginner-to-adaptable user would: open PYS Authoring from `Tools/PYS/Authoring`, follow its guidance, use the Project window Create menu, Hierarchy, Inspector, Add Component, object picker, scene view, and Play Mode. The point is to prove the user can create and customize their own setup from the guidance.
 
 Do not satisfy authoring validation by adding one-off scene generators, factory menu items, hidden auto-wire scripts, or generated "proof scenes" that bypass the Authoring Window and native Unity workflow. Those shortcuts can be useful only as separate developer tooling after the real authoring path has been manually proven, and they must not be treated as evidence that the authoring guide works.
 

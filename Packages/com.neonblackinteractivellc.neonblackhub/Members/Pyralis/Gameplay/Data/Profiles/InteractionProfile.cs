@@ -20,7 +20,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Interaction Profile", fileName = "InteractionProfile")]
     public class InteractionProfile : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             yield break;
         }

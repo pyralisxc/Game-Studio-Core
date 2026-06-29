@@ -22,10 +22,10 @@ namespace NeonBlack.Gameplay.Data.Definitions.Combat
     [CreateAssetMenu(menuName = "NeonBlack/Combat/Combat Sequence Definition", fileName = "CombatSequenceDefinition")]
     public class CombatSequenceDefinition : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (actions == null || actions.Length == 0)
-                yield return PyralisRuntimeValidationIssue.Required("No actions assigned to this sequence.", nameof(actions), nameof(CombatSequenceDefinition), issueCode: "CombatSequence.Actions.Empty");
+                yield return RuntimeValidationIssue.Required("No actions assigned to this sequence.", nameof(actions), nameof(CombatSequenceDefinition), issueCode: "CombatSequence.Actions.Empty");
 
             if (actions == null)
                 yield break;
@@ -35,7 +35,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Combat
                 CombatActionDefinition action = actions[i];
                 if (action == null)
                 {
-                    yield return PyralisRuntimeValidationIssue.Required(
+                    yield return RuntimeValidationIssue.Required(
                         $"Actions[{i}] is empty.",
                         $"{nameof(actions)}[{i}]",
                         nameof(CombatSequenceDefinition),
@@ -45,11 +45,11 @@ namespace NeonBlack.Gameplay.Data.Definitions.Combat
                     continue;
                 }
 
-                foreach (PyralisRuntimeValidationIssue issue in action.GetRuntimeValidationIssues())
+                foreach (RuntimeValidationIssue issue in action.GetRuntimeValidationIssues())
                 {
                     if (issue != null && !string.IsNullOrWhiteSpace(issue.Message))
                     {
-                        yield return new PyralisRuntimeValidationIssue(
+                        yield return new RuntimeValidationIssue(
                             $"Action `{action.displayName}`: {issue.Message}",
                             $"{nameof(actions)}[{i}]",
                             nameof(CombatSequenceDefinition),

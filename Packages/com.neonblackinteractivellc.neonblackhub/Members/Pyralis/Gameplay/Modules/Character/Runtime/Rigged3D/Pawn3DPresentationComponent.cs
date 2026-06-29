@@ -99,11 +99,11 @@ namespace NeonBlack.Gameplay.Modules.Character
                 context.PawnDefinition != null ? context.PawnDefinition.animationProfile : null);
         }
 
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (GetComponent<IActorAnimationController>() == null)
             {
-                yield return PyralisRuntimeValidationIssue.Required(
+                yield return RuntimeValidationIssue.Required(
                     "Pawn3DPresentationComponent needs a component that implements IActorAnimationController.",
                     "IActorAnimationController",
                     nameof(Pawn3DPresentationComponent),

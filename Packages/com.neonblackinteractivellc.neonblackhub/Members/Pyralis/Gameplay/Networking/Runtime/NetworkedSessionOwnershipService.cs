@@ -6,13 +6,13 @@ using Pys.Authoring.Contracts;
 namespace NeonBlack.Gameplay.Networking.Runtime
 {
     /// <summary>
-    /// NGO-backed session ownership policy used by networked Pyralis sessions.
+    /// NGO-backed session ownership policy used by networked gameplay sessions.
     /// </summary>
     [AuthoringContract(
         Category = "Networking",
         CapabilityPath = "Networking/Session/Session Ownership Service",
         Surface = AuthoringSurface.Goal,
-        Summary = "NGO-backed session ownership policy used by networked Pyralis sessions.",
+        Summary = "NGO-backed session ownership policy used by networked gameplay sessions.",
         RequiredInterfaceNames = new[] { nameof(ISessionOwnershipService) },
         SetupSteps = new[]
         {

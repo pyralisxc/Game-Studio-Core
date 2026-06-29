@@ -39,11 +39,11 @@ namespace NeonBlack.Gameplay.Data.Definitions
     [CreateAssetMenu(menuName = "NeonBlack/Definitions/Session Definition", fileName = "SessionDefinition", order = 0)]
     public class SessionDefinition : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (string.IsNullOrWhiteSpace(sessionName))
             {
-                yield return PyralisRuntimeValidationIssue.Required(
+                yield return RuntimeValidationIssue.Required(
                     "Session name is required.",
                     nameof(sessionName),
                     nameof(SessionDefinition),
@@ -54,7 +54,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
 
             if (maxParticipants < 1)
             {
-                yield return PyralisRuntimeValidationIssue.Required(
+                yield return RuntimeValidationIssue.Required(
                     "Max participants must be at least 1.",
                     nameof(maxParticipants),
                     nameof(SessionDefinition),
@@ -65,7 +65,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
 
             if (defaultGameMode == null)
             {
-                yield return PyralisRuntimeValidationIssue.Required(
+                yield return RuntimeValidationIssue.Required(
                     "Default game mode is not assigned.",
                     nameof(defaultGameMode),
                     nameof(SessionDefinition),
@@ -76,7 +76,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
 
             if (networkMode != GameplayNetworkMode.LocalOnly && localFirst)
             {
-                yield return PyralisRuntimeValidationIssue.Required(
+                yield return RuntimeValidationIssue.Required(
                     "Networked sessions should set Local First to false so setup tooling treats NGO as the authority path.",
                     nameof(localFirst),
                     nameof(SessionDefinition),
@@ -87,7 +87,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
 
             if (defaultParticipants == null || defaultParticipants.Length == 0)
             {
-                yield return PyralisRuntimeValidationIssue.Required(
+                yield return RuntimeValidationIssue.Required(
                     "At least one default participant should be assigned.",
                     nameof(defaultParticipants),
                     nameof(SessionDefinition),
@@ -100,7 +100,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
             int effectiveMaxParticipants = GetEffectiveMaxParticipants();
             if (defaultParticipants.Length > effectiveMaxParticipants)
             {
-                yield return PyralisRuntimeValidationIssue.Required(
+                yield return RuntimeValidationIssue.Required(
                     $"Session has {defaultParticipants.Length} default participants but only supports {effectiveMaxParticipants} participants.",
                     nameof(defaultParticipants),
                     nameof(SessionDefinition),
@@ -115,7 +115,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
                 ParticipantDefinition participant = defaultParticipants[i];
                 if (participant == null)
                 {
-                    yield return PyralisRuntimeValidationIssue.Required(
+                    yield return RuntimeValidationIssue.Required(
                         $"Default participant slot {i} is empty.",
                         nameof(defaultParticipants),
                         nameof(SessionDefinition),
@@ -130,7 +130,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
 
                 if (participant.preferredSeatIndex >= effectiveMaxParticipants)
                 {
-                    yield return PyralisRuntimeValidationIssue.Required(
+                    yield return RuntimeValidationIssue.Required(
                         $"Participant `{participant.displayName}` prefers seat {participant.preferredSeatIndex}, outside max participant count {effectiveMaxParticipants}.",
                         nameof(defaultParticipants),
                         nameof(SessionDefinition),
@@ -142,7 +142,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
 
                 if (!preferredSeats.Add(participant.preferredSeatIndex))
                 {
-                    yield return PyralisRuntimeValidationIssue.Recommended(
+                    yield return RuntimeValidationIssue.Recommended(
                         $"Preferred seat {participant.preferredSeatIndex} is assigned more than once; runtime can reassign duplicates, but prefabs/scenes should author seats clearly.",
                         nameof(defaultParticipants),
                         nameof(SessionDefinition),

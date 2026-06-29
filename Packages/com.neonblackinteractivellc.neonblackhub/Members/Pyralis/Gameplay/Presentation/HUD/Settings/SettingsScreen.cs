@@ -18,7 +18,7 @@ namespace NeonBlack.Gameplay.Presentation.HUD.Settings
         SetupSteps = new[] 
     { 
         "Assign Main Menu Page and Settings Page roots from the same Canvas.",
-        "Assign Settings Source to SettingsManager.",
+        "Assign Settings Source to GameplaySettingsService.",
         "Assign the Back Button so Close can save values.",
         "Start the Settings Page inactive."
     },
@@ -52,7 +52,7 @@ public class SettingsScreen : MonoBehaviour
     private Button _backButton;
 
     [Header("Runtime Services")]
-    [SerializeField, Tooltip("Settings service that stores and applies slider/toggle values. SettingsManager implements IGameplaySettingsApplier.")]
+    [SerializeField, Tooltip("Settings service that stores and applies slider/toggle values. GameplaySettingsService implements IGameplaySettingsApplier.")]
     private MonoBehaviour _settingsSource;
 
     [SerializeField, Tooltip("Optional gameplay state reader used to pause time only when settings are opened during active gameplay. SessionStateService normally supplies IGameplayStateReader.")]
@@ -174,7 +174,7 @@ public class SettingsScreen : MonoBehaviour
         if (_settings == null && !_loggedMissingSettings)
         {
             _loggedMissingSettings = true;
-            Debug.LogError("[SettingsScreen] Settings Source is not configured. Assign SettingsManager or another IGameplaySettingsApplier.", this);
+            Debug.LogError("[SettingsScreen] Settings Source is not configured. Assign GameplaySettingsService or another IGameplaySettingsApplier.", this);
         }
 
         return _settings;

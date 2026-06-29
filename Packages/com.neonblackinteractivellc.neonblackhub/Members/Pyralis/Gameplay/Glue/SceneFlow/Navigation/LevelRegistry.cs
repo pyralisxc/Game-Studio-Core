@@ -24,16 +24,16 @@ namespace NeonBlack.Gameplay.Glue.SceneFlow.Navigation
     )]
     public class LevelRegistry : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (levels == null || levels.Length == 0)
-                yield return PyralisRuntimeValidationIssue.Required("Levels list is empty.");
+                yield return RuntimeValidationIssue.Required("Levels list is empty.");
             else
             {
                 for (int i = 0; i < levels.Length; i++)
                     if (levels[i] == null)
                     {
-                        yield return PyralisRuntimeValidationIssue.Required(
+                        yield return RuntimeValidationIssue.Required(
                             $"Levels[{i}] is unassigned.",
                             $"{nameof(levels)}[{i}]",
                             nameof(LevelRegistry));

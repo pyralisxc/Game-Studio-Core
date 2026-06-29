@@ -12,8 +12,8 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Surface = AuthoringSurface.Profile,
         Summary = "Defines the visual feedback (flashes, popups) for hazard activation and explosion.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/visuals",
-        RequiredFields = new[] { nameof(activationFlashPreset), nameof(explosionFlashPreset) },
-        SetupSteps = new[] { "Assign Flash presets.", "Configure popup text and colors." },
+        RequiredFields = new[] { nameof(activationFlashEffect), nameof(explosionFlashEffect) },
+        SetupSteps = new[] { "Assign Flash entries.", "Configure popup text and colors." },
         SuccessChecks = new[] { "Trigger a hazard and verify the flashes and popups match the profile." },
         Tags = new[] { "capability:VFX", "capability:UI", "runtime:AnimationPresentation" },
         Selectable = false
@@ -21,18 +21,18 @@ namespace NeonBlack.Gameplay.Data.Profiles
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Hazard Feedback Profile", fileName = "HazardFeedbackProfile")]
     public class HazardFeedbackProfile : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            if (flashOnActivation && activationFlashPreset == null) yield return PyralisRuntimeValidationIssue.Required("Activation Flash is enabled but Preset is missing.");
-            if (flashOnExplosion && explosionFlashPreset == null) yield return PyralisRuntimeValidationIssue.Required("Explosion Flash is enabled but Preset is missing.");
+            if (flashOnActivation && activationFlashEffect == null) yield return RuntimeValidationIssue.Required("Activation Flash is enabled but profile is missing.");
+            if (flashOnExplosion && explosionFlashEffect == null) yield return RuntimeValidationIssue.Required("Explosion Flash is enabled but profile is missing.");
         }
 
         public bool flashOnActivation = true;
-        public FlashPresetSO activationFlashPreset;
+        public FlashEffectProfile activationFlashEffect;
         public bool flashOnExplosion = true;
-        public FlashPresetSO explosionFlashPreset;
+        public FlashEffectProfile explosionFlashEffect;
         public bool flashOnBounce = false;
-        public FlashPresetSO bounceFlashPreset;
+        public FlashEffectProfile bounceFlashEffect;
 
         public bool showActivationPopup = false;
         public string activationPopupText = "Warning";

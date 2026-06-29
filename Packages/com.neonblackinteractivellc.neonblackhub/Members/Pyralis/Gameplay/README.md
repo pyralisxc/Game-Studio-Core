@@ -1,11 +1,11 @@
 # NeonBlack Gameplay
 
-This folder contains the active Pyralis gameplay framework for Neon Black Hub.
+This folder contains the active gameplay framework for Neon Black Hub.
 
 The current source of truth is a shared gameplay stack built around:
 
 - `GameplaySessionBootstrap`
-- `PyralisGameplayLifetimeScope`
+- `GameplayLifetimeScope`
 - authored `SessionDefinition`, `ParticipantDefinition`, `PawnDefinition`, and `GameModeDefinition`
 - participant-owned pawns through `PawnRoot`
 - participant-owned input through `ParticipantDefinition.inputProfile`
@@ -19,12 +19,12 @@ The current source of truth is a shared gameplay stack built around:
 Core motto:
 
 - Unity owns engine behavior.
-- Pyralis owns gameplay meaning.
+- NeonBlack Gameplay owns gameplay meaning.
 - Reflection discovers structure.
 - Dependency analysis discovers setup relationships.
 - Validators witness local semantic readiness.
 - The graph compiles understanding.
-- PYS Authoring observes Pyralis contract evidence from its own package lane.
+- PYS Authoring observes gameplay contract evidence from its own package lane.
 
 ## Supported pawn presentation targets
 
@@ -44,7 +44,7 @@ Rigged 3D support is Animator-driven and intended for both `Generic` and `Humano
 - Participant topology describes how control enters the session: solo auto-start, Unity `PlayerInputManager` local join, network authority, or hybrid local/networked join.
 - Camera profiles describe what is **watched** and which saved Cinemachine recipe values should apply. Cinemachine owns composition, damping, offsets, lens behavior, and blend mechanics.
 - Scenes own scene-scale direction: bootstrap, lifetime scope, camera rig, spawners, scene services, and proof-specific objects.
-- Pyralis exposes setup evidence through gameplay contracts; PYS Authoring reads that evidence from its own package.
+- Gameplay scripts expose setup evidence through gameplay contracts; PYS Authoring reads that evidence from its own package.
 - Gameplay state that advances over time uses `GameplayTickBehaviour` and `GameplayTickContext` in the owning domain. Presentation, HUD effects, camera smoothing, and local input polling may use Unity `Update`/`LateUpdate` directly when they only display or collect state.
 
 ## Verification rule of thumb
@@ -57,11 +57,11 @@ Do not keep broad optional domain matrices or documentation audits in the active
 
 ## Layout
 
-- `Core/`: stable contracts plus tiny shared type vocabulary such as movement modes, presentation lanes, animation signals, action value language, and narrow optional sinks/publishers
+- `Core/`: stable contracts plus tiny shared type vocabulary such as movement modes, presentation lanes, animation signals, action value language, and narrow optional sinks/publishers; runtime contracts are grouped by seam family such as combat, movement, interaction, session, feedback, time, and scene
 - `Data/`: ScriptableObject definitions, profiles, config assets such as `GameConfig`, and data-backed handoff contracts such as participant and interaction dispatch context; authored combat data lives here, not in the Combat runtime namespace
 - `Editor/`: tactical custom inspectors for local gameplay fields
 - `Glue/`: bootstrap, lifetime scope, session services, participant services, input routing, participant spawning, route composition, and service-registration wiring that makes authored modules run
-- `Modules/`: reusable gameplay capability families such as character, combat, traversal, hazards, enemies, encounters, environment, interaction/collectibles, feedback, scoring, tabletop, settings, input, spawning, and RPG
+- `Modules/`: reusable gameplay capability families such as character, combat, traversal, hazards, enemies, encounters, environment, interaction/collectibles, feedback, scoring, tabletop, settings, input, spawning, and RPG; broad modules should expose child folders for their real subsystems instead of keeping feature pieces at the module root
 - `Networking/`: ownership, authority, and backend-facing runtime contracts
 - `Presentation/`: cross-feature visual and camera infrastructure
 - `Tests/`: package-level validation infrastructure
@@ -69,7 +69,7 @@ Do not keep broad optional domain matrices or documentation audits in the active
 
 Core is intentionally not an implementation home. Authored input setup is owned by `InputProfile`, gameplay config assets live under `Data/Config`, runtime session context lives under `Glue/Lifetime`, and optional feature domains live under `Modules`. The root `NeonBlack.Gameplay` assembly is a compatibility facade over `NeonBlack.Gameplay.Glue`; new composition code should reference or live in Glue directly instead of expanding the facade.
 
-Core contracts should stay neutral and compile-time focused. For example, `IDamageNumberSink` and `IActorFeedbackPublisher` are shared optional feedback seams, but `DamageNumber`, `DamageNumberSpawner`, `ActorFeedbackComponent`, and feedback event payloads belong to the Feedback module. `IActorAnimationController`, `IBillboardFacingController`, `IActorCombatMovementState`, `IActorCombatMovementInfluence`, `IActorCombatRequestReceiver`, `ActorCombatCommand`, `IActorCombatResultReceiver`, `ActorCombatResult`, `IActorGuardController`, `IActorGuardInputReceiver2D`, `IActorHazardImpactTarget`, `IActorInteractionInputReceiver2D`, `IActorInteractionRequestReceiver`, `IActorMotionStateReader`, `IActorMovementInputReceiver2D`, and `IEncounterSpawnSource` are tiny runtime seams that let player input, enemy AI, combat modules, motors, hazards, scoring, posture systems, interaction, encounters, spawning, and presentation communicate without importing concrete opposite-lane behavior. Data-backed presentation seams such as `IVisualFlashPlayer`, `ICameraRigProfileSwitcher`, and `IPawnAnimationProfileReceiver` live under `Data.Presentation` because they operate on authored presentation profiles/presets while Presentation owns the concrete Unity components. Combat definitions such as `WeaponData`, `CombatSequenceDefinition`, projectile definitions, and status effects are authored data under `Data.Definitions.Combat`; Combat runtime scripts consume them instead of owning their namespace.
+Core contracts should stay neutral and compile-time focused. For example, `IDamageNumberSink` and `IActorFeedbackPublisher` are shared optional feedback seams, but `DamageNumber`, `DamageNumberSpawner`, `ActorFeedbackComponent`, and feedback event payloads belong to the Feedback module. `IActorAnimationController`, `IBillboardFacingController`, `IActorCombatMovementState`, `IActorCombatMovementInfluence`, `IActorCombatRequestReceiver`, `ActorCombatCommand`, `IActorCombatResultReceiver`, `ActorCombatResult`, `IActorGuardController`, `IActorGuardInputReceiver2D`, `IActorHazardImpactTarget`, `IActorInteractionInputReceiver2D`, `IActorInteractionRequestReceiver`, `IActorMotionStateReader`, `IActorMovementInputReceiver2D`, and `IEncounterSpawnSource` are tiny runtime seams that let player input, enemy AI, combat modules, motors, hazards, scoring, posture systems, interaction, encounters, spawning, and presentation communicate without importing concrete opposite-lane behavior. Data-backed presentation seams such as `IVisualFlashPlayer`, `ICameraRigProfileSwitcher`, and `IPawnAnimationProfileReceiver` live under `Data.Presentation` because they operate on authored presentation profiles/entries while Presentation owns the concrete Unity components. Combat definitions such as `WeaponData`, `CombatSequenceDefinition`, projectile definitions, and status effects are authored data under `Data.Definitions.Combat`; Combat runtime scripts consume them instead of owning their namespace.
 
 Participant-facing pawn handoff contracts such as `IPawnParticipantInitializer`, `IPawnParticipantStateReader`, `IPawnRuntimeServicesReceiver`, `PawnRuntimeServicesContext`, `IPawnInputModule`, and `IPawnCombatModule` live under `Data.Participants` because they express authored participant/profile ownership rather than Character behavior. Interaction handler contracts that need participant context live under `Data.Interactions`, so Traversal, RPG, and Interaction-owned components can handle interactions without importing the concrete Interaction module. The Input module consumes those Data contracts and Core command seams; it should not import Character, Combat, or Interaction just to push move, jump, dash, attack, guard, or interact requests. The Combat module consumes Data combat profiles and Core combat/movement seams; it should not import Character just to read facing, airborne, or action-lock state from a pawn motor. When Character movement needs combat timing or movement multipliers, it reads `IActorCombatMovementInfluence` rather than importing Combat.
 

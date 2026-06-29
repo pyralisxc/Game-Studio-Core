@@ -15,7 +15,6 @@ namespace NeonBlack.Gameplay.Tests.Runtime
                 "Packages",
                 "com.neonblackinteractivellc.neonblackhub",
                 "Members",
-                "Pyralis",
                 "Gameplay");
 
             Assert.That(Directory.Exists(gameplayRoot), Is.True, $"Missing gameplay root: {gameplayRoot}");

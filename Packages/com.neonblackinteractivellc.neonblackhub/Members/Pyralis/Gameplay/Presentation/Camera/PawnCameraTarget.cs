@@ -24,7 +24,7 @@ namespace NeonBlack.Gameplay.Presentation.Camera
         Selectable = false
     )]
     [DisallowMultipleComponent]
-    [AddComponentMenu("NeonBlack/Pyralis/Pawn Camera Target")]
+    [AddComponentMenu("NeonBlack/Gameplay/Pawn Camera Target")]
     public sealed class PawnCameraTarget : MonoBehaviour
     {
         [SerializeField] private Transform followTarget;

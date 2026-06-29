@@ -11,7 +11,7 @@ namespace NeonBlack.Gameplay.Tests.Runtime
         [Test]
         public void RuntimeValidationIssueUtility_WithParentContext_PreservesChildMetadata()
         {
-            PyralisRuntimeValidationIssue child = PyralisRuntimeValidationIssue.Recommended(
+            RuntimeValidationIssue child = RuntimeValidationIssue.Recommended(
                 "Child semantic issue.",
                 "childField",
                 "ChildTarget",
@@ -19,7 +19,7 @@ namespace NeonBlack.Gameplay.Tests.Runtime
                 "Child is fixed.",
                 "Child.Code");
 
-            PyralisRuntimeValidationIssue parent = PyralisRuntimeValidationIssueUtility.WithParentContext(
+            RuntimeValidationIssue parent = RuntimeValidationIssueUtility.WithParentContext(
                 child,
                 "Parent: ",
                 "Parent.Code",
@@ -34,21 +34,21 @@ namespace NeonBlack.Gameplay.Tests.Runtime
             Assert.That(parent.TargetLabel, Is.EqualTo("ChildTarget"));
             Assert.That(parent.NativeAction, Is.EqualTo("Fix the child."));
             Assert.That(parent.SuccessCheck, Is.EqualTo("Child is fixed."));
-            Assert.That(parent.Severity, Is.EqualTo(PyralisRuntimeValidationSeverity.Recommended));
+            Assert.That(parent.Severity, Is.EqualTo(RuntimeValidationSeverity.Recommended));
         }
 
         [Test]
-        public void GameplaySessionBootstrap_ReportsPyralisOwnedRuntimeValidationIssues()
+        public void GameplaySessionBootstrap_ReportsGameplayOwnedRuntimeValidationIssues()
         {
             GameObject gameObject = new GameObject("Runtime Validation Bootstrap Test");
             try
             {
                 GameplaySessionBootstrap bootstrap = gameObject.AddComponent<GameplaySessionBootstrap>();
                 IRuntimeValidationProvider provider = bootstrap;
-                PyralisRuntimeValidationIssue[] issues = provider.GetRuntimeValidationIssues().ToArray();
+                RuntimeValidationIssue[] issues = provider.GetRuntimeValidationIssues().ToArray();
 
                 Assert.That(issues.Select(issue => issue.IssueCode), Does.Contain("GameplaySessionBootstrap.SessionDefinition.Missing"));
-                Assert.That(issues.Any(issue => issue.Severity == PyralisRuntimeValidationSeverity.Required), Is.True);
+                Assert.That(issues.Any(issue => issue.Severity == RuntimeValidationSeverity.Required), Is.True);
                 Assert.That(issues.All(issue => !string.IsNullOrWhiteSpace(issue.Message)), Is.True);
             }
             finally

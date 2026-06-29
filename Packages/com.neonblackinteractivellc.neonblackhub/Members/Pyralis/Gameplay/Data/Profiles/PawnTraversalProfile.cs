@@ -23,10 +23,10 @@ namespace NeonBlack.Gameplay.Data.Profiles
 [CreateAssetMenu(menuName = "NeonBlack/Profiles/Pawn Traversal Profile", fileName = "PawnTraversalProfile", order = -50)]
     public class PawnTraversalProfile : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            if (allowJump && jumpHeight <= 0f) yield return PyralisRuntimeValidationIssue.Required("Jump is allowed but Jump Height is <= 0.");
-            if (allowDodge && dodgeDistance <= 0f) yield return PyralisRuntimeValidationIssue.Required("Dodge is allowed but Dodge Distance is <= 0.");
+            if (allowJump && jumpHeight <= 0f) yield return RuntimeValidationIssue.Required("Jump is allowed but Jump Height is <= 0.");
+            if (allowDodge && dodgeDistance <= 0f) yield return RuntimeValidationIssue.Required("Dodge is allowed but Dodge Distance is <= 0.");
         }
 
         public bool allowJump = true;

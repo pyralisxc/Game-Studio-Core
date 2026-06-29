@@ -19,26 +19,26 @@ namespace NeonBlack.Gameplay.Data.Definitions
     [CreateAssetMenu(menuName = "NeonBlack/Definitions/Action Definition", fileName = "ActionDefinition", order = 60)]
     public class ActionDefinition : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (string.IsNullOrWhiteSpace(actionId))
-                yield return PyralisRuntimeValidationIssue.Required("Action id is required.");
+                yield return RuntimeValidationIssue.Required("Action id is required.");
 
             if (string.IsNullOrWhiteSpace(displayName))
-                yield return PyralisRuntimeValidationIssue.Required("Display name is required.");
+                yield return RuntimeValidationIssue.Required("Display name is required.");
 
             if (string.IsNullOrWhiteSpace(actionFamily))
-                yield return PyralisRuntimeValidationIssue.Required("Action family is required so tools can group related actions.");
+                yield return RuntimeValidationIssue.Required("Action family is required so tools can group related actions.");
 
             if (cooldown < 0f)
-                yield return PyralisRuntimeValidationIssue.Required("Cooldown cannot be negative.");
+                yield return RuntimeValidationIssue.Required("Cooldown cannot be negative.");
 
             if (resourceCost < 0)
-                yield return PyralisRuntimeValidationIssue.Required("Resource cost cannot be negative.");
+                yield return RuntimeValidationIssue.Required("Resource cost cannot be negative.");
 
             List<string> targetIssues = targetRule.GetValidationIssues();
             foreach (var issue in targetIssues)
-                yield return PyralisRuntimeValidationIssue.Required(issue);
+                yield return RuntimeValidationIssue.Required(issue);
         }
 
         public string actionId = "action.new";

@@ -178,21 +178,21 @@ namespace NeonBlack.Gameplay.Modules.Rpg.UI
             return true;
         }
 
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             ResolveReferences();
 
             if (routePresenter == null)
-                yield return PyralisRuntimeValidationIssue.Required("`RpgSkillTreePanelPresenter` should reference the SkillTree or Trainer route presenter or live below one.");
+                yield return RuntimeValidationIssue.Required("`RpgSkillTreePanelPresenter` should reference the SkillTree or Trainer route presenter or live below one.");
 
             if ((skillTrees == null || skillTrees.Length == 0) && (_runtimeTrees == null || _runtimeTrees.Length == 0))
-                yield return PyralisRuntimeValidationIssue.Required("`RpgSkillTreePanelPresenter` should reference at least one Skill Tree Definition.");
+                yield return RuntimeValidationIssue.Required("`RpgSkillTreePanelPresenter` should reference at least one Skill Tree Definition.");
 
             if (nodeListLabel == null && selectedNodeLabel == null)
-                yield return PyralisRuntimeValidationIssue.Required("`RpgSkillTreePanelPresenter` should reference a node list or selected node label.");
+                yield return RuntimeValidationIssue.Required("`RpgSkillTreePanelPresenter` should reference a node list or selected node label.");
 
             if (unlockButton == null)
-                yield return PyralisRuntimeValidationIssue.Required("`RpgSkillTreePanelPresenter` needs Unlock Button or a project input bridge calling UnlockSelectedNode().");
+                yield return RuntimeValidationIssue.Required("`RpgSkillTreePanelPresenter` needs Unlock Button or a project input bridge calling UnlockSelectedNode().");
         }
 
         private SkillTreeDefinition ActiveTree

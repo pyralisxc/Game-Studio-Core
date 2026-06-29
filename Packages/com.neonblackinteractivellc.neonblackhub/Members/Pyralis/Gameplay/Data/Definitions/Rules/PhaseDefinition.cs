@@ -20,9 +20,9 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
     [CreateAssetMenu(menuName = "NeonBlack/Rules/Phase Definition", fileName = "PhaseDefinition", order = -60)]
     public class PhaseDefinition : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            return PyralisRuntimeValidationIssueUtility.FromLocalValidationMessages(GetValidationIssues(), this);
+            return RuntimeValidationIssueUtility.FromLocalValidationMessages(GetValidationIssues(), this);
         }
 
         public string phaseId = "phase.default";

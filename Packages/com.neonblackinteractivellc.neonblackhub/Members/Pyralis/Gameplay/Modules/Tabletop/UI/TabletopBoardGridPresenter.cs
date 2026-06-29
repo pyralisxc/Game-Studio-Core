@@ -19,19 +19,19 @@ namespace NeonBlack.Gameplay.Modules.Tabletop
         Surface = AuthoringSurface.Goal,
         Summary = "Inspector Add Component path for a board presenter that can build selectable tabletop spaces.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/tabletop",
-        RequiredFields = new[] { nameof(boardDefinition), nameof(movePolicyDefinition), nameof(turnOrderDefinition), nameof(selectionBridge), nameof(spacePrefab), nameof(piecePrefab) },
-        SetupSteps = new[] { "Add TabletopBoardGridPresenter and TabletopBoardSelectionBridge to the same scene object.", "Assign Board, Move Policy, Turn Order, and Selection Bridge references.", "Assign Space and Piece prefabs." },
+        RequiredFields = new[] { nameof(boardDefinition), nameof(movePolicyDefinition), nameof(turnOrderDefinition), nameof(selectionController), nameof(spacePrefab), nameof(piecePrefab) },
+        SetupSteps = new[] { "Add TabletopBoardGridPresenter and TabletopBoardSelectionController to the same scene object.", "Assign Board, Move Policy, Turn Order, and Selection Controller references.", "Assign Space and Piece prefabs." },
         SuccessChecks = new[] { "Click 'Rebuild Board' in the inspector and verify the grid is generated." },
         Tags = new[] { "capability:Tabletop", "capability:Grid" }
     )]
-    [RequireComponent(typeof(TabletopBoardSelectionBridge))]
+    [RequireComponent(typeof(TabletopBoardSelectionController))]
     [AddComponentMenu("NeonBlack/Gameplay/Tabletop/Tabletop Board Grid Presenter")]
     public sealed class TabletopBoardGridPresenter : MonoBehaviour, IRuntimeValidationProvider
     {
         [SerializeField] private BoardDefinition boardDefinition;
         [SerializeField] private BoardMovePolicyDefinition movePolicyDefinition;
         [SerializeField] private TurnOrderDefinition turnOrderDefinition;
-        [SerializeField] private TabletopBoardSelectionBridge selectionBridge;
+        [SerializeField] private TabletopBoardSelectionController selectionController;
         [SerializeField] private GameObject spacePrefab;
         [SerializeField] private GameObject piecePrefab;
         [SerializeField] private Vector2 cellSize = Vector2.one;
@@ -47,17 +47,17 @@ namespace NeonBlack.Gameplay.Modules.Tabletop
 
         public IReadOnlyList<TabletopBoardSpaceView> SpaceViews => _spaceViews;
         public IReadOnlyList<TabletopBoardPieceView> PieceViews => _pieceViews;
-        public TabletopBoardSelectionBridge SelectionBridge => selectionBridge;
+        public TabletopBoardSelectionController SelectionBridge => selectionController;
         public BoardRuntimeState BoardState => _boardState;
         public TurnRuntimeState TurnState => _turnState;
         public IActionQueueService ActionQueue => _actionQueue;
         public string LastIssue { get; private set; } = string.Empty;
 
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (boardDefinition == null)
             {
-                yield return PyralisRuntimeValidationIssue.Required(
+                yield return RuntimeValidationIssue.Required(
                     "BoardDefinition is required before building a tabletop board presenter.",
                     nameof(boardDefinition),
                     nameof(TabletopBoardGridPresenter),
@@ -66,20 +66,20 @@ namespace NeonBlack.Gameplay.Modules.Tabletop
                     "TabletopBoardGridPresenter.BoardDefinition.Missing");
             }
 
-            if (selectionBridge == null && GetComponent<TabletopBoardSelectionBridge>() == null)
+            if (selectionController == null && GetComponent<TabletopBoardSelectionController>() == null)
             {
-                yield return PyralisRuntimeValidationIssue.Required(
-                    "TabletopBoardSelectionBridge is required before board spaces can be selected.",
-                    nameof(selectionBridge),
+                yield return RuntimeValidationIssue.Required(
+                    "TabletopBoardSelectionController is required before board spaces can be selected.",
+                    nameof(selectionController),
                     nameof(TabletopBoardGridPresenter),
-                    "Add TabletopBoardSelectionBridge as a sibling component or assign it to TabletopBoardGridPresenter.selectionBridge.",
+                    "Add TabletopBoardSelectionController as a sibling component or assign it to TabletopBoardGridPresenter.selectionController.",
                     "TabletopBoardGridPresenter can initialize the board selection bridge.",
                     "TabletopBoardGridPresenter.SelectionBridge.Missing");
             }
 
             if (cellSize.x <= 0f || cellSize.y <= 0f)
             {
-                yield return PyralisRuntimeValidationIssue.Required(
+                yield return RuntimeValidationIssue.Required(
                     "Cell Size must be greater than zero on both axes.",
                     nameof(cellSize),
                     nameof(TabletopBoardGridPresenter),
@@ -90,7 +90,7 @@ namespace NeonBlack.Gameplay.Modules.Tabletop
 
             if (spacePrefab == null)
             {
-                yield return PyralisRuntimeValidationIssue.Recommended(
+                yield return RuntimeValidationIssue.Recommended(
                     "Space Prefab is empty. Runtime can create plain fallback spaces, but authored board art should use a prefab with TabletopBoardSpaceView.",
                     nameof(spacePrefab),
                     nameof(TabletopBoardGridPresenter),
@@ -101,7 +101,7 @@ namespace NeonBlack.Gameplay.Modules.Tabletop
 
             if (piecePrefab == null)
             {
-                yield return PyralisRuntimeValidationIssue.Recommended(
+                yield return RuntimeValidationIssue.Recommended(
                     "Piece Prefab is empty. Runtime can use piece-specific BoardPieceDefinition visual prefabs or create fallback pieces.",
                     nameof(piecePrefab),
                     nameof(TabletopBoardGridPresenter),
@@ -117,22 +117,22 @@ namespace NeonBlack.Gameplay.Modules.Tabletop
             set
             {
                 resolveQueuedMoveImmediately = value;
-                if (selectionBridge != null)
-                    selectionBridge.ResolveQueuedMoveImmediately = value;
+                if (selectionController != null)
+                    selectionController.ResolveQueuedMoveImmediately = value;
             }
         }
 
         public void Configure(
             BoardDefinition board,
             BoardMovePolicyDefinition movePolicy = null,
-            TabletopBoardSelectionBridge bridge = null,
+            TabletopBoardSelectionController bridge = null,
             TurnOrderDefinition turnOrder = null)
         {
             boardDefinition = board;
             movePolicyDefinition = movePolicy;
             turnOrderDefinition = turnOrder;
             if (bridge != null)
-                selectionBridge = bridge;
+                selectionController = bridge;
         }
 
         public bool RebuildBoard(out string issue)
@@ -171,8 +171,8 @@ namespace NeonBlack.Gameplay.Modules.Tabletop
             if (!TryResolveSelectionBridge(out issue))
                 return false;
 
-            selectionBridge.ResolveQueuedMoveImmediately = resolveQueuedMoveImmediately;
-            selectionBridge.Initialize(_boardState, _actionQueue, turnState: _turnState);
+            selectionController.ResolveQueuedMoveImmediately = resolveQueuedMoveImmediately;
+            selectionController.Initialize(_boardState, _actionQueue, turnState: _turnState);
 
             for (int y = 0; y < _boardState.Height; y++)
             {
@@ -190,14 +190,14 @@ namespace NeonBlack.Gameplay.Modules.Tabletop
 
         public bool TrySelectCoordinate(BoardCoordinate coordinate, out string issue)
         {
-            if (selectionBridge == null || !selectionBridge.IsInitialized)
-                return Fail("TabletopBoardSelectionBridge must be initialized before selecting board spaces.", out issue);
+            if (selectionController == null || !selectionController.IsInitialized)
+                return Fail("TabletopBoardSelectionController must be initialized before selecting board spaces.", out issue);
 
             QueuedAction queuedAction = default;
-            bool hadSelection = selectionBridge.HasSelection;
+            bool hadSelection = selectionController.HasSelection;
             bool accepted = hadSelection
-                ? selectionBridge.TrySelectDestination(coordinate, out queuedAction, out issue)
-                : selectionBridge.TrySelectPieceAt(coordinate, out issue);
+                ? selectionController.TrySelectDestination(coordinate, out queuedAction, out issue)
+                : selectionController.TrySelectPieceAt(coordinate, out issue);
 
             if (!accepted)
                 return Fail(issue, out issue);
@@ -224,11 +224,11 @@ namespace NeonBlack.Gameplay.Modules.Tabletop
 
         private bool TryResolveSelectionBridge(out string issue)
         {
-            if (selectionBridge == null)
-                selectionBridge = GetComponent<TabletopBoardSelectionBridge>();
+            if (selectionController == null)
+                selectionController = GetComponent<TabletopBoardSelectionController>();
 
-            if (selectionBridge == null)
-                return Fail("Assign TabletopBoardSelectionBridge or add it as a sibling component before rebuilding the board.", out issue);
+            if (selectionController == null)
+                return Fail("Assign TabletopBoardSelectionController or add it as a sibling component before rebuilding the board.", out issue);
 
             issue = string.Empty;
             return true;
@@ -360,8 +360,8 @@ namespace NeonBlack.Gameplay.Modules.Tabletop
             ClearGeneratedViews();
             _boardState = null;
             _actionQueue = null;
-            if (selectionBridge != null)
-                selectionBridge.ClearSelection();
+            if (selectionController != null)
+                selectionController.ClearSelection();
 
             return Fail(message, out issue);
         }

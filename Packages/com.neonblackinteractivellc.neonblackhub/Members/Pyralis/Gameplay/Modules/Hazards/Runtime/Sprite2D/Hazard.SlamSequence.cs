@@ -13,7 +13,7 @@ public partial class Hazard
     /// Shared approach + warning-flash phase used by both Slam and Bouncy hazards.
     /// Handles the shadow drift, outline pulse, and optional targeting drift during warning.
     /// </summary>
-    private IEnumerator SlamWarningRoutine(DifficultyManager.HazardTiming timing)
+    private IEnumerator SlamWarningRoutine(HazardDifficultyController.HazardTiming timing)
     {
         DisableAllColliders();
         SetShadowSprite(_data.shadowSprite);
@@ -91,7 +91,7 @@ public partial class Hazard
         _audioSource.clip = null;
     }
 
-    private IEnumerator SlamSequenceRoutine(DifficultyManager.HazardTiming timing)
+    private IEnumerator SlamSequenceRoutine(HazardDifficultyController.HazardTiming timing)
     {
         yield return SlamWarningRoutine(timing);
 

@@ -11,7 +11,7 @@ namespace NeonBlack.Gameplay.Modules.Interaction
 /// Called by collectible collect and hazard-removal paths.
 ///
 /// SETUP:
-///   1. Attach to a dedicated "FeedbackManager" GameObject in the Game scene (or the Spawners GO).
+///   1. Attach to a dedicated "Feedback Object" GameObject in the Game scene (or the Spawners GO).
 ///   2. Assign audio clips and particle systems in the Inspector.
 ///   3. Create two world-space ParticleSystem GameObjects in the scene (set Stop Action = Disable):
 ///      - CollectFX  : sparkle / confetti burst
@@ -27,7 +27,7 @@ namespace NeonBlack.Gameplay.Modules.Interaction
         RequiredFields = new[] { nameof(_collectClip), nameof(_collectFX), nameof(_destroyClip), nameof(_destroyFX) },
         SetupSteps = new[] 
     { 
-        "Attach to a FeedbackManager or Spawner GameObject.",
+        "Attach to a Feedback Object or Spawner GameObject.",
         "Assign AudioClips and ParticleSystems.",
         "Ensure AudioSource is routed to the SFX mixer group."
     },

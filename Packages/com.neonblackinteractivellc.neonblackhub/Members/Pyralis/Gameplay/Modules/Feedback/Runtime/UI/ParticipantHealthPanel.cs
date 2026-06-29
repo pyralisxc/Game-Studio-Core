@@ -31,10 +31,10 @@ namespace NeonBlack.Gameplay.Modules.Feedback.UI
                 healthLabel.text = $"{Mathf.CeilToInt(health.CurrentHealth)}/{Mathf.CeilToInt(health.MaxHealth)}";
         }
 
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (healthLabel == null && healthFillImage == null)
-                yield return PyralisRuntimeValidationIssue.Required("`ParticipantHealthPanel` should reference a health label, a fill image, or both.");
+                yield return RuntimeValidationIssue.Required("`ParticipantHealthPanel` should reference a health label, a fill image, or both.");
         }
     }
 }

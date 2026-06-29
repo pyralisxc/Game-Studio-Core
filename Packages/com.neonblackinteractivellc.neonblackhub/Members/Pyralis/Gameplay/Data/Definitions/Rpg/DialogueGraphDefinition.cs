@@ -20,9 +20,9 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Dialogue Graph", fileName = "DialogueGraphDefinition")]
     public class DialogueGraphDefinition : ScriptableObject, IDialogueGraph, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            return PyralisRuntimeValidationIssueUtility.FromLocalValidationMessages(GetValidationIssues(), this);
+            return RuntimeValidationIssueUtility.FromLocalValidationMessages(GetValidationIssues(), this);
         }
 
         public string graphId = "dialogue.new";

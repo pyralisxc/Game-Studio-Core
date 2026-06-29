@@ -9,7 +9,7 @@ namespace NeonBlack.Gameplay.Modules.Hazards
 {
     /// <summary>
     /// Owns pooling and spawn orchestration for 2D hazards. Difficulty pacing
-    /// still comes from DifficultyManager, but this class keeps setup, pooling,
+    /// still comes from HazardDifficultyController, but this class keeps setup, pooling,
     /// and spawn-shape responsibilities in smaller helpers.
     /// </summary>
     [AuthoringContract(
@@ -17,11 +17,11 @@ namespace NeonBlack.Gameplay.Modules.Hazards
         CapabilityPath = "Combat/Actions/Hazard Spawner",
         Surface = AuthoringSurface.Goal,
         Summary = "Orchestrates pooling and spawning of 2D hazards based on difficulty pacing.",
-        RequiredFields = new[] { nameof(_hazardEntries), nameof(_difficultyManager) },
+        RequiredFields = new[] { nameof(_hazardEntries), nameof(_difficultyController) },
         SetupSteps = new[]
         {
             "Add HazardSpawner to a scene GameObject.",
-            "Wire DifficultyManager if this scene owns pacing directly.",
+            "Wire HazardDifficultyController if this scene owns pacing directly.",
             "Populate Hazard Entries with prefabs and weights."
         },
         SuccessChecks = new[] { "Start the game and verify hazards begin spawning around the play area." },
@@ -30,29 +30,29 @@ namespace NeonBlack.Gameplay.Modules.Hazards
     [DefaultExecutionOrder(-10)]
     public class HazardSpawner : MonoBehaviour, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (_hazardEntries == null || _hazardEntries.Length == 0)
-                yield return PyralisRuntimeValidationIssue.Required("Hazard Entries needs at least one entry.");
+                yield return RuntimeValidationIssue.Required("Hazard Entries needs at least one entry.");
             else
             {
                 for (int i = 0; i < _hazardEntries.Length; i++)
                 {
                     if (_hazardEntries[i].prefab == null)
-                        yield return PyralisRuntimeValidationIssue.Required($"Hazard Entry {i} needs a prefab.");
+                        yield return RuntimeValidationIssue.Required($"Hazard Entry {i} needs a prefab.");
                     if (_hazardEntries[i].weight <= 0)
-                        yield return PyralisRuntimeValidationIssue.Required($"Hazard Entry {i} weight must be greater than zero.");
+                        yield return RuntimeValidationIssue.Required($"Hazard Entry {i} weight must be greater than zero.");
                 }
             }
 
-            if (_difficultyManager == null)
-                yield return PyralisRuntimeValidationIssue.Required("Difficulty Manager is unassigned. Fallback timing will be used.");
+            if (_difficultyController == null)
+                yield return RuntimeValidationIssue.Required("Hazard Difficulty Controller is unassigned. Fallback timing will be used.");
 
             if (_gameplayStateSource == null && _gameplayStateReader == null)
-                yield return PyralisRuntimeValidationIssue.Required("Gameplay state is not assigned yet. GameManager or the runtime scope normally supplies it; assign Gameplay State Source only for standalone spawner tests.");
+                yield return RuntimeValidationIssue.Required("Gameplay state is not assigned yet. ArcadeGameFlowController or the runtime scope normally supplies it; assign Gameplay State Source only for standalone spawner tests.");
 
             if (_cameraBoundsProvider == null)
-                yield return PyralisRuntimeValidationIssue.Required("Camera bounds are not assigned yet. Assign GameplaySessionBootstrap.cameraRigController so the runtime can supply visible camera bounds.");
+                yield return RuntimeValidationIssue.Required("Camera bounds are not assigned yet. Assign GameplaySessionBootstrap.cameraRigController so the runtime can supply visible camera bounds.");
         }
         [System.Serializable]
         public class HazardEntry
@@ -91,8 +91,8 @@ namespace NeonBlack.Gameplay.Modules.Hazards
         private HazardEntry[] _hazardEntries;
 
         [Header("References")]
-        [SerializeField, Tooltip("DifficultyManager that controls all spawn timing and area settings.")]
-        private DifficultyManager _difficultyManager;
+        [SerializeField, Tooltip("HazardDifficultyController that controls all spawn timing and area settings.")]
+        private HazardDifficultyController _difficultyController;
         [SerializeField, Tooltip("Optional gameplay state reader. When empty, the scene orchestrator should configure this component before play.")]
         private MonoBehaviour _gameplayStateSource;
         [SerializeField, Tooltip("Optional hazard outcome sink. When empty, the scene orchestrator should configure this component before play.")]
@@ -177,9 +177,9 @@ namespace NeonBlack.Gameplay.Modules.Hazards
             float angle = parent.Data != null ? parent.Data.splitAngle : 45f;
             float scale = parent.Data != null ? parent.Data.splitChildScale : 0.6f;
 
-            DifficultyManager.HazardTiming childTiming = _difficultyManager != null
-                ? _difficultyManager.CurrentTiming
-                : new DifficultyManager.HazardTiming();
+            HazardDifficultyController.HazardTiming childTiming = _difficultyController != null
+                ? _difficultyController.CurrentTiming
+                : new HazardDifficultyController.HazardTiming();
             childTiming.shadowDuration = 0f;
             childTiming.warningFlashDuration = 0f;
 
@@ -332,13 +332,13 @@ namespace NeonBlack.Gameplay.Modules.Hazards
 
         private IEnumerator SpawnRoutine()
         {
-            float delay = _difficultyManager != null ? _difficultyManager.InitialSpawnDelay : 2f;
+            float delay = _difficultyController != null ? _difficultyController.InitialSpawnDelay : 2f;
             if (delay > 0f)
                 yield return new WaitForSeconds(delay);
 
             while (true)
             {
-                float interval = _difficultyManager != null ? _difficultyManager.CurrentSpawnInterval : 3f;
+                float interval = _difficultyController != null ? _difficultyController.CurrentSpawnInterval : 3f;
                 yield return new WaitForSeconds(interval);
 
                 if (_gameplayStateReader == null || !_gameplayStateReader.IsGameplayActive)
@@ -351,7 +351,7 @@ namespace NeonBlack.Gameplay.Modules.Hazards
 
         private IEnumerator FillToMinimumHazards()
         {
-            int minHazards = _difficultyManager != null ? _difficultyManager.CurrentMinHazards : 0;
+            int minHazards = _difficultyController != null ? _difficultyController.CurrentMinHazards : 0;
             int fillLimit = _totalPoolSize > 0 ? _totalPoolSize : 20;
             int filled = 0;
 
@@ -371,8 +371,8 @@ namespace NeonBlack.Gameplay.Modules.Hazards
 
         private IEnumerator SpawnBurst()
         {
-            int minBurst = _difficultyManager != null ? _difficultyManager.CurrentMinSpawnCount : 1;
-            int maxBurst = _difficultyManager != null ? _difficultyManager.CurrentMaxSpawnCount : 1;
+            int minBurst = _difficultyController != null ? _difficultyController.CurrentMinSpawnCount : 1;
+            int maxBurst = _difficultyController != null ? _difficultyController.CurrentMaxSpawnCount : 1;
             int burstCount = Random.Range(minBurst, maxBurst + 1);
 
             for (int i = 0; i < burstCount; i++)
@@ -388,7 +388,7 @@ namespace NeonBlack.Gameplay.Modules.Hazards
             if (_weightedIndices.Count == 0)
                 return;
 
-            int maxHazards = _difficultyManager != null ? _difficultyManager.CurrentMaxHazards : 0;
+            int maxHazards = _difficultyController != null ? _difficultyController.CurrentMaxHazards : 0;
             if (maxHazards > 0 && _activeHazards.Count >= maxHazards)
                 return;
 
@@ -414,11 +414,11 @@ namespace NeonBlack.Gameplay.Modules.Hazards
             hazard.Initialize(this, GetCurrentTiming());
         }
 
-        private DifficultyManager.HazardTiming GetCurrentTiming()
+        private HazardDifficultyController.HazardTiming GetCurrentTiming()
         {
-            return _difficultyManager != null
-                ? _difficultyManager.CurrentTiming
-                : new DifficultyManager.HazardTiming { shadowDuration = 2f, warningFlashDuration = 0.5f };
+            return _difficultyController != null
+                ? _difficultyController.CurrentTiming
+                : new HazardDifficultyController.HazardTiming { shadowDuration = 2f, warningFlashDuration = 0.5f };
         }
 
         private void ConfigureSpawnTransform(Hazard hazard, int typeIndex)
@@ -459,8 +459,8 @@ namespace NeonBlack.Gameplay.Modules.Hazards
             if (!TryGetSpawnBounds(objectRadius, out SpawnBounds bounds))
                 return Vector2.zero;
 
-            float minDistance = _difficultyManager != null ? _difficultyManager.MinDistanceFromPlayer : 1.5f;
-            float edgeBias = _difficultyManager != null ? _difficultyManager.EdgeBias : 0f;
+            float minDistance = _difficultyController != null ? _difficultyController.MinDistanceFromPlayer : 1.5f;
+            float edgeBias = _difficultyController != null ? _difficultyController.EdgeBias : 0f;
 
             Vector2 position = Vector2.zero;
             int attempts = 0;
@@ -519,7 +519,7 @@ namespace NeonBlack.Gameplay.Modules.Hazards
 
         private void GetCrossingPositions(HazardData data, out Vector2 start, out Vector2 end)
         {
-            float margin = _difficultyManager != null ? _difficultyManager.SpawnMargin : 0.5f;
+            float margin = _difficultyController != null ? _difficultyController.SpawnMargin : 0.5f;
             SpawnBounds bounds = GetCameraBounds(0f);
             const float offscreenPad = 1f;
 
@@ -588,7 +588,7 @@ namespace NeonBlack.Gameplay.Modules.Hazards
 
         private bool TryGetSpawnBounds(float objectRadius, out SpawnBounds bounds)
         {
-            float margin = (_difficultyManager != null ? _difficultyManager.SpawnMargin : 0.5f) + objectRadius;
+            float margin = (_difficultyController != null ? _difficultyController.SpawnMargin : 0.5f) + objectRadius;
             if (TryGetCameraBounds(margin, out CameraBounds2D cameraBounds))
             {
                 bounds = new SpawnBounds(cameraBounds.Center, cameraBounds.HalfWidth, cameraBounds.HalfHeight);
@@ -633,7 +633,7 @@ namespace NeonBlack.Gameplay.Modules.Hazards
 #if UNITY_EDITOR
         private void OnDrawGizmos()
         {
-            float margin = _difficultyManager != null ? _difficultyManager.SpawnMargin : 0.5f;
+            float margin = _difficultyController != null ? _difficultyController.SpawnMargin : 0.5f;
             if (!TryGetCameraBounds(margin, out CameraBounds2D bounds))
                 return;
 

@@ -32,12 +32,12 @@ namespace NeonBlack.Gameplay.Modules.Interaction
 [RequireComponent(typeof(CircleCollider2D))]
 public class Collectible2D : MonoBehaviour, IPickupCollectible, IRuntimeValidationProvider
 {
-    public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+    public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
     {
         if (GetComponent<Collider2D>() == null)
-            yield return PyralisRuntimeValidationIssue.Required("Collider2D is required for collection detection.");
+            yield return RuntimeValidationIssue.Required("Collider2D is required for collection detection.");
         else if (!GetComponent<Collider2D>().isTrigger)
-            yield return PyralisRuntimeValidationIssue.Required("Collider2D must be set to Is Trigger.");
+            yield return RuntimeValidationIssue.Required("Collider2D must be set to Is Trigger.");
     }
     public int FeedbackScoreValue => 1;
     [Header("Idle Animation")]

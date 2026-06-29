@@ -18,9 +18,9 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Item Catalog", fileName = "ItemCatalogDefinition")]
     public class ItemCatalogDefinition : ScriptableObject, IItemCatalog, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            return PyralisRuntimeValidationIssueUtility.FromLocalValidationMessages(GetValidationIssues(), this);
+            return RuntimeValidationIssueUtility.FromLocalValidationMessages(GetValidationIssues(), this);
         }
 
         public string catalogId = "items.default";

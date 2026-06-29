@@ -19,7 +19,7 @@ namespace NeonBlack.Gameplay.Presentation.HUD.Settings
         SetupSteps = new[] 
     { 
         "Place this on the settings panel that is shown from the main menu.",
-        "Assign Settings Source to SettingsManager or another IGameplaySettingsApplier.",
+        "Assign Settings Source to GameplaySettingsService or another IGameplaySettingsApplier.",
         "Assign any sliders, toggle, and dropdown the panel actually exposes."
     },
         SuccessChecks = new[] { "Open the settings panel and verify sliders modify volume and the resolution dropdown updates display." },
@@ -41,7 +41,7 @@ public class SettingsMenu : MonoBehaviour
     [SerializeField] private TMP_Dropdown resolutionDropdown;
 
     [Header("Runtime Services")]
-    [SerializeField, Tooltip("Settings service that stores and applies volume values. SettingsManager implements IGameplaySettingsApplier.")]
+    [SerializeField, Tooltip("Settings service that stores and applies volume values. GameplaySettingsService implements IGameplaySettingsApplier.")]
     private MonoBehaviour settingsSource;
 
     private Resolution[] _resolutions;
@@ -180,7 +180,7 @@ public class SettingsMenu : MonoBehaviour
         if (_settings == null && !_loggedMissingSettings)
         {
             _loggedMissingSettings = true;
-            Debug.LogError("[SettingsMenu] Settings Source is not configured. Assign SettingsManager or another IGameplaySettingsApplier.", this);
+            Debug.LogError("[SettingsMenu] Settings Source is not configured. Assign GameplaySettingsService or another IGameplaySettingsApplier.", this);
         }
 
         return _settings;

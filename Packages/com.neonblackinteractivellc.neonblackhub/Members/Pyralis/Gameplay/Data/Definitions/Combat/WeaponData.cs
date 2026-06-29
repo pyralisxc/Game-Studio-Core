@@ -18,28 +18,28 @@ namespace NeonBlack.Gameplay.Data.Definitions.Combat
     [CreateAssetMenu(menuName = "NeonBlack/Combat/Weapon Data", fileName = "NewWeapon")]
     public class WeaponData : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (string.IsNullOrWhiteSpace(weaponName))
-                yield return PyralisRuntimeValidationIssue.Required("Weapon Name is required.", nameof(weaponName), nameof(WeaponData), issueCode: "WeaponData.Name.Missing");
+                yield return RuntimeValidationIssue.Required("Weapon Name is required.", nameof(weaponName), nameof(WeaponData), issueCode: "WeaponData.Name.Missing");
             if (damage < 0f)
-                yield return PyralisRuntimeValidationIssue.Required("Damage cannot be negative.", nameof(damage), nameof(WeaponData), issueCode: "WeaponData.Damage.Invalid");
+                yield return RuntimeValidationIssue.Required("Damage cannot be negative.", nameof(damage), nameof(WeaponData), issueCode: "WeaponData.Damage.Invalid");
             if (attackCooldown <= 0f)
-                yield return PyralisRuntimeValidationIssue.Required("Attack Cooldown must be greater than zero.", nameof(attackCooldown), nameof(WeaponData), issueCode: "WeaponData.AttackCooldown.Invalid");
+                yield return RuntimeValidationIssue.Required("Attack Cooldown must be greater than zero.", nameof(attackCooldown), nameof(WeaponData), issueCode: "WeaponData.AttackCooldown.Invalid");
 
             if ((weaponType == WeaponType.Ranged || weaponType == WeaponType.Thrown) && projectileDefinition == null)
-                yield return PyralisRuntimeValidationIssue.Required("Ranged/thrown weapons require a Projectile Definition.", nameof(projectileDefinition), nameof(WeaponData), issueCode: "WeaponData.ProjectileDefinition.Missing");
+                yield return RuntimeValidationIssue.Required("Ranged/thrown weapons require a Projectile Definition.", nameof(projectileDefinition), nameof(WeaponData), issueCode: "WeaponData.ProjectileDefinition.Missing");
 
             if (weaponType == WeaponType.Melee && string.IsNullOrWhiteSpace(hitBoxZone))
-                yield return PyralisRuntimeValidationIssue.Required("Melee weapons should name the actor Hit Box Zone they use.", nameof(hitBoxZone), nameof(WeaponData), issueCode: "WeaponData.HitBoxZone.Missing");
+                yield return RuntimeValidationIssue.Required("Melee weapons should name the actor Hit Box Zone they use.", nameof(hitBoxZone), nameof(WeaponData), issueCode: "WeaponData.HitBoxZone.Missing");
 
             if (projectileDefinition != null)
             {
-                foreach (PyralisRuntimeValidationIssue issue in projectileDefinition.GetRuntimeValidationIssues())
+                foreach (RuntimeValidationIssue issue in projectileDefinition.GetRuntimeValidationIssues())
                 {
                     if (issue != null && !string.IsNullOrWhiteSpace(issue.Message))
                     {
-                        yield return new PyralisRuntimeValidationIssue(
+                        yield return new RuntimeValidationIssue(
                             $"Projectile Definition: {issue.Message}",
                             nameof(projectileDefinition),
                             nameof(WeaponData),

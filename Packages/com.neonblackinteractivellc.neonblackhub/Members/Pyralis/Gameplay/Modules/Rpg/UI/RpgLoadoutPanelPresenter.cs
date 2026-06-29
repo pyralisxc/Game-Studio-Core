@@ -167,24 +167,24 @@ namespace NeonBlack.Gameplay.Modules.Rpg.UI
             return true;
         }
 
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             ResolveReferences();
 
             if (routePresenter == null)
-                yield return PyralisRuntimeValidationIssue.Required("`RpgLoadoutPanelPresenter` should reference the Loadout route presenter or live below one.");
+                yield return RuntimeValidationIssue.Required("`RpgLoadoutPanelPresenter` should reference the Loadout route presenter or live below one.");
 
             if ((slots == null || slots.Length == 0) && (_runtimeSlots == null || _runtimeSlots.Length == 0))
-                yield return PyralisRuntimeValidationIssue.Required("`RpgLoadoutPanelPresenter` should reference at least one Equipment Slot Definition.");
+                yield return RuntimeValidationIssue.Required("`RpgLoadoutPanelPresenter` should reference at least one Equipment Slot Definition.");
 
             if ((items == null || items.Length == 0) && (_runtimeItems == null || _runtimeItems.Length == 0))
-                yield return PyralisRuntimeValidationIssue.Required("`RpgLoadoutPanelPresenter` should reference at least one Equippable Item Definition.");
+                yield return RuntimeValidationIssue.Required("`RpgLoadoutPanelPresenter` should reference at least one Equippable Item Definition.");
 
             if (loadoutLabel == null && selectedItemLabel == null)
-                yield return PyralisRuntimeValidationIssue.Required("`RpgLoadoutPanelPresenter` should reference a loadout list or selected item label.");
+                yield return RuntimeValidationIssue.Required("`RpgLoadoutPanelPresenter` should reference a loadout list or selected item label.");
 
             if (equipButton == null && unequipButton == null)
-                yield return PyralisRuntimeValidationIssue.Required("`RpgLoadoutPanelPresenter` needs Equip Button, Unequip Button, or a project input bridge calling EquipSelectedItem()/UnequipSelectedItem().");
+                yield return RuntimeValidationIssue.Required("`RpgLoadoutPanelPresenter` needs Equip Button, Unequip Button, or a project input bridge calling EquipSelectedItem()/UnequipSelectedItem().");
         }
 
         private void HandlePanelOpened(HubInteractionResult result)

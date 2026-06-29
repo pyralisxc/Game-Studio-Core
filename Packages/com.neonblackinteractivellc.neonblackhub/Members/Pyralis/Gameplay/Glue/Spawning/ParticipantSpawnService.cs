@@ -37,14 +37,14 @@ namespace NeonBlack.Gameplay.Glue.Spawning
     [AddComponentMenu("NeonBlack/Gameplay/Setup/Participant Spawn Service")]
     public class ParticipantSpawnService : MonoBehaviour, IGameService, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (rosterService == null)
-                yield return PyralisRuntimeValidationIssue.Required("Roster Service is empty. This is expected when GameplaySessionBootstrap injects it at runtime.");
+                yield return RuntimeValidationIssue.Required("Roster Service is empty. This is expected when GameplaySessionBootstrap injects it at runtime.");
             if (sessionStateService == null)
-                yield return PyralisRuntimeValidationIssue.Required("Session State Service is empty. This is expected when GameplaySessionBootstrap injects it at runtime.");
+                yield return RuntimeValidationIssue.Required("Session State Service is empty. This is expected when GameplaySessionBootstrap injects it at runtime.");
             if (spawnOnRegister && (spawnPoints == null || spawnPoints.Length == 0))
-                yield return PyralisRuntimeValidationIssue.Required("Spawn Points is empty. Assign spawn points on ParticipantSpawnService for pawn-backed routes, or disable Spawn On Register for non-pawn routes.");
+                yield return RuntimeValidationIssue.Required("Spawn Points is empty. Assign spawn points on ParticipantSpawnService for pawn-backed routes, or disable Spawn On Register for non-pawn routes.");
         }
         [SerializeField] private ParticipantRosterService rosterService;
         [SerializeField] private SessionStateService sessionStateService;

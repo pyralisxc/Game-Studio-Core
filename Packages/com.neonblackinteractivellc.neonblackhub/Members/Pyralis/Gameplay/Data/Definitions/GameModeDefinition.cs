@@ -30,18 +30,18 @@ namespace NeonBlack.Gameplay.Data.Definitions
 [CreateAssetMenu(menuName = "NeonBlack/Definitions/Game Mode Definition", fileName = "GameModeDefinition", order = 10)]
     public class GameModeDefinition : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             return BuildRuntimeValidationIssues();
         }
 
-        private List<PyralisRuntimeValidationIssue> BuildRuntimeValidationIssues()
+        private List<RuntimeValidationIssue> BuildRuntimeValidationIssues()
         {
-            List<PyralisRuntimeValidationIssue> issues = new List<PyralisRuntimeValidationIssue>();
+            List<RuntimeValidationIssue> issues = new List<RuntimeValidationIssue>();
 
             if (!enableRespawn && startingLives > 0)
             {
-                issues.Add(PyralisRuntimeValidationIssue.Required(
+                issues.Add(RuntimeValidationIssue.Required(
                     "Starting lives are only meaningful when respawn is enabled.",
                     nameof(startingLives),
                     nameof(GameModeDefinition),
@@ -87,7 +87,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
         public List<string> GetValidationIssues()
         {
             List<string> issues = new List<string>();
-            List<PyralisRuntimeValidationIssue> runtimeIssues = BuildRuntimeValidationIssues();
+            List<RuntimeValidationIssue> runtimeIssues = BuildRuntimeValidationIssues();
             for (int i = 0; i < runtimeIssues.Count; i++)
             {
                 if (runtimeIssues[i] != null && !string.IsNullOrWhiteSpace(runtimeIssues[i].Message))
@@ -97,11 +97,11 @@ namespace NeonBlack.Gameplay.Data.Definitions
             return issues;
         }
 
-        private void AppendNestedRuntimeValidationIssues(List<PyralisRuntimeValidationIssue> issues)
+        private void AppendNestedRuntimeValidationIssues(List<RuntimeValidationIssue> issues)
         {
             if (turnOrderDefinition != null)
             {
-                foreach (PyralisRuntimeValidationIssue issue in turnOrderDefinition.GetRuntimeValidationIssues())
+                foreach (RuntimeValidationIssue issue in turnOrderDefinition.GetRuntimeValidationIssues())
                 {
                     AddChildIssue(
                         issues,
@@ -114,7 +114,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
 
             if (boardDefinition != null)
             {
-                foreach (PyralisRuntimeValidationIssue issue in boardDefinition.GetRuntimeValidationIssues())
+                foreach (RuntimeValidationIssue issue in boardDefinition.GetRuntimeValidationIssues())
                 {
                     AddChildIssue(
                         issues,
@@ -133,7 +133,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
                     BoardTerminalConditionDefinition condition = boardTerminalConditions[i];
                     if (condition == null)
                     {
-                        issues.Add(PyralisRuntimeValidationIssue.Required(
+                        issues.Add(RuntimeValidationIssue.Required(
                             $"Board terminal condition[{i}] is null.",
                             $"{nameof(boardTerminalConditions)}[{i}]",
                             nameof(GameModeDefinition),
@@ -145,7 +145,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
 
                     if (!string.IsNullOrWhiteSpace(condition.conditionId) && !terminalConditionIds.Add(condition.conditionId))
                     {
-                        issues.Add(PyralisRuntimeValidationIssue.Required(
+                        issues.Add(RuntimeValidationIssue.Required(
                             $"Board terminal condition `{condition.conditionId}` is assigned more than once.",
                             nameof(boardTerminalConditions),
                             nameof(GameModeDefinition),
@@ -154,7 +154,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
                             "GameModeDefinition.BoardTerminalCondition.Duplicate"));
                     }
 
-                    foreach (PyralisRuntimeValidationIssue issue in condition.GetRuntimeValidationIssues())
+                    foreach (RuntimeValidationIssue issue in condition.GetRuntimeValidationIssues())
                     {
                         AddChildIssue(
                             issues,
@@ -169,14 +169,14 @@ namespace NeonBlack.Gameplay.Data.Definitions
         }
 
         private static void AddChildIssue(
-            List<PyralisRuntimeValidationIssue> issues,
-            PyralisRuntimeValidationIssue issue,
+            List<RuntimeValidationIssue> issues,
+            RuntimeValidationIssue issue,
             string messagePrefix,
             string issueCodePrefix,
             string fieldPath)
         {
-            PyralisRuntimeValidationIssue contextualIssue =
-                PyralisRuntimeValidationIssueUtility.WithParentContext(
+            RuntimeValidationIssue contextualIssue =
+                RuntimeValidationIssueUtility.WithParentContext(
                     issue,
                     messagePrefix,
                     issueCodePrefix,

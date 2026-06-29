@@ -4,6 +4,6 @@ namespace NeonBlack.Gameplay.Data.Presentation
 {
     public interface IVisualFlashPlayer
     {
-        void PlayOneShot(FlashPresetSO preset);
+        void PlayOneShot(FlashEffectProfile profile);
     }
 }

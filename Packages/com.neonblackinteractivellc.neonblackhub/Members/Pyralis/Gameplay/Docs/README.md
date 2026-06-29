@@ -1,4 +1,4 @@
-# Pyralis Gameplay Docs
+# NeonBlack Gameplay Docs
 
 This folder intentionally stays small. Active docs describe supported architecture, setup, verification, and roadmap truth. Extra audits, phase plans, historical notes, and duplicate setup guides belong outside the active doc set unless they protect current work.
 
@@ -8,7 +8,7 @@ This folder intentionally stays small. Active docs describe supported architectu
 - `ARCHITECTURE_BLUEPRINT.md` - runtime ownership, folderbase, vocabulary, and system boundaries.
 - `FEATURE_DEVELOPMENT_ROADMAP.md` - current feature expansion priorities.
 
-PYS Authoring package documentation lives under `Packages/com.pys.authoring/Docs`, not in Pyralis Gameplay.
+PYS Authoring package documentation lives under `Packages/com.pys.authoring/Docs`, not in this gameplay package.
 
 ## Maintenance Rule
 

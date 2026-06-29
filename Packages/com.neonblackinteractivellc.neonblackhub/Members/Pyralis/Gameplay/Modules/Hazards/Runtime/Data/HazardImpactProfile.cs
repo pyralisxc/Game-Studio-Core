@@ -20,10 +20,10 @@ namespace NeonBlack.Gameplay.Data.Profiles
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Hazard Impact Profile", fileName = "HazardImpactProfile")]
     public class HazardImpactProfile : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            if (string.IsNullOrWhiteSpace(effectId)) yield return PyralisRuntimeValidationIssue.Required("Effect Id is required.");
-            if (tickInterval <= 0f) yield return PyralisRuntimeValidationIssue.Required("Tick Interval must be greater than zero.");
+            if (string.IsNullOrWhiteSpace(effectId)) yield return RuntimeValidationIssue.Required("Effect Id is required.");
+            if (tickInterval <= 0f) yield return RuntimeValidationIssue.Required("Tick Interval must be greater than zero.");
         }
 
         public string effectId = "hazard.impact";

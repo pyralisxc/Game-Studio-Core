@@ -21,9 +21,9 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
     [CreateAssetMenu(menuName = "NeonBlack/Rules/Board Terminal Condition", fileName = "BoardTerminalCondition", order = -50)]
     public class BoardTerminalConditionDefinition : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            return PyralisRuntimeValidationIssueUtility.FromLocalValidationMessages(GetValidationIssues(), this);
+            return RuntimeValidationIssueUtility.FromLocalValidationMessages(GetValidationIssues(), this);
         }
 
         public string conditionId = "condition.boardTerminal";

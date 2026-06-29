@@ -143,7 +143,7 @@ public class HazardDataEditor : Editor
         {
             EditorGUILayout.HelpBox(
                 "Assign a HazardFeedbackRuntime to the hazard prefab when using a Feedback Profile. " +
-                "Add a SpriteFlasher too if your profile uses flash presets.",
+                "Add a SpriteFlasher too if your profile uses flash entries.",
                 MessageType.Info);
         }
 
@@ -174,8 +174,8 @@ public class HazardDataEditor : Editor
         if (isSlam)
         {
             Section("Timing");
-            Prop(_pSlamDur,    "Active Duration (s)", "How long the hazard stays slammed. 0 = use DifficultyManager.");
-            Prop(_pRetractDur, "Retract (s)",         "Fade-out time after impact. 0 = use DifficultyManager.");
+            Prop(_pSlamDur,    "Active Duration (s)", "How long the hazard stays slammed. 0 = use HazardDifficultyController.");
+            Prop(_pRetractDur, "Retract (s)",         "Fade-out time after impact. 0 = use HazardDifficultyController.");
             Prop(_pPulseRate,  "Pulse Rate",          "How fast the warning outline pulses during the warning phase (cycles/sec).");
         }
 

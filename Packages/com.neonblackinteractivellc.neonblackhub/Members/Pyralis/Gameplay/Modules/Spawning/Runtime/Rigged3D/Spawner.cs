@@ -25,16 +25,16 @@ namespace NeonBlack.Gameplay.Modules.Spawning
     )]
 public class Spawner : GameplayTickBehaviour, IRuntimeValidationProvider
 {
-    public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+    public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
     {
         if ((prefabs == null || prefabs.Length == 0) && (sprites == null || sprites.Length == 0))
-            yield return PyralisRuntimeValidationIssue.Required("Spawner needs at least one prefab or sprite option.");
+            yield return RuntimeValidationIssue.Required("Spawner needs at least one prefab or sprite option.");
 
         if (autoSpawn && spawnInterval <= 0f)
-            yield return PyralisRuntimeValidationIssue.Required("Auto Spawn enabled but Spawn Interval is <= 0.");
+            yield return RuntimeValidationIssue.Required("Auto Spawn enabled but Spawn Interval is <= 0.");
 
         if (patrol && patrolDistance <= 0f)
-            yield return PyralisRuntimeValidationIssue.Required("Patrol enabled but Patrol Distance is <= 0.");
+            yield return RuntimeValidationIssue.Required("Patrol enabled but Patrol Distance is <= 0.");
     }
     [Header("Prefabs  (drag full prefabs here)")]
     [Tooltip("Drag any prefabs or sprite GameObjects here.")]
@@ -265,10 +265,10 @@ public class Spawner : GameplayTickBehaviour, IRuntimeValidationProvider
     )]
 public class SpawnTracker : MonoBehaviour, IRuntimeValidationProvider
 {
-    public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+    public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
     {
         if (GetComponents<SpawnTracker>().Length > 1)
-            yield return PyralisRuntimeValidationIssue.Required("Multiple SpawnTrackers on this object.");
+            yield return RuntimeValidationIssue.Required("Multiple SpawnTrackers on this object.");
     }
 
     public System.Action OnDestroyed;

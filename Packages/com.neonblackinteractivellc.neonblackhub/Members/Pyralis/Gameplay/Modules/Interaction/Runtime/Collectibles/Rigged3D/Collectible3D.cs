@@ -23,12 +23,12 @@ namespace NeonBlack.Gameplay.Modules.Interaction
     [RequireComponent(typeof(Collider))]
     public class Collectible3D : GameplayTickBehaviour, IPickupCollectible, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (GetComponent<Collider>() == null)
-                yield return PyralisRuntimeValidationIssue.Required("Collider is required for collection detection.");
+                yield return RuntimeValidationIssue.Required("Collider is required for collection detection.");
             else if (!GetComponent<Collider>().isTrigger)
-                yield return PyralisRuntimeValidationIssue.Required("Collider must be set to Is Trigger.");
+                yield return RuntimeValidationIssue.Required("Collider must be set to Is Trigger.");
         }
         public int FeedbackScoreValue => 1;
         [SerializeField] private float bobSpeed = 2f;

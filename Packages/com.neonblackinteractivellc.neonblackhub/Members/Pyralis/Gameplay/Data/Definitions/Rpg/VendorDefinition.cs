@@ -20,9 +20,9 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Vendor", fileName = "VendorDefinition")]
     public class VendorDefinition : ScriptableObject, IVendorDefinition, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            return PyralisRuntimeValidationIssueUtility.FromLocalValidationMessages(GetValidationIssues(), this);
+            return RuntimeValidationIssueUtility.FromLocalValidationMessages(GetValidationIssues(), this);
         }
 
         public string vendorId = "vendor.new";

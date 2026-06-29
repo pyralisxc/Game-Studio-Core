@@ -21,9 +21,9 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
     [CreateAssetMenu(menuName = "NeonBlack/Rules/Board Definition", fileName = "BoardDefinition", order = -100)]
     public class BoardDefinition : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            return PyralisRuntimeValidationIssueUtility.FromLocalValidationMessages(GetValidationIssues(), this);
+            return RuntimeValidationIssueUtility.FromLocalValidationMessages(GetValidationIssues(), this);
         }
 
         public string boardId = "board.default";

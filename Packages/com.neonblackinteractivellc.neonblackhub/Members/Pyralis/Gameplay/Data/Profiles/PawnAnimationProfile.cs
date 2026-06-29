@@ -24,7 +24,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Pawn Animation Profile", fileName = "PawnAnimationProfile", order = -30)]
     public class PawnAnimationProfile : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             // The actual validation issues are complex and depend on UnityEditor APIs.
             // We return an empty list here and let the custom inspector handle the deep validation,

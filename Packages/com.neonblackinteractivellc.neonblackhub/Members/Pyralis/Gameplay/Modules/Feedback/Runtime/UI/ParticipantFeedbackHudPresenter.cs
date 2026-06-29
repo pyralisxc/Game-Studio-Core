@@ -125,7 +125,7 @@ namespace NeonBlack.Gameplay.Modules.Feedback.UI
             }
         }
 
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             CachePanels();
 
@@ -139,7 +139,7 @@ namespace NeonBlack.Gameplay.Modules.Feedback.UI
                 || (combatAlertPanels != null && combatAlertPanels.Length > 0);
 
             if (!hasDirectLabelSurface && !hasPanelSurface)
-                yield return PyralisRuntimeValidationIssue.Required("`ParticipantFeedbackHudPresenter` should reference at least one feedback label or timed text panel.");
+                yield return RuntimeValidationIssue.Required("`ParticipantFeedbackHudPresenter` should reference at least one feedback label or timed text panel.");
         }
 
         private void CachePanels()

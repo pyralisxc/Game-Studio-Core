@@ -24,28 +24,28 @@ namespace NeonBlack.Gameplay.Data.Profiles
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Pawn Combat Profile", fileName = "PawnCombatProfile", order = -20)]
     public class PawnCombatProfile : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (baseDamage < 0f)
-                yield return PyralisRuntimeValidationIssue.Required("Base Damage cannot be negative.", nameof(baseDamage), nameof(PawnCombatProfile), issueCode: "PawnCombatProfile.BaseDamage.Invalid");
+                yield return RuntimeValidationIssue.Required("Base Damage cannot be negative.", nameof(baseDamage), nameof(PawnCombatProfile), issueCode: "PawnCombatProfile.BaseDamage.Invalid");
             if (attackCooldown <= 0f)
-                yield return PyralisRuntimeValidationIssue.Required("Attack Cooldown must be greater than zero.", nameof(attackCooldown), nameof(PawnCombatProfile), issueCode: "PawnCombatProfile.AttackCooldown.Invalid");
+                yield return RuntimeValidationIssue.Required("Attack Cooldown must be greater than zero.", nameof(attackCooldown), nameof(PawnCombatProfile), issueCode: "PawnCombatProfile.AttackCooldown.Invalid");
 
             if (!enableCombat)
                 yield break;
 
-            foreach (PyralisRuntimeValidationIssue issue in GetWeaponIssues(attackWeapon, nameof(attackWeapon), "Attack Weapon"))
+            foreach (RuntimeValidationIssue issue in GetWeaponIssues(attackWeapon, nameof(attackWeapon), "Attack Weapon"))
                 yield return issue;
-            foreach (PyralisRuntimeValidationIssue issue in GetWeaponIssues(kickWeapon, nameof(kickWeapon), "Kick Weapon"))
+            foreach (RuntimeValidationIssue issue in GetWeaponIssues(kickWeapon, nameof(kickWeapon), "Kick Weapon"))
                 yield return issue;
-            foreach (PyralisRuntimeValidationIssue issue in GetWeaponIssues(aerialWeapon, nameof(aerialWeapon), "Aerial Weapon"))
+            foreach (RuntimeValidationIssue issue in GetWeaponIssues(aerialWeapon, nameof(aerialWeapon), "Aerial Weapon"))
                 yield return issue;
 
-            foreach (PyralisRuntimeValidationIssue issue in GetSequenceIssues(primarySequence, nameof(primarySequence), "Primary Sequence"))
+            foreach (RuntimeValidationIssue issue in GetSequenceIssues(primarySequence, nameof(primarySequence), "Primary Sequence"))
                 yield return issue;
-            foreach (PyralisRuntimeValidationIssue issue in GetSequenceIssues(secondarySequence, nameof(secondarySequence), "Secondary Sequence"))
+            foreach (RuntimeValidationIssue issue in GetSequenceIssues(secondarySequence, nameof(secondarySequence), "Secondary Sequence"))
                 yield return issue;
-            foreach (PyralisRuntimeValidationIssue issue in GetSequenceIssues(aerialSequence, nameof(aerialSequence), "Aerial Sequence"))
+            foreach (RuntimeValidationIssue issue in GetSequenceIssues(aerialSequence, nameof(aerialSequence), "Aerial Sequence"))
                 yield return issue;
         }
 
@@ -82,7 +82,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
             Sanitize();
         }
 
-        private static IEnumerable<PyralisRuntimeValidationIssue> GetWeaponIssues(
+        private static IEnumerable<RuntimeValidationIssue> GetWeaponIssues(
             WeaponData weapon,
             string fieldPath,
             string label)
@@ -90,11 +90,11 @@ namespace NeonBlack.Gameplay.Data.Profiles
             if (weapon == null)
                 yield break;
 
-            foreach (PyralisRuntimeValidationIssue issue in weapon.GetRuntimeValidationIssues())
+            foreach (RuntimeValidationIssue issue in weapon.GetRuntimeValidationIssues())
             {
                 if (issue != null && !string.IsNullOrWhiteSpace(issue.Message))
                 {
-                    yield return new PyralisRuntimeValidationIssue(
+                    yield return new RuntimeValidationIssue(
                         $"{label}: {issue.Message}",
                         fieldPath,
                         nameof(PawnCombatProfile),
@@ -106,7 +106,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
             }
         }
 
-        private static IEnumerable<PyralisRuntimeValidationIssue> GetSequenceIssues(
+        private static IEnumerable<RuntimeValidationIssue> GetSequenceIssues(
             CombatSequenceDefinition sequence,
             string fieldPath,
             string label)
@@ -114,11 +114,11 @@ namespace NeonBlack.Gameplay.Data.Profiles
             if (sequence == null)
                 yield break;
 
-            foreach (PyralisRuntimeValidationIssue issue in sequence.GetRuntimeValidationIssues())
+            foreach (RuntimeValidationIssue issue in sequence.GetRuntimeValidationIssues())
             {
                 if (issue != null && !string.IsNullOrWhiteSpace(issue.Message))
                 {
-                    yield return new PyralisRuntimeValidationIssue(
+                    yield return new RuntimeValidationIssue(
                         $"{label}: {issue.Message}",
                         fieldPath,
                         nameof(PawnCombatProfile),

@@ -40,7 +40,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
         private const string PawnPresentationModuleInterfaceFullName = "NeonBlack.Gameplay.Modules.Character.IPawnPresentationModule";
         private const string TopDownHopTypeFullName = "NeonBlack.Gameplay.Modules.Traversal.TopDownHopComponent";
 
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             return BuildRuntimeValidationIssues();
         }
@@ -55,7 +55,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
         public List<string> GetValidationIssues()
         {
             List<string> issues = new List<string>();
-            List<PyralisRuntimeValidationIssue> runtimeIssues = BuildRuntimeValidationIssues();
+            List<RuntimeValidationIssue> runtimeIssues = BuildRuntimeValidationIssues();
             for (int i = 0; i < runtimeIssues.Count; i++)
             {
                 if (runtimeIssues[i] != null && !string.IsNullOrWhiteSpace(runtimeIssues[i].Message))
@@ -65,9 +65,9 @@ namespace NeonBlack.Gameplay.Data.Definitions
             return issues;
         }
 
-        private List<PyralisRuntimeValidationIssue> BuildRuntimeValidationIssues()
+        private List<RuntimeValidationIssue> BuildRuntimeValidationIssues()
         {
-            List<PyralisRuntimeValidationIssue> issues = new List<PyralisRuntimeValidationIssue>();
+            List<RuntimeValidationIssue> issues = new List<RuntimeValidationIssue>();
 
             if (pawnPrefab == null)
             {
@@ -91,7 +91,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
             return issues;
         }
 
-        private void AppendPawnPrefabCompositionIssues(GameObject prefab, List<PyralisRuntimeValidationIssue> issues)
+        private void AppendPawnPrefabCompositionIssues(GameObject prefab, List<RuntimeValidationIssue> issues)
         {
             if (!HasComponentOfTypeName(prefab, PawnRootTypeFullName))
                 AddRequired(issues, $"Pawn Prefab `{prefab.name}`: Add PawnRoot to the prefab root.", "PawnDefinition.PawnRoot.Missing");
@@ -114,7 +114,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
                 AddRequired(issues, $"Pawn Prefab `{prefab.name}`: Enable the lane presentation component before Play Mode.", "PawnDefinition.PawnPresentation.Disabled");
         }
 
-        private void AppendPawnPrefabValidationProviderIssues(GameObject pawnPrefab, List<PyralisRuntimeValidationIssue> issues)
+        private void AppendPawnPrefabValidationProviderIssues(GameObject pawnPrefab, List<RuntimeValidationIssue> issues)
         {
             MonoBehaviour[] behaviours = pawnPrefab.GetComponentsInChildren<MonoBehaviour>(true);
             for (int i = 0; i < behaviours.Length; i++)
@@ -128,14 +128,14 @@ namespace NeonBlack.Gameplay.Data.Definitions
                 if (behaviours[i] is not IRuntimeValidationProvider provider)
                     continue;
 
-                foreach (PyralisRuntimeValidationIssue issue in provider.GetRuntimeValidationIssues())
+                foreach (RuntimeValidationIssue issue in provider.GetRuntimeValidationIssues())
                 {
                     if (issue != null && !string.IsNullOrWhiteSpace(issue.Message))
                     {
                         string issueCode = !string.IsNullOrWhiteSpace(issue.IssueCode)
                             ? issue.IssueCode
                             : $"PawnDefinition.Nested.{i}";
-                        issues.Add(new PyralisRuntimeValidationIssue(
+                        issues.Add(new RuntimeValidationIssue(
                             $"Pawn Prefab `{pawnPrefab.name}`: {issue.Message}",
                             issue.FieldPath,
                             !string.IsNullOrWhiteSpace(issue.TargetLabel) ? issue.TargetLabel : nameof(PawnDefinition),
@@ -148,7 +148,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
             }
         }
 
-        private PyralisRuntimeValidationIssue GetTopDownJumpFeatureIssue()
+        private RuntimeValidationIssue GetTopDownJumpFeatureIssue()
         {
             if (movementProfile == null
                 || movementProfile.Effective2DMovementStyle != Pawn2DMovementStyle.TopDownNoGravity
@@ -160,7 +160,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
             if (pawnPrefab != null && HasComponentOfTypeName(pawnPrefab, TopDownHopTypeFullName))
                 return null;
 
-            return PyralisRuntimeValidationIssue.Required(
+            return RuntimeValidationIssue.Required(
                 $"PawnDefinition `{name}`: Top-down/no-gravity Jump is enabled, but the pawn prefab has no TopDownHopComponent component. Add TopDownHopComponent to the pawn root when Jump should lift the visual child, or turn off Allow 2D Jump when this pawn has no top-down hop action.",
                 nameof(pawnPrefab),
                 nameof(PawnDefinition),
@@ -169,7 +169,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
                 "PawnDefinition.TopDownHop.Missing");
         }
 
-        private void AppendActorAnimationDriverIssues(GameObject pawnPrefab, MonoBehaviour animationDriver, List<PyralisRuntimeValidationIssue> issues)
+        private void AppendActorAnimationDriverIssues(GameObject pawnPrefab, MonoBehaviour animationDriver, List<RuntimeValidationIssue> issues)
         {
             if (animationDriver == null)
                 return;
@@ -284,14 +284,14 @@ namespace NeonBlack.Gameplay.Data.Definitions
             return false;
         }
 
-        private static void AddIfPresent(List<PyralisRuntimeValidationIssue> issues, PyralisRuntimeValidationIssue issue)
+        private static void AddIfPresent(List<RuntimeValidationIssue> issues, RuntimeValidationIssue issue)
         {
             if (issue != null && !string.IsNullOrWhiteSpace(issue.Message))
                 issues.Add(issue);
         }
 
         private static void AddRequired(
-            List<PyralisRuntimeValidationIssue> issues,
+            List<RuntimeValidationIssue> issues,
             string message,
             string issueCode,
             string fieldPath = null,
@@ -301,7 +301,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
             if (issues == null || string.IsNullOrWhiteSpace(message))
                 return;
 
-            issues.Add(PyralisRuntimeValidationIssue.Required(
+            issues.Add(RuntimeValidationIssue.Required(
                 message,
                 fieldPath,
                 nameof(PawnDefinition),

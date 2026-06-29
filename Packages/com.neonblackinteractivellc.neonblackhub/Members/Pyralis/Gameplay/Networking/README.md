@@ -1,12 +1,12 @@
-# Pyralis Networking
+# NeonBlack Gameplay Networking
 
-This domain owns the Unity Netcode for GameObjects lane for Pyralis. Core gameplay stays transport-agnostic; networked scenes opt in through `SessionDefinition.networkMode`.
+This domain owns the Unity Netcode for GameObjects lane for this gameplay package. Core gameplay stays transport-agnostic; networked scenes opt in through `SessionDefinition.networkMode`.
 
 ## Build Or Buy Boundary
 
-Pyralis should not write its own low-level transport, packet replication, host/client connection lifecycle, or socket stack for the MVP. Those are mature engine problems and belong to Unity Netcode for GameObjects plus Unity Transport in the supported MVP lane.
+This package should not write its own low-level transport, packet replication, host/client connection lifecycle, or socket stack for the MVP. Those are mature engine problems and belong to Unity Netcode for GameObjects plus Unity Transport in the supported MVP lane.
 
-Pyralis does write the game-development layer above that backend:
+This package does write the game-development layer above that backend:
 
 - beginner-facing authoring semantics through `SessionDefinition.networkMode`
 - setup guidance that separates local multiplayer from networked sessions
@@ -14,7 +14,7 @@ Pyralis does write the game-development layer above that backend:
 - participant ownership, seat ownership, authority checks, roster state, session state, and spawn service adapters
 - game-rule seams that future lobby, relay, rollback, prediction, reconciliation, and `.io`-style systems can plug into without putting NGO types into core gameplay features
 
-This keeps the platform commercially realistic: use proven networking infrastructure, but own the Pyralis authoring, validation, and game-rule chain that creators actually touch.
+This keeps the platform commercially realistic: use proven networking infrastructure, but own the gameplay authoring contract, validation, and game-rule chain that creators actually touch.
 
 ## MVP Contract
 
@@ -24,7 +24,7 @@ Supported now:
 - `GameplayNetworkMode.NetcodeHost`, `NetcodeClient`, and `NetcodeServer` select networked participant/session services.
 - Networked scenes author `NetworkedSessionStateService`, `NetworkedParticipantRosterService`, and `NetworkedParticipantSpawnService` under the Gameplay Root or assign them into the Bootstrap override fields when a session selects an NGO mode.
 - networked sessions register NGO-backed `ISessionOwnershipService` and `IParticipantAuthorityService` implementations.
-- `PyralisNetworkSetupValidator` checks the required MVP scene wiring: `NetworkManager`, `UnityTransport`, pawn prefab `NetworkObject`, and Network Prefab registration.
+- `NetworkSetupValidator` checks the required MVP scene wiring: `NetworkManager`, `UnityTransport`, pawn prefab `NetworkObject`, and Network Prefab registration.
 - `NetworkedParticipantSpawnService` calls `NetworkObject.Spawn`, `SpawnWithOwnership`, and `Despawn` on the server path.
 - local authority is resolved against the participant owner client id, so host/client status alone does not make every participant local.
 
@@ -48,6 +48,6 @@ For a networked pawn-backed scene:
 3. Add/configure `UnityTransport` and assign it to `NetworkManager.NetworkConfig.NetworkTransport`.
 4. Add `NetworkObject` to every pawn prefab spawned by networked participants.
 5. Register those pawn prefabs in `NetworkManager.NetworkConfig.Prefabs`.
-6. Keep module-owned capabilities using Pyralis network metadata (`networkRole`, `replicationPolicyId`, ownership/server flags) rather than direct NGO types.
+6. Keep module-owned capabilities using gameplay network metadata (`networkRole`, `replicationPolicyId`, ownership/server flags) rather than direct NGO types.
 
 Local multiplayer remains a separate PlayerInputManager/participant-spawn route. Installing NGO and Transport does not automatically make a scene networked.

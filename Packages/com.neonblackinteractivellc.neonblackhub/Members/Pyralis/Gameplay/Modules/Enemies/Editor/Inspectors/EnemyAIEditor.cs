@@ -82,14 +82,14 @@ public class EnemyAIEditor : Editor
 
         EditorGUILayout.HelpBox(
             is3D
-                ? "ThreeD chases on the XZ plane for brawlers, arena games, or enemies with depth movement."
+                ? "ThreeD chases on the XZ plane for rigged 3D characters, arena games, or enemies with depth movement."
                 : "TwoD chases on the X axis for side-scrollers. Use a flat 3D ground collider under the play space.",
             MessageType.Info);
         EditorGUILayout.Space(4f);
 
         if (is3D)
         {
-            EditorGUILayout.LabelField("Visuals (3D Brawler)", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Visuals (Rigged 3D)", EditorStyles.boldLabel);
             EditorGUILayout.PropertyField(_visualRoot);
             EditorGUILayout.PropertyField(_spriteDefaultFacesRight);
             EditorGUILayout.PropertyField(_presentationCamera);

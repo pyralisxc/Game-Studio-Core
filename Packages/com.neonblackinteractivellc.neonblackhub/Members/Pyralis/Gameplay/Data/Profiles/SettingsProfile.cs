@@ -23,9 +23,9 @@ namespace NeonBlack.Gameplay.Data.Profiles
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Settings Profile", fileName = "SettingsProfile", order = -10)]
     public class SettingsProfile : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            if (mixer == null) yield return PyralisRuntimeValidationIssue.Required("Audio Mixer is missing.");
+            if (mixer == null) yield return RuntimeValidationIssue.Required("Audio Mixer is missing.");
         }
 
         public AudioMixer mixer;

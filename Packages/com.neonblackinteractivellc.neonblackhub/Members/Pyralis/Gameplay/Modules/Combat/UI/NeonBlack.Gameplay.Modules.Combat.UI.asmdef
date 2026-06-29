@@ -1,0 +1,19 @@
+{
+  "name": "NeonBlack.Gameplay.Modules.Combat.UI",
+  "references": [
+    "NeonBlack.Gameplay.Core",
+    "NeonBlack.Gameplay.Data",
+    "NeonBlack.Gameplay.Modules.Combat",
+    "Unity.TextMeshPro",
+    "UnityEngine.UI",
+    "Pys.Authoring.Contracts"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": []
+}

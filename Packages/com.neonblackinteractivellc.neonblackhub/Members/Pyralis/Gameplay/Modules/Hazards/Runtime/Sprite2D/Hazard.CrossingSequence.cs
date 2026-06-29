@@ -10,7 +10,7 @@ public partial class Hazard
     // Crossing master sequence  (Crossing / Wavy)
     // ---------------------------------------------------------------------
 
-    private IEnumerator CrossingSequenceRoutine(DifficultyManager.HazardTiming timing)
+    private IEnumerator CrossingSequenceRoutine(HazardDifficultyController.HazardTiming timing)
     {
         DisableAllColliders();
         SetShadowAlpha(0f);

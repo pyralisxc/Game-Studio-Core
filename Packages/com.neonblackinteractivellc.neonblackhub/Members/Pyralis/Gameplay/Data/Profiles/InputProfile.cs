@@ -38,7 +38,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
     [System.Serializable]
     public class GameplayInputActionBinding
     {
-        [Tooltip("Pyralis gameplay role that reads this input. Use Custom for project-specific actions.")]
+        [Tooltip("gameplay role that reads this input. Use Custom for project-specific actions.")]
         public GameplayInputActionRole role = GameplayInputActionRole.Move;
         [Tooltip("Only used when Role is Custom. This should be stable enough for gameplay and animation wiring.")]
         public string customKey = string.Empty;
@@ -143,13 +143,13 @@ namespace NeonBlack.Gameplay.Data.Profiles
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Input Profile", fileName = "InputProfile", order = -90)]
     public class InputProfile : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             List<string> issues = new List<string>();
 
             if (actions == null)
             {
-                yield return PyralisRuntimeValidationIssue.Required(
+                yield return RuntimeValidationIssue.Required(
                     "Actions should be assigned for player-owned input. Leave it empty only for AI/system-only usage.",
                     nameof(actions),
                     nameof(InputProfile),
@@ -160,7 +160,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
 
             if (string.IsNullOrWhiteSpace(primaryActionMap))
             {
-                yield return PyralisRuntimeValidationIssue.Required(
+                yield return RuntimeValidationIssue.Required(
                     "Primary Action Map should name the gameplay action map.",
                     nameof(primaryActionMap),
                     nameof(InputProfile),
@@ -173,7 +173,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
                 InputActionMap map = actions.FindActionMap(primaryActionMap, throwIfNotFound: false);
                 if (map == null)
                 {
-                    yield return PyralisRuntimeValidationIssue.Required(
+                    yield return RuntimeValidationIssue.Required(
                         $"Primary Action Map '{primaryActionMap}' was not found in Actions.",
                         nameof(primaryActionMap),
                         nameof(InputProfile),
@@ -189,7 +189,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
 
             if (!supportsGamepad && !supportsKeyboardMouse && !touchFriendly)
             {
-                yield return PyralisRuntimeValidationIssue.Required(
+                yield return RuntimeValidationIssue.Required(
                     "At least one input surface should be supported for player-owned input.",
                     nameof(supportsGamepad),
                     nameof(InputProfile),
@@ -200,7 +200,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
 
             for (int i = 0; i < issues.Count; i++)
             {
-                yield return PyralisRuntimeValidationIssue.Required(
+                yield return RuntimeValidationIssue.Required(
                     issues[i],
                     nameof(actionBindings),
                     nameof(InputProfile),

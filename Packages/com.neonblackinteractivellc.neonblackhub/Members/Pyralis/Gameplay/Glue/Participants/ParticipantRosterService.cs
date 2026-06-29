@@ -35,10 +35,10 @@ namespace NeonBlack.Gameplay.Glue.Participants
     [AddComponentMenu("NeonBlack/Gameplay/Setup/Participant Roster Service")]
     public class ParticipantRosterService : MonoBehaviour, IParticipantRoster, IPlayerProvider, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (sessionDefinition == null)
-                yield return PyralisRuntimeValidationIssue.Required("Session Definition is empty. This is expected when GameplaySessionBootstrap injects it at runtime.");
+                yield return RuntimeValidationIssue.Required("Session Definition is empty. This is expected when GameplaySessionBootstrap injects it at runtime.");
         }
         [SerializeField] private SessionDefinition sessionDefinition;
 

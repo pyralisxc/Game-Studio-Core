@@ -49,7 +49,7 @@ public partial class PlayerInputHandler : GameplayTickBehaviour, IInputSettingsR
     [SerializeField, Tooltip("Gameplay state provider that controls when player input is accepted. SessionStateService normally supplies IGameplayStateReader; assign this only for standalone custom state.")]
     private MonoBehaviour _gameplayStateSource;
 
-    [SerializeField, Tooltip("Settings service that pushes joystick/gamepad deadzone and swap-controls values. SettingsManager implements IInputSettingsRegistrar.")]
+    [SerializeField, Tooltip("Settings service that pushes joystick/gamepad deadzone and swap-controls values. GameplaySettingsService implements IInputSettingsRegistrar.")]
     private MonoBehaviour _settingsRegistrarSource;
 
     [Header("Input Modes")]

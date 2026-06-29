@@ -35,10 +35,10 @@ namespace NeonBlack.Gameplay.Modules.Scoring
     [AddComponentMenu("NeonBlack/Gameplay/Modules/Scoring/Stillness Bonus 2D")]
     public class StillnessBonus2D : GameplayTickBehaviour, IGameplayRuntimeServicesReceiver, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            if (_collectiblesPerBonus <= 0) yield return PyralisRuntimeValidationIssue.Required("Collectibles Per Bonus must be positive.");
-            if (_stillnessInterval <= 0f) yield return PyralisRuntimeValidationIssue.Required("Stillness Interval must be greater than zero.");
+            if (_collectiblesPerBonus <= 0) yield return RuntimeValidationIssue.Required("Collectibles Per Bonus must be positive.");
+            if (_stillnessInterval <= 0f) yield return RuntimeValidationIssue.Required("Stillness Interval must be greater than zero.");
         }
         [Header("Reward Settings")]
         [SerializeField, Tooltip("Points added to the score each time the stillness interval completes.")]
@@ -65,7 +65,7 @@ namespace NeonBlack.Gameplay.Modules.Scoring
         [SerializeField, Tooltip("Optional sound played when a stillness bonus is awarded.")]
         private AudioClip _bonusClip;
 
-        [SerializeField, Tooltip("Volume of the bonus clip, scaled by SettingsManager.SFXVolume.")]
+        [SerializeField, Tooltip("Volume of the bonus clip, scaled by GameplaySettingsService.SFXVolume.")]
         [Range(0f, 1f)]
         private float _baseVolume = 0.8f;
 
@@ -100,7 +100,7 @@ namespace NeonBlack.Gameplay.Modules.Scoring
             _audioSource.spatialBlend = 0f;
             _audioSource.playOnAwake = false;
 
-            // Validate mixer routing. Without an Output Group assigned, SettingsManager's
+            // Validate mixer routing. Without an Output Group assigned, GameplaySettingsService's
             // SFX volume slider has no effect on this component's clips.
             if (_audioSource.outputAudioMixerGroup == null)
             {

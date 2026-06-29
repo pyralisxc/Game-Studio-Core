@@ -20,9 +20,9 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
     [CreateAssetMenu(menuName = "NeonBlack/RPG/Equippable Item", fileName = "EquippableItemDefinition")]
     public class EquippableItemDefinition : ItemDefinition, IEquippableItem, IRuntimeValidationProvider
     {
-        public new IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public new IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            return PyralisRuntimeValidationIssueUtility.FromLocalValidationMessages(GetValidationIssues(), this);
+            return RuntimeValidationIssueUtility.FromLocalValidationMessages(GetValidationIssues(), this);
         }
 
         public string[] allowedSlotIds = System.Array.Empty<string>();

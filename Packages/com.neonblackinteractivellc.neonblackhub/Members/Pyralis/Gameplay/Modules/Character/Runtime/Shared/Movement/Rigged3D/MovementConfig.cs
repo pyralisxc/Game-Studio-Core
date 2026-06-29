@@ -3,7 +3,7 @@ using NeonBlack.Gameplay.Core.Enums;
 namespace NeonBlack.Gameplay.Modules.Character
 {
     /// <summary>
-    /// All tuning parameters consumed by <see cref="BrawlerMovementModel"/>.
+    /// All tuning parameters consumed by <see cref="Rigged3DMovementModel"/>.
     /// Filled by <see cref="Pawn3DMovementComponent"/> from serialized fields or profile data.
     /// Plain C# struct with no UnityEngine.Object dependency.
     /// </summary>

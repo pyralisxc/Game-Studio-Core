@@ -156,21 +156,21 @@ namespace NeonBlack.Gameplay.Modules.Rpg.UI
             return SelectChoice(choices[index].ChoiceId);
         }
 
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             ResolveReferences();
 
             if (routePresenter == null)
-                yield return PyralisRuntimeValidationIssue.Required("`RpgDialoguePanelPresenter` should reference the Dialogue route presenter or live below one.");
+                yield return RuntimeValidationIssue.Required("`RpgDialoguePanelPresenter` should reference the Dialogue route presenter or live below one.");
 
             if ((dialogueGraphs == null || dialogueGraphs.Length == 0) && (_runtimeGraphs == null || _runtimeGraphs.Length == 0))
-                yield return PyralisRuntimeValidationIssue.Required("`RpgDialoguePanelPresenter` should reference at least one Dialogue Graph Definition.");
+                yield return RuntimeValidationIssue.Required("`RpgDialoguePanelPresenter` should reference at least one Dialogue Graph Definition.");
 
             if (lineLabel == null)
-                yield return PyralisRuntimeValidationIssue.Required("`RpgDialoguePanelPresenter` should reference a line label so the current dialogue node is visible.");
+                yield return RuntimeValidationIssue.Required("`RpgDialoguePanelPresenter` should reference a line label so the current dialogue node is visible.");
 
             if (continueButton == null && (choiceButtons == null || choiceButtons.Length == 0))
-                yield return PyralisRuntimeValidationIssue.Required("`RpgDialoguePanelPresenter` needs Continue Button or Choice Buttons for player input.");
+                yield return RuntimeValidationIssue.Required("`RpgDialoguePanelPresenter` needs Continue Button or Choice Buttons for player input.");
         }
 
         private void HandlePanelOpened(HubInteractionResult result)

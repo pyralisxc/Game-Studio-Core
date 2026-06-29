@@ -13,10 +13,10 @@ Use this package when you want to:
 
 | Location | Purpose |
 | --- | --- |
-| `Members/Pyralis/Gameplay/Docs/Authoring/` | Active setup guides for new scenes and authored gameplay routes. Start with `START_HERE.md`. |
+| `Members/Pyralis/Gameplay/Docs/` | Current architecture and setup guidance for authored gameplay routes. |
 | `Members/Pyralis/Gameplay/Core/` | Foundational services, VContainer composition, contracts, config, `SceneLoader`, and `TimeManager`. |
 | `Members/Pyralis/Gameplay/Data/` | ScriptableObject definitions and profiles for sessions, participants, pawns, modes, and settings. |
-| `Members/Pyralis/Gameplay/Editor/Authoring/` | Central Pyralis authoring spine, Authoring Window, Inspector guides, validation, diagnostics, and editor utilities. |
+| `Members/Pyralis/Gameplay/Editor/` | Local gameplay inspectors, validation helpers, diagnostics, and editor utilities. PYS Authoring lives in Packages/com.pys.authoring. |
 | `Members/Pyralis/Gameplay/Modules/` | Reusable gameplay capability families. Lane-specific code uses `Sprite2D`, `Billboard2_5D`, and `Rigged3D` folders where applicable. |
 | `Members/Pyralis/Gameplay/Glue/` | Bootstrap, lifetime, session, participant, input-routing, spawning, service-registration, and scene-flow composition that wires authored modules together. |
 | `Members/Pyralis/Gameplay/Networking/` | Session ownership, authority, replication-facing contracts, and backend adapters. |
@@ -65,17 +65,17 @@ If `package.json` still says an older version, that machine has an older copy of
 
 ## Quick start
 
-1. Read `Members/Pyralis/Gameplay/Docs/Authoring/START_HERE.md`.
+1. Read `Members/Pyralis/Gameplay/README.md`, then use PYS Authoring for scene-specific setup guidance.
 2. Add `GameplaySessionBootstrap` to your scene.
-3. Open the Pyralis Authoring Window or select the bootstrap and use its `Setup Flow` foldout.
+3. Open the PYS Authoring Window or select the bootstrap and use its `Setup Flow` foldout.
 4. In the Project window, select the folder you want to own the setup assets, then right-click and create the needed `NeonBlack/Gameplay/...` definitions and profiles.
 5. Use the Authoring Window as the route map, and use Inspector fields plus Project-window drag/drop to wire the scene natively.
-6. Use the focused setup guides in `Members/Pyralis/Gameplay/Docs/Authoring/Prefabs/` for combat, health, tabletop, and authored prefab setup.
+6. Use module-owned inspectors and PYS Authoring projections for combat, health, tabletop, and authored prefab setup.
 
 ## Current source of truth
 
 - Active runtime code is under `Members/Pyralis/Gameplay/`.
 - `GameplaySessionBootstrap` is the Unity-facing startup path for new scenes.
-- `PyralisGameplayLifetimeScope` is the runtime DI graph. It registers owned services for the active bootstrap/session path.
+- `GameplayLifetimeScope` is the runtime DI graph. It registers owned services for the active bootstrap/session path.
 - The folder structure is `Core/`, `Data/`, `Editor/`, `Modules/` with no `Shared/`, `Runtime2D/`, or `Runtime3D/` top-level folders.
-- Scene setup should follow the current guides in `Members/Pyralis/Gameplay/Docs/Authoring/`.
+- Scene setup should follow PYS Authoring projections plus the current gameplay docs under `Members/Pyralis/Gameplay/Docs/`.

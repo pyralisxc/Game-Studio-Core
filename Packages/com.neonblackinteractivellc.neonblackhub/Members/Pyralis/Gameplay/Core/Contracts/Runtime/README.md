@@ -1,4 +1,4 @@
-# Pyralis Runtime Contracts
+# Runtime Contracts
 
 This folder contains runtime gameplay interfaces and service seams.
 

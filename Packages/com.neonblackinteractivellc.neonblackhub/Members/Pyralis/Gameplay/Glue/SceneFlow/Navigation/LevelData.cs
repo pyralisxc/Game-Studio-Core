@@ -31,15 +31,15 @@ namespace NeonBlack.Gameplay.Glue.SceneFlow.Navigation
     )]
     public class LevelData : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (string.IsNullOrWhiteSpace(sceneName))
-                yield return PyralisRuntimeValidationIssue.Required(
+                yield return RuntimeValidationIssue.Required(
                     "Scene Name is required.",
                     nameof(sceneName),
                     nameof(LevelData));
             if (string.IsNullOrWhiteSpace(displayName))
-                yield return PyralisRuntimeValidationIssue.Required(
+                yield return RuntimeValidationIssue.Required(
                     "Display Name is required.",
                     nameof(displayName),
                     nameof(LevelData));

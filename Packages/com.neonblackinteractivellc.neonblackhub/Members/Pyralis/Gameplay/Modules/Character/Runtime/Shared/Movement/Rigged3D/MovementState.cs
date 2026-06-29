@@ -3,8 +3,8 @@ using UnityEngine;
 namespace NeonBlack.Gameplay.Modules.Character
 {
     /// <summary>
-    /// All mutable runtime state owned exclusively by <see cref="BrawlerMovementModel"/>.
-    /// Exposed read-only to the MonoBehaviour layer via <see cref="BrawlerMovementModel.State"/>.
+    /// All mutable runtime state owned exclusively by <see cref="Rigged3DMovementModel"/>.
+    /// Exposed read-only to the MonoBehaviour layer via <see cref="Rigged3DMovementModel.State"/>.
     /// </summary>
     public sealed class MovementState
     {

@@ -3,7 +3,7 @@ using UnityEngine;
 namespace NeonBlack.Gameplay.Modules.Character
 {
     /// <summary>
-    /// All input and combat-context data <see cref="BrawlerMovementModel"/> needs for one Update frame.
+    /// All input and combat-context data <see cref="Rigged3DMovementModel"/> needs for one Update frame.
     /// Filled by the MonoBehaviour layer from Unity input, scene camera context, and combat state.
     /// </summary>
     public struct MovementInput

@@ -23,7 +23,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
 [CreateAssetMenu(menuName = "NeonBlack/Profiles/Enemy Profile", fileName = "EnemyProfile")]
     public class EnemyProfile : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             return BuildRuntimeValidationIssues();
         }
@@ -34,7 +34,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
         public List<string> GetValidationIssues(GameObject actorRoot = null, ActorPresentationMode presentationMode = ActorPresentationMode.Billboard2_5D)
         {
             List<string> issues = new List<string>();
-            List<PyralisRuntimeValidationIssue> runtimeIssues = BuildRuntimeValidationIssues(presentationMode);
+            List<RuntimeValidationIssue> runtimeIssues = BuildRuntimeValidationIssues(presentationMode);
             for (int i = 0; i < runtimeIssues.Count; i++)
             {
                 if (runtimeIssues[i] != null && !string.IsNullOrWhiteSpace(runtimeIssues[i].Message))
@@ -48,13 +48,13 @@ namespace NeonBlack.Gameplay.Data.Profiles
             return issues;
         }
 
-        private List<PyralisRuntimeValidationIssue> BuildRuntimeValidationIssues(ActorPresentationMode presentationMode = ActorPresentationMode.Billboard2_5D)
+        private List<RuntimeValidationIssue> BuildRuntimeValidationIssues(ActorPresentationMode presentationMode = ActorPresentationMode.Billboard2_5D)
         {
-            List<PyralisRuntimeValidationIssue> issues = new List<PyralisRuntimeValidationIssue>();
+            List<RuntimeValidationIssue> issues = new List<RuntimeValidationIssue>();
 
             if (combatProfile == null)
             {
-                issues.Add(PyralisRuntimeValidationIssue.Required(
+                issues.Add(RuntimeValidationIssue.Required(
                     "Combat Profile is missing.",
                     nameof(combatProfile),
                     nameof(EnemyProfile),
@@ -74,7 +74,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
 
             if (reactionProfile == null)
             {
-                issues.Add(PyralisRuntimeValidationIssue.Required(
+                issues.Add(RuntimeValidationIssue.Required(
                     "Reaction Profile is missing.",
                     nameof(reactionProfile),
                     nameof(EnemyProfile),
@@ -100,8 +100,8 @@ namespace NeonBlack.Gameplay.Data.Profiles
         }
 
         private static void AppendChildIssues(
-            List<PyralisRuntimeValidationIssue> issues,
-            IEnumerable<PyralisRuntimeValidationIssue> childIssues,
+            List<RuntimeValidationIssue> issues,
+            IEnumerable<RuntimeValidationIssue> childIssues,
             string messagePrefix,
             string issueCodePrefix,
             string fieldPath)
@@ -109,10 +109,10 @@ namespace NeonBlack.Gameplay.Data.Profiles
             if (childIssues == null)
                 return;
 
-            foreach (PyralisRuntimeValidationIssue issue in childIssues)
+            foreach (RuntimeValidationIssue issue in childIssues)
             {
-                PyralisRuntimeValidationIssue contextualIssue =
-                    PyralisRuntimeValidationIssueUtility.WithParentContext(
+                RuntimeValidationIssue contextualIssue =
+                    RuntimeValidationIssueUtility.WithParentContext(
                         issue,
                         messagePrefix,
                         issueCodePrefix,

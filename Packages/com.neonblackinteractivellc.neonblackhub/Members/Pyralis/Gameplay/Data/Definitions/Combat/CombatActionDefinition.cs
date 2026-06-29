@@ -22,24 +22,24 @@ namespace NeonBlack.Gameplay.Data.Definitions.Combat
     [CreateAssetMenu(menuName = "NeonBlack/Combat/Combat Action Definition", fileName = "CombatActionDefinition")]
     public class CombatActionDefinition : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (comboStep < 1)
-                yield return PyralisRuntimeValidationIssue.Required("Combo Step must be at least 1.", nameof(comboStep), nameof(CombatActionDefinition), issueCode: "CombatAction.ComboStep.Invalid");
+                yield return RuntimeValidationIssue.Required("Combo Step must be at least 1.", nameof(comboStep), nameof(CombatActionDefinition), issueCode: "CombatAction.ComboStep.Invalid");
             if (comboWindow < 0f)
-                yield return PyralisRuntimeValidationIssue.Required("Combo Window cannot be negative.", nameof(comboWindow), nameof(CombatActionDefinition), issueCode: "CombatAction.ComboWindow.Invalid");
+                yield return RuntimeValidationIssue.Required("Combo Window cannot be negative.", nameof(comboWindow), nameof(CombatActionDefinition), issueCode: "CombatAction.ComboWindow.Invalid");
             if (weapon == null)
-                yield return PyralisRuntimeValidationIssue.Required("No Weapon Data assigned. Attack may not have damage or range stats.", nameof(weapon), nameof(CombatActionDefinition), issueCode: "CombatAction.Weapon.Missing");
+                yield return RuntimeValidationIssue.Required("No Weapon Data assigned. Attack may not have damage or range stats.", nameof(weapon), nameof(CombatActionDefinition), issueCode: "CombatAction.Weapon.Missing");
             if (string.IsNullOrWhiteSpace(hitBoxZone))
-                yield return PyralisRuntimeValidationIssue.Required("Hit Box Zone is required so the combat action can activate the authored hitbox slot.", nameof(hitBoxZone), nameof(CombatActionDefinition), issueCode: "CombatAction.HitBoxZone.Missing");
+                yield return RuntimeValidationIssue.Required("Hit Box Zone is required so the combat action can activate the authored hitbox slot.", nameof(hitBoxZone), nameof(CombatActionDefinition), issueCode: "CombatAction.HitBoxZone.Missing");
 
             if (weapon != null)
             {
-                foreach (PyralisRuntimeValidationIssue issue in weapon.GetRuntimeValidationIssues())
+                foreach (RuntimeValidationIssue issue in weapon.GetRuntimeValidationIssues())
                 {
                     if (issue != null && !string.IsNullOrWhiteSpace(issue.Message))
                     {
-                        yield return new PyralisRuntimeValidationIssue(
+                        yield return new RuntimeValidationIssue(
                             $"Weapon: {issue.Message}",
                             nameof(weapon),
                             nameof(CombatActionDefinition),

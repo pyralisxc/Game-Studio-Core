@@ -5,7 +5,7 @@ namespace NeonBlack.Gameplay.Modules.Character
     /// <summary>
     /// Physics results accumulated by the <see cref="Pawn3DMovementComponent"/> MonoBehaviour during one
     /// Update frame from CharacterController.Move, ground probes, and OnControllerColliderHit.
-    /// Passed to <see cref="BrawlerMovementModel.Tick"/> on the following frame so the model
+    /// Passed to <see cref="Rigged3DMovementModel.Tick"/> on the following frame so the model
     /// can update grounding state without touching Unity physics APIs directly.
     /// </summary>
     public struct MovementPhysicsFrame

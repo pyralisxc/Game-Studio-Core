@@ -101,8 +101,8 @@ namespace NeonBlack.Gameplay.Modules.Hazards
             if (_profile == null)
                 return;
 
-            if (_profile.flashOnActivation && _profile.activationFlashPreset != null)
-                ResolveFlashPlayer()?.PlayOneShot(_profile.activationFlashPreset);
+            if (_profile.flashOnActivation && _profile.activationFlashEffect != null)
+                ResolveFlashPlayer()?.PlayOneShot(_profile.activationFlashEffect);
             if (_profile.showActivationPopup)
                 SpawnPopup(_profile.activationPopupText, _profile.activationPopupColor);
         }
@@ -112,8 +112,8 @@ namespace NeonBlack.Gameplay.Modules.Hazards
             if (_profile == null)
                 return;
 
-            if (_profile.flashOnExplosion && _profile.explosionFlashPreset != null)
-                ResolveFlashPlayer()?.PlayOneShot(_profile.explosionFlashPreset);
+            if (_profile.flashOnExplosion && _profile.explosionFlashEffect != null)
+                ResolveFlashPlayer()?.PlayOneShot(_profile.explosionFlashEffect);
             if (_profile.showExplosionPopup)
                 SpawnPopup(_profile.explosionPopupText, _profile.explosionPopupColor);
         }
@@ -123,8 +123,8 @@ namespace NeonBlack.Gameplay.Modules.Hazards
             if (_profile == null)
                 return;
 
-            if (_profile.flashOnBounce && _profile.bounceFlashPreset != null)
-                ResolveFlashPlayer()?.PlayOneShot(_profile.bounceFlashPreset);
+            if (_profile.flashOnBounce && _profile.bounceFlashEffect != null)
+                ResolveFlashPlayer()?.PlayOneShot(_profile.bounceFlashEffect);
         }
 
         public void PlayCollectibleFeedback(int amount)
@@ -143,17 +143,17 @@ namespace NeonBlack.Gameplay.Modules.Hazards
             SpawnPopup(_profile.exitPopupText, _profile.exitPopupColor);
         }
 
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (_profile == null)
                 yield break;
 
-            if ((_profile.flashOnActivation && _profile.activationFlashPreset != null
-                || _profile.flashOnExplosion && _profile.explosionFlashPreset != null
-                || _profile.flashOnBounce && _profile.bounceFlashPreset != null)
+            if ((_profile.flashOnActivation && _profile.activationFlashEffect != null
+                || _profile.flashOnExplosion && _profile.explosionFlashEffect != null
+                || _profile.flashOnBounce && _profile.bounceFlashEffect != null)
                 && ResolveFlashPlayer() == null)
             {
-                yield return PyralisRuntimeValidationIssue.Required("`HazardFeedbackRuntime` needs a SpriteFlasher when flash presets are authored in the HazardFeedbackProfile.");
+                yield return RuntimeValidationIssue.Required("`HazardFeedbackRuntime` needs a SpriteFlasher when flash entries are authored in the HazardFeedbackProfile.");
             }
         }
 

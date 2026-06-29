@@ -50,14 +50,14 @@ namespace NeonBlack.Gameplay.Glue.Bootstrap
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Setup/Gameplay Session Bootstrap")]
     [DefaultExecutionOrder(-1100)]
-    [RequireComponent(typeof(PyralisGameplayLifetimeScope))]
+    [RequireComponent(typeof(GameplayLifetimeScope))]
     public class GameplaySessionBootstrap : MonoBehaviour, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (sessionDefinition == null)
             {
-                yield return PyralisRuntimeValidationIssue.Required(
+                yield return RuntimeValidationIssue.Required(
                     "Session Definition is unassigned.",
                     nameof(sessionDefinition),
                     nameof(GameplaySessionBootstrap),
@@ -68,7 +68,7 @@ namespace NeonBlack.Gameplay.Glue.Bootstrap
 
             if (cameraRigController == null)
             {
-                yield return PyralisRuntimeValidationIssue.Recommended(
+                yield return RuntimeValidationIssue.Recommended(
                     "Camera Rig Controller is unassigned. This is fine for non-camera proofs, but pawn proofs should author camera focus.",
                     nameof(cameraRigController),
                     nameof(GameplaySessionBootstrap),
@@ -95,7 +95,7 @@ namespace NeonBlack.Gameplay.Glue.Bootstrap
         [SerializeField] private CinemachineCameraRigController cameraRigController;
         [SerializeField, Tooltip("Optional scene transition service. Assign SceneFader, SceneLoader, or another component implementing ISceneNavigator.")]
         private MonoBehaviour sceneNavigatorSource;
-        [SerializeField] private TimeManager timeManager;
+        [SerializeField] private TimeScaleService timeScaleService;
         [SerializeField] private CameraShake cameraShake;
 
         private void Awake()
@@ -108,7 +108,7 @@ namespace NeonBlack.Gameplay.Glue.Bootstrap
             if (dontDestroyOnLoad)
                 DontDestroyOnLoad(gameObject);
 
-            PyralisGameplayLifetimeScope lifetimeScope = GetRequiredLifetimeScope();
+            GameplayLifetimeScope lifetimeScope = GetRequiredLifetimeScope();
             if (lifetimeScope == null)
                 return;
 
@@ -117,7 +117,7 @@ namespace NeonBlack.Gameplay.Glue.Bootstrap
                 sessionDefinition,
                 playerInputManager,
                 sceneNavigatorSource,
-                timeManager,
+                timeScaleService,
                 cameraShake,
                 cameraRigController,
                 sessionStateService,
@@ -136,12 +136,12 @@ namespace NeonBlack.Gameplay.Glue.Bootstrap
                 cameraRigController.SetGameMode(sessionDefinition.defaultGameMode);
         }
 
-        private PyralisGameplayLifetimeScope GetRequiredLifetimeScope()
+        private GameplayLifetimeScope GetRequiredLifetimeScope()
         {
-            PyralisGameplayLifetimeScope lifetimeScope = GetComponent<PyralisGameplayLifetimeScope>();
+            GameplayLifetimeScope lifetimeScope = GetComponent<GameplayLifetimeScope>();
             if (lifetimeScope == null)
             {
-                Debug.LogError("[GameplaySessionBootstrap] Missing PyralisGameplayLifetimeScope. Add it to the Gameplay Root before Play Mode; GameplaySessionBootstrap requires the visible composition root.", this);
+                Debug.LogError("[GameplaySessionBootstrap] Missing GameplayLifetimeScope. Add it to the Gameplay Root before Play Mode; GameplaySessionBootstrap requires the visible composition root.", this);
                 return null;
             }
 

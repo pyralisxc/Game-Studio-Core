@@ -9,7 +9,7 @@ public partial class Hazard
     // Bouncy sequence  (slam-style approach + warning ? distance-based segment travel)
     // ---------------------------------------------------------------------
 
-    private IEnumerator BouncySequenceRoutine(DifficultyManager.HazardTiming timing)
+    private IEnumerator BouncySequenceRoutine(HazardDifficultyController.HazardTiming timing)
     {
         yield return SlamWarningRoutine(timing);
 

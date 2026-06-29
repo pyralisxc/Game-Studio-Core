@@ -47,32 +47,32 @@ public class WorldHealthBarEditor : Editor
                 EditorGUILayout.PropertyField(prop, true);
         }
 
-        PyralisInspectorValidation.DrawValidationMessages(GetMessages((WorldHealthBar)target), "WorldHealthBar is ready for explicit world-space health presentation.");
+        InspectorValidation.DrawValidationMessages(GetMessages((WorldHealthBar)target), "WorldHealthBar is ready for explicit world-space health presentation.");
         serializedObject.ApplyModifiedProperties();
     }
 
-    private List<PyralisInspectorValidationIssue> GetMessages(WorldHealthBar healthBar)
+    private List<InspectorValidationIssue> GetMessages(WorldHealthBar healthBar)
     {
-        List<PyralisInspectorValidationIssue> messages = new List<PyralisInspectorValidationIssue>();
+        List<InspectorValidationIssue> messages = new List<InspectorValidationIssue>();
 
         if (healthBar != null && healthBar.GetComponent<HealthComponent>() == null)
-            messages.Add(PyralisInspectorValidationIssue.Required("HealthComponent is required on the same GameObject."));
+            messages.Add(InspectorValidationIssue.Required("HealthComponent is required on the same GameObject."));
 
         SerializedProperty targetCamera = serializedObject.FindProperty("targetCamera");
         if (targetCamera != null && targetCamera.objectReferenceValue == null)
-            messages.Add(PyralisInspectorValidationIssue.Recommended("Target Camera is empty. Assign a gameplay camera or set it at runtime so the bar billboards correctly."));
+            messages.Add(InspectorValidationIssue.Recommended("Target Camera is empty. Assign a gameplay camera or set it at runtime so the bar billboards correctly."));
 
         bool showDamageNumbers = serializedObject.FindProperty("showDamageNumbers")?.boolValue == true;
         bool showHealNumbers = serializedObject.FindProperty("showHealNumbers")?.boolValue == true;
         SerializedProperty damageNumberSink = serializedObject.FindProperty("damageNumberSink");
         if ((showDamageNumbers || showHealNumbers) && damageNumberSink != null && damageNumberSink.objectReferenceValue == null)
-            messages.Add(PyralisInspectorValidationIssue.Recommended("Damage Number Sink is empty. Assign DamageNumberSpawner or another IDamageNumberSink to show damage/heal numbers."));
+            messages.Add(InspectorValidationIssue.Recommended("Damage Number Sink is empty. Assign DamageNumberSpawner or another IDamageNumberSink to show damage/heal numbers."));
 
         if (damageNumberSink != null
             && damageNumberSink.objectReferenceValue is Component sinkComponent
             && sinkComponent.GetComponent<IDamageNumberSink>() == null)
         {
-            messages.Add(PyralisInspectorValidationIssue.Required("Damage Number Sink must reference a component that implements IDamageNumberSink."));
+            messages.Add(InspectorValidationIssue.Required("Damage Number Sink must reference a component that implements IDamageNumberSink."));
         }
 
         return messages;

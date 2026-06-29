@@ -30,11 +30,11 @@ namespace NeonBlack.Gameplay.Data.Profiles
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Camera Rig Profile", fileName = "CameraRigProfile", order = -70)]
     public class CameraRigProfile : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (useCinemachine && (reflectedSettings == null || reflectedSettings.Count == 0))
             {
-                yield return PyralisRuntimeValidationIssue.Optional(
+                yield return RuntimeValidationIssue.Optional(
                     "No reflected Cinemachine recipe is saved yet. Use the CameraRigProfile inspector to sync from a scene Cinemachine rig.");
             }
         }
@@ -57,7 +57,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
         public IReadOnlyList<CameraProfileEntry> ReflectedSettings => reflectedSettings;
 
         public CameraPresentationMode presentationMode = CameraPresentationMode.Shared;
-        [Tooltip("Chooses which gameplay target Pyralis routes into Cinemachine. Manual Cinemachine leaves Follow/LookAt untouched.")]
+        [Tooltip("Chooses which gameplay target the gameplay camera route sends into Cinemachine. Manual Cinemachine leaves Follow/LookAt untouched.")]
         public CameraFocusMode focusMode = CameraFocusMode.ParticipantGroup;
         public bool useCinemachine = true;
         public bool lockToPlayfield = true;

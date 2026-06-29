@@ -1,4 +1,4 @@
-# Pyralis Presentation
+# NeonBlack Gameplay Presentation
 
 This domain owns cross-feature presentation systems such as animation routing, camera infrastructure, visual feedback helpers, and shared visual adapters.
 

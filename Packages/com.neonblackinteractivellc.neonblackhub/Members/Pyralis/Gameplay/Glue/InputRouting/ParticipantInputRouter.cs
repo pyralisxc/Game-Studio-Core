@@ -45,11 +45,11 @@ namespace NeonBlack.Gameplay.Glue.InputRouting
     [AddComponentMenu("NeonBlack/Gameplay/Setup/Participant Input Router")]
     public class ParticipantInputRouter : MonoBehaviour, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (sessionDefinition == null)
             {
-                yield return PyralisRuntimeValidationIssue.Recommended(
+                yield return RuntimeValidationIssue.Recommended(
                     "Session Definition is empty. This is expected when GameplaySessionBootstrap injects it at runtime.",
                     nameof(sessionDefinition),
                     nameof(ParticipantInputRouter),
@@ -60,7 +60,7 @@ namespace NeonBlack.Gameplay.Glue.InputRouting
 
             if (rosterService == null)
             {
-                yield return PyralisRuntimeValidationIssue.Recommended(
+                yield return RuntimeValidationIssue.Recommended(
                     "Roster Service is empty. This is expected when GameplaySessionBootstrap injects it at runtime.",
                     nameof(rosterService),
                     nameof(ParticipantInputRouter),

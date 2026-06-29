@@ -25,10 +25,10 @@ namespace NeonBlack.Gameplay.Data.Config
     [CreateAssetMenu(menuName = "NeonBlack/Pyralis/Game Config", fileName = "GameConfig")]
     public class GameConfig : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            if (sessionDefinition == null) yield return PyralisRuntimeValidationIssue.Required("Session Definition is missing.");
-            if (string.IsNullOrWhiteSpace(mainMenuScene)) yield return PyralisRuntimeValidationIssue.Required("Main Menu Scene name is required.");
+            if (sessionDefinition == null) yield return RuntimeValidationIssue.Required("Session Definition is missing.");
+            if (string.IsNullOrWhiteSpace(mainMenuScene)) yield return RuntimeValidationIssue.Required("Main Menu Scene name is required.");
         }
 
         [Header("Session")]
@@ -41,8 +41,8 @@ namespace NeonBlack.Gameplay.Data.Config
         [Header("Service Prefabs")]
         [Tooltip("Optional prefab to use for SceneLoader service creation.")]
         public GameObject sceneLoaderPrefab;
-        [Tooltip("Optional prefab to use for TimeManager service creation.")]
-        public GameObject timeManagerPrefab;
+        [Tooltip("Optional prefab to use for TimeScaleService creation.")]
+        public GameObject timeScaleServicePrefab;
         [Tooltip("Optional prefab to use for CameraShake service creation.")]
         public GameObject cameraShakePrefab;
 

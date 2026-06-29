@@ -3,8 +3,6 @@
   "references": [
     "NeonBlack.Gameplay.Core",
     "NeonBlack.Gameplay.Data",
-    "Unity.TextMeshPro",
-    "UnityEngine.UI",
     "Pys.Authoring.Contracts"
   ],
   "includePlatforms": [],

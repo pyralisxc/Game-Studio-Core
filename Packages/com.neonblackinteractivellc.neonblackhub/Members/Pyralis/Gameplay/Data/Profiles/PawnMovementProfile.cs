@@ -30,10 +30,10 @@ namespace NeonBlack.Gameplay.Data.Profiles
 [CreateAssetMenu(menuName = "NeonBlack/Profiles/Pawn Movement Profile", fileName = "PawnMovementProfile", order = -60)]
     public class PawnMovementProfile : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            if (walkSpeed < 0f) yield return PyralisRuntimeValidationIssue.Required("Walk Speed cannot be negative.");
-            if (acceleration < 0f) yield return PyralisRuntimeValidationIssue.Required("Acceleration cannot be negative.");
+            if (walkSpeed < 0f) yield return RuntimeValidationIssue.Required("Walk Speed cannot be negative.");
+            if (acceleration < 0f) yield return RuntimeValidationIssue.Required("Acceleration cannot be negative.");
         }
 
         public MovementMode movementMode = MovementMode.ThreeD;

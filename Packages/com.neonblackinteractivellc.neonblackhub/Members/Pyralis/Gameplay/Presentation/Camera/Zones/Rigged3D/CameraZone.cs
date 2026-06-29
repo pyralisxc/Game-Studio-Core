@@ -34,7 +34,7 @@ namespace NeonBlack.Gameplay.Presentation.Camera.Zones
 public partial class CameraZone : MonoBehaviour
 {
     [Header("Runtime References")]
-    [Tooltip("Optional explicit camera rig reference. When left empty, Pyralis injects the active shared camera rig.")]
+    [Tooltip("Optional explicit camera rig reference. When left empty, the runtime injects the active shared camera rig.")]
     [SerializeField] private CinemachineCameraRigController cameraRigController;
 
     [Header("Profiles")]

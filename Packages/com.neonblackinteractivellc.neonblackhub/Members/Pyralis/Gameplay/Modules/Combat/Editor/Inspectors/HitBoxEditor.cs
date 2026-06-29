@@ -58,7 +58,7 @@ public class HitBoxEditor : Editor
                 "Seconds to freeze time on hit. 0 = disabled. 0.04-0.08 = light, 0.10-0.15 = heavy."));
         EditorGUILayout.PropertyField(_hitPauseSink, new GUIContent("Hit Pause Sink"));
         if (_freezeFrameDuration.floatValue > 0f && !ImplementsInterface(_hitPauseSink, "NeonBlack.Gameplay.Core.Contracts.IHitPauseSink"))
-            EditorGUILayout.HelpBox("Recommended: assign TimeManager or another IHitPauseSink when Freeze Frame Duration is greater than zero.", MessageType.Warning);
+            EditorGUILayout.HelpBox("Recommended: assign TimeScaleService or another IHitPauseSink when Freeze Frame Duration is greater than zero.", MessageType.Warning);
         EditorGUILayout.Space(4f);
 
         EditorGUILayout.LabelField("Camera Shake", EditorStyles.boldLabel);

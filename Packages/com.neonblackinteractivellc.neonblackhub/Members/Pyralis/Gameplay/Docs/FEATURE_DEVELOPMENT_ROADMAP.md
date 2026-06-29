@@ -1,4 +1,4 @@
-# Pyralis Feature Development Roadmap
+# NeonBlack Gameplay Feature Development Roadmap
 
 This roadmap tracks active expansion priorities. It is not a history log, audit archive, or exhaustive feature inventory.
 

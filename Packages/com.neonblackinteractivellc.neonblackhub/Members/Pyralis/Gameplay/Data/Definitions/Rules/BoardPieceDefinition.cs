@@ -20,9 +20,9 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
     [CreateAssetMenu(menuName = "NeonBlack/Rules/Board Piece Definition", fileName = "BoardPieceDefinition", order = -90)]
     public class BoardPieceDefinition : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            return PyralisRuntimeValidationIssueUtility.FromLocalValidationMessages(GetValidationIssues(), this);
+            return RuntimeValidationIssueUtility.FromLocalValidationMessages(GetValidationIssues(), this);
         }
 
         public string pieceId = "piece.default";

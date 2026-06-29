@@ -71,15 +71,15 @@ namespace NeonBlack.Gameplay.Modules.Rpg.UI
                 presenters[i]?.Close();
         }
 
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             ResolveReferences();
 
             if (hudPresenter == null)
-                yield return PyralisRuntimeValidationIssue.Required("`RpgHubPanelRouter` should reference the Hub Interaction HUD Presenter that publishes selected interaction results.");
+                yield return RuntimeValidationIssue.Required("`RpgHubPanelRouter` should reference the Hub Interaction HUD Presenter that publishes selected interaction results.");
 
             if (GetPresenters().Length == 0)
-                yield return PyralisRuntimeValidationIssue.Required("`RpgHubPanelRouter` should reference at least one route presenter.");
+                yield return RuntimeValidationIssue.Required("`RpgHubPanelRouter` should reference at least one route presenter.");
         }
 
         private void HandleInteractionResultShown(HubInteractionResult result)

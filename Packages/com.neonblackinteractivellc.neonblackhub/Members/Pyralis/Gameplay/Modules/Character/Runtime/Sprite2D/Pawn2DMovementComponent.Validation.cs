@@ -7,11 +7,11 @@ namespace NeonBlack.Gameplay.Modules.Character
 {
     public sealed partial class Pawn2DMovementComponent
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (moveSpeed <= 0f)
             {
-                yield return PyralisRuntimeValidationIssue.Required(
+                yield return RuntimeValidationIssue.Required(
                     "Move Speed must be greater than zero.",
                     nameof(moveSpeed),
                     nameof(Pawn2DMovementComponent),
@@ -24,7 +24,7 @@ namespace NeonBlack.Gameplay.Modules.Character
             {
                 if (dashSpeed <= 0f)
                 {
-                    yield return PyralisRuntimeValidationIssue.Required(
+                    yield return RuntimeValidationIssue.Required(
                         "Dash Speed must be greater than zero when dash is enabled.",
                         nameof(dashSpeed),
                         nameof(Pawn2DMovementComponent),
@@ -35,7 +35,7 @@ namespace NeonBlack.Gameplay.Modules.Character
 
                 if (dashCooldown <= 0f)
                 {
-                    yield return PyralisRuntimeValidationIssue.Required(
+                    yield return RuntimeValidationIssue.Required(
                         "Dash Cooldown must be greater than zero when dash is enabled.",
                         nameof(dashCooldown),
                         nameof(Pawn2DMovementComponent),
@@ -49,7 +49,7 @@ namespace NeonBlack.Gameplay.Modules.Character
             {
                 if (jumpVelocity <= 0f)
                 {
-                    yield return PyralisRuntimeValidationIssue.Required(
+                    yield return RuntimeValidationIssue.Required(
                         "Jump Velocity must be greater than zero when side-view jump is enabled.",
                         nameof(jumpVelocity),
                         nameof(Pawn2DMovementComponent),
@@ -60,7 +60,7 @@ namespace NeonBlack.Gameplay.Modules.Character
 
                 if (gravityScale <= 0f)
                 {
-                    yield return PyralisRuntimeValidationIssue.Required(
+                    yield return RuntimeValidationIssue.Required(
                         "Gravity Scale must be greater than zero when side-view jump is enabled.",
                         nameof(gravityScale),
                         nameof(Pawn2DMovementComponent),
@@ -72,7 +72,7 @@ namespace NeonBlack.Gameplay.Modules.Character
 
             if (useCameraVisibleBoundsForMovement && cameraBoundsProvider == null)
             {
-                yield return PyralisRuntimeValidationIssue.Required(
+                yield return RuntimeValidationIssue.Required(
                     "Use Camera Visible Bounds For Movement is enabled, but no camera bounds provider has been supplied by the session. Assign GameplaySessionBootstrap.cameraRigController; prefer PlayfieldProfile for normal legal movement bounds.",
                     nameof(useCameraVisibleBoundsForMovement),
                     nameof(Pawn2DMovementComponent),
@@ -89,7 +89,7 @@ namespace NeonBlack.Gameplay.Modules.Character
             {
                 if (Mathf.Abs(body.gravityScale) > 0.001f)
                 {
-                    yield return PyralisRuntimeValidationIssue.Required(
+                    yield return RuntimeValidationIssue.Required(
                         "Rigidbody2D gravity is non-zero while Movement Style is TopDownNoGravity.",
                         "Rigidbody2D.gravityScale",
                         nameof(Pawn2DMovementComponent),
@@ -100,7 +100,7 @@ namespace NeonBlack.Gameplay.Modules.Character
 
                 if (body.bodyType != RigidbodyType2D.Kinematic)
                 {
-                    yield return PyralisRuntimeValidationIssue.Required(
+                    yield return RuntimeValidationIssue.Required(
                         "Rigidbody2D Body Type should be Kinematic while Movement Style is TopDownNoGravity.",
                         "Rigidbody2D.bodyType",
                         nameof(Pawn2DMovementComponent),
@@ -112,7 +112,7 @@ namespace NeonBlack.Gameplay.Modules.Character
 
             if ((body.constraints & RigidbodyConstraints2D.FreezeRotation) == 0)
             {
-                yield return PyralisRuntimeValidationIssue.Recommended(
+                yield return RuntimeValidationIssue.Recommended(
                     "Rigidbody2D rotation is not frozen; collision nudges can spin the pawn during movement proofs.",
                     "Rigidbody2D.constraints",
                     nameof(Pawn2DMovementComponent),

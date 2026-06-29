@@ -125,10 +125,10 @@ public class HazardData : ScriptableObject
 
   [Header("Timing")]
   [Min(0f)]
-  [Tooltip("Seconds the hazard stays active after slamming. 0 = use DifficultyManager value.")]
+  [Tooltip("Seconds the hazard stays active after slamming. 0 = use HazardDifficultyController value.")]
   public float slamDuration = 0.4f;
   [Min(0f)]
-  [Tooltip("Seconds to fade out after retracting. 0 = use DifficultyManager value.")]
+  [Tooltip("Seconds to fade out after retracting. 0 = use HazardDifficultyController value.")]
   public float retractDuration = 0.5f;
 
   // Spawn Rotation
@@ -148,7 +148,7 @@ public class HazardData : ScriptableObject
   [Tooltip("World units per second.")]
   public float moveSpeed = 4f;
   [Min(0f)]
-  [Tooltip("Seconds the lane indicator is shown before the hazard moves. If DifficultyManager.warningFlashDuration is above 0.05s it overrides this value; set it to 0 in DifficultyManager to let this field drive the warning.")]
+  [Tooltip("Seconds the lane indicator is shown before the hazard moves. If HazardDifficultyController.warningFlashDuration is above 0.05s it overrides this value; set it to 0 in HazardDifficultyController to let this field drive the warning.")]
   public float crossingWarningDuration = 0.6f;
   [Tooltip("Rotate the sprite to face the direction of travel.")]
   public bool rotatesToFaceDirection = false;

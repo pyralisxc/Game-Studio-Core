@@ -77,7 +77,7 @@ public partial class Hazard : GameplayTickBehaviour, IRuntimeValidationProvider
 
     [Header("Feedback Services")]
     [SerializeField] private MonoBehaviour _cameraShakeSink;
-    [SerializeField, Tooltip("Optional settings service used to scale hazard SFX volume. SettingsManager implements IGameplaySettingsApplier.")]
+    [SerializeField, Tooltip("Optional settings service used to scale hazard SFX volume. GameplaySettingsService implements IGameplaySettingsApplier.")]
     private MonoBehaviour _settingsSource;
 
     [Header("Collectible Detection")]
@@ -212,7 +212,7 @@ public partial class Hazard : GameplayTickBehaviour, IRuntimeValidationProvider
     // Public API
     // ---------------------------------------------------------------------
 
-    public void Initialize(HazardSpawner spawner, DifficultyManager.HazardTiming timing)
+    public void Initialize(HazardSpawner spawner, HazardDifficultyController.HazardTiming timing)
     {
         if (_data == null)
         {
@@ -421,7 +421,7 @@ public partial class Hazard : GameplayTickBehaviour, IRuntimeValidationProvider
 
         if (_feedbackRuntime is IRuntimeValidationProvider provider)
         {
-            foreach (PyralisRuntimeValidationIssue issue in provider.GetRuntimeValidationIssues())
+            foreach (RuntimeValidationIssue issue in provider.GetRuntimeValidationIssues())
             {
                 if (issue != null && !string.IsNullOrWhiteSpace(issue.Message))
                     Debug.LogWarning($"[Hazard] '{name}': {issue.Message}", this);

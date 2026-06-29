@@ -30,11 +30,11 @@ namespace NeonBlack.Gameplay.Data.Profiles
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Playfield Profile", fileName = "PlayfieldProfile", order = -80)]
     public class PlayfieldProfile : ScriptableObject, IRuntimeValidationProvider, IPlayfieldBoundsProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            if (minBounds.x > maxBounds.x) yield return PyralisRuntimeValidationIssue.Required("Min X bound should not exceed Max X bound.");
-            if (minBounds.y > maxBounds.y) yield return PyralisRuntimeValidationIssue.Required("Min Y bound should not exceed Max Y bound.");
-            if (minDepth > maxDepth) yield return PyralisRuntimeValidationIssue.Required("Min Depth should not exceed Max Depth.");
+            if (minBounds.x > maxBounds.x) yield return RuntimeValidationIssue.Required("Min X bound should not exceed Max X bound.");
+            if (minBounds.y > maxBounds.y) yield return RuntimeValidationIssue.Required("Min Y bound should not exceed Max Y bound.");
+            if (minDepth > maxDepth) yield return RuntimeValidationIssue.Required("Min Depth should not exceed Max Depth.");
         }
 
         public MovementMode movementMode = MovementMode.ThreeD;

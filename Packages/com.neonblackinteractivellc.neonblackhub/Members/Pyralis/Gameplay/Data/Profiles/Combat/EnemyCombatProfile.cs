@@ -24,10 +24,10 @@ namespace NeonBlack.Gameplay.Data.Profiles
     [CreateAssetMenu(menuName = "NeonBlack/Profiles/Enemy Combat Profile", fileName = "EnemyCombatProfile")]
     public class EnemyCombatProfile : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (attackSequence == null || attackSequence.Length == 0)
-                yield return PyralisRuntimeValidationIssue.Required("Attack Sequence is empty. Enemy will not be able to attack.");
+                yield return RuntimeValidationIssue.Required("Attack Sequence is empty. Enemy will not be able to attack.");
         }
 
         public EnemyAttack[] attackSequence;

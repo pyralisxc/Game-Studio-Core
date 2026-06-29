@@ -22,11 +22,11 @@ namespace NeonBlack.Gameplay.Data.Definitions.Combat
     {
         private const string ProjectileRuntimeBodyInterfaceFullName = "NeonBlack.Gameplay.Modules.Combat.IProjectileRuntimeBody";
 
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (string.IsNullOrWhiteSpace(projectileId))
             {
-                yield return PyralisRuntimeValidationIssue.Required(
+                yield return RuntimeValidationIssue.Required(
                     "Projectile id is required.",
                     nameof(projectileId),
                     nameof(ProjectileDefinition),
@@ -37,7 +37,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Combat
 
             if (string.IsNullOrWhiteSpace(displayName))
             {
-                yield return PyralisRuntimeValidationIssue.Required(
+                yield return RuntimeValidationIssue.Required(
                     "Display name is required.",
                     nameof(displayName),
                     nameof(ProjectileDefinition),
@@ -48,7 +48,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Combat
 
             if (deliveryMode == ProjectileDeliveryMode.ProjectilePrefab && projectilePrefab == null)
             {
-                yield return PyralisRuntimeValidationIssue.Required(
+                yield return RuntimeValidationIssue.Required(
                     "Projectile prefab delivery requires a projectile prefab.",
                     nameof(projectilePrefab),
                     nameof(ProjectileDefinition),
@@ -59,7 +59,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Combat
 
             if (deliveryMode == ProjectileDeliveryMode.Hitscan && maxDistance <= 0f)
             {
-                yield return PyralisRuntimeValidationIssue.Required(
+                yield return RuntimeValidationIssue.Required(
                     "Hitscan delivery requires a max distance greater than zero.",
                     nameof(maxDistance),
                     nameof(ProjectileDefinition),
@@ -70,7 +70,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Combat
 
             if (speed <= 0f && deliveryMode == ProjectileDeliveryMode.ProjectilePrefab)
             {
-                yield return PyralisRuntimeValidationIssue.Required(
+                yield return RuntimeValidationIssue.Required(
                     "Projectile prefab delivery requires speed greater than zero.",
                     nameof(speed),
                     nameof(ProjectileDefinition),
@@ -81,7 +81,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Combat
 
             if (deliveryMode == ProjectileDeliveryMode.ProjectilePrefab && projectilePrefab != null)
             {
-                foreach (PyralisRuntimeValidationIssue issue in GetProjectilePrefabValidationIssues(projectilePrefab))
+                foreach (RuntimeValidationIssue issue in GetProjectilePrefabValidationIssues(projectilePrefab))
                     yield return issue;
             }
         }
@@ -117,7 +117,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Combat
         {
             var issues = new List<string>();
 
-            foreach (PyralisRuntimeValidationIssue issue in GetRuntimeValidationIssues())
+            foreach (RuntimeValidationIssue issue in GetRuntimeValidationIssues())
             {
                 if (issue != null && !string.IsNullOrWhiteSpace(issue.Message))
                     issues.Add(issue.Message);
@@ -126,7 +126,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Combat
             return issues;
         }
 
-        private static IEnumerable<PyralisRuntimeValidationIssue> GetProjectilePrefabValidationIssues(GameObject prefab)
+        private static IEnumerable<RuntimeValidationIssue> GetProjectilePrefabValidationIssues(GameObject prefab)
         {
             if (prefab == null)
                 yield break;
@@ -144,7 +144,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Combat
 
             if (hasMissingScript)
             {
-                yield return PyralisRuntimeValidationIssue.Required(
+                yield return RuntimeValidationIssue.Required(
                     $"Projectile prefab `{prefab.name}` has missing script references.",
                     nameof(projectilePrefab),
                     nameof(ProjectileDefinition),
@@ -155,7 +155,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Combat
 
             if (!HasComponentImplementing(prefab, ProjectileRuntimeBodyInterfaceFullName))
             {
-                yield return PyralisRuntimeValidationIssue.Required(
+                yield return RuntimeValidationIssue.Required(
                     $"Projectile prefab `{prefab.name}` needs Projectile or Projectile2D so ProjectileDefinition data reaches runtime shots.",
                     nameof(projectilePrefab),
                     nameof(ProjectileDefinition),
@@ -171,7 +171,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Combat
 
             if (!has3DPhysics && !has2DPhysics)
             {
-                yield return PyralisRuntimeValidationIssue.Required(
+                yield return RuntimeValidationIssue.Required(
                     $"Projectile prefab `{prefab.name}` needs 2D or 3D physics components for movement and hit detection.",
                     nameof(projectilePrefab),
                     nameof(ProjectileDefinition),
@@ -182,7 +182,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Combat
 
             if (has2DPhysics && has3DPhysics)
             {
-                yield return PyralisRuntimeValidationIssue.Recommended(
+                yield return RuntimeValidationIssue.Recommended(
                     $"Projectile prefab `{prefab.name}` mixes 2D and 3D physics. Keep one physics lane per projectile prefab.",
                     nameof(projectilePrefab),
                     nameof(ProjectileDefinition),

@@ -153,21 +153,21 @@ namespace NeonBlack.Gameplay.Modules.Rpg.UI
             return true;
         }
 
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             ResolveReferences();
 
             if (routePresenter == null)
-                yield return PyralisRuntimeValidationIssue.Required("`RpgVendorPanelPresenter` should reference the Vendor route presenter or live below one.");
+                yield return RuntimeValidationIssue.Required("`RpgVendorPanelPresenter` should reference the Vendor route presenter or live below one.");
 
             if ((vendors == null || vendors.Length == 0) && (_runtimeVendors == null || _runtimeVendors.Length == 0))
-                yield return PyralisRuntimeValidationIssue.Required("`RpgVendorPanelPresenter` should reference at least one Vendor Definition.");
+                yield return RuntimeValidationIssue.Required("`RpgVendorPanelPresenter` should reference at least one Vendor Definition.");
 
             if (offerListLabel == null && selectedOfferLabel == null)
-                yield return PyralisRuntimeValidationIssue.Required("`RpgVendorPanelPresenter` should reference an offer list or selected offer label.");
+                yield return RuntimeValidationIssue.Required("`RpgVendorPanelPresenter` should reference an offer list or selected offer label.");
 
             if (buyButton == null && sellButton == null)
-                yield return PyralisRuntimeValidationIssue.Required("`RpgVendorPanelPresenter` needs Buy Button, Sell Button, or a project input bridge calling BuySelectedOffer()/SellSelectedOffer().");
+                yield return RuntimeValidationIssue.Required("`RpgVendorPanelPresenter` needs Buy Button, Sell Button, or a project input bridge calling BuySelectedOffer()/SellSelectedOffer().");
         }
 
         private void HandlePanelOpened(HubInteractionResult result)

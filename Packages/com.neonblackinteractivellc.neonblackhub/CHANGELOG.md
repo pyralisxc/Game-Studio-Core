@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [0.2.9] - 2026-06-18
 
 ### Changed
-- Pyralis authoring now leans further on reflected capability descriptors, graph projections, and route proof traces so Intent, Overview, Guide, Map, Hygiene, and Facts keep clearer ownership boundaries.
+- Gameplay authoring now leans further on reflected capability descriptors, graph projections, and route proof traces so Intent, Overview, Guide, Map, Hygiene, and Facts keep clearer ownership boundaries.
 - Camera follow and pawn spawning use explicit participant-pawn assignment and `PawnCameraTarget` sockets instead of treating camera bounds as proof of camera follow readiness.
 - Package docs and diagnostics were consolidated: route capability vocabulary moved into the authoring model, stale temp graph snapshots were removed, and Hygiene exports now separate cleanup focus from expected watch-list pressure.
 - Package validation, marker scripts, and handoff documentation now agree on the `0.2.9` package metadata.
@@ -15,14 +15,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [0.2.8] - 2026-06-14
 
 ### Changed
-- Pyralis authoring cleanup now distinguishes feature-owned authoring contracts from runtime contract interfaces.
+- Gameplay authoring cleanup now distinguishes feature-owned authoring contracts from runtime contract interfaces.
 - Runtime gameplay interface seams moved from `Core/Contracts` to `Core/ContractInterfaces` to reduce authoring-contract naming ambiguity.
 - Package validation, marker scripts, and handoff documentation now agree on the `0.2.8` package metadata.
 
 ## [0.2.0] - 2026-06-11
 
 ### Changed
-- Pyralis authoring infrastructure is organized around the central `Editor/Authoring` spine and feature-local `Editor/Authoring` guided inspectors.
+- Gameplay authoring infrastructure is organized around the central `Editor/Authoring` spine and feature-local `Editor/Authoring` guided inspectors.
 - Package validation, marker scripts, and handoff documentation now agree on the `0.2.0` package metadata.
 
 ## [0.1.2] - 2026-06-02

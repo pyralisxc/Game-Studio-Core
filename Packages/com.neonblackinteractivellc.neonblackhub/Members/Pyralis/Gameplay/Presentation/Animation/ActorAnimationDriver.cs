@@ -13,7 +13,7 @@ namespace NeonBlack.Gameplay.Presentation.Animation
         Category = "Animation",
         CapabilityPath = "Presentation/Feedback/Actor Animation Driver",
         Surface = AuthoringSurface.RuntimeComponent,
-        Summary = "Bridges Pyralis signals (Move, Jump, Attack) to Animator parameters, plus sprite/billboard facing.",
+        Summary = "Bridges gameplay signals (Move, Jump, Attack) to Animator parameters, plus sprite/billboard facing.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/animation",
         RequiredFields = new[] { nameof(animator), nameof(presentationProfile), nameof(animationProfile), nameof(visualRoot), nameof(billboardTarget), nameof(cameraOverride) },
         SetupSteps = new[] 
@@ -29,16 +29,16 @@ namespace NeonBlack.Gameplay.Presentation.Animation
 [AddComponentMenu("NeonBlack/Gameplay/Animation/Actor Animation Driver")]
     public class ActorAnimationDriver : MonoBehaviour, IActorAnimationController, IPawnAnimationProfileReceiver, IActorCombatResultReceiver, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (animator == null && GetComponentInChildren<Animator>(true) == null)
-                yield return PyralisRuntimeValidationIssue.Required("Animator is empty and no child Animator was found.");
+                yield return RuntimeValidationIssue.Required("Animator is empty and no child Animator was found.");
             if (presentationProfile == null)
-                yield return PyralisRuntimeValidationIssue.Required("Presentation Profile is empty.");
+                yield return RuntimeValidationIssue.Required("Presentation Profile is empty.");
             if (animationProfile == null)
-                yield return PyralisRuntimeValidationIssue.Required("Animation Profile is empty.");
+                yield return RuntimeValidationIssue.Required("Animation Profile is empty.");
             if (presentationProfile != null && presentationProfile.presentationMode == ActorPresentationMode.Billboard2_5D && cameraOverride == null)
-                yield return PyralisRuntimeValidationIssue.Required("Camera Override is empty for Billboard2_5D presentation.");
+                yield return RuntimeValidationIssue.Required("Camera Override is empty for Billboard2_5D presentation.");
         }
         [Header("Scene References")]
         [SerializeField] private Animator animator;

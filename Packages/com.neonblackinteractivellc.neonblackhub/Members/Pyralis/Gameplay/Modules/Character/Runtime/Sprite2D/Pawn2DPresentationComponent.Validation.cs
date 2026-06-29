@@ -6,14 +6,14 @@ namespace NeonBlack.Gameplay.Modules.Character
 {
     public sealed partial class Pawn2DPresentationComponent
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             SpriteRenderer resolvedSpriteRenderer = spriteRenderer != null
                 ? spriteRenderer
                 : GetComponentInChildren<SpriteRenderer>(true);
             if (resolvedSpriteRenderer == null)
             {
-                yield return PyralisRuntimeValidationIssue.Required(
+                yield return RuntimeValidationIssue.Required(
                     "Sprite Renderer is empty and no child SpriteRenderer was found.",
                     nameof(spriteRenderer),
                     nameof(Pawn2DPresentationComponent),
@@ -23,7 +23,7 @@ namespace NeonBlack.Gameplay.Modules.Character
             }
             else if (resolvedSpriteRenderer.enabled && resolvedSpriteRenderer.sprite == null)
             {
-                yield return PyralisRuntimeValidationIssue.Required(
+                yield return RuntimeValidationIssue.Required(
                     "SpriteRenderer is enabled but no Sprite is assigned.",
                     "SpriteRenderer.sprite",
                     nameof(Pawn2DPresentationComponent),
@@ -34,7 +34,7 @@ namespace NeonBlack.Gameplay.Modules.Character
 
             if (GetComponent<IActorAnimationController>() == null)
             {
-                yield return PyralisRuntimeValidationIssue.Required(
+                yield return RuntimeValidationIssue.Required(
                     "Pawn2DPresentationComponent needs a component that implements IActorAnimationController.",
                     "IActorAnimationController",
                     nameof(Pawn2DPresentationComponent),
@@ -45,7 +45,7 @@ namespace NeonBlack.Gameplay.Modules.Character
 
             if (stretchAmount < 1f)
             {
-                yield return PyralisRuntimeValidationIssue.Required(
+                yield return RuntimeValidationIssue.Required(
                     "Stretch Amount should be at least 1.",
                     nameof(stretchAmount),
                     nameof(Pawn2DPresentationComponent),

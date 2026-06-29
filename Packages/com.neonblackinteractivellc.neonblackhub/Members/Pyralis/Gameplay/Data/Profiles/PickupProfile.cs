@@ -20,7 +20,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
 [CreateAssetMenu(menuName = "NeonBlack/Profiles/Pickup Profile", fileName = "PickupProfile")]
     public class PickupProfile : ScriptableObject, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             yield break;
         }

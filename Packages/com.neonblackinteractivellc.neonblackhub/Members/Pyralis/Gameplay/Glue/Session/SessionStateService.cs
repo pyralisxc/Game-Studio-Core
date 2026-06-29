@@ -37,10 +37,10 @@ namespace NeonBlack.Gameplay.Glue.Session
     [AddComponentMenu("NeonBlack/Gameplay/Setup/Session State Service")]
     public class SessionStateService : MonoBehaviour, IGameService, IGameplayStateReader, IRuntimeValidationProvider
     {
-        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (sessionDefinition == null)
-                yield return PyralisRuntimeValidationIssue.Required("Session Definition is empty. This is expected when GameplaySessionBootstrap injects the session at runtime.");
+                yield return RuntimeValidationIssue.Required("Session Definition is empty. This is expected when GameplaySessionBootstrap injects the session at runtime.");
         }
         public enum SessionPhase
         {
