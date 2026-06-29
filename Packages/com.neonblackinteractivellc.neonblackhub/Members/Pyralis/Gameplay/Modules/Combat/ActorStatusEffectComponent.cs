@@ -33,7 +33,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
         Tags = new[] { "capability:Combat", "lane:Combat" },
         Selectable = false
     )]
-    public class ActorStatusEffectComponent : MonoBehaviour, IActorStatusEffectReceiver, IDamageModifier
+    public class ActorStatusEffectComponent : GameplayTickBehaviour, IActorStatusEffectReceiver, IDamageModifier
 {
         private sealed class ActiveStatusEffect
         {
@@ -60,7 +60,10 @@ namespace NeonBlack.Gameplay.Modules.Combat
             Initialize();
         }
 
-        private void Update()
+        protected override GameplayTickDomain TickDomain => GameplayTickDomain.Combat;
+        protected override bool UsesGameplayTick => true;
+
+        protected override void OnGameplayTick(in GameplayTickContext context)
         {
             if (_activeEffects.Count == 0)
                 return;
@@ -74,12 +77,12 @@ namespace NeonBlack.Gameplay.Modules.Combat
                     continue;
                 }
 
-                effect.RemainingDuration -= Time.deltaTime;
+                effect.RemainingDuration -= context.DeltaTime;
                 if (effect.Definition.effectKind == StatusEffectKind.DamageOverTime
                     || effect.Definition.effectKind == StatusEffectKind.Poison
                     || effect.Definition.effectKind == StatusEffectKind.Burn)
                 {
-                    effect.TickTimer -= Time.deltaTime;
+                    effect.TickTimer -= context.DeltaTime;
                     if (effect.TickTimer <= 0f)
                     {
                         effect.TickTimer = effect.Definition.tickInterval;
@@ -88,7 +91,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
                 }
                 else if (effect.Definition.effectKind == StatusEffectKind.HealOverTime)
                 {
-                    effect.TickTimer -= Time.deltaTime;
+                    effect.TickTimer -= context.DeltaTime;
                     if (effect.TickTimer <= 0f)
                     {
                         effect.TickTimer = effect.Definition.tickInterval;

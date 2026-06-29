@@ -27,22 +27,24 @@ namespace NeonBlack.Gameplay.Modules.Interaction
         Tags = new[] { "capability:Puzzle", "capability:Input", "lane:Interaction" },
         Selectable = false
     )]
-    public class ActorInteractionComponent : MonoBehaviour, IActorInteractionRequestReceiver
+    public class ActorInteractionComponent : GameplayTickBehaviour, IActorInteractionRequestReceiver
     {
         [SerializeField] private InteractionProfile interactionProfile;
         private ActorInteractionContext _context;
         private IActorInteractionHandler[] _handlers;
         private float _cooldownTimer;
+        protected override GameplayTickDomain TickDomain => GameplayTickDomain.Interaction;
+        protected override bool UsesGameplayTick => true;
 
         private void Awake()
         {
             Initialize();
         }
 
-        private void Update()
+        protected override void OnGameplayTick(in GameplayTickContext context)
         {
             if (_cooldownTimer > 0f)
-                _cooldownTimer -= Time.deltaTime;
+                _cooldownTimer -= context.DeltaTime;
         }
 
         private void Initialize()

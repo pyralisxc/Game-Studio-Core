@@ -48,11 +48,18 @@ It contains:
 - Unity object vocabulary
 - Unity graph vocabulary
 - Unity action vocabulary
+- Unity package, authoring-window, component-role, and asset-role vocabulary
 - projection vocabulary
 - Hygiene lens vocabulary
 - optional target-project vocabulary providers
 
 Package code should use stable keys for built-in Unity concepts. Target projects may add or override labels through `IAuthoringVocabularyProvider`, but providers remain display-only.
+
+Generic Unity setup guides may live in PYS only when they describe native Unity authoring workflows such as Camera, Cinemachine, Animation, Animator, Timeline, Audio, VFX, UI, Input Actions, Prefab, or Lighting setup. They must compile into graph evidence, remain lower priority than target-project contracts, be labeled as built-in Unity setup guides, and must not claim target-project gameplay meaning.
+
+## Living Model
+
+`Docs/AUTHORING_MODEL.md` is the current product/architecture model for first-use behavior, tab ownership, and contract metadata. Update it when PYS changes how evidence becomes projections.
 
 ## Embedded Package Path
 

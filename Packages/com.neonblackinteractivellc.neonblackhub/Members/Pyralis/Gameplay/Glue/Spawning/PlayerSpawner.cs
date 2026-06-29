@@ -1,5 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
+using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Participants;
 using NeonBlack.Gameplay.Glue.Participants;
 using NeonBlack.Gameplay.Glue.Session;
@@ -15,7 +14,7 @@ namespace NeonBlack.Gameplay.Glue.Spawning
     /// Participant-owned respawn coordinator. Pawn identity and instantiation stay with
     /// ParticipantSpawnService; this component only handles death timing, lives, and revive feedback.
     /// </summary>
-    public class PlayerSpawner : MonoBehaviour
+    public class PlayerSpawner : GameplayTickBehaviour
     {
         [Header("Participant")]
         [Tooltip("Seat index to track. -1 follows the primary registered participant.")]
@@ -49,13 +48,19 @@ namespace NeonBlack.Gameplay.Glue.Spawning
         public bool IsRespawning { get; private set; }
         public bool IsGameOver { get; private set; }
 
+        protected override GameplayTickDomain TickDomain => GameplayTickDomain.Spawning;
+        protected override bool UsesGameplayTick => IsRespawning || _shieldActive;
+
         private HealthComponent _health;
         private GameObject _currentPawn;
         private GameObject _countdownCanvas;
         private TextMeshProUGUI _countdownLabel;
         private bool _rosterSubscribed;
-
-        private static readonly Dictionary<float, WaitForSeconds> WaitPool = new Dictionary<float, WaitForSeconds>();
+        private float _respawnTimer;
+        private bool _respawnCountdownVisible;
+        private bool _shieldActive;
+        private float _shieldTimer;
+        private Renderer[] _shieldRenderers = System.Array.Empty<Renderer>();
 
         private void Awake()
         {
@@ -176,18 +181,64 @@ namespace NeonBlack.Gameplay.Glue.Spawning
                 }
             }
 
-            StartCoroutine(RespawnRoutine());
+            BeginRespawn();
         }
 
-        private IEnumerator RespawnRoutine()
+        private void BeginRespawn()
         {
             IsRespawning = true;
+            _respawnTimer = Mathf.Max(0f, respawnDelay);
+            _respawnCountdownVisible = showCountdown && _respawnTimer > 0f;
             DisablePawn(_currentPawn);
 
-            if (showCountdown)
-                yield return CountdownRoutine();
-            else
-                yield return GetWait(respawnDelay);
+            if (_respawnCountdownVisible)
+            {
+                BuildCountdownUI();
+                _countdownLabel.gameObject.SetActive(true);
+                UpdateCountdownLabel();
+            }
+        }
+
+        protected override void OnGameplayTick(in GameplayTickContext context)
+        {
+            if (IsRespawning)
+                TickRespawn(context.DeltaTime);
+
+            if (_shieldActive)
+                TickRespawnShield(context.DeltaTime);
+        }
+
+        private void TickRespawn(float deltaTime)
+        {
+            if (_respawnTimer > 0f)
+            {
+                _respawnTimer = Mathf.Max(0f, _respawnTimer - deltaTime);
+                if (_respawnCountdownVisible)
+                    UpdateCountdownLabel();
+
+                if (_respawnTimer > 0f)
+                    return;
+            }
+
+            if (_respawnCountdownVisible && _countdownLabel != null)
+                _countdownLabel.gameObject.SetActive(false);
+
+            _respawnCountdownVisible = false;
+            CompleteRespawn();
+        }
+
+        private void UpdateCountdownLabel()
+        {
+            if (_countdownLabel == null)
+                return;
+
+            _countdownLabel.text = string.Format(countdownFormat, Mathf.Ceil(_respawnTimer));
+        }
+
+        private void CompleteRespawn()
+        {
+            if (!IsRespawning)
+                return;
 
             OnBeforeRespawn?.Invoke();
 
@@ -212,20 +263,6 @@ namespace NeonBlack.Gameplay.Glue.Spawning
 
             IsRespawning = false;
             OnAfterRespawn?.Invoke();
-        }
-
-        private IEnumerator CountdownRoutine()
-        {
-            BuildCountdownUI();
-            float timer = respawnDelay;
-            _countdownLabel.gameObject.SetActive(true);
-            while (timer > 0f)
-            {
-                _countdownLabel.text = string.Format(countdownFormat, Mathf.Ceil(timer));
-                yield return null;
-                timer -= Time.deltaTime;
-            }
-            _countdownLabel.gameObject.SetActive(false);
         }
 
         private void RevivePawn(GameObject pawn)
@@ -256,7 +293,7 @@ namespace NeonBlack.Gameplay.Glue.Spawning
                     hp.SetCurrentHealth(hp.MaxHealth * respawnHpFraction);
 
                 if (respawnShield > 0f)
-                    StartCoroutine(ApplyRespawnShield(pawn, hp));
+                    BeginRespawnShield(pawn, hp);
             }
 
             foreach (Renderer renderer in pawn.GetComponentsInChildren<Renderer>())
@@ -284,26 +321,41 @@ namespace NeonBlack.Gameplay.Glue.Spawning
             }
         }
 
-        private IEnumerator ApplyRespawnShield(GameObject pawn, HealthComponent hp)
+        private void BeginRespawnShield(GameObject pawn, HealthComponent hp)
         {
             hp.ForceIFrames(respawnShield);
 
-            float elapsed = 0f;
-            Renderer[] renderers = pawn != null
+            _shieldTimer = 0f;
+            _shieldActive = true;
+            _shieldRenderers = pawn != null
                 ? pawn.GetComponentsInChildren<Renderer>()
                 : System.Array.Empty<Renderer>();
+        }
 
-            while (elapsed < respawnShield)
+        private void TickRespawnShield(float deltaTime)
+        {
+            _shieldTimer += deltaTime;
+            if (_shieldTimer < respawnShield)
             {
-                elapsed += Time.deltaTime;
-                bool visible = Mathf.FloorToInt(elapsed / 0.12f) % 2 == 0;
-                foreach (Renderer renderer in renderers)
-                    renderer.enabled = visible;
-                yield return null;
+                bool visible = Mathf.FloorToInt(_shieldTimer / 0.12f) % 2 == 0;
+                foreach (Renderer renderer in _shieldRenderers)
+                {
+                    if (renderer != null)
+                        renderer.enabled = visible;
+                }
+
+                return;
             }
 
-            foreach (Renderer renderer in renderers)
-                renderer.enabled = true;
+            foreach (Renderer renderer in _shieldRenderers)
+            {
+                if (renderer != null)
+                    renderer.enabled = true;
+            }
+
+            _shieldActive = false;
+            _shieldTimer = 0f;
+            _shieldRenderers = System.Array.Empty<Renderer>();
         }
 
         private ParticipantHandle ResolveTrackedParticipant()
@@ -382,22 +434,10 @@ namespace NeonBlack.Gameplay.Glue.Spawning
             _countdownLabel = null;
         }
 
-        private static WaitForSeconds GetWait(float seconds)
-        {
-            seconds = (float)System.Math.Round(seconds, 2);
-            if (!WaitPool.TryGetValue(seconds, out WaitForSeconds wait))
-            {
-                wait = new WaitForSeconds(seconds);
-                WaitPool[seconds] = wait;
-            }
-
-            return wait;
-        }
-
         public void ForceRespawn()
         {
             if (!IsRespawning && !IsGameOver)
-                StartCoroutine(RespawnRoutine());
+                BeginRespawn();
         }
     }
 }

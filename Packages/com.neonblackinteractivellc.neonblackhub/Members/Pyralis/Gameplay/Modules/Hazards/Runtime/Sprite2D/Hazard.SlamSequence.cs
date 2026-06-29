@@ -43,8 +43,8 @@ public partial class Hazard
         float driftSpeed  = _data.trackingStrength * _data.moveSpeed;
         while (warnElapsed < warnDur)
         {
-            warnElapsed        += Time.deltaTime;
-            _outlineAlphaTimer += Time.deltaTime;
+            warnElapsed        += GameplayDeltaTime;
+            _outlineAlphaTimer += GameplayDeltaTime;
             if (_outlineAlphaTimer >= outlineAlphaInterval)
             {
                 _outlineAlphaTimer = 0f;
@@ -54,7 +54,7 @@ public partial class Hazard
                 && Vector2.Distance(transform.position, Player.position) > _data.lockOnRadius)
             {
                 Vector2 toPlayer = ((Vector2)Player.position - (Vector2)transform.position).normalized;
-                transform.position = (Vector2)transform.position + toPlayer * driftSpeed * Time.deltaTime;
+                transform.position = (Vector2)transform.position + toPlayer * driftSpeed * GameplayDeltaTime;
             }
             yield return null;
         }

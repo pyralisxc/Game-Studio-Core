@@ -7,7 +7,6 @@ using NeonBlack.Gameplay.Modules.Rpg.Runtime;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using VContainer;
 using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Rpg.UI
@@ -61,10 +60,10 @@ namespace NeonBlack.Gameplay.Modules.Rpg.UI
         public int SelectedIndex => _selectedIndex;
         public RpgVendorEntry SelectedEntry => Entries.Length > 0 && _selectedIndex >= 0 && _selectedIndex < Entries.Length ? Entries[_selectedIndex] : default;
 
-        [Inject]
-        private void Construct(VendorService vendorService)
+        public void ConfigureRuntime(VendorService vendorService)
         {
-            _vendorService = vendorService;
+            if (vendorService != null)
+                _vendorService = vendorService;
         }
 
         private void Awake()

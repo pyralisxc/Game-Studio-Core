@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Participants;
 using UnityEngine;
-using VContainer;
 using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Interaction
@@ -33,7 +32,7 @@ namespace NeonBlack.Gameplay.Modules.Interaction
     )]
 [DefaultExecutionOrder(-10)]
 [AddComponentMenu("NeonBlack/Gameplay/Interaction/Collectibles/Collectible Spawner 2D")]
-public class CollectibleSpawner2D : MonoBehaviour, IPickupSpawnSurface, IPickupBurstSpawnSurface, IRuntimeValidationProvider
+public class CollectibleSpawner2D : GameplayTickBehaviour, IPickupSpawnSurface, IPickupBurstSpawnSurface, IGameplayRuntimeServicesReceiver, IRuntimeValidationProvider
 {
     public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
     {
@@ -92,14 +91,16 @@ public class CollectibleSpawner2D : MonoBehaviour, IPickupSpawnSurface, IPickupB
     private IGameplayStateReader _gameplayStateReader;
     private ICameraBoundsProvider _cameraBoundsProvider;
     private bool _missingRuntimeServicesLogged;
+    protected override GameplayTickDomain TickDomain => GameplayTickDomain.Interaction;
+    protected override bool UsesGameplayTick => true;
 
     public bool CanAcceptRuntimeSpawns => _gameplayStateReader != null && _gameplayStateReader.IsGameplayActive;
 
-    private void Update()
+    protected override void OnGameplayTick(in GameplayTickContext context)
     {
         // Centralized bob tick \u2014 one MonoBehaviour Update instead of N individual Collectible2D Updates.
         // The native\u2192managed bridge call per MonoBehaviour.Update is the bottleneck at high collectible counts.
-        float dt = Time.deltaTime;
+        float dt = context.DeltaTime;
         foreach (Collectible2D c in _activeCrumbs)
             c.Tick(dt);
     }
@@ -117,19 +118,17 @@ public class CollectibleSpawner2D : MonoBehaviour, IPickupSpawnSurface, IPickupB
         InitializePool();
     }
 
-    [Inject]
-    private void Construct(IGameplayStateReader stateReader = null, ICameraBoundsProvider boundsProvider = null)
-    {
-        _gameplayStateReader ??= stateReader;
-        _cameraBoundsProvider ??= boundsProvider;
-    }
-
     public void ConfigureRuntime(IGameplayStateReader stateReader, ICameraBoundsProvider boundsProvider)
     {
         if (stateReader != null)
             _gameplayStateReader = stateReader;
         if (boundsProvider != null)
             _cameraBoundsProvider = boundsProvider;
+    }
+
+    public void ApplyRuntimeServices(GameplayRuntimeServicesContext context)
+    {
+        ConfigureRuntime(context.GameplayStateReader, context.CameraBoundsProvider);
     }
 
     private void InitializePool()

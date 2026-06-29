@@ -5,7 +5,6 @@ using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
-using VContainer;
 
 namespace NeonBlack.Gameplay.Modules.Input
 {
@@ -28,7 +27,7 @@ namespace NeonBlack.Gameplay.Modules.Input
 /// </summary>
 [AddComponentMenu("NeonBlack/Gameplay/Modules/Input/Sprite2D/Advanced Player Input Handler")]
 [DefaultExecutionOrder(-10)] // Register before settings services push input values during Start().
-public partial class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver, IPawnInputModule, IPawnRuntimeServicesReceiver
+public partial class PlayerInputHandler : GameplayTickBehaviour, IInputSettingsReceiver, IPawnInputModule, IPawnRuntimeServicesReceiver, IGameplayRuntimeServicesReceiver
 {
     [Header("Input Actions")]
     [SerializeField, Tooltip("Assign InputSystem_Actions.inputactions from the Assets root.\n" +
@@ -98,6 +97,9 @@ public partial class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver,
     private bool                _loggedMissingInputActions;
     private bool                _receivedParticipantInputProfile;
     private InputProfile        _inputProfile;
+    protected override GameplayTickDomain TickDomain => GameplayTickDomain.Input;
+    protected override bool UsesGameplayTick => true;
+    protected override bool UsesLateGameplayTick => true;
 
     // Unity Lifecycle
 
@@ -154,13 +156,6 @@ public partial class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver,
         ResolveInputSettingsRegistrar()?.UnregisterInputReceiver(this);
     }
 
-    [Inject]
-    private void Construct(IGameplayStateReader gameplayStateReader = null)
-    {
-        if (gameplayStateReader != null)
-            _gameplayStateReader = gameplayStateReader;
-    }
-
     public void ConfigureRuntime(IGameplayStateReader gameplayStateReader)
     {
         if (gameplayStateReader != null)
@@ -170,6 +165,11 @@ public partial class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver,
     public void ApplyRuntimeServices(PawnRuntimeServicesContext context)
     {
         ConfigureRuntime(context.GameplayStateReader);
+    }
+
+    public void ApplyRuntimeServices(GameplayRuntimeServicesContext context)
+    {
+        ConfigureRuntime(context.GameplayStateReader, context.InputSettingsRegistrar);
     }
 
     public void ConfigureRuntime(IGameplayStateReader gameplayStateReader, IInputSettingsRegistrar inputSettingsRegistrar)
@@ -183,7 +183,7 @@ public partial class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver,
         }
     }
 
-    private void Update()
+    protected override void OnGameplayTick(in GameplayTickContext context)
     {
         if (_movementInputReceiver == null)
             return;
@@ -253,7 +253,7 @@ public partial class PlayerInputHandler : MonoBehaviour, IInputSettingsReceiver,
         _movementInputReceiver.MoveDirection = Vector2.zero;
     }
 
-    private void LateUpdate()
+    protected override void OnLateGameplayTick(in GameplayTickContext context)
     {
         if (_movementInputReceiver != null && _movementInputReceiver.MoveDirection.sqrMagnitude > 0.01f)
             _lastNonZeroDir = _movementInputReceiver.MoveDirection;

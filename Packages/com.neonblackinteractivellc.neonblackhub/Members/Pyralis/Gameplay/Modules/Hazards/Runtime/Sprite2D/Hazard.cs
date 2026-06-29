@@ -53,7 +53,7 @@ namespace NeonBlack.Gameplay.Modules.Hazards
         SuccessChecks = new[] { "Place a hazard in the scene and verify it executes its sequence (Slam, Crossing, etc.) on start." },
         Tags = new[] { "capability:Combat", "axiom:Dimensions2D" }
     )]
-public partial class Hazard : MonoBehaviour, IRuntimeValidationProvider
+public partial class Hazard : GameplayTickBehaviour, IRuntimeValidationProvider
 {
     [Header("Child Renderers")]
     [SerializeField] private SpriteRenderer _shadowRenderer;
@@ -125,6 +125,12 @@ public partial class Hazard : MonoBehaviour, IRuntimeValidationProvider
     // and breaks sprite batching, which is expensive on mobile.
     private float _outlineAlphaTimer;
     private bool _loggedFeedbackValidationIssues;
+    private float _gameplayDeltaTime;
+
+    protected override GameplayTickDomain TickDomain => GameplayTickDomain.Hazards;
+    protected override bool UsesGameplayTick => true;
+
+    private float GameplayDeltaTime => _gameplayDeltaTime;
 
     private static readonly Dictionary<float, WaitForSeconds> _waitPool = new Dictionary<float, WaitForSeconds>();
 
@@ -141,6 +147,11 @@ public partial class Hazard : MonoBehaviour, IRuntimeValidationProvider
 
     private HazardRuntimeReferences Runtime =>
         _runtime ??= HazardRuntimeReferences.Resolve(gameObject, _cameraShakeSink, _settingsSource);
+
+    protected override void OnGameplayTick(in GameplayTickContext context)
+    {
+        _gameplayDeltaTime = context.DeltaTime;
+    }
 
     private void Awake()
     {

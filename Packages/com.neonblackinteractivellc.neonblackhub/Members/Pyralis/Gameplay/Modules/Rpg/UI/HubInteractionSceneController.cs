@@ -6,7 +6,6 @@ using NeonBlack.Gameplay.Data.Rpg;
 using NeonBlack.Gameplay.Data.Definitions.Rpg;
 using NeonBlack.Gameplay.Modules.Rpg.Runtime;
 using UnityEngine;
-using VContainer;
 
 namespace NeonBlack.Gameplay.Modules.Rpg.UI
 {
@@ -36,12 +35,12 @@ namespace NeonBlack.Gameplay.Modules.Rpg.UI
 
         public HubInteractionResult LastResult { get; private set; } = HubInteractionResult.Invalid("No hub interaction has been selected yet.");
 
-        [Inject]
-        private void Construct(
+        public void ConfigureRuntime(
             HubInteractionService interactionService,
             HubInteractionHudPresenter injectedPresenter = null)
         {
-            _interactionService = interactionService;
+            if (interactionService != null)
+                _interactionService = interactionService;
             if (hudPresenter == null)
                 hudPresenter = injectedPresenter;
         }

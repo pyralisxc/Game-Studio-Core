@@ -7,7 +7,6 @@ using NeonBlack.Gameplay.Modules.Rpg.Runtime;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using VContainer;
 
 namespace NeonBlack.Gameplay.Modules.Rpg.UI
 {
@@ -52,10 +51,10 @@ namespace NeonBlack.Gameplay.Modules.Rpg.UI
         public int SelectedIndex => _selectedIndex;
         public RpgLoadoutEntry SelectedEntry => Entries.Length > 0 && _selectedIndex >= 0 && _selectedIndex < Entries.Length ? Entries[_selectedIndex] : default;
 
-        [Inject]
-        private void Construct(EquipmentService equipment)
+        public void ConfigureRuntime(EquipmentService equipment)
         {
-            _equipmentService = equipment;
+            if (equipment != null)
+                _equipmentService = equipment;
         }
 
         private void Awake()

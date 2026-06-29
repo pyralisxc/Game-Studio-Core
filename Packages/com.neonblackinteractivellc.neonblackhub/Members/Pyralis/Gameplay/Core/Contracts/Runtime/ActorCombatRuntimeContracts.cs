@@ -3,11 +3,6 @@ using NeonBlack.Gameplay.Core.Types.Animation;
 
 namespace NeonBlack.Gameplay.Core.Contracts
 {
-    public interface IActorCombatRuntimeTickReceiver
-    {
-        void UpdateCombatTimers();
-    }
-
     public interface IActorCombatRequestReceiver
     {
         bool TryHandleCombatCommand(in ActorCombatCommand command);

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -12,7 +13,7 @@ namespace NeonBlack.Gameplay.Modules.Hazards
 /// Setup: Attach to the same GameObject as GameManager.
 /// Wire into GameManager's _difficultyManager slot.
 /// </summary>
-public class DifficultyManager : MonoBehaviour
+public class DifficultyManager : GameplayTickBehaviour
 {
     // Shared structs / enums
 
@@ -203,6 +204,9 @@ public class DifficultyManager : MonoBehaviour
     private float _waveTimer;
     private List<int> _waveWeightedIndices = new List<int>();
 
+    protected override GameplayTickDomain TickDomain => GameplayTickDomain.Hazards;
+    protected override bool UsesGameplayTick => true;
+
     // Public properties
 
     public float ElapsedTime           => _elapsedTime;
@@ -328,13 +332,13 @@ public class DifficultyManager : MonoBehaviour
 
     // Lifecycle
 
-    private void Update()
+    protected override void OnGameplayTick(in GameplayTickContext context)
     {
         if (!_isActive) return;
-        _elapsedTime += Time.deltaTime;
+        _elapsedTime += context.DeltaTime;
 
         if (_mode == DifficultyMode.Steps) UpdateSteps();
-        if (_mode == DifficultyMode.Wave)  UpdateWave();
+        if (_mode == DifficultyMode.Wave)  UpdateWave(context.DeltaTime);
 
 #if UNITY_EDITOR
         if (_showDebugValues)
@@ -366,10 +370,10 @@ public class DifficultyManager : MonoBehaviour
         OnStepAdvanced?.Invoke(_currentStep);
     }
 
-    private void UpdateWave()
+    private void UpdateWave(float deltaTime)
     {
         if (_waves == null || _waves.Length == 0) return;
-        _waveTimer -= Time.deltaTime;
+        _waveTimer -= deltaTime;
         if (_waveTimer > 0f) return;
         _currentWaveIndex = PickNextWaveIndex();
         _waveTimer = ActiveWave != null

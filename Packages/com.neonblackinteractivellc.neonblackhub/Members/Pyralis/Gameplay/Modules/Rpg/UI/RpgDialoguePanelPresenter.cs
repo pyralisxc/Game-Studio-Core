@@ -8,7 +8,6 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
-using VContainer;
 using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Rpg.UI
@@ -65,10 +64,10 @@ namespace NeonBlack.Gameplay.Modules.Rpg.UI
         public DialogueChoice[] AvailableChoices { get; private set; } = Array.Empty<DialogueChoice>();
         public string LastIssue { get; private set; } = string.Empty;
 
-        [Inject]
-        private void Construct(DialogueService dialogue)
+        public void ConfigureRuntime(DialogueService dialogue)
         {
-            _dialogueService = dialogue;
+            if (dialogue != null)
+                _dialogueService = dialogue;
         }
 
         private void Awake()

@@ -1,4 +1,5 @@
 using NeonBlack.Gameplay.Data.Participants;
+using NeonBlack.Gameplay.Data.Presentation;
 using NeonBlack.Gameplay.Modules.Character;
 using NeonBlack.Gameplay.Data.Profiles;
 using UnityEngine;
@@ -19,7 +20,7 @@ namespace NeonBlack.Gameplay.Modules.Character
                 movingTint = idleTint;
             }
 
-            animationDriver?.ApplyProfiles(
+            GetComponent<IPawnAnimationProfileReceiver>()?.ApplyProfiles(
                 presentationProfile,
                 context.PawnDefinition != null ? context.PawnDefinition.animationProfile : null);
 

@@ -13,16 +13,16 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Category = "Camera",
         CapabilityPath = "World & Meta/Camera/Camera Rig Profile",
         Surface = AuthoringSurface.Profile,
-        Summary = "Project-window creation path for camera framing, follow, zoom, and 2D orthographic route choices.",
+        Summary = "Project-window creation path for gameplay camera focus and saved Cinemachine recipe values.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/camera",
-        RequiredFields = new[] { nameof(presentationMode), nameof(focusMode), nameof(useCinemachine), nameof(followOffset), nameof(orthographic), nameof(minZoom), nameof(maxZoom) },
+        RequiredFields = new[] { nameof(presentationMode), nameof(focusMode), nameof(useCinemachine) },
         PrerequisiteStableIds = new[] { "mode.definition" },
         RouteStage = "Game Mode Asset",
         RouteOrder = 40,
         SetupDomain = "Camera",
-        ProofTarget = "CameraRigProfile frames the active participant or playfield route.",
+        ProofTarget = "CameraRigProfile routes gameplay focus and applies saved Cinemachine recipe values.",
         NativeActionKind = AuthoringActionKind.CreateAsset,
-        SuccessChecks = new[] { "Verify Cinemachine follows the profile's selected focus target at the specified framing." },
+        SuccessChecks = new[] { "Verify Cinemachine follows the profile's selected focus target and applies the saved recipe." },
         RoleTags = new[] { "CameraProfile", "ParticipantFollow", "PlayfieldView" },
         Tags = new[] { "capability:Camera", "runtime:CameraInput", "lane:Camera", "priority:AuxiliaryDefault" },
         Selectable = false
@@ -32,8 +32,11 @@ namespace NeonBlack.Gameplay.Data.Profiles
     {
         public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            if (minZoom > maxZoom)
-                yield return PyralisRuntimeValidationIssue.Required("Min Zoom should not exceed Max Zoom.");
+            if (useCinemachine && (reflectedSettings == null || reflectedSettings.Count == 0))
+            {
+                yield return PyralisRuntimeValidationIssue.Optional(
+                    "No reflected Cinemachine recipe is saved yet. Use the CameraRigProfile inspector to sync from a scene Cinemachine rig.");
+            }
         }
 
         public enum CameraPresentationMode
@@ -51,37 +54,46 @@ namespace NeonBlack.Gameplay.Data.Profiles
             ExplicitSceneTarget
         }
 
+        public IReadOnlyList<CameraProfileEntry> ReflectedSettings => reflectedSettings;
+
         public CameraPresentationMode presentationMode = CameraPresentationMode.Shared;
         [Tooltip("Chooses which gameplay target Pyralis routes into Cinemachine. Manual Cinemachine leaves Follow/LookAt untouched.")]
         public CameraFocusMode focusMode = CameraFocusMode.ParticipantGroup;
         public bool useCinemachine = true;
-        public bool orthographic = false;
         public bool lockToPlayfield = true;
-        [Tooltip("When enabled, Pyralis places and rotates the shared Cinemachine camera from this profile each frame. Disable this to hand-author the Cinemachine camera transform in the scene.")]
-        public bool useProfileTransform = true;
-        [Tooltip("World-space offset from the shared follow focus to the Cinemachine camera when Use Profile Transform is enabled.")]
-        public Vector3 followOffset = new Vector3(0f, 0f, -10f);
-        [Tooltip("Camera rotation in degrees when Use Profile Transform is enabled. X is pitch, Y is yaw, Z is roll.")]
-        public Vector3 viewEulerAngles = Vector3.zero;
-        public float defaultDistance = 10f;
-        public float minZoom = 3f;
-        public float maxZoom = 18f;
-        public float followDamping = 8f;
-        public float zoomDamping = 8f;
-        public float orthographicSize = 5f;
-        public float shakeAmplitude = 1f;
-        public float shakeFrequency = 1f;
+
+        [SerializeField]
+        private List<CameraProfileEntry> reflectedSettings = new List<CameraProfileEntry>();
 
         public void Sanitize()
         {
-            minZoom = Mathf.Max(0.01f, minZoom);
-            maxZoom = Mathf.Max(minZoom, maxZoom);
-            defaultDistance = Mathf.Max(0.01f, defaultDistance);
-            followDamping = Mathf.Max(0f, followDamping);
-            zoomDamping = Mathf.Max(0f, zoomDamping);
-            orthographicSize = Mathf.Max(0.01f, orthographicSize);
-            shakeAmplitude = Mathf.Max(0f, shakeAmplitude);
-            shakeFrequency = Mathf.Max(0f, shakeFrequency);
+            reflectedSettings ??= new List<CameraProfileEntry>();
+            for (int i = reflectedSettings.Count - 1; i >= 0; i--)
+            {
+                if (reflectedSettings[i] == null)
+                    reflectedSettings.RemoveAt(i);
+                else
+                    reflectedSettings[i].Sanitize();
+            }
+        }
+
+        public void ReplaceReflectedSettings(IEnumerable<CameraProfileEntry> entries)
+        {
+            reflectedSettings = entries != null
+                ? new List<CameraProfileEntry>(entries)
+                : new List<CameraProfileEntry>();
+            Sanitize();
+        }
+
+        public void ClearMissingReflectedSettings()
+        {
+            reflectedSettings ??= new List<CameraProfileEntry>();
+            reflectedSettings.RemoveAll(entry =>
+                entry == null
+                || entry.Status == CameraProfileMappingStatus.MissingComponent
+                || entry.Status == CameraProfileMappingStatus.MissingProperty
+                || entry.Status == CameraProfileMappingStatus.Unsupported
+                || entry.Status == CameraProfileMappingStatus.Stale);
         }
 
         private void OnValidate()
@@ -89,4 +101,5 @@ namespace NeonBlack.Gameplay.Data.Profiles
             Sanitize();
         }
     }
+
 }

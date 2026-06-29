@@ -1,6 +1,5 @@
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Modules.Combat;
-using NeonBlack.Gameplay.Presentation.Animation;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Modules.Combat
@@ -8,7 +7,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
     internal sealed class PawnCombat2DRuntimeReferences
     {
         public IActorCombatMovementState Motor { get; private set; }
-        public ActorAnimationDriver AnimationDriver { get; private set; }
+        public IActorAnimationController AnimationDriver { get; private set; }
         public IActorCombatResultReceiver[] CombatResultReceivers { get; private set; }
         public HealthComponent Health { get; private set; }
         public IActorFeedbackPublisher FeedbackPublisher { get; private set; }
@@ -21,7 +20,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
                 return references;
 
             references.Motor = owner.GetComponent<IActorCombatMovementState>();
-            references.AnimationDriver = owner.GetComponent<ActorAnimationDriver>();
+            references.AnimationDriver = owner.GetComponent<IActorAnimationController>();
             references.CombatResultReceivers = owner.GetComponents<IActorCombatResultReceiver>();
             references.Health = owner.GetComponent<HealthComponent>();
             references.FeedbackPublisher = owner.GetComponent<IActorFeedbackPublisher>();

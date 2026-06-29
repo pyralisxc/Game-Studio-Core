@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Profiles;
+using NeonBlack.Gameplay.Data.Presentation;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Types.Animation;
 using NeonBlack.Gameplay.Presentation.Visuals;
@@ -26,7 +27,7 @@ namespace NeonBlack.Gameplay.Presentation.Animation
         Selectable = false
     )]
 [AddComponentMenu("NeonBlack/Gameplay/Animation/Actor Animation Driver")]
-    public class ActorAnimationDriver : MonoBehaviour, IActorAnimationController, IActorCombatResultReceiver, IRuntimeValidationProvider
+    public class ActorAnimationDriver : MonoBehaviour, IActorAnimationController, IPawnAnimationProfileReceiver, IActorCombatResultReceiver, IRuntimeValidationProvider
     {
         public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {

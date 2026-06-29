@@ -13,28 +13,26 @@ namespace NeonBlack.Gameplay.Modules.Hazards.Zones
         Surface = AuthoringSurface.Goal,
         Summary = "2D trigger volume that repeatedly damages overlapping actors.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/combat/hazards",
-        RequiredFields = new[] { nameof(impactProfile), nameof(damagePerTick), nameof(tickInterval), nameof(knockbackForce), nameof(targeting) },
-        SetupSteps = new[] { "Place on a 2D volume.", "Assign Collider2D (Awake forces Is Trigger).", "Assign Hazard Impact Profile or use fallback fields." },
+        RequiredFields = new[] { nameof(impactProfile) },
+        SetupSteps = new[] { "Place on a 2D volume.", "Assign Collider2D (Awake forces Is Trigger).", "Assign Hazard Impact Profile for shared damage, knockback, targeting, and status effects." },
         SuccessChecks = new[] { "Walk an actor into the zone and verify it takes repeated damage." },
         Tags = new[] { "capability:Combat", "capability:Puzzle", "axiom:Dimensions2D" }
     )]
-[RequireComponent(typeof(Collider2D))]
+    [RequireComponent(typeof(Collider2D))]
     [AddComponentMenu("NeonBlack/Gameplay/Zones/Damage Zone 2D")]
-    public partial class DamageZone2D : MonoBehaviour, IRuntimeValidationProvider
+    public partial class DamageZone2D : GameplayTickBehaviour, IRuntimeValidationProvider
     {
         [Header("Profile")]
         [SerializeField] private HazardImpactProfile impactProfile;
-        [Header("Fallback Damage")]
-        [SerializeField] private float damagePerTick = 10f;
-        [SerializeField, Min(0.05f)] private float tickInterval = 0.5f;
-        [SerializeField] private float knockbackForce = 0f;
-        [SerializeField] private HazardTargetMode targeting = HazardTargetMode.All;
 
         [Header("Events")]
         public UnityEvent<GameObject> OnTargetEntered;
         public UnityEvent<GameObject> OnTargetExited;
 
         private readonly DamageZoneTargetRuntime _targets = new DamageZoneTargetRuntime();
+
+        protected override GameplayTickDomain TickDomain => GameplayTickDomain.Hazards;
+        protected override bool UsesGameplayTick => true;
 
         private void Awake()
         {
@@ -61,19 +59,20 @@ namespace NeonBlack.Gameplay.Modules.Hazards.Zones
             OnTargetExited?.Invoke(((Component)health).gameObject);
         }
 
-        private void Update()
+        protected override void OnGameplayTick(in GameplayTickContext context)
         {
             if (!_targets.HasTargets)
                 return;
 
-            _targets.Tick(gameObject, transform, impactProfile, damagePerTick, tickInterval, knockbackForce);
+            if (impactProfile == null)
+                return;
+
+            _targets.Tick(gameObject, transform, impactProfile, context.DeltaTime);
         }
 
         private bool IsValidTarget(IActorHealthState health)
         {
-            return impactProfile != null
-                ? HazardImpactUtility.IsValidTarget(health, impactProfile.targeting)
-                : HazardImpactUtility.IsValidTarget(health, targeting);
+            return impactProfile != null && HazardImpactUtility.IsValidTarget(health, impactProfile.targeting);
         }
     }
 }

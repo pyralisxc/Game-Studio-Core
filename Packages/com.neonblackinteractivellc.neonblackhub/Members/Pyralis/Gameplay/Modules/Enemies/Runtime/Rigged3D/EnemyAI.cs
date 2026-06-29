@@ -29,7 +29,7 @@ namespace NeonBlack.Gameplay.Modules.Enemies
     [RequireComponent(typeof(EnemyMovementModule))]
     [RequireComponent(typeof(EnemyDetectionModule))]
     [RequireComponent(typeof(EnemyAnimationModule))]
-    public partial class EnemyAI : MonoBehaviour, IActorMovementModifierReceiver, IActorCombatModifierReceiver, IEnemyActorState
+    public partial class EnemyAI : GameplayTickBehaviour, IActorMovementModifierReceiver, IActorCombatModifierReceiver, IEnemyActorState
     {
         public enum EnemyState { Patrol, Chase, Attack, Dead }
 
@@ -71,7 +71,6 @@ namespace NeonBlack.Gameplay.Modules.Enemies
         public EnemyMovementModule MovementModule => _runtime?.MovementModule;
         public EnemyDetectionModule DetectionModule => _runtime?.DetectionModule;
         public IActorCombatRequestReceiver CombatRequests => _runtime?.CombatRequestReceiver;
-        public IActorCombatRuntimeTickReceiver CombatTicker => _runtime?.CombatTickReceiver;
         public IActorCombatTacticalState CombatTactics => _runtime?.CombatTacticalState;
         public IActorCombatModifierReceiver CombatModifiers => _runtime?.CombatModifierReceiver;
         public EnemyAnimationModule AnimationModule => _runtime?.AnimationModule;
@@ -82,6 +81,8 @@ namespace NeonBlack.Gameplay.Modules.Enemies
         public Transform VisualRoot => visualRoot;
         public bool SpriteDefaultFacesRight => spriteDefaultFacesRight;
         public float WaypointTolerance => waypointTolerance;
+        protected override GameplayTickDomain TickDomain => GameplayTickDomain.Enemies;
+        protected override bool UsesGameplayTick => true;
 
         private void Awake()
         {
@@ -119,21 +120,20 @@ namespace NeonBlack.Gameplay.Modules.Enemies
             _states[_state].OnEnter(this);
         }
 
-        private void Update()
+        protected override void OnGameplayTick(in GameplayTickContext context)
         {
             if (_state == EnemyState.Dead) return;
 
-            MovementModule.Tick(Time.deltaTime);
-            CombatTicker?.UpdateCombatTimers();
+            MovementModule.Tick(context.DeltaTime);
 
             if ((_reactionState != null && _reactionState.IsReactionLocked) || _statusActionLocked)
             {
                 UpdateAnimator();
-                MovementModule.ApplyStationaryMotion(Time.deltaTime);
+                MovementModule.ApplyStationaryMotion(context.DeltaTime);
                 return;
             }
 
-            _states[_state].OnUpdate(this, Time.deltaTime);
+            _states[_state].OnUpdate(this, context.DeltaTime);
 
             UpdateAnimator();
         }

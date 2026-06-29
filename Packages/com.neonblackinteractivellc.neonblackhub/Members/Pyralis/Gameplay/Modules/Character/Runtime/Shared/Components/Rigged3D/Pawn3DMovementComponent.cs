@@ -94,8 +94,8 @@ namespace NeonBlack.Gameplay.Modules.Character
         /// Tick the movement model and return the world-space velocity for this frame.
         /// Pass the result to <see cref="ApplyMovement"/> after traversal checks.
         /// </summary>
-        public Vector3 Tick(FrameInput fi) =>
-            _model.Tick(BuildMovementInput(fi), _physicsFrame, Time.deltaTime);
+        public Vector3 Tick(FrameInput fi, float deltaTime) =>
+            _model.Tick(BuildMovementInput(fi), _physicsFrame, deltaTime);
 
         /// <summary>
         /// Apply model velocity + knockback via CharacterController and record
@@ -120,16 +120,16 @@ namespace NeonBlack.Gameplay.Modules.Character
         public void SetActing(bool acting)           => _model.SetActing(acting);
 
         //  IMovementModule (AI / network locomotion)  //
-        public void Move(Vector2 input)
+        public void Move(Vector2 input, float deltaTime)
         {
             var fi = new FrameInput { Move = input };
-            ApplyMovement(_model.Tick(BuildMovementInput(fi), _physicsFrame, Time.deltaTime));
+            ApplyMovement(_model.Tick(BuildMovementInput(fi), _physicsFrame, deltaTime), deltaTime);
         }
 
-        public void Jump()
+        public void Jump(float deltaTime)
         {
             var fi = new FrameInput { JumpPressed = true };
-            _model.Tick(BuildMovementInput(fi), _physicsFrame, Time.deltaTime);
+            _model.Tick(BuildMovementInput(fi), _physicsFrame, deltaTime);
         }
 
         public void SetMovementEnabled(bool enabled) => _runtime.Controller.enabled = enabled;

@@ -118,6 +118,142 @@ namespace Pys.Authoring.Editor.Tests
         }
 
         [Test]
+        public void BuildIntent_AddsBuiltInUnitySetupGuidesWhenNoTargetContractsExist()
+        {
+            AuthoringGraph graph = DependencyGraphProjection.Build(new UnityCodebaseScanResult());
+            graph.Nodes.Add(new AuthoringGraphNode("asset:scene", "Sample Scene", AuthoringGraphNodeKind.Asset));
+
+            IntentProjection intent = AuthoringProjectionBuilder.BuildIntent(graph);
+
+            Assert.That(intent.Rows, Has.Some.Matches<IntentRow>(row =>
+                row.ContractId == "contract:unity.setup.cinemachine-follow"
+                && row.IntentSource == "BuiltInUnitySetup"
+                && row.Priority == 100
+                && row.CapabilityPath == "Unity/Cinemachine/Follow Camera"));
+        }
+
+        [Test]
+        public void BuildFacts_DisplaysBuiltInUnitySetupGuidesAsFacts()
+        {
+            AuthoringGraph graph = DependencyGraphProjection.Build(new UnityCodebaseScanResult());
+
+            FactsProjection facts = AuthoringProjectionBuilder.BuildFacts(graph);
+
+            Assert.That(facts.Rows, Has.Some.Matches<FactRow>(row =>
+                row.Label == "Set Up Timeline Sequence"
+                && row.Detail.Contains("UnitySetupGuide")
+                && row.Confidence == "BuiltInUnitySetup"));
+        }
+
+        [Test]
+        public void BuildIntent_DoesNotMixBuiltInUnitySetupWithTargetContractsUnlessRequested()
+        {
+            AuthoringGraph graph = DependencyGraphProjection.Build(new UnityCodebaseScanResult());
+            AuthoringGraphNode contract = Contract("contract:combat", "Combat", "proof.combat", "Combat", 10);
+            contract.Metadata["selectable"] = "true";
+            contract.Metadata["surface"] = AuthoringSurface.Goal.ToString();
+            graph.Nodes.Add(contract);
+
+            IntentProjection defaultIntent = AuthoringProjectionBuilder.BuildIntent(graph);
+            IntentProjection requestedIntent = AuthoringProjectionBuilder.BuildIntent(graph, string.Empty, true);
+
+            Assert.That(defaultIntent.Rows, Has.None.Matches<IntentRow>(row => row.IntentSource == "BuiltInUnitySetup"));
+            Assert.That(requestedIntent.Rows[0].IntentSource, Is.EqualTo("TargetContract"));
+            Assert.That(requestedIntent.Rows, Has.Some.Matches<IntentRow>(row => row.IntentSource == "BuiltInUnitySetup" && row.Priority == 100));
+        }
+
+        [Test]
+        public void BuildGuide_CreatesNativeUnitySetupGuidePathFromGraphEvidence()
+        {
+            AuthoringGraph graph = DependencyGraphProjection.Build(new UnityCodebaseScanResult());
+
+            GuideProjection guide = AuthoringProjectionBuilder.BuildGuide(graph, "contract:unity.setup.timeline", true);
+            OverviewProjection overview = AuthoringProjectionBuilder.BuildOverview(graph, guide);
+
+            Assert.That(guide.SelectedDisplayName, Is.EqualTo("Set Up Timeline Sequence"));
+            Assert.That(guide.Rows, Has.Some.Matches<GuideRow>(row => row.Role == "UnitySetupStep" && row.ActionKind == AuthoringActionKind.OpenWindow.ToString()));
+            Assert.That(guide.Rows, Has.Some.Matches<GuideRow>(row => row.Role == "CompletionSignal" && row.BlocksProof == false));
+            Assert.That(overview.NextAction, Does.Contain("Playable Director"));
+            Assert.That(overview.NextActions, Has.Count.GreaterThanOrEqualTo(1));
+            Assert.That(overview.NextActions[0].NativeAction, Does.Contain("Playable Director"));
+        }
+
+        [Test]
+        public void BuildOverview_ExportsNextThreeBlockingGuideRows()
+        {
+            AuthoringGraph graph = new AuthoringGraph();
+            GuideProjection guide = new GuideProjection { SelectedDisplayName = "Route" };
+            guide.Rows.Add(new GuideRow { Title = "Step A", Detail = "A", NativeAction = "Do A", ActionKind = AuthoringActionKind.InspectObject.ToString(), ActionLabel = "Inspect Object", Role = "SetupStep", OwnerId = "a", BlocksProof = true });
+            guide.Rows.Add(new GuideRow { Title = "Step B", Detail = "B", NativeAction = "Do B", ActionKind = AuthoringActionKind.AssignField.ToString(), ActionLabel = "Assign Field", Role = "Issue", OwnerId = "b", BlocksProof = true });
+            guide.Rows.Add(new GuideRow { Title = "Step C", Detail = "C", NativeAction = "Do C", ActionKind = AuthoringActionKind.OpenWindow.ToString(), ActionLabel = "Open Window", Role = "SetupStep", OwnerId = "c", BlocksProof = true });
+            guide.Rows.Add(new GuideRow { Title = "Step D", Detail = "D", NativeAction = "Do D", Role = "SetupStep", OwnerId = "d", BlocksProof = true });
+
+            OverviewProjection overview = AuthoringProjectionBuilder.BuildOverview(graph, guide);
+            string json = ProjectionJsonExporter.ToOverviewJson(overview, "Assets");
+
+            Assert.That(overview.NextActions, Has.Count.EqualTo(3));
+            Assert.That(overview.NextActions[0].NativeAction, Is.EqualTo("Do A"));
+            Assert.That(overview.NextActions[2].ActionLabel, Is.EqualTo("Open Window"));
+            Assert.That(json, Does.Contain("\"nextActions\""));
+            Assert.That(json, Does.Contain("\"nativeAction\": \"Do A\""));
+            Assert.That(json, Does.Not.Contain("\"nativeAction\": \"Do D\""));
+        }
+
+        [Test]
+        public void BuildIntent_ProjectsCompositionAndReadinessMetadata()
+        {
+            AuthoringGraph graph = new AuthoringGraph();
+            AuthoringGraphNode contract = Contract("contract:actor", "Actor Route", "intent.actor", "Actor", 10);
+            contract.Metadata["selectable"] = "true";
+            contract.Metadata["surface"] = AuthoringSurface.Goal.ToString();
+            contract.Metadata["successDescription"] = "Set up an actor route.";
+            contract.Metadata["readinessHint"] = "Actor can enter Play Mode.";
+            contract.Metadata["expectedEvidence"] = "scene.object:Actor\ncomponent:Controller";
+            contract.Metadata["completionSignals"] = "Play Mode enters.";
+            contract.Metadata["validationOwnerStableId"] = "validation.actor";
+            contract.Metadata["intentToggles"] = "Combat\nCamera";
+            contract.Metadata["intentLanes"] = "Sprite2D\nRigged3D";
+            contract.Metadata["compatibleStableIds"] = "feature.inventory";
+            contract.Metadata["supportingStableIds"] = "setup.camera";
+            contract.Metadata["hoverExplanations"] = "Camera adds follow framing.";
+            graph.Nodes.Add(contract);
+
+            IntentProjection intent = AuthoringProjectionBuilder.BuildIntent(graph);
+            string json = ProjectionJsonExporter.ToIntentJson(intent, "Assets");
+
+            Assert.That(intent.Rows, Has.Count.EqualTo(1));
+            Assert.That(intent.Rows[0].SuccessDescription, Is.EqualTo("Set up an actor route."));
+            Assert.That(intent.Rows[0].ReadinessHint, Is.EqualTo("Actor can enter Play Mode."));
+            Assert.That(intent.Rows[0].ExpectedEvidence, Does.Contain("component:Controller"));
+            Assert.That(intent.Rows[0].CompletionSignals, Is.EqualTo("Play Mode enters."));
+            Assert.That(intent.Rows[0].IntentToggles, Does.Contain("Combat"));
+            Assert.That(intent.Rows[0].IntentLanes, Does.Contain("Sprite2D"));
+            Assert.That(intent.Rows[0].CompatibleStableIds, Is.EqualTo("feature.inventory"));
+            Assert.That(intent.Rows[0].SupportingStableIds, Is.EqualTo("setup.camera"));
+            Assert.That(intent.Rows[0].HoverExplanations, Is.EqualTo("Camera adds follow framing."));
+            Assert.That(json, Does.Contain("\"intentToggles\": \"Combat\\nCamera\""));
+            Assert.That(json, Does.Contain("\"successDescription\": \"Set up an actor route.\""));
+        }
+
+        [Test]
+        public void BuildGuide_UsesSuccessDescriptionBeforeFallbackProofTarget()
+        {
+            AuthoringGraph graph = new AuthoringGraph();
+            AuthoringGraphNode contract = Contract("contract:actor", "Actor Route", "intent.actor", "Actor", 10);
+            contract.Metadata["successDescription"] = "Set up an actor route.";
+            contract.Metadata["proofTarget"] = "Fallback proof wording";
+            contract.Metadata["expectedEvidence"] = "Actor exists.";
+            contract.Metadata["completionSignals"] = "Validation clears.";
+            graph.Nodes.Add(contract);
+
+            GuideProjection guide = AuthoringProjectionBuilder.BuildGuide(graph, "contract:actor");
+
+            Assert.That(guide.ProofTarget, Is.EqualTo("Set up an actor route."));
+            Assert.That(guide.Rows, Has.Some.Matches<GuideRow>(row => row.Role == "ExpectedEvidence" && row.Detail == "Actor exists."));
+            Assert.That(guide.Rows, Has.Some.Matches<GuideRow>(row => row.Role == "CompletionSignal" && row.Detail == "Validation clears."));
+        }
+
+        [Test]
         public void BuildIntent_DoesNotMixDuplicateStableIdContracts()
         {
             AuthoringGraph graph = new AuthoringGraph();
@@ -437,6 +573,127 @@ namespace Pys.Authoring.Editor.Tests
             Assert.That(map.Rows, Has.Count.EqualTo(1));
             Assert.That(map.Rows[0].Kind, Is.EqualTo("Asset"));
             Assert.That(map.Rows[0].SourcePath, Is.EqualTo("Assets/Test.asset"));
+            Assert.That(map.Rows[0].CanPing, Is.True);
+            Assert.That(map.Rows[0].NavigationKind, Is.EqualTo("Asset"));
+            Assert.That(map.Rows[0].NavigationLabel, Is.EqualTo("Ping Asset"));
+        }
+
+        [Test]
+        public void BuildMap_ProjectsSceneObjectSelectionAction()
+        {
+            AuthoringGraph graph = new AuthoringGraph();
+            AuthoringGraphNode sceneObject = new AuthoringGraphNode("scene:Assets/Test.unity:Root/Child", "Child", AuthoringGraphNodeKind.SceneObject);
+            sceneObject.Metadata["sourcePath"] = "Assets/Test.unity";
+            graph.Nodes.Add(sceneObject);
+
+            MapProjection map = AuthoringProjectionBuilder.BuildMap(graph);
+
+            Assert.That(map.Rows, Has.Count.EqualTo(1));
+            Assert.That(map.Rows[0].CanSelect, Is.True);
+            Assert.That(map.Rows[0].NavigationKind, Is.EqualTo("SceneObject"));
+            Assert.That(map.Rows[0].NavigationLabel, Is.EqualTo("Select in Hierarchy"));
+        }
+
+        [Test]
+        public void BuiltInUnitySetupContributor_AddsMissingPackageEvidence()
+        {
+            AuthoringGraph graph = new AuthoringGraph();
+            System.Type contributorType = System.Type.GetType("Pys.Authoring.Editor.UnitySetup.BuiltInUnitySetupGraphContributor, Pys.Authoring.Editor");
+            Assert.That(contributorType, Is.Not.Null);
+
+            MethodInfo addTo = contributorType.GetMethod("AddTo", BindingFlags.Static | BindingFlags.NonPublic, null, new[] { typeof(AuthoringGraph), typeof(Pys.Authoring.Editor.Vocabulary.AuthoringVocabularyDictionary), typeof(System.Func<string, bool>) }, null);
+            Assert.That(addTo, Is.Not.Null);
+
+            addTo.Invoke(null, new object[] { graph, null, new System.Func<string, bool>(packageName => packageName != "com.unity.timeline") });
+
+            Assert.That(graph.Nodes, Has.Some.Matches<AuthoringGraphNode>(node =>
+                node.Id == "contract:unity.setup.timeline"
+                && node.Metadata.TryGetValue("availability", out string availability)
+                && availability == "MissingPackage"
+                && node.Metadata.TryGetValue("packageAvailability", out string packageAvailability)
+                && packageAvailability.Contains("com.unity.timeline: Missing")));
+            Assert.That(graph.Nodes, Has.Some.Matches<AuthoringGraphNode>(node =>
+                node.Kind == AuthoringGraphNodeKind.Issue
+                && node.Metadata.TryGetValue("issueCode", out string issueCode)
+                && issueCode == "UnitySetup.Package.Missing"
+                && node.Metadata.TryGetValue("ownerStableId", out string ownerStableId)
+                && ownerStableId == "unity.setup.timeline"));
+        }
+
+        [Test]
+        public void BuiltInUnitySetup_ReadinessEvidenceUsesObservedSceneComponentsAndAssets()
+        {
+            UnityCodebaseScanResult scanResult = new UnityCodebaseScanResult();
+            UnityObjectObservation sceneCamera = new UnityObjectObservation("scene:Assets/Test.unity:Camera", "Camera", "Assets/Test.unity", "GameObject");
+            sceneCamera.Components.Add("UnityEngine.Camera");
+            sceneCamera.Components.Add("UnityEngine.AudioListener");
+            sceneCamera.ComponentFields.Add("UnityEngine.Camera.enabled=true");
+            sceneCamera.ComponentFields.Add("UnityEngine.AudioListener.enabled=true");
+            scanResult.SceneObjects.Add(sceneCamera);
+            scanResult.Assets.Add(new UnityAssetObservation("asset:Assets/Walk.anim", "Walk", "Assets/Walk.anim", "AnimationClip"));
+
+            AuthoringGraph graph = DependencyGraphProjection.Build(scanResult);
+
+            AuthoringGraphNode cameraGuide = FindNode(graph, "contract:unity.setup.camera");
+            Assert.That(cameraGuide, Is.Not.Null);
+            Assert.That(cameraGuide.Metadata["readinessState"], Is.EqualTo("Observed"));
+            Assert.That(cameraGuide.Metadata["observedComponents"], Does.Contain("Camera"));
+            Assert.That(cameraGuide.Metadata["observedComponents"], Does.Contain("AudioListener"));
+            Assert.That(cameraGuide.Metadata["observedFields"], Does.Contain("Camera.enabled=true"));
+
+            AuthoringGraphNode animationGuide = FindNode(graph, "contract:unity.setup.animation-clip");
+            Assert.That(animationGuide, Is.Not.Null);
+            Assert.That(animationGuide.Metadata["readinessState"], Is.EqualTo("Partial"));
+            Assert.That(animationGuide.Metadata["observedAssets"], Does.Contain("AnimationClip"));
+            Assert.That(animationGuide.Metadata["missingComponents"], Does.Contain("Animator"));
+        }
+
+        [Test]
+        public void BuildGuide_ProjectsBuiltInUnityReadinessEvidence()
+        {
+            UnityCodebaseScanResult scanResult = new UnityCodebaseScanResult();
+            UnityObjectObservation sceneCamera = new UnityObjectObservation("scene:Assets/Test.unity:Camera", "Camera", "Assets/Test.unity", "GameObject");
+            sceneCamera.Components.Add("UnityEngine.Camera");
+            sceneCamera.Components.Add("UnityEngine.AudioListener");
+            sceneCamera.ComponentFields.Add("UnityEngine.Camera.enabled=true");
+            sceneCamera.ComponentFields.Add("UnityEngine.AudioListener.enabled=true");
+            scanResult.SceneObjects.Add(sceneCamera);
+
+            AuthoringGraph graph = DependencyGraphProjection.Build(scanResult);
+            GuideProjection guide = AuthoringProjectionBuilder.BuildGuide(graph, "contract:unity.setup.camera", true);
+            string json = ProjectionJsonExporter.ToGuideJson(guide, "Assets");
+
+            Assert.That(guide.Rows, Has.Some.Matches<GuideRow>(row =>
+                row.Role == "UnityReadinessEvidence"
+                && row.Detail.Contains("Observed")
+                && row.BlocksProof == false));
+            Assert.That(json, Does.Contain("\"role\": \"UnityReadinessEvidence\""));
+            Assert.That(json, Does.Contain("Observed components"));
+            Assert.That(json, Does.Contain("Observed fields"));
+        }
+
+        [Test]
+        public void BuiltInUnitySetup_ReadinessEvidenceReportsMissingFieldAssignments()
+        {
+            UnityCodebaseScanResult scanResult = new UnityCodebaseScanResult();
+            UnityObjectObservation audioObject = new UnityObjectObservation("scene:Assets/Test.unity:Audio", "Audio", "Assets/Test.unity", "GameObject");
+            audioObject.Components.Add("UnityEngine.AudioSource");
+            audioObject.Components.Add("UnityEngine.AudioListener");
+            audioObject.ComponentFields.Add("UnityEngine.AudioSource.clip=Missing");
+            audioObject.ComponentFields.Add("UnityEngine.AudioSource.enabled=true");
+            audioObject.ComponentFields.Add("UnityEngine.AudioListener.enabled=true");
+            scanResult.SceneObjects.Add(audioObject);
+
+            AuthoringGraph graph = DependencyGraphProjection.Build(scanResult);
+            AuthoringGraphNode audioGuide = FindNode(graph, "contract:unity.setup.audio-source");
+
+            Assert.That(audioGuide, Is.Not.Null);
+            Assert.That(audioGuide.Metadata["readinessState"], Is.EqualTo("Partial"));
+            Assert.That(audioGuide.Metadata["observedFields"], Does.Contain("AudioSource.enabled=true"));
+            Assert.That(audioGuide.Metadata["missingFields"], Does.Contain("AudioSource.clip=Assigned"));
+            Assert.That(audioGuide.Metadata["readinessEvidenceSummary"], Does.Contain("Missing fields"));
+            Assert.That(audioGuide.Metadata["readinessEvidenceSummary"], Does.Contain("Audio Clip Assigned: Assigned"));
+            Assert.That(audioGuide.Metadata["readinessEvidenceSummary"], Does.Contain("Audio Source Enabled: Enabled"));
         }
 
         [Test]
@@ -469,12 +726,12 @@ namespace Pys.Authoring.Editor.Tests
 
             HygieneProjection hygiene = HygieneProjectionBuilder.Build(graph);
 
-            Assert.That(hygiene.Rows.Count, Is.EqualTo(4));
-            Assert.That(hygiene.Lenses.Count, Is.EqualTo(7));
+            Assert.That(hygiene.Lenses.Count, Is.EqualTo(9));
             Assert.That(FindLens(hygiene, HygieneLensKind.Overview).Rows.Count, Is.EqualTo(hygiene.Rows.Count));
             Assert.That(FindLens(hygiene, HygieneLensKind.Contracts).Rows.Count, Is.EqualTo(1));
             Assert.That(FindLens(hygiene, HygieneLensKind.Dependencies).Rows.Count, Is.EqualTo(2));
-            Assert.That(FindLens(hygiene, HygieneLensKind.ProjectionIntegrity).Rows.Count, Is.EqualTo(1));
+            Assert.That(FindLens(hygiene, HygieneLensKind.ValidationEvidence).Rows.Count, Is.EqualTo(1));
+            Assert.That(FindLens(hygiene, HygieneLensKind.VisualDependencyGraph).Rows.Count, Is.GreaterThanOrEqualTo(2));
         }
 
         [Test]
@@ -522,12 +779,91 @@ namespace Pys.Authoring.Editor.Tests
         }
 
         [Test]
+        public void BuildHygiene_ReportsGoalContractsMissingReadinessHints()
+        {
+            AuthoringGraph graph = new AuthoringGraph();
+            AuthoringGraphNode contract = new AuthoringGraphNode("contract:goal", "Goal Contract", AuthoringGraphNodeKind.Contract);
+            contract.Metadata["stableId"] = "goal";
+            contract.Metadata["surface"] = AuthoringSurface.Goal.ToString();
+            graph.Nodes.Add(contract);
+
+            HygieneProjection hygiene = HygieneProjectionBuilder.Build(graph);
+
+            Assert.That(hygiene.Rows, Has.Some.Matches<HygieneRow>(row =>
+                row.Lens == HygieneLensKind.Contracts
+                && row.IssueCode == "Contract.ReadinessHints.Missing"
+                && row.Recommendation.Contains("SuccessDescription")));
+        }
+
+        [Test]
+        public void BuildHygiene_ReportsValidationOwnerMismatch()
+        {
+            AuthoringGraph graph = new AuthoringGraph();
+            AuthoringGraphNode contract = new AuthoringGraphNode("contract:known", "Known Contract", AuthoringGraphNodeKind.Contract);
+            contract.Metadata["stableId"] = "known";
+            graph.Nodes.Add(contract);
+
+            AuthoringGraphNode issue = new AuthoringGraphNode("issue:unknown", "Unknown Owner", AuthoringGraphNodeKind.Issue);
+            issue.Metadata["issueCode"] = "Unknown.Owner";
+            issue.Metadata["nativeAction"] = "Inspect owner.";
+            issue.Metadata["successCheck"] = "Owner is valid.";
+            issue.Metadata["ownerStableId"] = "missing.owner";
+            graph.Nodes.Add(issue);
+
+            HygieneProjection hygiene = HygieneProjectionBuilder.Build(graph);
+
+            Assert.That(hygiene.Rows, Has.Some.Matches<HygieneRow>(row =>
+                row.Lens == HygieneLensKind.ValidationEvidence
+                && row.IssueCode == "Validation.Owner.Unmatched"
+                && row.Detail == "missing.owner"));
+        }
+
+        [Test]
+        public void BuildHygiene_ReportsUnobservedExpectedEvidence()
+        {
+            AuthoringGraph graph = new AuthoringGraph();
+            AuthoringGraphNode contract = new AuthoringGraphNode("contract:goal", "Goal Contract", AuthoringGraphNodeKind.Contract);
+            contract.Metadata["stableId"] = "goal";
+            contract.Metadata["expectedEvidence"] = "ReadyMarker";
+            graph.Nodes.Add(contract);
+
+            HygieneProjection hygiene = HygieneProjectionBuilder.Build(graph);
+
+            Assert.That(hygiene.Rows, Has.Some.Matches<HygieneRow>(row =>
+                row.Lens == HygieneLensKind.Ownership
+                && row.IssueCode == "Honesty.ExpectedEvidence.Unobserved"
+                && row.Detail == "ReadyMarker"));
+        }
+
+        [Test]
+        public void BuildHygiene_CreatesVisualDependencyGraphRows()
+        {
+            AuthoringGraph graph = new AuthoringGraph();
+            graph.Edges.Add(new AuthoringGraphEdge("type:a", "field:a.profile", AuthoringGraphEdgeKind.SerializedField));
+            graph.Edges.Add(new AuthoringGraphEdge("type:b", "field:b.profile", AuthoringGraphEdgeKind.SerializedField));
+            graph.Edges.Add(new AuthoringGraphEdge("contract:a", "issue:a", AuthoringGraphEdgeKind.ValidatorReports));
+
+            HygieneProjection hygiene = HygieneProjectionBuilder.Build(graph);
+
+            Assert.That(hygiene.Rows, Has.Some.Matches<HygieneRow>(row =>
+                row.Lens == HygieneLensKind.VisualDependencyGraph
+                && row.IssueCode == "Graph.EdgeKind.Group"
+                && row.OwnerId == "graph:SerializedField"
+                && row.Detail.Contains("2 edge")));
+            Assert.That(hygiene.Rows, Has.Some.Matches<HygieneRow>(row =>
+                row.Lens == HygieneLensKind.VisualDependencyGraph
+                && row.IssueCode == "Graph.NodeKind.Group"
+                && row.OwnerId == "graph:node:Type"
+                && row.Detail.Contains("2 node")));
+        }
+
+        [Test]
         public void BuildHygiene_EmptyInputStillCreatesLensPackets()
         {
             HygieneProjection hygiene = HygieneProjectionBuilder.Build(null);
 
             Assert.That(hygiene.Rows.Count, Is.EqualTo(0));
-            Assert.That(hygiene.Lenses.Count, Is.EqualTo(7));
+            Assert.That(hygiene.Lenses.Count, Is.EqualTo(9));
             Assert.That(FindLens(hygiene, HygieneLensKind.Overview).Rows.Count, Is.EqualTo(0));
         }
 
@@ -536,7 +872,7 @@ namespace Pys.Authoring.Editor.Tests
         {
             FactsProjection facts = new FactsProjection { AssemblyCount = 2, IssueCount = 3 };
             MapProjection map = new MapProjection();
-            map.Rows.Add(new MapRow { Id = "object:a", Label = "Object A", Kind = "SceneObject", SourcePath = "Assets/Test.unity", ComponentCount = 4, IssueCount = 1 });
+            map.Rows.Add(new MapRow { Id = "object:a", Label = "Object A", Kind = "SceneObject", SourcePath = "Assets/Test.unity", ComponentCount = 4, IssueCount = 1, CanSelect = true, NavigationKind = "SceneObject", NavigationLabel = "Select in Hierarchy" });
             OverviewProjection overview = new OverviewProjection { Summary = "Summary A", NextAction = "Inspect A", Reason = "Reason.A", IssueCount = 1 };
             GuideProjection guide = new GuideProjection();
             guide.Rows.Add(new GuideRow { OwnerId = "issue:a", Title = "Issue A", Detail = "Detail A", NativeAction = "Action A", SuccessCheck = "Check A" });
@@ -551,17 +887,35 @@ namespace Pys.Authoring.Editor.Tests
             Assert.That(factsJson, Does.Contain("\"assemblyCount\": 2"));
             Assert.That(factsJson, Does.Contain("\"issueCount\": 3"));
             Assert.That(mapJson, Does.Contain("\"label\": \"Object A\""));
+            Assert.That(mapJson, Does.Contain("\"canSelect\": true"));
+            Assert.That(mapJson, Does.Contain("\"navigationLabel\": \"Select in Hierarchy\""));
             Assert.That(overviewJson, Does.Contain("\"nextAction\": \"Inspect A\""));
             Assert.That(guideJson, Does.Contain("\"successCheck\": \"Check A\""));
             Assert.That(hygieneJson, Does.Contain("\"lenses\""));
             Assert.That(hygieneJson, Does.Contain("\"kind\": \"Contracts\""));
             Assert.That(hygieneJson, Does.Contain("\"issueCode\": \"Contract.Metadata.Missing\""));
+            Assert.That(hygieneJson, Does.Contain("\"sourceKind\": \"Contract\""));
+            Assert.That(hygieneJson, Does.Contain("\"claim\": \"Contract should describe enough metadata for projections.\""));
+            Assert.That(hygieneJson, Does.Contain("\"recommendation\": \"Complete the contract metadata on the declaring type.\""));
+
+            IntentProjection unityIntent = AuthoringProjectionBuilder.BuildIntent(DependencyGraphProjection.Build(new UnityCodebaseScanResult()), string.Empty, true);
+            string unityIntentJson = ProjectionJsonExporter.ToIntentJson(unityIntent, "Assets");
+            Assert.That(unityIntentJson, Does.Contain("\"intentSource\": \"BuiltInUnitySetup\""));
+            Assert.That(unityIntentJson, Does.Contain("\"priority\": 100"));
         }
 
         [Test]
         public void ExportIntentJson_MirrorsIntentProjection()
         {
-            IntentProjection intent = new IntentProjection { SelectableCount = 1 };
+            IntentProjection intent = new IntentProjection
+            {
+                SelectableCount = 1,
+                SelectedContractId = "contract:a",
+                SelectedDisplayName = "Contract A",
+                SelectedFeatureToggles = "Combat\nCamera",
+                SelectedLane = "Sprite2D",
+                SelectedCompositionSummary = "Selected intent composition uses lane: Sprite2D; features: Combat, Camera."
+            };
             intent.Rows.Add(new IntentRow
             {
                 ContractId = "contract:a",
@@ -576,6 +930,9 @@ namespace Pys.Authoring.Editor.Tests
             string json = ProjectionJsonExporter.ToIntentJson(intent, "Assets");
 
             Assert.That(json, Does.Contain("\"selectableCount\": 1"));
+            Assert.That(json, Does.Contain("\"selectedFeatureToggles\": \"Combat\\nCamera\""));
+            Assert.That(json, Does.Contain("\"selectedLane\": \"Sprite2D\""));
+            Assert.That(json, Does.Contain("\"selectedCompositionSummary\": \"Selected intent composition uses lane: Sprite2D; features: Combat, Camera.\""));
             Assert.That(json, Does.Contain("\"displayName\": \"Contract A\""));
             Assert.That(json, Does.Contain("\"capabilityPath\": \"System/A\""));
         }
@@ -634,6 +991,17 @@ namespace Pys.Authoring.Editor.Tests
             for (int i = 0; i < graph.Nodes.Count; i++)
             {
                 if (graph.Nodes[i].Kind == kind)
+                    return graph.Nodes[i];
+            }
+
+            return null;
+        }
+
+        private static AuthoringGraphNode FindNode(AuthoringGraph graph, string id)
+        {
+            for (int i = 0; i < graph.Nodes.Count; i++)
+            {
+                if (graph.Nodes[i].Id == id)
                     return graph.Nodes[i];
             }
 

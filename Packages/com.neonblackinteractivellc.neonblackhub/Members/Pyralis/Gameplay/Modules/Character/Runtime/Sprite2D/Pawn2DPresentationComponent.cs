@@ -1,7 +1,6 @@
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Data.Participants;
 using NeonBlack.Gameplay.Core.Types.Animation;
-using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using Pys.Authoring.Contracts;
@@ -26,7 +25,6 @@ namespace NeonBlack.Gameplay.Modules.Character
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Modules/Character/Sprite2D/Pawn 2D Presentation Component")]
     [RequireComponent(typeof(Pawn2DMovementComponent))]
-    [RequireComponent(typeof(ActorAnimationDriver))]
     public sealed partial class Pawn2DPresentationComponent : MonoBehaviour, IPawnPresentationModule, IRuntimeValidationProvider
     {
         private const float MovementInputThresholdSqr = 0.01f;
@@ -57,7 +55,7 @@ namespace NeonBlack.Gameplay.Modules.Character
         [SerializeField] private AudioClip dashClip;
 
         private Pawn2DMovementComponent movement;
-        private ActorAnimationDriver animationDriver;
+        private IActorAnimationController animationDriver;
         private AudioSource audioSource;
         private Vector3 baseScale;
         private float currentTiltAngle;
@@ -66,7 +64,7 @@ namespace NeonBlack.Gameplay.Modules.Character
         private void Awake()
         {
             movement = GetComponent<Pawn2DMovementComponent>();
-            animationDriver = GetComponent<ActorAnimationDriver>();
+            animationDriver = GetComponent<IActorAnimationController>();
             baseScale = transform.localScale;
             animator ??= GetComponent<Animator>();
             spriteRenderer ??= GetComponent<SpriteRenderer>() ?? GetComponentInChildren<SpriteRenderer>(true);

@@ -1,6 +1,5 @@
 using NeonBlack.Gameplay.Data.Participants;
 using UnityEngine;
-using VContainer;
 
 namespace NeonBlack.Gameplay.Modules.Feedback
 {
@@ -8,10 +7,11 @@ namespace NeonBlack.Gameplay.Modules.Feedback
     public class ParticipantFeedbackRelay : MonoBehaviour, IActorFeedbackReceiver
     {
         private IParticipantFeedbackPublisher _publisher;
-        [Inject]
-        private void Construct(IParticipantFeedbackPublisher publisher = null)
+
+        public void ConfigureRuntime(IParticipantFeedbackPublisher publisher)
         {
-            _publisher = publisher;
+            if (publisher != null)
+                _publisher = publisher;
         }
 
         public void HandleFeedbackEvent(ActorFeedbackEvent feedbackEvent)

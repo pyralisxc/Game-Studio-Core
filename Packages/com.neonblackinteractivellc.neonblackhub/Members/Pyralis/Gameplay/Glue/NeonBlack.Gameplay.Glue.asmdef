@@ -1,0 +1,32 @@
+{
+  "name": "NeonBlack.Gameplay.Glue",
+  "references": [
+    "NeonBlack.Gameplay.Core",
+    "NeonBlack.Gameplay.Data",
+    "NeonBlack.Gameplay.Modules.Character",
+    "NeonBlack.Gameplay.Modules.Combat",
+    "NeonBlack.Gameplay.Modules.Enemies",
+    "NeonBlack.Gameplay.Modules.Feedback",
+    "NeonBlack.Gameplay.Modules.Hazards",
+    "NeonBlack.Gameplay.Modules.Input",
+    "NeonBlack.Gameplay.Modules.Interaction",
+    "NeonBlack.Gameplay.Modules.Rpg",
+    "NeonBlack.Gameplay.Modules.Rpg.UI",
+    "NeonBlack.Gameplay.Modules.Scoring",
+    "NeonBlack.Gameplay.Presentation",
+    "Unity.InputSystem",
+    "Unity.Cinemachine",
+    "Unity.TextMeshPro",
+    "UnityEngine.UI",
+    "VContainer",
+    "Pys.Authoring.Contracts"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": []
+}

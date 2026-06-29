@@ -5,7 +5,7 @@ namespace NeonBlack.Gameplay.Modules.Character
 {
     public sealed partial class Pawn2DMovementComponent
     {
-        private void TickSideViewGravityMovement()
+        private void TickSideViewGravityMovement(float fixedDeltaTime)
         {
             UpdateGroundedState();
 
@@ -13,7 +13,7 @@ namespace NeonBlack.Gameplay.Modules.Character
             float targetX = (IsActionLocked ? 0f : moveDirection.x) * MoveSpeed;
             float rate = Mathf.Abs(targetX) > 0.01f ? acceleration : deceleration;
             velocity.x = rate > 0f
-                ? Mathf.MoveTowards(velocity.x, targetX, rate * Time.fixedDeltaTime)
+                ? Mathf.MoveTowards(velocity.x, targetX, rate * fixedDeltaTime)
                 : targetX;
 
             if (jumpQueued && isGrounded)

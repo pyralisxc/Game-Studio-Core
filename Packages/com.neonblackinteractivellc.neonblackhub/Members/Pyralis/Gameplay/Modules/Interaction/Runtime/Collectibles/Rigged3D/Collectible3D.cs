@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
-using VContainer;
 using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Interaction
@@ -22,7 +21,7 @@ namespace NeonBlack.Gameplay.Modules.Interaction
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Interaction/Collectibles/Collectible 3D")]
     [RequireComponent(typeof(Collider))]
-    public class Collectible3D : MonoBehaviour, IPickupCollectible, IRuntimeValidationProvider
+    public class Collectible3D : GameplayTickBehaviour, IPickupCollectible, IRuntimeValidationProvider
     {
         public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
@@ -42,6 +41,9 @@ namespace NeonBlack.Gameplay.Modules.Interaction
         private float _localTime;
         private IPickupAwardSink _awardSink;
 
+        protected override GameplayTickDomain TickDomain => GameplayTickDomain.Interaction;
+        protected override bool UsesGameplayTick => true;
+
         private void OnEnable()
         {
             _originPos = transform.position;
@@ -50,20 +52,14 @@ namespace NeonBlack.Gameplay.Modules.Interaction
             _awardSink ??= ResolveAwardSink();
         }
 
-        private void Update()
+        protected override void OnGameplayTick(in GameplayTickContext context)
         {
             if (!_alive)
                 return;
 
-            _localTime += Time.deltaTime;
+            _localTime += context.DeltaTime;
             float yOffset = Mathf.Sin(_localTime * bobSpeed) * bobHeight;
             transform.position = new Vector3(_originPos.x, _originPos.y + yOffset, _originPos.z);
-        }
-
-        [Inject]
-        private void Construct(IPickupAwardSink awardSink = null)
-        {
-            _awardSink = awardSink;
         }
 
         public void CollectBy(GameObject collector)

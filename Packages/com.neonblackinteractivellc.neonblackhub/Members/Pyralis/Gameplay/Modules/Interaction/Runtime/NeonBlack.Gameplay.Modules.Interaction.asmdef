@@ -3,7 +3,6 @@
   "references": [
     "NeonBlack.Gameplay.Core",
     "NeonBlack.Gameplay.Data",
-    "VContainer",
     "Pys.Authoring.Contracts"
   ],
   "includePlatforms": [],

@@ -5,7 +5,6 @@
     "NeonBlack.Gameplay.Data",
     "Unity.InputSystem",
     "UnityEngine.UI",
-    "VContainer",
     "Pys.Authoring.Contracts"
   ],
   "includePlatforms": [],

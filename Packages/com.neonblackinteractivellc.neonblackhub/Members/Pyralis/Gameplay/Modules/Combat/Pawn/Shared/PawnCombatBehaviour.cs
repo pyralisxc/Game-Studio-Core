@@ -1,9 +1,7 @@
 using NeonBlack.Gameplay.Data.Definitions.Combat;
-using NeonBlack.Gameplay.Modules.Combat;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Participants;
 using UnityEngine;
-using VContainer;
 using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Combat
@@ -19,20 +17,18 @@ namespace NeonBlack.Gameplay.Modules.Combat
         SuccessChecks = new[] { "Perform an attack combo in Play Mode and verify that 'HitBox.Fire()' is called via animation events and damage is applied." },
         Tags = new[] { "capability:MeleeFlow", "axiom:Realtime", "lane:Combat", "priority:Primary" }
     )]
-[AddComponentMenu("NeonBlack/Gameplay/Modules/Combat/Pawn/Pawn Combat Behaviour")]
+    [AddComponentMenu("NeonBlack/Gameplay/Modules/Combat/Pawn/Pawn Combat Behaviour")]
     [RequireComponent(typeof(PawnHitBoxModule))]
     [RequireComponent(typeof(PawnDamageModule))]
     [RequireComponent(typeof(PawnProjectileModule))]
     [RequireComponent(typeof(PawnBlockModule))]
     [RequireComponent(typeof(PawnWeaponModule))]
-    public partial class PawnCombatBehaviour : MonoBehaviour, IPawnCombatModule, IActorCombatMovementInfluence, IActorCombatRuntimeTickReceiver, IActorCombatRequestReceiver, IActorGuardController, ICombatActionStateReader, IDamageModifier, IActorCombatModifierReceiver, IRuntimeValidationProvider
+    public partial class PawnCombatBehaviour : GameplayTickBehaviour, IPawnCombatModule, IActorCombatMovementInfluence, IActorCombatRequestReceiver, IActorGuardController, ICombatActionStateReader, IDamageModifier, IActorCombatModifierReceiver, IRuntimeValidationProvider
     {
         private PawnCombatRuntimeReferences _runtime;
         private PawnComboProcessor _comboProcessor;
         private readonly CombatActionStateMachine _actionStateMachine = new CombatActionStateMachine();
 
-        private int _attackCount;
-        private int _kickCount;
         private float _attackTimer;
         private float _kickTimer;
         private int _aerialAttackCount;
@@ -57,8 +53,9 @@ namespace NeonBlack.Gameplay.Modules.Combat
         public float AerialAttackMoveMultiplier => aerialAttackMoveMultiplier;
         public float CombatTimer => _combatTimer;
         public CombatActionState ActionState => _actionStateMachine.CurrentState;
+        protected override GameplayTickDomain TickDomain => GameplayTickDomain.Combat;
+        protected override bool UsesGameplayTick => true;
 
-        [Inject]
         public void Construct(PawnComboProcessor comboProcessor)
         {
             _comboProcessor = comboProcessor;
@@ -87,9 +84,13 @@ namespace NeonBlack.Gameplay.Modules.Combat
             UnsubscribeHitBoxes();
         }
 
-        public void UpdateCombatTimers()
+        protected override void OnGameplayTick(in GameplayTickContext context)
         {
-            float dt = Time.deltaTime;
+            TickCombatTimers(context.DeltaTime);
+        }
+
+        private void TickCombatTimers(float dt)
+        {
             _attackTimer -= dt;
             _kickTimer -= dt;
             _aerialTimer -= dt;
@@ -120,11 +121,8 @@ namespace NeonBlack.Gameplay.Modules.Combat
 
             if (primarySequence != null && primarySequence.actions != null && primarySequence.actions.Length > 0)
             {
-                ExecuteSequenceAction(_comboProcessor.PrimaryState, primarySequence, CombatInputType.Primary, WeaponModule.AttackWeapon, "Punch", ref _attackTimer, attackCooldown);
-                return;
+                ExecuteSequenceAction(_comboProcessor.PrimaryState, primarySequence, CombatInputType.Primary, WeaponModule.AttackWeapon, ref _attackTimer, attackCooldown);
             }
-
-            ExecuteFallbackAttack();
         }
 
         public void HandleKick()
@@ -139,11 +137,8 @@ namespace NeonBlack.Gameplay.Modules.Combat
 
             if (secondarySequence != null && secondarySequence.actions != null && secondarySequence.actions.Length > 0)
             {
-                ExecuteSequenceAction(_comboProcessor.SecondaryState, secondarySequence, CombatInputType.Secondary, WeaponModule.KickWeapon, "Kick", ref _kickTimer, kickCooldown);
-                return;
+                ExecuteSequenceAction(_comboProcessor.SecondaryState, secondarySequence, CombatInputType.Secondary, WeaponModule.KickWeapon, ref _kickTimer, kickCooldown);
             }
-
-            ExecuteFallbackKick();
         }
 
         public void HandleBlockStart() => BlockModule?.HandleBlockStart();
@@ -178,13 +173,11 @@ namespace NeonBlack.Gameplay.Modules.Combat
 
         public void ResetAttackCombo()
         {
-            _attackCount = 0;
             _comboProcessor.ResetPrimary();
         }
 
         public void ResetKickCombo()
         {
-            _kickCount = 0;
             _comboProcessor.ResetSecondary();
         }
 

@@ -76,7 +76,7 @@ public partial class Hazard
         Vector2 toPlayer    = ((Vector2)Player.position - (Vector2)transform.position).normalized;
         float currentAngle  = Mathf.Atan2(currentDir.y, currentDir.x) * Mathf.Rad2Deg;
         float targetAngle   = Mathf.Atan2(toPlayer.y, toPlayer.x) * Mathf.Rad2Deg;
-        float maxDeg        = _data.trackingStrength * 720f * Time.deltaTime;
+        float maxDeg        = _data.trackingStrength * 720f * GameplayDeltaTime;
         float newAngle      = Mathf.MoveTowardsAngle(currentAngle, targetAngle, maxDeg);
         currentDir = new Vector2(Mathf.Cos(newAngle * Mathf.Deg2Rad), Mathf.Sin(newAngle * Mathf.Deg2Rad));
     }
@@ -88,12 +88,12 @@ public partial class Hazard
         float driftSpeed = _data.trackingStrength * _data.moveSpeed;
         while (elapsed < duration)
         {
-            elapsed += Time.deltaTime;
+            elapsed += GameplayDeltaTime;
             if (Player != null && Player.gameObject.activeInHierarchy
                 && Vector2.Distance(transform.position, Player.position) > _data.lockOnRadius)
             {
                 Vector2 toPlayer = ((Vector2)Player.position - (Vector2)transform.position).normalized;
-                transform.position = (Vector2)transform.position + toPlayer * driftSpeed * Time.deltaTime;
+                transform.position = (Vector2)transform.position + toPlayer * driftSpeed * GameplayDeltaTime;
             }
             yield return null;
         }
@@ -144,8 +144,8 @@ public partial class Hazard
         float startAlpha = _shadowRenderer != null ? _shadowRenderer.color.a : 1f;
         while (elapsed < duration)
         {
-            elapsed   += Time.deltaTime;
-            fadeTimer += Time.deltaTime;
+            elapsed   += GameplayDeltaTime;
+            fadeTimer += GameplayDeltaTime;
             if (fadeTimer >= fadeAlphaInterval)
             {
                 fadeTimer = 0f;
@@ -175,7 +175,7 @@ public partial class Hazard
     private const float CollectibleSweepInterval = 0.2f;
     private void TryTravelCollectibleSweep()
     {
-        _collectibleSweepTimer += Time.deltaTime;
+        _collectibleSweepTimer += GameplayDeltaTime;
         if (_collectibleSweepTimer < CollectibleSweepInterval) return;
         _collectibleSweepTimer = 0f;
         DestroyCollectiblesInRadius();

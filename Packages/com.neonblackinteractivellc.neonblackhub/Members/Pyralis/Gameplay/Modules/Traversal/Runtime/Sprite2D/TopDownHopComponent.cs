@@ -1,7 +1,6 @@
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Types.Animation;
-using NeonBlack.Gameplay.Presentation.Animation;
 using UnityEngine;
 using Pys.Authoring.Contracts;
 
@@ -35,14 +34,14 @@ namespace NeonBlack.Gameplay.Modules.Traversal
         RoleTags = new[] { "VisualHop", "FakeGravityJump", "JumpConsumer" },
         Tags = new[] { "capability:Movement", "capability:Traversal", "runtime:CharacterPawnGameplay", "axiom:Dimensions2D", "axiom:GravityNone", "axiom:Realtime", "lane:Traversal" }
     )]
-public sealed class TopDownHopComponent : MonoBehaviour, IActorGameplayActionReceiver
+public sealed class TopDownHopComponent : GameplayTickBehaviour, IActorGameplayActionReceiver
 {
         [SerializeField] private TopDownHopProfile hopProfile;
         [SerializeField, Tooltip("Optional visual transform to lift. If empty, the runtime uses a child SpriteRenderer or Animator.")]
         private Transform visualTransform;
 
         private Transform _actorTransform;
-        private ActorAnimationDriver _animationDriver;
+        private IActorAnimationController _animationDriver;
         private Vector3 _baseLocalPosition;
         private float _hopTimer;
         private float _cooldownTimer;
@@ -52,6 +51,8 @@ public sealed class TopDownHopComponent : MonoBehaviour, IActorGameplayActionRec
         public float HopProgress => _isHopping && hopProfile != null
             ? Mathf.Clamp01(_hopTimer / Mathf.Max(0.01f, hopProfile.duration))
             : 0f;
+        protected override GameplayTickDomain TickDomain => GameplayTickDomain.Traversal;
+        protected override bool UsesGameplayTick => true;
         private void Awake()
         {
             ResolveReferences(gameObject);
@@ -85,15 +86,15 @@ public sealed class TopDownHopComponent : MonoBehaviour, IActorGameplayActionRec
             return true;
         }
 
-        private void Update()
+        protected override void OnGameplayTick(in GameplayTickContext context)
         {
             if (_cooldownTimer > 0f)
-                _cooldownTimer = Mathf.Max(0f, _cooldownTimer - Time.deltaTime);
+                _cooldownTimer = Mathf.Max(0f, _cooldownTimer - context.DeltaTime);
 
             if (!_isHopping || hopProfile == null || visualTransform == null)
                 return;
 
-            _hopTimer += Time.deltaTime;
+            _hopTimer += context.DeltaTime;
             float progress = Mathf.Clamp01(_hopTimer / Mathf.Max(0.01f, hopProfile.duration));
             float lift = Mathf.Sin(progress * Mathf.PI) * hopProfile.height;
             visualTransform.localPosition = _baseLocalPosition + Vector3.up * lift;
@@ -132,7 +133,7 @@ public sealed class TopDownHopComponent : MonoBehaviour, IActorGameplayActionRec
                 actorObject = gameObject;
 
             _actorTransform ??= actorObject.transform;
-            _animationDriver ??= actorObject.GetComponent<ActorAnimationDriver>();
+            _animationDriver ??= actorObject.GetComponent<IActorAnimationController>();
 
             if (visualTransform != null)
             {

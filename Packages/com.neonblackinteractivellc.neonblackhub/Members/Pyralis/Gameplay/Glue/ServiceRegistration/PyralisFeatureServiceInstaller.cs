@@ -1,13 +1,10 @@
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions.Rpg;
-using NeonBlack.Gameplay.Modules.Combat;
-using NeonBlack.Gameplay.Modules.Enemies;
-using NeonBlack.Gameplay.Modules.Feedback;
 using NeonBlack.Gameplay.Glue.SceneFlow.Arcade2D;
 using NeonBlack.Gameplay.Data.Rpg;
-using NeonBlack.Gameplay.Modules.Rpg.Runtime;
-using NeonBlack.Gameplay.Modules.Scoring;
+using NeonBlack.Gameplay.Modules.Rpg.UI;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using VContainer;
 using VContainer.Unity;
 
@@ -50,7 +47,8 @@ namespace NeonBlack.Gameplay.Glue.ServiceRegistration
             ItemCatalogDefinition itemCatalog,
             ProgressionCurveDefinition progressionCurve)
         {
-            PyralisRpgServiceInstaller.Register(builder, itemCatalog, progressionCurve);
+            PyralisRpgRuntimeServices services = PyralisRpgServiceInstaller.Register(builder, itemCatalog, progressionCurve);
+            ConfigureRpgUi(services);
         }
 
         public static void RegisterGameFlowServices(IContainerBuilder builder, GameManager gameManager)
@@ -70,6 +68,47 @@ namespace NeonBlack.Gameplay.Glue.ServiceRegistration
         private static T FindServiceInHierarchy<T>(Component scopeRoot) where T : class
         {
             return scopeRoot != null ? scopeRoot.GetComponentInChildren<T>(true) : null;
+        }
+
+        private static void ConfigureRpgUi(PyralisRpgRuntimeServices services)
+        {
+            for (int sceneIndex = 0; sceneIndex < SceneManager.sceneCount; sceneIndex++)
+            {
+                Scene scene = SceneManager.GetSceneAt(sceneIndex);
+                if (!scene.isLoaded)
+                    continue;
+
+                foreach (GameObject root in scene.GetRootGameObjects())
+                    ConfigureRpgUiRoot(root, services);
+            }
+        }
+
+        private static void ConfigureRpgUiRoot(GameObject root, PyralisRpgRuntimeServices services)
+        {
+            RpgDialoguePanelPresenter[] dialoguePanels = root.GetComponentsInChildren<RpgDialoguePanelPresenter>(true);
+            for (int i = 0; i < dialoguePanels.Length; i++)
+                dialoguePanels[i].ConfigureRuntime(services.DialogueService);
+
+            RpgLoadoutPanelPresenter[] loadoutPanels = root.GetComponentsInChildren<RpgLoadoutPanelPresenter>(true);
+            for (int i = 0; i < loadoutPanels.Length; i++)
+                loadoutPanels[i].ConfigureRuntime(services.EquipmentService);
+
+            RpgQuestBoardPanelPresenter[] questPanels = root.GetComponentsInChildren<RpgQuestBoardPanelPresenter>(true);
+            for (int i = 0; i < questPanels.Length; i++)
+                questPanels[i].ConfigureRuntime(services.QuestService);
+
+            RpgSkillTreePanelPresenter[] skillPanels = root.GetComponentsInChildren<RpgSkillTreePanelPresenter>(true);
+            for (int i = 0; i < skillPanels.Length; i++)
+                skillPanels[i].ConfigureRuntime(services.ProgressionService, services.SkillTreeService);
+
+            RpgVendorPanelPresenter[] vendorPanels = root.GetComponentsInChildren<RpgVendorPanelPresenter>(true);
+            for (int i = 0; i < vendorPanels.Length; i++)
+                vendorPanels[i].ConfigureRuntime(services.VendorService);
+
+            HubInteractionHudPresenter hudPresenter = root.GetComponentInChildren<HubInteractionHudPresenter>(true);
+            HubInteractionSceneController[] hubControllers = root.GetComponentsInChildren<HubInteractionSceneController>(true);
+            for (int i = 0; i < hubControllers.Length; i++)
+                hubControllers[i].ConfigureRuntime(services.HubInteractionService, hudPresenter);
         }
     }
 }

@@ -2,9 +2,7 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Definitions.Combat;
 using NeonBlack.Gameplay.Data.Participants;
 using NeonBlack.Gameplay.Data.Profiles;
-using NeonBlack.Gameplay.Modules.Combat;
 using UnityEngine;
-
 using NeonBlack.Gameplay.Core.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Combat
@@ -32,10 +30,21 @@ namespace NeonBlack.Gameplay.Modules.Combat
 
         public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
+            if (!HasActions(primarySequence))
+                yield return PyralisRuntimeValidationIssue.Required("Primary Sequence needs at least one CombatActionDefinition. PawnCombatBehaviour does not invent local primary attacks.");
+            if (!HasActions(secondarySequence))
+                yield return PyralisRuntimeValidationIssue.Required("Secondary Sequence needs at least one CombatActionDefinition. PawnCombatBehaviour does not invent local secondary attacks.");
+            if (maxAerialAttacks > 0 && !HasActions(aerialSequence))
+                yield return PyralisRuntimeValidationIssue.Required("Aerial Sequence needs at least one CombatActionDefinition when Max Aerial Attacks is greater than zero.");
             if (attackCooldown < 0f)
                 yield return PyralisRuntimeValidationIssue.Required("Attack Cooldown cannot be negative.");
             if (maxAerialAttacks < 0)
                 yield return PyralisRuntimeValidationIssue.Required("Max Aerial Attacks cannot be negative.");
+        }
+
+        private static bool HasActions(CombatSequenceDefinition sequence)
+        {
+            return sequence != null && sequence.actions != null && sequence.actions.Length > 0;
         }
 
         public void ApplyCombatProfile(PawnProfileApplicationContext context, PawnCombatProfile profile)

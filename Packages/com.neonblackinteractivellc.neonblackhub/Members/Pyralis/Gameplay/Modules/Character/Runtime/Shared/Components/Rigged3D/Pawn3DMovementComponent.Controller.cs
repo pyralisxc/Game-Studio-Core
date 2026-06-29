@@ -9,7 +9,7 @@ namespace NeonBlack.Gameplay.Modules.Character
         /// Apply model velocity + knockback via CharacterController and record
         /// this frame's physics results for the next <see cref="Tick"/> call.
         /// </summary>
-        public void ApplyMovement(Vector3 modelVelocity)
+        public void ApplyMovement(Vector3 modelVelocity, float deltaTime)
         {
             if (!_runtime.Controller.enabled) return;
 
@@ -18,11 +18,11 @@ namespace NeonBlack.Gameplay.Modules.Character
             Vector3 knockbackVelocity = Vector3.zero;
             if (_runtime.Knockback != null)
             {
-                _runtime.Knockback.Tick(Time.deltaTime);
+                _runtime.Knockback.Tick(deltaTime);
                 knockbackVelocity = _runtime.Knockback.Velocity;
             }
 
-            CollisionFlags flags = _runtime.Controller.Move((modelVelocity + knockbackVelocity) * Time.deltaTime);
+            CollisionFlags flags = _runtime.Controller.Move((modelVelocity + knockbackVelocity) * deltaTime);
 
             bool byCollision = (flags & CollisionFlags.Below) != 0;
             bool byProbe = false;

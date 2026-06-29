@@ -4,7 +4,6 @@ using TMPro;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using UnityEngine.UI;
-using VContainer;
 using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Scoring
@@ -64,10 +63,10 @@ namespace NeonBlack.Gameplay.Modules.Scoring
         private UnityEngine.Events.UnityAction _onBack;
         private ILeaderboardService _leaderboardService;
 
-        [Inject]
-        private void Construct(ILeaderboardService leaderboardService = null)
+        public void ConfigureRuntime(ILeaderboardService leaderboardService)
         {
-            _leaderboardService = leaderboardService;
+            if (leaderboardService != null)
+                _leaderboardService = leaderboardService;
         }
 
         private void Start()

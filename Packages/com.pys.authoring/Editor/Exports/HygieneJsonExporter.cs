@@ -109,6 +109,14 @@ namespace Pys.Authoring.Editor.Exports
             public string severity;
             public string ownerId;
             public string detail;
+            public string sourceKind;
+            public string sourcePath;
+            public string evidenceIds;
+            public string claim;
+            public string evidence;
+            public string recommendation;
+            public string confidence;
+            public bool canNavigate;
 
             public static HygieneRowDto FromRow(HygieneRow row)
             {
@@ -119,7 +127,15 @@ namespace Pys.Authoring.Editor.Exports
                     title = row != null ? row.Title : string.Empty,
                     severity = row != null ? row.Severity.ToString() : string.Empty,
                     ownerId = row != null ? row.OwnerId : string.Empty,
-                    detail = row != null ? row.Detail : string.Empty
+                    detail = row != null ? row.Detail : string.Empty,
+                    sourceKind = row != null ? row.SourceKind : string.Empty,
+                    sourcePath = row != null ? row.SourcePath : string.Empty,
+                    evidenceIds = row != null ? row.EvidenceIds : string.Empty,
+                    claim = row != null ? row.Claim : string.Empty,
+                    evidence = row != null ? row.Evidence : string.Empty,
+                    recommendation = row != null ? row.Recommendation : string.Empty,
+                    confidence = row != null ? row.Confidence : string.Empty,
+                    canNavigate = row != null && row.CanNavigate
                 };
             }
         }

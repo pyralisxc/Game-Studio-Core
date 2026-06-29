@@ -1,7 +1,6 @@
 using NeonBlack.Gameplay.Data.Participants;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
-using VContainer;
 using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Interaction
@@ -36,7 +35,7 @@ namespace NeonBlack.Gameplay.Modules.Interaction
         Tags = new[] { "capability:Audio", "capability:VFX" }
     )]
 [AddComponentMenu("NeonBlack/Gameplay/Interaction/Collectibles/Collectible Feedback 2D")]
-public partial class CollectibleFeedback2D : MonoBehaviour, IPickupAwardSink, IRuntimeValidationProvider
+public partial class CollectibleFeedback2D : MonoBehaviour, IPickupAwardSink, IGameplayRuntimeServicesReceiver, IRuntimeValidationProvider
 {
     [Header("Collect Feedback")]
     [SerializeField, Tooltip("Sound played when the player collects a collectible.")]
@@ -64,15 +63,6 @@ public partial class CollectibleFeedback2D : MonoBehaviour, IPickupAwardSink, IR
     private IParticipantScoreAwardSink _participantScoreAwardSink;
     private bool _loggedMissingScoreAwardSink;
 
-    [Inject]
-    private void Construct(ISessionScoreAwardSink scoreAwardSink = null, IParticipantScoreAwardSink participantScoreAwardSink = null)
-    {
-        if (scoreAwardSink != null)
-            _scoreAwardSink = scoreAwardSink;
-        if (participantScoreAwardSink != null)
-            _participantScoreAwardSink = participantScoreAwardSink;
-    }
-
     private void Awake()
     {
         // Cache a 2D (non-spatial) AudioSource so clips have equal volume everywhere on screen.
@@ -97,6 +87,11 @@ public partial class CollectibleFeedback2D : MonoBehaviour, IPickupAwardSink, IR
             _scoreAwardSink = scoreAwardSink;
             _participantScoreAwardSink ??= scoreAwardSink as IParticipantScoreAwardSink;
         }
+    }
+
+    public void ApplyRuntimeServices(GameplayRuntimeServicesContext context)
+    {
+        ConfigureRuntime(context.SessionScoreAwardSink);
     }
 
     /// <summary>Play collect sound + particle burst at <paramref name="worldPos"/>.</summary>

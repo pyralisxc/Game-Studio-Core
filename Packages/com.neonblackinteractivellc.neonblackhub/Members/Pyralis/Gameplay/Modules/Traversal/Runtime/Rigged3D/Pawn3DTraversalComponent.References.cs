@@ -1,5 +1,5 @@
+using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Participants;
-using NeonBlack.Gameplay.Presentation.Animation;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Modules.Traversal
@@ -8,13 +8,13 @@ namespace NeonBlack.Gameplay.Modules.Traversal
     {
         private IPawnTraversalMovementController _movement;
         private CharacterController _controller;
-        private ActorAnimationDriver _animationDriver;
+        private IActorAnimationController _animationDriver;
 
         private void Awake()
         {
             _movement = GetComponent<IPawnTraversalMovementController>();
             _controller = GetComponent<CharacterController>();
-            _animationDriver = GetComponent<ActorAnimationDriver>();
+            _animationDriver = GetComponent<IActorAnimationController>();
             ApplySerializedTraversalProfile();
         }
 
@@ -22,7 +22,7 @@ namespace NeonBlack.Gameplay.Modules.Traversal
         {
             _movement ??= GetComponent<IPawnTraversalMovementController>();
             _controller ??= GetComponent<CharacterController>();
-            _animationDriver ??= GetComponent<ActorAnimationDriver>();
+            _animationDriver ??= GetComponent<IActorAnimationController>();
             return _movement != null && _controller != null;
         }
     }

@@ -24,6 +24,16 @@ namespace Pys.Authoring.Contracts
             RouteOrder = 0;
             SetupDomain = string.Empty;
             ProofTarget = string.Empty;
+            SuccessDescription = string.Empty;
+            ReadinessHint = string.Empty;
+            ValidationOwnerStableId = string.Empty;
+            ExpectedEvidence = new List<string>();
+            CompletionSignals = new List<string>();
+            IntentToggles = new List<string>();
+            IntentLanes = new List<string>();
+            CompatibleStableIds = new List<string>();
+            SupportingStableIds = new List<string>();
+            HoverExplanations = new List<string>();
             NativeActionKind = AuthoringActionKind.None;
             SetupSteps = new List<string>();
             SuccessChecks = new List<string>();
@@ -67,6 +77,26 @@ namespace Pys.Authoring.Contracts
         public string SetupDomain { get; set; }
 
         public string ProofTarget { get; set; }
+
+        public string SuccessDescription { get; set; }
+
+        public string ReadinessHint { get; set; }
+
+        public string ValidationOwnerStableId { get; set; }
+
+        public List<string> ExpectedEvidence { get; }
+
+        public List<string> CompletionSignals { get; }
+
+        public List<string> IntentToggles { get; }
+
+        public List<string> IntentLanes { get; }
+
+        public List<string> CompatibleStableIds { get; }
+
+        public List<string> SupportingStableIds { get; }
+
+        public List<string> HoverExplanations { get; }
 
         public AuthoringActionKind NativeActionKind { get; set; }
 

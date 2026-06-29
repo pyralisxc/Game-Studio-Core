@@ -21,7 +21,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
     /// <summary>
     /// Pure contract for time management. Deprecates static TimeManager access.
     /// </summary>
-    public interface ITimeManager : IHitPauseSink
+    public interface ITimeManager : IHitPauseSink, IGameplayTimePolicy
     {
     }
 

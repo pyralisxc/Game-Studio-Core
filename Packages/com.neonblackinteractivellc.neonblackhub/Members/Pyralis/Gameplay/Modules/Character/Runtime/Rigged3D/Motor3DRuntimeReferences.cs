@@ -14,7 +14,6 @@ namespace NeonBlack.Gameplay.Modules.Character
             Pawn3DMovementComponent movement,
             IPawnTraversalModule traversal,
             Pawn3DPresentationComponent presentation,
-            IActorCombatRuntimeTickReceiver combatTicker,
             IActorCombatRequestReceiver combatRequests,
             IActorHealthState health,
             IActorDamageImmunityController damageImmunity,
@@ -27,7 +26,6 @@ namespace NeonBlack.Gameplay.Modules.Character
             Movement = movement;
             Traversal = traversal;
             Presentation = presentation;
-            CombatTicker = combatTicker;
             CombatRequests = combatRequests;
             Health = health;
             DamageImmunity = damageImmunity;
@@ -40,7 +38,6 @@ namespace NeonBlack.Gameplay.Modules.Character
         public Pawn3DMovementComponent Movement { get; }
         public IPawnTraversalModule Traversal { get; }
         public Pawn3DPresentationComponent Presentation { get; }
-        public IActorCombatRuntimeTickReceiver CombatTicker { get; }
         public IActorCombatRequestReceiver CombatRequests { get; }
         public IActorHealthState Health { get; }
         public IActorDamageImmunityController DamageImmunity { get; }
@@ -56,7 +53,6 @@ namespace NeonBlack.Gameplay.Modules.Character
                 owner != null ? owner.GetComponent<Pawn3DMovementComponent>() : null,
                 owner != null ? owner.GetComponent<IPawnTraversalModule>() : null,
                 owner != null ? owner.GetComponent<Pawn3DPresentationComponent>() : null,
-                owner != null ? owner.GetComponent<IActorCombatRuntimeTickReceiver>() : null,
                 owner != null ? owner.GetComponent<IActorCombatRequestReceiver>() : null,
                 owner != null ? owner.GetComponent<IActorHealthState>() : null,
                 owner != null ? owner.GetComponent<IActorDamageImmunityController>() : null,

@@ -30,8 +30,8 @@ namespace NeonBlack.Gameplay.Modules.Hazards.Zones
             {
                 Vector3 delta = state.healthComponent.transform.position - sourceTransform.position;
                 delta.z = 0f;
-                Vector3 fallback = profile.useUpwardKnockback ? Vector3.up : Vector3.right;
-                Vector3 direction = delta.sqrMagnitude > 0.0001f ? delta.normalized : fallback;
+                Vector3 defaultDirection = profile.useUpwardKnockback ? Vector3.up : Vector3.right;
+                Vector3 direction = delta.sqrMagnitude > 0.0001f ? delta.normalized : defaultDirection;
                 state.knockback.ApplyKnockback(direction * profile.knockbackForce);
             }
 
@@ -95,14 +95,12 @@ namespace NeonBlack.Gameplay.Modules.Hazards.Zones
             GameObject source,
             Transform sourceTransform,
             HazardImpactProfile impactProfile,
-            float fallbackDamagePerTick,
-            float fallbackTickInterval,
-            float fallbackKnockbackForce)
+            float deltaTime)
         {
-            if (_targets.Count == 0)
+            if (_targets.Count == 0 || impactProfile == null)
                 return;
 
-            float interval = impactProfile != null ? impactProfile.tickInterval : fallbackTickInterval;
+            float interval = impactProfile.tickInterval;
 
             for (int i = _targets.Count - 1; i >= 0; i--)
             {
@@ -116,7 +114,7 @@ namespace NeonBlack.Gameplay.Modules.Hazards.Zones
                     continue;
                 }
 
-                state.timer -= Time.deltaTime;
+                state.timer -= deltaTime;
                 if (state.timer > 0f)
                 {
                     _targets[i] = state;
@@ -126,15 +124,7 @@ namespace NeonBlack.Gameplay.Modules.Hazards.Zones
                 state.timer = interval;
                 _targets[i] = state;
 
-                if (impactProfile != null)
-                {
-                    DamageZoneImpactRuntime.ApplyProfileImpact(source, sourceTransform, state, impactProfile);
-                    continue;
-                }
-
-                health.TakeDamage(fallbackDamagePerTick, state.healthComponent.transform.position, source);
-                if (fallbackKnockbackForce > 0f && state.knockback != null)
-                    state.knockback.ApplyKnockback(Vector3.up * fallbackKnockbackForce);
+                DamageZoneImpactRuntime.ApplyProfileImpact(source, sourceTransform, state, impactProfile);
             }
         }
     }

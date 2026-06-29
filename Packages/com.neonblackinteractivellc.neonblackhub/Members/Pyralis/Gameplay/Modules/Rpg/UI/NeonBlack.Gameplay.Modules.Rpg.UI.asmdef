@@ -6,7 +6,6 @@
     "NeonBlack.Gameplay.Modules.Rpg",
     "Unity.TextMeshPro",
     "UnityEngine.UI",
-    "VContainer",
     "Pys.Authoring.Contracts"
   ],
   "includePlatforms": [],

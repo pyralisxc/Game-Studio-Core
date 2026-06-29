@@ -1,5 +1,4 @@
 using NeonBlack.Gameplay.Data.Participants;
-using VContainer;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Modules.Feedback.UI
@@ -12,11 +11,13 @@ namespace NeonBlack.Gameplay.Modules.Feedback.UI
 
         private IParticipantRoster _participantRoster;
 
-        [Inject]
-        private void Construct(IParticipantRoster participantRoster = null)
+        public void ConfigureRuntime(IParticipantRoster participantRoster)
         {
-            _participantRoster = participantRoster;
-            OnBindingsConstructed();
+            if (participantRoster != null)
+            {
+                _participantRoster = participantRoster;
+                OnBindingsConstructed();
+            }
         }
 
         protected virtual void OnBindingsConstructed()

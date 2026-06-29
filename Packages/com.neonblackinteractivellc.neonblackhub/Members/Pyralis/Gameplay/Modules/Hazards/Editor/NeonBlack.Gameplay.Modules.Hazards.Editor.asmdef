@@ -2,7 +2,8 @@
   "name": "NeonBlack.Gameplay.Modules.Hazards.Editor",
   "references": [
     "NeonBlack.Gameplay.Modules.Hazards",
-    "NeonBlack.Gameplay.Editor"
+    "NeonBlack.Gameplay.Editor",
+    "NeonBlack.Gameplay.Core"
   ],
   "includePlatforms": [
     "Editor"

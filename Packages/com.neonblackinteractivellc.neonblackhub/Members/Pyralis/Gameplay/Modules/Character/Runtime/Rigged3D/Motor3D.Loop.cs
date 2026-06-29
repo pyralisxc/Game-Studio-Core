@@ -6,39 +6,37 @@ namespace NeonBlack.Gameplay.Modules.Character
 {
     public partial class Motor3D
     {
-        private void Update()
+        protected override void OnGameplayTick(in GameplayTickContext context)
         {
             ResolveDirectCapabilities();
 
             if (_reactionLockTimer > 0f || _statusActionLocked)
             {
-                TickLockedFrame();
+                TickLockedFrame(context.DeltaTime);
                 return;
             }
 
             FrameInput frameInput = Input.CollectFrameInput();
-            CombatTicker?.UpdateCombatTimers();
             Presentation.UpdateLookAround(frameInput);
 
             ApplyPostureInput(frameInput);
             DispatchActionInput(frameInput);
             ApplyDodgeInput(frameInput);
 
-            Vector3 velocity = Movement.Tick(frameInput);
-            if (HandleTraversalFrame(frameInput))
+            Vector3 velocity = Movement.Tick(frameInput, context.DeltaTime);
+            if (HandleTraversalFrame(frameInput, context.DeltaTime))
                 return;
 
-            Movement.ApplyMovement(velocity);
+            Movement.ApplyMovement(velocity, context.DeltaTime);
             ApplyPresentation();
         }
 
-        private void TickLockedFrame()
+        private void TickLockedFrame(float deltaTime)
         {
             if (_reactionLockTimer > 0f)
-                _reactionLockTimer = Mathf.Max(0f, _reactionLockTimer - Time.deltaTime);
+                _reactionLockTimer = Mathf.Max(0f, _reactionLockTimer - deltaTime);
 
-            CombatTicker?.UpdateCombatTimers();
-            Movement.ApplyMovement(Vector3.zero);
+            Movement.ApplyMovement(Vector3.zero, deltaTime);
             ApplyPresentation();
         }
 
@@ -90,10 +88,10 @@ namespace NeonBlack.Gameplay.Modules.Character
                 DamageImmunity?.ForceIFrames(Movement.DodgeDuration);
         }
 
-        private bool HandleTraversalFrame(FrameInput frameInput)
+        private bool HandleTraversalFrame(FrameInput frameInput, float deltaTime)
         {
-            if ((TraversalFeature != null && TraversalFeature.HandleHangFrame(frameInput))
-                || (TraversalFeature == null && Traversal.HandleHangFrame(frameInput)))
+            if ((TraversalFeature != null && TraversalFeature.HandleHangFrame(frameInput, deltaTime))
+                || (TraversalFeature == null && Traversal.HandleHangFrame(frameInput, deltaTime)))
             {
                 ApplyPresentation();
                 return true;

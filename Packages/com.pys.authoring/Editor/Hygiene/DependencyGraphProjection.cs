@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Pys.Authoring.Contracts;
 using Pys.Authoring.Editor.Scanning;
+using Pys.Authoring.Editor.UnitySetup;
 using Pys.Authoring.Editor.Vocabulary;
 
 namespace Pys.Authoring.Editor.Hygiene
@@ -20,6 +21,7 @@ namespace Pys.Authoring.Editor.Hygiene
             AddUnityObjects(graph, scanResult.SceneObjects, AuthoringGraphNodeKind.SceneObject, AuthoringGraphEdgeKind.SceneContains, vocabulary);
             AddUnityObjects(graph, scanResult.Prefabs, AuthoringGraphNodeKind.Prefab, AuthoringGraphEdgeKind.PrefabContains, vocabulary);
             AddAssets(graph, scanResult.Assets, vocabulary);
+            BuiltInUnitySetupGraphContributor.AddTo(graph, vocabulary);
             AddContractPrerequisiteEdges(graph);
             return graph;
         }
@@ -134,6 +136,7 @@ namespace Pys.Authoring.Editor.Hygiene
                 AuthoringGraphNode objectNode = GetOrAddNode(graph, observation.ObjectId, observation.Label, objectKind, vocabulary);
                 objectNode.Metadata["sourcePath"] = observation.SourcePath;
                 objectNode.Metadata["type"] = observation.TypeName;
+                objectNode.Metadata["componentFields"] = string.Join("\n", observation.ComponentFields);
 
                 AddEdges(graph, observation.ObjectId, observation.Components, "component:", AuthoringGraphNodeKind.Component, componentEdgeKind, vocabulary);
                 AddIssues(graph, observation.ObjectId, observation.Issues, vocabulary);
@@ -225,6 +228,16 @@ namespace Pys.Authoring.Editor.Hygiene
                 contractNode.Metadata["routeOrder"] = contract.RouteOrder.ToString();
                 contractNode.Metadata["setupDomain"] = contract.SetupDomain;
                 contractNode.Metadata["proofTarget"] = contract.ProofTarget;
+                contractNode.Metadata["successDescription"] = contract.SuccessDescription;
+                contractNode.Metadata["readinessHint"] = contract.ReadinessHint;
+                contractNode.Metadata["validationOwnerStableId"] = contract.ValidationOwnerStableId;
+                contractNode.Metadata["expectedEvidence"] = string.Join("\n", contract.ExpectedEvidence);
+                contractNode.Metadata["completionSignals"] = string.Join("\n", contract.CompletionSignals);
+                contractNode.Metadata["intentToggles"] = string.Join("\n", contract.IntentToggles);
+                contractNode.Metadata["intentLanes"] = string.Join("\n", contract.IntentLanes);
+                contractNode.Metadata["compatibleStableIds"] = string.Join(",", contract.CompatibleStableIds);
+                contractNode.Metadata["supportingStableIds"] = string.Join(",", contract.SupportingStableIds);
+                contractNode.Metadata["hoverExplanations"] = string.Join("\n", contract.HoverExplanations);
                 contractNode.Metadata["actionKind"] = contract.NativeActionKind.ToString();
                 contractNode.Metadata["setupSteps"] = string.Join("\n", contract.SetupSteps);
                 contractNode.Metadata["successChecks"] = string.Join("\n", contract.SuccessChecks);

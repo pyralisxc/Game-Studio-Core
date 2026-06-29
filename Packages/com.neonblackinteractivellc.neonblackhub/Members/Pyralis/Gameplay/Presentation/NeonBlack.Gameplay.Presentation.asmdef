@@ -4,7 +4,6 @@
     "NeonBlack.Gameplay.Core",
     "NeonBlack.Gameplay.Data",
     "Unity.TextMeshPro",
-    "Unity.InputSystem",
     "Unity.Cinemachine",
     "UnityEngine.UI",
     "VContainer",

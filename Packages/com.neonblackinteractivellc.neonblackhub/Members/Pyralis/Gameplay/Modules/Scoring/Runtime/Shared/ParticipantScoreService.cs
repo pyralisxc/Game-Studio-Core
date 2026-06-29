@@ -31,7 +31,7 @@ namespace NeonBlack.Gameplay.Modules.Scoring
         Tags = new[] { "capability:Scoring" }
     )]
     [DefaultExecutionOrder(-30)]
-    public class ParticipantScoreService : MonoBehaviour, IGameService, ISessionScoreService, IParticipantScoreAwardSink, IRuntimeValidationProvider
+    public class ParticipantScoreService : GameplayTickBehaviour, IGameService, ISessionScoreService, IParticipantScoreAwardSink, IRuntimeValidationProvider
     {
         private static int _activeInstanceCount;
 
@@ -66,6 +66,8 @@ namespace NeonBlack.Gameplay.Modules.Scoring
         public int   HighScorePoints   => _highScorePointsCached;
         public float HighScoreTime     => _highScoreTimeCached;
         public float HighScoreBestTime => _highScoreBestTimeCached;
+        protected override GameplayTickDomain TickDomain => GameplayTickDomain.Scoring;
+        protected override bool UsesGameplayTick => true;
         // Unity lifecycle.
         private void Awake()
         {
@@ -84,10 +86,10 @@ namespace NeonBlack.Gameplay.Modules.Scoring
             _activeInstanceCount = Mathf.Max(0, _activeInstanceCount - 1);
         }
 
-        private void Update()
+        protected override void OnGameplayTick(in GameplayTickContext context)
         {
             if (_isTiming)
-                _survivalTime += Time.deltaTime;
+                _survivalTime += context.DeltaTime;
         }
 
         private void OnDestroy()

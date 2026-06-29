@@ -24,7 +24,7 @@ namespace NeonBlack.Gameplay.Modules.Enemies
         Tags = new[] { "capability:Combat", "capability:Animation", "lane:Enemy" },
         Selectable = false
     )]
-    public class EnemyAmbientComponent : MonoBehaviour
+    public class EnemyAmbientComponent : GameplayTickBehaviour
 {
         [SerializeField] private EnemyAmbientProfile ambientProfile;
         private EnemyAI _enemyAI;
@@ -41,7 +41,10 @@ namespace NeonBlack.Gameplay.Modules.Enemies
             _lookAroundTimer = ambientProfile != null ? ambientProfile.lookAroundInterval : 0f;
         }
 
-        private void Update()
+        protected override GameplayTickDomain TickDomain => GameplayTickDomain.Enemies;
+        protected override bool UsesGameplayTick => true;
+
+        protected override void OnGameplayTick(in GameplayTickContext context)
         {
             if (ambientProfile == null || !ambientProfile.enableAmbientLookAround || _enemyAI == null)
                 return;
@@ -52,7 +55,7 @@ namespace NeonBlack.Gameplay.Modules.Enemies
             if (ambientProfile.suppressDuringReactionLock && _reactionState != null && _reactionState.IsReactionLocked)
                 return;
 
-            _lookAroundTimer -= Time.deltaTime;
+            _lookAroundTimer -= context.DeltaTime;
             if (_lookAroundTimer > 0f)
                 return;
 

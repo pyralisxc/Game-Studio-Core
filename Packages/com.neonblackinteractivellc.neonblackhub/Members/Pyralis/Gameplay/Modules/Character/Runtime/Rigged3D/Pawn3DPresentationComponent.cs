@@ -1,10 +1,10 @@
+using System.Collections.Generic;
+using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Data.Participants;
+using NeonBlack.Gameplay.Data.Presentation;
 using NeonBlack.Gameplay.Core.Types.Animation;
 using NeonBlack.Gameplay.Core.Types.Input;
-using NeonBlack.Gameplay.Presentation.Animation;
-using NeonBlack.Gameplay.Core.Contracts;
-using NeonBlack.Gameplay.Modules.Character;
 using UnityEngine;
 using Pys.Authoring.Contracts;
 
@@ -22,14 +22,13 @@ namespace NeonBlack.Gameplay.Modules.Character
         Tags = new[] { "capability:Animation", "axiom:Dimensions3D" }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Modules/Character/Rigged3D/Pawn 3D Presentation Component")]
-    [RequireComponent(typeof(ActorAnimationDriver))]
-    public sealed class Pawn3DPresentationComponent : MonoBehaviour, IPawnPresentationModule
+    public sealed class Pawn3DPresentationComponent : MonoBehaviour, IPawnPresentationModule, IRuntimeValidationProvider
     {
         [Header("Debug")]
         [SerializeField] private bool showDebugHUD;
         private Pawn3DMovementComponent _movement;
         private IActorGuardController _guardState;
-        private ActorAnimationDriver _animationDriver;
+        private IActorAnimationController _animationDriver;
         private IActorHealthState _health;
         private bool _lookAroundActive;
 
@@ -37,7 +36,7 @@ namespace NeonBlack.Gameplay.Modules.Character
         {
             _movement = GetComponent<Pawn3DMovementComponent>();
             _guardState = GetComponent<IActorGuardController>();
-            _animationDriver = GetComponent<ActorAnimationDriver>();
+            _animationDriver = GetComponent<IActorAnimationController>();
             _health = GetComponent<IActorHealthState>();
 
             if (_health != null)
@@ -95,9 +94,23 @@ namespace NeonBlack.Gameplay.Modules.Character
 
         public void ApplyPresentationProfile(PawnProfileApplicationContext context, PawnPresentationProfile presentationProfile)
         {
-            _animationDriver?.ApplyProfiles(
+            GetComponent<IPawnAnimationProfileReceiver>()?.ApplyProfiles(
                 presentationProfile,
                 context.PawnDefinition != null ? context.PawnDefinition.animationProfile : null);
+        }
+
+        public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
+        {
+            if (GetComponent<IActorAnimationController>() == null)
+            {
+                yield return PyralisRuntimeValidationIssue.Required(
+                    "Pawn3DPresentationComponent needs a component that implements IActorAnimationController.",
+                    "IActorAnimationController",
+                    nameof(Pawn3DPresentationComponent),
+                    "Add ActorAnimationDriver or another presentation-owned animation controller to the pawn root.",
+                    "The 3D pawn can receive animation signals from movement, traversal, and feedback.",
+                    "Pawn3DPresentation.AnimationController.Missing");
+            }
         }
 
         private void HandleModelTriggers(NeonBlack.Gameplay.Modules.Character.MovementState state)

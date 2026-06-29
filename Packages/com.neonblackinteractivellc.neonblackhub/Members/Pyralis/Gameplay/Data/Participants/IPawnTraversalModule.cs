@@ -9,7 +9,7 @@ namespace NeonBlack.Gameplay.Data.Participants
         float ShimmyVelocityX { get; }
 
         void ApplyTraversalProfile(PawnProfileApplicationContext context, PawnTraversalProfile traversalProfile);
-        bool HandleHangFrame(FrameInput frameInput);
+        bool HandleHangFrame(FrameInput frameInput, float deltaTime);
         void ProbeLedge();
         void HandleInteract();
         void TriggerClimbUp();

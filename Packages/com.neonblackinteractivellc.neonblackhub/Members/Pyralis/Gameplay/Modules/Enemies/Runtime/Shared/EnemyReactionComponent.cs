@@ -24,7 +24,7 @@ namespace NeonBlack.Gameplay.Modules.Enemies
         Tags = new[] { "capability:Combat", "lane:Enemy" },
         Selectable = false
     )]
-    public partial class EnemyReactionComponent : MonoBehaviour, IEnemyReactionState
+    public partial class EnemyReactionComponent : GameplayTickBehaviour, IEnemyReactionState
 {
         [SerializeField] private EnemyReactionProfile reactionProfile;
         [SerializeField] private MonoBehaviour hitPauseSink;
@@ -38,11 +38,13 @@ namespace NeonBlack.Gameplay.Modules.Enemies
         private float _reactionLockTimer;
 
         public bool IsReactionLocked => _reactionLockTimer > 0f;
+        protected override GameplayTickDomain TickDomain => GameplayTickDomain.Enemies;
+        protected override bool UsesGameplayTick => true;
 
-        private void Update()
+        protected override void OnGameplayTick(in GameplayTickContext context)
         {
             if (_reactionLockTimer > 0f)
-                _reactionLockTimer -= Time.deltaTime;
+                _reactionLockTimer -= context.DeltaTime;
         }
 
         private void HandleDamaged(float damage)

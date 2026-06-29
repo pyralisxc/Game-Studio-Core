@@ -82,6 +82,9 @@ namespace Pys.Authoring.Editor.Exports
             public string selectedContractId;
             public string selectedDisplayName;
             public string selectedDisabledReason;
+            public string selectedFeatureToggles;
+            public string selectedLane;
+            public string selectedCompositionSummary;
             public List<IntentRowDto> rows = new List<IntentRowDto>();
 
             public static IntentDto FromProjection(IntentProjection projection, string scriptsRoot)
@@ -92,7 +95,10 @@ namespace Pys.Authoring.Editor.Exports
                     selectableCount = projection != null ? projection.SelectableCount : 0,
                     selectedContractId = projection != null ? projection.SelectedContractId : string.Empty,
                     selectedDisplayName = projection != null ? projection.SelectedDisplayName : string.Empty,
-                    selectedDisabledReason = projection != null ? projection.SelectedDisabledReason : string.Empty
+                    selectedDisabledReason = projection != null ? projection.SelectedDisabledReason : string.Empty,
+                    selectedFeatureToggles = projection != null ? projection.SelectedFeatureToggles : string.Empty,
+                    selectedLane = projection != null ? projection.SelectedLane : string.Empty,
+                    selectedCompositionSummary = projection != null ? projection.SelectedCompositionSummary : string.Empty
                 };
 
                 if (projection == null)
@@ -121,6 +127,18 @@ namespace Pys.Authoring.Editor.Exports
             public string sourcePath;
             public string organizationPattern;
             public int dependencyCount;
+            public string intentToggles;
+            public string intentLanes;
+            public string compatibleStableIds;
+            public string supportingStableIds;
+            public string hoverExplanations;
+            public string successDescription;
+            public string readinessHint;
+            public string expectedEvidence;
+            public string completionSignals;
+            public string validationOwnerStableId;
+            public string intentSource;
+            public int priority;
 
             public static IntentRowDto FromRow(IntentRow row)
             {
@@ -138,7 +156,19 @@ namespace Pys.Authoring.Editor.Exports
                     sourceType = row != null ? row.SourceType : string.Empty,
                     sourcePath = row != null ? row.SourcePath : string.Empty,
                     organizationPattern = row != null ? row.OrganizationPattern : string.Empty,
-                    dependencyCount = row != null ? row.DependencyCount : 0
+                    dependencyCount = row != null ? row.DependencyCount : 0,
+                    intentToggles = row != null ? row.IntentToggles : string.Empty,
+                    intentLanes = row != null ? row.IntentLanes : string.Empty,
+                    compatibleStableIds = row != null ? row.CompatibleStableIds : string.Empty,
+                    supportingStableIds = row != null ? row.SupportingStableIds : string.Empty,
+                    hoverExplanations = row != null ? row.HoverExplanations : string.Empty,
+                    successDescription = row != null ? row.SuccessDescription : string.Empty,
+                    readinessHint = row != null ? row.ReadinessHint : string.Empty,
+                    expectedEvidence = row != null ? row.ExpectedEvidence : string.Empty,
+                    completionSignals = row != null ? row.CompletionSignals : string.Empty,
+                    validationOwnerStableId = row != null ? row.ValidationOwnerStableId : string.Empty,
+                    intentSource = row != null ? row.IntentSource : string.Empty,
+                    priority = row != null ? row.Priority : 0
                 };
             }
         }
@@ -240,6 +270,10 @@ namespace Pys.Authoring.Editor.Exports
             public string sourcePath;
             public int componentCount;
             public int issueCount;
+            public bool canPing;
+            public bool canSelect;
+            public string navigationKind;
+            public string navigationLabel;
 
             public static MapRowDto FromRow(MapRow row)
             {
@@ -250,7 +284,11 @@ namespace Pys.Authoring.Editor.Exports
                     kind = row != null ? row.Kind : string.Empty,
                     sourcePath = row != null ? row.SourcePath : string.Empty,
                     componentCount = row != null ? row.ComponentCount : 0,
-                    issueCount = row != null ? row.IssueCount : 0
+                    issueCount = row != null ? row.IssueCount : 0,
+                    canPing = row != null && row.CanPing,
+                    canSelect = row != null && row.CanSelect,
+                    navigationKind = row != null ? row.NavigationKind : string.Empty,
+                    navigationLabel = row != null ? row.NavigationLabel : string.Empty
                 };
             }
         }
@@ -266,10 +304,11 @@ namespace Pys.Authoring.Editor.Exports
             public string proofTarget;
             public string readiness;
             public int issueCount;
+            public List<OverviewActionRowDto> nextActions = new List<OverviewActionRowDto>();
 
             public static OverviewDto FromProjection(OverviewProjection projection, string scriptsRoot)
             {
-                return new OverviewDto
+                OverviewDto dto = new OverviewDto
                 {
                     scriptsRoot = scriptsRoot ?? string.Empty,
                     summary = projection != null ? projection.Summary : string.Empty,
@@ -279,6 +318,44 @@ namespace Pys.Authoring.Editor.Exports
                     proofTarget = projection != null ? projection.ProofTarget : string.Empty,
                     readiness = projection != null ? projection.Readiness : string.Empty,
                     issueCount = projection != null ? projection.IssueCount : 0
+                };
+
+                if (projection == null)
+                    return dto;
+
+                for (int i = 0; i < projection.NextActions.Count; i++)
+                    dto.nextActions.Add(OverviewActionRowDto.FromRow(projection.NextActions[i]));
+
+                return dto;
+            }
+        }
+
+        [Serializable]
+        private sealed class OverviewActionRowDto
+        {
+            public int order;
+            public string title;
+            public string detail;
+            public string actionKind;
+            public string actionLabel;
+            public string nativeAction;
+            public string sourceRole;
+            public string ownerId;
+            public bool blocksReadiness;
+
+            public static OverviewActionRowDto FromRow(OverviewActionRow row)
+            {
+                return new OverviewActionRowDto
+                {
+                    order = row != null ? row.Order : 0,
+                    title = row != null ? row.Title : string.Empty,
+                    detail = row != null ? row.Detail : string.Empty,
+                    actionKind = row != null ? row.ActionKind : string.Empty,
+                    actionLabel = row != null ? row.ActionLabel : string.Empty,
+                    nativeAction = row != null ? row.NativeAction : string.Empty,
+                    sourceRole = row != null ? row.SourceRole : string.Empty,
+                    ownerId = row != null ? row.OwnerId : string.Empty,
+                    blocksReadiness = row != null && row.BlocksReadiness
                 };
             }
         }

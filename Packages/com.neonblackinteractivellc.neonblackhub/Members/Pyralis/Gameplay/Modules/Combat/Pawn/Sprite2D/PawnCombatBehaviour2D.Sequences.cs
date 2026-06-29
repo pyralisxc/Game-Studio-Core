@@ -1,6 +1,5 @@
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Data.Definitions.Combat;
-using NeonBlack.Gameplay.Modules.Combat;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Types.Animation;
 using UnityEngine;
@@ -13,10 +12,9 @@ namespace NeonBlack.Gameplay.Modules.Combat
             PawnComboProcessor.ComboRuntimeState state,
             CombatSequenceDefinition sequence,
             CombatInputType inputType,
-            WeaponData fallbackWeapon,
-            string fallbackZoneName,
+            WeaponData defaultWeapon,
             ref float cooldownTimer,
-            float fallbackCooldown)
+            float defaultCooldown)
         {
             if (Runtime.Motor == null)
                 return false;
@@ -35,8 +33,8 @@ namespace NeonBlack.Gameplay.Modules.Combat
                 return false;
             }
 
-            WeaponData resolvedWeapon = action.weapon != null ? action.weapon : fallbackWeapon;
-            cooldownTimer = ResolveActionCooldown(action, resolvedWeapon, fallbackCooldown);
+            WeaponData resolvedWeapon = action.weapon != null ? action.weapon : defaultWeapon;
+            cooldownTimer = ResolveActionCooldown(action, resolvedWeapon, defaultCooldown);
 
             Runtime.Motor.ResetMoveToIdle();
             Runtime.Motor.IsActing = true;
@@ -44,49 +42,9 @@ namespace NeonBlack.Gameplay.Modules.Combat
             UpdateActionState();
 
             TriggerCombatAnimation(action, inputType);
-            ActivateHitBoxForZone(action.fallbackHitBoxZone, resolvedWeapon ?? fallbackWeapon, action.fallbackHitBoxZone);
+            ActivateHitBoxForZone(action.hitBoxZone, resolvedWeapon ?? defaultWeapon, action.hitBoxZone);
 
             return true;
-        }
-
-        private void ExecuteFallbackAttack()
-        {
-            if (Runtime.Motor == null || !CombatActionStateMachine.CanStartActionFrom(Runtime.Motor.IsActing, _attackTimer))
-                return;
-
-            _attackTimer = attackCooldown;
-            _combatTimer = combatWindow;
-            _attackCount = (_attackCount % 3) + 1;
-            Runtime.Motor.ResetMoveToIdle();
-            Runtime.Motor.IsActing = true;
-            _actingTimer = Mathf.Max(attackWeapon != null ? attackWeapon.hitDelay + attackWeapon.hitDuration : hitDelay + hitDuration, 0.05f);
-            UpdateActionState();
-            PublishCombatResult(new ActorCombatResult(
-                ActorCombatResultKind.AttackStarted,
-                gameObject,
-                animationSignal: ActorAnimationSignal.AttackPrimary,
-                step: _attackCount));
-            ActivateHitBoxForZone("Punch", attackWeapon);
-        }
-
-        private void ExecuteFallbackKick()
-        {
-            if (Runtime.Motor == null || !CombatActionStateMachine.CanStartActionFrom(Runtime.Motor.IsActing, _kickTimer))
-                return;
-
-            _kickTimer = kickCooldown;
-            _combatTimer = combatWindow;
-            _kickCount = (_kickCount % 3) + 1;
-            Runtime.Motor.ResetMoveToIdle();
-            Runtime.Motor.IsActing = true;
-            _actingTimer = Mathf.Max(kickWeapon != null ? kickWeapon.hitDelay + kickWeapon.hitDuration : hitDelay + hitDuration, 0.05f);
-            UpdateActionState();
-            PublishCombatResult(new ActorCombatResult(
-                ActorCombatResultKind.AttackStarted,
-                gameObject,
-                animationSignal: ActorAnimationSignal.AttackSecondary,
-                step: _kickCount));
-            ActivateHitBoxForZone("Kick", kickWeapon);
         }
 
         private void TriggerCombatAnimation(CombatActionDefinition action, CombatInputType inputType)
@@ -109,7 +67,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
                 : ActorAnimationSignal.AttackPrimary;
         }
 
-        private static float ResolveActionCooldown(CombatActionDefinition action, WeaponData resolvedWeapon, float fallbackCooldown)
+        private static float ResolveActionCooldown(CombatActionDefinition action, WeaponData resolvedWeapon, float defaultCooldown)
         {
             if (action != null && action.cooldownOverride >= 0f)
                 return action.cooldownOverride;
@@ -117,7 +75,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
             if (resolvedWeapon != null && resolvedWeapon.attackCooldown > 0f)
                 return resolvedWeapon.attackCooldown;
 
-            return fallbackCooldown;
+            return defaultCooldown;
         }
     }
 }

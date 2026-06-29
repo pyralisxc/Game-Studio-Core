@@ -7,7 +7,6 @@ using NeonBlack.Gameplay.Modules.Rpg.Runtime;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using VContainer;
 
 namespace NeonBlack.Gameplay.Modules.Rpg.UI
 {
@@ -56,11 +55,12 @@ namespace NeonBlack.Gameplay.Modules.Rpg.UI
         public int SelectedNodeIndex => _selectedNodeIndex;
         public RpgSkillTreeEntry SelectedEntry => Entries.Length > 0 && _selectedNodeIndex >= 0 && _selectedNodeIndex < Entries.Length ? Entries[_selectedNodeIndex] : default;
 
-        [Inject]
-        private void Construct(ProgressionService progression, SkillTreeService skills)
+        public void ConfigureRuntime(ProgressionService progression, SkillTreeService skills)
         {
-            _progressionService = progression;
-            _skillTreeService = skills;
+            if (progression != null)
+                _progressionService = progression;
+            if (skills != null)
+                _skillTreeService = skills;
         }
 
         private void Awake()

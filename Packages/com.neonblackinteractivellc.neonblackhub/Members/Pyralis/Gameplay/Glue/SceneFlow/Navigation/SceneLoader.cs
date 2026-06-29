@@ -15,7 +15,7 @@ namespace NeonBlack.Gameplay.Glue.SceneFlow.Navigation
         Category = "Setup",
         CapabilityPath = "Core Setup/Navigation/Scene Loader",
         Surface = AuthoringSurface.Service,
-        Summary = "Simple ISceneNavigator implementation that fades with a generated runtime canvas. Use SceneFader for menu/game-shell flows that need loading-screen routing.",
+        Summary = "Simple ISceneNavigator implementation that fades with a runtime-owned canvas.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/navigation",
         RequiredFields = new[] { nameof(fadeDuration) },
         RequiredInterfaces = new[] { typeof(ISceneNavigator) },
@@ -23,7 +23,7 @@ namespace NeonBlack.Gameplay.Glue.SceneFlow.Navigation
         { 
             "Add to a Bootstrap child GameObject or assign to GameplaySessionBootstrap.",
             "Configure Fade Duration.",
-            "Prefer one navigation owner per menu flow. SceneFader is the current game-shell route; SceneLoader remains a lightweight generated-canvas fallback."
+            "Use one navigation owner per menu flow. Use SceneFader when the route needs loading-screen routing."
         },
         SuccessChecks = new[] { "Transitioning between scenes triggers a smooth fade out and fade in." },
         Tags = new[] { "capability:Setup" },

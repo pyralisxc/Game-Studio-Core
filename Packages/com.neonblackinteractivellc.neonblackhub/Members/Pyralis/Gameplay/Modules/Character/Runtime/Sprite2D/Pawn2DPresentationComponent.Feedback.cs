@@ -1,5 +1,4 @@
 using NeonBlack.Gameplay.Core.Types.Animation;
-using NeonBlack.Gameplay.Presentation.Animation;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Modules.Character

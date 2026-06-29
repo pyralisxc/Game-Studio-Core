@@ -93,6 +93,7 @@ namespace Pys.Authoring.Editor.Scanning
             SourcePath = sourcePath ?? string.Empty;
             TypeName = typeName ?? string.Empty;
             Components = new List<string>();
+            ComponentFields = new List<string>();
             Issues = new List<AuthoringIssue>();
         }
 
@@ -105,6 +106,8 @@ namespace Pys.Authoring.Editor.Scanning
         public string TypeName { get; }
 
         public List<string> Components { get; }
+
+        public List<string> ComponentFields { get; }
 
         public List<AuthoringIssue> Issues { get; }
     }

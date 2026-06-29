@@ -32,6 +32,17 @@ namespace NeonBlack.Gameplay.Modules.Character
                     "Pawn2DPresentation.SpriteRenderer.Sprite.Missing");
             }
 
+            if (GetComponent<IActorAnimationController>() == null)
+            {
+                yield return PyralisRuntimeValidationIssue.Required(
+                    "Pawn2DPresentationComponent needs a component that implements IActorAnimationController.",
+                    "IActorAnimationController",
+                    nameof(Pawn2DPresentationComponent),
+                    "Add ActorAnimationDriver or another presentation-owned animation controller to the pawn root.",
+                    "The 2D pawn can receive animation signals from movement and feedback.",
+                    "Pawn2DPresentation.AnimationController.Missing");
+            }
+
             if (stretchAmount < 1f)
             {
                 yield return PyralisRuntimeValidationIssue.Required(

@@ -4,7 +4,7 @@
     "NeonBlack.Gameplay.Core",
     "NeonBlack.Gameplay.Modules.Character",
     "NeonBlack.Gameplay.Data",
-    "NeonBlack.Gameplay",
+    "NeonBlack.Gameplay.Glue",
     "Unity.Netcode.Runtime",
     "Unity.InputSystem",
     "Pys.Authoring.Contracts"

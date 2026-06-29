@@ -1,10 +1,6 @@
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
-using NeonBlack.Gameplay.Modules.Combat;
-using NeonBlack.Gameplay.Modules.Enemies;
-using NeonBlack.Gameplay.Modules.Feedback;
 using NeonBlack.Gameplay.Glue.SceneFlow.Arcade2D;
-using NeonBlack.Gameplay.Modules.Scoring;
 
 namespace NeonBlack.Gameplay.Glue.ServiceRegistration
 {

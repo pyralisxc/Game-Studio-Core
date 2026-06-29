@@ -296,7 +296,7 @@ namespace NeonBlack.Gameplay.Glue.Participants
         {
             IParticipantAuthorityService authorityService = _participantAuthorityService;
             if (authorityService != null)
-                return authorityService.ResolveOwnerClientId(playerInput, seatIndex);
+                return authorityService.ResolveOwnerClientId(BuildAuthorityRequest(playerInput, seatIndex));
 
             return ResolveOwnerClientId();
         }
@@ -305,9 +305,17 @@ namespace NeonBlack.Gameplay.Glue.Participants
         {
             IParticipantAuthorityService authorityService = _participantAuthorityService;
             if (authorityService != null)
-                return authorityService.IsLocalParticipant(playerInput, seatIndex);
+                return authorityService.IsLocalParticipant(BuildAuthorityRequest(playerInput, seatIndex));
 
             return true;
+        }
+
+        private static ParticipantAuthorityRequest BuildAuthorityRequest(PlayerInput playerInput, int seatIndex)
+        {
+            return new ParticipantAuthorityRequest(
+                seatIndex,
+                playerInput != null ? playerInput.playerIndex : -1,
+                playerInput != null);
         }
 
         private bool ApplyParticipantLifecycle(ParticipantHandle participant, ParticipantLifecycleState state)

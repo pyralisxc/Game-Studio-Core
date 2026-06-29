@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Definitions;
-using NeonBlack.Gameplay.Presentation.Animation;
+using NeonBlack.Gameplay.Core.Types.Animation;
 using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Presentation.Animation;
 using UnityEngine;
 using Pys.Authoring.Contracts;
 

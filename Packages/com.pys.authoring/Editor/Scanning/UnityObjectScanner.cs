@@ -84,9 +84,90 @@ namespace Pys.Authoring.Editor.Scanning
                 }
 
                 observation.Components.Add(component.GetType().FullName);
+                AddComponentFieldEvidence(component, observation);
 
                 ReflectiveRuntimeValidationObserver.AddValidationIssues(component, validationMethodNames, observation.Issues);
             }
+        }
+
+        private static void AddComponentFieldEvidence(Component component, UnityObjectObservation observation)
+        {
+            if (component == null || observation == null)
+                return;
+
+            Type type = component.GetType();
+            string fullName = type.FullName ?? type.Name;
+
+            AddBooleanPropertyEvidence(component, fullName, "enabled", observation);
+            AddObjectPropertyEvidence(component, fullName, "clip", observation);
+            AddObjectPropertyEvidence(component, fullName, "outputAudioMixerGroup", observation);
+            AddObjectPropertyEvidence(component, fullName, "runtimeAnimatorController", observation);
+            AddObjectPropertyEvidence(component, fullName, "avatar", observation);
+            AddObjectPropertyEvidence(component, fullName, "playableAsset", observation);
+            AddObjectPropertyEvidence(component, fullName, "visualEffectAsset", observation);
+            AddObjectPropertyEvidence(component, fullName, "sharedMaterial", observation);
+            AddObjectPropertyEvidence(component, fullName, "material", observation);
+            AddObjectPropertyEvidence(component, fullName, "Follow", observation);
+            AddObjectPropertyEvidence(component, fullName, "LookAt", observation);
+            AddObjectPropertyEvidence(component, fullName, "TrackingTarget", observation);
+        }
+
+        private static void AddBooleanPropertyEvidence(object target, string typeName, string propertyName, UnityObjectObservation observation)
+        {
+            PropertyInfo property = ReadableProperty(target, propertyName);
+            if (property == null || property.PropertyType != typeof(bool))
+                return;
+
+            object value = ReadPropertyValue(target, property);
+            if (value is bool boolValue)
+                observation.ComponentFields.Add(typeName + "." + propertyName + "=" + (boolValue ? "true" : "false"));
+        }
+
+        private static void AddObjectPropertyEvidence(object target, string typeName, string propertyName, UnityObjectObservation observation)
+        {
+            PropertyInfo property = ReadableProperty(target, propertyName);
+            if (property == null)
+                return;
+
+            object value = ReadPropertyValue(target, property);
+            string state = UnityObjectAssigned(value) ? "Assigned" : "Missing";
+            observation.ComponentFields.Add(typeName + "." + propertyName + "=" + state);
+        }
+
+        private static PropertyInfo ReadableProperty(object target, string propertyName)
+        {
+            if (target == null || string.IsNullOrWhiteSpace(propertyName))
+                return null;
+
+            PropertyInfo property = target.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public);
+            if (property == null || !property.CanRead || property.GetIndexParameters().Length != 0)
+                return null;
+
+            return property;
+        }
+
+        private static object ReadPropertyValue(object target, PropertyInfo property)
+        {
+            try
+            {
+                return property.GetValue(target, null);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static bool UnityObjectAssigned(object value)
+        {
+            if (value == null)
+                return false;
+
+            UnityEngine.Object unityObject = value as UnityEngine.Object;
+            if (value is UnityEngine.Object)
+                return unityObject != null;
+
+            return true;
         }
 
         private static string GetHierarchyPath(Transform transform)

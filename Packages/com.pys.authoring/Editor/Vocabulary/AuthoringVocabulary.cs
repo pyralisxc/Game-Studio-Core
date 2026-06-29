@@ -6,6 +6,10 @@ namespace Pys.Authoring.Editor.Vocabulary
         {
             AuthoringVocabularyDictionary dictionary = new AuthoringVocabularyDictionary();
             UnityObjectVocabulary.AddTo(dictionary);
+            UnityPackageVocabulary.AddTo(dictionary);
+            UnityAuthoringWindowVocabulary.AddTo(dictionary);
+            UnityRoleVocabulary.AddTo(dictionary);
+            UnitySetupVocabulary.AddTo(dictionary);
             UnityGraphVocabulary.AddTo(dictionary);
             UnityActionVocabulary.AddTo(dictionary);
             ProjectionVocabulary.AddTo(dictionary);

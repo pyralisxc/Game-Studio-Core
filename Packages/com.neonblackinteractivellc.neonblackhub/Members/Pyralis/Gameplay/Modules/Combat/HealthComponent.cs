@@ -27,7 +27,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
         Tags = new[] { "capability:CombatState", "axiom:Realtime", "lane:Combat", "priority:Primary" }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Combat/Health Component")]
-    public class HealthComponent : MonoBehaviour, IActorHealthModifierReceiver, IActorHealthState, IActorDamageImmunityController, IRuntimeValidationProvider
+    public class HealthComponent : GameplayTickBehaviour, IActorHealthModifierReceiver, IActorHealthState, IActorDamageImmunityController, IRuntimeValidationProvider
     {
         public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
@@ -96,18 +96,21 @@ namespace NeonBlack.Gameplay.Modules.Combat
         CurrentHealth = maxHealth;
     }
 
-    private void Update()
+    protected override GameplayTickDomain TickDomain => GameplayTickDomain.Combat;
+    protected override bool UsesGameplayTick => true;
+
+    protected override void OnGameplayTick(in GameplayTickContext context)
     {
         if (_iFrameTimer > 0f)
-            _iFrameTimer -= Time.deltaTime;
+            _iFrameTimer -= context.DeltaTime;
 
         // Regeneration
         if (regenEnabled && !IsDead && CurrentHealth < maxHealth * regenCapFrac)
         {
             if (_regenTimer > 0f)
-                _regenTimer -= Time.deltaTime;
+                _regenTimer -= context.DeltaTime;
             else
-                Heal(regenRate * _regenRateMultiplier * Time.deltaTime);
+                Heal(regenRate * _regenRateMultiplier * context.DeltaTime);
         }
     }
 

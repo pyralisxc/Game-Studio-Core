@@ -28,7 +28,7 @@ namespace NeonBlack.Gameplay.Modules.Interaction
         Tags = new[] { "capability:Inventory", "lane:Interaction" },
         Selectable = false
     )]
-    public class ActorPickupCollector3D : MonoBehaviour, IActorInteractionHandler
+    public class ActorPickupCollector3D : GameplayTickBehaviour, IActorInteractionHandler
 {
         private const int BufferSize = 16;
         [SerializeField] private PickupProfile pickupProfile;
@@ -36,13 +36,15 @@ namespace NeonBlack.Gameplay.Modules.Interaction
         private readonly Collider[] _overlapBuffer = new Collider[BufferSize];
         private ActorInteractionContext _context;
         private IActorFeedbackPublisher _feedbackPublisher;
+        protected override GameplayTickDomain TickDomain => GameplayTickDomain.Interaction;
+        protected override bool UsesGameplayTick => true;
 
         private void Awake()
         {
             Initialize();
         }
 
-        private void Update()
+        protected override void OnGameplayTick(in GameplayTickContext context)
         {
             if (_context == null || pickupProfile == null || !pickupProfile.enableAutoCollect)
                 return;

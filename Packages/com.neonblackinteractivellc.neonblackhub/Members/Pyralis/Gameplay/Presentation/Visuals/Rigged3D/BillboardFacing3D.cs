@@ -26,7 +26,7 @@ namespace NeonBlack.Gameplay.Presentation.Visuals
         Tags = new[] { "capability:Animation", "axiom:Dimensions3D" }
     )]
 [AddComponentMenu("NeonBlack/Gameplay/Runtime 3D/Presentation/Billboard Facing 3D")]
-public class BillboardFacing3D : MonoBehaviour, IRuntimeValidationProvider
+public class BillboardFacing3D : MonoBehaviour, IRuntimeValidationProvider, IBillboardFacingController
 {
     public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
     {
@@ -65,6 +65,22 @@ public class BillboardFacing3D : MonoBehaviour, IRuntimeValidationProvider
         cameraOverride = newCamera;
         facingMode = newFacingMode;
         spriteDefaultFacesRight = newSpriteDefaultFacesRight;
+    }
+
+    public void ConfigureBillboardFacing(
+        Transform newTarget,
+        Transform newMirroredVisualRoot,
+        SpriteRenderer newSpriteRenderer,
+        UnityEngine.Camera newCamera,
+        bool newSpriteDefaultFacesRight)
+    {
+        Configure(
+            newTarget,
+            newMirroredVisualRoot,
+            newSpriteRenderer,
+            newCamera,
+            FacingMode.YAxisOnly,
+            newSpriteDefaultFacesRight);
     }
 
     public void ApplyBillboard()

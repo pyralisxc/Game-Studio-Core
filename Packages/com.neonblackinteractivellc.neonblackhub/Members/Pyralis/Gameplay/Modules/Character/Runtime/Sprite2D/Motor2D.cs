@@ -77,7 +77,7 @@ namespace NeonBlack.Gameplay.Modules.Character
             return started;
         }
 
-        public void Jump() => movement?.Jump();
+        public void Jump() => movement?.Jump(0f);
 
         public void PlayDeathAnimation()
         {

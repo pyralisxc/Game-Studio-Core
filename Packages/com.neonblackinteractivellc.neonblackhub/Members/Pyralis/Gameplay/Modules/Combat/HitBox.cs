@@ -2,7 +2,6 @@ using System;
 using NeonBlack.Gameplay.Data.Definitions.Combat;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
-using NeonBlack.Gameplay.Presentation.Visuals;
 using UnityEngine;
 using Pys.Authoring.Contracts;
 

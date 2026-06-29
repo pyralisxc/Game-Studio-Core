@@ -1,6 +1,5 @@
 using UnityEngine;
 using NeonBlack.Gameplay.Data.Definitions.Combat;
-using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Core.Contracts;
 using Pys.Authoring.Contracts;
 
@@ -27,7 +26,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
         [SerializeField] private int startingWeaponIndex;
 
         private int _activeWeaponIndex;
-        private ActorAnimationDriver _animationDriver;
+        private IActorAnimationController _animationDriver;
 
         public WeaponData AttackWeapon => attackWeapon;
         public WeaponData KickWeapon => kickWeapon;
@@ -36,7 +35,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
 
         private void Awake()
         {
-            _animationDriver = GetComponent<ActorAnimationDriver>();
+            _animationDriver = GetComponent<IActorAnimationController>();
             if (equippedWeapons != null && equippedWeapons.Length > 0)
             {
                 _activeWeaponIndex = Mathf.Clamp(startingWeaponIndex, 0, equippedWeapons.Length - 1);

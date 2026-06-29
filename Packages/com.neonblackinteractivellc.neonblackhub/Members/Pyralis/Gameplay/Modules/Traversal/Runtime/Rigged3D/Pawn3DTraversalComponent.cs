@@ -5,7 +5,6 @@ using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Interactions;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Data.Participants;
-using NeonBlack.Gameplay.Presentation.Animation;
 using UnityEngine;
 using Pys.Authoring.Contracts;
 
@@ -33,7 +32,7 @@ namespace NeonBlack.Gameplay.Modules.Traversal
     )]
 [AddComponentMenu("NeonBlack/Gameplay/Modules/Traversal/Rigged3D/Pawn 3D Traversal Component")]
     [RequireComponent(typeof(CharacterController))]
-    public sealed partial class Pawn3DTraversalComponent : MonoBehaviour, IPawnTraversalModule, IActorTraversalFeature, IActorInteractionHandler
+    public sealed partial class Pawn3DTraversalComponent : GameplayTickBehaviour, IPawnTraversalModule, IActorTraversalFeature, IActorInteractionHandler
     {
         [Header("Profile")]
         [SerializeField] private PawnTraversalProfile traversalProfile;
@@ -49,8 +48,19 @@ namespace NeonBlack.Gameplay.Modules.Traversal
         private Coroutine _activeClimb;
         private IClimbZone _activeClimbZone;
         private float _shimmyVelocityX;
+        private float _gameplayDeltaTime;
 
         public float ShimmyVelocityX => _shimmyVelocityX;
+
+        protected override GameplayTickDomain TickDomain => GameplayTickDomain.Traversal;
+        protected override bool UsesGameplayTick => true;
+
+        private float GameplayDeltaTime => _gameplayDeltaTime;
+
+        protected override void OnGameplayTick(in GameplayTickContext context)
+        {
+            _gameplayDeltaTime = context.DeltaTime;
+        }
 
         public void ProbeTraversal() => ProbeLedge();
 

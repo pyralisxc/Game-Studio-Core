@@ -3,8 +3,8 @@ using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Data.Participants;
+using NeonBlack.Gameplay.Data.Presentation;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using VContainer;
 using Pys.Authoring.Contracts;
 
@@ -12,8 +12,8 @@ namespace NeonBlack.Gameplay.Presentation.Camera
 {
     /// <summary>
     /// Manages a Cinemachine virtual camera for a gameplay session. Tracks all active
-    /// participants and keeps them framed, with support for shared and split-screen modes,
-    /// playfield bounds clamping, runtime profile switching, and optional scroll zoom.
+    /// participants and routes gameplay focus targets into Cinemachine, with support for
+    /// shared and split-screen modes plus playfield bounds visibility.
     /// </summary>
     [AuthoringContract(
         StableId = "proof.camera-cursor-world",
@@ -27,7 +27,7 @@ namespace NeonBlack.Gameplay.Presentation.Camera
         { 
             "Add to CameraRig root.",
             "Assign Target Camera (physical Unity Camera with Cinemachine Brain).",
-            "Assign Camera Rig Profile (shared/split behavior, zoom, damping).",
+            "Assign Camera Rig Profile (focus routing and saved Cinemachine recipe values).",
             "Assign Shared Camera Behaviour (Cinemachine virtual camera).",
             "For pawn-follow cameras, add PawnCameraTarget to the pawn prefab or use the pawn root fallback."
         },
@@ -35,10 +35,10 @@ namespace NeonBlack.Gameplay.Presentation.Camera
         RoleTags = new[] { "CameraRig", "Cinemachine", "ParticipantFollow" },
         Tags = new[] { "capability:Camera", "runtime:CameraInput" }
     )]
-[AddComponentMenu("NeonBlack/Gameplay/Camera/Cinemachine Camera Rig Controller")]
+    [AddComponentMenu("NeonBlack/Gameplay/Camera/Cinemachine Camera Rig Controller")]
     [ExecuteAlways]
-    public class CinemachineCameraRigController : MonoBehaviour, ICameraBoundsProvider
-{
+    public class CinemachineCameraRigController : MonoBehaviour, ICameraBoundsProvider, ICameraRigProfileSwitcher
+    {
         [SerializeField] private CameraRigProfile cameraRigProfile;
         [SerializeField] private PlayfieldProfile playfieldProfile;
         [SerializeField] private MonoBehaviour sharedCameraBehaviour;
@@ -60,36 +60,18 @@ namespace NeonBlack.Gameplay.Presentation.Camera
         [SerializeField, Tooltip("Add black bars to enforce exactly the minimum rectangle. Leave false so extra screen area shows more world.")]
         private bool letterbox2D = false;
 
-        [Header("Scroll Zoom")]
-        [Tooltip("Allow mouse scroll wheel to nudge the zoom at runtime.")]
-        [SerializeField] private bool allowScrollZoom = false;
-        [Tooltip("How fast scroll adjusts zoom. Higher = faster.")]
-        [SerializeField] private float scrollZoomSpeed = 2f;
-
         private Transform _sharedFocusTarget;
-        private bool _sharedFocusInitialized;
 
-        // Scroll zoom state.
-        private float _scrollZoomOffset;
         private int _cachedScreenWidth;
         private int _cachedScreenHeight;
-
-        // Profile blend state.
-        private CameraRigProfile _blendFromProfile;
-        private float _blendT        = 1f;   // 0 = blend start, 1 = complete
-        private float _blendDuration = 0.5f;
         private IParticipantRoster participantRoster;
 
         public Transform RuntimeSharedFocusTarget => _sharedFocusTarget;
         public Object RuntimeSharedCameraBehaviour => sharedCameraBehaviour;
         public Object RuntimeTargetCamera => ResolveTargetCamera();
         public int RuntimeParticipantCount => participantRoster != null ? participantRoster.Participants.Count : 0;
-        public bool RuntimeUsingProfileTransform => cameraRigProfile != null && cameraRigProfile.useProfileTransform;
         public CameraRigProfile.CameraFocusMode RuntimeFocusMode => cameraRigProfile != null ? cameraRigProfile.focusMode : CameraRigProfile.CameraFocusMode.ParticipantGroup;
-        public float RuntimeFollowDamping => cameraRigProfile != null ? BlendFloat(p => p.followDamping) : 0f;
-        public Vector3 RuntimeFollowOffset => cameraRigProfile != null ? BlendVector(p => p.followOffset) : Vector3.zero;
-        public Vector3 RuntimeViewEulerAngles => cameraRigProfile != null ? BlendVector(p => p.viewEulerAngles) : Vector3.zero;
-        public float RuntimeProfileOrthographicSize => cameraRigProfile != null ? BlendFloat(p => p.orthographicSize) : 0f;
+        public float RuntimeProfileOrthographicSize => CameraRigProfileApplier.HasReflectedProjectionOverride(cameraRigProfile, out _, out float size) ? size : 0f;
         public float RuntimeSharedCinemachineOrthographicSize => TryGetCinemachineLens(sharedCameraBehaviour, out LensSettings lens) ? lens.OrthographicSize : 0f;
         public bool RuntimeEnforceMinimumVisibleArea2D => enforceMinimumVisibleArea2D;
         public float RuntimeMinimumOrthographicSize2D => CalculateRequiredOrthographicSize2D();
@@ -122,23 +104,13 @@ namespace NeonBlack.Gameplay.Presentation.Camera
             ApplyMinimumVisibleArea2D(force: true);
         }
 
-        private void OnEnable()
-        {
-            SubscribeToRoster(participantRoster);
-        }
-
-        private void OnDisable()
-        {
-            SubscribeToRoster(null);
-        }
-
         private void Update()
         {
             if (Application.isPlaying)
                 return;
 
             ResolveTargetCamera();
-            ApplyCameraLensDefaults(0f, instant: true);
+            ApplyCameraProfileRecipe();
             ApplyMinimumVisibleArea2D(force: false);
         }
 
@@ -151,13 +123,8 @@ namespace NeonBlack.Gameplay.Presentation.Camera
                 return;
             }
 
-            // Advance profile blend.
-            if (_blendT < 1f)
-                _blendT = Mathf.MoveTowards(_blendT, 1f, Time.deltaTime / Mathf.Max(0.001f, _blendDuration));
-
-            HandleScrollZoom();
-
             ApplyCameraFocus();
+            ApplyCameraProfileRecipe();
 
             ApplyMinimumVisibleArea2D(force: true);
         }
@@ -188,7 +155,7 @@ namespace NeonBlack.Gameplay.Presentation.Camera
 
         public void SetParticipantRoster(IParticipantRoster rosterService)
         {
-            SubscribeToRoster(rosterService);
+            participantRoster = rosterService;
         }
 
         /// <summary>
@@ -198,9 +165,6 @@ namespace NeonBlack.Gameplay.Presentation.Camera
         public void SwitchProfile(CameraRigProfile profile, float transitionDuration = 0.5f)
         {
             if (profile == null || profile == cameraRigProfile) return;
-            _blendFromProfile = cameraRigProfile;
-            _blendDuration    = Mathf.Max(0f, transitionDuration);
-            _blendT           = 0f;
             cameraRigProfile  = profile;
             cameraRigProfile.Sanitize();
         }
@@ -225,7 +189,6 @@ namespace NeonBlack.Gameplay.Presentation.Camera
         public void SetExplicitFocusTarget(Transform target)
         {
             explicitFocusTarget = target;
-            _sharedFocusInitialized = false;
         }
 
         private void ApplyCameraFocus()
@@ -235,7 +198,6 @@ namespace NeonBlack.Gameplay.Presentation.Camera
 
             if (cameraRigProfile.focusMode == CameraRigProfile.CameraFocusMode.ManualCinemachine)
             {
-                ApplyCameraLensDefaults(0f);
                 return;
             }
 
@@ -249,8 +211,6 @@ namespace NeonBlack.Gameplay.Presentation.Camera
             {
                 if (explicitFocusTarget != null)
                     ApplySingleFocusTarget(explicitFocusTarget.position, 0f, explicitFocusTarget);
-                else
-                    ApplyCameraLensDefaults(0f);
                 return;
             }
 
@@ -325,7 +285,6 @@ namespace NeonBlack.Gameplay.Presentation.Camera
                 Transform followTarget = ResolveParticipantFollowTarget(participant);
                 Transform lookAtTarget = ResolveParticipantLookAtTarget(participant);
                 ApplyCinemachineTarget(sharedCameraBehaviour, followTarget, lookAtTarget);
-                ApplyCameraLensDefaults(0f);
                 return;
             }
         }
@@ -360,23 +319,11 @@ namespace NeonBlack.Gameplay.Presentation.Camera
                 MoveSharedFocusTarget(ClampToPlayfield(desiredFocus));
 
             ApplyCinemachineTarget(sharedCameraBehaviour, followTarget, lookAtTarget);
-            ApplyCameraLensDefaults(participantSpread);
         }
 
         private void MoveSharedFocusTarget(Vector3 desiredFocus)
         {
-            float followDamping = BlendFloat(p => p.followDamping);
-            if (!_sharedFocusInitialized || followDamping <= 0f)
-            {
-                _sharedFocusTarget.position = desiredFocus;
-                _sharedFocusInitialized = true;
-                return;
-            }
-
-            _sharedFocusTarget.position = Vector3.Lerp(
-                _sharedFocusTarget.position,
-                desiredFocus,
-                Mathf.Clamp01(Time.deltaTime * followDamping));
+            _sharedFocusTarget.position = desiredFocus;
         }
 
         private void ApplyCinemachineTarget(MonoBehaviour cameraBehaviour, Transform followTarget, Transform lookAtTarget)
@@ -386,12 +333,6 @@ namespace NeonBlack.Gameplay.Presentation.Camera
 
             vcam.Follow = followTarget;
             vcam.LookAt = lookAtTarget != null ? lookAtTarget : followTarget;
-            if (cameraRigProfile != null
-                && cameraRigProfile.presentationMode == CameraRigProfile.CameraPresentationMode.Shared
-                && followTarget == _sharedFocusTarget)
-            {
-                ApplySharedCameraTransform(vcam);
-            }
         }
 
         private Transform ResolveParticipantFollowTarget(ParticipantHandle participant)
@@ -412,53 +353,31 @@ namespace NeonBlack.Gameplay.Presentation.Camera
             return cameraTarget != null ? cameraTarget.LookAtTarget : participant.PawnInstance.transform;
         }
 
-        private void ApplyCameraLensDefaults(float participantSpread, bool instant = false)
+        private void ApplyCameraProfileRecipe()
         {
-            if (targetCamera == null || cameraRigProfile == null)
+            if (cameraRigProfile == null)
                 return;
 
-            targetCamera.orthographic = cameraRigProfile.orthographic;
-            if (cameraRigProfile.orthographic)
-            {
-                // Blend between profiles when transitioning.
-                float minZoom    = BlendFloat(p => p.minZoom);
-                float maxZoom    = BlendFloat(p => p.maxZoom);
-                float zoomDamp   = BlendFloat(p => p.zoomDamping);
-                float orthoSize  = BlendFloat(p => p.orthographicSize);
+            if (!cameraRigProfile.useCinemachine)
+                return;
 
-                float desiredSize = Mathf.Clamp(orthoSize + participantSpread + _scrollZoomOffset, minZoom, maxZoom);
-                targetCamera.orthographicSize = instant || zoomDamp <= 0f
-                    ? desiredSize
-                    : Mathf.Lerp(targetCamera.orthographicSize, desiredSize, Mathf.Clamp01(Time.deltaTime * zoomDamp));
+            CameraRigProfileApplier.ApplyToSceneCamera(cameraRigProfile, sharedCameraBehaviour);
+
+            if (splitScreenCameraBehaviours != null)
+            {
+                for (int i = 0; i < splitScreenCameraBehaviours.Length; i++)
+                    CameraRigProfileApplier.ApplyToSceneCamera(cameraRigProfile, splitScreenCameraBehaviours[i]);
             }
 
-            ApplyCinemachineLensDefaults(targetCamera.orthographic, targetCamera.orthographicSize);
-        }
+            if (targetCamera != null
+                && CameraRigProfileApplier.HasReflectedProjectionOverride(cameraRigProfile, out bool orthographic, out float orthographicSize))
+            {
+                targetCamera.orthographic = orthographic;
+                if (orthographic)
+                    targetCamera.orthographicSize = orthographicSize;
 
-        private void ApplySharedCameraTransform(CinemachineVirtualCameraBase sharedVcam)
-        {
-            if (sharedVcam == null || cameraRigProfile == null || !cameraRigProfile.useProfileTransform)
-                return;
-
-            Vector3 followOffset = BlendVector(p => p.followOffset);
-            Vector3 viewEulerAngles = BlendVector(p => p.viewEulerAngles);
-            sharedVcam.transform.SetPositionAndRotation(
-                _sharedFocusTarget.position + followOffset,
-                Quaternion.Euler(viewEulerAngles));
-        }
-
-        private float BlendFloat(System.Func<CameraRigProfile, float> selector)
-        {
-            float to = selector(cameraRigProfile);
-            if (_blendFromProfile == null || _blendT >= 1f) return to;
-            return Mathf.Lerp(selector(_blendFromProfile), to, _blendT);
-        }
-
-        private Vector3 BlendVector(System.Func<CameraRigProfile, Vector3> selector)
-        {
-            Vector3 to = selector(cameraRigProfile);
-            if (_blendFromProfile == null || _blendT >= 1f) return to;
-            return Vector3.Lerp(selector(_blendFromProfile), to, _blendT);
+                ApplyCinemachineLensDefaults(targetCamera.orthographic, targetCamera.orthographicSize);
+            }
         }
 
         private UnityEngine.Camera ResolveTargetCamera()
@@ -585,18 +504,6 @@ namespace NeonBlack.Gameplay.Presentation.Camera
             }
         }
 
-        private void HandleScrollZoom()
-        {
-            if (!allowScrollZoom) return;
-            if (Mouse.current == null) return;
-            float scroll = Mouse.current.scroll.ReadValue().y;
-            if (Mathf.Abs(scroll) < 0.01f) return;
-            _scrollZoomOffset -= scroll * scrollZoomSpeed * Time.deltaTime;
-            // Keep offset within a reasonable range so it can't escape profile bounds.
-            float maxOffset = (cameraRigProfile.maxZoom - cameraRigProfile.minZoom) * 0.5f;
-            _scrollZoomOffset = Mathf.Clamp(_scrollZoomOffset, -maxOffset, maxOffset);
-        }
-
         private Vector3 ClampToPlayfield(Vector3 candidate)
         {
             if (playfieldProfile == null || !cameraRigProfile.lockToPlayfield || !playfieldProfile.clampToBounds)
@@ -619,34 +526,6 @@ namespace NeonBlack.Gameplay.Presentation.Camera
             return new Vector3(center.x, center.y, depth);
         }
 
-        private void SubscribeToRoster(IParticipantRoster roster)
-        {
-            if (participantRoster != null)
-            {
-                participantRoster.ParticipantPawnAssigned -= HandleParticipantPawnAssigned;
-                participantRoster.ParticipantPawnCleared -= HandleParticipantPawnCleared;
-            }
-
-            participantRoster = roster;
-            if (participantRoster == null)
-                return;
-
-            participantRoster.ParticipantPawnAssigned -= HandleParticipantPawnAssigned;
-            participantRoster.ParticipantPawnAssigned += HandleParticipantPawnAssigned;
-            participantRoster.ParticipantPawnCleared -= HandleParticipantPawnCleared;
-            participantRoster.ParticipantPawnCleared += HandleParticipantPawnCleared;
-        }
-
-        private void HandleParticipantPawnAssigned(ParticipantHandle participant, GameObject pawn)
-        {
-            _sharedFocusInitialized = false;
-        }
-
-        private void HandleParticipantPawnCleared(ParticipantHandle participant, GameObject pawn)
-        {
-            _sharedFocusInitialized = false;
-        }
-
 #if UNITY_EDITOR
         private void OnValidate()
         {
@@ -662,7 +541,7 @@ namespace NeonBlack.Gameplay.Presentation.Camera
             if (portraitMinWorldHeight2D <= 0f)
                 portraitMinWorldHeight2D = 19.2f;
 
-            ApplyCameraLensDefaults(0f, instant: true);
+            ApplyCameraProfileRecipe();
             ApplyMinimumVisibleArea2D(force: true);
         }
 #endif

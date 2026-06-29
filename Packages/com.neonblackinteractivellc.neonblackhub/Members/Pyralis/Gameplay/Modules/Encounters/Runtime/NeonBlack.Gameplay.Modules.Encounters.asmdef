@@ -2,9 +2,7 @@
   "name": "NeonBlack.Gameplay.Modules.Encounters",
   "references": [
     "NeonBlack.Gameplay.Core",
-    "NeonBlack.Gameplay.Data",
-    "NeonBlack.Gameplay.Presentation",
-    "VContainer"
+    "NeonBlack.Gameplay.Data"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

@@ -23,7 +23,7 @@ namespace NeonBlack.Gameplay.Modules.Spawning
         Tags = new[] { "capability:Environment" },
         Selectable = false
     )]
-public class Spawner : MonoBehaviour, IRuntimeValidationProvider
+public class Spawner : GameplayTickBehaviour, IRuntimeValidationProvider
 {
     public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
     {
@@ -108,6 +108,8 @@ public class Spawner : MonoBehaviour, IRuntimeValidationProvider
     private Vector3 _startPos;
     private float   _patrolT;        // 0 to 1 ping-pong value
     private bool    _patrolForward = true;
+    protected override GameplayTickDomain TickDomain => GameplayTickDomain.Spawning;
+    protected override bool UsesGameplayTick => true;
 
     private void Start()
     {
@@ -117,13 +119,13 @@ public class Spawner : MonoBehaviour, IRuntimeValidationProvider
             _timer = spawnInterval;
     }
 
-    private void Update()
+    protected override void OnGameplayTick(in GameplayTickContext context)
     {
-        if (patrol) HandlePatrol();
+        if (patrol) HandlePatrol(context.DeltaTime);
 
         if (!autoSpawn || spawnInterval <= 0f) return;
 
-        _timer -= Time.deltaTime;
+        _timer -= context.DeltaTime;
         if (_timer <= 0f)
         {
             SpawnOne();
@@ -131,12 +133,12 @@ public class Spawner : MonoBehaviour, IRuntimeValidationProvider
         }
     }
 
-    private void HandlePatrol()
+    private void HandlePatrol(float deltaTime)
     {
         if (patrolDistance <= 0f)
             return;
 
-        float step = patrolSpeed * Time.deltaTime / patrolDistance;
+        float step = patrolSpeed * deltaTime / patrolDistance;
         _patrolT += _patrolForward ? step : -step;
 
         if (_patrolT >= 1f) { _patrolT = 1f; _patrolForward = false; }

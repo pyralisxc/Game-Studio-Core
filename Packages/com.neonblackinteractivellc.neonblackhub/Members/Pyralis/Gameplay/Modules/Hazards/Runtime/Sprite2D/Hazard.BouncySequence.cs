@@ -68,14 +68,14 @@ public partial class Hazard
             float segTraveled = 0f;
             while (segTraveled < segDist)
             {
-                totalElapsed += Time.deltaTime;
+                totalElapsed += GameplayDeltaTime;
                 if (totalElapsed >= maxTime) { hitTimeLimit = true; break; }
 
                 if (_data.enableTargeting) SteerTowardPlayer(ref dir);
 
                 float curveTBouncy = Mathf.Clamp01(1f - (float)hopsLeft / Mathf.Max(1, _data.bounceCount));
                 float speedMult    = _data.speedCurve.Evaluate(curveTBouncy);
-                float step         = speed * speedMult * Time.deltaTime;
+                float step         = speed * speedMult * GameplayDeltaTime;
 
                 Vector2 wavyDelta = Vector2.zero;
                 if (_data.enableWavyPath)
@@ -83,7 +83,7 @@ public partial class Hazard
                     Vector2 perp = new Vector2(-dir.y, dir.x);
                     wavyDelta    = perp * Mathf.Cos(totalElapsed * _data.waveFrequency * Mathf.PI * 2f)
                                    * _data.waveAmplitude * _data.waveFrequency * Mathf.PI * 2f
-                                   * Time.deltaTime;
+                                   * GameplayDeltaTime;
                 }
 
                 transform.position = (Vector2)transform.position + dir * step + wavyDelta;

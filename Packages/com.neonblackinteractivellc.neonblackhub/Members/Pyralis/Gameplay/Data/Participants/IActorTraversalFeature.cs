@@ -34,7 +34,7 @@ namespace NeonBlack.Gameplay.Data.Participants
     {
         float ShimmyVelocityX { get; }
         void ProbeTraversal();
-        bool HandleHangFrame(FrameInput frameInput);
+        bool HandleHangFrame(FrameInput frameInput, float deltaTime);
         void TriggerClimbUp();
         void TryLedgeGrab(IClimbZone zone, float maxVelocityY = 0f);
         void SetClimbZone(IClimbZone zone);

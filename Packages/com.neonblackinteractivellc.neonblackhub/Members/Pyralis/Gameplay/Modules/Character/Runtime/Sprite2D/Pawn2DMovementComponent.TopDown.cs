@@ -4,10 +4,10 @@ namespace NeonBlack.Gameplay.Modules.Character
 {
     public sealed partial class Pawn2DMovementComponent
     {
-        private void TickTopDownNoGravityMovement()
+        private void TickTopDownNoGravityMovement(float fixedDeltaTime)
         {
-            Vector2 velocity = model.Tick(BuildMotorInput(), Time.fixedDeltaTime);
-            Vector2 newPos = rb2d.position + velocity * Time.fixedDeltaTime;
+            Vector2 velocity = model.Tick(BuildMotorInput(), fixedDeltaTime);
+            Vector2 newPos = rb2d.position + velocity * fixedDeltaTime;
 
             if (TryGetMovementBounds(out MovementBounds2D bounds))
                 newPos = ApplyTopDownBounds(newPos, bounds);

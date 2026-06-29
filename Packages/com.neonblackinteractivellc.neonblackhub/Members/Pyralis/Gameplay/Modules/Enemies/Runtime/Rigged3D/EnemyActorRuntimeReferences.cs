@@ -14,7 +14,6 @@ namespace NeonBlack.Gameplay.Modules.Enemies
             EnemyMovementModule movementModule,
             EnemyDetectionModule detectionModule,
             IActorCombatRequestReceiver combatRequestReceiver,
-            IActorCombatRuntimeTickReceiver combatTickReceiver,
             IActorCombatTacticalState combatTacticalState,
             IActorCombatModifierReceiver combatModifierReceiver,
             IEnemyCombatProfileReceiver combatProfileReceiver,
@@ -28,7 +27,6 @@ namespace NeonBlack.Gameplay.Modules.Enemies
             MovementModule = movementModule;
             DetectionModule = detectionModule;
             CombatRequestReceiver = combatRequestReceiver;
-            CombatTickReceiver = combatTickReceiver;
             CombatTacticalState = combatTacticalState;
             CombatModifierReceiver = combatModifierReceiver;
             CombatProfileReceiver = combatProfileReceiver;
@@ -42,7 +40,6 @@ namespace NeonBlack.Gameplay.Modules.Enemies
         public EnemyMovementModule MovementModule { get; }
         public EnemyDetectionModule DetectionModule { get; }
         public IActorCombatRequestReceiver CombatRequestReceiver { get; }
-        public IActorCombatRuntimeTickReceiver CombatTickReceiver { get; }
         public IActorCombatTacticalState CombatTacticalState { get; }
         public IActorCombatModifierReceiver CombatModifierReceiver { get; }
         public IEnemyCombatProfileReceiver CombatProfileReceiver { get; }
@@ -59,7 +56,6 @@ namespace NeonBlack.Gameplay.Modules.Enemies
                 owner.GetComponent<EnemyMovementModule>(),
                 owner.GetComponent<EnemyDetectionModule>(),
                 owner.GetComponent<IActorCombatRequestReceiver>(),
-                owner.GetComponent<IActorCombatRuntimeTickReceiver>(),
                 owner.GetComponent<IActorCombatTacticalState>(),
                 owner.GetComponent<IActorCombatModifierReceiver>(),
                 owner.GetComponent<IEnemyCombatProfileReceiver>(),

@@ -1,7 +1,6 @@
 using System.Collections;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Types.Animation;
-using NeonBlack.Gameplay.Presentation.Animation;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Modules.Traversal
@@ -36,7 +35,7 @@ namespace NeonBlack.Gameplay.Modules.Traversal
             float duration = Mathf.Max(zone.ClimbDuration, 0.05f);
             while (elapsed < duration)
             {
-                elapsed += Time.deltaTime;
+                elapsed += GameplayDeltaTime;
                 float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / duration));
                 transform.position = zone.SamplePath(t, startPos);
                 yield return null;

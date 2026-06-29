@@ -34,8 +34,8 @@ public partial class Hazard
         float crossingAlphaTimer = 0f;
         while (elapsed < warningTime)
         {
-            elapsed            += Time.deltaTime;
-            crossingAlphaTimer += Time.deltaTime;
+            elapsed            += GameplayDeltaTime;
+            crossingAlphaTimer += GameplayDeltaTime;
             if (crossingAlphaTimer >= crossingAlphaInterval)
             {
                 crossingAlphaTimer = 0f;
@@ -117,20 +117,20 @@ public partial class Hazard
         float maxTravelTime = travelTime * 3f;
         while (elapsed < maxTravelTime)
         {
-            elapsed += Time.deltaTime;
+            elapsed += GameplayDeltaTime;
             float t = Mathf.Clamp01(elapsed / travelTime);
 
             if (_data.enableTargeting) SteerTowardPlayer(ref dir);
 
             float speedMult  = _data.speedCurve.Evaluate(t);
-            Vector2 movement = dir * speed * speedMult * Time.deltaTime;
+            Vector2 movement = dir * speed * speedMult * GameplayDeltaTime;
 
             if (_data.enableWavyPath)
             {
                 Vector2 perp = new Vector2(-dir.y, dir.x);
                 movement += perp * Mathf.Cos(elapsed * _data.waveFrequency * Mathf.PI * 2f)
                                  * _data.waveAmplitude * _data.waveFrequency * Mathf.PI * 2f
-                                 * Time.deltaTime;
+                                 * GameplayDeltaTime;
             }
 
             transform.position = (Vector2)transform.position + movement;
@@ -147,8 +147,8 @@ public partial class Hazard
             if (_data.crossingCollectibleMode != HazardData.CrossingCollectibleMode.None)
             {
                 crumbAccum += _data.crossingCollectibleMode == HazardData.CrossingCollectibleMode.PerDistance
-                    ? speed * speedMult * Time.deltaTime
-                    : Time.deltaTime;
+                    ? speed * speedMult * GameplayDeltaTime
+                    : GameplayDeltaTime;
                 if (crumbAccum >= _data.collectibleSpawnInterval)
                 {
                     crumbAccum -= _data.collectibleSpawnInterval;

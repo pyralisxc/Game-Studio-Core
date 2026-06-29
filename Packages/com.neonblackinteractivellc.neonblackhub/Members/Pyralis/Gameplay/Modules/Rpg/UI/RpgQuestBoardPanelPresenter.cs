@@ -8,7 +8,6 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
-using VContainer;
 using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Rpg.UI
@@ -60,11 +59,10 @@ namespace NeonBlack.Gameplay.Modules.Rpg.UI
         public RpgQuestBoardEntry SelectedEntry => Entries.Length > 0 && _selectedIndex >= 0 && _selectedIndex < Entries.Length ? Entries[_selectedIndex] : default;
         public string LastIssue { get; private set; } = string.Empty;
 
-        [Inject]
-        private void Construct(QuestService questsService = null)
+        public void ConfigureRuntime(QuestService questsService)
         {
-            if (_questService == null)
-                _questService = questsService ?? new QuestService();
+            if (questsService != null)
+                _questService = questsService;
         }
 
         private void Awake()

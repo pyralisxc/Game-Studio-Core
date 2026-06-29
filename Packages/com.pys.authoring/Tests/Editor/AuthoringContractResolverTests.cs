@@ -30,6 +30,24 @@ namespace Pys.Authoring.Editor.Tests
             Assert.That(contracts[0].MetadataGaps, Does.Contain("capabilityPath"));
         }
 
+        [Test]
+        public void Resolve_CarriesIntentCompositionAndReadinessHints()
+        {
+            var contracts = AuthoringContractResolver.Resolve(typeof(IntentCompositionFixture));
+
+            Assert.That(contracts, Has.Count.EqualTo(1));
+            Assert.That(contracts[0].SuccessDescription, Is.EqualTo("Set up a controllable actor with camera support."));
+            Assert.That(contracts[0].ReadinessHint, Is.EqualTo("Actor can enter Play Mode and receive input."));
+            Assert.That(contracts[0].ValidationOwnerStableId, Is.EqualTo("validation.actor.route"));
+            Assert.That(contracts[0].ExpectedEvidence, Is.EqualTo(new[] { "scene.object:Actor", "component:Controller" }));
+            Assert.That(contracts[0].CompletionSignals, Is.EqualTo(new[] { "Play Mode enters without validation issues" }));
+            Assert.That(contracts[0].IntentToggles, Is.EqualTo(new[] { "Combat", "Camera" }));
+            Assert.That(contracts[0].IntentLanes, Is.EqualTo(new[] { "Sprite2D", "Rigged3D" }));
+            Assert.That(contracts[0].CompatibleStableIds, Is.EqualTo(new[] { "feature.inventory" }));
+            Assert.That(contracts[0].SupportingStableIds, Is.EqualTo(new[] { "setup.camera" }));
+            Assert.That(contracts[0].HoverExplanations, Is.EqualTo(new[] { "Camera adds follow framing." }));
+        }
+
         [TestCase("simple_name", "Simple Name")]
         [TestCase("simple-name", "Simple Name")]
         [TestCase("simple.name", "Simple Name")]
@@ -59,6 +77,26 @@ namespace Pys.Authoring.Editor.Tests
 
         [AuthoringContract]
         private sealed class MissingMetadataFixture
+        {
+        }
+
+        [AuthoringContract(
+            StableId = "fixture.intent",
+            DisplayName = "Actor Route",
+            Category = "Fixture",
+            CapabilityPath = "Fixture/Actor",
+            Surface = AuthoringSurface.Goal,
+            SuccessDescription = "Set up a controllable actor with camera support.",
+            ReadinessHint = "Actor can enter Play Mode and receive input.",
+            ValidationOwnerStableId = "validation.actor.route",
+            ExpectedEvidence = new[] { "scene.object:Actor", "component:Controller" },
+            CompletionSignals = new[] { "Play Mode enters without validation issues" },
+            IntentToggles = new[] { "Combat", "Camera" },
+            IntentLanes = new[] { "Sprite2D", "Rigged3D" },
+            CompatibleStableIds = new[] { "feature.inventory" },
+            SupportingStableIds = new[] { "setup.camera" },
+            HoverExplanations = new[] { "Camera adds follow framing." })]
+        private sealed class IntentCompositionFixture
         {
         }
     }

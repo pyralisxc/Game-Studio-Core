@@ -59,21 +59,9 @@ namespace NeonBlack.Gameplay.Modules.Hazards.Editor
                 messages.Add(PyralisInspectorValidationIssue.Required("Collider2D should be set to Is Trigger."));
 
             SerializedProperty impactProfile = serializedObject.FindProperty("impactProfile");
-            SerializedProperty damage = serializedObject.FindProperty("damagePerTick");
-            SerializedProperty tickInterval = serializedObject.FindProperty("tickInterval");
-            SerializedProperty knockback = serializedObject.FindProperty("knockbackForce");
 
             if (impactProfile != null && impactProfile.objectReferenceValue == null)
-            {
-                if (damage != null && damage.floatValue <= 0f)
-                    messages.Add(PyralisInspectorValidationIssue.Required("Fallback Damage Per Tick must be greater than zero when Impact Profile is empty."));
-            }
-
-            if (tickInterval != null && tickInterval.floatValue <= 0f)
-                messages.Add(PyralisInspectorValidationIssue.Required("Tick Interval must be greater than zero."));
-
-            if (knockback != null && knockback.floatValue < 0f)
-                messages.Add(PyralisInspectorValidationIssue.Required("Knockback Force cannot be negative."));
+                messages.Add(PyralisInspectorValidationIssue.Required("Hazard Impact Profile is required. Damage zones use profile-owned impact payloads."));
 
             return messages;
         }

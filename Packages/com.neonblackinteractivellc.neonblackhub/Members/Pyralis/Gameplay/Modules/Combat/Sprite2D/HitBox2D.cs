@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Data.Definitions.Combat;
-using System.Collections;
 using System;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
@@ -18,7 +17,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
 ///   3. Add this component.
 ///   4. Set Owner to the root character GameObject.
 ///   5. Optionally assign a WeaponData asset.
-///   6. Call Enable() / Disable() from PlayerActions2D or via Coroutine.
+///   6. Call Fire() from combat logic to arm the active hit window.
 /// </summary>
 [AuthoringContract(
         StableId = "combat.hitbox.2d",
@@ -32,7 +31,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
         Tags = new[] { "capability:CombatSensors", "axiom:Realtime", "axiom:Dimensions2D" }
     )]
 [RequireComponent(typeof(Collider2D))]
-public class HitBox2D : MonoBehaviour
+public class HitBox2D : GameplayTickBehaviour
 {
     public event Action<GameObject> HitConfirmed;
 
@@ -59,6 +58,14 @@ public class HitBox2D : MonoBehaviour
     private AudioSource  _audio;
     private IHitPauseSink _hitPauseSink;
     private readonly HashSet<GameObject> _hitIds = new HashSet<GameObject>();
+    private bool _isFiring;
+    private float _fireRemaining;
+    private float _nextRepeatTime;
+    private float _fireElapsed;
+    private float _repeatRate;
+
+    protected override GameplayTickDomain TickDomain => GameplayTickDomain.Combat;
+    protected override bool UsesGameplayTick => true;
 
     private void Awake()
     {
@@ -70,43 +77,51 @@ public class HitBox2D : MonoBehaviour
         _col.enabled = false;
     }
 
-    private Coroutine _fireRoutine;
-
     /// <summary>
     /// Fires the hitbox for a specified duration.
     /// If repeatRate > 0, the hit list is cleared periodically allowing multiple hits on the same target.
     /// </summary>
     public void Fire(float duration = 0.1f, float repeatRate = 0f)
     {
-        if (_fireRoutine != null)
-            StopCoroutine(_fireRoutine);
-
-        _fireRoutine = StartCoroutine(FireRoutine(duration, repeatRate));
-    }
-
-    private IEnumerator FireRoutine(float duration, float repeatRate)
-    {
         _hitIds.Clear();
         _col.enabled = true;
+        _isFiring = true;
+        _fireRemaining = Mathf.Max(0f, duration);
+        _fireElapsed = 0f;
+        _repeatRate = Mathf.Max(0f, repeatRate);
+        _nextRepeatTime = _repeatRate > 0f ? _repeatRate : float.MaxValue;
 
-        float elapsed = 0f;
-        float nextRepeatTime = repeatRate > 0f ? repeatRate : float.MaxValue;
+        if (_fireRemaining <= 0f)
+            EndFireWindow();
+    }
 
-        while (elapsed < duration)
+    protected override void OnGameplayTick(in GameplayTickContext context)
+    {
+        if (!_isFiring)
+            return;
+
+        _fireElapsed += context.DeltaTime;
+        _fireRemaining -= context.DeltaTime;
+
+        if (_fireElapsed >= _nextRepeatTime)
         {
-            yield return null;
-            elapsed += Time.deltaTime;
-
-            if (elapsed >= nextRepeatTime)
-            {
-                _hitIds.Clear();
-                nextRepeatTime += repeatRate;
-            }
+            _hitIds.Clear();
+            _nextRepeatTime += _repeatRate;
         }
 
+        if (_fireRemaining <= 0f)
+            EndFireWindow();
+    }
+
+    private void EndFireWindow()
+    {
         _col.enabled = false;
         _hitIds.Clear();
-        _fireRoutine = null;
+        _isFiring = false;
+        _fireRemaining = 0f;
+        _fireElapsed = 0f;
+        _nextRepeatTime = float.MaxValue;
+        _repeatRate = 0f;
     }
 
     public void ConfigureDamage(float damage, float knockback)

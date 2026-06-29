@@ -1,6 +1,5 @@
 using UnityEngine;
 using NeonBlack.Gameplay.Core.Types.Animation;
-using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Core.Contracts;
 using Pys.Authoring.Contracts;
 
@@ -18,7 +17,7 @@ namespace NeonBlack.Gameplay.Modules.Enemies
     public class EnemyAnimationModule : MonoBehaviour
 {
         private Animator _animator;
-        private ActorAnimationDriver _animationDriver;
+        private IActorAnimationController _animationDriver;
 
         private static readonly int H_IsMoving = Animator.StringToHash("IsMoving");
         private static readonly int H_Grounded = Animator.StringToHash("IsGrounded");
@@ -28,7 +27,7 @@ namespace NeonBlack.Gameplay.Modules.Enemies
         private void Awake()
         {
             _animator = GetComponentInChildren<Animator>();
-            _animationDriver = GetComponent<ActorAnimationDriver>();
+            _animationDriver = GetComponent<IActorAnimationController>();
         }
 
         public void UpdateMovement(bool isMoving, bool isGrounded)

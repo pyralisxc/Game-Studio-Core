@@ -187,7 +187,7 @@ namespace NeonBlack.Gameplay.Tests.Runtime
                 LastProfile = traversalProfile;
             }
 
-            public bool HandleHangFrame(FrameInput frameInput) => false;
+            public bool HandleHangFrame(FrameInput frameInput, float deltaTime) => false;
             public void ProbeLedge() { }
             public void HandleInteract() { }
             public void TriggerClimbUp() { }

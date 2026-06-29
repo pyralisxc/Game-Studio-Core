@@ -13,12 +13,23 @@ namespace Pys.Authoring.Editor.Projections
 
         public static IntentProjection BuildIntent(AuthoringGraph graph, string selectedContractId)
         {
+            return BuildIntent(graph, selectedContractId, false);
+        }
+
+        public static IntentProjection BuildIntent(AuthoringGraph graph, string selectedContractId, bool includeUnitySetupGuides)
+        {
             IntentProjection projection = new IntentProjection();
             projection.SelectedContractId = selectedContractId ?? string.Empty;
             if (graph == null)
                 return projection;
 
-            List<AuthoringGraphNode> intentCandidates = FindIntentCandidateContracts(graph);
+            List<AuthoringGraphNode> targetIntentCandidates = FindIntentCandidateContracts(graph, false);
+            List<AuthoringGraphNode> builtInSetupCandidates = BuiltInUnitySetupContracts(graph);
+            List<AuthoringGraphNode> intentCandidates = new List<AuthoringGraphNode>(targetIntentCandidates);
+            bool includeBuiltInSetup = includeUnitySetupGuides || targetIntentCandidates.Count == 0;
+            if (includeBuiltInSetup)
+                intentCandidates.AddRange(builtInSetupCandidates);
+
             for (int i = 0; i < intentCandidates.Count; i++)
             {
                 AuthoringGraphNode node = intentCandidates[i];
@@ -61,7 +72,19 @@ namespace Pys.Authoring.Editor.Projections
                     SourceType = sourceType ?? string.Empty,
                     SourcePath = sourcePath ?? string.Empty,
                     OrganizationPattern = IntentOrganizationPattern(graph, node),
-                    DependencyCount = ContractDependencyCount(node)
+                    DependencyCount = ContractDependencyCount(node),
+                    IntentToggles = Metadata(node, "intentToggles"),
+                    IntentLanes = Metadata(node, "intentLanes"),
+                    CompatibleStableIds = Metadata(node, "compatibleStableIds"),
+                    SupportingStableIds = Metadata(node, "supportingStableIds"),
+                    HoverExplanations = Metadata(node, "hoverExplanations"),
+                    SuccessDescription = Metadata(node, "successDescription"),
+                    ReadinessHint = Metadata(node, "readinessHint"),
+                    ExpectedEvidence = Metadata(node, "expectedEvidence"),
+                    CompletionSignals = Metadata(node, "completionSignals"),
+                    ValidationOwnerStableId = Metadata(node, "validationOwnerStableId"),
+                    IntentSource = IntentSourceFor(node),
+                    Priority = PriorityFor(node)
                 });
 
                 if (node.Id == projection.SelectedContractId)
@@ -74,9 +97,9 @@ namespace Pys.Authoring.Editor.Projections
             return projection;
         }
 
-        private static List<AuthoringGraphNode> FindIntentCandidateContracts(AuthoringGraph graph)
+        private static List<AuthoringGraphNode> FindIntentCandidateContracts(AuthoringGraph graph, bool includeBuiltInUnitySetup)
         {
-            List<AuthoringGraphNode> contracts = ContractNodes(graph);
+            List<AuthoringGraphNode> contracts = ContractNodes(graph, includeBuiltInUnitySetup);
             List<AuthoringGraphNode> explicitGoals = new List<AuthoringGraphNode>();
             for (int i = 0; i < contracts.Count; i++)
             {
@@ -106,7 +129,7 @@ namespace Pys.Authoring.Editor.Projections
             return contracts;
         }
 
-        private static List<AuthoringGraphNode> ContractNodes(AuthoringGraph graph)
+        private static List<AuthoringGraphNode> ContractNodes(AuthoringGraph graph, bool includeBuiltInUnitySetup)
         {
             List<AuthoringGraphNode> contracts = new List<AuthoringGraphNode>();
             if (graph == null)
@@ -115,7 +138,23 @@ namespace Pys.Authoring.Editor.Projections
             for (int i = 0; i < graph.Nodes.Count; i++)
             {
                 AuthoringGraphNode node = graph.Nodes[i];
-                if (node.Kind == AuthoringGraphNodeKind.Contract)
+                if (node.Kind == AuthoringGraphNodeKind.Contract && (includeBuiltInUnitySetup || !IsBuiltInUnitySetup(node)))
+                    contracts.Add(node);
+            }
+
+            return contracts;
+        }
+
+        private static List<AuthoringGraphNode> BuiltInUnitySetupContracts(AuthoringGraph graph)
+        {
+            List<AuthoringGraphNode> contracts = new List<AuthoringGraphNode>();
+            if (graph == null)
+                return contracts;
+
+            for (int i = 0; i < graph.Nodes.Count; i++)
+            {
+                AuthoringGraphNode node = graph.Nodes[i];
+                if (node.Kind == AuthoringGraphNodeKind.Contract && IsBuiltInUnitySetup(node))
                     contracts.Add(node);
             }
 
@@ -132,6 +171,15 @@ namespace Pys.Authoring.Editor.Projections
                 return true;
 
             if (!string.IsNullOrWhiteSpace(Metadata(contract, "proofTarget")))
+                return true;
+
+            if (!string.IsNullOrWhiteSpace(Metadata(contract, "successDescription")))
+                return true;
+
+            if (!string.IsNullOrWhiteSpace(Metadata(contract, "expectedEvidence")))
+                return true;
+
+            if (!string.IsNullOrWhiteSpace(Metadata(contract, "completionSignals")))
                 return true;
 
             return !string.IsNullOrWhiteSpace(Metadata(contract, "successChecks"));
@@ -168,11 +216,23 @@ namespace Pys.Authoring.Editor.Projections
             if (contract == null)
                 return string.Empty;
 
+            if (IsBuiltInUnitySetup(contract))
+                return "Built-in Unity setup guide";
+
             if (Metadata(contract, "surface") == AuthoringSurface.Goal.ToString())
                 return "Goal surface";
 
             if (!string.IsNullOrWhiteSpace(Metadata(contract, "proofTarget")))
                 return "Proof target";
+
+            if (!string.IsNullOrWhiteSpace(Metadata(contract, "successDescription")))
+                return "Success description";
+
+            if (!string.IsNullOrWhiteSpace(Metadata(contract, "expectedEvidence")))
+                return "Expected evidence";
+
+            if (!string.IsNullOrWhiteSpace(Metadata(contract, "completionSignals")))
+                return "Completion signals";
 
             if (!string.IsNullOrWhiteSpace(Metadata(contract, "successChecks")))
                 return "Success checks";
@@ -186,6 +246,31 @@ namespace Pys.Authoring.Editor.Projections
         private static int ContractDependencyCount(AuthoringGraphNode contract)
         {
             return MetadataList(contract, "prerequisiteStableIds").Length;
+        }
+
+        private static bool IsBuiltInUnitySetup(AuthoringGraphNode node)
+        {
+            return Metadata(node, "sourceKind") == "BuiltInUnitySetup"
+                || Metadata(node, "intentSource") == "BuiltInUnitySetup"
+                || Metadata(node, "setupGuideKind") == "UnitySetupGuide";
+        }
+
+        private static string IntentSourceFor(AuthoringGraphNode node)
+        {
+            string source = Metadata(node, "intentSource");
+            if (!string.IsNullOrWhiteSpace(source))
+                return source;
+
+            return IsBuiltInUnitySetup(node) ? "BuiltInUnitySetup" : "TargetContract";
+        }
+
+        private static int PriorityFor(AuthoringGraphNode node)
+        {
+            string priority = Metadata(node, "priority");
+            if (int.TryParse(priority, out int parsed))
+                return parsed;
+
+            return IsBuiltInUnitySetup(node) ? 100 : 0;
         }
 
         public static FactsProjection BuildFacts(AuthoringGraph graph)
@@ -266,11 +351,53 @@ namespace Pys.Authoring.Editor.Projections
                     Kind = node.Kind.ToString(),
                     SourcePath = sourcePath ?? string.Empty,
                     ComponentCount = componentCounts.TryGetValue(node.Id, out int components) ? components : 0,
-                    IssueCount = issueCounts.TryGetValue(node.Id, out int issues) ? issues : 0
+                    IssueCount = issueCounts.TryGetValue(node.Id, out int issues) ? issues : 0,
+                    CanPing = CanPingMapNode(node, sourcePath),
+                    CanSelect = CanSelectMapNode(node),
+                    NavigationKind = MapNavigationKind(node, sourcePath),
+                    NavigationLabel = MapNavigationLabel(node, sourcePath)
                 });
             }
 
             return projection;
+        }
+
+        private static bool CanPingMapNode(AuthoringGraphNode node, string sourcePath)
+        {
+            if (node == null || string.IsNullOrWhiteSpace(sourcePath))
+                return false;
+
+            return node.Kind == AuthoringGraphNodeKind.Prefab
+                || node.Kind == AuthoringGraphNodeKind.Asset;
+        }
+
+        private static bool CanSelectMapNode(AuthoringGraphNode node)
+        {
+            return node != null
+                && node.Kind == AuthoringGraphNodeKind.SceneObject
+                && node.Id.StartsWith("scene:", System.StringComparison.Ordinal);
+        }
+
+        private static string MapNavigationKind(AuthoringGraphNode node, string sourcePath)
+        {
+            if (CanSelectMapNode(node))
+                return "SceneObject";
+
+            if (CanPingMapNode(node, sourcePath))
+                return "Asset";
+
+            return string.Empty;
+        }
+
+        private static string MapNavigationLabel(AuthoringGraphNode node, string sourcePath)
+        {
+            if (CanSelectMapNode(node))
+                return "Select in Hierarchy";
+
+            if (CanPingMapNode(node, sourcePath))
+                return "Ping Asset";
+
+            return string.Empty;
         }
 
         public static OverviewProjection BuildOverview(AuthoringGraph graph)
@@ -306,9 +433,10 @@ namespace Pys.Authoring.Editor.Projections
             GuideRow activeRow = FindFirstBlockingGuideRow(guide);
             if (activeRow != null)
             {
+                AddOverviewActionRows(projection, guide);
                 projection.Summary = string.IsNullOrWhiteSpace(projection.SelectedIntent)
                     ? issueCount + " graph issue(s) are asking for attention."
-                    : "Selected intent is blocked before proof: " + projection.SelectedIntent;
+                    : "Selected intent is blocked before readiness: " + projection.SelectedIntent;
                 projection.NextAction = !string.IsNullOrWhiteSpace(activeRow.NativeAction) ? activeRow.NativeAction : activeRow.Title;
                 projection.Reason = activeRow.Detail ?? string.Empty;
             }
@@ -319,8 +447,8 @@ namespace Pys.Authoring.Editor.Projections
                     : "Selected intent has no blocking guide rows.";
                 projection.NextAction = string.IsNullOrWhiteSpace(projection.ProofTarget)
                     ? "Review Hygiene or export the graph when you need more detail."
-                    : "Run the proof target: " + projection.ProofTarget;
-                projection.Reason = "Proof ready";
+                    : "Verify readiness target: " + projection.ProofTarget;
+                projection.Reason = "No blocking guide rows";
                 projection.Readiness = "Ready";
             }
 
@@ -333,6 +461,11 @@ namespace Pys.Authoring.Editor.Projections
         }
 
         public static GuideProjection BuildGuide(AuthoringGraph graph, string selectedContractId)
+        {
+            return BuildGuide(graph, selectedContractId, false);
+        }
+
+        public static GuideProjection BuildGuide(AuthoringGraph graph, string selectedContractId, bool includeUnitySetupGuides)
         {
             GuideProjection projection = new GuideProjection();
             projection.SelectedContractId = selectedContractId ?? string.Empty;
@@ -352,6 +485,32 @@ namespace Pys.Authoring.Editor.Projections
             AddRouteContractRows(graph, routeContracts, selectedContract, projection);
             projection.ProofReady = FindFirstBlockingGuideRow(projection) == null;
             return projection;
+        }
+
+        private static void AddOverviewActionRows(OverviewProjection projection, GuideProjection guide)
+        {
+            if (projection == null || guide == null)
+                return;
+
+            for (int i = 0; i < guide.Rows.Count && projection.NextActions.Count < 3; i++)
+            {
+                GuideRow row = guide.Rows[i];
+                if (row == null || !row.BlocksProof)
+                    continue;
+
+                projection.NextActions.Add(new OverviewActionRow
+                {
+                    Order = projection.NextActions.Count + 1,
+                    Title = row.Title ?? string.Empty,
+                    Detail = row.Detail ?? string.Empty,
+                    ActionKind = row.ActionKind ?? string.Empty,
+                    ActionLabel = row.ActionLabel ?? string.Empty,
+                    NativeAction = row.NativeAction ?? string.Empty,
+                    SourceRole = row.Role ?? string.Empty,
+                    OwnerId = row.OwnerId ?? string.Empty,
+                    BlocksReadiness = row.BlocksProof
+                });
+            }
         }
 
         private static void AddSelectedContractRows(AuthoringGraphNode contract, GuideProjection projection)
@@ -468,13 +627,18 @@ namespace Pys.Authoring.Editor.Projections
                 return;
 
             projection.SelectedDisplayName = selectedContract.Label;
-            projection.ProofTarget = FirstNonEmpty(Metadata(selectedContract, "proofTarget"), selectedContract.Label);
+            projection.ProofTarget = FirstNonEmpty(
+                Metadata(selectedContract, "successDescription"),
+                Metadata(selectedContract, "proofTarget"),
+                Metadata(selectedContract, "readinessHint"),
+                selectedContract.Label);
             HashSet<string> addedIssueIds = new HashSet<string>();
 
             for (int i = 0; i < routeContracts.Count; i++)
             {
                 AuthoringGraphNode contract = routeContracts[i];
                 AddContractIdentityAndMetadataRows(contract, projection);
+                AddBuiltInUnityReadinessRows(contract, projection);
                 AddIssueRowsForContract(graph, routeContracts, contract, projection, addedIssueIds);
                 AddContractSetupStepRows(contract, projection);
             }
@@ -499,6 +663,29 @@ namespace Pys.Authoring.Editor.Projections
             {
                 AddGuideRow(projection, contract, "ContractMetadata", "Complete contract metadata", gaps, AuthoringActionKind.ReviewCode.ToString(), "Edit the contract metadata inside the selected scripts folder.", "The contract metadata gap no longer appears after scanning.", true);
             }
+        }
+
+        private static void AddBuiltInUnityReadinessRows(AuthoringGraphNode contract, GuideProjection projection)
+        {
+            if (!IsBuiltInUnitySetup(contract))
+                return;
+
+            string summary = Metadata(contract, "readinessEvidenceSummary");
+            if (string.IsNullOrWhiteSpace(summary))
+                return;
+
+            string state = Metadata(contract, "readinessState");
+            string detail = string.IsNullOrWhiteSpace(state) ? summary : state + "\n" + summary;
+            AddGuideRow(
+                projection,
+                contract,
+                "UnityReadinessEvidence",
+                "Review observed Unity evidence",
+                detail,
+                AuthoringActionKind.InspectObject.ToString(),
+                "Inspect the observed scene objects and assets listed for this Unity setup guide.",
+                "The scan reflects the native Unity components and assets required by this setup guide.",
+                false);
         }
 
         private static void AddIssueRowsForContract(
@@ -571,19 +758,35 @@ namespace Pys.Authoring.Editor.Projections
                 return;
 
             string[] split = setupSteps.Split('\n');
+            string[] actionKinds = MetadataList(contract, "actionKinds");
             for (int i = 0; i < split.Length; i++)
             {
                 string line = split[i].Trim();
                 if (string.IsNullOrWhiteSpace(line))
                     continue;
 
-                AddGuideRow(projection, contract, "SetupStep", "Complete setup step", line, actionKind, line, "The setup step is represented by validation evidence after scanning.", true);
+                string rowActionKind = i < actionKinds.Length && !string.IsNullOrWhiteSpace(actionKinds[i])
+                    ? actionKinds[i]
+                    : actionKind;
+                string role = IsBuiltInUnitySetup(contract) ? "UnitySetupStep" : "SetupStep";
+                string title = IsBuiltInUnitySetup(contract) ? "Complete Unity setup step" : "Complete setup step";
+                AddGuideRow(projection, contract, role, title, line, rowActionKind, line, "The setup step is represented by validation evidence after scanning.", true);
             }
         }
 
         private static void AddContractProofCheckRows(AuthoringGraphNode contract, GuideProjection projection)
         {
             string successChecks = Metadata(contract, "successChecks");
+            string completionSignals = Metadata(contract, "completionSignals");
+            string expectedEvidence = Metadata(contract, "expectedEvidence");
+            string readinessHint = Metadata(contract, "readinessHint");
+            string successDescription = Metadata(contract, "successDescription");
+
+            AddLinesAsGuideRows(projection, contract, successDescription, "SuccessHint", AuthoringActionKind.RunPlayModeCheck.ToString(), false, "Review success description");
+            AddLinesAsGuideRows(projection, contract, readinessHint, "ReadinessHint", AuthoringActionKind.InspectObject.ToString(), false, "Review readiness hint");
+            AddLinesAsGuideRows(projection, contract, expectedEvidence, "ExpectedEvidence", AuthoringActionKind.InspectObject.ToString(), false, "Observe expected evidence");
+            AddLinesAsGuideRows(projection, contract, completionSignals, "CompletionSignal", AuthoringActionKind.RunPlayModeCheck.ToString(), false, "Verify completion signal");
+
             if (string.IsNullOrWhiteSpace(successChecks))
                 return;
 
@@ -594,7 +797,30 @@ namespace Pys.Authoring.Editor.Projections
                 if (string.IsNullOrWhiteSpace(line))
                     continue;
 
-                AddGuideRow(projection, contract, "ProofCheck", "Verify proof target", line, AuthoringActionKind.RunPlayModeCheck.ToString(), line, line, false);
+                AddGuideRow(projection, contract, "ProofCheck", "Verify readiness target", line, AuthoringActionKind.RunPlayModeCheck.ToString(), line, line, false);
+            }
+        }
+
+        private static void AddLinesAsGuideRows(
+            GuideProjection projection,
+            AuthoringGraphNode contract,
+            string lines,
+            string role,
+            string actionKind,
+            bool blocksProof,
+            string title)
+        {
+            if (string.IsNullOrWhiteSpace(lines))
+                return;
+
+            string[] split = lines.Split('\n');
+            for (int i = 0; i < split.Length; i++)
+            {
+                string line = split[i].Trim();
+                if (string.IsNullOrWhiteSpace(line))
+                    continue;
+
+                AddGuideRow(projection, contract, role, title, line, actionKind, line, line, blocksProof);
             }
         }
 
@@ -654,7 +880,7 @@ namespace Pys.Authoring.Editor.Projections
                     Order = projection.Rows.Count + 1,
                     Role = role,
                     OwnerId = ownerId,
-                    Title = role == "ProofCheck" ? "Verify proof target" : "Complete setup step",
+                    Title = role == "ProofCheck" ? "Verify readiness target" : "Complete setup step",
                     Detail = line,
                     ActionKind = actionKind,
                     ActionLabel = ActionLabel(actionKind),
@@ -769,7 +995,7 @@ namespace Pys.Authoring.Editor.Projections
                 Detail = FactDetail(node),
                 SourcePath = sourcePath ?? string.Empty,
                 SourceCount = CountConnectedEdges(graph, node.Id),
-                Confidence = FactConfidence(node.Kind)
+                Confidence = FactConfidence(node)
             });
         }
 
@@ -797,6 +1023,15 @@ namespace Pys.Authoring.Editor.Projections
             {
                 node.Metadata.TryGetValue("stableId", out string stableId);
                 node.Metadata.TryGetValue("sourceType", out string sourceType);
+                if (IsBuiltInUnitySetup(node))
+                {
+                    node.Metadata.TryGetValue("setupDomain", out string setupDomain);
+                    node.Metadata.TryGetValue("readinessState", out string readinessState);
+                    return "UnitySetupGuide: " + (setupDomain ?? string.Empty)
+                        + "; StableId: " + (stableId ?? string.Empty)
+                        + "; Readiness: " + (readinessState ?? string.Empty);
+                }
+
                 return "StableId: " + (stableId ?? string.Empty) + "; Source: " + (sourceType ?? string.Empty);
             }
 
@@ -813,9 +1048,12 @@ namespace Pys.Authoring.Editor.Projections
             return kindLabel ?? node.Kind.ToString();
         }
 
-        private static string FactConfidence(AuthoringGraphNodeKind kind)
+        private static string FactConfidence(AuthoringGraphNode node)
         {
-            switch (kind)
+            if (IsBuiltInUnitySetup(node))
+                return "BuiltInUnitySetup";
+
+            switch (node != null ? node.Kind : 0)
             {
                 case AuthoringGraphNodeKind.Contract:
                     return "ContractMetadata";
@@ -927,16 +1165,25 @@ namespace Pys.Authoring.Editor.Projections
             if (string.IsNullOrWhiteSpace(value))
                 return new string[0];
 
-            string[] raw = value.Split(new[] { ',' }, System.StringSplitOptions.RemoveEmptyEntries);
+            string[] raw = value.Split(new[] { ',', '\n' }, System.StringSplitOptions.RemoveEmptyEntries);
             for (int i = 0; i < raw.Length; i++)
                 raw[i] = raw[i].Trim();
 
             return raw;
         }
 
-        private static string FirstNonEmpty(string preferred, string fallback)
+        private static string FirstNonEmpty(params string[] values)
         {
-            return !string.IsNullOrWhiteSpace(preferred) ? preferred : fallback ?? string.Empty;
+            if (values == null)
+                return string.Empty;
+
+            for (int i = 0; i < values.Length; i++)
+            {
+                if (!string.IsNullOrWhiteSpace(values[i]))
+                    return values[i];
+            }
+
+            return string.Empty;
         }
 
         private static string StableIdFor(AuthoringGraphNode node)

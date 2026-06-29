@@ -21,9 +21,17 @@ namespace NeonBlack.Gameplay.Glue.SceneServices
         Tags = new[] { "capability:Setup", "axiom:Realtime" },
         Selectable = false
     )]
-    public class TimeManager : MonoBehaviour, IHitPauseSink
+    public class TimeManager : MonoBehaviour, ITimeManager
     {
         private Coroutine _freezeCoroutine;
+        private bool _isPaused;
+        private bool _isHitPaused;
+
+        public bool IsGameplayActive => CanGameplayTick;
+        public bool IsPaused => _isPaused;
+        public bool IsHitPaused => _isHitPaused;
+        public bool CanGameplayTick => !_isPaused && !_isHitPaused;
+        public float TimeScale => Time.timeScale;
 
         private void OnDisable()
         {
@@ -32,6 +40,9 @@ namespace NeonBlack.Gameplay.Glue.SceneServices
 
         public void Freeze(float duration)
         {
+            if (duration <= 0f)
+                return;
+
             if (_freezeCoroutine != null)
             {
                 StopCoroutine(_freezeCoroutine);
@@ -42,6 +53,9 @@ namespace NeonBlack.Gameplay.Glue.SceneServices
 
         private void ResetTimeScale()
         {
+            _isPaused = false;
+            _isHitPaused = false;
+
             if (Time.timeScale == 0f)
             {
                 Time.timeScale = 1f;
@@ -56,8 +70,10 @@ namespace NeonBlack.Gameplay.Glue.SceneServices
 
         private IEnumerator FreezeCoroutine(float duration)
         {
+            _isHitPaused = true;
             Time.timeScale = 0f;
             yield return new WaitForSecondsRealtime(duration);
+            _isHitPaused = false;
             Time.timeScale = 1f;
             _freezeCoroutine = null;
         }

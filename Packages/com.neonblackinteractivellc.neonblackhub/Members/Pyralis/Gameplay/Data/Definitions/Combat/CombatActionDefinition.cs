@@ -14,7 +14,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Combat
         CapabilityPath = "Combat/Actions/Combat Action Definition",
         Surface = AuthoringSurface.Goal,
         Summary = "Project-window creation path for one combat action.",
-        RequiredFields = new[] { nameof(displayName), nameof(inputType), nameof(animationSignal) },
+        RequiredFields = new[] { nameof(displayName), nameof(inputType), nameof(animationSignal), nameof(hitBoxZone) },
         SuccessChecks = new[] { "Verify the combat action triggers the correct animation and applies damage/weapon effects." },
         RoleTags = new[] { "IntentRouteEssential", "CombatDefinitionRouteSupport" },
         Tags = new[] { "capability:Combat", "capability:Animation", "runtime:Combat", "runtime:AnimationPresentation" }
@@ -30,6 +30,8 @@ namespace NeonBlack.Gameplay.Data.Definitions.Combat
                 yield return PyralisRuntimeValidationIssue.Required("Combo Window cannot be negative.", nameof(comboWindow), nameof(CombatActionDefinition), issueCode: "CombatAction.ComboWindow.Invalid");
             if (weapon == null)
                 yield return PyralisRuntimeValidationIssue.Required("No Weapon Data assigned. Attack may not have damage or range stats.", nameof(weapon), nameof(CombatActionDefinition), issueCode: "CombatAction.Weapon.Missing");
+            if (string.IsNullOrWhiteSpace(hitBoxZone))
+                yield return PyralisRuntimeValidationIssue.Required("Hit Box Zone is required so the combat action can activate the authored hitbox slot.", nameof(hitBoxZone), nameof(CombatActionDefinition), issueCode: "CombatAction.HitBoxZone.Missing");
 
             if (weapon != null)
             {
@@ -59,7 +61,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Combat
         public bool finisherResetsCombo = false;
         public float comboWindow = 0.35f;
         public float cooldownOverride = -1f;
-        public string fallbackHitBoxZone = "Punch";
+        public string hitBoxZone = "Punch";
         public WeaponData weapon;
 
         public void Sanitize()
@@ -72,9 +74,9 @@ namespace NeonBlack.Gameplay.Data.Definitions.Combat
             comboStep = Mathf.Max(1, comboStep);
             comboWindow = Mathf.Max(0f, comboWindow);
             cooldownOverride = cooldownOverride < 0f ? -1f : cooldownOverride;
-            if (string.IsNullOrWhiteSpace(fallbackHitBoxZone))
+            if (string.IsNullOrWhiteSpace(hitBoxZone))
             {
-                fallbackHitBoxZone = "Punch";
+                hitBoxZone = "Punch";
             }
         }
 

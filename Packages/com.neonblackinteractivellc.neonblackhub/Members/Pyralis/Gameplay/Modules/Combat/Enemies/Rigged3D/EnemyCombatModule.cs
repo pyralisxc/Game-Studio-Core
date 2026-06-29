@@ -17,7 +17,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
         SuccessChecks = new[] { "Verify enemy attacks when player is in range." },
         Tags = new[] { "capability:Combat" }
     )]
-    public partial class EnemyCombatModule : MonoBehaviour, IActorCombatRequestReceiver, IActorCombatTacticalState, IActorCombatModifierReceiver, IEnemyCombatProfileReceiver
+    public partial class EnemyCombatModule : GameplayTickBehaviour, IActorCombatRequestReceiver, IActorCombatTacticalState, IActorCombatModifierReceiver, IEnemyCombatProfileReceiver
 {
         [Header("Combat Settings")]
         [SerializeField] private EnemyCombatProfile combatProfile;
@@ -49,6 +49,8 @@ namespace NeonBlack.Gameplay.Modules.Combat
         public HitBoxSlot[] HitBoxZones => hitBoxZones;
         public IActorFacingMirrorTarget[] FacingMirrorTargets => hitBoxZones;
         public Dictionary<EnemyAttack, int> AttackTriggerHashes => _attackTriggerHashes;
+        protected override GameplayTickDomain TickDomain => GameplayTickDomain.Combat;
+        protected override bool UsesGameplayTick => true;
 
         private void Awake()
         {
@@ -92,9 +94,9 @@ namespace NeonBlack.Gameplay.Modules.Combat
             if (_attackTimer > 0f) _attackTimer -= deltaTime;
         }
 
-        public void UpdateCombatTimers()
+        protected override void OnGameplayTick(in GameplayTickContext context)
         {
-            Tick(Time.deltaTime);
+            Tick(context.DeltaTime);
         }
 
         public bool CanAttack(float distanceToPlayer)

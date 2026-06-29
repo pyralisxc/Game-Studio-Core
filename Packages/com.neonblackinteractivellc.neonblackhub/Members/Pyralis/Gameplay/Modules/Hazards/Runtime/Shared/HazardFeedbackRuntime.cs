@@ -1,7 +1,7 @@
 using NeonBlack.Gameplay.Core.Contracts;
 using System.Collections.Generic;
+using NeonBlack.Gameplay.Data.Presentation;
 using NeonBlack.Gameplay.Data.Profiles;
-using NeonBlack.Gameplay.Presentation.Visuals;
 using TMPro;
 using UnityEngine;
 using Pys.Authoring.Contracts;
@@ -38,7 +38,7 @@ namespace NeonBlack.Gameplay.Modules.Hazards
             public Color BaseColor;
         }
 
-        [SerializeField] private SpriteFlasher spriteFlasher;
+        [SerializeField] private MonoBehaviour spriteFlasher;
         [SerializeField] private bool autoFindSpriteFlasher = true;
         [SerializeField] private Camera popupCamera;
 
@@ -46,12 +46,12 @@ namespace NeonBlack.Gameplay.Modules.Hazards
         private readonly List<Popup> _active = new List<Popup>(4);
         private HazardFeedbackProfile _profile;
         private Camera _camera;
+        private IVisualFlashPlayer _flashPlayer;
 
         private void Awake()
         {
             _camera = popupCamera;
-            if (autoFindSpriteFlasher && spriteFlasher == null)
-                spriteFlasher = GetComponent<SpriteFlasher>() ?? GetComponentInChildren<SpriteFlasher>(true);
+            ResolveFlashPlayer();
         }
 
         private void LateUpdate()
@@ -102,7 +102,7 @@ namespace NeonBlack.Gameplay.Modules.Hazards
                 return;
 
             if (_profile.flashOnActivation && _profile.activationFlashPreset != null)
-                spriteFlasher?.PlayOneShot(_profile.activationFlashPreset);
+                ResolveFlashPlayer()?.PlayOneShot(_profile.activationFlashPreset);
             if (_profile.showActivationPopup)
                 SpawnPopup(_profile.activationPopupText, _profile.activationPopupColor);
         }
@@ -113,7 +113,7 @@ namespace NeonBlack.Gameplay.Modules.Hazards
                 return;
 
             if (_profile.flashOnExplosion && _profile.explosionFlashPreset != null)
-                spriteFlasher?.PlayOneShot(_profile.explosionFlashPreset);
+                ResolveFlashPlayer()?.PlayOneShot(_profile.explosionFlashPreset);
             if (_profile.showExplosionPopup)
                 SpawnPopup(_profile.explosionPopupText, _profile.explosionPopupColor);
         }
@@ -124,7 +124,7 @@ namespace NeonBlack.Gameplay.Modules.Hazards
                 return;
 
             if (_profile.flashOnBounce && _profile.bounceFlashPreset != null)
-                spriteFlasher?.PlayOneShot(_profile.bounceFlashPreset);
+                ResolveFlashPlayer()?.PlayOneShot(_profile.bounceFlashPreset);
         }
 
         public void PlayCollectibleFeedback(int amount)
@@ -151,10 +151,44 @@ namespace NeonBlack.Gameplay.Modules.Hazards
             if ((_profile.flashOnActivation && _profile.activationFlashPreset != null
                 || _profile.flashOnExplosion && _profile.explosionFlashPreset != null
                 || _profile.flashOnBounce && _profile.bounceFlashPreset != null)
-                && spriteFlasher == null)
+                && ResolveFlashPlayer() == null)
             {
                 yield return PyralisRuntimeValidationIssue.Required("`HazardFeedbackRuntime` needs a SpriteFlasher when flash presets are authored in the HazardFeedbackProfile.");
             }
+        }
+
+        private IVisualFlashPlayer ResolveFlashPlayer()
+        {
+            if (_flashPlayer != null)
+                return _flashPlayer;
+
+            _flashPlayer = spriteFlasher as IVisualFlashPlayer;
+            if (_flashPlayer != null || !autoFindSpriteFlasher)
+                return _flashPlayer;
+
+            MonoBehaviour[] behaviours = GetComponents<MonoBehaviour>();
+            for (int i = 0; i < behaviours.Length; i++)
+            {
+                if (behaviours[i] is not IVisualFlashPlayer player)
+                    continue;
+
+                spriteFlasher = behaviours[i];
+                _flashPlayer = player;
+                return _flashPlayer;
+            }
+
+            behaviours = GetComponentsInChildren<MonoBehaviour>(true);
+            for (int i = 0; i < behaviours.Length; i++)
+            {
+                if (behaviours[i] is not IVisualFlashPlayer player)
+                    continue;
+
+                spriteFlasher = behaviours[i];
+                _flashPlayer = player;
+                return _flashPlayer;
+            }
+
+            return null;
         }
 
         private void SpawnPopup(string text, Color color)

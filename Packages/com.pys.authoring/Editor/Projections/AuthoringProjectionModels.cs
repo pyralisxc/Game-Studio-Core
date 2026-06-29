@@ -18,6 +18,12 @@ namespace Pys.Authoring.Editor.Projections
         public string SelectedDisplayName;
 
         public string SelectedDisabledReason;
+
+        public string SelectedFeatureToggles;
+
+        public string SelectedLane;
+
+        public string SelectedCompositionSummary;
     }
 
     public sealed class IntentRow
@@ -35,6 +41,18 @@ namespace Pys.Authoring.Editor.Projections
         public string SourcePath;
         public string OrganizationPattern;
         public int DependencyCount;
+        public string IntentToggles;
+        public string IntentLanes;
+        public string CompatibleStableIds;
+        public string SupportingStableIds;
+        public string HoverExplanations;
+        public string SuccessDescription;
+        public string ReadinessHint;
+        public string ExpectedEvidence;
+        public string CompletionSignals;
+        public string ValidationOwnerStableId;
+        public string IntentSource;
+        public int Priority;
     }
 
     public sealed class FactsProjection
@@ -87,10 +105,21 @@ namespace Pys.Authoring.Editor.Projections
         public string SourcePath;
         public int ComponentCount;
         public int IssueCount;
+        public bool CanPing;
+        public bool CanSelect;
+        public string NavigationKind;
+        public string NavigationLabel;
     }
 
     public sealed class OverviewProjection
     {
+        public OverviewProjection()
+        {
+            NextActions = new List<OverviewActionRow>();
+        }
+
+        public List<OverviewActionRow> NextActions { get; }
+
         public string Summary;
         public string NextAction;
         public string Reason;
@@ -98,6 +127,19 @@ namespace Pys.Authoring.Editor.Projections
         public string ProofTarget;
         public string Readiness;
         public int IssueCount;
+    }
+
+    public sealed class OverviewActionRow
+    {
+        public int Order;
+        public string Title;
+        public string Detail;
+        public string ActionKind;
+        public string ActionLabel;
+        public string NativeAction;
+        public string SourceRole;
+        public string OwnerId;
+        public bool BlocksReadiness;
     }
 
     public sealed class GuideProjection

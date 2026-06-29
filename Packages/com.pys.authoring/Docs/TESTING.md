@@ -13,9 +13,10 @@ Package validation:
 7. Confirm Settings shows Observer-mode evidence counts and authoring-guide readiness.
 8. Select an Intent contract when contracts are present.
 9. Confirm Overview reads from the active Guide path.
-10. Confirm Guide shows selected intent, proof target, readiness, ordered rows, and blocking status.
+10. Confirm Guide shows selected intent, readiness target, readiness, ordered rows, and blocking status.
 11. Toggle tab-local filters and confirm exports match the rendered packet.
-12. Export Graph, Hygiene, Facts, Intent, Map, Overview, and Guide JSON.
+12. Refresh or domain reload, then confirm scripts root, selected intent, and tab-local controls persist while scan state is stale until refreshed.
+13. Export Graph, Hygiene, Facts, Intent, Map, Overview, and Guide JSON.
 
 Current prepared tests cover:
 
@@ -26,7 +27,9 @@ Current prepared tests cover:
 - generic Unity action vocabulary
 - Facts and Overview projections
 - Facts typed rows with provenance, confidence, and source counts
-- selected Intent projection from explicit goal/proof organization patterns
+- selected Intent projection from explicit goal/readiness organization patterns
+- developer-settable Intent composition metadata and readiness hints
+- lower-priority Unity setup guides as graph-backed fallback/user-enabled Intent rows
 - route-terminal Intent fallback when no explicit goal exists
 - reflective runtime validation method discovery and issue normalization
 - observed validation evidence flowing into Guide, Overview, Facts, and Hygiene
@@ -36,7 +39,8 @@ Current prepared tests cover:
 - validator issue rows scoped to the selected route dependency closure
 - Map asset rows
 - reflected fields excluded from Map asset rows
-- Guide action kind labels and selected proof path rows
+- Guide action kind labels and selected readiness path rows
 - Hygiene lens projection shape
 - grouped assembly reference Hygiene rows
+- Hygiene readiness-hint, validation-owner, expected-evidence, and dependency graph seed rows
 - projection/export parity

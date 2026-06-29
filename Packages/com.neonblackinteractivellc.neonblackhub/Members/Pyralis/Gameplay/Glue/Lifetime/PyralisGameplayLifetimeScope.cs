@@ -69,6 +69,7 @@ namespace NeonBlack.Gameplay.Glue.Lifetime
         private ISessionOwnershipService _sessionOwnershipService;
         private IParticipantAuthorityService _participantAuthorityService;
         private PyralisRuntimeFeatureServicePolicy _featureServicePolicy;
+        private IGameplayEventChannel _eventChannel;
 
         [Header("RPG Definitions")]
         [SerializeField] private ItemCatalogDefinition itemCatalog;
@@ -167,6 +168,7 @@ namespace NeonBlack.Gameplay.Glue.Lifetime
         private void RegisterRuntimeFlowServices(IContainerBuilder builder)
         {
             GameplayEventChannel eventChannel = new GameplayEventChannel();
+            _eventChannel = eventChannel;
             builder.RegisterInstance<IGameplayEventChannel>(eventChannel);
             builder.RegisterInstance(eventChannel);
         }
@@ -265,8 +267,31 @@ namespace NeonBlack.Gameplay.Glue.Lifetime
                         continue;
 
                     container.InjectGameObject(root);
+                    ApplyRuntimeServiceContext(root);
                 }
             }
+        }
+
+        private void ApplyRuntimeServiceContext(GameObject root)
+        {
+            if (root == null)
+                return;
+
+            IGameplayRuntimeServicesReceiver[] receivers =
+                root.GetComponentsInChildren<IGameplayRuntimeServicesReceiver>(true);
+            if (receivers == null || receivers.Length == 0)
+                return;
+
+            GameplayRuntimeServicesContext context = new GameplayRuntimeServicesContext(
+                _sessionStateService,
+                _cameraRigController,
+                _sessionDefinition?.defaultGameMode?.playfieldProfile,
+                FindServiceInHierarchy<IInputSettingsRegistrar>(),
+                FindServiceInHierarchy<ISessionScoreAwardSink>(),
+                _eventChannel);
+
+            for (int i = 0; i < receivers.Length; i++)
+                receivers[i]?.ApplyRuntimeServices(context);
         }
 
         private T FindServiceInHierarchy<T>() where T : class

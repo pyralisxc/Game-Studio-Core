@@ -1,7 +1,7 @@
 namespace NeonBlack.Gameplay.Glue.SceneFlow.Navigation
 {
     /// <summary>
-    /// Compile-time constants for default scene names used by the arcade adapter flow.
+    /// Compile-time constants for default scene names used by scene-flow services.
     /// Individual level scene names are still sourced from LevelData assets.
     /// </summary>
     public static class SceneNames

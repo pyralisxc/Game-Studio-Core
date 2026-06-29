@@ -1,6 +1,5 @@
 using UnityEngine;
 using NeonBlack.Gameplay.Core.Types.Animation;
-using NeonBlack.Gameplay.Presentation.Animation;
 using NeonBlack.Gameplay.Core.Contracts;
 using Pys.Authoring.Contracts;
 
@@ -24,7 +23,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
         [Range(10f, 180f)]
         [SerializeField] private float blockFrontalAngle = 90f;
 
-        private ActorAnimationDriver _animationDriver;
+        private IActorAnimationController _animationDriver;
         private IActorCombatMovementState _motor;
         private bool _isBlocking;
 
@@ -34,7 +33,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
 
         private void Awake()
         {
-            _animationDriver = GetComponent<ActorAnimationDriver>();
+            _animationDriver = GetComponent<IActorAnimationController>();
             _motor = GetComponent<IActorCombatMovementState>();
         }
 

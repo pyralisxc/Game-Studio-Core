@@ -1,6 +1,5 @@
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Contracts.Networking;
-using UnityEngine.InputSystem;
 using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Glue.Ownership
@@ -21,13 +20,13 @@ namespace NeonBlack.Gameplay.Glue.Ownership
         Selectable = false
     )]
     public sealed class LocalParticipantAuthorityService : IParticipantAuthorityService
-{
-        public bool IsLocalParticipant(PlayerInput playerInput, int seatIndex)
+    {
+        public bool IsLocalParticipant(ParticipantAuthorityRequest request)
         {
             return true;
         }
 
-        public ulong ResolveOwnerClientId(PlayerInput playerInput, int seatIndex)
+        public ulong ResolveOwnerClientId(ParticipantAuthorityRequest request)
         {
             return 0UL;
         }

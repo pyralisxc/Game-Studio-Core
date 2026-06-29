@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
-using VContainer;
 using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Scoring
@@ -34,7 +33,7 @@ namespace NeonBlack.Gameplay.Modules.Scoring
         Tags = new[] { "capability:Session" }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Modules/Scoring/Stillness Bonus 2D")]
-    public class StillnessBonus2D : MonoBehaviour, IRuntimeValidationProvider
+    public class StillnessBonus2D : GameplayTickBehaviour, IGameplayRuntimeServicesReceiver, IRuntimeValidationProvider
     {
         public IEnumerable<PyralisRuntimeValidationIssue> GetRuntimeValidationIssues()
         {
@@ -86,6 +85,8 @@ namespace NeonBlack.Gameplay.Modules.Scoring
 
         /// <summary>Normalized 0-1 progress toward the next reward (useful for a UI fill bar).</summary>
         public float StillProgress => _stillnessInterval > 0f ? _stillTimer / _stillnessInterval : 0f;
+        protected override GameplayTickDomain TickDomain => GameplayTickDomain.Scoring;
+        protected override bool UsesGameplayTick => true;
 
         private void Awake()
         {
@@ -110,15 +111,6 @@ namespace NeonBlack.Gameplay.Modules.Scoring
             ResolveRuntimeServices();
         }
 
-        [Inject]
-        private void Construct(ISessionScoreAwardSink scoreAwardSink = null, IGameplayStateReader gameplayStateReader = null)
-        {
-            if (scoreAwardSink != null)
-                _scoreAwardSink = scoreAwardSink;
-            if (gameplayStateReader != null)
-                _gameplayStateReader = gameplayStateReader;
-        }
-
         public void ConfigureRuntime(IGameplayStateReader gameplayStateReader, ISessionScoreAwardSink scoreAwardSink)
         {
             if (gameplayStateReader != null)
@@ -127,7 +119,12 @@ namespace NeonBlack.Gameplay.Modules.Scoring
                 _scoreAwardSink = scoreAwardSink;
         }
 
-        private void Update()
+        public void ApplyRuntimeServices(GameplayRuntimeServicesContext context)
+        {
+            ConfigureRuntime(context.GameplayStateReader, context.SessionScoreAwardSink);
+        }
+
+        protected override void OnGameplayTick(in GameplayTickContext context)
         {
             ResolveRuntimeServices();
 
@@ -153,7 +150,7 @@ namespace NeonBlack.Gameplay.Modules.Scoring
                 return;
             }
 
-            _stillTimer += Time.deltaTime;
+            _stillTimer += context.DeltaTime;
 
             if (_stillTimer >= _stillnessInterval)
             {

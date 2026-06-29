@@ -1,7 +1,6 @@
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Contracts.Networking;
 using Unity.Netcode;
-using UnityEngine.InputSystem;
 using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Networking.Runtime
@@ -22,7 +21,7 @@ namespace NeonBlack.Gameplay.Networking.Runtime
     )]
     public sealed class NetworkedParticipantAuthorityService : IParticipantAuthorityService
     {
-        public ulong ResolveOwnerClientId(PlayerInput playerInput, int seatIndex)
+        public ulong ResolveOwnerClientId(ParticipantAuthorityRequest request)
         {
             NetworkManager networkManager = NetworkManager.Singleton;
             return networkManager != null && networkManager.IsListening
@@ -30,13 +29,13 @@ namespace NeonBlack.Gameplay.Networking.Runtime
                 : NetworkManager.ServerClientId;
         }
 
-        public bool IsLocalParticipant(PlayerInput playerInput, int seatIndex)
+        public bool IsLocalParticipant(ParticipantAuthorityRequest request)
         {
             NetworkManager networkManager = NetworkManager.Singleton;
             if (networkManager == null || !networkManager.IsListening)
                 return true;
 
-            ulong ownerClientId = ResolveOwnerClientId(playerInput, seatIndex);
+            ulong ownerClientId = ResolveOwnerClientId(request);
             return ownerClientId == networkManager.LocalClientId;
         }
     }

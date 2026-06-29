@@ -2,7 +2,6 @@ using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Participants;
 using UnityEngine;
-using VContainer;
 using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Character
@@ -33,7 +32,7 @@ namespace NeonBlack.Gameplay.Modules.Character
 [AddComponentMenu("NeonBlack/Gameplay/Modules/Character/Sprite2D/Pawn 2D Movement Component")]
     [RequireComponent(typeof(Rigidbody2D))]
     [RequireComponent(typeof(PolygonCollider2D))]
-    public sealed partial class Pawn2DMovementComponent : MonoBehaviour, IPawnMotor, IMovementModule, IPawnLocomotionStateReader, IActorReactionResponder, IActorMovementModifierReceiver, IPawnRuntimeServicesReceiver, IRuntimeValidationProvider
+    public sealed partial class Pawn2DMovementComponent : GameplayTickBehaviour, IPawnMotor, IMovementModule, IPawnLocomotionStateReader, IActorReactionResponder, IActorMovementModifierReceiver, IPawnRuntimeServicesReceiver, IGameplayRuntimeServicesReceiver, IRuntimeValidationProvider
     {
         private readonly Motor2DModel model = new Motor2DModel();
         private readonly Collider2D[] groundCheckHits = new Collider2D[8];
@@ -78,6 +77,9 @@ namespace NeonBlack.Gameplay.Modules.Character
         public Object RuntimeGameplayStateSource => gameplayStateReader as Object;
         public Object RuntimeCameraBoundsSource => cameraBoundsProvider as Object;
         public Object RuntimePlayfieldBoundsSource => playfieldBoundsProvider as Object;
+        protected override GameplayTickDomain TickDomain => GameplayTickDomain.Character;
+        protected override bool UsesGameplayTick => true;
+        protected override bool UsesFixedGameplayTick => true;
 
         public bool TryGetRuntimeGameplayActive(out bool isGameplayActive)
         {
@@ -100,12 +102,6 @@ namespace NeonBlack.Gameplay.Modules.Character
             ConfigureRigidbodyForMovementMode();
         }
 
-        [Inject]
-        private void Construct(IGameplayStateReader stateReader = null)
-        {
-            gameplayStateReader ??= stateReader;
-        }
-
         public void ConfigureRuntime(
             IGameplayStateReader stateReader,
             ICameraBoundsProvider boundsProvider,
@@ -124,12 +120,17 @@ namespace NeonBlack.Gameplay.Modules.Character
             ConfigureRuntime(context.GameplayStateReader, context.CameraBoundsProvider, context.PlayfieldBoundsProvider);
         }
 
+        public void ApplyRuntimeServices(GameplayRuntimeServicesContext context)
+        {
+            ConfigureRuntime(context.GameplayStateReader, context.CameraBoundsProvider, context.PlayfieldBoundsProvider);
+        }
+
         private void Start()
         {
             ClampPositionToBounds();
         }
 
-        private void FixedUpdate()
+        protected override void OnFixedGameplayTick(in GameplayTickContext context)
         {
             if (!HasRequiredRuntimeServices())
                 return;
@@ -140,18 +141,18 @@ namespace NeonBlack.Gameplay.Modules.Character
 
             if (EffectiveMovementStyle == Pawn2DMovementStyle.SideViewGravity)
             {
-                TickSideViewGravityMovement();
+                TickSideViewGravityMovement(context.FixedDeltaTime);
                 return;
             }
 
-            TickTopDownNoGravityMovement();
+            TickTopDownNoGravityMovement(context.FixedDeltaTime);
         }
 
-        private void Update()
+        protected override void OnGameplayTick(in GameplayTickContext context)
         {
             if (reactionLockTimer > 0f)
             {
-                reactionLockTimer = Mathf.Max(0f, reactionLockTimer - Time.deltaTime);
+                reactionLockTimer = Mathf.Max(0f, reactionLockTimer - context.DeltaTime);
                 if (reactionLockTimer <= 0f)
                     moveDirection = Vector2.zero;
             }
@@ -162,12 +163,12 @@ namespace NeonBlack.Gameplay.Modules.Character
                 facingRight = false;
         }
 
-        public void Move(Vector2 input)
+        public void Move(Vector2 input, float deltaTime)
         {
             moveDirection = input;
         }
 
-        public void Jump()
+        public void Jump(float deltaTime)
         {
             if (jumpEnabled && !IsActionLocked && !model.State.IsDead)
                 jumpQueued = true;

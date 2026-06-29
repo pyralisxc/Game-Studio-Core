@@ -1,7 +1,7 @@
 {
   "name": "NeonBlack.Gameplay.Presentation.HUD.UI.Editor",
   "references": [
-    "NeonBlack.Gameplay",
+    "NeonBlack.Gameplay.Glue",
     "NeonBlack.Gameplay.Presentation"
   ],
   "includePlatforms": [

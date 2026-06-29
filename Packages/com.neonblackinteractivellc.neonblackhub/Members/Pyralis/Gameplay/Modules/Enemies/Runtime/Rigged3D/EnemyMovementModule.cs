@@ -1,6 +1,5 @@
 using UnityEngine;
 using NeonBlack.Gameplay.Core.Enums;
-using NeonBlack.Gameplay.Presentation.Visuals;
 using NeonBlack.Gameplay.Core.Contracts;
 using Pys.Authoring.Contracts;
 
@@ -27,7 +26,7 @@ public class EnemyMovementModule : MonoBehaviour
 
         private CharacterController _controller;
         private IActorKnockbackController _knockbackReceiver;
-        private BillboardFacing3D _billboardFacing;
+        private IBillboardFacingController _billboardFacing;
         
         private float _verticalVel;
         private bool _isGrounded;
@@ -39,7 +38,7 @@ public class EnemyMovementModule : MonoBehaviour
         {
             _controller = GetComponent<CharacterController>();
             _knockbackReceiver = GetComponent<IActorKnockbackController>();
-            _billboardFacing = GetComponent<BillboardFacing3D>();
+            _billboardFacing = GetComponent<IBillboardFacingController>();
         }
 
         public void Tick(float deltaTime)
@@ -61,7 +60,7 @@ public class EnemyMovementModule : MonoBehaviour
             _verticalVel += gravity * deltaTime;
         }
 
-        public void MoveToward(Vector3 worldTarget, float speed, float statusMoveSpeedMultiplier, Camera cam, Transform visualRoot, bool spriteDefaultFacesRight, IActorFacingMirrorTarget[] facingMirrorTargets)
+        public void MoveToward(Vector3 worldTarget, float speed, float statusMoveSpeedMultiplier, float deltaTime, Camera cam, Transform visualRoot, bool spriteDefaultFacesRight, IActorFacingMirrorTarget[] facingMirrorTargets)
         {
             Vector3 dir = worldTarget - transform.position;
             dir.y = 0f;
@@ -71,13 +70,13 @@ public class EnemyMovementModule : MonoBehaviour
 
             if (dir.sqrMagnitude < 0.01f)
             {
-                _controller.Move(new Vector3(kb.x, _verticalVel + kb.y, kb.z) * Time.deltaTime);
+                _controller.Move(new Vector3(kb.x, _verticalVel + kb.y, kb.z) * deltaTime);
                 return;
             }
 
             dir.Normalize();
             Vector3 move = dir * speed * statusMoveSpeedMultiplier;
-            _controller.Move(new Vector3(move.x + kb.x, _verticalVel + kb.y, move.z + kb.z) * Time.deltaTime);
+            _controller.Move(new Vector3(move.x + kb.x, _verticalVel + kb.y, move.z + kb.z) * deltaTime);
 
             FaceTarget(worldTarget, cam, visualRoot, spriteDefaultFacesRight, facingMirrorTargets);
         }

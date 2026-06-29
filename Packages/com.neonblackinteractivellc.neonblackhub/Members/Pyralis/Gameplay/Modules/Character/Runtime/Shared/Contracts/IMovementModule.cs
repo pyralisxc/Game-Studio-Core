@@ -32,10 +32,10 @@ public interface IMovementModule
         /// Drive movement for this frame.
         /// </summary>
         /// <param name="input">Normalised X/Y input (X = left/right, Y = forward/back).</param>
-        void Move(Vector2 input);
+        void Move(Vector2 input, float deltaTime);
 
         /// <summary>Request a jump. No-op if conditions are not met (not grounded, no jumps remaining, etc.).</summary>
-        void Jump();
+        void Jump(float deltaTime);
 
         /// <summary>Enable or disable movement processing entirely (e.g. during cinematic or stun).</summary>
         void SetMovementEnabled(bool enabled);

@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
-using VContainer;
 using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Interaction
@@ -70,12 +69,6 @@ public class Collectible2D : MonoBehaviour, IPickupCollectible, IRuntimeValidati
         _localTime = Random.Range(0f, Mathf.PI * 2f); // random phase offset so collectibles don't look identical
         _awardSink ??= ResolveAwardSink();
         _spawner ??= GetComponentInParent<CollectibleSpawner2D>();
-    }
-
-    [Inject]
-    private void Construct(IPickupAwardSink awardSink = null)
-    {
-        _awardSink = awardSink;
     }
 
     /// <summary>

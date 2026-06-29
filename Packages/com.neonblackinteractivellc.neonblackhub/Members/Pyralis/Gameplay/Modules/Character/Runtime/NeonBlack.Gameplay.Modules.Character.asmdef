@@ -3,10 +3,8 @@
   "references": [
     "NeonBlack.Gameplay.Core",
     "NeonBlack.Gameplay.Data",
-    "NeonBlack.Gameplay.Presentation",
     "Unity.InputSystem",
     "Unity.Netcode.Runtime",
-    "VContainer",
     "Pys.Authoring.Contracts"
   ],
   "includePlatforms": [],

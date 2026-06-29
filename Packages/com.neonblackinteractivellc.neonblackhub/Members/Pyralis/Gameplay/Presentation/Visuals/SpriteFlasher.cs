@@ -1,5 +1,6 @@
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Types.Animation;
+using NeonBlack.Gameplay.Data.Presentation;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -29,7 +30,7 @@ namespace NeonBlack.Gameplay.Presentation.Visuals
         SuccessChecks = new[] { "Assign a FlashPresetSO and call Play() from a script or UnityEvent." },
         Tags = new[] { "capability:VFX" }
     )]
-public class SpriteFlasher : MonoBehaviour
+public class SpriteFlasher : MonoBehaviour, IVisualFlashPlayer
 {
     [Header("Targets")]
     [SerializeField, Tooltip("SpriteRenderers to flash. Leave empty and enable Auto Find to collect them automatically.")]

@@ -43,6 +43,15 @@ namespace Pys.Authoring.Editor.Tests
             Assert.That(dictionary.Label(AuthoringVocabularyKey.ActionAddComponent, string.Empty), Is.EqualTo("Add Component"));
             Assert.That(dictionary.Label(AuthoringVocabularyKey.ActionAssignField, string.Empty), Is.EqualTo("Assign Field"));
             Assert.That(dictionary.Label(AuthoringVocabularyKey.ProjectionIntent, string.Empty), Is.EqualTo("Intent"));
+            Assert.That(dictionary.Label("unity.setup.domain:Audio", string.Empty), Is.EqualTo("Audio"));
+            Assert.That(dictionary.Label("unity.field:AudioSource.clip", string.Empty), Is.EqualTo("Audio Clip Assigned"));
+            Assert.That(dictionary.Label("unity.field:Animator.runtimeAnimatorController", string.Empty), Is.EqualTo("Animator Controller Assigned"));
+            Assert.That(dictionary.Label("unity.field:PlayableDirector.playableAsset", string.Empty), Is.EqualTo("Timeline Asset Assigned"));
+            Assert.That(dictionary.Label("unity.field:Cinemachine.Follow", string.Empty), Is.EqualTo("Cinemachine Follow Target"));
+            Assert.That(dictionary.Label("unity.readiness:Partial", string.Empty), Is.EqualTo("Partial"));
+            Assert.That(dictionary.Label("unity.state:Assigned", string.Empty), Is.EqualTo("Assigned"));
+            Assert.That(dictionary.Label("unity.state:true", string.Empty), Is.EqualTo("Enabled"));
+            Assert.That(dictionary.Label("unity.binding:Track", string.Empty), Is.EqualTo("Track Binding"));
         }
     }
 

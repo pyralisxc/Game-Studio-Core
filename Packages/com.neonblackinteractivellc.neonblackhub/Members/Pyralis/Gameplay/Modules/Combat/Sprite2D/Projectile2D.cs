@@ -7,7 +7,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
     [AddComponentMenu("NeonBlack/Gameplay/Combat/Projectile 2D")]
     [RequireComponent(typeof(Rigidbody2D))]
     [RequireComponent(typeof(Collider2D))]
-    public sealed class Projectile2D : MonoBehaviour, IProjectileRuntimeBody
+    public sealed class Projectile2D : GameplayTickBehaviour, IProjectileRuntimeBody
     {
         [Header("Impact Feedback")]
         [SerializeField] private MonoBehaviour hitPauseSink;
@@ -22,6 +22,8 @@ namespace NeonBlack.Gameplay.Modules.Combat
         private Coroutine _lifetimeRoutine;
         private Vector3 _origin;
         private bool _hasHit;
+        protected override GameplayTickDomain TickDomain => GameplayTickDomain.Combat;
+        protected override bool UsesGameplayTick => true;
 
         private void Awake()
         {
@@ -61,7 +63,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
                 _lifetimeRoutine = StartCoroutine(LifetimeRoutine());
         }
 
-        private void Update()
+        protected override void OnGameplayTick(in GameplayTickContext context)
         {
             if (_hasHit || _command.MaxDistance <= 0f)
                 return;

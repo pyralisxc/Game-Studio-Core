@@ -27,7 +27,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
         Tags = new[] { "capability:Combat", "lane:Combat" },
         Selectable = false
     )]
-    public class ActorCombatReactionComponent : MonoBehaviour, IDamageModifier, IActorGuardController
+    public class ActorCombatReactionComponent : GameplayTickBehaviour, IDamageModifier, IActorGuardController
 {
         [SerializeField] private ActorCombatReactionProfile reactionProfile;
         private IActorHealthState _health;
@@ -171,10 +171,13 @@ namespace NeonBlack.Gameplay.Modules.Combat
                 _knockback?.ClearKnockback();
         }
 
-        private void Update()
+        protected override GameplayTickDomain TickDomain => GameplayTickDomain.Combat;
+        protected override bool UsesGameplayTick => true;
+
+        protected override void OnGameplayTick(in GameplayTickContext context)
         {
             if (_parryTimer > 0f)
-                _parryTimer = Mathf.Max(0f, _parryTimer - Time.deltaTime);
+                _parryTimer = Mathf.Max(0f, _parryTimer - context.DeltaTime);
         }
 
         private Vector3 ResolveFacingDirection()

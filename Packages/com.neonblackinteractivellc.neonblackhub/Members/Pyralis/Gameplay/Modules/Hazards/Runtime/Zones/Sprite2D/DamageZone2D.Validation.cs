@@ -15,11 +15,24 @@ namespace NeonBlack.Gameplay.Modules.Hazards.Zones
             else if (!zoneCollider.isTrigger)
                 yield return PyralisRuntimeValidationIssue.Required("Collider2D is not set to Is Trigger. Awake will force it on.");
 
-            if (impactProfile == null && damagePerTick <= 0f)
-                yield return PyralisRuntimeValidationIssue.Required("Fallback Damage Per Tick must be greater than zero when Impact Profile is empty.");
+            if (impactProfile == null)
+            {
+                yield return PyralisRuntimeValidationIssue.Required("Hazard Impact Profile is required. Damage zones use profile-owned impact payloads.");
+                yield break;
+            }
 
-            if (tickInterval <= 0f)
-                yield return PyralisRuntimeValidationIssue.Required("Tick Interval must be greater than zero.");
+            foreach (PyralisRuntimeValidationIssue issue in impactProfile.GetRuntimeValidationIssues())
+            {
+                if (issue != null && !string.IsNullOrWhiteSpace(issue.Message))
+                    yield return new PyralisRuntimeValidationIssue(
+                        $"Impact Profile: {issue.Message}",
+                        "impactProfile",
+                        nameof(DamageZone2D),
+                        "Open the assigned HazardImpactProfile and resolve the named issue.",
+                        "Assigned HazardImpactProfile reports no validation issues.",
+                        issue.Severity,
+                        "DamageZone2D.ImpactProfile." + issue.IssueCode);
+            }
         }
     }
 }

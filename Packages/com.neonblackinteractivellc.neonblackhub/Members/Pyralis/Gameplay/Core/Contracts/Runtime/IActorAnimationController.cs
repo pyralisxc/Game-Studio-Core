@@ -1,4 +1,5 @@
 using NeonBlack.Gameplay.Core.Types.Animation;
+using UnityEngine;
 
 namespace NeonBlack.Gameplay.Core.Contracts
 {
@@ -13,6 +14,8 @@ public interface IActorAnimationController
         void SetIntCustom(string customKey, int value);
         void TriggerSignal(ActorAnimationSignal signal, int intValue = 1, float floatValue = 1f, bool boolValue = true);
         void TriggerCustom(string customKey, int intValue = 1, float floatValue = 1f, bool boolValue = true);
+        void ApplyBillboard();
+        void SetRuntimeControllerOverride(RuntimeAnimatorController controller);
         void SetFacing(bool facingRight);
     }
 }

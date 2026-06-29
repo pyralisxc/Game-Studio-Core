@@ -1,14 +1,13 @@
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Types.Animation;
 using NeonBlack.Gameplay.Core.Types.Input;
-using NeonBlack.Gameplay.Presentation.Animation;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Modules.Traversal
 {
     public sealed partial class Pawn3DTraversalComponent
     {
-        public bool HandleHangFrame(FrameInput frameInput)
+        public bool HandleHangFrame(FrameInput frameInput, float deltaTime)
         {
             if (!EnsureDependencies())
                 return false;
@@ -45,14 +44,14 @@ namespace NeonBlack.Gameplay.Modules.Traversal
                 float halfWidth = _hangZone.ShimmyWidth * 0.5f;
                 float minX = _hangZone.WorldPosition.x - halfWidth;
                 float maxX = _hangZone.WorldPosition.x + halfWidth;
-                float nextX = transform.position.x + shimmy * Time.deltaTime;
+                float nextX = transform.position.x + shimmy * deltaTime;
                 if (nextX < minX || nextX > maxX)
                     shimmy = 0f;
 
                 _shimmyVelocityX = shimmy;
             }
 
-            _controller.Move(new Vector3(_shimmyVelocityX, 0f, 0f) * Time.deltaTime);
+            _controller.Move(new Vector3(_shimmyVelocityX, 0f, 0f) * deltaTime);
             _animationDriver?.SetFloatSignal(ActorAnimationSignal.Shimmy, _shimmyVelocityX);
             return true;
         }

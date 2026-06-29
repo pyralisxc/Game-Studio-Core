@@ -1,5 +1,4 @@
 using NeonBlack.Gameplay.Core.Contracts;
-using NeonBlack.Gameplay.Presentation.Animation;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Modules.Character
@@ -11,17 +10,14 @@ namespace NeonBlack.Gameplay.Modules.Character
         private PawnRootRuntimeReferences(
             GameObject owner,
             IActorHealthState health,
-            ActorAnimationDriver animation,
             IActorKnockbackController knockback)
         {
             _owner = owner;
             Health = health;
-            Animation = animation;
             Knockback = knockback;
         }
 
         public IActorHealthState Health { get; }
-        public ActorAnimationDriver Animation { get; }
         public IActorKnockbackController Knockback { get; }
 
         public static PawnRootRuntimeReferences Capture(GameObject owner)
@@ -29,7 +25,6 @@ namespace NeonBlack.Gameplay.Modules.Character
             return new PawnRootRuntimeReferences(
                 owner,
                 owner != null ? owner.GetComponent<IActorHealthState>() : null,
-                owner != null ? owner.GetComponent<ActorAnimationDriver>() : null,
                 owner != null ? owner.GetComponent<IActorKnockbackController>() : null);
         }
 

@@ -17,7 +17,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
 /// 5. On the pawn combat component, assign a Projectile Spawn Point child Transform (e.g. a hand/muzzle empty GameObject).
 /// </summary>
 [RequireComponent(typeof(Rigidbody))]
-public class Projectile : MonoBehaviour, IProjectileRuntimeBody
+public class Projectile : GameplayTickBehaviour, IProjectileRuntimeBody
 {
     [Header("Motion")]
     [Tooltip("When true, gravity pulls the projectile downward, creating an arc. " +
@@ -41,6 +41,9 @@ public class Projectile : MonoBehaviour, IProjectileRuntimeBody
     private Coroutine _lifetimeRoutine;
     private ProjectilePoolHandle _poolHandle;
     private Vector3 _origin;
+    protected override GameplayTickDomain TickDomain => GameplayTickDomain.Combat;
+    protected override bool UsesGameplayTick => true;
+    protected override bool UsesFixedGameplayTick => true;
 
     private void Awake()
     {
@@ -89,14 +92,14 @@ public class Projectile : MonoBehaviour, IProjectileRuntimeBody
         cameraShakeSink = cameraShake as MonoBehaviour;
     }
 
-    private void FixedUpdate()
+    protected override void OnFixedGameplayTick(in GameplayTickContext context)
     {
         if (!useArc) return;
         // Apply scaled gravity manually so we can tune the arc without Unity's fixed gravity.
-        _rb.linearVelocity += Vector3.down * (Physics.gravity.magnitude * gravityScale * Time.fixedDeltaTime);
+        _rb.linearVelocity += Vector3.down * (Physics.gravity.magnitude * gravityScale * context.FixedDeltaTime);
     }
 
-    private void Update()
+    protected override void OnGameplayTick(in GameplayTickContext context)
     {
         if (_hasHit || _command.MaxDistance <= 0f)
             return;

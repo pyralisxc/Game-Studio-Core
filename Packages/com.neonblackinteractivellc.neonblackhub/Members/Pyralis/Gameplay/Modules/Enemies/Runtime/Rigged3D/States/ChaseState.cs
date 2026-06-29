@@ -21,7 +21,7 @@ namespace NeonBlack.Gameplay.Modules.Enemies
                 return;
             }
 
-            ai.MovementModule.MoveToward(ai.DetectionModule.PlayerPosition, ai.MoveSpeed, ai.StatusMoveSpeedMultiplier, ai.PresentationCamera, ai.VisualRoot, ai.SpriteDefaultFacesRight, ai.CombatTactics?.FacingMirrorTargets);
+            ai.MovementModule.MoveToward(ai.DetectionModule.PlayerPosition, ai.MoveSpeed, ai.StatusMoveSpeedMultiplier, deltaTime, ai.PresentationCamera, ai.VisualRoot, ai.SpriteDefaultFacesRight, ai.CombatTactics?.FacingMirrorTargets);
         }
 
         public void OnExit(EnemyAI ai) { }

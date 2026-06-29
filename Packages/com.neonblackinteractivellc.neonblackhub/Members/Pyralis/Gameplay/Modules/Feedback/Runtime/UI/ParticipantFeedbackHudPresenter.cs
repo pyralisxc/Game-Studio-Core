@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using TMPro;
 using UnityEngine;
-using VContainer;
 using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Feedback.UI
@@ -43,20 +42,24 @@ namespace NeonBlack.Gameplay.Modules.Feedback.UI
         private float _statusTimer;
         private float _scoreTimer;
         private float _combatAlertTimer;
+        private bool _subscribedToFeedbackStream;
 
-        [Inject]
-        private void Construct(IParticipantFeedbackStream feedbackStream = null)
+        public void ConfigureRuntime(IParticipantFeedbackStream feedbackStream)
         {
+            if (_feedbackStream == feedbackStream)
+                return;
+
+            UnsubscribeFeedbackStream();
+
             _feedbackStream = feedbackStream;
+
+            SubscribeFeedbackStream();
         }
 
         private void Start()
         {
             CachePanels();
-            if (_feedbackStream == null)
-                return;
-
-            _feedbackStream.FeedbackPublished += HandleFeedbackMessage;
+            SubscribeFeedbackStream();
         }
 
         private void Update()
@@ -69,10 +72,25 @@ namespace NeonBlack.Gameplay.Modules.Feedback.UI
 
         private void OnDestroy()
         {
-            if (_feedbackStream == null)
+            UnsubscribeFeedbackStream();
+        }
+
+        private void SubscribeFeedbackStream()
+        {
+            if (_subscribedToFeedbackStream || !isActiveAndEnabled || _feedbackStream == null)
+                return;
+
+            _feedbackStream.FeedbackPublished += HandleFeedbackMessage;
+            _subscribedToFeedbackStream = true;
+        }
+
+        private void UnsubscribeFeedbackStream()
+        {
+            if (!_subscribedToFeedbackStream || _feedbackStream == null)
                 return;
 
             _feedbackStream.FeedbackPublished -= HandleFeedbackMessage;
+            _subscribedToFeedbackStream = false;
         }
 
         private void HandleFeedbackMessage(ParticipantFeedbackMessage message)

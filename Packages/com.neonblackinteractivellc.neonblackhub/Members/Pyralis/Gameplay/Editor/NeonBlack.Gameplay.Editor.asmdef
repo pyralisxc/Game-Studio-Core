@@ -2,7 +2,7 @@
   "name": "NeonBlack.Gameplay.Editor",
   "references": [
     "NeonBlack.Gameplay.Modules.Character",
-    "NeonBlack.Gameplay",
+    "NeonBlack.Gameplay.Glue",
     "NeonBlack.Gameplay.Core",
     "NeonBlack.Gameplay.Data",
     "NeonBlack.Gameplay.Modules.Combat",

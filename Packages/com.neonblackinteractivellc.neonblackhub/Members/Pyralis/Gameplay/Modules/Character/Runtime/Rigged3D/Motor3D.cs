@@ -32,7 +32,7 @@ namespace NeonBlack.Gameplay.Modules.Character
 [RequireComponent(typeof(Pawn3DInputModule))]
 [RequireComponent(typeof(Pawn3DMovementComponent))]
 [RequireComponent(typeof(Pawn3DPresentationComponent))]
-public partial class Motor3D : MonoBehaviour, IActorCombatMovementState, IActorReactionResponder, IActorMovementModifierReceiver, IClimbTraversalActor, IActorMotionStateReader
+public partial class Motor3D : GameplayTickBehaviour, IActorCombatMovementState, IActorReactionResponder, IActorMovementModifierReceiver, IClimbTraversalActor, IActorMotionStateReader
 {
     private Motor3DRuntimeReferences _runtime;
     private float                     _reactionLockTimer;
@@ -42,13 +42,14 @@ public partial class Motor3D : MonoBehaviour, IActorCombatMovementState, IActorR
     private Pawn3DMovementComponent Movement => _runtime?.Movement;
     private IPawnTraversalModule Traversal => _runtime?.Traversal;
     private Pawn3DPresentationComponent Presentation => _runtime?.Presentation;
-    private IActorCombatRuntimeTickReceiver CombatTicker => _runtime?.CombatTicker;
     private IActorCombatRequestReceiver CombatRequests => _runtime?.CombatRequests;
     private IActorHealthState Health => _runtime?.Health;
     private IActorDamageImmunityController DamageImmunity => _runtime?.DamageImmunity;
     private IActorTraversalFeature TraversalFeature => _runtime?.TraversalFeature;
     private IActorInteractionRequestReceiver InteractionRequests => _runtime?.InteractionRequests;
     private IActorGuardController GuardFeature => _runtime?.GuardFeature;
+    protected override GameplayTickDomain TickDomain => GameplayTickDomain.Character;
+    protected override bool UsesGameplayTick => true;
 
     //  Combat-facing movement state  //
     public bool IsGrounded  => Movement.State.IsGrounded;

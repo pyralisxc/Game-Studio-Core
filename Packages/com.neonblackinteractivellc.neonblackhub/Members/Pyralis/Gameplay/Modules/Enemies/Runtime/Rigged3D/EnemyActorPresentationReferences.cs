@@ -1,6 +1,5 @@
+using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Types.Animation;
-using NeonBlack.Gameplay.Presentation.Animation;
-using NeonBlack.Gameplay.Presentation.Visuals;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Modules.Enemies
@@ -8,8 +7,8 @@ namespace NeonBlack.Gameplay.Modules.Enemies
     internal sealed class EnemyActorPresentationReferences
     {
         private EnemyActorPresentationReferences(
-            ActorAnimationDriver animationDriver,
-            BillboardFacing3D billboardFacing,
+            IActorAnimationController animationDriver,
+            IBillboardFacingController billboardFacing,
             SpriteRenderer spriteRenderer)
         {
             AnimationDriver = animationDriver;
@@ -17,8 +16,8 @@ namespace NeonBlack.Gameplay.Modules.Enemies
             SpriteRenderer = spriteRenderer;
         }
 
-        public ActorAnimationDriver AnimationDriver { get; }
-        public BillboardFacing3D BillboardFacing { get; }
+        public IActorAnimationController AnimationDriver { get; }
+        public IBillboardFacingController BillboardFacing { get; }
         public SpriteRenderer SpriteRenderer { get; }
         public static ActorPresentationMode DefaultPresentationMode => ActorPresentationMode.Billboard2_5D;
         public ActorPresentationMode PresentationMode =>
@@ -27,8 +26,8 @@ namespace NeonBlack.Gameplay.Modules.Enemies
         public static EnemyActorPresentationReferences Resolve(GameObject owner)
         {
             return new EnemyActorPresentationReferences(
-                owner != null ? owner.GetComponent<ActorAnimationDriver>() : null,
-                owner != null ? owner.GetComponent<BillboardFacing3D>() : null,
+                owner != null ? owner.GetComponent<IActorAnimationController>() : null,
+                owner != null ? owner.GetComponent<IBillboardFacingController>() : null,
                 owner != null ? owner.GetComponentInChildren<SpriteRenderer>() : null);
         }
 
@@ -41,12 +40,11 @@ namespace NeonBlack.Gameplay.Modules.Enemies
             if (BillboardFacing == null)
                 return;
 
-            BillboardFacing.Configure(
+            BillboardFacing.ConfigureBillboardFacing(
                 visualRoot != null ? visualRoot : ownerTransform,
                 visualRoot,
                 SpriteRenderer,
                 presentationCamera,
-                BillboardFacing3D.FacingMode.YAxisOnly,
                 spriteDefaultFacesRight);
         }
 

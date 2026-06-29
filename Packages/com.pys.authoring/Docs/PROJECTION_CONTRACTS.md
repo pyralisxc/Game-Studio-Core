@@ -46,26 +46,30 @@ Allowed payload:
 
 - selectable goal option rows inferred from contract organization evidence
 - selected contract ID and display name
+- selected feature toggles, selected lane, and selected composition summary rendered by the tab
 - disabled reason when selected metadata is incomplete
 - category, capability path, surface, and summary from contract evidence
 - stable ID, source type, and source file provenance for each contract row
 - duplicate stable ID select-block reason when graph evidence reports a collision
 - organization pattern and dependency count for each projected Intent candidate
+- developer-settable intent toggles, lanes, compatibility/supporting stable IDs, hover explanations, success descriptions, readiness hints, expected evidence, completion signals, and validation owner stable ID
 
 Intent candidate inference:
 
-- `Surface = Goal`, `ProofTarget`, or `SuccessChecks` make an explicit goal candidate.
+- `Surface = Goal`, `SuccessDescription`, `ExpectedEvidence`, `CompletionSignals`, `ProofTarget`, or `SuccessChecks` make an explicit goal candidate.
 - If no explicit goal exists, the terminal contract of a prerequisite chain may become the route goal candidate.
 - If no organization pattern exists, Intent falls back to selectable contract rows so sparse target projects remain usable.
 - Setup, profile, service, presenter, adapter, runtime component, and vocabulary contracts are supporting route evidence unless they match one of the goal patterns above.
+- Built-in Unity setup guides may appear only when no target Intent candidates exist, or when the user enables Unity Setup Guides. They are always lower priority than target-project contracts and must be labeled as `BuiltInUnitySetup`.
 
 Forbidden payload:
 
 - scene repair steps
-- proof instructions
+- readiness instructions
 - raw graph rows that are not goal or fallback contract evidence
 - full visible contract inventory tables
 - product-specific meaning not supplied by contracts or vocabulary providers
+- built-in Unity setup guides presented as target-project gameplay contracts
 
 Native actions: no.
 
@@ -75,7 +79,7 @@ Current scene/setup reality: no.
 
 Code audit pressure: no.
 
-Export rule: export mirrors the rendered Intent projection fields, including active candidate visibility controls and the selected contract.
+Export rule: export mirrors the rendered Intent projection fields, including active candidate visibility controls, the selected contract, selected feature toggles, selected lane, and selected composition summary.
 
 ## Overview
 
@@ -86,9 +90,10 @@ Allowed payload:
 - concise scan summary
 - issue count
 - selected intent name
-- proof target
+- readiness target
 - readiness
 - next action from the active Guide projection evidence
+- up to three next-action rows from ordered blocking Guide rows
 - reason code from graph issue metadata
 
 Forbidden payload:
@@ -110,17 +115,19 @@ Export rule: export mirrors the Overview projection fields.
 
 ## Guide
 
-Question: How do I resolve the selected intent proof path?
+Question: How do I resolve the selected intent readiness path?
 
 Allowed payload:
 
 - selected contract ID and display name
-- proof target
-- proof readiness
+- readiness target
+- readiness state
+- success descriptions, readiness hints, expected evidence, and completion signals from selected route contracts
+- built-in Unity setup readiness evidence rows derived from observed native scene components, component field assignments, and assets
 - selected contract dependency closure, ordered by generic route metadata
 - ordered rows
 - row role
-- proof-blocking status
+- blocking status
 - route stable ID, route stage, route order, and setup domain per row
 - issue rows
 - owner IDs
@@ -164,6 +171,8 @@ Allowed payload:
 - source paths
 - component counts
 - issue counts
+- packet-backed navigation fields: `CanSelect`, `CanPing`, `NavigationKind`, and `NavigationLabel`
+- native inspection commands when the row packet says they are available: select loaded scene object or ping project asset
 
 Forbidden payload:
 
@@ -172,7 +181,7 @@ Forbidden payload:
 - code ownership commentary
 - product-specific meaning not present in observed evidence
 
-Native actions: no.
+Native actions: yes, only current-reality inspection actions backed by the rendered row packet. Map actions may select a hierarchy object or ping a project asset. They must not create, repair, or configure desired setup.
 
 Desired target data: no.
 
@@ -180,7 +189,7 @@ Current scene/setup reality: yes.
 
 Code audit pressure: no.
 
-Export rule: export mirrors the rendered Map projection rows, including active row filters.
+Export rule: export mirrors the rendered Map projection rows, including active row filters and navigation/action fields.
 
 ## Hygiene
 
@@ -192,9 +201,14 @@ Allowed payload:
 - dependency pressure
 - contract metadata pressure
 - duplicate stable ID pressure with all source types/files
+- goal readiness-hint pressure
+- validation record structure and owner pressure
+- expected-evidence honesty pressure
 - projection integrity pressure
 - source ownership pressure when inferred from graph evidence
 - docs/claims pressure when represented as typed evidence
+- textual dependency graph edge groups
+- textual dependency graph node groups
 
 Forbidden payload:
 
@@ -230,8 +244,11 @@ Allowed payload:
 - asset count
 - issue count
 - fact rows for observed assemblies, namespaces, types, scripts, fields, contracts, validators, scene objects, prefabs, assets, and issues
+- built-in Unity setup fact details including readiness state when native scene/asset evidence was observed
+- Unity-native vocabulary labels for setup domains, component fields, bindings, and readiness states when those labels explain observed evidence
 - source path/provenance when observed
 - confidence label and source/edge count
+- active kind and search filters through the rendered row packet
 
 Forbidden payload:
 
@@ -249,4 +266,4 @@ Current scene/setup reality: counts and observed fact rows only.
 
 Code audit pressure: no.
 
-Export rule: export mirrors the rendered Facts projection counts and rows, including active row filters.
+Export rule: export mirrors the rendered Facts projection counts and rows, including active kind/search filters.

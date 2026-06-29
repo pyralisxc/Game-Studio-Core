@@ -1,6 +1,5 @@
 using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Data.Definitions.Combat;
-using NeonBlack.Gameplay.Modules.Combat;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Types.Animation;
 
@@ -15,7 +14,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
 
             if (aerialSequence != null && aerialSequence.actions != null && aerialSequence.actions.Length > 0)
             {
-                if (ExecuteSequenceAction(_comboProcessor.AerialState, aerialSequence, CombatInputType.Aerial, WeaponModule.AerialWeapon, aerialHitBoxZone, ref _aerialTimer, attackCooldown))
+                if (ExecuteSequenceAction(_comboProcessor.AerialState, aerialSequence, CombatInputType.Aerial, WeaponModule.AerialWeapon, ref _aerialTimer, attackCooldown))
                     _aerialAttackCount++;
                 return;
             }
@@ -37,10 +36,9 @@ namespace NeonBlack.Gameplay.Modules.Combat
             PawnComboProcessor.ComboRuntimeState state,
             CombatSequenceDefinition sequence,
             CombatInputType inputType,
-            WeaponData fallbackWeapon,
-            string fallbackZoneName,
+            WeaponData defaultWeapon,
             ref float cooldownTimer,
-            float fallbackCooldown)
+            float defaultCooldown)
         {
             if (_comboProcessor.TryExecuteAction(
                 state,
@@ -53,59 +51,17 @@ namespace NeonBlack.Gameplay.Modules.Combat
                 out int _,
                 out CombatActionDefinition action))
             {
-                WeaponData resolvedWeapon = action.weapon != null ? action.weapon : fallbackWeapon;
-                cooldownTimer = ResolveActionCooldown(action, resolvedWeapon, fallbackCooldown);
+                WeaponData resolvedWeapon = action.weapon != null ? action.weapon : defaultWeapon;
+                cooldownTimer = ResolveActionCooldown(action, resolvedWeapon, defaultCooldown);
                 Motor.IsActing = true;
                 UpdateActionState();
                 Motor.ResetMoveToIdle();
                 TriggerCombatAnimation(action, inputType);
-                ActivateHitBoxForZone(action.fallbackHitBoxZone, resolvedWeapon ?? fallbackWeapon ?? WeaponModule.ActiveWeapon, action.fallbackHitBoxZone);
+                ActivateHitBoxForZone(action.hitBoxZone, resolvedWeapon ?? defaultWeapon ?? WeaponModule.ActiveWeapon, action.hitBoxZone);
                 return true;
             }
 
             return false;
-        }
-
-        private void ExecuteFallbackAttack()
-        {
-            if (Motor == null || !CombatActionStateMachine.CanStartActionFrom(Motor.IsActing, _attackTimer))
-                return;
-
-            _attackTimer = attackCooldown;
-            Motor.IsActing = true;
-            _combatTimer = combatWindow;
-            UpdateActionState();
-            _attackCount = (_attackCount % 3) + 1;
-
-            Motor.ResetMoveToIdle();
-            PublishCombatResult(new ActorCombatResult(
-                ActorCombatResultKind.AttackStarted,
-                gameObject,
-                animationSignal: ActorAnimationSignal.AttackPrimary,
-                step: _attackCount));
-
-            ActivateHitBoxForZone("Punch", WeaponModule.AttackWeapon);
-        }
-
-        private void ExecuteFallbackKick()
-        {
-            if (Motor == null || !CombatActionStateMachine.CanStartActionFrom(Motor.IsActing, _kickTimer))
-                return;
-
-            _kickTimer = kickCooldown;
-            Motor.IsActing = true;
-            _combatTimer = combatWindow;
-            UpdateActionState();
-            _kickCount = (_kickCount % 3) + 1;
-
-            Motor.ResetMoveToIdle();
-            PublishCombatResult(new ActorCombatResult(
-                ActorCombatResultKind.AttackStarted,
-                gameObject,
-                animationSignal: ActorAnimationSignal.AttackSecondary,
-                step: _kickCount));
-
-            ActivateHitBoxForZone("Kick", WeaponModule.KickWeapon);
         }
 
         private void TriggerCombatAnimation(CombatActionDefinition action, CombatInputType inputType)
@@ -131,13 +87,13 @@ namespace NeonBlack.Gameplay.Modules.Combat
             };
         }
 
-        private float ResolveActionCooldown(CombatActionDefinition action, WeaponData resolvedWeapon, float fallbackCooldown)
+        private float ResolveActionCooldown(CombatActionDefinition action, WeaponData resolvedWeapon, float defaultCooldown)
         {
             if (action != null && action.cooldownOverride >= 0f)
                 return action.cooldownOverride;
             if (resolvedWeapon != null && resolvedWeapon.attackCooldown > 0f)
                 return resolvedWeapon.attackCooldown;
-            return fallbackCooldown;
+            return defaultCooldown;
         }
     }
 }

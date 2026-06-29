@@ -41,6 +41,26 @@ namespace Pys.Authoring.Contracts
 
         public string ProofTarget { get; set; }
 
+        public string SuccessDescription { get; set; }
+
+        public string ReadinessHint { get; set; }
+
+        public string ValidationOwnerStableId { get; set; }
+
+        public string[] ExpectedEvidence { get; set; }
+
+        public string[] CompletionSignals { get; set; }
+
+        public string[] IntentToggles { get; set; }
+
+        public string[] IntentLanes { get; set; }
+
+        public string[] CompatibleStableIds { get; set; }
+
+        public string[] SupportingStableIds { get; set; }
+
+        public string[] HoverExplanations { get; set; }
+
         public AuthoringActionKind NativeActionKind { get; set; } = AuthoringActionKind.None;
 
         public string[] SetupSteps { get; set; }

@@ -20,16 +20,26 @@ Use contracts to describe stable authoring meaning:
 - `CapabilityPath`: slash-delimited capability path.
 - `Surface`: whether this is a goal, setup, profile, component, service, presenter, adapter, or vocabulary-only item.
 - `SetupSteps`: generic steps Guide may project for selected Intent paths.
-- `SuccessChecks`: checks Guide may show as proof target verification.
-- `PrerequisiteStableIds`: stable IDs that must be resolved before this contract's proof path.
+- `SuccessChecks`: checks Guide may show as readiness verification.
+- `PrerequisiteStableIds`: stable IDs that must be resolved before this contract's readiness path.
 - `RouteStage` and `RouteOrder`: generic ordering hints for Guide rows inside a selected dependency closure.
 - `SetupDomain`: broad setup domain label for Guide grouping and export rows.
-- `ProofTarget`: contract-owned proof label when the proof target differs from the display name.
+- `SuccessDescription`: optional human-readable success outcome for the selected authoring intent.
+- `ReadinessHint`: optional hint for what local readiness should look like.
+- `ExpectedEvidence`: optional evidence keys or descriptions PYS should expect to observe.
+- `CompletionSignals`: optional signals that indicate the route is complete enough to verify.
+- `ValidationOwnerStableId`: optional stable ID that links target-owned validation records to this contract.
+- `IntentToggles`: optional feature toggles PYS can render in Intent.
+- `IntentLanes`: optional lane/mode values PYS can render as compact choices.
+- `CompatibleStableIds`: optional stable IDs for compatible follow-up capabilities.
+- `SupportingStableIds`: optional stable IDs for supporting setup/capabilities.
+- `HoverExplanations`: optional short explanations for controls or compatibility.
+- `ProofTarget`: fallback wording. Prefer `SuccessDescription`, `ExpectedEvidence`, and `CompletionSignals` for current integrations.
 - `NativeActionKind`: generic Unity action kind for setup rows.
 - `RequiredFields`, `RequiredComponents`, and `RequiredInterfaces`: structure the graph can inspect.
 - `Selectable`: whether Intent may select this contract.
 
-Intent is not a full contract inventory. PYS treats explicit goal/proof evidence as the primary Intent candidate source, then falls back to terminal route contracts, then to selectable contracts only when no stronger organization pattern exists. Use `Surface = Goal`, `ProofTarget`, and `SuccessChecks` for user-facing authoring goals. Use `PrerequisiteStableIds`, `RouteStage`, `RouteOrder`, and `SetupDomain` for the supporting setup/profile/component path that Guide should expand after an Intent is selected.
+Intent is not a full contract inventory. PYS treats explicit goal, success, readiness, and expected-evidence metadata as the primary Intent candidate source, then falls back to terminal route contracts, then to selectable contracts only when no stronger organization pattern exists. Use `Surface = Goal`, `SuccessDescription`, `ExpectedEvidence`, `CompletionSignals`, `IntentToggles`, and `IntentLanes` for user-facing authoring goals. Use `PrerequisiteStableIds`, `RouteStage`, `RouteOrder`, `SetupDomain`, `CompatibleStableIds`, and `SupportingStableIds` for the supporting setup/profile/component path that Guide should expand after an Intent is selected.
 
 ## Validation Guidance
 
@@ -53,7 +63,9 @@ Validation should witness local readiness. It should not invent product setup fl
 
 Vocabulary providers are display-only.
 
-They may label stable keys, categories, or target-project concepts, but they must not decide setup validity, graph ownership, proof readiness, or runtime behavior.
+They may label stable keys, categories, or target-project concepts, but they must not decide setup validity, graph ownership, readiness, or runtime behavior.
+
+PYS also includes built-in Unity vocabulary and lower-priority Unity setup guides for native workflows such as Camera, Cinemachine, Animation, Animator, Timeline, Audio, VFX, UI, Input Actions, Prefab, and Lighting setup. These guides compile into graph evidence and help projects before code/contracts exist, but target-project contracts remain the authoritative Intent source when present.
 
 ## Integration Checklist
 
