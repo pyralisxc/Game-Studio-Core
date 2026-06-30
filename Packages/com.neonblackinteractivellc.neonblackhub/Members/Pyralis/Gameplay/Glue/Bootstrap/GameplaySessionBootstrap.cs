@@ -98,6 +98,8 @@ namespace NeonBlack.Gameplay.Glue.Bootstrap
         [SerializeField] private TimeScaleService timeScaleService;
         [SerializeField] private CameraShake cameraShake;
 
+        public SessionDefinition SessionDefinition => sessionDefinition;
+
         private void Awake()
         {
             Scene bootstrapScene = gameObject.scene;

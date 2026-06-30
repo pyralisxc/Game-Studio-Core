@@ -7,6 +7,7 @@ This folder intentionally stays small. Active docs describe supported architectu
 - `CURRENT_STATE_AUDIT.md` - current health, risks, Hygiene baseline, and verification posture.
 - `ARCHITECTURE_BLUEPRINT.md` - runtime ownership, folderbase, vocabulary, and system boundaries.
 - `FEATURE_DEVELOPMENT_ROADMAP.md` - current feature expansion priorities.
+- `RUNTIME_WIRING_AUDIT.md` - current Glue-to-Wiring metamorphosis plan: canonical runtime address language, read-only wiring truth first, and hard cuts only after duplicate delivery meanings are visible.
 
 PYS Authoring package documentation lives under `Packages/com.pys.authoring/Docs`, not in this gameplay package.
 
