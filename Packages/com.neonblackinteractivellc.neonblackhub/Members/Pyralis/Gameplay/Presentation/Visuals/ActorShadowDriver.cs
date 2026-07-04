@@ -14,12 +14,11 @@ namespace NeonBlack.Gameplay.Presentation.Visuals
         Surface = AuthoringSurface.Goal,
         Summary = "Applies shadow presentation (blob or renderer) based on PawnPresentationProfile.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/visuals",
-        RequiredFields = new[] { nameof(visualRoot), nameof(shadowRoot), nameof(shadowSpriteRenderer), nameof(modelRenderers), nameof(presentationProfile) },
         SetupSteps = new[] 
         { 
             "Add to the actor root or visual root.",
-            "Assign Shadow Sprite Renderer for blob shadows.",
-            "Assign Model Renderers for 3D shadow control."
+            "Assign Shadow Sprite Renderer only when using an authored blob-shadow child.",
+            "Assign Model Renderers only when the automatic child renderer search is not sufficient."
         },
         SuccessChecks = new[] { "Verify a shadow appears under the actor and scales correctly with height." },
         Tags = new[] { "capability:Animation" }
@@ -30,10 +29,10 @@ namespace NeonBlack.Gameplay.Presentation.Visuals
         public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (presentationProfile == null)
-                yield return RuntimeValidationIssue.Required("Presentation Profile is missing. Expected to be assigned by presentation stack at runtime.");
+                yield return RuntimeValidationIssue.Recommended("Presentation Profile is empty. This is valid when the presentation stack applies the profile at runtime.");
             
             if (shadowSpriteRenderer == null && (modelRenderers == null || modelRenderers.Length == 0))
-                yield return RuntimeValidationIssue.Required("No shadow renderer or model renderers assigned. Shadow will be invisible.");
+                yield return RuntimeValidationIssue.Recommended("No authored shadow renderer or model renderers assigned. Runtime profile application may still resolve or create shadow output.");
         }
         [Header("Scene References")]
         [SerializeField] private Transform visualRoot;

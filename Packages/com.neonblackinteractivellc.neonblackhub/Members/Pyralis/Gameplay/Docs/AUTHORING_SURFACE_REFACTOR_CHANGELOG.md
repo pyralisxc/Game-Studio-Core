@@ -81,3 +81,16 @@ Verification:
 
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because this is contract metadata/setup guidance only.
+
+### Actor Shadow Driver Contract Accuracy
+
+Changes:
+
+- Removed runtime-resolved shadow fields from `ActorShadowDriver` PYS required fields.
+- Rephrased setup steps so authored blob/model references are optional when the automatic presentation stack can resolve or create the shadow output.
+- Downgraded validation for missing runtime-applied presentation profile and missing authored shadow renderers from required to recommended.
+
+Verification:
+
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because this changes validation severity and contract metadata; visual behavior still requires Unity proof.
