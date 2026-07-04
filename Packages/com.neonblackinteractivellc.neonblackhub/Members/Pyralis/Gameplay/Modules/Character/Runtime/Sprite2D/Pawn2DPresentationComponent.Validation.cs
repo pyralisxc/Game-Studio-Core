@@ -43,6 +43,17 @@ namespace NeonBlack.Gameplay.Modules.Character
                     "Pawn2DPresentation.AnimationController.Missing");
             }
 
+            if ((dashClip != null || deathClip != null) && GetComponent<AudioSource>() == null)
+            {
+                yield return RuntimeValidationIssue.Required(
+                    "Dash or Death clip is assigned but no AudioSource exists on the pawn root.",
+                    "AudioSource",
+                    nameof(Pawn2DPresentationComponent),
+                    "Add an AudioSource on the same GameObject as Pawn2DPresentationComponent, or clear the dash/death clips.",
+                    "Optional 2D pawn audio feedback can play through an authored AudioSource.",
+                    "Pawn2DPresentation.AudioSource.Missing");
+            }
+
             if (stretchAmount < 1f)
             {
                 yield return RuntimeValidationIssue.Required(

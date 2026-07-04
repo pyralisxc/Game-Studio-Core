@@ -19,7 +19,7 @@ namespace NeonBlack.Gameplay.Modules.Character
         SetupDomain = "Presentation",
         ProofTarget = "Pawn visuals react to movement and animation signals.",
         NativeActionKind = AuthoringActionKind.AddComponent,
-        SetupSteps = new[] { "Add on the same root as Motor2D.", "Assign SpriteRenderer." },
+        SetupSteps = new[] { "Add on the same root as Motor2D.", "Assign SpriteRenderer.", "Add AudioSource only when dash or death clips are assigned." },
         SuccessChecks = new[] { "Move the pawn and verify the sprite tilts and tints according to velocity." },
         Tags = new[] { "capability:Animation", "capability:VFX", "axiom:Dimensions2D" }
     )]
@@ -68,16 +68,17 @@ namespace NeonBlack.Gameplay.Modules.Character
             baseScale = transform.localScale;
             animator ??= GetComponent<Animator>();
             spriteRenderer ??= GetComponent<SpriteRenderer>() ?? GetComponentInChildren<SpriteRenderer>(true);
-            EnsureAudioSource();
+            CacheAudioSource();
         }
 
-        private void EnsureAudioSource()
+        private void CacheAudioSource()
         {
             audioSource = GetComponent<AudioSource>();
-            if (audioSource == null)
-                audioSource = gameObject.AddComponent<AudioSource>();
-            audioSource.spatialBlend = 0f;
-            audioSource.playOnAwake = false;
+            if (audioSource != null)
+            {
+                audioSource.spatialBlend = 0f;
+                audioSource.playOnAwake = false;
+            }
         }
 
         private void Update()

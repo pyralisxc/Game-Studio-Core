@@ -122,3 +122,17 @@ Verification:
 - Reference search found no serialized member scene/prefab references to `CollectibleFeedback2D`.
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because Unity is not available on `PATH`; run collectible interaction tests/proofs in the Unity Editor.
+
+### Pawn 2D Presentation Optional Audio Ownership
+
+Changes:
+
+- Removed automatic `AudioSource` creation from `Pawn2DPresentationComponent`.
+- Kept dash/death clips optional; playback now no-ops when no authored AudioSource exists instead of creating hidden setup at runtime.
+- Added validation that reports a missing pawn-root `AudioSource` only when dash or death clips are assigned.
+
+Verification:
+
+- Reference search found no serialized member scene/prefab references to `Pawn2DPresentationComponent`.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because Unity is not available on `PATH`; run affected pawn presentation tests/proofs in the Unity Editor.

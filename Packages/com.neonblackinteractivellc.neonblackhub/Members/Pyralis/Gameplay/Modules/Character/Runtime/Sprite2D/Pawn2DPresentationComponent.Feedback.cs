@@ -7,8 +7,7 @@ namespace NeonBlack.Gameplay.Modules.Character
     {
         public void PlayDashFeedback()
         {
-            if (dashClip != null)
-                audioSource.PlayOneShot(dashClip);
+            PlayPresentationClip(dashClip);
             animationDriver?.TriggerSignal(ActorAnimationSignal.Dash);
         }
 
@@ -16,11 +15,18 @@ namespace NeonBlack.Gameplay.Modules.Character
         {
             ResetTransientVisualState();
             animationDriver?.TriggerSignal(ActorAnimationSignal.Death);
-            if (deathClip != null)
-                audioSource.PlayOneShot(deathClip);
+            PlayPresentationClip(deathClip);
 #if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
             try { Handheld.Vibrate(); } catch { }
 #endif
+        }
+
+        private void PlayPresentationClip(AudioClip clip)
+        {
+            if (clip == null || audioSource == null)
+                return;
+
+            audioSource.PlayOneShot(clip);
         }
     }
 }
