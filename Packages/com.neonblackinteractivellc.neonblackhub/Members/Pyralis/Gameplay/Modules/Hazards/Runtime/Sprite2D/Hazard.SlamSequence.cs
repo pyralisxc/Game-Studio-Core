@@ -63,7 +63,7 @@ public partial class Hazard
     }
 
     /// <summary>
-    /// Plays a one-shot clip through the hazard's cached 2D AudioSource (spatialBlend = 0).
+    /// Plays a one-shot clip through the hazard's authored 2D AudioSource (spatialBlend = 0).
     /// Volume is always equal across the screen - correct for an orthographic 2D game.
     /// </summary>
     private void PlaySFX(AudioClip clip)

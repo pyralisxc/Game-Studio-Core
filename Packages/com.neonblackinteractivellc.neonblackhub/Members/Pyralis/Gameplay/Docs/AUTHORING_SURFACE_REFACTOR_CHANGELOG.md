@@ -136,3 +136,17 @@ Verification:
 - Reference search found no serialized member scene/prefab references to `Pawn2DPresentationComponent`.
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because Unity is not available on `PATH`; run affected pawn presentation tests/proofs in the Unity Editor.
+
+### Hazard Optional Audio Ownership
+
+Changes:
+
+- Removed automatic `AudioSource` creation from `HazardRuntimeReferences`.
+- Kept hazard audio optional; hazard SFX playback already no-ops when no authored AudioSource exists.
+- Added validation when `HazardData` assigns audio clips but the hazard prefab root has no `AudioSource`.
+
+Verification:
+
+- Reference search found member scenes serialize `HazardSpawner`, not direct `Hazard` components.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because Unity is not available on `PATH`; run affected hazard/spawner tests and Play Mode hazard proofs in the Unity Editor.

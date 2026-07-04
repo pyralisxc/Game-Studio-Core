@@ -20,7 +20,7 @@ namespace NeonBlack.Gameplay.Modules.Hazards
             if (owner == null)
                 return references;
 
-            references.AudioSource = ResolveAudioSource(owner);
+            references.AudioSource = ResolveOptionalAudioSource(owner);
             references.FeedbackRuntime = owner.GetComponent<HazardFeedbackRuntime>()
                 ?? owner.GetComponentInChildren<HazardFeedbackRuntime>(true);
             references.CameraShakeSink = ResolveCameraShakeSink(cameraShakeSink);
@@ -64,14 +64,15 @@ namespace NeonBlack.Gameplay.Modules.Hazards
                 ?? settingsSource.GetComponent<IGameplaySettingsApplier>();
         }
 
-        private static AudioSource ResolveAudioSource(GameObject owner)
+        private static AudioSource ResolveOptionalAudioSource(GameObject owner)
         {
             AudioSource audioSource = owner.GetComponent<AudioSource>();
-            if (audioSource == null)
-                audioSource = owner.AddComponent<AudioSource>();
+            if (audioSource != null)
+            {
+                audioSource.spatialBlend = 0f;
+                audioSource.playOnAwake = false;
+            }
 
-            audioSource.spatialBlend = 0f;
-            audioSource.playOnAwake = false;
             return audioSource;
         }
     }

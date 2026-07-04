@@ -30,8 +30,21 @@ namespace NeonBlack.Gameplay.Modules.Hazards
                     yield return RuntimeValidationIssue.Required("Explosive hazard needs a Kinematic Rigidbody2D on root.");
             }
 
+            if (_data != null && HasAudioFeedback(_data) && GetComponent<UnityEngine.AudioSource>() == null)
+                yield return RuntimeValidationIssue.Required("HazardData assigns audio clips, but the hazard prefab root has no AudioSource.");
+
             if (_data != null && _data.hazardType == HazardData.HazardType.Crossing && _laneRenderer == null)
                 yield return RuntimeValidationIssue.Required("Crossing hazard needs a Lane Renderer.");
+        }
+
+        private static bool HasAudioFeedback(HazardData data)
+        {
+            return data.slamImpactClip != null
+                || data.bounceClip != null
+                || data.crossingEntryClip != null
+                || data.crossingTravelClip != null
+                || data.crossingExitClip != null
+                || data.explosionClip != null;
         }
     }
 }

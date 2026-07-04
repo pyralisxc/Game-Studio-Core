@@ -48,6 +48,7 @@ namespace NeonBlack.Gameplay.Modules.Hazards
         "Attach Hazard script to a GameObject.",
         "Assign a HazardData ScriptableObject.",
         "Wire the Shadow SpriteRenderer and Hit Colliders required by this hazard prefab.",
+        "Add AudioSource only when the assigned HazardData uses audio clips.",
         "Wire optional Outline, Lane, Explosion, feedback, and service overrides only when the selected HazardData uses those modifiers."
     },
         SuccessChecks = new[] { "Place a hazard in the scene and verify it executes its sequence (Slam, Crossing, etc.) on start." },
