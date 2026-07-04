@@ -15,11 +15,12 @@ namespace NeonBlack.Gameplay.Glue.SceneFlow.Navigation
         Category = "Setup",
         CapabilityPath = "Core Setup/Navigation/Scene Fader",
         Surface = AuthoringSurface.Service,
-        Summary = "Persistent ISceneNavigator that fades to black, optionally routes through the loading screen, and restores time scale.",
-        RequiredFields = new[] { nameof(_fadeOutDuration), nameof(_fadeInDuration) },
+        Summary = "Persistent ISceneNavigator that fades through a runtime-owned overlay, optionally routes through the loading screen, and restores time scale.",
         SetupSteps = new[] 
         { 
             "Place one SceneFader in the bootstrap or first navigation scene.",
+            "Tune fade durations when the defaults do not fit the project.",
+            "The fade overlay is created at runtime by this service.",
             "Use FadeToSceneViaLoader when the LoadingScreen scene should show progress."
         },
         SuccessChecks = new[] { "Initiate a scene transition and verify the screen fades smoothly to black." },

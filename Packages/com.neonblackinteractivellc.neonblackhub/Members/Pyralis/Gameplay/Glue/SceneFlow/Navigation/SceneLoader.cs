@@ -9,20 +9,20 @@ using Pys.Authoring.Contracts;
 namespace NeonBlack.Gameplay.Glue.SceneFlow.Navigation
 {
     /// <summary>
-    /// Scene navigation service that handles transitions with a generated fade canvas.
+    /// Scene navigation service that handles transitions with a runtime-owned fade canvas.
     /// </summary>
     [AuthoringContract(
         Category = "Setup",
         CapabilityPath = "Core Setup/Navigation/Scene Loader",
         Surface = AuthoringSurface.Service,
-        Summary = "Simple ISceneNavigator implementation that fades with a runtime-owned canvas.",
+        Summary = "Simple ISceneNavigator implementation that fades through a runtime-owned overlay.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/navigation",
-        RequiredFields = new[] { nameof(fadeDuration) },
         RequiredInterfaces = new[] { typeof(ISceneNavigator) },
         SetupSteps = new[] 
         { 
             "Add to a Bootstrap child GameObject or assign to GameplaySessionBootstrap.",
-            "Configure Fade Duration.",
+            "Tune Fade Duration when the default transition timing does not fit the project.",
+            "The fade canvas is created at runtime by this service.",
             "Use one navigation owner per menu flow. Use SceneFader when the route needs loading-screen routing."
         },
         SuccessChecks = new[] { "Transitioning between scenes triggers a smooth fade out and fade in." },

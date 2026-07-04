@@ -94,3 +94,17 @@ Verification:
 
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because this changes validation severity and contract metadata; visual behavior still requires Unity proof.
+
+### Scene Flow Runtime Overlay Contract Accuracy
+
+Changes:
+
+- Kept both `SceneLoader` and `SceneFader` because member scenes currently serialize references to each service.
+- Removed fade-duration settings from required PYS fields; they are tunable defaults, not missing setup.
+- Updated setup guidance to state that fade canvas/overlay objects are created at runtime by the navigation service.
+
+Verification:
+
+- Reference search found `SceneLoader` serialized in `Members/Public/Apocalyptia/Scenes/MainMenu.unity` and `SceneFader` serialized in `Members/Public/La Cucarachacha/Scenes/MainMenu.unity`.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because this is contract metadata/setup guidance only.
