@@ -15,7 +15,9 @@ namespace NeonBlack.Gameplay.Modules.Interaction
                 yield return RuntimeValidationIssue.Required("Collect FX particle system is unassigned.");
 
             AudioSource audio = GetComponent<AudioSource>();
-            if (audio != null && audio.outputAudioMixerGroup == null)
+            if (audio == null)
+                yield return RuntimeValidationIssue.Required("AudioSource component is missing.");
+            else if (audio.outputAudioMixerGroup == null)
                 yield return RuntimeValidationIssue.Required("AudioSource is missing an Output Mixer Group. Volume settings will not apply.");
         }
     }

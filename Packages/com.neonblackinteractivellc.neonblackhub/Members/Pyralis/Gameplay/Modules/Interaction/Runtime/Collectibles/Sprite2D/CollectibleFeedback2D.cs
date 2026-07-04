@@ -28,6 +28,7 @@ namespace NeonBlack.Gameplay.Modules.Interaction
         SetupSteps = new[] 
     { 
         "Attach to a Feedback Object or Spawner GameObject.",
+        "Add an AudioSource on the same GameObject.",
         "Assign AudioClips and ParticleSystems.",
         "Ensure AudioSource is routed to the SFX mixer group."
     },
@@ -35,6 +36,7 @@ namespace NeonBlack.Gameplay.Modules.Interaction
         Tags = new[] { "capability:Audio", "capability:VFX" }
     )]
 [AddComponentMenu("NeonBlack/Gameplay/Interaction/Collectibles/Collectible Feedback 2D")]
+[RequireComponent(typeof(AudioSource))]
 public partial class CollectibleFeedback2D : MonoBehaviour, IPickupAwardSink, IGameplayRuntimeServicesReceiver, IRuntimeValidationProvider
 {
     [Header("Collect Feedback")]
@@ -67,13 +69,17 @@ public partial class CollectibleFeedback2D : MonoBehaviour, IPickupAwardSink, IG
     {
         // Cache a 2D (non-spatial) AudioSource so clips have equal volume everywhere on screen.
         _audioSource = GetComponent<AudioSource>();
-        if (_audioSource == null) _audioSource = gameObject.AddComponent<AudioSource>();
-        _audioSource.spatialBlend = 0f;
-        _audioSource.playOnAwake  = false;
+        if (_audioSource != null)
+        {
+            _audioSource.spatialBlend = 0f;
+            _audioSource.playOnAwake  = false;
+        }
 
         // Validate mixer routing only when this component is actually playing clips.
         // Score-only pickup proofs should not need audio mixer setup.
-        if ((_collectClip != null || _destroyClip != null) && _audioSource.outputAudioMixerGroup == null)
+        if ((_collectClip != null || _destroyClip != null) && _audioSource == null)
+            Debug.LogError("[CollectibleFeedback2D] AudioSource is missing. Add one on this GameObject and route it to the SFX mixer group.", this);
+        else if ((_collectClip != null || _destroyClip != null) && _audioSource.outputAudioMixerGroup == null)
             Debug.LogError("[CollectibleFeedback2D] AudioSource has no Output AudioMixerGroup assigned. "
                 + "Drag your SFX mixer group into the AudioSource's 'Output' field so volume settings apply.", this);
 

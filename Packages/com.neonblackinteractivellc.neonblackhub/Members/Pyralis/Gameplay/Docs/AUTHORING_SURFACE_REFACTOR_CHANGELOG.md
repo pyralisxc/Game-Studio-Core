@@ -108,3 +108,17 @@ Verification:
 - Reference search found `SceneLoader` serialized in `Members/Public/Apocalyptia/Scenes/MainMenu.unity` and `SceneFader` serialized in `Members/Public/La Cucarachacha/Scenes/MainMenu.unity`.
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because this is contract metadata/setup guidance only.
+
+### Collectible Feedback AudioSource Ownership
+
+Changes:
+
+- Added `RequireComponent(typeof(AudioSource))` to `CollectibleFeedback2D`.
+- Removed runtime `AudioSource` creation from `CollectibleFeedback2D.Awake`; the AudioSource is now an authored Unity component that can be routed to the SFX mixer in the Inspector.
+- Updated validation to report a missing `AudioSource` directly instead of only checking mixer routing when one already exists.
+
+Verification:
+
+- Reference search found no serialized member scene/prefab references to `CollectibleFeedback2D`.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because Unity is not available on `PATH`; run collectible interaction tests/proofs in the Unity Editor.
