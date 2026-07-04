@@ -21,7 +21,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Surface = AuthoringSurface.Profile,
         Summary = "Defines the movement feel, speed, acceleration, and damping for a pawn archetype.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/movement",
-        RequiredFields = new[] { nameof(walkSpeed), nameof(acceleration), nameof(dashSpeed), nameof(movementMode), nameof(movementStyle), nameof(useCharacterController) },
+        RequiredFields = new[] { nameof(movementMode), nameof(movementStyle) },
         SetupSteps = new[] { "Assign to a PawnDefinition." },
         SuccessChecks = new[] { "Move the pawn in play mode and verify speed feel." },
         Tags = new[] { "capability:Movement", "runtime:CharacterPawnGameplay", "lane:Movement", "priority:AuxiliaryDefault" },

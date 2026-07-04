@@ -448,3 +448,20 @@ Verification:
 - `SessionDefinition` runtime validation still checks participant limits and local/network consistency.
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because this is contract metadata only.
+
+### Movement And Enemy Profile Required Field Accuracy
+
+Changes:
+
+- Narrowed `PawnMovementProfile` required PYS fields to movement mode and 2D movement style lane choices.
+- Narrowed `PlayfieldProfile` required PYS fields to movement mode; bounds remain sanitized/validated and only become meaningful when bounds or wrapping are enabled.
+- Removed default enemy attack mode from `EnemyCombatProfile` required PYS fields; the attack sequence remains required.
+- Kept runtime behavior unchanged.
+
+Verification:
+
+- `PawnMovementProfile` sanitizes movement tuning values through `OnValidate`.
+- `PlayfieldProfile` validates bound ordering rather than requiring specific default bound values.
+- `EnemyCombatProfile` runtime validation requires a non-empty attack sequence and treats attack mode as a default selection policy.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because this is contract metadata only.

@@ -16,7 +16,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Surface = AuthoringSurface.Profile,
         Summary = "Project-window creation path for movement space, bounds, wrap, and arena-depth rules.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/core",
-        RequiredFields = new[] { nameof(movementMode), nameof(minBounds), nameof(maxBounds) },
+        RequiredFields = new[] { nameof(movementMode) },
         PrerequisiteStableIds = new[] { "mode.definition" },
         RouteStage = "Game Mode Asset",
         RouteOrder = 35,

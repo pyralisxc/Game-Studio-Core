@@ -15,7 +15,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Surface = AuthoringSurface.Profile,
         Summary = "Defines how an AI enemy chooses and sequences its attacks.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/enemies",
-        RequiredFields = new[] { nameof(attackSequence), nameof(attackMode) },
+        RequiredFields = new[] { nameof(attackSequence) },
         SetupSteps = new[] { "Add EnemyAttacks to the attackSequence array.", "Set Attack Mode." },
         SuccessChecks = new[] { "Verify the enemy cycles through the defined attacks during combat." },
         Tags = new[] { "capability:Combat", "runtime:Combat" },
