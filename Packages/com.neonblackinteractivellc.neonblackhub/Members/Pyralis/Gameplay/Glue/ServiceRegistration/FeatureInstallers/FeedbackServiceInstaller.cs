@@ -47,7 +47,7 @@ namespace NeonBlack.Gameplay.Glue.ServiceRegistration
             ParticipantFeedbackService feedbackService,
             IParticipantRoster participantRoster)
         {
-            if (feedbackService == null)
+            if (feedbackService == null && participantRoster == null)
                 return;
 
             for (int sceneIndex = 0; sceneIndex < SceneManager.sceneCount; sceneIndex++)
@@ -67,12 +67,13 @@ namespace NeonBlack.Gameplay.Glue.ServiceRegistration
                     for (int i = 0; i < relays.Length; i++)
                         relays[i]?.ConfigureRuntime(feedbackService);
 
+                    ParticipantHudTargetBinding[] hudBindings = root.GetComponentsInChildren<ParticipantHudTargetBinding>(true);
+                    for (int i = 0; i < hudBindings.Length; i++)
+                        hudBindings[i]?.ConfigureRuntime(participantRoster);
+
                     ParticipantFeedbackHudPresenter[] presenters = root.GetComponentsInChildren<ParticipantFeedbackHudPresenter>(true);
                     for (int i = 0; i < presenters.Length; i++)
-                    {
                         presenters[i]?.ConfigureRuntime(feedbackService);
-                        presenters[i]?.ConfigureRuntime(participantRoster);
-                    }
                 }
             }
         }

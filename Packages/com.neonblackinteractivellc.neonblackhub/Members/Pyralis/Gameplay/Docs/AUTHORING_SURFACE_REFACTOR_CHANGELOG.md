@@ -58,3 +58,14 @@ Verification:
 Unity proof still required:
 
 - Run `FeedbackHudBindingTests` from Unity Test Runner.
+
+Follow-up fix in same family:
+
+- Updated `FeedbackServiceInstaller` so all `ParticipantHudTargetBinding` components receive the participant roster, including `ParticipantHealthHudBinder`.
+- Kept feedback stream wiring on `ParticipantFeedbackHudPresenter`.
+- Deferred cutting direct labels from `ParticipantFeedbackHudPresenter` because `Members/Public/La Cucarachacha/Scenes/MainMenu.unity` currently serializes `_statusLabel`.
+
+Additional verification:
+
+- Scoped `git diff --check` passed for the installer change.
+- No Unity Test Runner execution from shell; run affected runtime tests in Unity.
