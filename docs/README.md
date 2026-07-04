@@ -14,9 +14,6 @@ Use the package docs as the source of truth for gameplay setup and architecture:
 - `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/CURRENT_STATE_AUDIT.md`
 - `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/ARCHITECTURE_BLUEPRINT.md`
 - `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/FEATURE_DEVELOPMENT_ROADMAP.md`
-- `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/Authoring/START_HERE.md`
-- `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/Authoring/AUTHORING_BLUEPRINT.md`
-- `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/Authoring/AUTHORING_MODEL.md`
-- `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/Authoring/CANONICAL_SETUP.md`
+- Installed/source `com.pys.authoring` package docs for Authoring Window behavior, projections, exports, and target-project integration.
 
 If a scratch plan or dated audit conflicts with those package docs, update the package docs and remove the stale note.

@@ -9,7 +9,7 @@ This folder intentionally stays small. Active docs describe supported architectu
 - `FEATURE_DEVELOPMENT_ROADMAP.md` - current feature expansion priorities.
 - `RUNTIME_WIRING_AUDIT.md` - current Glue-to-Wiring metamorphosis plan: canonical runtime address language, read-only wiring truth first, and hard cuts only after duplicate delivery meanings are visible.
 
-PYS Authoring package documentation lives under `Packages/com.pys.authoring/Docs`, not in this gameplay package.
+PYS Authoring package documentation lives with the installed/source `com.pys.authoring` package, not in this gameplay package.
 
 ## Maintenance Rule
 

@@ -16,7 +16,7 @@ Use this package when you want to:
 | `Members/Pyralis/Gameplay/Docs/` | Current architecture and setup guidance for authored gameplay routes. |
 | `Members/Pyralis/Gameplay/Core/` | Foundational services, VContainer composition, contracts, config, `SceneLoader`, and `TimeManager`. |
 | `Members/Pyralis/Gameplay/Data/` | ScriptableObject definitions and profiles for sessions, participants, pawns, modes, and settings. |
-| `Members/Pyralis/Gameplay/Editor/` | Local gameplay inspectors, validation helpers, diagnostics, and editor utilities. PYS Authoring lives in Packages/com.pys.authoring. |
+| `Members/Pyralis/Gameplay/Editor/` | Local gameplay inspectors, validation helpers, diagnostics, and editor utilities. PYS Authoring lives in the external `com.pys.authoring` package. |
 | `Members/Pyralis/Gameplay/Modules/` | Reusable gameplay capability families. Lane-specific code uses `Sprite2D`, `Billboard2_5D`, and `Rigged3D` folders where applicable. |
 | `Members/Pyralis/Gameplay/Glue/` | Bootstrap, lifetime, session, participant, input-routing, spawning, service-registration, and scene-flow composition that wires authored modules together. |
 | `Members/Pyralis/Gameplay/Networking/` | Session ownership, authority, replication-facing contracts, and backend adapters. |
@@ -26,8 +26,8 @@ Use this package when you want to:
 
 ## Install prerequisites for another Unity project
 
-Neon Black Hub currently has one non-Unity-registry prerequisite: `jp.hadashikick.vcontainer`.
-Unity packages cannot reliably add scoped registries or Git dependencies from inside their own `package.json`, so the consuming project must install or expose VContainer before adding this package.
+Neon Black Hub currently has two non-Unity-registry prerequisites: `jp.hadashikick.vcontainer` and the external `com.pys.authoring` package.
+Unity packages cannot reliably add scoped registries, Git dependencies, or local disk dependencies from inside their own `package.json`, so the consuming project must install or expose both prerequisites before adding this package.
 
 Recommended project manifest setup:
 
@@ -49,6 +49,8 @@ Recommended project manifest setup:
 ```
 
 After VContainer resolves in the target project, add `com.neonblackinteractivellc.neonblackhub` through Package Manager or the project manifest. If Package Manager reports invalid dependencies before Unity imports scripts, check the target project's manifest first; copying only this package without the VContainer registry/package will not be enough.
+
+Game Studio Core does not embed PYS Authoring source. Install `com.pys.authoring` through Unity Package Manager from the source package's `package.json`, then let Unity refresh package resolution before compiling NeonBlack Gameplay.
 
 ## Handoff verification for another computer
 

@@ -45,7 +45,7 @@ Participant topology is graph evidence, not networking vocabulary. `SessionDefin
 
 ## Current Authoring State
 
-NeonBlack Gameplay exposes setup evidence through the runtime-safe `Pys.Authoring.Contracts` assembly. The standalone `com.pys.authoring` package owns all authoring UI, graph, projection, export, vocabulary, and hygiene behavior.
+NeonBlack Gameplay exposes setup evidence through the runtime-safe `Pys.Authoring.Contracts` assembly. The standalone `com.pys.authoring` package owns all authoring UI, graph, projection, export, vocabulary, and hygiene behavior. Game Studio Core consumes that package as an installed external package rather than embedding its source under this project.
 
 ```text
 Gameplay scripts/assets
@@ -65,7 +65,7 @@ PYS owns the Authoring Window, graph compilation, projection packets, Hygiene/Fa
 
 Inspectors are local integrity surfaces, not setup guides. They may show field-local contract issues, local validation warnings, or small asset-local utilities such as syncing an `InputProfile` from its assigned Unity Input Action Asset. They should not carry route setup cards, genre/preset buttons, alternate proof guidance, projection rows, handoff adapters, or export logic.
 
-PYS exports are external read-only diagnostics from the exact projection packet the PYS UI renders. Current package docs for tab contracts, hygiene lenses, target-project integration, and validation live under `Packages/com.pys.authoring/Docs`.
+PYS exports are external read-only diagnostics from the exact projection packet the PYS UI renders. Current package docs for tab contracts, hygiene lenses, target-project integration, and validation live with the installed/source `com.pys.authoring` package.
 
 ## Platform Health
 
@@ -112,7 +112,7 @@ Hygiene now has source-derived runtime communication pressure categories for dir
 
 ## Verification Posture
 
-Use Unity Test Runner or `.\Tools\Validation\Run-PreSceneValidation.ps1` as the durable gate when runtime/editor code changes. For docs-only consolidation, use link/reference checks and `git diff --check`.
+Use Unity Test Runner as the durable gate when runtime/editor code changes. For docs-only consolidation, use link/reference checks and `git diff --check`.
 
 Manual Authoring Window walkthroughs are still required for user-flow confidence because static tests can prove graph shape but not whether the setup feels clear.
 
