@@ -318,3 +318,16 @@ Verification:
 
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because this is contract metadata only.
+
+### Tabletop Move Policy Contract Accuracy
+
+Changes:
+
+- Removed `maxDistance` from `BoardMovePolicyDefinition` required PYS fields; identity and shape remain required setup meaning.
+- Kept `maxDistance` range validation in the local validation provider.
+
+Verification:
+
+- Scoped reference search found no serialized member scene/prefab/asset references that required a compatibility field change.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because this is contract metadata only.

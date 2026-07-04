@@ -32,7 +32,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
         CapabilityPath = "Tabletop/Board/Board Move Policy Definition",
         Surface = AuthoringSurface.Goal,
         Summary = "Project-window creation path for tabletop legal-move policy.",
-        RequiredFields = new[] { nameof(policyId), nameof(shape), nameof(maxDistance) },
+        RequiredFields = new[] { nameof(policyId), nameof(displayName), nameof(shape) },
         SuccessChecks = new[] { "Verify that pieces can only move according to the shape and distance defined in this policy." },
         Tags = new[] { "capability:Tabletop", "capability:Grid", "runtime:BoardCardTabletop" }
     )]
