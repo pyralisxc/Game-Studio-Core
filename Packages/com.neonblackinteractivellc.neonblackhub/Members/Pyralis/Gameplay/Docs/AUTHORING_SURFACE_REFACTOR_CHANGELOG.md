@@ -344,3 +344,18 @@ Verification:
 - Reference search found no serialized member scene/prefab/asset references to `Collectible3D`.
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because this is contract metadata only.
+
+### Collectible Feedback 2D Contract Required Field Accuracy
+
+Changes:
+
+- Removed optional destroy feedback clip and particle references from `CollectibleFeedback2D` required PYS fields.
+- Updated setup guidance so collection feedback is the required proof path and destroy feedback is explicitly optional.
+- Kept runtime behavior unchanged.
+
+Verification:
+
+- `CollectibleFeedback2D.Validation.cs` already required collect clip, collect particle system, and audio setup, but did not require destroy feedback.
+- Reference search found no serialized member scene/prefab/asset references to `CollectibleFeedback2D`.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because this is contract metadata only.

@@ -24,12 +24,13 @@ namespace NeonBlack.Gameplay.Modules.Interaction
         CapabilityPath = "Interaction/Collectibles/Feedback/Collectible Feedback2D",
         Surface = AuthoringSurface.Goal,
         Summary = "Manages audio and visual feedback (particles/sounds) for collectible actions.",
-        RequiredFields = new[] { nameof(_collectClip), nameof(_collectFX), nameof(_destroyClip), nameof(_destroyFX) },
+        RequiredFields = new[] { nameof(_collectClip), nameof(_collectFX) },
         SetupSteps = new[] 
     { 
         "Attach to a Feedback Object or Spawner GameObject.",
         "Add an AudioSource on the same GameObject.",
-        "Assign AudioClips and ParticleSystems.",
+        "Assign collection AudioClip and ParticleSystem.",
+        "Optionally assign destroy AudioClip and ParticleSystem feedback.",
         "Ensure AudioSource is routed to the SFX mixer group."
     },
         SuccessChecks = new[] { "Collect a pickup and verify the sparkle particles play and the collection sound triggers." },
