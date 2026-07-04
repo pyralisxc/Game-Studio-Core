@@ -46,13 +46,8 @@ Do not use dated audits, migration notes, or old setup guides as source truth. I
 - Keep the runtime simple and Unity-native: explicit pawn sibling components describe what a pawn is, direct module-owned components describe optional capabilities, and `ParticipantDefinition` owns input for the participant driving the pawn.
 - Keep active docs focused on present truth and intended direction. Remove stale legacy/history commentary from setup and architecture docs unless it protects active migration, shipped compatibility, or project data; move useful history to an archive, changelog, migration note, or audit file.
 
-### Authoring Surface Refactor Defaults
+### Authoring Surface Defaults
 
-Use `docs\superpowers\plans\2026-07-04-codebase-authoring-surface-refactor.md` and `Packages\com.neonblackinteractivellc.neonblackhub\Members\Pyralis\Gameplay\Docs\AUTHORING_SURFACE_REFACTOR_AUDIT.md` as the active execution map for the package-wide simplification lane.
-
-Default decisions for that lane:
-
-- Start with Feedback plus simple Presentation before higher-risk systems such as locomotion, combat, RPG, tabletop, networking, or editor tooling.
 - Reduce visible Unity setup before reducing internal implementation. A few clear modules with assigned profiles are preferable to many small scene components that require code navigation to understand.
 - Keep internal code modular where it clarifies ownership: state machines, handlers, private lanes, readers, sinks, and small helpers are valid implementation details.
 - Use profiles for reusable authored variation, not as one giant storage object and not for every local field.
