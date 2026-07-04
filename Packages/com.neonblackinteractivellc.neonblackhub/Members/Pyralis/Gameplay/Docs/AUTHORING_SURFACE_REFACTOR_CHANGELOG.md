@@ -574,3 +574,18 @@ Verification:
 - `EnemyCombatProfile` already owns attack-sequence validation.
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because this is contract metadata only.
+
+### RPG Item Definition Contract Accuracy
+
+Changes:
+
+- Narrowed `ItemDefinition` required PYS fields to item id, display name, and category.
+- Removed rarity, max stack size, and tags from unconditional required metadata.
+- Kept runtime behavior unchanged.
+
+Verification:
+
+- `ItemDefinition.GetValidationIssues` requires item id, display name, category, and validates max stack size range.
+- `ItemDefinition.Sanitize` defaults rarity and clamps max stack size to at least 1; tags are optional and normalized when present.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because this is contract metadata only.

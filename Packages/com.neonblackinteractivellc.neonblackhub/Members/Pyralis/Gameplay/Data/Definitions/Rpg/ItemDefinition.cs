@@ -10,7 +10,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rpg
         Category = "Inventory",
         CapabilityPath = "RPG/Inventory/Definitions/Item Definition",
         Surface = AuthoringSurface.Goal,
-        RequiredFields = new[] { nameof(itemId), nameof(displayName), nameof(category), nameof(rarity), nameof(maxStackSize), nameof(tags) },
+        RequiredFields = new[] { nameof(itemId), nameof(displayName), nameof(category) },
         SuccessChecks = new[] { "Proof that the item can exist in an inventory and has correct display properties." },
         Tags = new[] { "capability:Inventory", "runtime:CharacterPawnGameplay", "lane:RPG" }
     )]
