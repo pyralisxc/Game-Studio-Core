@@ -36,7 +36,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Combat
         CapabilityPath = "Combat/Actions/Status Effect Definition",
         Surface = AuthoringSurface.Goal,
         Summary = "Defines a status effect (buff or debuff) that can be applied to actors.",
-        RequiredFields = new[] { nameof(effectId), nameof(displayName), nameof(duration) },
+        RequiredFields = new[] { nameof(effectId), nameof(displayName) },
         SetupSteps = new[] { "Set Effect Kind and Duration.", "Configure stack mode." },
         SuccessChecks = new[] { "Apply the effect to an actor and verify its magnitude and duration match the definition." },
         Tags = new[] { "capability:Combat", "runtime:Combat" }

@@ -264,3 +264,15 @@ Verification:
 - Reference search found the removed flasher completion events were only referenced inside their owning flasher scripts.
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because Unity is not available on `PATH`; run affected presentation/feedback proofs in the Unity Editor.
+
+### Profile Numeric Required Field Accuracy
+
+Changes:
+
+- Removed `duration` from `StatusEffectDefinition` required PYS fields; identity fields remain required and duration is still range-validated.
+- Removed `duration`, `height`, and `cooldown` from `TopDownHopProfile` required PYS fields; the action role remains the authored meaning field and numeric values remain sanitized.
+
+Verification:
+
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because this is contract metadata only.

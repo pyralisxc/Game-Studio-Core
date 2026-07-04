@@ -14,7 +14,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Surface = AuthoringSurface.Profile,
         Summary = "Tuning asset for fake-gravity visual jumps where the pawn sprite or visual child arcs without changing collider position.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/movement",
-        RequiredFields = new[] { nameof(actionRole), nameof(duration), nameof(height), nameof(cooldown) },
+        RequiredFields = new[] { nameof(actionRole) },
         SuccessChecks = new[] { "Perform a hop in a top-down scene and verify the shadow stays on the ground while the sprite arcs up." },
         RoleTags = new[] { "VisualHop", "FakeGravityJump", "JumpProfile" },
         Tags = new[] { "capability:Movement", "capability:Traversal", "runtime:CharacterPawnGameplay", "axiom:Dimensions2D", "axiom:GravityNone", "axiom:Realtime" },
