@@ -277,3 +277,17 @@ Verification:
 
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because this is contract metadata only.
+
+### Health Component Contract Accuracy
+
+Changes:
+
+- Removed `iFrameDuration` from `HealthComponent` required PYS fields; Max Health and Faction remain the authored setup identity.
+- Rephrased feedback setup guidance so optional UnityEvents are not presented as the required feedback path.
+- Preserved serialized `OnDamaged`, `OnHealed`, and `OnDeath` UnityEvent fields because member prefabs currently serialize them.
+
+Verification:
+
+- Reference search found `HealthComponent` UnityEvents serialized in member prefabs, so event fields were preserved.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because this is contract metadata/setup guidance only.

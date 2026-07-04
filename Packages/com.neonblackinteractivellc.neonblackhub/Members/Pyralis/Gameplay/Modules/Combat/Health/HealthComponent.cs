@@ -16,12 +16,12 @@ namespace NeonBlack.Gameplay.Modules.Combat
         Surface = AuthoringSurface.Goal,
         Summary = "Universal health component for players, enemies, and destructible props.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/health",
-        RequiredFields = new[] { nameof(maxHealth), nameof(faction), nameof(iFrameDuration) },
+        RequiredFields = new[] { nameof(maxHealth), nameof(faction) },
         SetupSteps = new[]
         {
             "Add to the actor or prop root.",
             "Set Max Health and Faction.",
-            "Wire OnDamaged, OnHealed, or OnDeath UnityEvents for visual feedback (HitFlash, UI)."
+            "Use typed health state/events, feedback components, or optional UnityEvents for visual feedback."
         },
         SuccessChecks = new[] { "Damage changes health state and raises configured feedback events." },
         Tags = new[] { "capability:CombatState", "axiom:Realtime", "lane:Combat", "priority:Primary" }
