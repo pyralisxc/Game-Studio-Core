@@ -331,3 +331,16 @@ Verification:
 - Scoped reference search found no serialized member scene/prefab/asset references that required a compatibility field change.
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because this is contract metadata only.
+
+### Collectible 3D Contract Required Field Accuracy
+
+Changes:
+
+- Removed bob animation tuning values from `Collectible3D` required PYS fields, matching the earlier `Collectible2D` contract cleanup.
+- Kept collider setup expressed through Unity's `RequireComponent` and runtime validation.
+
+Verification:
+
+- Reference search found no serialized member scene/prefab/asset references to `Collectible3D`.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because this is contract metadata only.

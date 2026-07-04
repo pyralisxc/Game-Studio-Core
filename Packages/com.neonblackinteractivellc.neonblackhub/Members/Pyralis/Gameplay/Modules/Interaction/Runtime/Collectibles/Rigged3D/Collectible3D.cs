@@ -10,7 +10,6 @@ namespace NeonBlack.Gameplay.Modules.Interaction
         CapabilityPath = "Interaction/Collectibles/Collectible 3D",
         Surface = AuthoringSurface.Goal,
         Summary = "3D collectible item that awards points and bobs in world space.",
-        RequiredFields = new[] { nameof(bobSpeed), nameof(bobHeight) },
         SetupSteps = new[] 
         { 
             "Add to a 3D prefab with a Collider (Is Trigger).",
