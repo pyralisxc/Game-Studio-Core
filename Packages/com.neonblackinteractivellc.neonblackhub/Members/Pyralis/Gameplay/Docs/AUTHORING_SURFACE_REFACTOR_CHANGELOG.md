@@ -69,3 +69,15 @@ Additional verification:
 
 - Scoped `git diff --check` passed for the installer change.
 - No Unity Test Runner execution from shell; run affected runtime tests in Unity.
+
+### Actor Floating Feedback Contract Accuracy
+
+Changes:
+
+- Removed optional `damageNumberSink` and `popupCamera` from `ActorFloatingFeedbackReceiver` required PYS fields.
+- Kept setup guidance, but phrased both fields as optional/runtime-configurable depending on enabled feedback categories.
+
+Verification:
+
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because this is contract metadata/setup guidance only.

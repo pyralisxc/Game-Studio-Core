@@ -11,12 +11,11 @@ namespace NeonBlack.Gameplay.Modules.Feedback
         CapabilityPath = "Presentation/Feedback/Actor Floating Feedback Receiver",
         Surface = AuthoringSurface.Goal,
         Summary = "Renders world-space damage, heal, score, combo, status, parry, stagger, guard-break, and finisher popups from actor feedback events.",
-        RequiredFields = new[] { nameof(damageNumberSink), nameof(popupCamera) },
         SetupSteps = new[] 
         { 
             "Attach to the actor root or a child visuals object.",
-            "Assign Damage Number Sink to DamageNumberSpawner if damage/heal numbers are enabled.",
-            "Assign Popup Camera when world-space popups should face a specific gameplay camera."
+            "Assign Damage Number Sink when damage/heal numbers should route through a shared DamageNumberSpawner.",
+            "Assign Popup Camera or call SetPopupCamera when world-space popups should face a specific gameplay camera."
         },
         SuccessChecks = new[] { "Verify world-space popups appear above the actor during combat." },
         Tags = new[] { "capability:VFX" }
