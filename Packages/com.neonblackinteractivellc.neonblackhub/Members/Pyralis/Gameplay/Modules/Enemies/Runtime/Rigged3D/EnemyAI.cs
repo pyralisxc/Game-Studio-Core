@@ -19,7 +19,7 @@ namespace NeonBlack.Gameplay.Modules.Enemies
         Surface = AuthoringSurface.Goal,
         Summary = "Canonical 3D/2.5D AI controller; handles patrol, detection, and attack states.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/enemy-ai",
-        RequiredFields = new[] { nameof(moveSpeed), nameof(enemyProfile), nameof(patrolPoints) },
+        RequiredFields = new[] { nameof(enemyProfile) },
         SetupSteps = new[] { "Add EnemyAI to 3D actor.", "Assign EnemyProfile.", "Configure Detection Module ranges." },
         SuccessChecks = new[] { "Place enemy and player in scene. Verify enemy enters 'Chase' state when player enters detection range." },
         Tags = new[] { "capability:TacticsAggressive", "capability:Steering3D", "axiom:Realtime", "axiom:Dimensions3D", "lane:AI", "priority:Primary" }

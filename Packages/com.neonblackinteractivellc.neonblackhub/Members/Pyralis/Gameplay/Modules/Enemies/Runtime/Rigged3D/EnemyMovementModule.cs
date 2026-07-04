@@ -11,7 +11,7 @@ namespace NeonBlack.Gameplay.Modules.Enemies
         Surface = AuthoringSurface.Goal,
         Summary = "Coordinates 3D movement for enemy actors, including gravity and target facing.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/enemies",
-        RequiredFields = new[] { nameof(movementMode), nameof(gravity), nameof(groundCheckRadius), nameof(groundLayer) },
+        RequiredFields = new[] { nameof(movementMode), nameof(groundLayer) },
         SuccessChecks = new[] { "Verify enemy can move toward a target and stay grounded." },
         Tags = new[] { "capability:Movement" }
     )]

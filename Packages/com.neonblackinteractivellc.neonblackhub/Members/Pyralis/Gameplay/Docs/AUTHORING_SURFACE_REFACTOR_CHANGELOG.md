@@ -497,3 +497,20 @@ Verification:
 - `ParticipantDefinition` setup guidance already states input profile and pawn are conditional by route.
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because this is contract metadata only.
+
+### Enemy Runtime Contract Required Field Accuracy
+
+Changes:
+
+- Narrowed `EnemyMovementModule` required PYS fields to movement mode and ground layer; gravity and ground-check radius remain movement tuning.
+- Narrowed `EnemyAI` required PYS fields to `enemyProfile`; move speed is tuning and patrol points are optional because the AI can use random patrol targets.
+- Narrowed `EnemySpawner` required PYS fields to enemy prefabs; spawn points fall back to the spawner transform and spawn mode has a default.
+- Kept runtime behavior unchanged.
+
+Verification:
+
+- `EnemyAI.GetPatrolTarget` falls back to a random patrol target when no patrol points are assigned.
+- `EnemySpawner.TryPickSpawnOrigin` falls back to the spawner transform when no valid spawn point exists.
+- `EnemySpawner.Start` already guards against missing enemy prefabs before spawning.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because this is contract metadata only.

@@ -15,7 +15,7 @@ namespace NeonBlack.Gameplay.Modules.Spawning
         CapabilityPath = "Combat/Actions/Enemy Spawner",
         Surface = AuthoringSurface.Goal,
         Summary = "Inspector Add Component path for scene-authored enemy spawning.",
-        RequiredFields = new[] { "enemyPrefabs", "spawnPoints", "mode" },
+        RequiredFields = new[] { "enemyPrefabs" },
         SetupSteps = new[] { "Configure Spawn Points" },
         SuccessChecks = new[] { "Verify that enemies are spawned according to the selected mode (Continuous/Waves)." },
         Tags = new[] { "capability:Combat", "capability:Session" }
