@@ -17,7 +17,6 @@ namespace NeonBlack.Gameplay.Networking.Participants
         CapabilityPath = "Networking/Session/Networked Session State Service",
         Surface = AuthoringSurface.Goal,
         Summary = "Drop-in replacement for SessionStateService in online sessions. Handles NGO role startup.",
-        RequiredFields = new[] { "networkMode", "autoStartHost" },
         SuccessChecks = new[] { "Entering the scene correctly triggers the NGO role (Host/Client/Server) defined in the SessionDefinition." },
         RoleTags = new[] { "IntentRouteEssential", "NetworkRouteSupport" },
         Tags = new[] { "capability:Networking", "runtime:Networking" }

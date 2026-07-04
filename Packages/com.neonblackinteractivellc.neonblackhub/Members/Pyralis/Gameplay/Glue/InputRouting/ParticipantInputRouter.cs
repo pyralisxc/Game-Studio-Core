@@ -25,7 +25,6 @@ namespace NeonBlack.Gameplay.Glue.InputRouting
         Surface = AuthoringSurface.RequiredSetup,
         Summary = "Routes physical input device events to the correct participant; participant definitions own the InputProfile that pawn and non-pawn control surfaces consume.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/input",
-        RequiredFields = new[] { nameof(autoRegisterDefaultParticipantsWithoutPlayerInput) },
         PrerequisiteStableIds = new[] { "participant.default", "input.profile" },
         RouteStage = "Scene Services",
         RouteOrder = 60,

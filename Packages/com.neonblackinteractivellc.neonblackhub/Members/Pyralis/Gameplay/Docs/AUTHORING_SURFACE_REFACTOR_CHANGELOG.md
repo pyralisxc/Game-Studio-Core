@@ -429,3 +429,22 @@ Verification:
 - `CameraZone` skips exit switching when no exit profile is assigned.
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because this is metadata/message cleanup only.
+
+### Route Policy Required Field Accuracy
+
+Changes:
+
+- Removed `ParticipantInputRouter.autoRegisterDefaultParticipantsWithoutPlayerInput` from required PYS fields; injected session and roster references remain validated as recommended standalone setup concerns.
+- Removed `NetworkedSessionStateService` pseudo-fields from required PYS metadata because network mode and auto-start policy live on `SessionDefinition`.
+- Removed projectile pooling policy defaults from `ProjectileLauncherBase` required PYS fields.
+- Narrowed `SessionDefinition` required PYS fields to session name, default game mode, and default participants; network mode and participant limit remain sanitized/validated.
+- Kept runtime behavior unchanged.
+
+Verification:
+
+- `ParticipantInputRouter` runtime validation already reports injected dependencies as recommended, not required.
+- `NetworkedSessionStateService` reads network startup policy from `ActiveSessionDefinition`.
+- `ProjectileLauncherBase` can operate with pooling disabled and clamps pool size at return time.
+- `SessionDefinition` runtime validation still checks participant limits and local/network consistency.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because this is contract metadata only.

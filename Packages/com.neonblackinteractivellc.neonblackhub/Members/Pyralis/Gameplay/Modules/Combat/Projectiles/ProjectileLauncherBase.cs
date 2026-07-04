@@ -13,7 +13,6 @@ namespace NeonBlack.Gameplay.Modules.Combat
         Surface = AuthoringSurface.Goal,
         Summary = "Base component for firing projectiles and hitscan attacks with built-in pooling and feedback routing.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/combat/projectiles",
-        RequiredFields = new[] { nameof(usePrefabPooling), nameof(maxPoolSizePerPrefab) },
         SetupSteps = new[] 
         { 
             "Add ProjectileLauncher2D or 3D to a scene coordinator.", 

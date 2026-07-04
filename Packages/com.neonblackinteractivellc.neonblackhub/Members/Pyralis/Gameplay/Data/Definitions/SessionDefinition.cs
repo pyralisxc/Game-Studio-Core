@@ -24,7 +24,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
         Surface = AuthoringSurface.Goal,
         Summary = "Root configuration for a gameplay session. Defines the boundary of your game world and network authority.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/session",
-        RequiredFields = new[] { nameof(sessionName), nameof(defaultGameMode), nameof(defaultParticipants), nameof(networkMode), nameof(maxParticipants) },
+        RequiredFields = new[] { nameof(sessionName), nameof(defaultGameMode), nameof(defaultParticipants) },
         PrerequisiteStableIds = new[] { "bootstrap.root" },
         RouteStage = "Session Asset",
         RouteOrder = 20,
