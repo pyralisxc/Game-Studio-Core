@@ -314,17 +314,22 @@ Likely valid gameplay output:
 - `Modules/Hazards/Runtime/Shared/HazardFeedbackRuntime.cs` - creates hazard feedback popups.
 - `Presentation/Camera/CinemachineCameraRigController.cs` - creates shared camera focus helper transform.
 - `Glue/Spawning/PlayerSpawner.cs` - creates respawn countdown UI output.
+- `Glue/SceneFlow/Navigation/UI/SceneFader.cs` - creates a fade overlay as runtime scene-flow output; the duration defaults are no longer required setup.
+- `Glue/SceneFlow/Navigation/SceneLoader.cs` - creates a fade canvas as runtime scene-flow output; the duration default is no longer required setup.
+
+Reviewed in this lane:
+
+- `Modules/Character/Runtime/Sprite2D/Pawn2DPresentationComponent.cs` - optional dash/death audio now reads an authored `AudioSource` only when clips are assigned.
+- `Modules/Hazards/Runtime/Sprite2D/HazardRuntimeReferences.cs` - optional hazard audio no longer auto-creates an `AudioSource`; `Hazard` validates assigned audio clips without an authored source.
+- `Modules/Interaction/Runtime/Collectibles/Sprite2D/CollectibleFeedback2D.cs` - feedback audio now uses `RequireComponent(typeof(AudioSource))` and authored mixer routing.
+- `Modules/Combat/Pawn/Sprite2D/HitBox2D.cs` - optional hit SFX no longer auto-creates an `AudioSource`.
+- `Modules/Scoring/Sprite2D/StillnessBonus2D.cs` - optional bonus audio no longer auto-creates an `AudioSource`.
 
 Needs review for Unity-native prefab/reference simplification:
 
 - `Presentation/Visuals/ActorShadowDriver.cs` - creates `RuntimeShadow`; may be better as an authored child or prefab.
-- `Modules/Input/Runtime/Sprite2D/VirtualJoystick.cs` - auto-adds `CanvasGroup`; may be acceptable local component repair but should be `RequireComponent` if always required.
-- `Modules/Character/Runtime/Sprite2D/Pawn2DPresentationComponent.cs` - auto-adds `AudioSource`; likely better as `RequireComponent` or explicit optional reference.
-- `Modules/Hazards/Runtime/Sprite2D/HazardRuntimeReferences.cs` - auto-adds `AudioSource`; likely better as authored optional audio source.
-- `Modules/Interaction/Runtime/Collectibles/Sprite2D/CollectibleFeedback2D.cs` - auto-adds feedback audio source; likely better as authored optional audio source.
+- `Modules/Input/Runtime/Sprite2D/VirtualJoystick.cs` - auto-adds `CanvasGroup`; it is serialized in member scenes without the sibling component, so a code-only cut is deferred until a scene/sample pass.
 - `Modules/Spawning/Runtime/Rigged3D/Spawner.cs` - can build GameObjects from sprites; likely useful for prototypes but not ideal as the main package authoring path.
-- `Glue/SceneFlow/Navigation/UI/SceneFader.cs` - should be checked for prefab-first fade UI.
-- `Glue/SceneFlow/Navigation/SceneLoader.cs` - should be checked for prefab-first loading/fade UI.
 
 ## Sample-only Content
 
@@ -347,7 +352,7 @@ Reason:
 - It contains several adapter/pass-through candidates.
 - It has runtime-created display objects that can be classified without changing core gameplay.
 - It is lower risk than locomotion, combat, networking, or RPG data.
-- It can produce a concrete authoring simplification sample before deeper gameplay refactors.
+- It can produce concrete authoring simplification evidence before Cameron hand-authors package samples.
 
 Initial files to inspect before code changes:
 
@@ -371,5 +376,5 @@ Expected first code-phase outcome:
 - Keep one clear feedback owner per surface.
 - Move fallback display/audio settings into profiles or prefab references where appropriate.
 - Keep popups as runtime output only when they are true gameplay output.
-- Replace automatic setup repair with `RequireComponent`, serialized references, or sample prefab structure where Unity can express the relationship directly.
+- Replace automatic setup repair with `RequireComponent`, serialized references, or documented prefab structure where Unity can express the relationship directly.
 - Add/adjust focused tests only for data routing or behavior seams, not visual feel.

@@ -28,7 +28,7 @@ Core motto:
 
 ## Authoring Surface Direction
 
-Game Studio Core should feel simple in Unity even when its internals are modular. Prefer clear scene roots, prefab modules, profile assets, and package samples over scattered setup scripts. PYS observes gameplay evidence from the package; it does not replace Unity's native Inspector, prefab, and sample workflows.
+Game Studio Core should feel simple in Unity even when its internals are modular. Prefer clear scene roots, prefab modules, profile assets, and Cameron-authored package samples over scattered setup scripts. PYS observes gameplay evidence from the package; it does not replace Unity's native Inspector, prefab, and sample workflows.
 
 ## Supported pawn presentation targets
 

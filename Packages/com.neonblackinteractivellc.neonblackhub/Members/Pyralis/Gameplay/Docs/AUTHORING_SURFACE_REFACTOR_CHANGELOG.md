@@ -191,3 +191,18 @@ Verification:
 - Reference search found no serialized member scene/prefab references to `HitBox2D`.
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because Unity is not available on `PATH`; run affected combat/hitbox proofs in the Unity Editor.
+
+### Living Docs Ownership Refresh
+
+Changes:
+
+- Updated the package README folder table so it matches the actual gameplay package folders and current ownership boundaries.
+- Removed the stale `Integrations/` folder row and old `Core` wording that implied VContainer, scene loading, and config ownership lived there.
+- Rephrased quick-start guidance so Unity-native scene/prefab/profile setup remains primary and PYS Authoring is framed as evidence, route truth, proof readiness, and cross-object setup projection.
+- Updated the refactor audit so already-cleaned optional audio owners and scene-flow runtime overlays are no longer listed as unresolved setup-repair pressure.
+- Clarified that samples in this lane are Cameron-authored, not agent-generated.
+
+Verification:
+
+- Scoped `git diff --check` passed for touched docs.
+- Unity Test Runner was not run because this is docs-only.
