@@ -465,3 +465,18 @@ Verification:
 - `EnemyCombatProfile` runtime validation requires a non-empty attack sequence and treats attack mode as a default selection policy.
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because this is contract metadata only.
+
+### Pawn Presentation Component Required Field Accuracy
+
+Changes:
+
+- Removed `Pawn3DPresentationComponent.showDebugHUD` from required PYS fields.
+- Narrowed `Pawn2DPresentationComponent` required PYS fields to the sprite renderer reference; tint, tilt, and squash/stretch values remain presentation tuning.
+- Kept runtime behavior unchanged.
+
+Verification:
+
+- `Pawn3DPresentationComponent` runtime validation requires an `IActorAnimationController`, not the debug HUD toggle.
+- `Pawn2DPresentationComponent.Validation.cs` validates that a `SpriteRenderer` can be resolved directly or from a child.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because this is contract metadata only.

@@ -12,7 +12,7 @@ namespace NeonBlack.Gameplay.Modules.Character
         CapabilityPath = "Presentation/Feedback/Pawn2D Presentation Component",
         Surface = AuthoringSurface.Goal,
         Summary = "2D pawn presentation facade; maps movement state into sprite facing/tint, animation signals, squash/stretch, tilt, and dash/death feedback.",
-        RequiredFields = new[] { nameof(spriteRenderer), nameof(movingTint), nameof(tiltEnabled), nameof(stretchAmount), nameof(squashSnapSpeed), nameof(tiltSpeed) },
+        RequiredFields = new[] { nameof(spriteRenderer) },
         PrerequisiteStableIds = new[] { "pawn.root", "movement.pawn.2d", "camera.rig.profile" },
         RouteStage = "Pawn Prefab",
         RouteOrder = 100,

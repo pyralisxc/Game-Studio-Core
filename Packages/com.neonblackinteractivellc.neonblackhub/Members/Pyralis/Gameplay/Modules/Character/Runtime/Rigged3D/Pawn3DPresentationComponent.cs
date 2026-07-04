@@ -16,7 +16,6 @@ namespace NeonBlack.Gameplay.Modules.Character
         CapabilityPath = "Presentation/Feedback/Pawn3D Presentation Component",
         Surface = AuthoringSurface.Goal,
         Summary = "3D presentation module; maps movement state to Animator signals and handles billboarding.",
-        RequiredFields = new[] { nameof(showDebugHUD) },
         SetupSteps = new[] { "Attach to a Pawn with ActorAnimationDriver.", "Ensure Animator parameters match signal names." },
         SuccessChecks = new[] { "Move the 3D pawn and verify Animator signals follow movement and combat state." },
         Tags = new[] { "capability:Animation", "axiom:Dimensions3D" }
