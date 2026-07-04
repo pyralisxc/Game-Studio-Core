@@ -11,7 +11,6 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Surface = AuthoringSurface.Profile,
         Summary = "Defines how an actor reacts to combat events (guard, parry, block, shield break).",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/combat",
-        RequiredFields = new[] { nameof(enableGuard), nameof(enableParry), nameof(blockDamageReduction) },
         SetupSteps = new[] { "Configure parry and guard windows.", "Set shield break durations." },
         SuccessChecks = new[] { "Trigger a parry in-game and verify the reaction lock is applied." },
         Tags = new[] { "capability:Combat", "runtime:Combat" },

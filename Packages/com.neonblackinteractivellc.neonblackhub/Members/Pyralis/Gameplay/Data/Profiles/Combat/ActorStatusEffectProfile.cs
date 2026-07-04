@@ -12,7 +12,6 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Surface = AuthoringSurface.Profile,
         Summary = "Defines common status effect vulnerabilities and immunities for an actor.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/combat",
-        RequiredFields = new[] { nameof(defaultShieldDamageReduction) },
         SetupSteps = new[] { "List starting effects.", "Set default shield reduction." },
         SuccessChecks = new[] { "Verify the actor is spawned with the specified starting effects." },
         Tags = new[] { "capability:Combat", "capability:Stats", "runtime:Combat" },

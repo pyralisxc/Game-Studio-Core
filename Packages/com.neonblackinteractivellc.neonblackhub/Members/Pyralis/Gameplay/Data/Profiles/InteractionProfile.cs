@@ -11,7 +11,6 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Surface = AuthoringSurface.Profile,
         Summary = "Defines how an actor interacts with world objects.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/interaction",
-        RequiredFields = new[] { nameof(enableInteraction) },
         SetupSteps = new[] { "Set Interaction Cooldown." },
         SuccessChecks = new[] { "Verify the actor can trigger interaction events on compatible world objects." },
         Tags = new[] { "capability:Puzzle", "capability:Session", "runtime:CharacterPawnGameplay" },

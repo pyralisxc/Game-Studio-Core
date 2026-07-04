@@ -11,7 +11,6 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Surface = AuthoringSurface.Profile,
         Summary = "Tuning asset for the actor-level pickup collection feature.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/inventory",
-        RequiredFields = new[] { nameof(enableAutoCollect), nameof(interactionRadius), nameof(collectibleLayers) },
         SetupSteps = new[] { "Assign to a Pawn or Interaction component." },
         SuccessChecks = new[] { "Walk over a pickup and verify it is collected." },
         Tags = new[] { "capability:Puzzle", "capability:Inventory", "runtime:CharacterPawnGameplay" },

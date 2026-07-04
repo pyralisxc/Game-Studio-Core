@@ -12,7 +12,6 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Surface = AuthoringSurface.Profile,
         Summary = "Configuration for idle and non-combat 'living world' behaviors for enemies.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/enemies",
-        RequiredFields = new[] { nameof(enableAmbientLookAround), nameof(lookAroundInterval) },
         RequiredComponentNames = new[] { "NeonBlack.Gameplay.Modules.Enemies.EnemyAmbientComponent" },
         SetupSteps = new[]
         {

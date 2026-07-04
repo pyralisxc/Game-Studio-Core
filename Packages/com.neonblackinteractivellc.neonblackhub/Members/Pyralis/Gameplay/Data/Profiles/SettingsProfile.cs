@@ -15,7 +15,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Surface = AuthoringSurface.Profile,
         Summary = "Project-window creation path for settings and menu defaults.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/core",
-        RequiredFields = new[] { nameof(mixer), nameof(defaultMusicVolume), nameof(defaultSfxVolume) },
+        RequiredFields = new[] { nameof(mixer) },
         SuccessChecks = new[] { "Check that volumes are applied correctly in the main menu." },
         Tags = new[] { "capability:UI", "runtime:PlatformCore" },
         Selectable = false

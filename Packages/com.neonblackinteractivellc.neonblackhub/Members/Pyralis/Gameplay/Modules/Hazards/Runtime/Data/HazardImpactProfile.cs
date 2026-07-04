@@ -12,7 +12,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
         CapabilityPath = "Combat/Actions/Hazard Impact Profile",
         Surface = AuthoringSurface.Goal,
         Summary = "Defines the damage, knockback, and status effects applied by a hazard on contact.",
-        RequiredFields = new[] { nameof(effectId), nameof(damagePerTick) },
+        RequiredFields = new[] { nameof(effectId) },
         SetupSteps = new[] { "Set Damage and Tick Interval.", "Configure Targeting." },
         SuccessChecks = new[] { "Verify the hazard applies the correct damage and status effects to targets." },
         Tags = new[] { "capability:Combat", "runtime:Combat" }

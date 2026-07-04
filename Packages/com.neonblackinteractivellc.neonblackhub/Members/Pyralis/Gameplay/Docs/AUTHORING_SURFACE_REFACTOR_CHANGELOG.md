@@ -377,3 +377,19 @@ Verification:
 - Reference search found no serialized member scene/prefab/asset references to the tabletop presenter or selection controller.
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because this is contract metadata only.
+
+### Profile Required Field Accuracy
+
+Changes:
+
+- Narrowed `SettingsProfile` required PYS fields to the audio mixer reference.
+- Removed default toggles, layer masks, intervals, radii, and sanitized numeric tuning from profile required PYS fields in `PickupProfile`, `EnemyAmbientProfile`, `InteractionProfile`, `ActorStatusEffectProfile`, and `ActorCombatReactionProfile`.
+- Narrowed `HazardImpactProfile` required PYS fields to the authored `effectId`; damage and tick tuning remain sanitized/validated by the profile.
+- Kept runtime behavior unchanged.
+
+Verification:
+
+- Profile validation either requires only the object reference/identity field or sanitizes numeric values through `OnValidate`.
+- `PickupProfile` and `InteractionProfile` expose no runtime validation issues, so their default toggles are not required setup truth.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because this is contract metadata only.
