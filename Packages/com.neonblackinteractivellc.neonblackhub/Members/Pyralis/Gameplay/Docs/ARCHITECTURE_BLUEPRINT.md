@@ -104,6 +104,8 @@ Most day-to-day design iteration should happen in:
 
 The Inspector path should be treated as product surface, not secondary tooling. If the preferred setup requires knowing hidden code rules, the authoring model is not done yet.
 
+Visible Unity setup should be smaller than the internal implementation. Prefer a few clear scene or prefab modules with assigned profiles over many sibling components that require the user to inspect code to understand ownership. Internal behavior may remain split into state machines, handlers, lanes, and private helper classes when that keeps the module readable.
+
 The maintainable path is:
 
 - one obvious scene entrypoint,

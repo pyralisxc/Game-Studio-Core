@@ -109,6 +109,7 @@ Hygiene now has source-derived runtime communication pressure categories for dir
 7. Keep generated diagnostics such as PYS Authoring exports out of source control and outside imported asset/package folders; use them as evidence, not durable docs.
 8. Keep runtime communication explicit: commands request work, events report facts, state readers expose current state, handlers/sinks react, and state machines own lifecycle transitions.
 9. Keep gameplay time explicit: rule-changing timers tick through the owning domain, while display-only animation and input polling stay local to their Unity component.
+10. Keep the active simplification lane package-wide: fewer visible Unity setup components, clearer profile ownership, less pass-through glue, and stronger package samples across pawns, scene services, presentation, feedback, interaction, RPG, tabletop, networking, and editor tools.
 
 ## Verification Posture
 
