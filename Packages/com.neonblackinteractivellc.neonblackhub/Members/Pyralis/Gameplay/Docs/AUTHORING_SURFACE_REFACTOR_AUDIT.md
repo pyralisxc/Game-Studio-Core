@@ -316,6 +316,8 @@ Likely valid gameplay output:
 - `Glue/Spawning/PlayerSpawner.cs` - creates respawn countdown UI output.
 - `Glue/SceneFlow/Navigation/UI/SceneFader.cs` - creates a fade overlay as runtime scene-flow output; the duration defaults are no longer required setup.
 - `Glue/SceneFlow/Navigation/SceneLoader.cs` - creates a fade canvas as runtime scene-flow output; the duration default is no longer required setup.
+- `Modules/Combat/UI/WorldHealthBar.Canvas.cs` - creates world-space health bar UI as presentation output for an authored `WorldHealthBar` component.
+- `Modules/Tabletop/UI/TabletopBoardGridPresenter.cs` - creates runtime board space/piece views from authored board definitions; missing prefabs remain recommended, not required.
 
 Reviewed in this lane:
 

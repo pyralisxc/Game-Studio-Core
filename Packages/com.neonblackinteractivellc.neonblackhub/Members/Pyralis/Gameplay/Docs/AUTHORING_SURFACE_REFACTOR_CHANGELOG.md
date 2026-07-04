@@ -291,3 +291,17 @@ Verification:
 - Reference search found `HealthComponent` UnityEvents serialized in member prefabs, so event fields were preserved.
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because this is contract metadata/setup guidance only.
+
+### Runtime Output Classification Refresh
+
+Changes:
+
+- Updated the refactor audit to classify `WorldHealthBar` generated world-space UI as valid runtime presentation output.
+- Updated the refactor audit to classify `TabletopBoardGridPresenter` generated board space/piece views as valid runtime board output from authored definitions.
+- Kept `Modules/Spawning/Runtime/Rigged3D/Spawner.cs` in needs-review because sprite-to-GameObject spawning remains prototype utility pressure rather than the main authored package path.
+
+Verification:
+
+- Inspected `WorldHealthBar.Canvas.cs` and `TabletopBoardGridPresenter.cs` before classifying their generated objects.
+- Scoped `git diff --check` passed for touched docs.
+- Unity Test Runner was not run because this is docs-only classification.
