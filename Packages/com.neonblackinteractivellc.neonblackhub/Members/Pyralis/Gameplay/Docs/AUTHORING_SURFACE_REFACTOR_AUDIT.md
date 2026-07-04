@@ -1,0 +1,375 @@
+# Authoring Surface Refactor Audit
+
+This audit maps the current Unity-facing setup surface for the package-wide simplification lane. It is evidence for staged refactors, not a mandate to move or delete everything listed here.
+
+Unity version checked for this pass: `6000.4.0f1`.
+
+Inventory snapshot:
+
+- Gameplay C# files under `Members/Pyralis/Gameplay`: 573
+- Top-level distribution: Core 72, Data 160, Editor 14, Glue 39, Modules 264, Networking 7, Presentation 17
+- Package assemblies found: 36
+- PYS Authoring is external through `Packages/manifest.json` as `file:../../Pys Authoring/Packages/com.pys.authoring`
+
+## Classification Rules
+
+- Owner: owns gameplay behavior or lifecycle.
+- Profile: owns authored tuning or reusable configuration.
+- Adapter: converts one stable contract to another.
+- Pass-through: forwards calls without owning rules.
+- Validator: reports setup evidence.
+- Presentation: displays state without owning gameplay rules.
+- Scene Service: scene-authored service or scene-scale behavior.
+- Sample-only: example content, not core package architecture.
+
+## Owner Scripts
+
+These are current behavior or lifecycle owners. They should not be collapsed into a generic manager. Refactors should make their visible Unity role clearer and move only unrelated or pass-through work away from them.
+
+### Core / Glue Owners
+
+- `Glue/Bootstrap/GameplaySessionBootstrap.cs` - scene startup and session handoff owner.
+- `Glue/Lifetime/GameplayLifetimeScope.cs` - VContainer composition owner for the route/service graph.
+- `Glue/Session/SessionStateService.cs` - session lifecycle state owner.
+- `Glue/Participants/ParticipantRosterService.cs` - participant registry and player-provider owner.
+- `Glue/Spawning/ParticipantSpawnService.cs` - participant pawn placement owner.
+- `Glue/InputRouting/ParticipantInputRouter.cs` - participant input handoff owner.
+- `Glue/SceneServices/TimeScaleService.cs` - global time scale and hit-pause owner.
+- `Glue/SceneFlow/Arcade2D/ArcadeGameFlowController.cs` - arcade route flow owner.
+- `Glue/SceneFlow/Navigation/SceneLoader.cs` - scene navigation owner.
+- `Glue/SceneFlow/Navigation/LevelRegistry.cs` - authored level registry owner.
+- `Glue/SceneFlow/Navigation/LevelData.cs` - authored level entry owner.
+
+### Pawn / Character Owners
+
+- `Modules/Character/Runtime/Shared/PawnRoot.cs` - pawn identity and participant profile handoff owner.
+- `Modules/Character/Runtime/Sprite2D/Motor2D.cs` - shared 2D motor surface.
+- `Modules/Character/Runtime/Sprite2D/Pawn2DMovementComponent.cs` - 2D movement and locomotion state owner.
+- `Modules/Character/Runtime/Sprite2D/Pawn2DPresentationComponent.cs` - 2D pawn presentation facade.
+- `Modules/Character/Runtime/Rigged3D/Motor3D.cs` - 3D pawn composition root.
+- `Modules/Character/Runtime/Rigged3D/Pawn3DInputModule.cs` - 3D pawn input handoff owner.
+- `Modules/Character/Runtime/Rigged3D/Pawn3DPresentationComponent.cs` - 3D pawn presentation facade.
+- `Modules/Character/Runtime/Shared/Components/Rigged3D/Pawn3DMovementComponent.cs` - 3D movement and traversal-facing movement owner.
+
+### Combat / Hazard / Interaction Owners
+
+- `Modules/Combat/Pawn/Shared/PawnCombatBehaviour.cs` - shared pawn combat owner.
+- `Modules/Combat/Pawn/Sprite2D/PawnCombatBehaviour2D.cs` - 2D pawn combat owner.
+- `Modules/Combat/Health/HealthComponent.cs` - actor health owner.
+- `Modules/Combat/Status/ActorStatusEffectComponent.cs` - actor status-effect owner.
+- `Modules/Combat/Flow/CombatFlowController.cs` - combat flow owner.
+- `Modules/Hazards/Runtime/Sprite2D/Hazard.cs` - 2D hazard owner.
+- `Modules/Hazards/Runtime/Zones/Sprite2D/DamageZone2D.cs` - 2D damage-zone owner.
+- `Modules/Hazards/Runtime/Zones/Rigged3D/DamageZone.cs` - 3D damage-zone owner.
+- `Modules/Interaction/Runtime/Shared/ActorInteractionComponent.cs` - actor interaction request owner.
+- `Modules/Interaction/Runtime/Collectibles/Sprite2D/Collectible2D.cs` - 2D collectible owner.
+- `Modules/Interaction/Runtime/Collectibles/Rigged3D/Collectible3D.cs` - 3D collectible owner.
+- `Modules/Interaction/Runtime/Collectibles/Sprite2D/CollectibleSpawner2D.cs` - collectible spawn owner.
+
+### Optional Domain Owners
+
+- `Modules/Enemies/Runtime/Rigged3D/EnemyAI.cs` - enemy behavior coordinator.
+- `Modules/Enemies/Runtime/Rigged3D/EnemyMovementModule.cs` - enemy movement owner.
+- `Modules/Enemies/Runtime/Rigged3D/EnemyDetectionModule.cs` - enemy detection owner.
+- `Modules/Enemies/Runtime/Rigged3D/EnemyAnimationModule.cs` - enemy animation handoff owner.
+- `Modules/Encounters/Runtime/Rigged3D/ArenaZone.cs` - encounter zone owner.
+- `Modules/Spawning/Runtime/Rigged3D/Spawner.cs` - generic 3D spawn utility owner.
+- `Modules/Spawning/Runtime/Rigged3D/EnemySpawner.cs` - enemy spawn utility owner.
+- `Modules/Tabletop/Runtime/Rules/TabletopBoardSelectionController.cs` - tabletop selection owner.
+- `Modules/Settings/GameplaySettingsService.cs` - gameplay settings apply owner.
+- `Networking/Characters/NetworkedSessionStateService.cs` - networked session override owner.
+- `Networking/Characters/NetworkedParticipantRosterService.cs` - networked participant roster override owner.
+- `Networking/Characters/NetworkedParticipantSpawnService.cs` - networked spawn override owner.
+
+## Profile Assets
+
+These are authored data owners. The simplification target is to make these profiles more useful without turning them into one giant profile.
+
+### Shared Route / Pawn Profiles
+
+- `Data/Definitions/SessionDefinition.cs`
+- `Data/Definitions/GameModeDefinition.cs`
+- `Data/Definitions/ParticipantDefinition.cs`
+- `Data/Definitions/PawnDefinition.cs`
+- `Data/Config/GameConfig.cs`
+- `Data/Profiles/InputProfile.cs`
+- `Data/Profiles/InputZoneSet.cs`
+- `Data/Profiles/SettingsProfile.cs`
+- `Data/Profiles/PlayfieldProfile.cs`
+- `Data/Profiles/CameraRigProfile.cs`
+- `Data/Profiles/PawnMovementProfile.cs`
+- `Data/Profiles/PawnPresentationProfile.cs`
+- `Data/Profiles/PawnAnimationProfile.cs`
+- `Data/Profiles/PawnTraversalProfile.cs`
+- `Data/Profiles/InteractionProfile.cs`
+- `Data/Profiles/PickupProfile.cs`
+- `Data/Profiles/TopDownHopProfile.cs`
+
+### Combat / Hazard / Feedback Profiles
+
+- `Data/Profiles/Combat/PawnCombatProfile.cs`
+- `Data/Profiles/Combat/EnemyCombatProfile.cs`
+- `Data/Profiles/Combat/ActorCombatReactionProfile.cs`
+- `Data/Profiles/Combat/ActorStatusEffectProfile.cs`
+- `Data/Definitions/Combat/CombatActionDefinition.cs`
+- `Data/Definitions/Combat/CombatSequenceDefinition.cs`
+- `Data/Definitions/Combat/ProjectileDefinition.cs`
+- `Data/Definitions/Combat/ProjectileImpactDefinition.cs`
+- `Data/Definitions/Combat/StatusEffectDefinition.cs`
+- `Data/Definitions/Combat/WeaponData.cs`
+- `Data/Definitions/Combat/EnemyAttack.cs`
+- `Data/Definitions/Combat/FireModeDefinition.cs`
+- `Data/Profiles/ActorFeedbackProfile.cs`
+- `Data/Profiles/HazardFeedbackProfile.cs`
+- `Data/Presentation/FlashEffectProfile.cs`
+- `Modules/Hazards/Runtime/Data/HazardImpactProfile.cs`
+- `Modules/Hazards/Runtime/Shared/HazardData.cs`
+- `Modules/Hazards/Runtime/Shared/HazardDataCatalog.cs`
+
+### RPG / Tabletop Profiles And Definitions
+
+- `Data/Definitions/Rpg/DialogueGraphDefinition.cs`
+- `Data/Definitions/Rpg/EquipmentSlotDefinition.cs`
+- `Data/Definitions/Rpg/EquippableItemDefinition.cs`
+- `Data/Definitions/Rpg/HubDefinition.cs`
+- `Data/Definitions/Rpg/ItemCatalogDefinition.cs`
+- `Data/Definitions/Rpg/ItemDefinition.cs`
+- `Data/Definitions/Rpg/NpcDefinition.cs`
+- `Data/Definitions/Rpg/ProgressionCurveDefinition.cs`
+- `Data/Definitions/Rpg/QuestDefinition.cs`
+- `Data/Definitions/Rpg/SkillTreeDefinition.cs`
+- `Data/Definitions/Rpg/StatDefinition.cs`
+- `Data/Definitions/Rpg/VendorDefinition.cs`
+- `Data/Definitions/Rules/BoardDefinition.cs`
+- `Data/Definitions/Rules/BoardMovePolicyDefinition.cs`
+- `Data/Definitions/Rules/BoardPieceDefinition.cs`
+- `Data/Definitions/Rules/BoardTerminalConditionDefinition.cs`
+- `Data/Definitions/Rules/PhaseDefinition.cs`
+- `Data/Definitions/Rules/TurnOrderDefinition.cs`
+
+## Adapter Scripts
+
+These scripts currently look like bridge surfaces. Some are valid Unity-facing adapters; others may become internal implementation details after module/profile cleanup.
+
+- `Modules/Input/Runtime/Sprite2D/Motor2DInputAdapter.cs`
+- `Modules/Input/Runtime/Sprite2D/PlayerInputHandler.cs`
+- `Modules/Character/Runtime/Sprite2D/InteractionInputAdapter2D.cs`
+- `Modules/Combat/Pawn/Sprite2D/GuardInputAdapter2D.cs`
+- `Modules/Combat/Pawn/Shared/PawnDamageModule.cs`
+- `Modules/Combat/Pawn/Shared/PawnHitBoxModule.cs`
+- `Modules/Combat/Pawn/Shared/PawnProjectileModule.cs`
+- `Modules/Combat/Pawn/Shared/PawnWeaponModule.cs`
+- `Modules/Feedback/Runtime/Participants/ParticipantFeedbackRelay.cs`
+- `Modules/Feedback/Runtime/UI/ParticipantHudTargetBinding.cs`
+- `Modules/Feedback/Runtime/UI/ParticipantHealthHudBinder.cs`
+- `Modules/Feedback/Runtime/UI/ParticipantFeedbackHudPresenter.cs`
+- `Modules/Rpg/UI/RpgHubPanelRouter.cs`
+- `Modules/Rpg/UI/RpgPanelRoutePresenter.cs`
+- `Presentation/HUD/Settings/SettingsMenu.cs`
+- `Presentation/HUD/Settings/SettingsScreen.cs`
+
+## Pass-through Candidates
+
+These are not confirmed deletions. They are first-pass candidates because their names or scan hits suggest forwarding, binding, routing, or fallback behavior. Inspect behavior before changing them.
+
+### Highest-Value First Pass
+
+- `Modules/Feedback/Runtime/UI/ParticipantHudTargetBinding.cs`
+- `Modules/Feedback/Runtime/UI/ParticipantHealthHudBinder.cs`
+- `Modules/Feedback/Runtime/UI/ParticipantHealthPanel.cs`
+- `Modules/Feedback/Runtime/UI/ParticipantTimedTextPanel.cs`
+- `Modules/Feedback/Runtime/UI/ParticipantFeedbackHudPresenter.cs`
+- `Modules/Feedback/Runtime/Participants/ParticipantFeedbackRelay.cs`
+- `Modules/Feedback/Runtime/Participants/ParticipantFeedbackService.cs`
+- `Modules/Feedback/Runtime/Shared/ActorFeedbackComponent.cs`
+- `Modules/Feedback/Runtime/Shared/ActorFloatingFeedbackReceiver.cs`
+- `Modules/Feedback/Runtime/UI/DamageNumberSpawner.cs`
+- `Modules/Feedback/Runtime/UI/DamageNumber.cs`
+
+### Secondary Candidates
+
+- `Presentation/Visuals/TextFlasher.cs`
+- `Presentation/Visuals/SpriteFlasher.cs`
+- `Presentation/Visuals/ActorShadowDriver.cs`
+- `Presentation/HUD/GameFlow/Sprite2D/GameFlowHudController.cs`
+- `Presentation/HUD/UI/UIOrientationHandler.cs`
+- `Modules/Rpg/UI/RpgHubPanelRouter.cs`
+- `Modules/Rpg/UI/RpgPanelRoutePresenter.cs`
+- `Modules/Rpg/UI/RpgDialoguePanelPresenter.cs`
+- `Modules/Rpg/UI/RpgQuestBoardPanelPresenter.cs`
+- `Modules/Rpg/UI/RpgSkillTreePanelPresenter.cs`
+- `Modules/Rpg/UI/RpgVendorPanelPresenter.cs`
+- `Modules/Rpg/UI/RpgLoadoutPanelPresenter.cs`
+- `Modules/Rpg/UI/HubInteractionHudPresenter.cs`
+
+## Validator Candidates
+
+These providers should be split into two groups during later phases:
+
+- Unity-local checks: missing field, missing sibling, invalid range, missing prefab.
+- PYS-semantic checks: route contradiction, topology, proof target, cross-object readiness.
+
+### Data Validators
+
+- `Data/Config/GameConfig.cs`
+- `Data/Definitions/SessionDefinition.cs`
+- `Data/Definitions/GameModeDefinition.cs`
+- `Data/Definitions/PawnDefinition.cs`
+- `Data/Definitions/Actions/ActionDefinition.cs`
+- `Data/Definitions/ActorAnimationDefinition.cs`
+- `Data/Definitions/Combat/CombatActionDefinition.cs`
+- `Data/Definitions/Combat/CombatSequenceDefinition.cs`
+- `Data/Definitions/Combat/EnemyAttack.cs`
+- `Data/Definitions/Combat/ProjectileDefinition.cs`
+- `Data/Definitions/Combat/ProjectileImpactDefinition.cs`
+- `Data/Definitions/Combat/StatusEffectDefinition.cs`
+- `Data/Definitions/Combat/WeaponData.cs`
+- `Data/Definitions/Rpg/*Definition.cs`
+- `Data/Definitions/Rules/*Definition.cs`
+- `Data/Profiles/*.cs`
+- `Data/Profiles/Combat/*.cs`
+
+### Runtime Validators
+
+- `Glue/Bootstrap/GameplaySessionBootstrap.cs`
+- `Glue/InputRouting/ParticipantInputRouter.cs`
+- `Glue/Participants/ParticipantRosterService.cs`
+- `Glue/Spawning/ParticipantSpawnService.cs`
+- `Glue/Session/SessionStateService.cs`
+- `Glue/SceneFlow/Navigation/LevelData.cs`
+- `Glue/SceneFlow/Navigation/LevelRegistry.cs`
+- `Modules/Character/Runtime/Sprite2D/Pawn2DMovementComponent*.cs`
+- `Modules/Character/Runtime/Sprite2D/Pawn2DPresentationComponent*.cs`
+- `Modules/Combat/Health/HealthComponent.cs`
+- `Modules/Combat/Pawn/Shared/PawnCombatBehaviour*.cs`
+- `Modules/Combat/Pawn/Sprite2D/PawnCombatBehaviour2D*.cs`
+- `Modules/Combat/Pawn/Sprite2D/GuardInputAdapter2D.cs`
+- `Modules/Hazards/Runtime/Sprite2D/Hazard*.cs`
+- `Modules/Hazards/Runtime/Zones/Sprite2D/DamageZone2D*.cs`
+- `Modules/Hazards/Runtime/Zones/Rigged3D/DamageZone*.cs`
+- `Modules/Hazards/Runtime/Shared/HazardFeedbackRuntime.cs`
+- `Modules/Interaction/Runtime/Collectibles/Sprite2D/Collectible2D.cs`
+- `Modules/Interaction/Runtime/Collectibles/Sprite2D/CollectibleFeedback2D*.cs`
+- `Modules/Interaction/Runtime/Collectibles/Sprite2D/CollectibleSpawner2D.cs`
+- `Modules/Interaction/Runtime/Collectibles/Rigged3D/Collectible3D.cs`
+- `Modules/Rpg/UI/*.cs`
+- `Modules/Scoring/Runtime/Shared/ParticipantScoreService.cs`
+- `Modules/Scoring/Sprite2D/StillnessBonus2D.cs`
+- `Modules/Spawning/Runtime/Rigged3D/Spawner.cs`
+- `Presentation/Animation/ActorAnimationDriver.cs`
+- `Presentation/Visuals/ActorShadowDriver.cs`
+- `Presentation/Visuals/Rigged3D/BillboardFacing3D.cs`
+
+## Presentation Scripts
+
+These should remain display-focused. Refactors should move gameplay rules out of them, and prefer prefab/serialized references over runtime setup repair.
+
+- `Presentation/Animation/ActorAnimationDriver.cs`
+- `Presentation/Camera/CinemachineCameraRigController.cs`
+- `Presentation/Camera/PawnCameraTarget.cs`
+- `Presentation/Camera/Rigged3D/CameraOcclusionFader.cs`
+- `Presentation/Camera/Zones/Rigged3D/CameraZone.cs`
+- `Presentation/HUD/GameFlow/Sprite2D/GameFlowHudController.cs`
+- `Presentation/HUD/Settings/SettingsMenu.cs`
+- `Presentation/HUD/Settings/SettingsScreen.cs`
+- `Presentation/HUD/UI/UIOrientationHandler.cs`
+- `Presentation/Visuals/ActorShadowDriver.cs`
+- `Presentation/Visuals/CameraShake.cs`
+- `Presentation/Visuals/Rigged3D/BillboardFacing3D.cs`
+- `Presentation/Visuals/SpriteFlasher.cs`
+- `Presentation/Visuals/TextFlasher.cs`
+- `Modules/Combat/UI/WorldHealthBar.cs`
+- `Modules/Rpg/UI/*.cs`
+- `Modules/Tabletop/UI/*.cs`
+- `Modules/Feedback/Runtime/UI/*.cs`
+
+## Scene Services
+
+These are scene-authored or scene-scale surfaces. They should remain visible when they are required, not created silently to repair setup.
+
+- `Glue/Bootstrap/GameplaySessionBootstrap.cs`
+- `Glue/Lifetime/GameplayLifetimeScope.cs`
+- `Glue/Participants/ParticipantRosterService.cs`
+- `Glue/InputRouting/ParticipantInputRouter.cs`
+- `Glue/Spawning/ParticipantSpawnService.cs`
+- `Glue/Session/SessionStateService.cs`
+- `Glue/SceneServices/TimeScaleService.cs`
+- `Glue/SceneFlow/Navigation/SceneLoader.cs`
+- `Glue/SceneFlow/Navigation/UI/SceneFader.cs`
+- `Glue/SceneFlow/Navigation/UI/SceneGuard.cs`
+- `Glue/SceneFlow/Navigation/UI/SplashScreenController.cs`
+- `Glue/SceneFlow/Navigation/UI/MainMenuController.cs`
+- `Glue/SceneFlow/Navigation/UI/LoadingScreenController.cs`
+- `Presentation/Camera/CinemachineCameraRigController.cs`
+- `Presentation/Visuals/CameraShake.cs`
+- `Modules/Settings/GameplaySettingsService.cs`
+
+## Runtime-Created Object Pressure
+
+Runtime object creation is allowed for gameplay output. The audit target is hidden setup repair.
+
+Likely valid gameplay output:
+
+- `Modules/Feedback/Runtime/Shared/ActorFloatingFeedbackReceiver.Popups.cs` - creates floating feedback popups.
+- `Modules/Hazards/Runtime/Shared/HazardFeedbackRuntime.cs` - creates hazard feedback popups.
+- `Presentation/Camera/CinemachineCameraRigController.cs` - creates shared camera focus helper transform.
+- `Glue/Spawning/PlayerSpawner.cs` - creates respawn countdown UI output.
+
+Needs review for Unity-native prefab/reference simplification:
+
+- `Presentation/Visuals/ActorShadowDriver.cs` - creates `RuntimeShadow`; may be better as an authored child or prefab.
+- `Modules/Input/Runtime/Sprite2D/VirtualJoystick.cs` - auto-adds `CanvasGroup`; may be acceptable local component repair but should be `RequireComponent` if always required.
+- `Modules/Character/Runtime/Sprite2D/Pawn2DPresentationComponent.cs` - auto-adds `AudioSource`; likely better as `RequireComponent` or explicit optional reference.
+- `Modules/Hazards/Runtime/Sprite2D/HazardRuntimeReferences.cs` - auto-adds `AudioSource`; likely better as authored optional audio source.
+- `Modules/Interaction/Runtime/Collectibles/Sprite2D/CollectibleFeedback2D.cs` - auto-adds feedback audio source; likely better as authored optional audio source.
+- `Modules/Spawning/Runtime/Rigged3D/Spawner.cs` - can build GameObjects from sprites; likely useful for prototypes but not ideal as the main package authoring path.
+- `Glue/SceneFlow/Navigation/UI/SceneFader.cs` - should be checked for prefab-first fade UI.
+- `Glue/SceneFlow/Navigation/SceneLoader.cs` - should be checked for prefab-first loading/fade UI.
+
+## Sample-only Content
+
+Sample and member project content should not define the core package authoring surface.
+
+- `Samples~/Example/*`
+- `Members/Public/*`
+- `Members/Jim/*`
+- `Members/Squire/*`
+
+Audit note: public/member media should continue moving toward explicit samples, Addressables, or route-owned content packages when it is not part of the always-imported core package surface.
+
+## First Refactor Candidates
+
+Recommended first implementation family: Feedback plus simple Presentation.
+
+Reason:
+
+- It has many visible UI/presenter/binder scripts.
+- It contains several adapter/pass-through candidates.
+- It has runtime-created display objects that can be classified without changing core gameplay.
+- It is lower risk than locomotion, combat, networking, or RPG data.
+- It can produce a concrete authoring simplification sample before deeper gameplay refactors.
+
+Initial files to inspect before code changes:
+
+- `Modules/Feedback/Runtime/UI/ParticipantHudTargetBinding.cs`
+- `Modules/Feedback/Runtime/UI/ParticipantHealthHudBinder.cs`
+- `Modules/Feedback/Runtime/UI/ParticipantHealthPanel.cs`
+- `Modules/Feedback/Runtime/UI/ParticipantTimedTextPanel.cs`
+- `Modules/Feedback/Runtime/UI/ParticipantFeedbackHudPresenter.cs`
+- `Modules/Feedback/Runtime/Participants/ParticipantFeedbackService.cs`
+- `Modules/Feedback/Runtime/Participants/ParticipantFeedbackRelay.cs`
+- `Modules/Feedback/Runtime/Shared/ActorFeedbackComponent.cs`
+- `Modules/Feedback/Runtime/Shared/ActorFloatingFeedbackReceiver.cs`
+- `Modules/Feedback/Runtime/UI/DamageNumberSpawner.cs`
+- `Modules/Feedback/Runtime/UI/DamageNumber.cs`
+- `Presentation/Visuals/ActorShadowDriver.cs`
+- `Presentation/Visuals/SpriteFlasher.cs`
+- `Presentation/Visuals/TextFlasher.cs`
+
+Expected first code-phase outcome:
+
+- Keep one clear feedback owner per surface.
+- Move fallback display/audio settings into profiles or prefab references where appropriate.
+- Keep popups as runtime output only when they are true gameplay output.
+- Replace automatic setup repair with `RequireComponent`, serialized references, or sample prefab structure where Unity can express the relationship directly.
+- Add/adjust focused tests only for data routing or behavior seams, not visual feel.
