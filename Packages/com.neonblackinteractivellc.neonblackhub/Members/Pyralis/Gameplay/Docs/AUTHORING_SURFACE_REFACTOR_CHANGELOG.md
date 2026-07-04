@@ -271,6 +271,7 @@ Changes:
 
 - Removed `duration` from `StatusEffectDefinition` required PYS fields; identity fields remain required and duration is still range-validated.
 - Removed `duration`, `height`, and `cooldown` from `TopDownHopProfile` required PYS fields; the action role remains the authored meaning field and numeric values remain sanitized.
+- Removed `cooldown` and `burstCount` from `FireModeDefinition` required PYS fields; fire mode identity remains required and cadence values remain sanitized.
 
 Verification:
 

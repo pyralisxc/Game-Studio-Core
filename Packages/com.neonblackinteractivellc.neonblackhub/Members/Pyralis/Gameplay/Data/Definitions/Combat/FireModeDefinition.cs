@@ -10,7 +10,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Combat
         CapabilityPath = "Combat/Actions/Fire Mode Definition",
         Surface = AuthoringSurface.Goal,
         Summary = "Project-window creation path for firing cadence, burst, and spread behavior.",
-        RequiredFields = new[] { nameof(fireModeId), nameof(cooldown), nameof(burstCount) },
+        RequiredFields = new[] { nameof(fireModeId), nameof(displayName) },
         SuccessChecks = new[] { "Equip a weapon with this fire mode and verify the firing cadence and spread." },
         Tags = new[] { "capability:Combat", "runtime:Combat" }
     )]
