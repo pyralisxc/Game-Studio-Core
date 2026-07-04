@@ -25,8 +25,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
         CapabilityPath = "Combat/Sensors/Hit Box2D",
         Surface = AuthoringSurface.Goal,
         Summary = "Trigger-based 2D hitbox for melee attacks in Tilemap or 2D physics scenes.",
-        RequiredFields = new[] { nameof(owner), nameof(weapon), nameof(hitFXPrefab), nameof(hitSFX), nameof(hitPauseSink) },
-        SetupSteps = new[] { "Add to a child GameObject of a 2D actor.", "Assign a Trigger Collider2D." },
+        SetupSteps = new[] { "Add to a child GameObject of a 2D actor.", "Assign a Trigger Collider2D.", "Add AudioSource only when Hit SFX is assigned." },
         SuccessChecks = new[] { "The 2D hitbox damages a valid target during its active window." },
         Tags = new[] { "capability:CombatSensors", "axiom:Realtime", "axiom:Dimensions2D" }
     )]
@@ -75,6 +74,9 @@ public class HitBox2D : GameplayTickBehaviour
         owner        ??= GetComponentInParent<HealthComponent>()?.gameObject;
         _hitPauseSink = ResolveHitPauseSink();
         _col.enabled = false;
+
+        if (hitSFX != null && _audio == null)
+            Debug.LogError("[HitBox2D] Hit SFX is assigned but no AudioSource exists on this GameObject.", this);
     }
 
     /// <summary>
@@ -180,11 +182,8 @@ public class HitBox2D : GameplayTickBehaviour
         if (hitFXPrefab != null)
             Instantiate(hitFXPrefab, (Vector3)other.bounds.center, Quaternion.identity);
 
-        if (hitSFX != null)
-        {
-            if (_audio == null) _audio = gameObject.AddComponent<AudioSource>();
+        if (hitSFX != null && _audio != null)
             _audio.PlayOneShot(hitSFX);
-        }
 
         HitConfirmed?.Invoke(hp.gameObject);
     }

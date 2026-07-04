@@ -177,3 +177,17 @@ Verification:
 - Reference search found member scenes using older `ScoreManager`/`StillnessReward` identifiers, not serialized `ParticipantScoreService` or `StillnessBonus2D`.
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because Unity is not available on `PATH`; run affected scoring/stillness proofs in the Unity Editor.
+
+### HitBox2D Optional Feedback Ownership
+
+Changes:
+
+- Removed optional `owner`, `weapon`, `hitFXPrefab`, `hitSFX`, and `hitPauseSink` fields from `HitBox2D` required PYS fields.
+- Removed runtime `AudioSource` creation from `HitBox2D`; hit SFX now requires an authored AudioSource when used.
+- Added a direct runtime error when Hit SFX is assigned without an AudioSource.
+
+Verification:
+
+- Reference search found no serialized member scene/prefab references to `HitBox2D`.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because Unity is not available on `PATH`; run affected combat/hitbox proofs in the Unity Editor.
