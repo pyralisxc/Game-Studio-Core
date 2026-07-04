@@ -15,7 +15,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Surface = AuthoringSurface.Profile,
         Summary = "Project-window creation path for gameplay camera focus and saved Cinemachine recipe values.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/camera",
-        RequiredFields = new[] { nameof(presentationMode), nameof(focusMode), nameof(useCinemachine) },
+        RequiredFields = new[] { nameof(presentationMode), nameof(focusMode) },
         PrerequisiteStableIds = new[] { "mode.definition" },
         RouteStage = "Game Mode Asset",
         RouteOrder = 40,

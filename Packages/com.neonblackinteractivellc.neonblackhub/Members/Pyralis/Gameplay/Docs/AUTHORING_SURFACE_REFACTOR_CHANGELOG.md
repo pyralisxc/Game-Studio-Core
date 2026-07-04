@@ -410,3 +410,22 @@ Verification:
 - `EnemyReactionProfile` sanitizes/validates timing ranges rather than requiring specific default values.
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because this is contract metadata only.
+
+### Camera And Billboard Contract Accuracy
+
+Changes:
+
+- Narrowed `CameraRigProfile` required PYS fields to the presentation and focus lane choices.
+- Removed `CameraShake` required PYS fields because it can shake its own transform when no explicit target is assigned.
+- Narrowed `BillboardFacing3D` required PYS fields to target and camera references; mirroring and sprite fields remain optional presentation outputs.
+- Corrected the `BillboardFacing3D` validation message so it no longer claims an unimplemented main-camera fallback.
+- Narrowed `CameraZone` required PYS fields to enter profile and player tag; exit profile and transition duration are optional route behavior.
+- Kept runtime behavior unchanged.
+
+Verification:
+
+- `CameraShake.ResolveTarget` falls back to the component transform when no target is assigned.
+- `BillboardFacing3D.ApplyBillboard` requires an active camera and target before applying facing.
+- `CameraZone` skips exit switching when no exit profile is assigned.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because this is metadata/message cleanup only.

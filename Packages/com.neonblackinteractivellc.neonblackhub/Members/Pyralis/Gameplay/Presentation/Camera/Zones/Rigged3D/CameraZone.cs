@@ -19,7 +19,7 @@ namespace NeonBlack.Gameplay.Presentation.Camera.Zones
         Surface = AuthoringSurface.Goal,
         Summary = "3D trigger volume that switches CameraRigProfile when the player enters.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/camera",
-        RequiredFields = new[] { nameof(onEnterProfile), nameof(onExitProfile), nameof(transitionDuration), nameof(_playerTag) },
+        RequiredFields = new[] { nameof(onEnterProfile), nameof(_playerTag) },
         SetupSteps = new[] 
     { 
         "Assign On Enter Profile to the camera framing this zone should activate.",

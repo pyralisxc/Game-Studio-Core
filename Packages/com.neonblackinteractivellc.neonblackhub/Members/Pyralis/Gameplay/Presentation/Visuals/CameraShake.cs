@@ -15,12 +15,11 @@ namespace NeonBlack.Gameplay.Presentation.Visuals
         Surface = AuthoringSurface.Goal,
         Summary = "Canonical camera shake service for gameplay impact feedback.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/visuals",
-        RequiredFields = new[] { nameof(targetTransform), nameof(defaultShakeMode), nameof(positionInfluence), nameof(rotationInfluence) },
         RequiredInterfaces = new[] { typeof(ICameraShakeSink) },
         SetupSteps = new[]
         {
             "Add CameraShake to a Bootstrap child GameObject or assign to GameplaySessionBootstrap.",
-            "Assign Target Transform (camera rig root or main camera).",
+            "Optionally assign Target Transform (camera rig root or main camera).",
             "Set Default Shake Mode (Planar2D for most games)."
         },
         SuccessChecks = new[] { "Calling Shake(intensity, duration) causes the target transform to vibrate." },
