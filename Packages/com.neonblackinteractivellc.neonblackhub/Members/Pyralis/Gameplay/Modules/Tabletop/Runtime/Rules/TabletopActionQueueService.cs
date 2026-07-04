@@ -15,7 +15,6 @@ namespace NeonBlack.Gameplay.Modules.Tabletop.Runtime
         Surface = AuthoringSurface.Service,
         Summary = "Processes tabletop action execution requests and resolves them via registered tabletop resolvers.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/actions",
-        RequiredFields = new[] { nameof(_pendingActions), nameof(_resolvers) },
         RequiredInterfaces = new[] { typeof(IActionQueueService) },
         SetupSteps = new[] { "Create TabletopActionQueueService when the tabletop board presenter builds runtime state.", "Register one or more tabletop IActionResolver implementations." },
         SuccessChecks = new[] { "PendingCount increments when an action is successfully enqueued." },

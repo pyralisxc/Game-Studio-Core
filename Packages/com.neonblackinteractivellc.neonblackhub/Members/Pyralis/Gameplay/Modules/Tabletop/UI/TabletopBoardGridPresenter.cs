@@ -19,8 +19,8 @@ namespace NeonBlack.Gameplay.Modules.Tabletop
         Surface = AuthoringSurface.Goal,
         Summary = "Inspector Add Component path for a board presenter that can build selectable tabletop spaces.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/tabletop",
-        RequiredFields = new[] { nameof(boardDefinition), nameof(movePolicyDefinition), nameof(turnOrderDefinition), nameof(selectionController), nameof(spacePrefab), nameof(piecePrefab) },
-        SetupSteps = new[] { "Add TabletopBoardGridPresenter and TabletopBoardSelectionController to the same scene object.", "Assign Board, Move Policy, Turn Order, and Selection Controller references.", "Assign Space and Piece prefabs." },
+        RequiredFields = new[] { nameof(boardDefinition) },
+        SetupSteps = new[] { "Add TabletopBoardGridPresenter to the board root.", "Assign a BoardDefinition.", "Optionally assign Move Policy, Turn Order, Selection Controller, Space prefab, and Piece prefab references." },
         SuccessChecks = new[] { "Click 'Rebuild Board' in the inspector and verify the grid is generated." },
         Tags = new[] { "capability:Tabletop", "capability:Grid" }
     )]

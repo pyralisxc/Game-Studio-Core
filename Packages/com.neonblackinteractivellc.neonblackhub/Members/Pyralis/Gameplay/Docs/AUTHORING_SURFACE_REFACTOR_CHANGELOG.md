@@ -359,3 +359,21 @@ Verification:
 - Reference search found no serialized member scene/prefab/asset references to `CollectibleFeedback2D`.
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because this is contract metadata only.
+
+### Tabletop Runtime Contract Required Field Accuracy
+
+Changes:
+
+- Narrowed `TabletopBoardGridPresenter` required PYS fields to `boardDefinition`.
+- Reframed move policy, turn order, selection controller, space prefab, and piece prefab as optional setup inputs.
+- Removed the boolean setup toggle from `TabletopBoardSelectionController` required PYS fields.
+- Removed constructor-owned private runtime collections from `TabletopActionQueueService` required PYS fields.
+- Kept runtime behavior unchanged.
+
+Verification:
+
+- `TabletopBoardGridPresenter` runtime validation already treats board definition and selection bridge as required, while treating missing visual prefabs as recommended fallback output.
+- `TabletopActionQueueService` creates pending action and resolver collections in its constructor.
+- Reference search found no serialized member scene/prefab/asset references to the tabletop presenter or selection controller.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because this is contract metadata only.
