@@ -15,7 +15,7 @@ namespace NeonBlack.Gameplay.Data.Definitions
         Surface = AuthoringSurface.Goal,
         Summary = "Defines a player, AI, seat, hand, faction, or command owner within a session, including the preferred input profile and optional default pawn.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/session",
-        RequiredFields = new[] { nameof(displayName), nameof(defaultPawn), nameof(inputProfile), nameof(teamIndex) },
+        RequiredFields = new[] { nameof(displayName) },
         PrerequisiteStableIds = new[] { "mode.definition" },
         RouteStage = "Participant Asset",
         RouteOrder = 50,

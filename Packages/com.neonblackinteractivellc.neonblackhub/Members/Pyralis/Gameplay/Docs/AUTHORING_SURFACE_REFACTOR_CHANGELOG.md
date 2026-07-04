@@ -480,3 +480,20 @@ Verification:
 - `Pawn2DPresentationComponent.Validation.cs` validates that a `SpriteRenderer` can be resolved directly or from a child.
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because this is contract metadata only.
+
+### Route-Conditional Definition Required Field Accuracy
+
+Changes:
+
+- Narrowed `ProjectileDefinition` required PYS fields to projectile id and display name; prefab and speed remain required only for projectile-prefab delivery.
+- Narrowed `WeaponData` required PYS fields to weapon name; projectile definitions and hitbox zones remain validated based on weapon type.
+- Narrowed `ParticipantDefinition` required PYS fields to display name; pawn, input profile, and team setup remain route-dependent authoring choices.
+- Kept runtime behavior unchanged.
+
+Verification:
+
+- `ProjectileDefinition` runtime validation requires prefab and speed only when `deliveryMode` is `ProjectilePrefab`, and max distance only for hitscan delivery.
+- `WeaponData` runtime validation requires projectile definition for ranged/thrown weapons and hitbox zone for melee weapons.
+- `ParticipantDefinition` setup guidance already states input profile and pawn are conditional by route.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because this is contract metadata only.

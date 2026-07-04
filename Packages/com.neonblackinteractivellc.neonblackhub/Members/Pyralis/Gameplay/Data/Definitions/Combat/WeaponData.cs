@@ -10,7 +10,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Combat
         CapabilityPath = "Combat/Actions/Weapon Data",
         Surface = AuthoringSurface.Goal,
         Summary = "The primary definition for an actor's weapon; defines damage, timing, range, and presentation.",
-        RequiredFields = new[] { nameof(weaponName), nameof(damage), nameof(attackCooldown) },
+        RequiredFields = new[] { nameof(weaponName) },
         SetupSteps = new[] { "Set Weapon Type.", "Assign Projectile or Hitbox Zone." },
         SuccessChecks = new[] { "Assign to a Pawn or Enemy and verify attacks trigger animations and deal damage." },
         Tags = new[] { "capability:Combat", "runtime:Combat" }

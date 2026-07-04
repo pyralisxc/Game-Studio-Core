@@ -12,7 +12,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Combat
         CapabilityPath = "Combat/Projectiles/Projectile Definition",
         Surface = AuthoringSurface.Goal,
         Summary = "Project-window creation path for projectile behavior.",
-        RequiredFields = new[] { nameof(projectileId), nameof(projectilePrefab), nameof(speed) },
+        RequiredFields = new[] { nameof(projectileId), nameof(displayName) },
         SuccessChecks = new[] { "Spawn the projectile and verify it travels at the correct speed and deals damage." },
         RoleTags = new[] { "IntentRouteEssential", "CombatDefinitionRouteSupport" },
         Tags = new[] { "capability:Combat", "runtime:GunsProjectiles", "runtime:Combat" }
