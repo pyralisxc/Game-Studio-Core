@@ -150,3 +150,16 @@ Verification:
 - Reference search found member scenes serialize `HazardSpawner`, not direct `Hazard` components.
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because Unity is not available on `PATH`; run affected hazard/spawner tests and Play Mode hazard proofs in the Unity Editor.
+
+### Collectible Contract Required Field Accuracy
+
+Changes:
+
+- Removed bob animation tuning values from `Collectible2D` required PYS fields; collider setup is already expressed through Unity's `RequireComponent` plus runtime validation.
+- Narrowed `CollectibleSpawner2D` required PYS fields to `_crumbPrefab`; pool size, initial counts, intervals, minimum count, and spawn margin are tunable defaults.
+
+Verification:
+
+- Reference search found no serialized member scene/prefab references to `Collectible2D`, `CollectibleSpawner2D`, or `ActorPickupCollector2D`.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because this is contract metadata only.

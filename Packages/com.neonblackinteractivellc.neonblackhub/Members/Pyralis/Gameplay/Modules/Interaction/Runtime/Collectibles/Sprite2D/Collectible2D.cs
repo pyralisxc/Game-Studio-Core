@@ -18,7 +18,6 @@ namespace NeonBlack.Gameplay.Modules.Interaction
         CapabilityPath = "Interaction/Collectibles/Collectible 2D",
         Surface = AuthoringSurface.Goal,
         Summary = "2D collectible item that awards points and triggers feedback on collection.",
-        RequiredFields = new[] { nameof(_bobSpeed), nameof(_bobHeight) },
         SetupSteps = new[] 
     { 
         "Create a prefab with SpriteRenderer and CircleCollider2D (Is Trigger).",

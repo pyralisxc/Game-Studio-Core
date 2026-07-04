@@ -20,7 +20,7 @@ namespace NeonBlack.Gameplay.Modules.Interaction
         CapabilityPath = "Interaction/Collectibles/Spawning/Collectible Spawner 2D",
         Surface = AuthoringSurface.Goal,
         Summary = "Manages the collectible object pool and spawn logic for 2D sessions.",
-        RequiredFields = new[] { nameof(_crumbPrefab), nameof(_poolSize), nameof(_initialCrumbCount), nameof(_spawnInterval), nameof(_minimumOnScreen), nameof(_spawnMargin) },
+        RequiredFields = new[] { nameof(_crumbPrefab) },
         SetupSteps = new[] 
     { 
         "Add to the scene Spawners root.",
