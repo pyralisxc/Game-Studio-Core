@@ -13,7 +13,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
         Surface = AuthoringSurface.Goal,
         Summary = "Manages enemy combat AI, attack sequencing, and hitboxes.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/enemies",
-        RequiredFields = new[] { nameof(combatProfile), nameof(hitBoxZones), nameof(attackSequence), nameof(attackMode) },
+        RequiredFields = new[] { nameof(combatProfile), nameof(hitBoxZones) },
         SuccessChecks = new[] { "Verify enemy attacks when player is in range." },
         Tags = new[] { "capability:Combat" }
     )]

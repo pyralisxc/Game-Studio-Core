@@ -559,3 +559,18 @@ Verification:
 - `BuildCommands` handles a missing projectile by returning an empty command array and resolves missing direction to `Vector3.forward`.
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because this is contract metadata only.
+
+### Enemy Combat Module Contract Ownership
+
+Changes:
+
+- Narrowed `EnemyCombatModule` required PYS fields to the combat profile and hitbox zones.
+- Removed profile-owned attack sequence and attack mode fields from the module's unconditional required metadata.
+- Kept runtime behavior unchanged.
+
+Verification:
+
+- `EnemyCombatModule.ApplyCombatProfile` copies attack sequence, attack mode, selection policy, cooldowns, range, and weighting from `EnemyCombatProfile`.
+- `EnemyCombatProfile` already owns attack-sequence validation.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because this is contract metadata only.
