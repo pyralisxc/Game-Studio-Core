@@ -250,3 +250,17 @@ Verification:
 - Reference search found the removed UnityEvent fields were only referenced inside `ParticipantFeedbackService`.
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because Unity is not available on `PATH`; run affected feedback HUD proofs in the Unity Editor.
+
+### Flasher Optional Event And Contract Cleanup
+
+Changes:
+
+- Removed unused private completion `UnityEvent` fields from `SpriteFlasher` and `TextFlasher`.
+- Removed `SpriteFlasher` required PYS fields for renderer list, default profile, and play-on-start toggle because auto-find and explicit profile calls are valid setup paths.
+- Kept profile-driven flash playback behavior unchanged.
+
+Verification:
+
+- Reference search found the removed flasher completion events were only referenced inside their owning flasher scripts.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because Unity is not available on `PATH`; run affected presentation/feedback proofs in the Unity Editor.

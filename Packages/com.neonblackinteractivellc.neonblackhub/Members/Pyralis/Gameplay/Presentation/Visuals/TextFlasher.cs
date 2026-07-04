@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace NeonBlack.Gameplay.Presentation.Visuals
 {
@@ -25,10 +24,6 @@ public class TextFlasher : MonoBehaviour
     private FlashEffectProfile _defaultProfile;
     [SerializeField, Tooltip("If true, plays the default profile automatically from Start.")]
     private bool _playOnStart = false;
-
-    [Header("Events")]
-    [SerializeField, Tooltip("Fired when a finite effect (loopCount >= 1) finishes and colors are fully restored.")]
-    private UnityEvent _onFlashComplete;
 
     private Coroutine _routine;
     private Color[] _originalColors;
@@ -161,7 +156,6 @@ public class TextFlasher : MonoBehaviour
         }
 
         RestoreToCapture(baseColors);
-        _onFlashComplete?.Invoke();
     }
 
     private IEnumerator PulseRoutine(FlashEffectProfile profile, Color[] baseColors)

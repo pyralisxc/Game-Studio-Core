@@ -4,7 +4,6 @@ using NeonBlack.Gameplay.Data.Presentation;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Events;
 using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Presentation.Visuals
@@ -20,14 +19,13 @@ namespace NeonBlack.Gameplay.Presentation.Visuals
         Surface = AuthoringSurface.Goal,
         Summary = "Coroutine-driven color flash effects on SpriteRenderers.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/visuals",
-        RequiredFields = new[] { "_renderers", "_defaultProfile", "_playOnStart" },
         SetupSteps = new[]
     {
         "Add SpriteFlasher to an actor or object prefab.",
         "Enable Auto Find Renderers or assign targets manually.",
         "Assign a FlashEffectProfile for common effects (Hit, Flash)."
     },
-        SuccessChecks = new[] { "Assign a FlashEffectProfile and call Play() from a script or UnityEvent." },
+        SuccessChecks = new[] { "Assign a FlashEffectProfile and call Play() or PlayOneShot() from the owning gameplay script." },
         Tags = new[] { "capability:VFX" }
     )]
 public class SpriteFlasher : MonoBehaviour, IVisualFlashPlayer
@@ -43,10 +41,6 @@ public class SpriteFlasher : MonoBehaviour, IVisualFlashPlayer
     private FlashEffectProfile _defaultProfile;
     [SerializeField, Tooltip("If true, plays the default profile automatically from Start.")]
     private bool _playOnStart;
-
-    [Header("Events")]
-    [SerializeField, Tooltip("Fired when a finite effect finishes and colors are fully restored.")]
-    private UnityEvent _onFlashComplete;
 
     private Coroutine _routine;
     private Color[] _originalColors;
@@ -163,7 +157,6 @@ public class SpriteFlasher : MonoBehaviour, IVisualFlashPlayer
         }
 
         RestoreToCapture(baseColors);
-        _onFlashComplete?.Invoke();
     }
 
     private IEnumerator PulseRoutine(FlashEffectProfile profile, Color[] baseColors)
