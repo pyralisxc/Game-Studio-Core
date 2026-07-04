@@ -11,7 +11,6 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Surface = AuthoringSurface.Profile,
         Summary = "Configures which gameplay events (damage, death, score) trigger visual feedback or HUD notifications.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/visuals",
-        RequiredFields = new[] { nameof(publishDamageEvents), nameof(publishDeathEvents), nameof(publishScoreEvents) },
         SetupSteps = new[] { "Toggle desired event publications." },
         SuccessChecks = new[] { "Verify that damage events trigger floating text or HUD updates." },
         Tags = new[] { "capability:UI", "capability:VFX", "runtime:AnimationPresentation" },

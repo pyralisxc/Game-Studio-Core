@@ -12,7 +12,6 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Surface = AuthoringSurface.Profile,
         Summary = "Defines the visual feedback (flashes, popups) for hazard activation and explosion.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/visuals",
-        RequiredFields = new[] { nameof(activationFlashEffect), nameof(explosionFlashEffect) },
         SetupSteps = new[] { "Assign Flash entries.", "Configure popup text and colors." },
         SuccessChecks = new[] { "Trigger a hazard and verify the flashes and popups match the profile." },
         Tags = new[] { "capability:VFX", "capability:UI", "runtime:AnimationPresentation" },

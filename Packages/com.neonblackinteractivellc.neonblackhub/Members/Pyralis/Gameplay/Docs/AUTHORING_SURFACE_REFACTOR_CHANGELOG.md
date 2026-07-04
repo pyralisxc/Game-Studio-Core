@@ -393,3 +393,20 @@ Verification:
 - `PickupProfile` and `InteractionProfile` expose no runtime validation issues, so their default toggles are not required setup truth.
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because this is contract metadata only.
+
+### Presentation Feedback Profile Required Field Accuracy
+
+Changes:
+
+- Narrowed `PawnPresentationProfile` required PYS fields to the authored presentation mode lane.
+- Removed optional HUD prefab, tint, flash profile, event-toggle, and reaction-timing defaults from presentation/feedback profile required PYS fields.
+- Kept conditional validation in `HazardFeedbackProfile`, `ActorFeedbackProfile`, and `EnemyReactionProfile` as the source of actual profile health.
+- Kept runtime behavior unchanged.
+
+Verification:
+
+- `HazardFeedbackProfile` already validates flash profile references only when the corresponding flash toggle is enabled.
+- `ActorFeedbackProfile` validates the "all outputs disabled" case rather than requiring specific event toggles.
+- `EnemyReactionProfile` sanitizes/validates timing ranges rather than requiring specific default values.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because this is contract metadata only.

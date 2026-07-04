@@ -16,7 +16,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Surface = AuthoringSurface.Profile,
         Summary = "Project-window creation path for pawn presentation lane and visual setup choices.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/visuals",
-        RequiredFields = new[] { nameof(presentationMode), nameof(hudPrefab), nameof(primaryTint) },
+        RequiredFields = new[] { nameof(presentationMode) },
         SuccessChecks = new[] { "Change the primary tint and see it reflected on the pawn in the scene." },
         Tags = new[] { "capability:Animation", "capability:VFX", "runtime:AnimationPresentation" },
         Selectable = false

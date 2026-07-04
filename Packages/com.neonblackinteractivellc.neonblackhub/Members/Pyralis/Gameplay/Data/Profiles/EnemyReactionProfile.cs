@@ -14,7 +14,6 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Surface = AuthoringSurface.Profile,
         Summary = "Configures stagger, hit-stun, and death reaction timing for enemies.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/enemies",
-        RequiredFields = new[] { nameof(hurtLockDuration), nameof(staggerDamageThreshold) },
         SetupSteps = new[] { "Set hit stun and death delays.", "Assign to an EnemyProfile." },
         SuccessChecks = new[] { "Hit the enemy and verify it enters a hit-stun state for the specified duration." },
         Tags = new[] { "capability:Combat", "runtime:Combat" },
