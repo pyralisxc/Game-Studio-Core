@@ -20,7 +20,6 @@ namespace NeonBlack.Gameplay.Modules.Scoring
         CapabilityPath = "Goals & Scoring/Rules/Participant Score Service",
         Surface = AuthoringSurface.Goal,
         Summary = "Canonical scoring service; tracks participant scores, session points, survival time, and high-score persistence.",
-        RequiredFields = new[] { nameof(OnPointsChanged), nameof(OnHighScoreBeaten) },
         RequiredInterfaces = new[] { typeof(IGameService), typeof(ISessionScoreService) },
         SetupSteps = new[]
         {

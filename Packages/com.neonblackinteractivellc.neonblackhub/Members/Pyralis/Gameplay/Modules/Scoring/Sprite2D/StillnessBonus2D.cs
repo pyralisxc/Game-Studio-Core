@@ -22,12 +22,12 @@ namespace NeonBlack.Gameplay.Modules.Scoring
         CapabilityPath = "Goals & Scoring/Bonuses/Stillness Bonus 2D",
         Surface = AuthoringSurface.Goal,
         Summary = "Awards points to the player for remaining stationary.",
-        RequiredFields = new[] { nameof(_collectiblesPerBonus), nameof(_stillnessInterval), nameof(_stillnessThreshold), nameof(_bonusClip) },
         SetupSteps = new[] 
         { 
             "Attach to the Player GameObject.",
             "Ensure a component implementing IActorMotionStateReader is present.",
-            "Tune reward timing and point values."
+            "Tune reward timing and point values.",
+            "Add AudioSource only when Bonus Clip is assigned."
         },
         SuccessChecks = new[] { "Stay still for 3 seconds and verify the score increases." },
         Tags = new[] { "capability:Session" }
@@ -39,6 +39,8 @@ namespace NeonBlack.Gameplay.Modules.Scoring
         {
             if (_collectiblesPerBonus <= 0) yield return RuntimeValidationIssue.Required("Collectibles Per Bonus must be positive.");
             if (_stillnessInterval <= 0f) yield return RuntimeValidationIssue.Required("Stillness Interval must be greater than zero.");
+            if (_bonusClip != null && GetComponent<AudioSource>() == null)
+                yield return RuntimeValidationIssue.Required("Bonus Clip is assigned but no AudioSource exists on this GameObject.");
         }
         [Header("Reward Settings")]
         [SerializeField, Tooltip("Points added to the score each time the stillness interval completes.")]
@@ -94,15 +96,19 @@ namespace NeonBlack.Gameplay.Modules.Scoring
             _healthState = GetComponent<IActorHealthState>();
 
             _audioSource = GetComponent<AudioSource>();
-            if (_audioSource == null)
-                _audioSource = gameObject.AddComponent<AudioSource>();
-
-            _audioSource.spatialBlend = 0f;
-            _audioSource.playOnAwake = false;
+            if (_audioSource != null)
+            {
+                _audioSource.spatialBlend = 0f;
+                _audioSource.playOnAwake = false;
+            }
 
             // Validate mixer routing. Without an Output Group assigned, GameplaySettingsService's
             // SFX volume slider has no effect on this component's clips.
-            if (_audioSource.outputAudioMixerGroup == null)
+            if (_bonusClip != null && _audioSource == null)
+            {
+                Debug.LogError("[StillnessBonus2D] Bonus Clip is assigned but no AudioSource exists on this GameObject.", this);
+            }
+            else if (_bonusClip != null && _audioSource.outputAudioMixerGroup == null)
             {
                 Debug.LogError("[StillnessBonus2D] AudioSource has no Output AudioMixerGroup assigned. "
                     + "Drag your SFX mixer group into the AudioSource's 'Output' field so volume settings apply.", this);

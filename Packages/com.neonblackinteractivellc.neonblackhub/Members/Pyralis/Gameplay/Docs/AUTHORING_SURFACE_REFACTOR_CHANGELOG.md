@@ -163,3 +163,17 @@ Verification:
 - Reference search found no serialized member scene/prefab references to `Collectible2D`, `CollectibleSpawner2D`, or `ActorPickupCollector2D`.
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because this is contract metadata only.
+
+### Scoring Contract And Optional Audio Accuracy
+
+Changes:
+
+- Removed UnityEvent fields from `ParticipantScoreService` required PYS fields; they are runtime event surfaces, not setup inputs.
+- Removed numeric/default tuning and optional bonus clip from `StillnessBonus2D` required PYS fields.
+- Removed automatic `AudioSource` creation from `StillnessBonus2D`; bonus audio now requires an authored AudioSource only when Bonus Clip is assigned.
+
+Verification:
+
+- Reference search found member scenes using older `ScoreManager`/`StillnessReward` identifiers, not serialized `ParticipantScoreService` or `StillnessBonus2D`.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because Unity is not available on `PATH`; run affected scoring/stillness proofs in the Unity Editor.
