@@ -544,3 +544,18 @@ Verification:
 - `SplashScreenController` explicitly supports a static fallback path when video fields are empty, and skips fade when no black overlay exists.
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because this is contract metadata only.
+
+### Projectile Planner Contract Accuracy
+
+Changes:
+
+- Removed request-property `RequiredFields` metadata from `ProjectileFirePlanner`.
+- Kept planner setup guidance focused on configuring `FireModeDefinition` and calling `BuildCommands` from weapon/action logic.
+- Kept runtime behavior unchanged.
+
+Verification:
+
+- `ProjectileFirePlanner` is a static planner with no serialized Unity fields.
+- `BuildCommands` handles a missing projectile by returning an empty command array and resolves missing direction to `Vector3.forward`.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because this is contract metadata only.

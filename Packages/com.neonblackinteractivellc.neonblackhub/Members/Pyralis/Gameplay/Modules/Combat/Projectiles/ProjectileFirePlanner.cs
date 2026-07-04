@@ -13,7 +13,6 @@ namespace NeonBlack.Gameplay.Modules.Combat
         Surface = AuthoringSurface.Goal,
         Summary = "Logic for planning projectile trajectories based on fire modes and spread rules.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/combat/projectiles",
-        RequiredFields = new[] { nameof(ProjectileFireRequest.Projectile), nameof(ProjectileFireRequest.FireMode), nameof(ProjectileFireRequest.Origin), nameof(ProjectileFireRequest.Direction) },
         SetupSteps = new[] { "Ensure FireModeDefinition spread values are configured.", "Call BuildCommands from weapon or action logic." },
         SuccessChecks = new[] { "Fire mode settings produce the expected projectile command pattern." },
         Tags = new[] { "capability:RangedFlow" }
