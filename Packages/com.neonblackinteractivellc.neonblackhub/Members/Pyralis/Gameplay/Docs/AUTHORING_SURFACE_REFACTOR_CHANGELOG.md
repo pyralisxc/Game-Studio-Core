@@ -514,3 +514,18 @@ Verification:
 - `EnemySpawner.Start` already guards against missing enemy prefabs before spawning.
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because this is contract metadata only.
+
+### Pawn 2D Movement Contract Required Field Accuracy
+
+Changes:
+
+- Narrowed `Pawn2DMovementComponent` required PYS fields to movement style, move speed, and ground layer.
+- Removed dash toggle, dash tuning, jump toggle, jump tuning, and input zone references from unconditional required fields.
+- Kept runtime behavior unchanged.
+
+Verification:
+
+- `Pawn2DMovementComponent.Validation.cs` already requires dash values only when dash is enabled and jump values only for side-view jump routes.
+- `Pawn2DMovementComponent.Bounds.cs` treats `inputZones` as optional and only consults it when assigned.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because this is contract metadata only.
