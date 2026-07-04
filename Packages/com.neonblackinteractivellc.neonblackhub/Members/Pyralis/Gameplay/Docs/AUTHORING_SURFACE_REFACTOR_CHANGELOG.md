@@ -206,3 +206,19 @@ Verification:
 
 - Scoped `git diff --check` passed for touched docs.
 - Unity Test Runner was not run because this is docs-only.
+
+### Actor Shadow Authored Output Ownership
+
+Changes:
+
+- Removed the generic runtime `RuntimeShadow` GameObject and `SpriteRenderer` creation path from `ActorShadowDriver`.
+- Kept profile `shadowPrefab` instantiation as authored runtime output.
+- Preserved authored shadow renderer references separately from runtime prefab instances.
+- Added validation that blob-shadow mode needs either an authored child `SpriteRenderer` or a profile `shadowPrefab`.
+
+Verification:
+
+- Reference search found no serialized member scene/prefab references to `ActorShadowDriver`.
+- Scoped scan confirmed `ActorShadowDriver` no longer contains `RuntimeShadow`, `new GameObject`, or `AddComponent<SpriteRenderer>`.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because Unity is not available on `PATH`; run affected presentation proofs in the Unity Editor.

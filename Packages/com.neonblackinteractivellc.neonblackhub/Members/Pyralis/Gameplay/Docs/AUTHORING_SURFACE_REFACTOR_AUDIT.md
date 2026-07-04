@@ -324,10 +324,10 @@ Reviewed in this lane:
 - `Modules/Interaction/Runtime/Collectibles/Sprite2D/CollectibleFeedback2D.cs` - feedback audio now uses `RequireComponent(typeof(AudioSource))` and authored mixer routing.
 - `Modules/Combat/Pawn/Sprite2D/HitBox2D.cs` - optional hit SFX no longer auto-creates an `AudioSource`.
 - `Modules/Scoring/Sprite2D/StillnessBonus2D.cs` - optional bonus audio no longer auto-creates an `AudioSource`.
+- `Presentation/Visuals/ActorShadowDriver.cs` - blob shadows now require an authored child `SpriteRenderer` or profile `shadowPrefab`; the driver no longer creates a generic `RuntimeShadow` object.
 
 Needs review for Unity-native prefab/reference simplification:
 
-- `Presentation/Visuals/ActorShadowDriver.cs` - creates `RuntimeShadow`; may be better as an authored child or prefab.
 - `Modules/Input/Runtime/Sprite2D/VirtualJoystick.cs` - auto-adds `CanvasGroup`; it is serialized in member scenes without the sibling component, so a code-only cut is deferred until a scene/sample pass.
 - `Modules/Spawning/Runtime/Rigged3D/Spawner.cs` - can build GameObjects from sprites; likely useful for prototypes but not ideal as the main package authoring path.
 

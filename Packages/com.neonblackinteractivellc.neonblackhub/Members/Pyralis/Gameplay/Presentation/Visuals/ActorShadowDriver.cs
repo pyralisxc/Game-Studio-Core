@@ -14,10 +14,10 @@ namespace NeonBlack.Gameplay.Presentation.Visuals
         Surface = AuthoringSurface.Goal,
         Summary = "Applies shadow presentation (blob or renderer) based on PawnPresentationProfile.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/visuals",
-        SetupSteps = new[] 
-        { 
+        SetupSteps = new[]
+        {
             "Add to the actor root or visual root.",
-            "Assign Shadow Sprite Renderer only when using an authored blob-shadow child.",
+            "Assign Shadow Sprite Renderer when using an authored blob-shadow child, or assign a Shadow Prefab on the Pawn Presentation Profile.",
             "Assign Model Renderers only when the automatic child renderer search is not sufficient."
         },
         SuccessChecks = new[] { "Verify a shadow appears under the actor and scales correctly with height." },
@@ -32,7 +32,17 @@ namespace NeonBlack.Gameplay.Presentation.Visuals
                 yield return RuntimeValidationIssue.Recommended("Presentation Profile is empty. This is valid when the presentation stack applies the profile at runtime.");
             
             if (shadowSpriteRenderer == null && (modelRenderers == null || modelRenderers.Length == 0))
-                yield return RuntimeValidationIssue.Recommended("No authored shadow renderer or model renderers assigned. Runtime profile application may still resolve or create shadow output.");
+                yield return RuntimeValidationIssue.Recommended("No authored shadow renderer or model renderers assigned. Runtime profile application may still resolve renderer-shadow output.");
+
+            if (RequiresBlobShadowRenderer())
+                yield return RuntimeValidationIssue.Required("Blob shadow mode needs either an authored Shadow Sprite Renderer or a Shadow Prefab on the Pawn Presentation Profile.");
+
+            if (presentationProfile != null
+                && presentationProfile.shadowPrefab != null
+                && presentationProfile.shadowPrefab.GetComponentInChildren<SpriteRenderer>(true) == null)
+            {
+                yield return RuntimeValidationIssue.Required("Shadow Prefab has no child SpriteRenderer for blob shadow output.");
+            }
         }
         [Header("Scene References")]
         [SerializeField] private Transform visualRoot;
@@ -43,7 +53,9 @@ namespace NeonBlack.Gameplay.Presentation.Visuals
         [Header("Runtime")]
         [SerializeField] private PawnPresentationProfile presentationProfile;
 
-        private GameObject _generatedShadowObject;
+        private GameObject _runtimeShadowObject;
+        private Transform _runtimeShadowRoot;
+        private SpriteRenderer _runtimeShadowSpriteRenderer;
 
         public void ApplyProfile(PawnPresentationProfile profile)
         {
@@ -108,25 +120,27 @@ namespace NeonBlack.Gameplay.Presentation.Visuals
             }
 
             EnsureShadowVisual();
-            if (shadowRoot == null || shadowSpriteRenderer == null)
+            Transform activeShadowRoot = ActiveShadowRoot();
+            SpriteRenderer activeShadowRenderer = ActiveShadowRenderer();
+            if (activeShadowRoot == null || activeShadowRenderer == null)
                 return;
 
-            shadowRoot.localPosition = presentationProfile.shadowLocalOffset;
-            shadowRoot.localRotation = Quaternion.identity;
+            activeShadowRoot.localPosition = presentationProfile.shadowLocalOffset;
+            activeShadowRoot.localRotation = Quaternion.identity;
 
             float heightOffset = 0f;
             if (visualRoot != null)
                 heightOffset = Mathf.Max(0f, visualRoot.position.y - transform.position.y);
 
             float scaleMultiplier = Mathf.Max(0.1f, 1f - heightOffset * presentationProfile.shadowHeightScaleResponse);
-            shadowRoot.localScale = Vector3.Scale(presentationProfile.shadowScale, new Vector3(scaleMultiplier, scaleMultiplier, 1f));
+            activeShadowRoot.localScale = Vector3.Scale(presentationProfile.shadowScale, new Vector3(scaleMultiplier, scaleMultiplier, 1f));
 
-            shadowSpriteRenderer.color = presentationProfile.shadowColor;
+            activeShadowRenderer.color = presentationProfile.shadowColor;
             if (presentationProfile.shadowSprite != null)
-                shadowSpriteRenderer.sprite = presentationProfile.shadowSprite;
+                activeShadowRenderer.sprite = presentationProfile.shadowSprite;
             if (!string.IsNullOrWhiteSpace(presentationProfile.shadowSortingLayerName))
-                shadowSpriteRenderer.sortingLayerName = presentationProfile.shadowSortingLayerName;
-            shadowSpriteRenderer.sortingOrder = presentationProfile.shadowSortingOrder;
+                activeShadowRenderer.sortingLayerName = presentationProfile.shadowSortingLayerName;
+            activeShadowRenderer.sortingOrder = presentationProfile.shadowSortingOrder;
             SetShadowVisible(presentationProfile.shadowSprite != null || presentationProfile.shadowPrefab != null);
         }
 
@@ -154,48 +168,64 @@ namespace NeonBlack.Gameplay.Presentation.Visuals
         {
             if (presentationProfile.shadowPrefab != null)
             {
-                if (_generatedShadowObject == null || _generatedShadowObject.name != presentationProfile.shadowPrefab.name + " (Runtime)")
+                if (_runtimeShadowObject == null || _runtimeShadowObject.name != presentationProfile.shadowPrefab.name + " (Runtime)")
                 {
-                    if (_generatedShadowObject != null)
-                        DestroyGeneratedShadow();
+                    if (_runtimeShadowObject != null)
+                        DestroyRuntimeShadow();
 
-                    _generatedShadowObject = Instantiate(presentationProfile.shadowPrefab, transform);
-                    _generatedShadowObject.name = presentationProfile.shadowPrefab.name + " (Runtime)";
-                    shadowRoot = _generatedShadowObject.transform;
-                    shadowSpriteRenderer = _generatedShadowObject.GetComponentInChildren<SpriteRenderer>(true);
+                    _runtimeShadowObject = Instantiate(presentationProfile.shadowPrefab, transform);
+                    _runtimeShadowObject.name = presentationProfile.shadowPrefab.name + " (Runtime)";
+                    _runtimeShadowRoot = _runtimeShadowObject.transform;
+                    _runtimeShadowSpriteRenderer = _runtimeShadowObject.GetComponentInChildren<SpriteRenderer>(true);
                 }
 
                 return;
             }
 
-            if (_generatedShadowObject == null)
-            {
-                _generatedShadowObject = new GameObject("RuntimeShadow");
-                _generatedShadowObject.transform.SetParent(transform, false);
-                shadowRoot = _generatedShadowObject.transform;
-                shadowSpriteRenderer = _generatedShadowObject.AddComponent<SpriteRenderer>();
-            }
+            DestroyRuntimeShadow();
         }
 
         private void SetShadowVisible(bool visible)
         {
-            if (shadowRoot != null)
-                shadowRoot.gameObject.SetActive(visible);
+            Transform activeShadowRoot = ActiveShadowRoot();
+            if (activeShadowRoot != null)
+                activeShadowRoot.gameObject.SetActive(visible);
         }
 
-        private void DestroyGeneratedShadow()
+        private void DestroyRuntimeShadow()
         {
-            if (_generatedShadowObject == null)
+            if (_runtimeShadowObject == null)
                 return;
 
             if (Application.isPlaying)
-                Destroy(_generatedShadowObject);
+                Destroy(_runtimeShadowObject);
             else
-                DestroyImmediate(_generatedShadowObject);
+                DestroyImmediate(_runtimeShadowObject);
 
-            _generatedShadowObject = null;
-            shadowRoot = null;
-            shadowSpriteRenderer = null;
+            _runtimeShadowObject = null;
+            _runtimeShadowRoot = null;
+            _runtimeShadowSpriteRenderer = null;
+        }
+
+        private Transform ActiveShadowRoot()
+        {
+            return _runtimeShadowRoot != null ? _runtimeShadowRoot : shadowRoot;
+        }
+
+        private SpriteRenderer ActiveShadowRenderer()
+        {
+            return _runtimeShadowSpriteRenderer != null ? _runtimeShadowSpriteRenderer : shadowSpriteRenderer;
+        }
+
+        private bool RequiresBlobShadowRenderer()
+        {
+            if (presentationProfile == null)
+                return false;
+
+            ActorShadowMode mode = ResolveShadowMode();
+            return mode == ActorShadowMode.BlobSprite
+                && presentationProfile.shadowPrefab == null
+                && shadowSpriteRenderer == null;
         }
     }
 }
