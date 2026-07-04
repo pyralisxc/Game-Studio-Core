@@ -604,3 +604,18 @@ Verification:
 - `Pawn3DMovementComponent.Profiles.cs` applies movement speed from `PawnMovementProfile` and jump tuning from `PawnTraversalProfile`.
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because this is contract metadata only.
+
+### Plan And Audit Progress Consolidation
+
+Changes:
+
+- Added a current-status section to the implementation plan so unfinished checklist items do not imply no work has happened.
+- Added a current-progress section to the authoring surface audit summarizing completed cleanup families and remaining proof.
+- Kept refactor-specific sequencing out of `AGENTS.md`.
+
+Verification:
+
+- Confirmed Unity version remains `6000.4.0f1`.
+- Confirmed PYS Authoring remains external in `Packages/manifest.json`.
+- Scoped `git diff --check` passed for touched docs.
+- Unity Test Runner was not run because this is docs-only consolidation.

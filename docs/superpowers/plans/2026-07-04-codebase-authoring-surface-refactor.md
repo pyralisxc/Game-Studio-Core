@@ -10,6 +10,29 @@
 
 ---
 
+## Current Status
+
+Last updated: 2026-07-04.
+
+Completed evidence:
+
+- Unity version has been confirmed as `6000.4.0f1`.
+- PYS Authoring remains an external package dependency through `Packages/manifest.json` as `file:../../Pys Authoring/Packages/com.pys.authoring`.
+- The package-wide ownership audit exists at `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/AUTHORING_SURFACE_REFACTOR_AUDIT.md`.
+- Living architecture docs and the gameplay README define the package-wide authoring-surface target instead of a pawn-only cleanup.
+- The dedicated refactor changelog exists at `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/AUTHORING_SURFACE_REFACTOR_CHANGELOG.md` and records each committed slice.
+- Feedback, presentation, collectibles, tabletop, route policy, profile metadata, camera, scene service, projectile, enemy, RPG item, pawn movement, and validation-required-field cleanup slices have been committed.
+- Runtime-created object pressure has been classified in the audit as valid runtime output, reviewed setup repair, or deferred review.
+
+Remaining evidence before this goal can be called complete:
+
+- Unity Editor compile and Unity Test Runner proof still need to run for `com.neonblackinteractivellc.neonblackhub`.
+- Package samples remain intentionally untouched; Cameron plans to hand-author samples from working code, so sample proof is not complete.
+- Remaining higher-risk cleanup should focus on real ownership consolidation, stale-doc folding, and Unity proof rather than broad metadata sweeps.
+- Existing unrelated local/generated changes remain outside this lane: `.plastic/*`, `Game Studio Core.slnx`, and `Tools/Validation/Run-PreSceneValidation.ps1`.
+
+---
+
 ## Operating Rules
 
 - Do not move, delete, or rename Unity assets without preserving matching `.meta` files.
