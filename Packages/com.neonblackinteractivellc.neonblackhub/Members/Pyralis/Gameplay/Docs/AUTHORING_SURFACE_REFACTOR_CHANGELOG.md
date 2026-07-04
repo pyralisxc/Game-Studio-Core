@@ -236,3 +236,17 @@ Verification:
 - Reference search found `statusLabel` serialized in `Members/Public/La Cucarachacha/Scenes/MainMenu.unity`, so direct label fields were preserved.
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because this is contract metadata/setup guidance only.
+
+### Participant Feedback Service Stream Ownership
+
+Changes:
+
+- Removed legacy inspector `UnityEvent` channels from `ParticipantFeedbackService`.
+- Kept `FeedbackPublished` as the single participant feedback stream consumed by HUD presenters.
+- Kept publish helper methods as typed code entrypoints over `ParticipantFeedbackMessage`.
+
+Verification:
+
+- Reference search found the removed UnityEvent fields were only referenced inside `ParticipantFeedbackService`.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because Unity is not available on `PATH`; run affected feedback HUD proofs in the Unity Editor.

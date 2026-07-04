@@ -2,7 +2,6 @@ using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Participants;
 using System;
 using UnityEngine;
-using UnityEngine.Events;
 using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Feedback
@@ -22,25 +21,7 @@ namespace NeonBlack.Gameplay.Modules.Feedback
         Tags = new[] { "capability:VFX" }
     )]
     public class ParticipantFeedbackService : MonoBehaviour, IGameService, IParticipantFeedbackStream, IParticipantFeedbackPublisher
-{
-        [System.Serializable]
-        public sealed class ParticipantIntEvent : UnityEvent<ParticipantHandle, int> { }
-
-        [System.Serializable]
-        public sealed class ParticipantFloatEvent : UnityEvent<ParticipantHandle, float> { }
-
-        [System.Serializable]
-        public sealed class ParticipantStatusEvent : UnityEvent<ParticipantHandle, string> { }
-
-        [System.Serializable]
-        public sealed class ParticipantAlertEvent : UnityEvent<ParticipantHandle, string, int> { }
-
-        public ParticipantIntEvent OnParticipantScorePopup = new ParticipantIntEvent();
-        public ParticipantIntEvent OnParticipantComboPopup = new ParticipantIntEvent();
-        public ParticipantFloatEvent OnParticipantDamageFeedback = new ParticipantFloatEvent();
-        public ParticipantFloatEvent OnParticipantHealFeedback = new ParticipantFloatEvent();
-        public ParticipantStatusEvent OnParticipantStatusFeedback = new ParticipantStatusEvent();
-        public ParticipantAlertEvent OnParticipantCombatAlert = new ParticipantAlertEvent();
+    {
         public event Action<ParticipantFeedbackMessage> FeedbackPublished;
 
         public void Initialize() { }
@@ -52,28 +33,6 @@ namespace NeonBlack.Gameplay.Modules.Feedback
                 return;
 
             FeedbackPublished?.Invoke(message);
-
-            switch (message.Kind)
-            {
-                case ParticipantFeedbackKind.Score:
-                    OnParticipantScorePopup?.Invoke(message.Participant, message.IntValue);
-                    break;
-                case ParticipantFeedbackKind.Combo:
-                    OnParticipantComboPopup?.Invoke(message.Participant, message.IntValue);
-                    break;
-                case ParticipantFeedbackKind.Damage:
-                    OnParticipantDamageFeedback?.Invoke(message.Participant, message.FloatValue);
-                    break;
-                case ParticipantFeedbackKind.Heal:
-                    OnParticipantHealFeedback?.Invoke(message.Participant, message.FloatValue);
-                    break;
-                case ParticipantFeedbackKind.Status:
-                    OnParticipantStatusFeedback?.Invoke(message.Participant, message.TextValue);
-                    break;
-                case ParticipantFeedbackKind.CombatAlert:
-                    OnParticipantCombatAlert?.Invoke(message.Participant, message.TextValue, message.IntValue);
-                    break;
-            }
         }
 
         public void PublishScore(ParticipantHandle participant, int amount)
