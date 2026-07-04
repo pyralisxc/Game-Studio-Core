@@ -24,7 +24,7 @@ namespace NeonBlack.Gameplay.Modules.Character
         CapabilityPath = "Movement/Traversal/Pawn3D Movement Component",
         Surface = AuthoringSurface.Goal,
         Summary = "Core 3D movement motor; handles walking, jumping, gravity, and ground detection.",
-        RequiredFields = new[] { nameof(movementMode), nameof(groundLayer), nameof(walkSpeed), nameof(jumpHeight) },
+        RequiredFields = new[] { nameof(movementMode), nameof(groundLayer) },
         SetupSteps = new[] { "Attach to a Pawn root with CharacterController.", "Assign Ground Layer mask." },
         SuccessChecks = new[] { "Verify the pawn can walk and jump in Play Mode." },
         Tags = new[] { "capability:Movement", "axiom:Realtime", "axiom:Dimensions3D" }

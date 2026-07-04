@@ -589,3 +589,18 @@ Verification:
 - `ItemDefinition.Sanitize` defaults rarity and clamps max stack size to at least 1; tags are optional and normalized when present.
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because this is contract metadata only.
+
+### Pawn 3D Movement Contract Required Field Accuracy
+
+Changes:
+
+- Narrowed `Pawn3DMovementComponent` required PYS fields to movement mode and ground layer.
+- Removed walk speed and jump height from unconditional required metadata because those are default/profile-owned tuning values.
+- Kept runtime behavior unchanged.
+
+Verification:
+
+- `Pawn3DMovementComponent` has nonzero serialized defaults for walk speed and jump height.
+- `Pawn3DMovementComponent.Profiles.cs` applies movement speed from `PawnMovementProfile` and jump tuning from `PawnTraversalProfile`.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because this is contract metadata only.
