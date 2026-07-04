@@ -14,7 +14,7 @@ namespace NeonBlack.Gameplay.Presentation.Camera
         CapabilityPath = "World & Meta/Camera/Camera Occlusion Fader",
         Surface = AuthoringSurface.Goal,
         Summary = "Fades renderers that block the line of sight between the camera and a tracked target.",
-        RequiredFields = new[] { nameof(target), nameof(fadeAlpha), nameof(fadeDistance), nameof(occlusionMask) },
+        RequiredFields = new[] { nameof(target), nameof(occlusionMask) },
         SetupSteps = new[] 
     { 
         "Attach to your Main Camera.",

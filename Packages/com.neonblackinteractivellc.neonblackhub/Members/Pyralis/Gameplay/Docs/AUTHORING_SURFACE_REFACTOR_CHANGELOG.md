@@ -305,3 +305,16 @@ Verification:
 - Inspected `WorldHealthBar.Canvas.cs` and `TabletopBoardGridPresenter.cs` before classifying their generated objects.
 - Scoped `git diff --check` passed for touched docs.
 - Unity Test Runner was not run because this is docs-only classification.
+
+### Utility And Traversal Contract Accuracy
+
+Changes:
+
+- Removed numeric traversal tuning fields from `PawnTraversalProfile` required PYS fields; feature toggles remain as the authored capability choice, while numeric values remain sanitized/validated.
+- Removed camera fade tuning fields from `CameraOcclusionFader` required PYS fields; target and occlusion mask remain the setup references.
+- Removed `Spawner` required PYS fields because prefab and sprite sources are alternative inputs and the runtime validator already reports when neither source exists.
+
+Verification:
+
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because this is contract metadata only.

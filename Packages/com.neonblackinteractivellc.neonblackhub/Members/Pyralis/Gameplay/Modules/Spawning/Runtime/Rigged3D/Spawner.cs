@@ -12,7 +12,6 @@ namespace NeonBlack.Gameplay.Modules.Spawning
         Category = "Environment",
         Surface = AuthoringSurface.Goal,
         Summary = "Optional scene utility for spawning authored prefabs or sprite presentation objects. This is not the participant pawn spawn path.",
-        RequiredFields = new[] { nameof(prefabs), nameof(sprites), nameof(spawnRadius), nameof(spawnInterval), nameof(maxAlive), nameof(maxTotal), nameof(patrolDistance), nameof(patrolSpeed) },
         SetupSteps = new[] 
     { 
         "Add Spawner only when this scene needs generic content spawning.",
