@@ -21,7 +21,6 @@ namespace NeonBlack.Gameplay.Glue.Spawning
         Surface = AuthoringSurface.Goal,
         Summary = "Single owner for participant pawn spawning. It resolves each ParticipantDefinition default pawn, places it at authored spawn points, and reports pawn assignment through the roster.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/participants",
-        RequiredFields = new[] { nameof(spawnPoints) },
         RequiredInterfaces = new[] { typeof(IGameService) },
         PrerequisiteStableIds = new[] { "session.definition", "pawn.definition" },
         RouteStage = "Scene Services",

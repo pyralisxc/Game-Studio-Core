@@ -16,7 +16,7 @@ namespace NeonBlack.Gameplay.Glue.SceneFlow.Navigation
         CapabilityPath = "UI/HUD/Splash Screen Controller",
         Surface = AuthoringSurface.Goal,
         Summary = "Drives the optional intro scene, plays a video or static fallback, preloads the next scene, and fades out.",
-        RequiredFields = new[] { nameof(_nextSceneName), nameof(_blackOverlay), nameof(_videoClip), nameof(_videoPlayer), nameof(_videoDisplay) },
+        RequiredFields = new[] { nameof(_nextSceneName) },
         SetupSteps = new[] 
         { 
             "Assign Next Scene Name to the menu or target gameplay scene.",

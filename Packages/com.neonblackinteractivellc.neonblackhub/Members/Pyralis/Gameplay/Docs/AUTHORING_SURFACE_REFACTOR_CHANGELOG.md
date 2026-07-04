@@ -529,3 +529,18 @@ Verification:
 - `Pawn2DMovementComponent.Bounds.cs` treats `inputZones` as optional and only consults it when assigned.
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because this is contract metadata only.
+
+### Scene Service Contract Required Field Accuracy
+
+Changes:
+
+- Removed unconditional spawn point required metadata from `ParticipantSpawnService`; spawn points remain conditionally required when `spawnOnRegister` is enabled.
+- Narrowed `SplashScreenController` required PYS fields to the next scene name; black overlay and video fields remain optional splash presentation.
+- Kept runtime behavior unchanged.
+
+Verification:
+
+- `ParticipantSpawnService.GetRuntimeValidationIssues` already reports missing spawn points only when `spawnOnRegister` is enabled.
+- `SplashScreenController` explicitly supports a static fallback path when video fields are empty, and skips fade when no black overlay exists.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because this is contract metadata only.
