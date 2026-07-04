@@ -222,3 +222,17 @@ Verification:
 - Scoped scan confirmed `ActorShadowDriver` no longer contains `RuntimeShadow`, `new GameObject`, or `AddComponent<SpriteRenderer>`.
 - Scoped `git diff --check` passed for touched files.
 - Unity Test Runner was not run because Unity is not available on `PATH`; run affected presentation proofs in the Unity Editor.
+
+### Participant Feedback HUD Contract Accuracy
+
+Changes:
+
+- Removed direct TMP label fields from `ParticipantFeedbackHudPresenter` required PYS fields.
+- Kept direct labels and timed panels as supported alternative output surfaces.
+- Rephrased setup guidance so child `ParticipantTimedTextPanel` surfaces satisfy the HUD feedback contract.
+
+Verification:
+
+- Reference search found `statusLabel` serialized in `Members/Public/La Cucarachacha/Scenes/MainMenu.unity`, so direct label fields were preserved.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run because this is contract metadata/setup guidance only.

@@ -11,8 +11,7 @@ namespace NeonBlack.Gameplay.Modules.Feedback.UI
         CapabilityPath = "UI/HUD/Participant Feedback Hud Presenter",
         Surface = AuthoringSurface.Goal,
         Summary = "Displays participant-specific feedback (combos, status, scores) in the HUD.",
-        RequiredFields = new[] { nameof(comboLabel), nameof(statusLabel), nameof(scorePopupLabel) },
-        SetupSteps = new[] { "Attach to HUD canvas element", "Assign TMP labels or timed panels" },
+        SetupSteps = new[] { "Attach to a HUD canvas element.", "Assign direct TMP labels, child timed panels, or both." },
         SuccessChecks = new[] { "Feedback messages (e.g. status applied) appear in the UI." },
         Tags = new[] { "capability:UI" }
     )]
