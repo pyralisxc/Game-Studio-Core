@@ -37,3 +37,24 @@ Verification:
 Notes:
 
 - Existing unrelated local/generated changes remain outside this refactor lane: `.plastic/*`, `Game Studio Core.slnx`, and `Tools/Validation/Run-PreSceneValidation.ps1`.
+
+### Feedback HUD Health Binding Ownership
+
+Changes:
+
+- Simplified `ParticipantHealthHudBinder` so it only binds tracked participant health into `ParticipantHealthPanel` surfaces.
+- Removed duplicate direct label/fill image ownership from the binder.
+- Updated the binder's PYS contract metadata to require `ParticipantHealthPanel` instead of direct UI fields.
+- Added runtime tests for binder validation with and without a child `ParticipantHealthPanel`.
+- Added the Feedback module reference to the runtime test assembly.
+
+Verification:
+
+- Scoped `git diff --check` passed for touched files.
+- Confirmed `Neonblackinteractivellc.Neonblackhub.Tests.asmdef` parses as JSON.
+- Confirmed `ParticipantHealthHudBinder` no longer references `healthLabel`, `healthFillImage`, `TextMeshProUGUI`, or `UnityEngine.UI`.
+- Unity Test Runner was not run from the shell because Unity is not available on `PATH`; run the affected runtime tests in the Unity Editor.
+
+Unity proof still required:
+
+- Run `FeedbackHudBindingTests` from Unity Test Runner.
