@@ -25,6 +25,7 @@ Completed evidence:
 - Runtime-created object pressure has been classified in the audit as valid runtime output, reviewed setup repair, or deferred review.
 - The obvious numeric/tuning `RequiredFields` false-positive scan is clean; remaining hits are primarily identifiers, definitions, UI/prefab/component references, physics masks, or concrete route services.
 - Unity batch smoke resolves packages after the corrected external PYS Authoring package path.
+- Focused runtime tests now protect the first wiring-report parity rule: canonical missing `SessionDefinition` rows suppress duplicate local validation rows, and route-dependent camera guidance is deferred until route evidence exists.
 
 Remaining evidence before this goal can be called complete:
 

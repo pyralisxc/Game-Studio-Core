@@ -12,6 +12,21 @@ Scope rules:
 
 ## 2026-07-04
 
+### Wiring Report Canonical Evidence Tests
+
+Changes:
+
+- Added focused runtime tests for `GameplayWiringReportBuilder`.
+- Protected the current parity behavior where missing `SessionDefinition` setup is represented by one canonical `MissingProvider` row instead of a duplicate local validation row.
+- Protected the route-deferral behavior where camera guidance waits while session route evidence is absent.
+- Updated the plan and audit current-status sections to record this wiring-report proof slice.
+
+Verification:
+
+- Scoped code inspection confirmed `GameplayWiringReportBuilder` already suppresses the duplicate `GameplaySessionBootstrap.SessionDefinition.Missing` validation row and defers `GameplaySessionBootstrap.CameraRig.Optional` when session route evidence is unavailable.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run from shell; run `GameplayWiringReportBuilderTests` in the Unity Editor Test Runner.
+
 ### Wiring Audit Status Accuracy
 
 Changes:
