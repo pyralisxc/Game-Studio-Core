@@ -12,6 +12,20 @@ Scope rules:
 
 ## 2026-07-05
 
+### Feedback HUD Compatibility Note
+
+Changes:
+
+- Rechecked the Feedback HUD direct-label compatibility note.
+- Updated the audit to state that direct TMP label compatibility is still current because `Members/Public/La Cucarachacha/Scenes/MainMenu.unity` serializes `statusLabel` on `ParticipantFeedbackHudPresenter`.
+- Kept runtime code unchanged.
+
+Verification:
+
+- Scoped reference search confirmed `ParticipantFeedbackHudPresenter.statusLabel` is still serialized by the member scene.
+- Scoped `git diff --check` passed for touched docs.
+- Unity Test Runner was not run because this slice is docs-only.
+
 ### Unity Verification Queue
 
 Changes:

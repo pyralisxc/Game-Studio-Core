@@ -221,7 +221,7 @@ Reviewed on 2026-07-04. Retain the Feedback UI split:
 - `ActorFeedbackComponent` is the actor-local publisher.
 - `ActorFloatingFeedbackReceiver`, `DamageNumberSpawner`, and `DamageNumber` are presentation owners for world-space feedback and pooled numeric output.
 
-Do not collapse these into one HUD/feedback script. The remaining simplification pressure is to keep contracts accurate, remove stale direct-label compatibility only after authored scenes no longer serialize it, and keep status/damage/heal routing behavior complete.
+Do not collapse these into one HUD/feedback script. Reviewed again on 2026-07-05: direct TMP label compatibility remains current because `Members/Public/La Cucarachacha/Scenes/MainMenu.unity` still serializes `statusLabel` on `ParticipantFeedbackHudPresenter`. The remaining simplification pressure is to keep contracts accurate, remove direct-label compatibility only after authored scenes no longer serialize it, and keep status/damage/heal routing behavior complete.
 
 ### Traversal Profile Ownership Review
 
