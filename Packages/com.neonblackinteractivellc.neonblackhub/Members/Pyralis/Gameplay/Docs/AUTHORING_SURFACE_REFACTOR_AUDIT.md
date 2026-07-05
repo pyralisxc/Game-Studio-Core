@@ -324,6 +324,8 @@ Settings UI review note: keep `SettingsMenu` and `SettingsScreen` separate. `Set
 
 Leaderboard UI review note: keep `LeaderboardScreen` as a Scoring-owned UI presenter. The leaderboard page and row surface are required to display entries; main-menu return wiring, back button, and status label are route/UI affordances that may be supplied elsewhere.
 
+Navigation UI review note: `MainMenuController` and `LoadingScreenController` are route-owned UI surfaces. Main menu buttons, panels, and scene navigator references are optional per route composition when another system wires navigation; the configured game scene name is the durable menu target. Loading screen progress bar and label are optional presentation fields because the controller can load the pending scene without visible progress UI.
+
 ## Scene Services
 
 These are scene-authored or scene-scale surfaces. They should remain visible when they are required, not created silently to repair setup.

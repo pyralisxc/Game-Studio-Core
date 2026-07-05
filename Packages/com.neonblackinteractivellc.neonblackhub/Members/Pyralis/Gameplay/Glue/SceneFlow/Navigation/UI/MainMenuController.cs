@@ -13,12 +13,12 @@ namespace NeonBlack.Gameplay.Glue.SceneFlow.Navigation
         CapabilityPath = "Core Setup/Navigation/Main Menu Controller",
         Surface = AuthoringSurface.RequiredSetup,
         Summary = "Main menu controller for a panel-driven gameplay menu scene; handles play/load/exit navigation.",
-        RequiredFields = new[] { nameof(mainPanel), nameof(newGameButton), nameof(exitButton), nameof(gameSceneName), nameof(sceneNavigatorSource) },
+        RequiredFields = new[] { nameof(gameSceneName) },
         SetupSteps = new[] 
         { 
             "Assign Main Panel and every main menu button that should be clickable.",
             "Assign Game Scene Name to the scene loaded by New Game.",
-            "Assign Scene Navigator Source to SceneFader or SceneLoader.",
+            "Assign Scene Navigator Source to SceneFader or SceneLoader, or provide one through SetSceneNavigator at runtime.",
             "Assign each panel Back button so they can return to Main Panel."
         },
         SuccessChecks = new[] { "Menu buttons correctly navigate between panels or trigger scene transitions." },

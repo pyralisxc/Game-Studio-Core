@@ -16,7 +16,6 @@ namespace NeonBlack.Gameplay.Glue.SceneFlow.Navigation
         CapabilityPath = "Core Setup/Navigation/Loading Screen Controller",
         Surface = AuthoringSurface.RequiredSetup,
         Summary = "LoadingScreenController reads SceneFader.PendingScene and shows optional progress UI.",
-        RequiredFields = new[] { nameof(_progressBar), nameof(_label) },
         SetupSteps = new[] 
         { 
             "Use this only in the loading scene referenced by SceneNames.LoadingScreen.",

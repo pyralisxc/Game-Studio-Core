@@ -67,6 +67,20 @@ Verification:
 - Scoped code inspection confirmed `Open()`, `Close()`, and status updates null-check optional page, button, and label references.
 - Unity Test Runner was not run from shell; run affected UI checks in the Unity Editor.
 
+### Navigation UI Contract Accuracy
+
+Changes:
+
+- Narrowed `MainMenuController` required PYS fields to `gameSceneName`; panels, buttons, and navigator references are route-specific and already null-checked or runtime-settable.
+- Removed optional progress bar and label from `LoadingScreenController` required PYS fields.
+- Updated setup guidance and audit notes to keep navigation UI owned by scene-flow routes instead of treating every visible control as package-mandatory setup.
+
+Verification:
+
+- Scoped code inspection confirmed `MainMenuController` null-checks optional buttons/panels and can receive an `ISceneNavigator` through `SetSceneNavigator`.
+- Scoped code inspection confirmed `LoadingScreenController` null-checks progress and label UI before updating them.
+- Unity Test Runner was not run from shell; run affected navigation UI checks in the Unity Editor.
+
 ### Baseline Planning And Audit
 
 Commits:
