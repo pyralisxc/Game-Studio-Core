@@ -15,12 +15,11 @@ namespace NeonBlack.Gameplay.Presentation.HUD.Settings
         CapabilityPath = "Settings/UI/Settings Menu",
         Surface = AuthoringSurface.Goal,
         Summary = "Drives the 3D main-menu settings panel: volume sliders, fullscreen state, and resolution selection.",
-        RequiredFields = new[] { nameof(settingsSource), nameof(masterSlider), nameof(musicSlider), nameof(sfxSlider), nameof(fullscreenToggle), nameof(resolutionDropdown) },
         SetupSteps = new[] 
     { 
         "Place this on the settings panel that is shown from the main menu.",
-        "Assign Settings Source to GameplaySettingsService or another IGameplaySettingsApplier.",
-        "Assign any sliders, toggle, and dropdown the panel actually exposes."
+        "Inject Settings Source through the lifetime scope, or assign GameplaySettingsService or another IGameplaySettingsApplier.",
+        "Assign only the sliders, toggle, and dropdown the panel actually exposes."
     },
         SuccessChecks = new[] { "Open the settings panel and verify sliders modify volume and the resolution dropdown updates display." },
         Tags = new[] { "capability:UI", "capability:Setup" }

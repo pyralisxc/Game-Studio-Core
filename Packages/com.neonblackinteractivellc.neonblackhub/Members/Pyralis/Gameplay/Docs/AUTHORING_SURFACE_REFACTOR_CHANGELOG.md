@@ -39,6 +39,20 @@ Verification:
 - Scoped search confirmed the shared material mutation path was removed from `TextFlasher`.
 - Unity Test Runner was not run from shell; run affected presentation/feedback checks in the Unity Editor.
 
+### Settings UI Contract Accuracy
+
+Changes:
+
+- Removed always-required PYS fields from `SettingsMenu`; settings services can be injected and individual controls are optional when a panel does not expose them.
+- Narrowed `SettingsScreen` required fields to `_settingsPage`, the only field required for `Open()` to operate.
+- Updated setup guidance so main-menu page, back button, controls, and settings source are described as authored/injected according to the actual UI surface.
+- Classified `SettingsMenu` and `SettingsScreen` as separate retained owners in the refactor audit.
+
+Verification:
+
+- Scoped code inspection confirmed both settings components null-check optional controls and resolve settings services from injection or assigned `MonoBehaviour` sources.
+- Unity Test Runner was not run from shell; run affected UI checks in the Unity Editor.
+
 ### Baseline Planning And Audit
 
 Commits:

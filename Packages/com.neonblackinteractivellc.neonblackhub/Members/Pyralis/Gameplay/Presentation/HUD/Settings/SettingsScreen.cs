@@ -14,12 +14,12 @@ namespace NeonBlack.Gameplay.Presentation.HUD.Settings
         CapabilityPath = "Settings/UI/Settings Screen",
         Surface = AuthoringSurface.Goal,
         Summary = "Swaps between a main menu page and a settings page, forwards slider/toggle values to a settings service, and can pause gameplay.",
-        RequiredFields = new[] { nameof(_mainMenuPage), nameof(_settingsPage), nameof(_settingsSource), nameof(_backButton) },
+        RequiredFields = new[] { nameof(_settingsPage) },
         SetupSteps = new[] 
     { 
-        "Assign Main Menu Page and Settings Page roots from the same Canvas.",
-        "Assign Settings Source to GameplaySettingsService.",
-        "Assign the Back Button so Close can save values.",
+        "Assign Settings Page root from the same Canvas.",
+        "Inject Settings Source through the lifetime scope, or assign GameplaySettingsService.",
+        "Assign Main Menu Page and Back Button when this screen owns menu-page return navigation.",
         "Start the Settings Page inactive."
     },
         SuccessChecks = new[] { "Open settings from the menu and verify it pauses gameplay and populates sliders correctly." },

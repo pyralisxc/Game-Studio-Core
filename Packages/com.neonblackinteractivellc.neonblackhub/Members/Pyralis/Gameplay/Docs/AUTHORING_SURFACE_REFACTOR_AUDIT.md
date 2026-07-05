@@ -320,6 +320,8 @@ These should remain display-focused. Refactors should move gameplay rules out of
 
 Presentation visual review note: keep `SpriteFlasher` and `TextFlasher` as separate concrete Unity targets because SpriteRenderer and TMP_Text color ownership are different authoring surfaces. They should share the profile-backed `IVisualFlashPlayer` contract and avoid mutating shared materials.
 
+Settings UI review note: keep `SettingsMenu` and `SettingsScreen` separate. `SettingsMenu` owns concrete settings controls for main-menu panels; `SettingsScreen` owns page swapping and optional gameplay pause. Their settings service can be injected by Glue or assigned through the Inspector, and individual UI controls are optional when a panel does not expose that setting.
+
 ## Scene Services
 
 These are scene-authored or scene-scale surfaces. They should remain visible when they are required, not created silently to repair setup.
