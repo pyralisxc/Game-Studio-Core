@@ -21,8 +21,9 @@ Completed evidence:
 - The package-wide ownership audit exists at `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/AUTHORING_SURFACE_REFACTOR_AUDIT.md`.
 - Living architecture docs and the gameplay README define the package-wide authoring-surface target instead of a pawn-only cleanup.
 - The dedicated refactor changelog exists at `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/AUTHORING_SURFACE_REFACTOR_CHANGELOG.md` and records each committed slice.
-- Feedback, presentation, collectibles, tabletop, route policy, profile metadata, camera, scene service, projectile, enemy, RPG item, pawn movement, optional media, optional sink, and modular profile cleanup slices have been committed.
+- Feedback, presentation, collectibles, tabletop, route policy, profile metadata, camera, scene service, projectile, enemy, RPG item, pawn movement, traversal, combat tuning, movement/detection tuning, optional media, optional sink, and modular profile cleanup slices have been committed.
 - Runtime-created object pressure has been classified in the audit as valid runtime output, reviewed setup repair, or deferred review.
+- The obvious numeric/tuning `RequiredFields` false-positive scan is clean; remaining hits are primarily identifiers, definitions, UI/prefab/component references, physics masks, or concrete route services.
 - Unity batch smoke resolves packages after the corrected external PYS Authoring package path.
 
 Remaining evidence before this goal can be called complete:

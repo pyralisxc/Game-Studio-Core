@@ -12,6 +12,19 @@ Scope rules:
 
 ## 2026-07-04
 
+### Required Field Sweep Status
+
+Changes:
+
+- Updated the implementation plan and audit to record that the obvious numeric/tuning `RequiredFields` false-positive scan is clean.
+- Clarified that remaining required-field hits are primarily identity, definitions, UI/prefab/component references, physics masks, or concrete route/service setup.
+
+Verification:
+
+- Scoped `RequiredFields` inventory confirmed no remaining obvious numeric/tuning required-field false positives matching range, priority, cooldown, damage, health, token, count, index, angle, reduction, speed, rate, duration, distance, height, grounded, or line-of-sight patterns.
+- Scoped `git diff --check` passed for touched docs.
+- Unity Test Runner was not run because this slice is docs-only.
+
 ### Movement And Detection Contract Accuracy
 
 Changes:
