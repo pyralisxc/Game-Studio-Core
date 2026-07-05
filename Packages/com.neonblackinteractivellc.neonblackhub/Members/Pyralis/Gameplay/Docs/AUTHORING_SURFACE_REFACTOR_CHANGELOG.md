@@ -1270,3 +1270,18 @@ Verification:
 - Confirmed prefab spawning remains unchanged and raw sprite spawning remains supported for prototype scenes.
 - Scoped `git diff --check` passed for touched files.
 - Unity Editor Test Runner proof remains manual because batch mode currently stalls on Unity Licensing Client reconnects before test discovery.
+
+### Arcade 2D Hazard Naming Surface
+
+Changes:
+
+- Clarified the Unity-facing name of the serialized `Hazard` prefab runner as "Arcade 2D Hazard Pattern".
+- Added component-menu entries for `HazardSpawner` and `HazardDifficultyController` as "Arcade 2D Hazard Spawner" and "Arcade 2D Hazard Pacing".
+- Renamed the `HazardData` asset creation menu/default file name to "Arcade 2D Hazard Pattern" while preserving the serialized class name.
+- Updated the audit to distinguish profile-backed damage zones from the arcade 2D hazard pattern system.
+
+Verification:
+
+- Confirmed the `Hazard` script GUID has no committed prefab/scene references under the package, so this slice safely avoids prefab migration.
+- Scoped `git diff --check` passed for touched files.
+- Unity Editor Test Runner proof remains manual because Unity Editor processes are currently open.

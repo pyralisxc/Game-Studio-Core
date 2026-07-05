@@ -8,7 +8,7 @@ using Pys.Authoring.Contracts;
 namespace NeonBlack.Gameplay.Modules.Hazards
 {
 /// <summary>
-/// Controls a single hazard's visual lifecycle and movement.
+/// Runs one authored arcade 2D hazard pattern's visual lifecycle, movement, and impact window.
 ///
 /// BEHAVIOUR (set via HazardData.hazardType):
 ///   Slam     -> Shadow -> Warning -> Slam -> Retract -> Pool
@@ -36,18 +36,18 @@ namespace NeonBlack.Gameplay.Modules.Hazards
 /// _hitColliders accepts any number of Collider2D components (Box, Circle, Capsule, Polygon)
 /// from the root OR from child GameObjects. All are enabled / disabled together as a group.
 /// </summary>
-[AddComponentMenu("NeonBlack/Gameplay/Modules/Hazards/Sprite2D/Hazard")]
+[AddComponentMenu("NeonBlack/Gameplay/Hazards/Arcade 2D Hazard Pattern")]
 [AuthoringContract(
         Category = "Combat",
-        CapabilityPath = "Combat/Actions/Hazard",
+        CapabilityPath = "Combat/Actions/Arcade 2D Hazard Pattern",
         Surface = AuthoringSurface.Goal,
-        Summary = "Primary controller for 2D hazards, handling movement, targeting, and impact sequences.",
+        Summary = "Prefab runner for an authored arcade 2D hazard pattern, including movement, targeting, impact, and pooling.",
         RequiredFields = new[] { nameof(_data), nameof(_hitColliders), nameof(_shadowRenderer) },
         SetupSteps = new[]
     {
-        "Attach Hazard script to a GameObject.",
-        "Assign a HazardData ScriptableObject.",
-        "Wire the Shadow SpriteRenderer and Hit Colliders required by this hazard prefab.",
+        "Attach the Arcade 2D Hazard Pattern component to the hazard prefab root.",
+        "Assign a HazardData pattern asset.",
+        "Wire the Shadow SpriteRenderer and Hit Colliders required by this pattern prefab.",
         "Add AudioSource only when the assigned HazardData uses audio clips.",
         "Wire optional Outline, Lane, Explosion, feedback, and service overrides only when the selected HazardData uses those modifiers."
     },

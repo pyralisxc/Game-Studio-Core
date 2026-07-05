@@ -8,21 +8,22 @@ using Pys.Authoring.Contracts;
 namespace NeonBlack.Gameplay.Modules.Hazards
 {
     /// <summary>
-    /// Owns pooling and spawn orchestration for 2D hazards. Difficulty pacing
+    /// Owns pooling and spawn orchestration for arcade 2D hazard patterns. Difficulty pacing
     /// still comes from HazardDifficultyController, but this class keeps setup, pooling,
     /// and spawn-shape responsibilities in smaller helpers.
     /// </summary>
+    [AddComponentMenu("NeonBlack/Gameplay/Hazards/Arcade 2D Hazard Spawner")]
     [AuthoringContract(
         Category = "Combat, Session",
-        CapabilityPath = "Combat/Actions/Hazard Spawner",
+        CapabilityPath = "Combat/Actions/Arcade 2D Hazard Spawner",
         Surface = AuthoringSurface.Goal,
-        Summary = "Orchestrates pooling and spawning of 2D hazards based on difficulty pacing.",
+        Summary = "Orchestrates pooling and spawning for authored arcade 2D hazard pattern prefabs.",
         RequiredFields = new[] { nameof(_hazardEntries), nameof(_difficultyController) },
         SetupSteps = new[]
         {
-            "Add HazardSpawner to a scene GameObject.",
-            "Wire HazardDifficultyController if this scene owns pacing directly.",
-            "Populate Hazard Entries with prefabs and weights."
+            "Add Arcade 2D Hazard Spawner to a scene GameObject.",
+            "Wire HazardDifficultyController when this scene owns pacing directly.",
+            "Populate Hazard Entries with arcade 2D hazard pattern prefabs and weights."
         },
         SuccessChecks = new[] { "Start the game and verify hazards begin spawning around the play area." },
         Tags = new[] { "capability:Combat", "capability:Session", "axiom:Dimensions2D" }

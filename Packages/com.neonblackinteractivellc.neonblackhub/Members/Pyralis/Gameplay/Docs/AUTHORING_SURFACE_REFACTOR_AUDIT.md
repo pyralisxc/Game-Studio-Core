@@ -157,7 +157,7 @@ These are current behavior or lifecycle owners. They should not be collapsed int
 - `Modules/Combat/Health/HealthComponent.cs` - actor health owner.
 - `Modules/Combat/Status/ActorStatusEffectComponent.cs` - actor status-effect owner.
 - `Modules/Combat/Flow/CombatFlowController.cs` - combat flow owner.
-- `Modules/Hazards/Runtime/Sprite2D/Hazard.cs` - 2D hazard owner.
+- `Modules/Hazards/Runtime/Sprite2D/Hazard.cs` - serialized runner for one arcade 2D hazard pattern prefab; class name remains stable for Unity references, while the Unity-facing menu/contract uses "Arcade 2D Hazard Pattern".
 - `Modules/Hazards/Runtime/Zones/Sprite2D/DamageZone2D.cs` - 2D damage-zone owner.
 - `Modules/Hazards/Runtime/Zones/Rigged3D/DamageZone.cs` - 3D damage-zone owner.
 - `Modules/Interaction/Runtime/Shared/ActorInteractionComponent.cs` - actor interaction request owner.
@@ -427,6 +427,8 @@ Enemy attack review note: `EnemyAttack` assets should require the animation sign
 Health component review note: `HealthComponent` should require faction as semantic combat identity, while max health and regeneration values are component tuning. Invalid health tuning belongs in runtime validation so PYS observes it as quality evidence rather than missing setup.
 
 Movement and detection review note: `Pawn2DMovementComponent.moveSpeed` and `EnemyDetectionModule` aggro/leash/line-of-sight settings are runtime tuning with validation evidence, not unconditional PYS required setup. `IMovementModule` is a runtime interface contract; its read-only properties describe behavior supplied by concrete modules and should not be listed as authorable required fields.
+
+Hazard naming review note: the package has two hazard concepts. `DamageZone` and `DamageZone2D` are profile-backed damage volumes. The `Runtime/Sprite2D/Hazard*.cs` family is an arcade 2D pattern system: a `HazardData` pattern asset, a serialized `Hazard` prefab runner, a `HazardSpawner`, and a `HazardDifficultyController` pacing surface. Keep the serialized class names stable unless a prefab/scene migration is done in Unity; prefer the clearer Unity-facing names "Arcade 2D Hazard Pattern", "Arcade 2D Hazard Spawner", and "Arcade 2D Hazard Pacing".
 
 ## Scene Services
 

@@ -13,6 +13,7 @@ namespace NeonBlack.Gameplay.Modules.Hazards
 /// Setup: Attach to the same GameObject as ArcadeGameFlowController.
 /// Wire into ArcadeGameFlowController's difficulty controller slot.
 /// </summary>
+[AddComponentMenu("NeonBlack/Gameplay/Hazards/Arcade 2D Hazard Pacing")]
 public class HazardDifficultyController : GameplayTickBehaviour
 {
     // Shared structs / enums

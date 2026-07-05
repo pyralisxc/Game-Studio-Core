@@ -5,7 +5,7 @@ using UnityEngine;
 namespace NeonBlack.Gameplay.Modules.Hazards
 {
 /// <summary>
-/// ScriptableObject defining all properties for a single hazard type.
+/// ScriptableObject defining one arcade 2D hazard pattern.
 ///
 /// HazardType - the core movement pattern (3 types):
 ///  Slam - stationary shadow, warning, slam, retract.
@@ -34,9 +34,9 @@ namespace NeonBlack.Gameplay.Modules.Hazards
 /// Colliders are NOT configured here - add any Collider2D type(s) to the prefab and wire them
 /// into the Hazard component's _hitColliders list. Multiple hitboxes are fully supported.
 ///
-/// Setup: right-click Project > Create > NeonBlack > Hazards > Hazard Data.
+/// Setup: right-click Project > Create > NeonBlack > Hazards > Arcade 2D Hazard Pattern.
 /// </summary>
-[CreateAssetMenu(fileName = "NewHazardData", menuName = "NeonBlack/Hazards/Hazard Data")]
+[CreateAssetMenu(fileName = "Arcade2DHazardPattern", menuName = "NeonBlack/Hazards/Arcade 2D Hazard Pattern")]
 public class HazardData : ScriptableObject
 {
   // Enums
