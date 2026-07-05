@@ -12,6 +12,22 @@ Scope rules:
 
 ## 2026-07-05
 
+### Damage Number Runtime Surface Fold
+
+Changes:
+
+- Folded the pooled `DamageNumber` implementation into `DamageNumberSpawner.cs`.
+- Removed the standalone `DamageNumber.cs` script and `.meta` because no scenes, prefabs, samples, or tests serialized its GUID.
+- Removed the custom `DamageNumber` inspector so `DamageNumberSpawner` remains the only authored damage-number setup surface.
+- Added a focused runtime test proving `DamageNumberSpawner.Spawn` still creates pooled runtime output after the fold.
+- Updated the active audit counts and Feedback/HUD plan to show `DamageNumberSpawner` as the explicit scene-facing sink.
+
+Verification:
+
+- GUID/reference search found serialized references to `DamageNumberSpawner` only; `DamageNumber` had no serialized scene, prefab, sample, or test attachments.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner still needs to run `FeedbackHudBindingTests` from the Editor because runtime code changed.
+
 ### Sectioned Refactor Audit Plan
 
 Changes:

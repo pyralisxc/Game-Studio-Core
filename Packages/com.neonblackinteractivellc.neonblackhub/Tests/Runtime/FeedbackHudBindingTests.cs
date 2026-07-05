@@ -1,5 +1,6 @@
 using System.Linq;
 using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Modules.Feedback;
 using NeonBlack.Gameplay.Modules.Feedback.UI;
 using NUnit.Framework;
 using UnityEngine;
@@ -76,6 +77,26 @@ namespace NeonBlack.Gameplay.Tests.Runtime
                 Assert.That(issues, Is.Not.Empty);
                 Assert.That(issues, Has.None.Matches<RuntimeValidationIssue>(issue =>
                     issue.Severity == RuntimeValidationSeverity.Required));
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void DamageNumberSpawner_SpawnDamage_CreatesRuntimeOutput()
+        {
+            GameObject root = new GameObject("Damage Number Spawner Root");
+
+            try
+            {
+                DamageNumberSpawner spawner = root.AddComponent<DamageNumberSpawner>();
+
+                spawner.Spawn(12f, Vector3.zero);
+
+                Assert.That(root.transform.childCount, Is.GreaterThan(0));
+                Assert.That(root.transform.GetChild(0).gameObject.name, Is.EqualTo("DamageNumber"));
             }
             finally
             {

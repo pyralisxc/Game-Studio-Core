@@ -7,7 +7,7 @@ Unity version checked for this pass: `6000.4.0f1`.
 Inventory snapshot:
 
 - Gameplay C# files under `Members/Pyralis/Gameplay`: 573
-- Top-level distribution: Core 72, Data 160, Editor 14, Glue 39, Modules 264, Networking 7, Presentation 17
+- Top-level distribution: Core 72, Data 160, Editor 14, Glue 40, Modules 247 runtime scripts, Networking 7, Presentation 16
 - Package assemblies found: 36
 - PYS Authoring is external through `Packages/manifest.json` as `file:../../../Pys Authoring/Packages/com.pys.authoring`
 
@@ -49,7 +49,7 @@ This is the current package-wide cleanup map after the Feedback/HUD opening slic
 | `Glue` | 40 | Bootstrap, lifetime, participant services, feature service registration, scene flow, spawning, and wiring reports. | Largest current file is `GameplayWiringReportBuilder` at 807 lines. Glue can become a smart manager if report/build/register policies are not separated by ownership. | Continue policy extraction and report parity first. Do not move folders or delete service addresses until `RUNTIME_WIRING_AUDIT.md` parity gates are complete. |
 | `Modules/Character` | 49 | Pawn identity, movement, physical state, and pawn-facing sibling modules. | Visible pawn surfaces must stay readable, but movement internals are large enough to hide feature behavior. | Preserve current pawn surfaces. Move internal lanes into private models/state machines only when it reduces inspector-facing components or duplicated ownership. |
 | `Modules/Combat` | 58 | Health, hitboxes, weapons, pawn combat, enemy combat, projectiles, combat state, and combat UI. | High script count is expected, but direct feature coupling and component-local fallback combat payloads remain the main risk. | Keep authored combat definitions as source truth. Consolidate only duplicate hitbox/projectile/weapon adapters with reference checks and tests. |
-| `Modules/Feedback` | 19 | Actor feedback publishers/receivers, participant feedback stream, HUD surfaces, and damage-number output. | Opening cleanup removed hidden HUD base glue. Remaining pressure is direct TMP label compatibility and pooled damage-number implementation surface. | Keep concrete HUD widgets. Remove direct label compatibility only after serialized scene refs disappear. Consider internalizing `DamageNumber` after editor/prefab references are checked. |
+| `Modules/Feedback` | 18 | Actor feedback publishers/receivers, participant feedback stream, HUD surfaces, and damage-number output. | Opening cleanup removed hidden HUD base glue and folded the pooled damage-number instance into its spawner. Remaining pressure is direct TMP label compatibility. | Keep concrete HUD widgets. Remove direct label compatibility only after serialized scene refs disappear. Keep `DamageNumberSpawner` as the authored sink surface. |
 | `Modules/Hazards` | 22 | Hazard profiles, runtime zones, spawners, impact data, and hazard feedback. | Several large hazard files suggest profile/application and runtime-output lanes may be mixed. | Audit `HazardSpawner`, `Hazard`, and `HazardDifficultyController` for profile-owned payloads versus scene output before moving code. |
 | `Modules/Rpg` | 38 | RPG services, UI presenters, panel routers, and RPG domain runtime. | UI presenter count and file size are high; risk is one panel becoming a local game framework. | Start with panel presenter ownership tables. Extract reusable view helpers only when multiple presenters duplicate identical UI mechanics. |
 | `Modules/Input` | 5 | Input readers/adapters for participant-owned pawn control. | Low count, but `PlayerInputHandler` remains large and easy to overuse as direct setup surface. | Keep `Motor2DInputAdapter` as beginner surface. Treat `PlayerInputHandler` as lower-level implementation unless custom input routes need it. |
@@ -64,8 +64,8 @@ This is the current package-wide cleanup map after the Feedback/HUD opening slic
 
 Current metrics:
 
-- Runtime script counts by top-level section: Core 72, Data 160, Glue 40, Modules 248, Networking 7, Presentation 16.
-- Runtime script counts by largest module groups: Combat 58, Character 49, RPG 38, Hazards 22, Feedback 19, Enemies 17.
+- Runtime script counts by top-level section: Core 72, Data 160, Glue 40, Modules 247, Networking 7, Presentation 16.
+- Runtime script counts by largest module groups: Combat 58, Character 49, RPG 38, Hazards 22, Feedback 18, Enemies 17.
 - Largest runtime files currently include `GameplayWiringReportBuilder`, `HazardSpawner`, `CinemachineCameraRigController`, `DialogueService`, `CameraRigProfileApplier`, `ActorAnimationDriver`, and multiple RPG panel presenters.
 - Name-pattern scan found 71 manager/router/binder/presenter/adapter/relay/service/controller class declarations. These are review pressure, not automatic deletion.
 - Scene search/runtime creation scan found 65 `GetComponentsInChildren`, find, instantiate, or `new GameObject` hits across runtime package sections. Classify each as valid runtime output, setup evidence, or hidden setup repair before changing it.
@@ -78,7 +78,7 @@ Order matters. Do not chase script-count reduction before proving ownership and 
 1. Feedback/HUD follow-up
    - Keep `ParticipantHealthHudBinder`, `ParticipantHealthPanel`, `ParticipantTimedTextPanel`, `ParticipantFeedbackHudPresenter`, `ParticipantFeedbackRelay`, and `ParticipantFeedbackService`.
    - Defer direct TMP label removal until `Members/Public/La Cucarachacha/Scenes/MainMenu.unity` no longer serializes `statusLabel`.
-   - Audit `DamageNumberSpawner`/`DamageNumber` next for internalization: `DamageNumber` should likely stop being beginner-facing if no prefab/editor route requires direct Add Component usage.
+   - Keep `DamageNumberSpawner` as the explicit scene-facing `IDamageNumberSink`; `DamageNumber` is now implementation code inside the spawner file.
 
 2. Runtime wiring and Glue
    - Continue `RUNTIME_WIRING_AUDIT.md` phases before moving folders.
@@ -281,7 +281,6 @@ These are not confirmed deletions. They are first-pass candidates because their 
 - `Modules/Feedback/Runtime/Shared/ActorFeedbackComponent.cs`
 - `Modules/Feedback/Runtime/Shared/ActorFloatingFeedbackReceiver.cs`
 - `Modules/Feedback/Runtime/UI/DamageNumberSpawner.cs`
-- `Modules/Feedback/Runtime/UI/DamageNumber.cs`
 
 ### Feedback HUD And Popup Ownership Review
 
@@ -294,7 +293,7 @@ Reviewed on 2026-07-04. Retain the Feedback UI split:
 - `ParticipantFeedbackRelay` is a valid participant-context adapter from actor feedback events into participant feedback messages.
 - `ParticipantFeedbackService` is the valid stream owner.
 - `ActorFeedbackComponent` is the actor-local publisher.
-- `ActorFloatingFeedbackReceiver`, `DamageNumberSpawner`, and `DamageNumber` are presentation owners for world-space feedback and pooled numeric output.
+- `ActorFloatingFeedbackReceiver` and `DamageNumberSpawner` are presentation owners for world-space feedback and pooled numeric output. The pooled `DamageNumber` implementation lives inside the spawner file instead of exposing a separate script.
 
 Do not collapse these into one HUD/feedback script. Reviewed again on 2026-07-05: direct TMP label compatibility remains current because `Members/Public/La Cucarachacha/Scenes/MainMenu.unity` still serializes `statusLabel` on `ParticipantFeedbackHudPresenter`. Local widget gaps are recommended Inspector/prefab issues rather than required PYS route blockers. `ParticipantHudTargetBinding` was removed after GUID/reference checks because it was hidden pass-through glue with only two concrete consumers; participant filtering now lives directly on the concrete HUD components. The remaining simplification pressure is to keep contracts accurate, remove direct-label compatibility only after authored scenes no longer serialize it, and keep status/damage/heal routing behavior complete.
 
@@ -514,7 +513,6 @@ Files reviewed during the opening slice:
 - `Modules/Feedback/Runtime/Shared/ActorFeedbackComponent.cs`
 - `Modules/Feedback/Runtime/Shared/ActorFloatingFeedbackReceiver.cs`
 - `Modules/Feedback/Runtime/UI/DamageNumberSpawner.cs`
-- `Modules/Feedback/Runtime/UI/DamageNumber.cs`
 - `Presentation/Visuals/ActorShadowDriver.cs`
 - `Presentation/Visuals/SpriteFlasher.cs`
 - `Presentation/Visuals/TextFlasher.cs`
