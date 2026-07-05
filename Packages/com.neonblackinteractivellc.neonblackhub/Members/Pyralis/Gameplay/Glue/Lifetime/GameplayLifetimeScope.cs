@@ -37,7 +37,6 @@ namespace NeonBlack.Gameplay.Glue.Lifetime
         CapabilityPath = "Core Setup/Composition/Pyralis Gameplay Lifetime Scope",
         Surface = AuthoringSurface.Goal,
         Summary = "Inspector Add Component path for the visible Pyralis runtime composition scope.",
-        RequiredFields = new[] { nameof(InjectLoadedScenesOnBuild) },
         RouteStage = "Scene Root",
         RouteOrder = 5,
         SetupDomain = "Composition",

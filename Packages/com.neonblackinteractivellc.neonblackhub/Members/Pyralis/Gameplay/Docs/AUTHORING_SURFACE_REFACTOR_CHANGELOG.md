@@ -12,6 +12,18 @@ Scope rules:
 
 ## 2026-07-04
 
+### Lifetime Scope Contract Accuracy
+
+Changes:
+
+- Removed `InjectLoadedScenesOnBuild` from `GameplayLifetimeScope` required PYS fields because it is a runtime property set by `GameplaySessionBootstrap`, not an Inspector-authored setup field.
+- Added an audit note clarifying that PYS should require the visible lifetime-scope route anchor rather than the bootstrap handoff option.
+
+Verification:
+
+- Scoped reference search confirmed `GameplaySessionBootstrap` sets `GameplayLifetimeScope.InjectLoadedScenesOnBuild` before runtime configuration, and no serialized authoring field exists on `GameplayLifetimeScope` for that property.
+- Unity Test Runner was not run from shell; validate the scene-root bootstrap/lifetime setup in the Unity Editor.
+
 ### Traversal Profile Contract Accuracy
 
 Changes:

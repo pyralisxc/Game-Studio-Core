@@ -340,6 +340,8 @@ RPG panel action review note: RPG UI presenters remain valid panel owners when t
 
 UI orientation review note: `UIOrientationHandler` owns captured RectTransform layout snapshots for portrait and landscape. The serialized `portrait` and `landscape` objects are not meaningful required fields by themselves; the real setup requirement is that each layout has been captured through the inspector workflow.
 
+Lifetime scope review note: `GameplayLifetimeScope` is the visible composition root, but `InjectLoadedScenesOnBuild` is a runtime property set by `GameplaySessionBootstrap`, not an Inspector-authored field. PYS should require the lifetime-scope component route anchor, not a non-serialized bootstrap handoff option.
+
 ## Scene Services
 
 These are scene-authored or scene-scale surfaces. They should remain visible when they are required, not created silently to repair setup.
