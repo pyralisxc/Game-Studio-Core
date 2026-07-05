@@ -348,6 +348,8 @@ Pawn combat review note: pawn combat authoring should require the combat definit
 
 Enemy attack review note: `EnemyAttack` assets should require the animation signal and hitbox zone that define the attack's meaning. Range, damage, priority, weighting, and timing values are AI/combat tuning; invalid values should surface through runtime validation instead of PYS required-field setup.
 
+Health component review note: `HealthComponent` should require faction as semantic combat identity, while max health and regeneration values are component tuning. Invalid health tuning belongs in runtime validation so PYS observes it as quality evidence rather than missing setup.
+
 ## Scene Services
 
 These are scene-authored or scene-scale surfaces. They should remain visible when they are required, not created silently to repair setup.

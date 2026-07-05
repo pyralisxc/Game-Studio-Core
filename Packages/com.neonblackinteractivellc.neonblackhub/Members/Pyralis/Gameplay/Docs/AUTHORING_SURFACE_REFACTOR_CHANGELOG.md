@@ -12,6 +12,19 @@ Scope rules:
 
 ## 2026-07-04
 
+### Health Component Tuning Contract Accuracy
+
+Changes:
+
+- Removed `maxHealth` from `HealthComponent` required PYS fields; faction remains required as semantic combat identity.
+- Added an audit note clarifying that health and regeneration values are component tuning, with invalid values reported through runtime validation.
+
+Verification:
+
+- Scoped code inspection confirmed `HealthComponent` already reports invalid max health, destroy delay, and regeneration settings through `IRuntimeValidationProvider`.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run from shell; run affected combat-state checks in the Unity Editor.
+
 ### Enemy Attack Tuning Contract Accuracy
 
 Changes:

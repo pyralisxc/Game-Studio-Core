@@ -16,7 +16,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
         Surface = AuthoringSurface.Goal,
         Summary = "Universal health component for players, enemies, and destructible props.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/health",
-        RequiredFields = new[] { nameof(maxHealth), nameof(faction) },
+        RequiredFields = new[] { nameof(faction) },
         SetupSteps = new[]
         {
             "Add to the actor or prop root.",
