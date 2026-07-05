@@ -12,6 +12,20 @@ Scope rules:
 
 ## 2026-07-05
 
+### Agent-Owned Pursuable Goal
+
+Changes:
+
+- Split the implementation plan's completion model into agent-owned cleanup work and Cameron-owned Unity/sample acceptance gates.
+- Added a concrete agent-owned execution target covering validation cleanup, ownership consolidation, stale-doc folding, changelog maintenance, scoped hygiene checks, and clean git closeout.
+- Updated the audit so remaining agent work is not framed as waiting on Unity Editor proof.
+
+Verification:
+
+- Reviewed the current plan done criteria, current-status section, and audit remaining-review section.
+- Confirmed this slice only updates documentation and does not touch `Assets/`.
+- Unity Test Runner was not run because this slice changes execution planning only.
+
 ### Living Docs Index Refresh
 
 Changes:

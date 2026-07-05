@@ -27,7 +27,7 @@ Completed evidence:
 - Unity batch smoke resolves packages after the corrected external PYS Authoring package path.
 - Focused runtime tests now protect the first wiring-report parity rules: canonical missing `SessionDefinition` rows suppress duplicate local validation rows; route-dependent camera guidance is deferred until route evidence exists; participant service and feature activation rows wait for a complete participant route; complete participant routes report concrete missing participant-service providers; PlayerInputManager plus multiple auto-join participants reports one semantic join timing issue; authored combat routes report combat feature activation; authored scoring routes report scoring, game-flow, and feedback service activation.
 
-Remaining evidence before this goal can be called complete:
+Remaining evidence before the full refactor lane can be called complete:
 
 - Unity Editor compile and Unity Test Runner proof still need to run for `com.neonblackinteractivellc.neonblackhub`; batch Test Runner currently stalls on Unity Licensing Client reconnects before test discovery, so Editor Test Runner is the active proof surface.
 - Package samples remain intentionally untouched; Cameron plans to hand-author samples from working code, so sample proof is not complete.
@@ -40,6 +40,40 @@ Unity Editor verification queue:
 - `FeedbackHudBindingTests` - proves the retained Feedback HUD ownership split still validates and binds through `ParticipantHealthPanel`.
 - A full EditMode pass for `NeonBlack.Gameplay.Tests` after Unity imports the current package state.
 - Manual Editor compile/package refresh for the external `com.pys.authoring` dependency path.
+
+---
+
+## Agent-Owned Pursuable Goal
+
+Use this as the active execution target when Cameron asks Codex to keep working without waiting on Unity Editor or sample-authoring handoffs:
+
+**Goal:** Finish every agent-owned authoring-surface cleanup slice that can be proven from source, package metadata, focused tests, and lightweight git hygiene, while leaving Cameron-owned Unity/sample proof as explicit acceptance gates.
+
+Agent-owned completion includes:
+
+- Keep `Assets/` untouched.
+- Do not auto-generate samples, scenes, prefabs, or ScriptableObject assets.
+- Continue small commits with entries in `AUTHORING_SURFACE_REFACTOR_CHANGELOG.md`.
+- Finish stale-doc folding where current source evidence proves a doc is stale.
+- Finish small validation cleanup slices where PYS-facing evidence still duplicates local field/range/prefab setup that Unity inspectors, `OnValidate`, `RequireComponent`, or existing runtime validation already own.
+- Finish small ownership/pass-through consolidation slices where a script has no durable owner responsibility and can be folded without touching serialized assets.
+- Keep deferred any cleanup that depends on authored scenes, prefabs, samples, or manual Editor judgement.
+- End with a clean agent-owned git state: no staged changes, no uncommitted package/doc changes from this lane, and known generated/user-side dirt explicitly listed.
+
+Agent-owned completion does not include:
+
+- Running Unity Editor Test Runner when only the user can provide reliable Editor-side proof.
+- Creating or editing Cameron-authored samples.
+- Manual Play Mode feel checks.
+- Removing compatibility serialized by member scenes.
+- Editing `Assets/`.
+
+The current agent-owned next phases are:
+
+1. Validation evidence cleanup: inspect remaining `IRuntimeValidationProvider`, `GetRuntimeValidationIssues`, and `AuthoringContract` surfaces; make only low-risk source-backed cuts.
+2. Ownership consolidation: inspect remaining pass-through candidates; merge only scripts with duplicate ownership that can be changed without serialized scene/prefab edits.
+3. Living-doc finalization: fold stale guidance into active docs and remove only clearly superseded helper/doc references.
+4. Final agent-owned closeout: update the changelog, run scoped `git diff --check` on touched files, report Unity/sample acceptance gates, and leave the branch ready for Cameron's Editor proof.
 
 ---
 
