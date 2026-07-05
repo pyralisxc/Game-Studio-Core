@@ -8,6 +8,8 @@ This folder intentionally stays small. Active docs describe supported architectu
 - `ARCHITECTURE_BLUEPRINT.md` - runtime ownership, folderbase, vocabulary, and system boundaries.
 - `FEATURE_DEVELOPMENT_ROADMAP.md` - current feature expansion priorities.
 - `RUNTIME_WIRING_AUDIT.md` - current Glue-to-Wiring metamorphosis plan: canonical runtime address language, read-only wiring truth first, and hard cuts only after duplicate delivery meanings are visible.
+- `AUTHORING_SURFACE_REFACTOR_AUDIT.md` - active ownership inventory for the package-wide authoring surface simplification lane.
+- `AUTHORING_SURFACE_REFACTOR_CHANGELOG.md` - active review log for committed authoring-surface refactor slices.
 
 PYS Authoring package documentation lives with the installed/source `com.pys.authoring` package, not in this gameplay package.
 

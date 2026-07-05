@@ -99,5 +99,6 @@ For participant-spawned pawns, profile fields belong on `PawnDefinition`; prefab
 
 - `Docs/CURRENT_STATE_AUDIT.md` for current health, risks, Hygiene baseline, and verification posture.
 - `Docs/ARCHITECTURE_BLUEPRINT.md` for runtime ownership, folderbase, and system boundaries.
+- `Docs/AUTHORING_SURFACE_REFACTOR_AUDIT.md` and `Docs/AUTHORING_SURFACE_REFACTOR_CHANGELOG.md` while the package-wide authoring surface simplification lane is active.
 - The installed/source `com.pys.authoring` package docs for PYS Authoring behavior, projections, exports, and target-project integration.
 - `Docs/FEATURE_DEVELOPMENT_ROADMAP.md` for current expansion priorities.

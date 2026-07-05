@@ -680,7 +680,7 @@ Expected: one small commit per ownership problem.
 - Inspect/modify/delete: obsolete editor helpers under `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Editor`
 - Inspect/modify/delete: obsolete runtime helpers under `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay`
 
-- [ ] **Step 1: Find stale docs and old route language**
+- [x] **Step 1: Find stale docs and old route language**
 
 Run:
 

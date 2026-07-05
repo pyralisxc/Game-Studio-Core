@@ -12,6 +12,20 @@ Scope rules:
 
 ## 2026-07-05
 
+### Living Docs Index Refresh
+
+Changes:
+
+- Added the active authoring-surface refactor audit and changelog to the gameplay docs index.
+- Added the active refactor audit and changelog to gameplay README recommended reading while this simplification lane is active.
+- Marked the stale-doc search step complete in the implementation plan; broader stale-doc folding remains open.
+
+Verification:
+
+- Ran a scoped stale-word search across active gameplay docs and package README files.
+- Reviewed matches and found mostly intentional current guidance, current compatibility notes, or historical changelog entries rather than obvious obsolete docs to cut.
+- Unity Test Runner was not run because this slice is documentation-only.
+
 ### Refactor Plan Checklist Accuracy
 
 Changes:
