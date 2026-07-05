@@ -22,7 +22,7 @@ Completed in this lane:
 - The obvious numeric/tuning `RequiredFields` false-positive scan is clean. Remaining `RequiredFields` hits are primarily identity fields, definitions, UI/prefab/component references, physics masks, or concrete route/service setup.
 - Unity batch smoke resolves packages after the corrected external PYS Authoring package path.
 - The dedicated changelog records the evidence and verification for each slice.
-- Focused wiring-report runtime tests now cover the first canonical-evidence parity behavior: missing `SessionDefinition` setup appears once as a `MissingProvider` row, and route-dependent camera guidance is deferred while session route evidence is absent.
+- Focused wiring-report runtime tests now cover the first canonical-evidence parity behaviors: missing `SessionDefinition` setup appears once as a `MissingProvider` row; route-dependent camera guidance is deferred while session route evidence is absent; participant service and feature activation rows wait for a complete participant route.
 
 Remaining review:
 

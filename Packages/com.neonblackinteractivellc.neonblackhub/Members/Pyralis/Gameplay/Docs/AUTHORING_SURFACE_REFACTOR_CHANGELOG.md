@@ -19,6 +19,7 @@ Changes:
 - Added focused runtime tests for `GameplayWiringReportBuilder`.
 - Protected the current parity behavior where missing `SessionDefinition` setup is represented by one canonical `MissingProvider` row instead of a duplicate local validation row.
 - Protected the route-deferral behavior where camera guidance waits while session route evidence is absent.
+- Protected participant-route deferral so roster, spawn, input, camera guidance, and feature activation rows wait until the session asset has enough route evidence.
 - Updated the plan, audit, and runtime wiring audit current-status sections to record this wiring-report proof slice.
 
 Verification:
