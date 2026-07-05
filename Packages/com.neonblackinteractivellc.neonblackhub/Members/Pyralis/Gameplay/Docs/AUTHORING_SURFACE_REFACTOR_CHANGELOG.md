@@ -634,3 +634,17 @@ Verification:
 - Unity batch smoke after the path fix resolved packages and exited with return code 0.
 - Scoped `git diff --check` passed for touched files.
 - Automated EditMode Test Runner did not produce test results in batch mode because Unity stalled on Licensing Client reconnects before test discovery. Editor Test Runner verification remains the appropriate next proof surface.
+
+### Camera Rig Conditional Focus Target Contract
+
+Changes:
+
+- Removed `explicitFocusTarget` from the always-required PYS fields on `CinemachineCameraRigController`.
+- Updated setup guidance so Explicit Focus Target is required only when `CameraRigProfile.focusMode` is `Explicit Scene Target`.
+
+Verification:
+
+- Confirmed `CameraRigProfile.focusMode` includes `ExplicitSceneTarget` as one option among manual, participant, group, and playfield focus modes.
+- Confirmed `CinemachineCameraRigController` falls back to participant/pawn/playfield focus paths when explicit focus mode is not selected.
+- Scoped `git diff --check` passed for touched files.
+- Unity Editor Test Runner proof remains manual because batch mode currently stalls on Unity Licensing Client reconnects before test discovery.

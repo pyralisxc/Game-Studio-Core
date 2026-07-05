@@ -22,14 +22,15 @@ namespace NeonBlack.Gameplay.Presentation.Camera
         Surface = AuthoringSurface.Goal,
         Summary = "Cinemachine Camera Rig Controller is the scene camera runtime. Use this Inspector for assigned references and tuning values.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/camera",
-        RequiredFields = new[] { nameof(cameraRigProfile), nameof(sharedCameraBehaviour), nameof(targetCamera), nameof(explicitFocusTarget) },
+        RequiredFields = new[] { nameof(cameraRigProfile), nameof(sharedCameraBehaviour), nameof(targetCamera) },
         SetupSteps = new[] 
         { 
             "Add to CameraRig root.",
             "Assign Target Camera (physical Unity Camera with Cinemachine Brain).",
             "Assign Camera Rig Profile (focus routing and saved Cinemachine recipe values).",
             "Assign Shared Camera Behaviour (Cinemachine virtual camera).",
-            "For pawn-follow cameras, add PawnCameraTarget to the pawn prefab or use the pawn root fallback."
+            "For pawn-follow cameras, add PawnCameraTarget to the pawn prefab or use the pawn root fallback.",
+            "Assign Explicit Focus Target only when CameraRigProfile.focusMode is Explicit Scene Target."
         },
         SuccessChecks = new[] { "Enter Play Mode. Verify the camera rig frames the spawned player pawn automatically. In Split-Screen, verify two viewports are created." },
         RoleTags = new[] { "CameraRig", "Cinemachine", "ParticipantFollow" },
