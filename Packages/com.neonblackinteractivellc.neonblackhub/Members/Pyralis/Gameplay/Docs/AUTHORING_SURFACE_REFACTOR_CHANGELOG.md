@@ -81,6 +81,19 @@ Verification:
 - Scoped code inspection confirmed `LoadingScreenController` null-checks progress and label UI before updating them.
 - Unity Test Runner was not run from shell; run affected navigation UI checks in the Unity Editor.
 
+### Game Flow HUD Contract Accuracy
+
+Changes:
+
+- Narrowed `GameFlowHudController` required PYS fields to the live score and time labels.
+- Rephrased setup guidance so panels, game-over labels, buttons, and settings references are route-owned optional UI surfaces.
+- Added an audit note classifying `GameFlowHudController` as a focused live HUD presenter when those optional route surfaces are absent.
+
+Verification:
+
+- Scoped code inspection confirmed panel, button, settings, and game-over label references are null-checked before use.
+- Unity Test Runner was not run from shell; run affected HUD checks in the Unity Editor.
+
 ### Baseline Planning And Audit
 
 Commits:

@@ -326,6 +326,8 @@ Leaderboard UI review note: keep `LeaderboardScreen` as a Scoring-owned UI prese
 
 Navigation UI review note: `MainMenuController` and `LoadingScreenController` are route-owned UI surfaces. Main menu buttons, panels, and scene navigator references are optional per route composition when another system wires navigation; the configured game scene name is the durable menu target. Loading screen progress bar and label are optional presentation fields because the controller can load the pending scene without visible progress UI.
 
+Game flow HUD review note: `GameFlowHudController` is a presentation owner for live score/time labels. HUD panel, game-over panel, buttons, settings screen, and final-score labels are optional route surfaces because the controller null-checks them and can operate as a focused live HUD.
+
 ## Scene Services
 
 These are scene-authored or scene-scale surfaces. They should remain visible when they are required, not created silently to repair setup.

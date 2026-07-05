@@ -18,12 +18,13 @@ namespace NeonBlack.Gameplay.Presentation.HUD.GameFlow
         Surface = AuthoringSurface.Goal,
         Summary = "Manages gameplay UI: HUD, game over screen, and settings navigation.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/ui",
-        RequiredFields = new[] { "_hudPanel", "_gameOverPanel", "_scoreLabel", "_timeLabel" },
+        RequiredFields = new[] { nameof(_scoreLabel), nameof(_timeLabel) },
         SetupSteps = new[] 
     { 
         "Add GameFlowHudController to the UI Canvas.",
-        "Wire panel GameObjects and TMP labels.",
-        "Assign session flow, gameplay state, and score service sources."
+        "Wire score and time TMP labels for the live HUD.",
+        "Assign HUD, game-over, button, and settings references only when this controller owns those UI surfaces.",
+        "Inject session flow, gameplay state, and score services from the route lifetime scope."
     },
         SuccessChecks = new[] { "The HUD shows points and survival time when the game starts." },
         Tags = new[] { "capability:UI" }
