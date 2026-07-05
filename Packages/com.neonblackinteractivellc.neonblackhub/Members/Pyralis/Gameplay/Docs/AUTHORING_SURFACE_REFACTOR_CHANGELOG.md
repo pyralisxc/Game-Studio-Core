@@ -53,6 +53,20 @@ Verification:
 - Scoped code inspection confirmed both settings components null-check optional controls and resolve settings services from injection or assigned `MonoBehaviour` sources.
 - Unity Test Runner was not run from shell; run affected UI checks in the Unity Editor.
 
+### Leaderboard UI Contract Accuracy
+
+Changes:
+
+- Narrowed `LeaderboardScreen` required PYS fields to the leaderboard page, row container, and row prefab.
+- Changed missing back button and status label validation from required to recommended.
+- Removed main-menu page from required validation because the screen already supports externally owned page routing.
+- Updated setup guidance and audit notes to classify `LeaderboardScreen` as a Scoring-owned UI presenter.
+
+Verification:
+
+- Scoped code inspection confirmed `Open()`, `Close()`, and status updates null-check optional page, button, and label references.
+- Unity Test Runner was not run from shell; run affected UI checks in the Unity Editor.
+
 ### Baseline Planning And Audit
 
 Commits:

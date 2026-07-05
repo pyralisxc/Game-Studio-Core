@@ -17,12 +17,13 @@ namespace NeonBlack.Gameplay.Modules.Scoring
         CapabilityPath = "UI/HUD/Leaderboard Screen",
         Surface = AuthoringSurface.Goal,
         Summary = "UI screen for displaying top scores from a leaderboard service.",
-        RequiredFields = new[] { nameof(_mainMenuPage), nameof(_leaderboardPage), nameof(_backButton), nameof(_rowContainer), nameof(_rowPrefab), nameof(_statusLabel) },
+        RequiredFields = new[] { nameof(_leaderboardPage), nameof(_rowContainer), nameof(_rowPrefab) },
         SetupSteps = new[] 
         { 
-            "Wire Main Menu Page and Leaderboard Page.",
-            "Assign Row Prefab with Rank/Name/Score labels.",
-            "Assign Row Container."
+            "Wire Leaderboard Page.",
+            "Assign Row Container and Row Prefab with Rank/Name/Score labels.",
+            "Assign Main Menu Page and Back Button only when this screen owns menu-page return navigation.",
+            "Assign Status Label when the page should show loading, empty, or unavailable states."
         },
         SuccessChecks = new[] { "Open the leaderboard in the menu and verify the 'Fetching scores...' status appears." },
         Tags = new[] { "capability:UI" }
@@ -32,12 +33,16 @@ namespace NeonBlack.Gameplay.Modules.Scoring
     {
         public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            if (_mainMenuPage == null) yield return RuntimeValidationIssue.Required("Main Menu Page is unassigned.");
             if (_leaderboardPage == null) yield return RuntimeValidationIssue.Required("Leaderboard Page is unassigned.");
             if (_rowContainer == null) yield return RuntimeValidationIssue.Required("Row Container is unassigned.");
             if (_rowPrefab == null) yield return RuntimeValidationIssue.Required("Row Prefab is unassigned.");
             else if (_rowPrefab.GetComponentsInChildren<TextMeshProUGUI>(true).Length < 3)
                 yield return RuntimeValidationIssue.Required("Row Prefab needs at least 3 TMP labels for Rank, Name, and Score.");
+
+            if (_backButton == null)
+                yield return RuntimeValidationIssue.Recommended("Back Button is unassigned. This is valid when another route closes the leaderboard.");
+            if (_statusLabel == null)
+                yield return RuntimeValidationIssue.Recommended("Status Label is unassigned. Loading, empty, and unavailable messages will be hidden.");
         }
         [Header("Pages")]
         [SerializeField, Tooltip("Root GameObject of the main menu content. Hidden while leaderboard is open.")]

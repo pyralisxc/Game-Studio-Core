@@ -322,6 +322,8 @@ Presentation visual review note: keep `SpriteFlasher` and `TextFlasher` as separ
 
 Settings UI review note: keep `SettingsMenu` and `SettingsScreen` separate. `SettingsMenu` owns concrete settings controls for main-menu panels; `SettingsScreen` owns page swapping and optional gameplay pause. Their settings service can be injected by Glue or assigned through the Inspector, and individual UI controls are optional when a panel does not expose that setting.
 
+Leaderboard UI review note: keep `LeaderboardScreen` as a Scoring-owned UI presenter. The leaderboard page and row surface are required to display entries; main-menu return wiring, back button, and status label are route/UI affordances that may be supplied elsewhere.
+
 ## Scene Services
 
 These are scene-authored or scene-scale surfaces. They should remain visible when they are required, not created silently to repair setup.
