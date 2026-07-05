@@ -142,14 +142,11 @@ namespace NeonBlack.Gameplay.Tests.Runtime
         public void Build_WithCompleteParticipantRoute_ReportsMissingRequiredParticipantProviders()
         {
             GameObject root = new GameObject("Gameplay Wiring Report Test");
-            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
-            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
-            ParticipantDefinition participant = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            ParticipantDefinition participant = CreateParticipant();
+            SessionDefinition session = CreateCompleteRoute(out GameModeDefinition mode, participant);
             try
             {
                 root.AddComponent<GameplaySessionBootstrap>();
-                session.defaultGameMode = mode;
-                session.defaultParticipants = new[] { participant };
 
                 GameplayWiringReport report = GameplayWiringReportBuilder.Build(root, session);
 
@@ -173,10 +170,7 @@ namespace NeonBlack.Gameplay.Tests.Runtime
             }
             finally
             {
-                Object.DestroyImmediate(participant);
-                Object.DestroyImmediate(mode);
-                Object.DestroyImmediate(session);
-                Object.DestroyImmediate(root);
+                DestroyObjects(participant, mode, session, root);
             }
         }
 
@@ -184,18 +178,13 @@ namespace NeonBlack.Gameplay.Tests.Runtime
         public void Build_WithPlayerInputManagerAndMultipleAutoJoinParticipants_ReportsJoinTimingIssue()
         {
             GameObject root = new GameObject("Gameplay Wiring Report Test");
-            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
-            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
-            ParticipantDefinition firstParticipant = ScriptableObject.CreateInstance<ParticipantDefinition>();
-            ParticipantDefinition secondParticipant = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            ParticipantDefinition firstParticipant = CreateParticipant(autoJoin: true);
+            ParticipantDefinition secondParticipant = CreateParticipant(autoJoin: true);
+            SessionDefinition session = CreateCompleteRoute(out GameModeDefinition mode, firstParticipant, secondParticipant);
             try
             {
                 root.AddComponent<GameplaySessionBootstrap>();
                 root.AddComponent<PlayerInputManager>();
-                session.defaultGameMode = mode;
-                firstParticipant.autoJoin = true;
-                secondParticipant.autoJoin = true;
-                session.defaultParticipants = new[] { firstParticipant, secondParticipant };
 
                 GameplayWiringReport report = GameplayWiringReportBuilder.Build(root, session);
 
@@ -207,11 +196,7 @@ namespace NeonBlack.Gameplay.Tests.Runtime
             }
             finally
             {
-                Object.DestroyImmediate(secondParticipant);
-                Object.DestroyImmediate(firstParticipant);
-                Object.DestroyImmediate(mode);
-                Object.DestroyImmediate(session);
-                Object.DestroyImmediate(root);
+                DestroyObjects(secondParticipant, firstParticipant, mode, session, root);
             }
         }
 
@@ -219,15 +204,12 @@ namespace NeonBlack.Gameplay.Tests.Runtime
         public void Build_WithCompleteCombatRoute_ReportsCombatFeatureActivation()
         {
             GameObject root = new GameObject("Gameplay Wiring Report Test");
-            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
-            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
-            ParticipantDefinition participant = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            ParticipantDefinition participant = CreateParticipant();
+            SessionDefinition session = CreateCompleteRoute(out GameModeDefinition mode, participant);
             try
             {
                 root.AddComponent<GameplaySessionBootstrap>();
                 mode.enableCombat = true;
-                session.defaultGameMode = mode;
-                session.defaultParticipants = new[] { participant };
 
                 GameplayWiringReport report = GameplayWiringReportBuilder.Build(root, session);
 
@@ -237,10 +219,7 @@ namespace NeonBlack.Gameplay.Tests.Runtime
             }
             finally
             {
-                Object.DestroyImmediate(participant);
-                Object.DestroyImmediate(mode);
-                Object.DestroyImmediate(session);
-                Object.DestroyImmediate(root);
+                DestroyObjects(participant, mode, session, root);
             }
         }
 
@@ -248,15 +227,12 @@ namespace NeonBlack.Gameplay.Tests.Runtime
         public void Build_WithCompleteScoringRoute_ReportsScoringGameFlowAndFeedbackActivation()
         {
             GameObject root = new GameObject("Gameplay Wiring Report Test");
-            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
-            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
-            ParticipantDefinition participant = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            ParticipantDefinition participant = CreateParticipant();
+            SessionDefinition session = CreateCompleteRoute(out GameModeDefinition mode, participant);
             try
             {
                 root.AddComponent<GameplaySessionBootstrap>();
                 mode.enableScore = true;
-                session.defaultGameMode = mode;
-                session.defaultParticipants = new[] { participant };
 
                 GameplayWiringReport report = GameplayWiringReportBuilder.Build(root, session);
 
@@ -266,10 +242,34 @@ namespace NeonBlack.Gameplay.Tests.Runtime
             }
             finally
             {
-                Object.DestroyImmediate(participant);
-                Object.DestroyImmediate(mode);
-                Object.DestroyImmediate(session);
-                Object.DestroyImmediate(root);
+                DestroyObjects(participant, mode, session, root);
+            }
+        }
+
+        private static SessionDefinition CreateCompleteRoute(
+            out GameModeDefinition mode,
+            params ParticipantDefinition[] participants)
+        {
+            mode = ScriptableObject.CreateInstance<GameModeDefinition>();
+            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
+            session.defaultGameMode = mode;
+            session.defaultParticipants = participants;
+            return session;
+        }
+
+        private static ParticipantDefinition CreateParticipant(bool autoJoin = true)
+        {
+            ParticipantDefinition participant = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            participant.autoJoin = autoJoin;
+            return participant;
+        }
+
+        private static void DestroyObjects(params Object[] objects)
+        {
+            for (int i = 0; i < objects.Length; i++)
+            {
+                if (objects[i] != null)
+                    Object.DestroyImmediate(objects[i]);
             }
         }
 

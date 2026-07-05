@@ -12,6 +12,19 @@ Scope rules:
 
 ## 2026-07-05
 
+### Wiring Report Test Maintenance
+
+Changes:
+
+- Consolidated repeated complete-route test setup in `GameplayWiringReportBuilderTests`.
+- Added helpers for creating complete session routes, creating participant definitions, and destroying temporary Unity objects.
+- Kept runtime behavior unchanged.
+
+Verification:
+
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run from shell; run `GameplayWiringReportBuilderTests` in the Unity Editor Test Runner.
+
 ### Wiring Report Canonical Evidence Tests
 
 Changes:
