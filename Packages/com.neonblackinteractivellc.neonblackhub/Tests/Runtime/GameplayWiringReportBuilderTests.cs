@@ -191,7 +191,8 @@ namespace NeonBlack.Gameplay.Tests.Runtime
                 Assert.That(
                     report.Rows.Count(row =>
                         row.Kind == GameplayWiringRowKind.TimingIssue
-                        && row.Contract == "ParticipantJoinRoute"),
+                        && row.Contract == "ParticipantJoinRoute"
+                        && row.Evidence.Contains("Unity PlayerInputManager")),
                     Is.EqualTo(1));
             }
             finally

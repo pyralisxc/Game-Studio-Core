@@ -297,18 +297,11 @@ namespace NeonBlack.Gameplay.Glue.Wiring.Reporting
             if (sessionDefinition == null || sessionDefinition.defaultParticipants == null)
                 return;
 
-            int autoJoinCount = 0;
-            for (int i = 0; i < sessionDefinition.defaultParticipants.Length; i++)
-            {
-                if (sessionDefinition.defaultParticipants[i] != null
-                    && sessionDefinition.defaultParticipants[i].autoJoin)
-                {
-                    autoJoinCount++;
-                }
-            }
-
             PlayerInputManager playerInputManager = FindComponent<PlayerInputManager>(gameplayRoot);
-            if (playerInputManager != null && autoJoinCount > 1)
+            ParticipantJoinRouteDecision joinRoute = ParticipantJoinRoutePolicy.Evaluate(
+                sessionDefinition,
+                playerInputManager != null);
+            if (joinRoute.ShouldDeferAutoRegistration)
             {
                 report.Add(new GameplayWiringRow(
                     GameplayWiringRowKind.TimingIssue,
@@ -321,7 +314,7 @@ namespace NeonBlack.Gameplay.Glue.Wiring.Reporting
                     GameplayWiringTiming.Join,
                     GameplayWiringRequiredness.Required,
                     GameplayWiringSeverity.Warning,
-                    "Multiple default participants are marked Auto Join while PlayerInputManager is present. Local join should wait for Unity PlayerInputManager joins."));
+                    joinRoute.WarningMessage));
             }
         }
 

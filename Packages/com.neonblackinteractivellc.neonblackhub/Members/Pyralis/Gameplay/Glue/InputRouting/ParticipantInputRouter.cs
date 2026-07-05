@@ -187,9 +187,12 @@ namespace NeonBlack.Gameplay.Glue.InputRouting
             if (sessionDefinition == null || sessionDefinition.defaultParticipants == null)
                 return;
 
-            if (playerInputManager != null && CountAutoJoinDefaultParticipants() > 1)
+            ParticipantJoinRouteDecision joinRoute = ParticipantJoinRoutePolicy.Evaluate(
+                sessionDefinition,
+                playerInputManager != null);
+            if (joinRoute.ShouldDeferAutoRegistration)
             {
-                Debug.LogWarning("[ParticipantInputRouter] Multiple default participants are marked Auto Join while PlayerInputManager is assigned. Skipping automatic registration so Unity PlayerInputManager can pair each controller with one participant.", this);
+                Debug.LogWarning("[ParticipantInputRouter] " + joinRoute.WarningMessage, this);
                 _autoRegisteredDefaults = true;
                 return;
             }
@@ -205,22 +208,6 @@ namespace NeonBlack.Gameplay.Glue.InputRouting
             }
 
             _autoRegisteredDefaults = true;
-        }
-
-        private int CountAutoJoinDefaultParticipants()
-        {
-            if (sessionDefinition == null || sessionDefinition.defaultParticipants == null)
-                return 0;
-
-            int count = 0;
-            for (int i = 0; i < sessionDefinition.defaultParticipants.Length; i++)
-            {
-                ParticipantDefinition definition = sessionDefinition.defaultParticipants[i];
-                if (definition != null && definition.autoJoin)
-                    count++;
-            }
-
-            return count;
         }
 
         private void SubscribeToPlayerInputManager()

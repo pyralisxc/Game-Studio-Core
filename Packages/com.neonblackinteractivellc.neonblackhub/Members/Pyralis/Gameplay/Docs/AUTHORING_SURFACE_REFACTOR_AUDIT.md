@@ -33,6 +33,7 @@ Remaining review:
 - Generic sprite-to-GameObject spawning remains supported as prototype utility output, with validation guidance steering reusable package content toward authored prefabs.
 - `CollectibleFeedback2D` optional clip/particle setup no longer reports missing collect clip or collect FX as required validation. AudioSource validation only appears when audio clips are assigned, and mixer routing is recommended evidence because audio still plays without settings routing.
 - Feedback HUD widget surfaces (`ParticipantTimedTextPanel`, `ParticipantHealthPanel`, `ParticipantHealthHudBinder`, and `ParticipantFeedbackHudPresenter`) now report missing local labels/panels as recommended validation rather than required PYS setup blockers. The Feedback capability can still exist while Unity-local widget assignment remains an Inspector/prefab concern.
+- Participant join timing now uses one shared `ParticipantJoinRoutePolicy` for both `ParticipantInputRouter` runtime deferral and `GameplayWiringReportBuilder` timing evidence, removing duplicated auto-join counting and message ownership.
 
 ## Classification Rules
 

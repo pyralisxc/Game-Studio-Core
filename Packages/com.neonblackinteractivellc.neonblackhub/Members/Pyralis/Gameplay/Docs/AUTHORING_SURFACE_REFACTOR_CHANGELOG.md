@@ -12,6 +12,22 @@ Scope rules:
 
 ## 2026-07-05
 
+### Participant Join Route Policy
+
+Changes:
+
+- Added `ParticipantJoinRoutePolicy` as the single owner for the PlayerInputManager plus multiple Auto Join participant timing decision.
+- Updated `ParticipantInputRouter` to use the shared policy before deferring default auto-registration.
+- Updated `GameplayWiringReportBuilder` to use the same policy when emitting `ParticipantJoinRoute` timing evidence.
+- Kept runtime behavior and existing wiring report row shape intact.
+
+Verification:
+
+- Scoped code inspection confirmed the previous duplicate auto-join counting was removed from the router/report paths.
+- Updated `GameplayWiringReportBuilderTests` to assert the timing row carries the shared PlayerInputManager evidence.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run from shell; run `GameplayWiringReportBuilderTests` in the Unity Editor Test Runner.
+
 ### Feedback HUD Local Widget Validation
 
 Changes:
