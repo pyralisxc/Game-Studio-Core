@@ -12,7 +12,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
         Surface = AuthoringSurface.Goal,
         Summary = "Primary pawn combat controller; handles sequences, combos, and delegates to modules.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/combat",
-        RequiredFields = new[] { nameof(primarySequence), nameof(secondarySequence), nameof(aerialSequence), nameof(attackCooldown), nameof(kickCooldown), nameof(maxAerialAttacks) },
+        RequiredFields = new[] { nameof(primarySequence), nameof(secondarySequence), nameof(aerialSequence) },
         RequiredInterfaces = new[] { typeof(IPawnCombatModule) },
         SuccessChecks = new[] { "Perform an attack combo in Play Mode and verify that 'HitBox.Fire()' is called via animation events and damage is applied." },
         Tags = new[] { "capability:MeleeFlow", "axiom:Realtime", "lane:Combat", "priority:Primary" }

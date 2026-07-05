@@ -12,6 +12,21 @@ Scope rules:
 
 ## 2026-07-04
 
+### Pawn Combat Tuning Contract Accuracy
+
+Changes:
+
+- Removed `baseDamage` and `attackCooldown` from `PawnCombatProfile` required PYS fields; those numeric values are sanitized/profile-validated tuning, not missing setup references.
+- Removed cooldown and aerial-count tuning from `PawnCombatBehaviour` required PYS fields while keeping authored combat sequences required.
+- Removed `startingWeaponIndex`, `attackCooldown`, and `kickCooldown` from `PawnCombatBehaviour2D` required PYS fields while keeping hitbox, weapon-list, sequence, and projectile surfaces required.
+- Added an audit note clarifying that combat definitions and concrete combat surfaces are setup requirements, while numeric tuning should be validation evidence.
+
+Verification:
+
+- Scoped code inspection confirmed `PawnCombatProfile` sanitizes numeric tuning and reports invalid combat tuning through `IRuntimeValidationProvider`.
+- Scoped code inspection confirmed `PawnCombatBehaviour` and `PawnCombatBehaviour2D` already validate missing action sequences and invalid cooldown/aerial values separately from PYS required fields.
+- Unity Test Runner was not run from shell; run affected combat checks in the Unity Editor.
+
 ### Level Session Contract Accuracy
 
 Changes:

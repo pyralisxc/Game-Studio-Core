@@ -344,6 +344,8 @@ Lifetime scope review note: `GameplayLifetimeScope` is the visible composition r
 
 Level session review note: `LevelSession` is a static cross-scene navigation handoff. `ChosenSceneName` and `IsRandom` are runtime state set by menu or flow code, not setup fields. PYS can describe the route contract, but it should not classify those transient properties as required authoring fields.
 
+Pawn combat review note: pawn combat authoring should require the combat definitions and hitbox/projectile surfaces that give the component meaning, not every numeric tuning value copied from `PawnCombatProfile`. Cooldowns, damage values, aerial counts, and weapon indices are profile/component tuning with runtime validation or clamping; PYS should observe invalid tuning as codebase quality evidence rather than present those values as missing setup.
+
 ## Scene Services
 
 These are scene-authored or scene-scale surfaces. They should remain visible when they are required, not created silently to repair setup.

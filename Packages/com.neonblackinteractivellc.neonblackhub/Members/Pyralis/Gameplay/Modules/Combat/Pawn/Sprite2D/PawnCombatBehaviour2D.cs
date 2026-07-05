@@ -12,7 +12,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
         CapabilityPath = "Combat/Actions/Pawn Combat Behaviour2D",
         Surface = AuthoringSurface.Goal,
         Summary = "2D pawn combat; receives attack input, resolves combos, activates HitBox2D, and fires projectiles.",
-        RequiredFields = new[] { nameof(hitBoxZones), nameof(equippedWeapons), nameof(startingWeaponIndex), nameof(attackCooldown), nameof(kickCooldown), nameof(primarySequence), nameof(secondarySequence), nameof(projectileLauncher) },
+        RequiredFields = new[] { nameof(hitBoxZones), nameof(equippedWeapons), nameof(primarySequence), nameof(secondarySequence), nameof(projectileLauncher) },
         RequiredComponentNames = new[] { "NeonBlack.Gameplay.Modules.Character.Motor2D" },
         SetupSteps = new[] 
         { 

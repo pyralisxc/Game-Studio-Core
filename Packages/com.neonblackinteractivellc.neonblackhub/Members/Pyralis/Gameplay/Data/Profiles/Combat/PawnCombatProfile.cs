@@ -15,7 +15,7 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Surface = AuthoringSurface.Profile,
         Summary = "Defines the core combat parameters for a pawn archetype.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/combat",
-        RequiredFields = new[] { nameof(baseDamage), nameof(attackCooldown), nameof(attackWeapon), nameof(primarySequence) },
+        RequiredFields = new[] { nameof(attackWeapon), nameof(primarySequence) },
         SetupSteps = new[] { "Set base damage and cooldowns.", "Configure block reduction." },
         SuccessChecks = new[] { "Verify the pawn can attack and take damage in-game." },
         Tags = new[] { "capability:Combat", "runtime:Combat", "lane:Combat", "priority:AuxiliaryDefault" },
