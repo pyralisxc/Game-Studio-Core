@@ -724,3 +724,18 @@ Verification:
 - Confirmed `TabletopBoardGridPresenter` treats its fallback piece prefab as recommended and can use piece-specific visual prefabs or generated fallback pieces.
 - Scoped `git diff --check` passed for touched files.
 - Unity Editor Test Runner proof remains manual because batch mode currently stalls on Unity Licensing Client reconnects before test discovery.
+
+### Pawn Definition Modular Profile Contract
+
+Changes:
+
+- Narrowed `PawnDefinition` always-required PYS fields to `pawnPrefab`.
+- Updated setup guidance so movement, combat, traversal, presentation, and animation profiles are assigned only for capabilities the pawn supports.
+
+Verification:
+
+- Confirmed `PawnDefinition.BuildRuntimeValidationIssues` requires the pawn prefab and validates prefab composition directly.
+- Confirmed presentation and animation profiles are required only when an `ActorAnimationDriver` needs profile data from either the `PawnDefinition` or the component itself.
+- Confirmed top-down hop validation is conditional on the movement profile's effective movement style and jump setting.
+- Scoped `git diff --check` passed for touched files.
+- Unity Editor Test Runner proof remains manual because batch mode currently stalls on Unity Licensing Client reconnects before test discovery.
