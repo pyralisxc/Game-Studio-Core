@@ -29,8 +29,8 @@ namespace NeonBlack.Gameplay.Modules.Settings
         Surface = AuthoringSurface.Goal,
         Summary = "Manages global audio volume levels and mixer integration. Connects settings profiles to the active Unity AudioMixer.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/settings",
-        RequiredFields = new[] { nameof(settingsProfile), nameof(_mixerOverride) },
-        SetupSteps = new[] { "Attach to a persistent root GameObject.", "Assign a SettingsProfile asset." },
+        RequiredFields = new[] { nameof(settingsProfile) },
+        SetupSteps = new[] { "Attach to a persistent root GameObject.", "Assign a SettingsProfile asset.", "Assign Mixer Override only when the SettingsProfile mixer should be replaced for this scene." },
         SuccessChecks = new[] { "Verify AudioMixer parameters 'MusicVolume' and 'SFXVolume' change when sliders are moved in the Settings UI." },
         Tags = new[] { "capability:Audio", "capability:UI" }
     )]

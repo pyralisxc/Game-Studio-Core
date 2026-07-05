@@ -662,3 +662,20 @@ Verification:
 - Confirmed setup guidance already describes Camera Override as optional.
 - Scoped `git diff --check` passed for touched files.
 - Unity Editor Test Runner proof remains manual because batch mode currently stalls on Unity Licensing Client reconnects before test discovery.
+
+### Optional Override And Feedback Sink Contracts
+
+Changes:
+
+- Removed `_mixerOverride` from the always-required PYS fields on `GameplaySettingsService`; the assigned `SettingsProfile` remains the settings owner.
+- Removed `hitPauseSink` and `cameraShakeSink` from the always-required PYS fields on `EnemyReactionComponent`.
+- Removed optional owner and hit feedback outputs from the always-required PYS fields on the 3D `HitBox`.
+- Updated setup guidance so mixer override, inferred hitbox owner, hit FX, hit pause, and camera shake sinks are explicitly optional scene outputs.
+
+Verification:
+
+- Confirmed `GameplaySettingsService.Mixer` resolves the override only when assigned, otherwise it uses `SettingsProfile.mixer`.
+- Confirmed 3D `HitBox` infers owner from a parent `HealthComponent` when the owner field is empty.
+- Confirmed enemy reaction and hitbox feedback calls use null-safe optional sink resolution.
+- Scoped `git diff --check` passed for touched files.
+- Unity Editor Test Runner proof remains manual because batch mode currently stalls on Unity Licensing Client reconnects before test discovery.

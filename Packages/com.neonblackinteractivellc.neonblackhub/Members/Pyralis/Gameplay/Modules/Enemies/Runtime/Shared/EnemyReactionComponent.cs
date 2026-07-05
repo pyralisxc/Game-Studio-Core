@@ -12,13 +12,14 @@ namespace NeonBlack.Gameplay.Modules.Enemies
         Category = "Combat",
         CapabilityPath = "Combat/Actions/Enemy Reaction Component",
         Surface = AuthoringSurface.Profile,
-        RequiredFields = new[] { nameof(reactionProfile), nameof(hitPauseSink), nameof(cameraShakeSink) },
+        RequiredFields = new[] { nameof(reactionProfile) },
         RequiredComponentNames = new[] { "NeonBlack.Gameplay.Modules.Enemies.EnemyAI", "NeonBlack.Gameplay.Modules.Combat.HealthComponent" },
         RequiredInterfaces = new[] { typeof(IEnemyReactionState) },
         SetupSteps = new[]
         {
             "add EnemyReactionComponent to the enemy root",
-            "assign EnemyReactionProfile"
+            "assign EnemyReactionProfile",
+            "assign hit pause and camera shake sinks only when enemy reactions should drive those optional feedback outputs"
         },
         SuccessChecks = new[] { "Verify that hit pause and camera shake are triggered when the enemy takes damage." },
         Tags = new[] { "capability:Combat", "lane:Enemy" },

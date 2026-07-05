@@ -18,8 +18,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
         Surface = AuthoringSurface.Goal,
         Summary = "One-shot overlap query hitbox for melee and projectile impacts.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/hitbox",
-        RequiredFields = new[] { nameof(owner), nameof(hitFXPrefab), nameof(hitPauseSink), nameof(cameraShakeSink) },
-        SetupSteps = new[] { "Add to a child GameObject of a combat actor.", "Assign a Box or Sphere collider (it will be disabled at runtime)." },
+        SetupSteps = new[] { "Add to a child GameObject of a combat actor.", "Assign a Box or Sphere collider (it will be disabled at runtime).", "Assign Owner only when parent HealthComponent inference is not sufficient.", "Assign hit FX, hit pause, and camera shake sinks only when the hitbox should emit those optional feedback outputs." },
         SuccessChecks = new[] { "The hitbox damages a valid target and plays impact feedback." },
         Tags = new[] { "capability:CombatSensors", "axiom:Realtime", "axiom:Dimensions3D", "lane:Combat", "priority:Primary" }
     )]
