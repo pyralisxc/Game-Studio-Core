@@ -17,7 +17,7 @@ Last updated: 2026-07-04.
 Completed evidence:
 
 - Unity version has been confirmed as `6000.4.0f1`.
-- PYS Authoring remains an external package dependency through `Packages/manifest.json` as `file:../../Pys Authoring/Packages/com.pys.authoring`.
+- PYS Authoring remains an external package dependency through `Packages/manifest.json` as `file:../../../Pys Authoring/Packages/com.pys.authoring`.
 - The package-wide ownership audit exists at `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/AUTHORING_SURFACE_REFACTOR_AUDIT.md`.
 - Living architecture docs and the gameplay README define the package-wide authoring-surface target instead of a pawn-only cleanup.
 - The dedicated refactor changelog exists at `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/AUTHORING_SURFACE_REFACTOR_CHANGELOG.md` and records each committed slice.

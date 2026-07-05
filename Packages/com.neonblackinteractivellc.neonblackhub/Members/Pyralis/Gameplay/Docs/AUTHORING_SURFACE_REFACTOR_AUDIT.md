@@ -9,7 +9,7 @@ Inventory snapshot:
 - Gameplay C# files under `Members/Pyralis/Gameplay`: 573
 - Top-level distribution: Core 72, Data 160, Editor 14, Glue 39, Modules 264, Networking 7, Presentation 17
 - Package assemblies found: 36
-- PYS Authoring is external through `Packages/manifest.json` as `file:../../Pys Authoring/Packages/com.pys.authoring`
+- PYS Authoring is external through `Packages/manifest.json` as `file:../../../Pys Authoring/Packages/com.pys.authoring`
 
 ## Current Progress
 

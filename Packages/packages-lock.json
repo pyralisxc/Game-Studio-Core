@@ -18,7 +18,7 @@
       }
     },
     "com.pys.authoring": {
-      "version": "file:../../Pys Authoring/Packages/com.pys.authoring",
+      "version": "file:../../../Pys Authoring/Packages/com.pys.authoring",
       "depth": 0,
       "source": "local",
       "dependencies": {}

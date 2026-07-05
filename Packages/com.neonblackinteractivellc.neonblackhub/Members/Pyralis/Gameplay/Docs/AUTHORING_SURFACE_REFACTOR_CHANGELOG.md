@@ -619,3 +619,18 @@ Verification:
 - Confirmed PYS Authoring remains external in `Packages/manifest.json`.
 - Scoped `git diff --check` passed for touched docs.
 - Unity Test Runner was not run because this is docs-only consolidation.
+
+### PYS Authoring Package Path Verification
+
+Changes:
+
+- Corrected the `com.pys.authoring` local package path in `Packages/manifest.json` and `Packages/packages-lock.json`.
+- Updated refactor plan/audit docs to quote the corrected external package path.
+
+Verification:
+
+- Confirmed the corrected local package target contains `Packages/com.pys.authoring/package.json`.
+- Unity batch launch previously failed package resolution because the old relative path resolved one directory too shallow.
+- Unity batch smoke after the path fix resolved packages and exited with return code 0.
+- Scoped `git diff --check` passed for touched files.
+- Automated EditMode Test Runner did not produce test results in batch mode because Unity stalled on Licensing Client reconnects before test discovery. Editor Test Runner verification remains the appropriate next proof surface.
