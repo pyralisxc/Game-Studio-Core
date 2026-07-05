@@ -144,6 +144,7 @@ namespace NeonBlack.Gameplay.Modules.Rpg.UI
             if (!TryGetQuest(selected.QuestId, out IQuestDefinition quest))
                 return Fail($"Quest `{selected.QuestId}` could not be found.");
 
+            EnsureService();
             if (!_questService.TryStartQuest(ResolveOwner(), quest, out string issue))
                 return Fail(issue);
 
@@ -273,6 +274,12 @@ namespace NeonBlack.Gameplay.Modules.Rpg.UI
         {
             if (routePresenter == null)
                 routePresenter = GetComponentInParent<RpgPanelRoutePresenter>() ?? GetComponentInChildren<RpgPanelRoutePresenter>(true);
+        }
+
+        private void EnsureService()
+        {
+            if (_questService == null)
+                _questService = new QuestService();
         }
 
         private RpgOwnerKey ResolveOwner()

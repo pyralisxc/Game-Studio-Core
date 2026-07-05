@@ -109,6 +109,21 @@ Verification:
 - Scoped search confirmed `EnsureService()` is now called before `_dialogueService` dialogue operations in `RpgDialoguePanelPresenter`.
 - Unity Test Runner was not run from shell; run affected RPG UI checks in the Unity Editor.
 
+### RPG Panel Action Service Fallbacks
+
+Changes:
+
+- Updated `RpgVendorPanelPresenter` to call its service fallback before buy/sell actions.
+- Updated `RpgLoadoutPanelPresenter` to call its service fallback before equip/unequip actions.
+- Added and used a quest service fallback in `RpgQuestBoardPanelPresenter` before starting quests.
+- Updated `RpgSkillTreePanelPresenter` to call its service fallback before unlock actions.
+- Added an audit note for RPG panel action ownership and service fallback expectations.
+
+Verification:
+
+- Scoped search confirmed the affected action methods now call their service fallback before service dereferences.
+- Unity Test Runner was not run from shell; run affected RPG UI checks in the Unity Editor.
+
 ### Baseline Planning And Audit
 
 Commits:

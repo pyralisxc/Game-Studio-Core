@@ -169,6 +169,7 @@ namespace NeonBlack.Gameplay.Modules.Rpg.UI
             if (string.IsNullOrEmpty(selected.NodeId))
                 return Fail("No skill node is selected.");
 
+            EnsureServices();
             if (!_skillTreeService.TryUnlock(ResolveOwner(), tree, selected.NodeId, out string issue))
                 return Fail(issue);
 

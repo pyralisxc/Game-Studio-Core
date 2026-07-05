@@ -140,6 +140,7 @@ namespace NeonBlack.Gameplay.Modules.Rpg.UI
             if (!TryGetFirstCompatibleSlot(item, out IEquipmentSlot slot))
                 return Fail($"Item `{selected.ItemId}` has no compatible configured slot.");
 
+            EnsureService();
             if (!_equipmentService.TryEquip(ResolveOwner(), slot, item, out string issue))
                 return Fail(issue);
 
@@ -158,6 +159,7 @@ namespace NeonBlack.Gameplay.Modules.Rpg.UI
             if (!TryGetEquippedSlotForItem(selected.ItemId, out string slotId))
                 return Fail($"Item `{selected.ItemId}` is not currently equipped.");
 
+            EnsureService();
             if (!_equipmentService.TryUnequip(ResolveOwner(), slotId, out _))
                 return Fail($"Slot `{slotId}` could not be unequipped.");
 

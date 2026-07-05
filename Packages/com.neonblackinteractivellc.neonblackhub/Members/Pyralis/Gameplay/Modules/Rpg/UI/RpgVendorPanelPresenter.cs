@@ -131,6 +131,7 @@ namespace NeonBlack.Gameplay.Modules.Rpg.UI
             if (string.IsNullOrWhiteSpace(selected.OfferId))
                 return Fail("No vendor offer is selected.");
 
+            EnsureService();
             if (!_vendorService.TryBuy(ResolveOwner(), _activeVendor, selected.OfferId, 1, out _, out string issue))
                 return Fail(issue);
 
@@ -145,6 +146,7 @@ namespace NeonBlack.Gameplay.Modules.Rpg.UI
             if (string.IsNullOrWhiteSpace(selected.OfferId))
                 return Fail("No vendor offer is selected.");
 
+            EnsureService();
             if (!_vendorService.TrySell(ResolveOwner(), _activeVendor, selected.OfferId, 1, out _, out string issue))
                 return Fail(issue);
 

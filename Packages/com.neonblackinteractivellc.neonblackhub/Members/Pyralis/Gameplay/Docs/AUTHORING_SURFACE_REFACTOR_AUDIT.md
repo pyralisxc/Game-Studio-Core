@@ -330,6 +330,8 @@ Game flow HUD review note: `GameFlowHudController` is a presentation owner for l
 
 RPG dialogue UI review note: `RpgDialoguePanelPresenter` owns dialogue rendering and choice submission for a dialogue panel. Authored graph data and a visible line label are the durable authoring requirements; route presenters can be resolved from parent/child hierarchy, NPC profiles can fall back from graph speaker ids, and speaker/choice/issue labels are optional surfaces depending on the panel design.
 
+RPG panel action review note: RPG UI presenters remain valid panel owners when they expose concrete player actions. Vendor, loadout, quest board, and skill tree presenters should use their feature service when Glue provides one, but each action path must fall back to the same local service helper used by the rest of the presenter so standalone authored panels fail with domain issues instead of null service dereferences.
+
 ## Scene Services
 
 These are scene-authored or scene-scale surfaces. They should remain visible when they are required, not created silently to repair setup.
