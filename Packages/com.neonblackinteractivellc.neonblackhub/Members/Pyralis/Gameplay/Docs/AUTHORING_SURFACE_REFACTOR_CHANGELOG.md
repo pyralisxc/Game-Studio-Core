@@ -12,6 +12,21 @@ Scope rules:
 
 ## 2026-07-05
 
+### Feedback HUD Target Binding Removal
+
+Changes:
+
+- Removed the hidden abstract `ParticipantHudTargetBinding` script after GUID/reference checks found no scene, prefab, sample, or test attachments.
+- Folded participant filter fields and target matching directly into `ParticipantHealthHudBinder` and `ParticipantFeedbackHudPresenter`.
+- Updated `FeedbackServiceInstaller` to configure the concrete health binder instead of scanning for the removed base type.
+- Updated the authoring-surface audit to keep future agents from treating the removed base as an active owner.
+
+Verification:
+
+- Scoped reference search found `ParticipantHudTargetBinding` only in docs, its own source/meta, the two HUD consumers, and the feedback installer before removal.
+- Existing serialized field names `usePrimaryParticipant` and `participantSeat` were preserved on the concrete HUD components for compatibility.
+- Unity Test Runner still needs to run `FeedbackHudBindingTests` from the Editor because runtime code changed.
+
 ### Stale Refactor Doc Folding
 
 Changes:

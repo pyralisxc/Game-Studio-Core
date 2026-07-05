@@ -187,7 +187,6 @@ These scripts currently look like bridge surfaces. Some are valid Unity-facing a
 - `Modules/Combat/Pawn/Shared/PawnProjectileModule.cs`
 - `Modules/Combat/Pawn/Shared/PawnWeaponModule.cs`
 - `Modules/Feedback/Runtime/Participants/ParticipantFeedbackRelay.cs`
-- `Modules/Feedback/Runtime/UI/ParticipantHudTargetBinding.cs`
 - `Modules/Feedback/Runtime/UI/ParticipantHealthHudBinder.cs`
 - `Modules/Feedback/Runtime/UI/ParticipantFeedbackHudPresenter.cs`
 - `Modules/Rpg/UI/RpgHubPanelRouter.cs`
@@ -201,7 +200,6 @@ These are not confirmed deletions. They are first-pass candidates because their 
 
 ### Highest-Value First Pass
 
-- `Modules/Feedback/Runtime/UI/ParticipantHudTargetBinding.cs`
 - `Modules/Feedback/Runtime/UI/ParticipantHealthHudBinder.cs`
 - `Modules/Feedback/Runtime/UI/ParticipantHealthPanel.cs`
 - `Modules/Feedback/Runtime/UI/ParticipantTimedTextPanel.cs`
@@ -217,17 +215,16 @@ These are not confirmed deletions. They are first-pass candidates because their 
 
 Reviewed on 2026-07-04. Retain the Feedback UI split:
 
-- `ParticipantHudTargetBinding` owns participant selection only.
-- `ParticipantHealthHudBinder` owns participant health lookup and binding to panel surfaces.
+- `ParticipantHealthHudBinder` owns participant selection, participant health lookup, and binding to panel surfaces.
 - `ParticipantHealthPanel` owns concrete TMP/Image health presentation.
 - `ParticipantTimedTextPanel` owns one reusable temporary text surface.
-- `ParticipantFeedbackHudPresenter` owns participant feedback stream subscription and routes stream messages into direct legacy labels or reusable timed text panels.
+- `ParticipantFeedbackHudPresenter` owns participant feedback stream subscription, participant message filtering, and routing stream messages into direct legacy labels or reusable timed text panels.
 - `ParticipantFeedbackRelay` is a valid participant-context adapter from actor feedback events into participant feedback messages.
 - `ParticipantFeedbackService` is the valid stream owner.
 - `ActorFeedbackComponent` is the actor-local publisher.
 - `ActorFloatingFeedbackReceiver`, `DamageNumberSpawner`, and `DamageNumber` are presentation owners for world-space feedback and pooled numeric output.
 
-Do not collapse these into one HUD/feedback script. Reviewed again on 2026-07-05: direct TMP label compatibility remains current because `Members/Public/La Cucarachacha/Scenes/MainMenu.unity` still serializes `statusLabel` on `ParticipantFeedbackHudPresenter`. Local widget gaps are recommended Inspector/prefab issues rather than required PYS route blockers. The remaining simplification pressure is to keep contracts accurate, remove direct-label compatibility only after authored scenes no longer serialize it, and keep status/damage/heal routing behavior complete.
+Do not collapse these into one HUD/feedback script. Reviewed again on 2026-07-05: direct TMP label compatibility remains current because `Members/Public/La Cucarachacha/Scenes/MainMenu.unity` still serializes `statusLabel` on `ParticipantFeedbackHudPresenter`. Local widget gaps are recommended Inspector/prefab issues rather than required PYS route blockers. `ParticipantHudTargetBinding` was removed after GUID/reference checks because it was hidden pass-through glue with only two concrete consumers; participant filtering now lives directly on the concrete HUD components. The remaining simplification pressure is to keep contracts accurate, remove direct-label compatibility only after authored scenes no longer serialize it, and keep status/damage/heal routing behavior complete.
 
 ### Traversal Profile Ownership Review
 
@@ -435,7 +432,7 @@ Why this lane was a good first slice:
 
 Files reviewed during the opening slice:
 
-- `Modules/Feedback/Runtime/UI/ParticipantHudTargetBinding.cs`
+- `Modules/Feedback/Runtime/UI/ParticipantHudTargetBinding.cs` - removed after reference checks; participant filtering now lives on concrete HUD components.
 - `Modules/Feedback/Runtime/UI/ParticipantHealthHudBinder.cs`
 - `Modules/Feedback/Runtime/UI/ParticipantHealthPanel.cs`
 - `Modules/Feedback/Runtime/UI/ParticipantTimedTextPanel.cs`

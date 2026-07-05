@@ -67,9 +67,9 @@ namespace NeonBlack.Gameplay.Glue.ServiceRegistration
                     for (int i = 0; i < relays.Length; i++)
                         relays[i]?.ConfigureRuntime(feedbackService);
 
-                    ParticipantHudTargetBinding[] hudBindings = root.GetComponentsInChildren<ParticipantHudTargetBinding>(true);
-                    for (int i = 0; i < hudBindings.Length; i++)
-                        hudBindings[i]?.ConfigureRuntime(participantRoster);
+                    ParticipantHealthHudBinder[] healthBinders = root.GetComponentsInChildren<ParticipantHealthHudBinder>(true);
+                    for (int i = 0; i < healthBinders.Length; i++)
+                        healthBinders[i]?.ConfigureRuntime(participantRoster);
 
                     ParticipantFeedbackHudPresenter[] presenters = root.GetComponentsInChildren<ParticipantFeedbackHudPresenter>(true);
                     for (int i = 0; i < presenters.Length; i++)

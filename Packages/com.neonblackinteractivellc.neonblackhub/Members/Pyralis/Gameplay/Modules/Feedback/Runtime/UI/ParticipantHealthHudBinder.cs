@@ -16,9 +16,21 @@ namespace NeonBlack.Gameplay.Modules.Feedback.UI
         Tags = new[] { "capability:UI" }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Feedback/UI/Participant Health HUD Binder")]
-    public class ParticipantHealthHudBinder : ParticipantHudTargetBinding, IRuntimeValidationProvider
+    public class ParticipantHealthHudBinder : MonoBehaviour, IRuntimeValidationProvider
     {
+        [Header("Participant Filter")]
+        [SerializeField] private bool usePrimaryParticipant = true;
+        [SerializeField] private int participantSeat = 0;
+
         [SerializeField] private ParticipantHealthPanel[] healthPanels;
+
+        private IParticipantRoster _participantRoster;
+
+        public void ConfigureRuntime(IParticipantRoster participantRoster)
+        {
+            if (participantRoster != null)
+                _participantRoster = participantRoster;
+        }
 
         private void Start()
         {
@@ -63,6 +75,18 @@ namespace NeonBlack.Gameplay.Modules.Feedback.UI
                 for (int i = 0; i < healthPanels.Length; i++)
                     healthPanels[i]?.ApplyHealth(health);
             }
+        }
+
+        private bool TryGetTrackedParticipant(out ParticipantHandle participant)
+        {
+            participant = null;
+            if (_participantRoster == null)
+                return false;
+
+            if (usePrimaryParticipant)
+                return _participantRoster.TryGetPrimaryParticipant(out participant);
+
+            return _participantRoster.TryGetParticipantBySeat(participantSeat, out participant);
         }
     }
 }

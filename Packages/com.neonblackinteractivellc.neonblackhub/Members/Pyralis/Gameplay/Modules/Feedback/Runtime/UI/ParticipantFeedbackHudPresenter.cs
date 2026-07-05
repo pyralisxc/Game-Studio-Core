@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Data.Participants;
 using TMPro;
 using UnityEngine;
 using Pys.Authoring.Contracts;
@@ -16,8 +17,12 @@ namespace NeonBlack.Gameplay.Modules.Feedback.UI
         Tags = new[] { "capability:UI" }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Feedback/UI/Participant Feedback HUD Presenter")]
-    public class ParticipantFeedbackHudPresenter : ParticipantHudTargetBinding, IRuntimeValidationProvider
+    public class ParticipantFeedbackHudPresenter : MonoBehaviour, IRuntimeValidationProvider
     {
+        [Header("Participant Filter")]
+        [SerializeField] private bool usePrimaryParticipant = true;
+        [SerializeField] private int participantSeat = 0;
+
         [Header("Labels")]
         [SerializeField] private TextMeshProUGUI comboLabel;
         [SerializeField] private TextMeshProUGUI statusLabel;
@@ -193,6 +198,17 @@ namespace NeonBlack.Gameplay.Modules.Feedback.UI
             label.text = text;
             label.gameObject.SetActive(true);
             timer = duration;
+        }
+
+        private bool MatchesParticipant(ParticipantHandle participant)
+        {
+            if (participant == null)
+                return false;
+
+            if (usePrimaryParticipant)
+                return participant.SeatIndex == 0;
+
+            return participant.SeatIndex == participantSeat;
         }
     }
 }
