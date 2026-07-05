@@ -12,7 +12,6 @@ namespace NeonBlack.Gameplay.Glue.SceneFlow.Navigation
         Surface = AuthoringSurface.Goal,
         Summary = "Lightweight static cross-scene contract for level selection metadata.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/level-session",
-        RequiredFields = new[] { nameof(ChosenSceneName), nameof(IsRandom) },
         SetupSteps = new[] { "Set LevelSession.ChosenSceneName from the UI or mission selector.", "Clear the session using LevelSession.Clear() when returning to the menu." },
         SuccessChecks = new[] { "Verify ChosenSceneName is set correctly in the destination scene's Start method." },
         Tags = new[] { "capability:Setup" }

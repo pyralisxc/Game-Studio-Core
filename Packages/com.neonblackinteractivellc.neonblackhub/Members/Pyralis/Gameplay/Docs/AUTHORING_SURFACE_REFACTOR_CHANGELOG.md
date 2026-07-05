@@ -12,6 +12,18 @@ Scope rules:
 
 ## 2026-07-04
 
+### Level Session Contract Accuracy
+
+Changes:
+
+- Removed `ChosenSceneName` and `IsRandom` from `LevelSession` required PYS fields because they are static runtime navigation state, not Inspector-authored setup fields.
+- Added an audit note clarifying that PYS may describe the level-selection route contract without treating transient handoff properties as authoring requirements.
+
+Verification:
+
+- Scoped reference search confirmed `ArcadeGameFlowController.Navigation` reads and updates `LevelSession` at runtime, and no serialized setup field backs those properties.
+- Unity Test Runner was not run from shell; validate level-selection flow in the Unity Editor.
+
 ### Lifetime Scope Contract Accuracy
 
 Changes:

@@ -342,6 +342,8 @@ UI orientation review note: `UIOrientationHandler` owns captured RectTransform l
 
 Lifetime scope review note: `GameplayLifetimeScope` is the visible composition root, but `InjectLoadedScenesOnBuild` is a runtime property set by `GameplaySessionBootstrap`, not an Inspector-authored field. PYS should require the lifetime-scope component route anchor, not a non-serialized bootstrap handoff option.
 
+Level session review note: `LevelSession` is a static cross-scene navigation handoff. `ChosenSceneName` and `IsRandom` are runtime state set by menu or flow code, not setup fields. PYS can describe the route contract, but it should not classify those transient properties as required authoring fields.
+
 ## Scene Services
 
 These are scene-authored or scene-scale surfaces. They should remain visible when they are required, not created silently to repair setup.
