@@ -12,6 +12,19 @@ Scope rules:
 
 ## 2026-07-05
 
+### Unity Verification Queue
+
+Changes:
+
+- Added a focused Unity Editor verification queue to the refactor plan.
+- Listed `GameplayWiringReportBuilderTests`, `FeedbackHudBindingTests`, the full `NeonBlack.Gameplay.Tests` EditMode pass, and the external `com.pys.authoring` package refresh as pending Editor proof.
+- Kept shell checks scoped to commit hygiene rather than treating them as Unity proof.
+
+Verification:
+
+- Scoped `git diff --check` passed for touched docs.
+- Unity Test Runner was not run from shell; the added queue names the Editor-side proof still required.
+
 ### Wiring Report Test Maintenance
 
 Changes:

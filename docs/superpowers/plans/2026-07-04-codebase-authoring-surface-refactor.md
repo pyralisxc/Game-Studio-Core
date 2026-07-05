@@ -34,6 +34,13 @@ Remaining evidence before this goal can be called complete:
 - Remaining higher-risk cleanup should focus on real ownership consolidation, stale-doc folding, and Unity proof rather than broad metadata sweeps.
 - Existing unrelated local/generated changes remain outside this lane: `.plastic/*`, `Game Studio Core.slnx`, and `Tools/Validation/Run-PreSceneValidation.ps1`.
 
+Unity Editor verification queue:
+
+- `GameplayWiringReportBuilderTests` - proves canonical wiring report parity, route deferral, route-complete missing providers, participant join timing, and feature activation evidence.
+- `FeedbackHudBindingTests` - proves the retained Feedback HUD ownership split still validates and binds through `ParticipantHealthPanel`.
+- A full EditMode pass for `NeonBlack.Gameplay.Tests` after Unity imports the current package state.
+- Manual Editor compile/package refresh for the external `com.pys.authoring` dependency path.
+
 ---
 
 ## Operating Rules
