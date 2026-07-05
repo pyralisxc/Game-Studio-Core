@@ -648,3 +648,17 @@ Verification:
 - Confirmed `CinemachineCameraRigController` falls back to participant/pawn/playfield focus paths when explicit focus mode is not selected.
 - Scoped `git diff --check` passed for touched files.
 - Unity Editor Test Runner proof remains manual because batch mode currently stalls on Unity Licensing Client reconnects before test discovery.
+
+### Billboard Camera Override Contract
+
+Changes:
+
+- Removed `cameraOverride` from the always-required PYS fields on `BillboardFacing3D`.
+- Downgraded the missing camera override runtime issue from required to recommended because setup guidance already allows runtime camera assignment.
+
+Verification:
+
+- Confirmed `BillboardFacing3D.ApplyBillboard` safely returns when no active camera is available.
+- Confirmed setup guidance already describes Camera Override as optional.
+- Scoped `git diff --check` passed for touched files.
+- Unity Editor Test Runner proof remains manual because batch mode currently stalls on Unity Licensing Client reconnects before test discovery.
