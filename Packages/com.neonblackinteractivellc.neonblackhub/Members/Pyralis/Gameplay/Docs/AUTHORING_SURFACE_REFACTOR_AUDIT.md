@@ -332,6 +332,8 @@ RPG dialogue UI review note: `RpgDialoguePanelPresenter` owns dialogue rendering
 
 RPG panel action review note: RPG UI presenters remain valid panel owners when they expose concrete player actions. Vendor, loadout, quest board, and skill tree presenters should use their feature service when Glue provides one, but each action path must fall back to the same local service helper used by the rest of the presenter so standalone authored panels fail with domain issues instead of null service dereferences.
 
+UI orientation review note: `UIOrientationHandler` owns captured RectTransform layout snapshots for portrait and landscape. The serialized `portrait` and `landscape` objects are not meaningful required fields by themselves; the real setup requirement is that each layout has been captured through the inspector workflow.
+
 ## Scene Services
 
 These are scene-authored or scene-scale surfaces. They should remain visible when they are required, not created silently to repair setup.

@@ -124,6 +124,20 @@ Verification:
 - Scoped search confirmed the affected action methods now call their service fallback before service dereferences.
 - Unity Test Runner was not run from shell; run affected RPG UI checks in the Unity Editor.
 
+### UI Orientation Contract Accuracy
+
+Changes:
+
+- Removed misleading `portrait`/`landscape` required PYS fields from `UIOrientationHandler`; those serialized layout objects are always present.
+- Added runtime validation for the actual setup requirement: portrait and landscape layouts must be captured.
+- Added an audit note for UI orientation ownership and the inspector capture workflow.
+
+Verification:
+
+- Scoped code inspection confirmed layout application already ignores uncaptured layouts, and the custom inspector reports capture status.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run from shell; verify orientation capture behavior in the Unity Editor.
+
 ### Baseline Planning And Audit
 
 Commits:

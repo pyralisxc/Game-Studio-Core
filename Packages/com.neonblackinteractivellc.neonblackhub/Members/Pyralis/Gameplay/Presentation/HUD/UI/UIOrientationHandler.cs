@@ -15,7 +15,6 @@ namespace NeonBlack.Gameplay.Presentation.HUD.UI
         Surface = AuthoringSurface.Goal,
         Summary = "Maintains UI layout integrity across portrait and landscape device orientations.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/ui",
-        RequiredFields = new[] { nameof(portrait), nameof(landscape) },
         RequiredComponents = new[] { typeof(RectTransform) },
         SetupSteps = new[] 
         { 
@@ -26,7 +25,7 @@ namespace NeonBlack.Gameplay.Presentation.HUD.UI
         Tags = new[] { "capability:UI", "runtime:PlatformCore" }
     )]
 [RequireComponent(typeof(RectTransform))]
-    public class UIOrientationHandler : MonoBehaviour
+    public class UIOrientationHandler : MonoBehaviour, IRuntimeValidationProvider
 {
         [System.Serializable]
         public class LayoutData
@@ -78,6 +77,14 @@ namespace NeonBlack.Gameplay.Presentation.HUD.UI
         private void Awake()
         {
             _rt = GetComponent<RectTransform>();
+        }
+
+        public System.Collections.Generic.IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
+        {
+            if (portrait == null || !portrait.captured)
+                yield return RuntimeValidationIssue.Required("Portrait layout has not been captured.");
+            if (landscape == null || !landscape.captured)
+                yield return RuntimeValidationIssue.Required("Landscape layout has not been captured.");
         }
 
         private void Start()
