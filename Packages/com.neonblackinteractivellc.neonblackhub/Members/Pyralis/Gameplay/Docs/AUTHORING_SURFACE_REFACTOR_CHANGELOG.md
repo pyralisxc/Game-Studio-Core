@@ -12,6 +12,21 @@ Scope rules:
 
 ## 2026-07-05
 
+### Collectible Feedback Optional Media Validation
+
+Changes:
+
+- Stopped reporting missing collect clip and collect FX as required `CollectibleFeedback2D` runtime validation issues.
+- Kept AudioSource validation conditional on assigned collect/destroy audio clips.
+- Downgraded missing mixer routing for assigned collectible audio from required to recommended evidence.
+- Added a focused runtime test proving `CollectibleFeedback2D` has no required validation issues when no optional media is assigned.
+
+Verification:
+
+- Scoped code inspection confirmed `CollectibleFeedback2D` setup guidance already says audio clips and particle systems are optional.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run from shell; run `PickupAwardRoutingTests` in the Unity Editor Test Runner.
+
 ### Agent-Owned Pursuable Goal
 
 Changes:

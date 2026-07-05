@@ -1,6 +1,7 @@
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Modules.Interaction;
 using NUnit.Framework;
+using System.Linq;
 using UnityEngine;
 
 namespace NeonBlack.Gameplay.Tests.Runtime
@@ -18,6 +19,19 @@ namespace NeonBlack.Gameplay.Tests.Runtime
             feedback.ApplyAward(new PickupAwardPayload(null, Vector3.zero, 5, PickupAwardOutcome.Collected));
 
             Assert.AreEqual(5, scoreAwardSink.Points);
+            Object.DestroyImmediate(go);
+        }
+
+        [Test]
+        public void CollectibleFeedback2D_WithNoOptionalMedia_HasNoRequiredValidationIssues()
+        {
+            GameObject go = new GameObject("Collectible Feedback");
+            CollectibleFeedback2D feedback = go.AddComponent<CollectibleFeedback2D>();
+
+            bool hasRequiredIssue = feedback.GetRuntimeValidationIssues()
+                .Any(issue => issue.Severity == RuntimeValidationSeverity.Required);
+
+            Assert.IsFalse(hasRequiredIssue);
             Object.DestroyImmediate(go);
         }
 

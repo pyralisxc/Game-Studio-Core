@@ -31,6 +31,7 @@ Remaining review:
 - Further agent-owned code changes should prioritize real ownership consolidation, validation evidence cleanup, and stale-doc folding over more broad metadata trimming. Unity-native setup proof remains an acceptance gate for Cameron's Editor pass. The remaining `RequiredFields` scan is now mostly identity, definition, prefab, UI, physics mask, or concrete component/service setup rather than obvious optional media/profile/tuning false positives.
 - `VirtualJoystick` CanvasGroup auto-add remains deferred until a scene/sample pass can preserve authored content.
 - Generic sprite-to-GameObject spawning remains supported as prototype utility output, with validation guidance steering reusable package content toward authored prefabs.
+- `CollectibleFeedback2D` optional clip/particle setup no longer reports missing collect clip or collect FX as required validation. AudioSource validation only appears when audio clips are assigned, and mixer routing is recommended evidence because audio still plays without settings routing.
 
 ## Classification Rules
 
