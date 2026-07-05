@@ -266,6 +266,14 @@ Acceptance:
 
 ### Phase C - Report Parity Against Current Runtime
 
+Status: parity protection started.
+
+Current protected behavior:
+
+- missing `GameplaySessionBootstrap.sessionDefinition` setup appears once as the canonical `MissingProvider` row for `SessionDefinition`
+- duplicate local `GameplaySessionBootstrap.SessionDefinition.Missing` validation rows are suppressed when the canonical missing-provider row exists
+- route-dependent camera guidance is deferred while session route evidence is absent
+
 Compare report rows with existing inspector warnings, validators, and PYS exports.
 
 Acceptance:
