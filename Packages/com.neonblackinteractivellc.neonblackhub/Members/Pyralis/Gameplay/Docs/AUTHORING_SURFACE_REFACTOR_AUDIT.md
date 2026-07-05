@@ -328,6 +328,8 @@ Navigation UI review note: `MainMenuController` and `LoadingScreenController` ar
 
 Game flow HUD review note: `GameFlowHudController` is a presentation owner for live score/time labels. HUD panel, game-over panel, buttons, settings screen, and final-score labels are optional route surfaces because the controller null-checks them and can operate as a focused live HUD.
 
+RPG dialogue UI review note: `RpgDialoguePanelPresenter` owns dialogue rendering and choice submission for a dialogue panel. Authored graph data and a visible line label are the durable authoring requirements; route presenters can be resolved from parent/child hierarchy, NPC profiles can fall back from graph speaker ids, and speaker/choice/issue labels are optional surfaces depending on the panel design.
+
 ## Scene Services
 
 These are scene-authored or scene-scale surfaces. They should remain visible when they are required, not created silently to repair setup.

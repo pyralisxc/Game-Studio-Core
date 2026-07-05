@@ -94,6 +94,21 @@ Verification:
 - Scoped code inspection confirmed panel, button, settings, and game-over label references are null-checked before use.
 - Unity Test Runner was not run from shell; run affected HUD checks in the Unity Editor.
 
+### RPG Dialogue UI Contract Accuracy
+
+Changes:
+
+- Narrowed `RpgDialoguePanelPresenter` required PYS fields to authored dialogue graphs and the line label.
+- Updated setup guidance so route presenter, NPC profiles, speaker labels, choice labels, and issue labels match the existing runtime fallback/optional behavior.
+- Called the existing `EnsureService()` fallback before dialogue start, continue, choice selection, and choice refresh so standalone authored panels do not dereference a missing `DialogueService`.
+- Added an audit note classifying the dialogue presenter as the retained dialogue panel owner.
+
+Verification:
+
+- Scoped code inspection confirmed `routePresenter` is auto-resolved from parent/child hierarchy and NPCs can fall back from graph speaker ids.
+- Scoped search confirmed `EnsureService()` is now called before `_dialogueService` dialogue operations in `RpgDialoguePanelPresenter`.
+- Unity Test Runner was not run from shell; run affected RPG UI checks in the Unity Editor.
+
 ### Baseline Planning And Audit
 
 Commits:

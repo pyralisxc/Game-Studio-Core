@@ -17,9 +17,9 @@ namespace NeonBlack.Gameplay.Modules.Rpg.UI
         Category = "Dialogue",
         CapabilityPath = "RPG/Dialogue/UI/Dialogue Panel Presenter",
         Surface = AuthoringSurface.Goal,
-        RequiredFields = new[] { nameof(routePresenter), nameof(dialogueGraphs), nameof(npcProfiles), nameof(speakerLabel), nameof(lineLabel), nameof(choiceButtons) },
+        RequiredFields = new[] { nameof(dialogueGraphs), nameof(lineLabel) },
         RequiredComponentNames = new[] { "TMPro.TextMeshProUGUI" },
-        SetupSteps = new[] { "Add to a Canvas-backed RPG dialogue panel.", "Assign speaker, line, choice, and issue labels from the UI hierarchy." },
+        SetupSteps = new[] { "Add to a Canvas-backed RPG dialogue panel.", "Assign a line label and at least one authored dialogue graph.", "Assign speaker, choice, and issue labels only when the panel exposes those surfaces." },
         SuccessChecks = new[] { "Open one RPG dialogue panel and verify speaker, line, choices, and validation issues render from authored dialogue data." },
         Tags = new[] { "capability:Dialogue", "runtime:CharacterPawnGameplay", "lane:RPG" }
     )]
@@ -108,6 +108,7 @@ namespace NeonBlack.Gameplay.Modules.Rpg.UI
             if (!TryResolveNpc(result.NpcId, graph, out INpcProfile npc))
                 return Fail($"Dialogue NPC `{result.NpcId}` could not be found.");
 
+            EnsureService();
             RpgOwnerKey owner = ResolveOwner();
             if (!_dialogueService.TryStartSession(owner, npc, graph, out DialogueSessionState state, out string issue))
                 return Fail(issue);
@@ -124,6 +125,7 @@ namespace NeonBlack.Gameplay.Modules.Rpg.UI
             if (_activeGraph == null)
                 return Fail("No active dialogue graph is open.");
 
+            EnsureService();
             if (!_dialogueService.TryContinue(ResolveOwner(), _activeGraph, out DialogueSessionState state, out string issue))
                 return Fail(issue);
 
@@ -138,6 +140,7 @@ namespace NeonBlack.Gameplay.Modules.Rpg.UI
             if (_activeGraph == null)
                 return Fail("No active dialogue graph is open.");
 
+            EnsureService();
             if (!_dialogueService.TrySelectChoice(ResolveOwner(), _activeGraph, choiceId, out DialogueSessionState state, out string issue))
                 return Fail(issue);
 
@@ -190,6 +193,7 @@ namespace NeonBlack.Gameplay.Modules.Rpg.UI
             }
 
             CurrentNode = node;
+            EnsureService();
             AvailableChoices = _dialogueService.GetAvailableChoices(ResolveOwner(), _activeGraph);
             Render();
         }
