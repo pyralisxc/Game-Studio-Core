@@ -679,3 +679,17 @@ Verification:
 - Confirmed enemy reaction and hitbox feedback calls use null-safe optional sink resolution.
 - Scoped `git diff --check` passed for touched files.
 - Unity Editor Test Runner proof remains manual because batch mode currently stalls on Unity Licensing Client reconnects before test discovery.
+
+### Actor Animation Conditional Reference Contract
+
+Changes:
+
+- Narrowed `ActorAnimationDriver` always-required PYS fields to the authored presentation and animation profiles.
+- Moved Animator, Visual Root, Billboard Target, and Camera Override into conditional setup guidance because the component resolves child references and only needs camera override for billboard presentation.
+
+Verification:
+
+- Confirmed `ActorAnimationDriver.ResolveReferences` finds child `Animator`, child `SpriteRenderer`, `BillboardFacing3D`, `ActorShadowDriver`, `visualRoot`, and `billboardTarget` fallbacks.
+- Confirmed runtime validation already reports missing Animator only when no child Animator exists, and reports missing camera override only for `Billboard2_5D`.
+- Scoped `git diff --check` passed for touched files.
+- Unity Editor Test Runner proof remains manual because batch mode currently stalls on Unity Licensing Client reconnects before test discovery.

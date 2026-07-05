@@ -15,12 +15,14 @@ namespace NeonBlack.Gameplay.Presentation.Animation
         Surface = AuthoringSurface.RuntimeComponent,
         Summary = "Bridges gameplay signals (Move, Jump, Attack) to Animator parameters, plus sprite/billboard facing.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/animation",
-        RequiredFields = new[] { nameof(animator), nameof(presentationProfile), nameof(animationProfile), nameof(visualRoot), nameof(billboardTarget), nameof(cameraOverride) },
+        RequiredFields = new[] { nameof(presentationProfile), nameof(animationProfile) },
         SetupSteps = new[] 
         { 
             "Assign Animator component (searches children if empty).",
             "Assign Presentation Profile for mode defaults (2D vs 3D).",
-            "Assign Animation Profile with signal-to-parameter bindings."
+            "Assign Animation Profile with signal-to-parameter bindings.",
+            "Assign Visual Root, Billboard Target, or Animator only when child-object inference is not sufficient.",
+            "Assign Camera Override only when the presentation mode is Billboard2_5D and no runtime camera service applies one."
         },
         SuccessChecks = new[] { "Enter Play Mode. Verify the 'Speed' and 'IsGrounded' parameters on the Animator react to pawn movement." },
         Tags = new[] { "capability:Animation" },
