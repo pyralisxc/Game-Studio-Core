@@ -21,12 +21,13 @@ Completed evidence:
 - The package-wide ownership audit exists at `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/AUTHORING_SURFACE_REFACTOR_AUDIT.md`.
 - Living architecture docs and the gameplay README define the package-wide authoring-surface target instead of a pawn-only cleanup.
 - The dedicated refactor changelog exists at `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/AUTHORING_SURFACE_REFACTOR_CHANGELOG.md` and records each committed slice.
-- Feedback, presentation, collectibles, tabletop, route policy, profile metadata, camera, scene service, projectile, enemy, RPG item, pawn movement, and validation-required-field cleanup slices have been committed.
+- Feedback, presentation, collectibles, tabletop, route policy, profile metadata, camera, scene service, projectile, enemy, RPG item, pawn movement, optional media, optional sink, and modular profile cleanup slices have been committed.
 - Runtime-created object pressure has been classified in the audit as valid runtime output, reviewed setup repair, or deferred review.
+- Unity batch smoke resolves packages after the corrected external PYS Authoring package path.
 
 Remaining evidence before this goal can be called complete:
 
-- Unity Editor compile and Unity Test Runner proof still need to run for `com.neonblackinteractivellc.neonblackhub`.
+- Unity Editor compile and Unity Test Runner proof still need to run for `com.neonblackinteractivellc.neonblackhub`; batch Test Runner currently stalls on Unity Licensing Client reconnects before test discovery, so Editor Test Runner is the active proof surface.
 - Package samples remain intentionally untouched; Cameron plans to hand-author samples from working code, so sample proof is not complete.
 - Remaining higher-risk cleanup should focus on real ownership consolidation, stale-doc folding, and Unity proof rather than broad metadata sweeps.
 - Existing unrelated local/generated changes remain outside this lane: `.plastic/*`, `Game Studio Core.slnx`, and `Tools/Validation/Run-PreSceneValidation.ps1`.

@@ -739,3 +739,18 @@ Verification:
 - Confirmed top-down hop validation is conditional on the movement profile's effective movement style and jump setting.
 - Scoped `git diff --check` passed for touched files.
 - Unity Editor Test Runner proof remains manual because batch mode currently stalls on Unity Licensing Client reconnects before test discovery.
+
+### Plan And Audit Status Refresh
+
+Changes:
+
+- Updated the implementation plan current-status section to include optional media, optional sink, and modular profile cleanup slices.
+- Updated the authoring surface audit current-progress section to reflect the corrected PYS package path smoke proof and the remaining Editor Test Runner proof.
+- Clarified that remaining `RequiredFields` hits are now mostly identity, prefab, UI, or concrete component setup surfaces rather than broad optional media/profile false positives.
+
+Verification:
+
+- Confirmed Unity version remains `6000.4.0f1`.
+- Confirmed the current worktree dirty set still contains only known unrelated/generated files outside this lane.
+- Scoped `git diff --check` passed for touched docs.
+- Unity Editor Test Runner proof remains manual because batch mode currently stalls on Unity Licensing Client reconnects before test discovery.
