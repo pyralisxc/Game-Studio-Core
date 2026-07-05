@@ -67,7 +67,7 @@ If `package.json` still says an older version, that machine has an older copy of
 
 1. Read `Members/Pyralis/Gameplay/README.md`, then use Unity Inspector fields, project assets, and PYS Authoring evidence for scene-specific setup guidance.
 2. Add `GameplaySessionBootstrap` to your scene.
-3. Open the PYS Authoring Window or select the bootstrap and use its `Setup Flow` foldout.
+3. Open the PYS Authoring Window from the installed `com.pys.authoring` package.
 4. In the Project window, select the folder you want to own the setup assets, then right-click and create the needed `NeonBlack/Gameplay/...` definitions and profiles.
 5. Use the Authoring Window as the route map, and use Inspector fields plus Project-window drag/drop to wire the scene natively.
 6. Use module-owned inspectors for local field setup and PYS Authoring projections for route evidence, proof readiness, and cross-object setup truth.

@@ -12,6 +12,19 @@ Scope rules:
 
 ## 2026-07-04
 
+### Package README Setup Guidance
+
+Changes:
+
+- Removed the stale package README claim that selecting `GameplaySessionBootstrap` exposes a `Setup Flow` foldout.
+- Kept the supported setup path focused on opening PYS Authoring from the installed external package, then using Unity Inspector and Project-window authoring.
+
+Verification:
+
+- Scoped search found no gameplay-package bootstrap inspector or local `Setup Flow` implementation.
+- Scoped `git diff --check` passed for touched docs.
+- Unity Test Runner was not run because this slice is docs-only.
+
 ### Required Field Sweep Status
 
 Changes:
