@@ -12,6 +12,21 @@ Scope rules:
 
 ## 2026-07-05
 
+### Feedback HUD Local Widget Validation
+
+Changes:
+
+- Removed hard PYS required fields for `ParticipantTimedTextPanel.label` and `ParticipantHealthHudBinder.healthPanels`.
+- Downgraded missing local HUD widget surfaces in `ParticipantTimedTextPanel`, `ParticipantHealthPanel`, `ParticipantHealthHudBinder`, and `ParticipantFeedbackHudPresenter` from required validation to recommended validation.
+- Kept the existing Feedback HUD ownership split intact; no scene, prefab, sample, or `Assets/` content was touched.
+- Added focused runtime assertions proving missing HUD widget surfaces no longer produce required validation issues.
+
+Verification:
+
+- Scoped code inspection confirmed the affected presenters/binders null-check missing labels/panels before rendering.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run from shell; run `FeedbackHudBindingTests` in the Unity Editor Test Runner.
+
 ### Collectible Feedback Optional Media Validation
 
 Changes:

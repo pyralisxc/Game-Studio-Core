@@ -11,8 +11,7 @@ namespace NeonBlack.Gameplay.Modules.Feedback.UI
         CapabilityPath = "UI/HUD/Participant Timed Text Panel",
         Surface = AuthoringSurface.Goal,
         Summary = "Displays temporary text messages (e.g., 'Level Up', 'K.O.') on the HUD.",
-        RequiredFields = new[] { nameof(label) },
-        SetupSteps = new[] { "Attach to a UI panel inside a Canvas." },
+        SetupSteps = new[] { "Attach to a UI panel inside a Canvas.", "Assign a TMP label when this panel should render messages." },
         SuccessChecks = new[] { "Call ShowText() from a script and verify the label appears on screen." },
         Tags = new[] { "capability:UI" }
     )]
@@ -47,7 +46,7 @@ namespace NeonBlack.Gameplay.Modules.Feedback.UI
         public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (label == null)
-                yield return RuntimeValidationIssue.Required("`ParticipantTimedTextPanel` should reference a TextMeshProUGUI label.");
+                yield return RuntimeValidationIssue.Recommended("`ParticipantTimedTextPanel` has no TextMeshProUGUI label assigned, so it cannot render timed HUD text.");
         }
     }
 }

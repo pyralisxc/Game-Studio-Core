@@ -33,7 +33,7 @@ namespace NeonBlack.Gameplay.Tests.Runtime
         }
 
         [Test]
-        public void ParticipantHealthHudBinder_WithoutHealthPanel_ReportsMissingPanelSurface()
+        public void ParticipantHealthHudBinder_WithoutHealthPanel_ReportsRecommendedPanelSurface()
         {
             GameObject root = new GameObject("Health Hud Root");
 
@@ -45,7 +45,37 @@ namespace NeonBlack.Gameplay.Tests.Runtime
                     .GetRuntimeValidationIssues()
                     .ToArray();
 
-                Assert.That(issues.Select(issue => issue.Message), Does.Contain("`ParticipantHealthHudBinder` should reference at least one `ParticipantHealthPanel`."));
+                Assert.That(issues, Has.Exactly(1).Matches<RuntimeValidationIssue>(issue =>
+                    issue.Severity == RuntimeValidationSeverity.Recommended
+                    && issue.Message.Contains("no ParticipantHealthPanel")));
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void FeedbackHudWidgets_WithMissingLocalSurfaces_ReportNoRequiredIssues()
+        {
+            GameObject root = new GameObject("Feedback Hud Root");
+
+            try
+            {
+                IRuntimeValidationProvider[] providers =
+                {
+                    root.AddComponent<ParticipantTimedTextPanel>(),
+                    root.AddComponent<ParticipantHealthPanel>(),
+                    root.AddComponent<ParticipantFeedbackHudPresenter>()
+                };
+
+                RuntimeValidationIssue[] issues = providers
+                    .SelectMany(provider => provider.GetRuntimeValidationIssues())
+                    .ToArray();
+
+                Assert.That(issues, Is.Not.Empty);
+                Assert.That(issues, Has.None.Matches<RuntimeValidationIssue>(issue =>
+                    issue.Severity == RuntimeValidationSeverity.Required));
             }
             finally
             {

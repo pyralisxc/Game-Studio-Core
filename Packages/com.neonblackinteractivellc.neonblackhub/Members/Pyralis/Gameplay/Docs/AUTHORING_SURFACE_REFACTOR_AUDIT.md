@@ -32,6 +32,7 @@ Remaining review:
 - `VirtualJoystick` CanvasGroup auto-add remains deferred until a scene/sample pass can preserve authored content.
 - Generic sprite-to-GameObject spawning remains supported as prototype utility output, with validation guidance steering reusable package content toward authored prefabs.
 - `CollectibleFeedback2D` optional clip/particle setup no longer reports missing collect clip or collect FX as required validation. AudioSource validation only appears when audio clips are assigned, and mixer routing is recommended evidence because audio still plays without settings routing.
+- Feedback HUD widget surfaces (`ParticipantTimedTextPanel`, `ParticipantHealthPanel`, `ParticipantHealthHudBinder`, and `ParticipantFeedbackHudPresenter`) now report missing local labels/panels as recommended validation rather than required PYS setup blockers. The Feedback capability can still exist while Unity-local widget assignment remains an Inspector/prefab concern.
 
 ## Classification Rules
 
@@ -222,7 +223,7 @@ Reviewed on 2026-07-04. Retain the Feedback UI split:
 - `ActorFeedbackComponent` is the actor-local publisher.
 - `ActorFloatingFeedbackReceiver`, `DamageNumberSpawner`, and `DamageNumber` are presentation owners for world-space feedback and pooled numeric output.
 
-Do not collapse these into one HUD/feedback script. Reviewed again on 2026-07-05: direct TMP label compatibility remains current because `Members/Public/La Cucarachacha/Scenes/MainMenu.unity` still serializes `statusLabel` on `ParticipantFeedbackHudPresenter`. The remaining simplification pressure is to keep contracts accurate, remove direct-label compatibility only after authored scenes no longer serialize it, and keep status/damage/heal routing behavior complete.
+Do not collapse these into one HUD/feedback script. Reviewed again on 2026-07-05: direct TMP label compatibility remains current because `Members/Public/La Cucarachacha/Scenes/MainMenu.unity` still serializes `statusLabel` on `ParticipantFeedbackHudPresenter`. Local widget gaps are recommended Inspector/prefab issues rather than required PYS route blockers. The remaining simplification pressure is to keep contracts accurate, remove direct-label compatibility only after authored scenes no longer serialize it, and keep status/damage/heal routing behavior complete.
 
 ### Traversal Profile Ownership Review
 

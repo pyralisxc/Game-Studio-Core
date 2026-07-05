@@ -11,7 +11,6 @@ namespace NeonBlack.Gameplay.Modules.Feedback.UI
         CapabilityPath = "UI/HUD/Participant Health Hud Binder",
         Surface = AuthoringSurface.Goal,
         Summary = "Binds participant health state to UI elements like labels and progress bars.",
-        RequiredFields = new[] { nameof(healthPanels) },
         SetupSteps = new[] { "Attach to HUD canvas element", "Assign or child a ParticipantHealthPanel" },
         SuccessChecks = new[] { "The health bar updates when the tracked participant takes damage." },
         Tags = new[] { "capability:UI" }
@@ -38,7 +37,7 @@ namespace NeonBlack.Gameplay.Modules.Feedback.UI
             bool hasPanelSurface = healthPanels != null && healthPanels.Length > 0;
 
             if (!hasPanelSurface)
-                yield return RuntimeValidationIssue.Required("`ParticipantHealthHudBinder` should reference at least one `ParticipantHealthPanel`.");
+                yield return RuntimeValidationIssue.Recommended("`ParticipantHealthHudBinder` has no ParticipantHealthPanel assigned or childed, so it cannot display participant health.");
         }
 
         private void CachePanels()

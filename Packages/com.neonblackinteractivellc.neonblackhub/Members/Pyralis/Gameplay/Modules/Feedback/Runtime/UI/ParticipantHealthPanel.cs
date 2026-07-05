@@ -34,7 +34,7 @@ namespace NeonBlack.Gameplay.Modules.Feedback.UI
         public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (healthLabel == null && healthFillImage == null)
-                yield return RuntimeValidationIssue.Required("`ParticipantHealthPanel` should reference a health label, a fill image, or both.");
+                yield return RuntimeValidationIssue.Recommended("`ParticipantHealthPanel` has no health label or fill image assigned, so it cannot display health.");
         }
     }
 }

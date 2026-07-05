@@ -138,7 +138,7 @@ namespace NeonBlack.Gameplay.Modules.Feedback.UI
                 || (combatAlertPanels != null && combatAlertPanels.Length > 0);
 
             if (!hasDirectLabelSurface && !hasPanelSurface)
-                yield return RuntimeValidationIssue.Required("`ParticipantFeedbackHudPresenter` should reference at least one feedback label or timed text panel.");
+                yield return RuntimeValidationIssue.Recommended("`ParticipantFeedbackHudPresenter` has no feedback label or timed text panel assigned, so participant feedback will not render.");
         }
 
         private void CachePanels()
