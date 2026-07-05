@@ -232,12 +232,37 @@ namespace NeonBlack.Gameplay.Tests.Runtime
                 GameplayWiringReport report = GameplayWiringReportBuilder.Build(root, session);
 
                 Assert.That(
-                    report.Rows.Any(row =>
-                        row.Kind == GameplayWiringRowKind.ServiceActivation
-                        && row.Contract == "CombatServices"
-                        && row.Provider == "RuntimeFeatureServicePolicy"
-                        && row.Receiver == "FeatureServiceInstaller"),
+                    HasServiceActivation(report, "CombatServices"),
                     Is.True);
+            }
+            finally
+            {
+                Object.DestroyImmediate(participant);
+                Object.DestroyImmediate(mode);
+                Object.DestroyImmediate(session);
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void Build_WithCompleteScoringRoute_ReportsScoringGameFlowAndFeedbackActivation()
+        {
+            GameObject root = new GameObject("Gameplay Wiring Report Test");
+            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
+            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
+            ParticipantDefinition participant = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            try
+            {
+                root.AddComponent<GameplaySessionBootstrap>();
+                mode.enableScore = true;
+                session.defaultGameMode = mode;
+                session.defaultParticipants = new[] { participant };
+
+                GameplayWiringReport report = GameplayWiringReportBuilder.Build(root, session);
+
+                Assert.That(HasServiceActivation(report, "GameFlowServices"), Is.True);
+                Assert.That(HasServiceActivation(report, "ScoringServices"), Is.True);
+                Assert.That(HasServiceActivation(report, "FeedbackServices"), Is.True);
             }
             finally
             {
@@ -253,6 +278,15 @@ namespace NeonBlack.Gameplay.Tests.Runtime
             return report.Rows.Any(row =>
                 row.Kind == GameplayWiringRowKind.MissingProvider
                 && row.Contract == contract);
+        }
+
+        private static bool HasServiceActivation(GameplayWiringReport report, string contract)
+        {
+            return report.Rows.Any(row =>
+                row.Kind == GameplayWiringRowKind.ServiceActivation
+                && row.Contract == contract
+                && row.Provider == "RuntimeFeatureServicePolicy"
+                && row.Receiver == "FeatureServiceInstaller");
         }
     }
 }

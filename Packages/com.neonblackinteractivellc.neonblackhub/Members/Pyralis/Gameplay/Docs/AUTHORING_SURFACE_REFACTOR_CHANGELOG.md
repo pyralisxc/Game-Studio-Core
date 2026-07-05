@@ -23,6 +23,7 @@ Changes:
 - Protected the matching route-complete behavior so concrete missing roster, spawn, and input providers appear once the session has a default game mode and participant route.
 - Protected participant join timing evidence so PlayerInputManager with multiple auto-join participants reports one semantic `ParticipantJoinRoute` row.
 - Protected authored combat feature activation evidence so complete combat routes report a `CombatServices` service activation row.
+- Protected authored scoring feature activation evidence so complete scoring routes report `ScoringServices`, `GameFlowServices`, and `FeedbackServices` rows.
 - Updated the plan, audit, and runtime wiring audit current-status sections to record this wiring-report proof slice.
 
 Verification:

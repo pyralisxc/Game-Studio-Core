@@ -25,7 +25,7 @@ Completed evidence:
 - Runtime-created object pressure has been classified in the audit as valid runtime output, reviewed setup repair, or deferred review.
 - The obvious numeric/tuning `RequiredFields` false-positive scan is clean; remaining hits are primarily identifiers, definitions, UI/prefab/component references, physics masks, or concrete route services.
 - Unity batch smoke resolves packages after the corrected external PYS Authoring package path.
-- Focused runtime tests now protect the first wiring-report parity rules: canonical missing `SessionDefinition` rows suppress duplicate local validation rows; route-dependent camera guidance is deferred until route evidence exists; participant service and feature activation rows wait for a complete participant route; complete participant routes report concrete missing participant-service providers; PlayerInputManager plus multiple auto-join participants reports one semantic join timing issue; authored combat routes report combat feature activation.
+- Focused runtime tests now protect the first wiring-report parity rules: canonical missing `SessionDefinition` rows suppress duplicate local validation rows; route-dependent camera guidance is deferred until route evidence exists; participant service and feature activation rows wait for a complete participant route; complete participant routes report concrete missing participant-service providers; PlayerInputManager plus multiple auto-join participants reports one semantic join timing issue; authored combat routes report combat feature activation; authored scoring routes report scoring, game-flow, and feedback service activation.
 
 Remaining evidence before this goal can be called complete:
 

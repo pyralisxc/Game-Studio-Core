@@ -277,6 +277,7 @@ Current protected behavior:
 - complete participant routes report concrete missing participant roster, spawn, and input providers
 - PlayerInputManager with multiple auto-join participants reports one `ParticipantJoinRoute` timing issue
 - authored combat routes report `CombatServices` feature activation evidence
+- authored scoring routes report `ScoringServices`, `GameFlowServices`, and `FeedbackServices` activation evidence
 
 Compare report rows with existing inspector warnings, validators, and PYS exports.
 
