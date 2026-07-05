@@ -9,6 +9,7 @@
                        "NeonBlack.Gameplay.Modules.Input",
                        "NeonBlack.Gameplay.Modules.Interaction",
                        "NeonBlack.Gameplay.Modules.Feedback",
+                       "NeonBlack.Gameplay.Presentation",
                        "Unity.InputSystem"
                    ],
     "optionalUnityReferences":  [

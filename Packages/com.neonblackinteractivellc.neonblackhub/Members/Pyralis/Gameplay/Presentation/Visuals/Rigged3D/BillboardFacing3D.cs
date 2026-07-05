@@ -15,11 +15,10 @@ namespace NeonBlack.Gameplay.Presentation.Visuals
         Surface = AuthoringSurface.Goal,
         Summary = "Forces a 3D object to face the camera and supports left/right mirroring.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/visuals",
-        RequiredFields = new[] { nameof(target) },
         SetupSteps = new[] 
     { 
         "Attach to a 3D visual object.",
-        "Assign Target (usually this Transform).",
+        "Assign Target only when facing should rotate a child or alternate transform.",
         "Assign Camera Override (optional)."
     },
         SuccessChecks = new[] { "Move the camera and verify the object rotates to face it." },
@@ -30,7 +29,6 @@ public class BillboardFacing3D : MonoBehaviour, IRuntimeValidationProvider, IBil
 {
     public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
     {
-        if (target == null) yield return RuntimeValidationIssue.Required("Target transform is unassigned.");
         if (cameraOverride == null) yield return RuntimeValidationIssue.Recommended("Camera Override is empty. This is valid when another system assigns the gameplay camera at runtime.");
     }
     public enum FacingMode

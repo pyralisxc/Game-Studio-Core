@@ -35,13 +35,13 @@ namespace NeonBlack.Gameplay.Presentation.Visuals
                 yield return RuntimeValidationIssue.Recommended("No authored shadow renderer or model renderers assigned. Runtime profile application may still resolve renderer-shadow output.");
 
             if (RequiresBlobShadowRenderer())
-                yield return RuntimeValidationIssue.Required("Blob shadow mode needs either an authored Shadow Sprite Renderer or a Shadow Prefab on the Pawn Presentation Profile.");
+                yield return RuntimeValidationIssue.Recommended("Blob shadow mode has no authored Shadow Sprite Renderer or Shadow Prefab, so blob shadow output will not render.");
 
             if (presentationProfile != null
                 && presentationProfile.shadowPrefab != null
                 && presentationProfile.shadowPrefab.GetComponentInChildren<SpriteRenderer>(true) == null)
             {
-                yield return RuntimeValidationIssue.Required("Shadow Prefab has no child SpriteRenderer for blob shadow output.");
+                yield return RuntimeValidationIssue.Recommended("Shadow Prefab has no child SpriteRenderer for blob shadow output.");
             }
         }
         [Header("Scene References")]

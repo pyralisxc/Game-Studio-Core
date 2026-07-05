@@ -12,6 +12,22 @@ Scope rules:
 
 ## 2026-07-05
 
+### Presentation Helper Validation
+
+Changes:
+
+- Removed `BillboardFacing3D.target` from hard PYS required fields because the component falls back to its own transform.
+- Kept missing billboard camera override as recommended runtime-assignment guidance.
+- Downgraded incomplete `ActorShadowDriver` blob-shadow output from required to recommended validation.
+- Added focused presentation validation tests and added `NeonBlack.Gameplay.Presentation` to the runtime test assembly references.
+
+Verification:
+
+- Scoped code inspection confirmed `BillboardFacing3D.ApplyBillboard()` uses `target != null ? target : transform`.
+- Scoped code inspection confirmed `ActorShadowDriver` safely returns when active shadow root/renderer are absent.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run from shell; run `PresentationValidationTests` in the Unity Editor Test Runner.
+
 ### Participant Join Route Policy
 
 Changes:

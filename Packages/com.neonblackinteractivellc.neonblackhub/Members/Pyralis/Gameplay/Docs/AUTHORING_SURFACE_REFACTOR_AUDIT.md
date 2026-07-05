@@ -34,6 +34,7 @@ Remaining review:
 - `CollectibleFeedback2D` optional clip/particle setup no longer reports missing collect clip or collect FX as required validation. AudioSource validation only appears when audio clips are assigned, and mixer routing is recommended evidence because audio still plays without settings routing.
 - Feedback HUD widget surfaces (`ParticipantTimedTextPanel`, `ParticipantHealthPanel`, `ParticipantHealthHudBinder`, and `ParticipantFeedbackHudPresenter`) now report missing local labels/panels as recommended validation rather than required PYS setup blockers. The Feedback capability can still exist while Unity-local widget assignment remains an Inspector/prefab concern.
 - Participant join timing now uses one shared `ParticipantJoinRoutePolicy` for both `ParticipantInputRouter` runtime deferral and `GameplayWiringReportBuilder` timing evidence, removing duplicated auto-join counting and message ownership.
+- Presentation helpers now avoid required PYS blockers for locally recoverable visual output: `BillboardFacing3D` no longer requires `target` because it falls back to its own transform, and `ActorShadowDriver` reports missing blob-shadow output as recommended presentation evidence.
 
 ## Classification Rules
 
@@ -329,7 +330,7 @@ These should remain display-focused. Refactors should move gameplay rules out of
 - `Modules/Tabletop/UI/*.cs`
 - `Modules/Feedback/Runtime/UI/*.cs`
 
-Presentation visual review note: keep `SpriteFlasher` and `TextFlasher` as separate concrete Unity targets because SpriteRenderer and TMP_Text color ownership are different authoring surfaces. They should share the profile-backed `IVisualFlashPlayer` contract and avoid mutating shared materials.
+Presentation visual review note: keep `SpriteFlasher` and `TextFlasher` as separate concrete Unity targets because SpriteRenderer and TMP_Text color ownership are different authoring surfaces. They should share the profile-backed `IVisualFlashPlayer` contract and avoid mutating shared materials. `BillboardFacing3D` and `ActorShadowDriver` remain concrete presentation helpers; their missing target/shadow output warnings should guide prefab inspection without blocking PYS route readiness.
 
 Settings UI review note: keep `SettingsMenu` and `SettingsScreen` separate. `SettingsMenu` owns concrete settings controls for main-menu panels; `SettingsScreen` owns page swapping and optional gameplay pause. Their settings service can be injected by Glue or assigned through the Inspector, and individual UI controls are optional when a panel does not expose that setting.
 
