@@ -12,6 +12,21 @@ Scope rules:
 
 ## 2026-07-05
 
+### Sectioned Refactor Audit Plan
+
+Changes:
+
+- Added a sectioned package-wide simplification audit to the active authoring-surface refactor audit.
+- Recorded current runtime script counts by top-level section and module group.
+- Added an ordered refactor plan that keeps Feedback/HUD first, then runtime wiring, Presentation, Hazards, RPG, and only later Combat/Character.
+- Added active-doc cleanup rules so future section plans fold into living docs instead of becoming parallel stale files.
+
+Verification:
+
+- Scoped inventory commands counted runtime scripts by section and module.
+- Scoped stale-word search reviewed active docs and confirmed remaining old names are either current compatibility notes or historical changelog evidence.
+- Unity Test Runner was not run because this slice updates docs/planning only.
+
 ### Feedback HUD Target Binding Removal
 
 Changes:
@@ -138,7 +153,7 @@ Changes:
 
 - Added the active authoring-surface refactor audit and changelog to the gameplay docs index.
 - Added the active refactor audit and changelog to gameplay README recommended reading while this simplification lane is active.
-- Marked the stale-doc search step complete in the implementation plan; broader stale-doc folding remains open.
+- Marked the stale-doc search step complete in the implementation plan for that checkpoint.
 
 Verification:
 

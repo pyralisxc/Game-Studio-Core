@@ -38,6 +38,78 @@ Remaining review:
 - Presentation helpers now avoid required PYS blockers for locally recoverable visual output: `BillboardFacing3D` no longer requires `target` because it falls back to its own transform, and `ActorShadowDriver` reports missing blob-shadow output as recommended presentation evidence.
 - RuntimeSceneSearch feature evidence now appears in the wiring report as inventory-only rows for combat, enemy, RPG, game-flow, scoring, and feedback service families. Registration still follows the existing `RuntimeFeatureServicePolicy` and installer paths.
 
+## Sectioned Simplification Audit
+
+This is the current package-wide cleanup map after the Feedback/HUD opening slices. Counts exclude editor-only scripts.
+
+| Section | Runtime scripts | Current role | Simplification pressure | Next posture |
+| --- | ---: | --- | --- | --- |
+| `Core` | 72 | Stable contracts, tiny shared type vocabulary, and neutral runtime language. | Keep small; do not turn contracts into behavior. Watch for contracts that only exist for one obsolete caller. | Audit only when deleting a concrete feature seam or replacing direct communication with a better command/event/state-reader contract. |
+| `Data` | 160 | ScriptableObject definitions, profiles, config, and data-backed handoff contracts. | High field/profile count can become a second implementation layer if profiles collect local fallback values. | Favor focused capability profiles. Remove required PYS fields that duplicate runtime validation or sanitized tuning. Do not create a mega profile. |
+| `Glue` | 40 | Bootstrap, lifetime, participant services, feature service registration, scene flow, spawning, and wiring reports. | Largest current file is `GameplayWiringReportBuilder` at 807 lines. Glue can become a smart manager if report/build/register policies are not separated by ownership. | Continue policy extraction and report parity first. Do not move folders or delete service addresses until `RUNTIME_WIRING_AUDIT.md` parity gates are complete. |
+| `Modules/Character` | 49 | Pawn identity, movement, physical state, and pawn-facing sibling modules. | Visible pawn surfaces must stay readable, but movement internals are large enough to hide feature behavior. | Preserve current pawn surfaces. Move internal lanes into private models/state machines only when it reduces inspector-facing components or duplicated ownership. |
+| `Modules/Combat` | 58 | Health, hitboxes, weapons, pawn combat, enemy combat, projectiles, combat state, and combat UI. | High script count is expected, but direct feature coupling and component-local fallback combat payloads remain the main risk. | Keep authored combat definitions as source truth. Consolidate only duplicate hitbox/projectile/weapon adapters with reference checks and tests. |
+| `Modules/Feedback` | 19 | Actor feedback publishers/receivers, participant feedback stream, HUD surfaces, and damage-number output. | Opening cleanup removed hidden HUD base glue. Remaining pressure is direct TMP label compatibility and pooled damage-number implementation surface. | Keep concrete HUD widgets. Remove direct label compatibility only after serialized scene refs disappear. Consider internalizing `DamageNumber` after editor/prefab references are checked. |
+| `Modules/Hazards` | 22 | Hazard profiles, runtime zones, spawners, impact data, and hazard feedback. | Several large hazard files suggest profile/application and runtime-output lanes may be mixed. | Audit `HazardSpawner`, `Hazard`, and `HazardDifficultyController` for profile-owned payloads versus scene output before moving code. |
+| `Modules/Rpg` | 38 | RPG services, UI presenters, panel routers, and RPG domain runtime. | UI presenter count and file size are high; risk is one panel becoming a local game framework. | Start with panel presenter ownership tables. Extract reusable view helpers only when multiple presenters duplicate identical UI mechanics. |
+| `Modules/Input` | 5 | Input readers/adapters for participant-owned pawn control. | Low count, but `PlayerInputHandler` remains large and easy to overuse as direct setup surface. | Keep `Motor2DInputAdapter` as beginner surface. Treat `PlayerInputHandler` as lower-level implementation unless custom input routes need it. |
+| `Modules/Interaction` | 9 | Collectibles and interaction dispatch surfaces. | Moderate; likely healthy after score-sink cleanup, but generic spawning still needs sample/editor proof. | Keep collectible behavior module-owned. Avoid moving score/hazard coupling back into concrete modules. |
+| `Modules/Tabletop` | 9 | Board/action runtime and scene-facing board UI. | Runtime-created board views are valid output, but presenter complexity can grow quickly. | Keep generated board/piece views as output. Move reusable board UI mechanics to helpers only after duplicate presenter code appears. |
+| `Modules/Traversal` | 9 | Traversal profile application and 3D traversal capability. | Current count is controlled. Main risk is leaking Character references back into traversal. | Preserve Data-owned traversal seams and profile ownership. Do not collapse traversal into movement unless setup becomes clearer. |
+| `Modules/Enemies` | 17 | Enemy AI, combat handoff, reaction, movement, and editor-facing enemy ownership. | Watch same-capability direct combat edges; some are still accepted, but should remain explainable. | Keep enemy decisions issuing combat commands. Do not move combat setup back into enemy editor/runtime. |
+| `Modules/Scoring` | 5 | Score service and score/bonus scene components. | Low count. Main risk is old scene naming or placeholder service assumptions. | Keep score sink/event seams. Audit old member scene identifiers before deleting compatibility. |
+| `Modules/Encounters`, `Environment`, `Settings`, `Spawning` | 8 total | Small focused feature/runtime utility lanes. | Low script count; risk is premature consolidation into broader managers. | Leave mostly unchanged unless a concrete stale adapter or duplicate route appears. |
+| `Networking` | 7 | Optional NGO extension layer. | Should remain isolated and opt-in. | Avoid touching during simplification unless shared DTOs or authority seams drift. |
+| `Presentation` | 16 | Camera, animation, visual, HUD infrastructure. | Large camera/animation files and runtime-created helper output need disciplined proof. | Keep concrete Unity surfaces. Extract only proven reusable policy/model code; do not move module behavior into Presentation. |
+
+Current metrics:
+
+- Runtime script counts by top-level section: Core 72, Data 160, Glue 40, Modules 248, Networking 7, Presentation 16.
+- Runtime script counts by largest module groups: Combat 58, Character 49, RPG 38, Hazards 22, Feedback 19, Enemies 17.
+- Largest runtime files currently include `GameplayWiringReportBuilder`, `HazardSpawner`, `CinemachineCameraRigController`, `DialogueService`, `CameraRigProfileApplier`, `ActorAnimationDriver`, and multiple RPG panel presenters.
+- Name-pattern scan found 71 manager/router/binder/presenter/adapter/relay/service/controller class declarations. These are review pressure, not automatic deletion.
+- Scene search/runtime creation scan found 65 `GetComponentsInChildren`, find, instantiate, or `new GameObject` hits across runtime package sections. Classify each as valid runtime output, setup evidence, or hidden setup repair before changing it.
+- Required-field scan still finds many contracts. Continue narrowing only when a field is identity/profile/route meaning versus optional tuning or local widget state.
+
+## Sectioned Refactor Plan
+
+Order matters. Do not chase script-count reduction before proving ownership and serialized-reference safety.
+
+1. Feedback/HUD follow-up
+   - Keep `ParticipantHealthHudBinder`, `ParticipantHealthPanel`, `ParticipantTimedTextPanel`, `ParticipantFeedbackHudPresenter`, `ParticipantFeedbackRelay`, and `ParticipantFeedbackService`.
+   - Defer direct TMP label removal until `Members/Public/La Cucarachacha/Scenes/MainMenu.unity` no longer serializes `statusLabel`.
+   - Audit `DamageNumberSpawner`/`DamageNumber` next for internalization: `DamageNumber` should likely stop being beginner-facing if no prefab/editor route requires direct Add Component usage.
+
+2. Runtime wiring and Glue
+   - Continue `RUNTIME_WIRING_AUDIT.md` phases before moving folders.
+   - Extract small report/policy helpers only when they reduce duplicated setup meaning.
+   - Keep `GameplaySessionBootstrap`, `GameplayLifetimeScope`, `ParticipantRosterService`, `ParticipantInputRouter`, and `ParticipantSpawnService` stable unless a focused test protects the change.
+
+3. Presentation and camera
+   - Audit `CinemachineCameraRigController`, `CameraRigProfileApplier`, and `ActorAnimationDriver` for private policy/model extraction.
+   - Keep visible Unity components concrete; do not move module runtime behavior into Presentation.
+   - Treat runtime-created camera focus helpers as valid output only when they are explicit routing output, not missing camera-rig repair.
+
+4. Hazards
+   - Audit `HazardSpawner`, `Hazard`, `HazardDifficultyController`, `HazardData`, and hazard feedback for profile-owned payloads versus scene runtime output.
+   - Prefer moving reusable payload/tuning into profiles or data helpers over adding scene components.
+   - Preserve authored hazard prefab/scene references until GUID/reference checks prove safe deletion.
+
+5. RPG UI and services
+   - Build panel-presenter ownership tables before editing.
+   - Merge or internalize only duplicated UI mechanics, not domain behavior.
+   - Keep RPG runtime services under `Modules/Rpg/Runtime`, UI under `Modules/Rpg/UI`, and service registration under Glue.
+
+6. Combat and Character
+   - Leave core pawn/combat surfaces alone until Feedback, Presentation, Hazards, and RPG cleanup have reduced simpler visible noise.
+   - Later slices should target duplicate adapter/helper ownership around hitboxes, projectiles, weapon modules, and combat action state.
+   - Any movement/traversal consolidation must preserve current visible pawn component clarity and Data-owned seams.
+
+7. Active-doc cleanup
+   - Keep `README.md`, `CURRENT_STATE_AUDIT.md`, `ARCHITECTURE_BLUEPRINT.md`, `RUNTIME_WIRING_AUDIT.md`, and this audit as the active doc set for this lane.
+   - Historical changelog entries can mention removed names as evidence, but active audit sections should not list deleted scripts as current candidates or owners.
+   - Delete or fold new side plans into these docs instead of adding more markdown files.
+
 ## Classification Rules
 
 - Owner: owns gameplay behavior or lifecycle.
