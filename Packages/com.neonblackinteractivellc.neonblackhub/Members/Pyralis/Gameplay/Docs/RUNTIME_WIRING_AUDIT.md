@@ -274,6 +274,7 @@ Current protected behavior:
 - duplicate local `GameplaySessionBootstrap.SessionDefinition.Missing` validation rows are suppressed when the canonical missing-provider row exists
 - route-dependent camera guidance is deferred while session route evidence is absent
 - participant roster, spawn, input, and feature activation rows are deferred until the session asset has a default game mode and participant route
+- complete participant routes report concrete missing participant roster, spawn, and input providers
 
 Compare report rows with existing inspector warnings, validators, and PYS exports.
 

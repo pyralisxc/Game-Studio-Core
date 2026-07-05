@@ -136,5 +136,54 @@ namespace NeonBlack.Gameplay.Tests.Runtime
                 Object.DestroyImmediate(root);
             }
         }
+
+        [Test]
+        public void Build_WithCompleteParticipantRoute_ReportsMissingRequiredParticipantProviders()
+        {
+            GameObject root = new GameObject("Gameplay Wiring Report Test");
+            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
+            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
+            ParticipantDefinition participant = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            try
+            {
+                root.AddComponent<GameplaySessionBootstrap>();
+                session.defaultGameMode = mode;
+                session.defaultParticipants = new[] { participant };
+
+                GameplayWiringReport report = GameplayWiringReportBuilder.Build(root, session);
+
+                Assert.That(
+                    HasMissingProvider(report, "ParticipantRosterService"),
+                    Is.True);
+
+                Assert.That(
+                    HasMissingProvider(report, "ParticipantSpawnService"),
+                    Is.True);
+
+                Assert.That(
+                    HasMissingProvider(report, "ParticipantInputRouter"),
+                    Is.True);
+
+                Assert.That(
+                    report.Rows.Any(row =>
+                        row.Kind == GameplayWiringRowKind.TimingIssue
+                        && row.Contract == "ParticipantServiceRoute"),
+                    Is.False);
+            }
+            finally
+            {
+                Object.DestroyImmediate(participant);
+                Object.DestroyImmediate(mode);
+                Object.DestroyImmediate(session);
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        private static bool HasMissingProvider(GameplayWiringReport report, string contract)
+        {
+            return report.Rows.Any(row =>
+                row.Kind == GameplayWiringRowKind.MissingProvider
+                && row.Contract == contract);
+        }
     }
 }
