@@ -12,6 +12,19 @@ Scope rules:
 
 ## 2026-07-04
 
+### Traversal Profile Contract Accuracy
+
+Changes:
+
+- Removed traversal capability toggles from `PawnTraversalProfile` required PYS fields; jump, dodge, climb, and hang are authored profile variation, not mandatory setup.
+- Narrowed `Pawn3DTraversalComponent` required PYS fields to `traversalProfile`; climb/hang toggles, cooldown, and ledge probe settings are applied tuning owned by the component/profile.
+- Added an audit note clarifying that traversal profile tuning is PYS-observable quality evidence, while concrete missing profile/component wiring stays in the Unity inspector path.
+
+Verification:
+
+- Scoped code inspection confirmed `Pawn3DTraversalComponent` applies `PawnTraversalProfile` into climb/hang/cooldown fields and the custom inspector reports missing profile/movement setup.
+- Unity Test Runner was not run from shell; run affected traversal checks in the Unity Editor.
+
 ### Feedback Status Popup Ownership
 
 Changes:

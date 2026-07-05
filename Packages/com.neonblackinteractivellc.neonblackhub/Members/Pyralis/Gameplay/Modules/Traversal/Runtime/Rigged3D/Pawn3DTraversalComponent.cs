@@ -16,7 +16,7 @@ namespace NeonBlack.Gameplay.Modules.Traversal
         Surface = AuthoringSurface.Profile,
         Summary = "3D traversal component; handles ledge climbing, hanging, shimmying, profile tuning, and traversal interaction.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/traversal",
-        RequiredFields = new[] { nameof(traversalProfile), nameof(allowClimb), nameof(allowHang), nameof(climbCooldown), nameof(ledgeProbe) },
+        RequiredFields = new[] { nameof(traversalProfile) },
         RequiredComponentNames = new[] { "NeonBlack.Gameplay.Modules.Character.Motor3D", "NeonBlack.Gameplay.Modules.Character.Pawn3DMovementComponent" },
         RequiredInterfaces = new[] { typeof(IActorTraversalFeature), typeof(IActorInteractionHandler) },
         SetupSteps = new[]

@@ -17,7 +17,7 @@ Completed in this lane:
 
 - Baseline package inventory and ownership classification are in place.
 - Living architecture docs now describe the authoring-surface refactor as package-wide.
-- Feedback, presentation, collectible, tabletop, profile, route policy, scene service, enemy, projectile, RPG item, pawn movement, optional media, optional sink, and modular pawn profile contracts have been narrowed where PYS required fields were duplicating Unity-local validation, profile-owned tuning, route-conditional setup, or runtime request data.
+- Feedback, presentation, collectible, tabletop, profile, route policy, scene service, enemy, projectile, RPG item, pawn movement, traversal, optional media, optional sink, and modular pawn profile contracts have been narrowed where PYS required fields were duplicating Unity-local validation, profile-owned tuning, route-conditional setup, or runtime request data.
 - Runtime-created object pressure has been classified so gameplay output is not confused with hidden setup repair.
 - Unity batch smoke resolves packages after the corrected external PYS Authoring package path.
 - The dedicated changelog records the evidence and verification for each slice.
@@ -220,6 +220,12 @@ Reviewed on 2026-07-04. Retain the Feedback UI split:
 - `ActorFloatingFeedbackReceiver`, `DamageNumberSpawner`, and `DamageNumber` are presentation owners for world-space feedback and pooled numeric output.
 
 Do not collapse these into one HUD/feedback script. The remaining simplification pressure is to keep contracts accurate, remove stale direct-label compatibility only after authored scenes no longer serialize it, and keep status/damage/heal routing behavior complete.
+
+### Traversal Profile Ownership Review
+
+Reviewed on 2026-07-04. `PawnTraversalProfile` owns reusable traversal toggles and tuning. `Pawn3DTraversalComponent` owns the direct 3D traversal runtime surface and applies the profile into climb/hang tuning, while its custom inspector owns concrete Unity-local setup checks for the profile and sibling movement components.
+
+Do not treat capability toggles such as jump, dodge, climb, or hang as PYS-required fields. They are authored variation. PYS should surface traversal intent and codebase-quality evidence; invalid enabled tuning remains runtime-validation evidence on the profile, and concrete missing component/profile wiring remains an Inspector concern for the direct component.
 
 ### Secondary Candidates
 

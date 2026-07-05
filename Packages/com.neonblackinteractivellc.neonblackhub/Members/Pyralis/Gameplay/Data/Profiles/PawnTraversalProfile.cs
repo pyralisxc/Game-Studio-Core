@@ -14,7 +14,6 @@ namespace NeonBlack.Gameplay.Data.Profiles
         Surface = AuthoringSurface.Profile,
         Summary = "Defines the jumping, dodging, and climbing capabilities of a pawn.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/traversal",
-        RequiredFields = new[] { nameof(allowJump), nameof(allowDodge) },
         SetupSteps = new[] { "Assign to a PawnDefinition.", "Enable desired traversal features." },
         SuccessChecks = new[] { "Verify the pawn can jump and crouch correctly in-game." },
         Tags = new[] { "capability:Movement", "runtime:CharacterPawnGameplay" },
