@@ -754,3 +754,17 @@ Verification:
 - Confirmed the current worktree dirty set still contains only known unrelated/generated files outside this lane.
 - Scoped `git diff --check` passed for touched docs.
 - Unity Editor Test Runner proof remains manual because batch mode currently stalls on Unity Licensing Client reconnects before test discovery.
+
+### Generic Spawner Sprite Output Guidance
+
+Changes:
+
+- Added a recommended runtime validation issue when generic `Spawner` uses raw Sprite entries without prefab entries.
+- Updated the audit so raw sprite-to-GameObject spawning is classified as retained prototype utility output with prefab-first guidance, not an unresolved hidden setup repair.
+
+Verification:
+
+- Confirmed `Spawner` is an optional scene utility and not the participant pawn or enemy spawn path.
+- Confirmed prefab spawning remains unchanged and raw sprite spawning remains supported for prototype scenes.
+- Scoped `git diff --check` passed for touched files.
+- Unity Editor Test Runner proof remains manual because batch mode currently stalls on Unity Licensing Client reconnects before test discovery.

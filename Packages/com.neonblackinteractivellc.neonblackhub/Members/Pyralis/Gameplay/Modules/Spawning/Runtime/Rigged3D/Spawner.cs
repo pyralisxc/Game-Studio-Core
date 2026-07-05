@@ -29,6 +29,9 @@ public class Spawner : GameplayTickBehaviour, IRuntimeValidationProvider
         if ((prefabs == null || prefabs.Length == 0) && (sprites == null || sprites.Length == 0))
             yield return RuntimeValidationIssue.Required("Spawner needs at least one prefab or sprite option.");
 
+        if ((prefabs == null || prefabs.Length == 0) && sprites != null && sprites.Length > 0)
+            yield return RuntimeValidationIssue.Recommended("Spawner is using raw Sprite entries only. Prefer authored prefabs for reusable package content; raw sprites are best kept for prototype-only scene utilities.");
+
         if (autoSpawn && spawnInterval <= 0f)
             yield return RuntimeValidationIssue.Required("Auto Spawn enabled but Spawn Interval is <= 0.");
 
