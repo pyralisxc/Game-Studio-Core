@@ -710,3 +710,17 @@ Verification:
 - Confirmed `LevelData.GetRuntimeValidationIssues` requires scene name and display name, not preview artwork.
 - Scoped `git diff --check` passed for touched files.
 - Unity Editor Test Runner proof remains manual because batch mode currently stalls on Unity Licensing Client reconnects before test discovery.
+
+### Board Piece Optional Visual Contract
+
+Changes:
+
+- Removed `visualPrefab` from the always-required PYS fields on `BoardPieceDefinition`.
+- Added setup guidance explaining that a board piece visual prefab is only needed when the piece should override the presenter fallback visual.
+
+Verification:
+
+- Confirmed `BoardPieceDefinition.GetValidationIssues` requires piece identity fields, not visual prefab assignment.
+- Confirmed `TabletopBoardGridPresenter` treats its fallback piece prefab as recommended and can use piece-specific visual prefabs or generated fallback pieces.
+- Scoped `git diff --check` passed for touched files.
+- Unity Editor Test Runner proof remains manual because batch mode currently stalls on Unity Licensing Client reconnects before test discovery.

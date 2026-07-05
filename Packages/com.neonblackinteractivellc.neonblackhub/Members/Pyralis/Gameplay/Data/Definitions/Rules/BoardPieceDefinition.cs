@@ -13,8 +13,9 @@ namespace NeonBlack.Gameplay.Data.Definitions.Rules
         CapabilityPath = "Tabletop/Board/Board Piece Definition",
         Surface = AuthoringSurface.Goal,
         Summary = "Project-window creation path for tabletop board pieces.",
-        RequiredFields = new[] { nameof(pieceId), nameof(displayName), nameof(visualPrefab) },
-        SuccessChecks = new[] { "Verify the piece is instantiated correctly on the board with the assigned visual prefab." },
+        RequiredFields = new[] { nameof(pieceId), nameof(displayName) },
+        SetupSteps = new[] { "Set Piece Id and Display Name.", "Assign Visual Prefab only when this board piece should override the presenter fallback piece visual." },
+        SuccessChecks = new[] { "Verify the piece is instantiated correctly on the board with either its assigned visual prefab or the presenter fallback." },
         Tags = new[] { "capability:Tabletop", "capability:Grid", "runtime:BoardCardTabletop" }
     )]
     [CreateAssetMenu(menuName = "NeonBlack/Rules/Board Piece Definition", fileName = "BoardPieceDefinition", order = -90)]
