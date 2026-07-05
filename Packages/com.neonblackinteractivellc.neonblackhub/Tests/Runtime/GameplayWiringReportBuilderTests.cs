@@ -215,6 +215,39 @@ namespace NeonBlack.Gameplay.Tests.Runtime
             }
         }
 
+        [Test]
+        public void Build_WithCompleteCombatRoute_ReportsCombatFeatureActivation()
+        {
+            GameObject root = new GameObject("Gameplay Wiring Report Test");
+            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
+            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
+            ParticipantDefinition participant = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            try
+            {
+                root.AddComponent<GameplaySessionBootstrap>();
+                mode.enableCombat = true;
+                session.defaultGameMode = mode;
+                session.defaultParticipants = new[] { participant };
+
+                GameplayWiringReport report = GameplayWiringReportBuilder.Build(root, session);
+
+                Assert.That(
+                    report.Rows.Any(row =>
+                        row.Kind == GameplayWiringRowKind.ServiceActivation
+                        && row.Contract == "CombatServices"
+                        && row.Provider == "RuntimeFeatureServicePolicy"
+                        && row.Receiver == "FeatureServiceInstaller"),
+                    Is.True);
+            }
+            finally
+            {
+                Object.DestroyImmediate(participant);
+                Object.DestroyImmediate(mode);
+                Object.DestroyImmediate(session);
+                Object.DestroyImmediate(root);
+            }
+        }
+
         private static bool HasMissingProvider(GameplayWiringReport report, string contract)
         {
             return report.Rows.Any(row =>

@@ -276,6 +276,7 @@ Current protected behavior:
 - participant roster, spawn, input, and feature activation rows are deferred until the session asset has a default game mode and participant route
 - complete participant routes report concrete missing participant roster, spawn, and input providers
 - PlayerInputManager with multiple auto-join participants reports one `ParticipantJoinRoute` timing issue
+- authored combat routes report `CombatServices` feature activation evidence
 
 Compare report rows with existing inspector warnings, validators, and PYS exports.
 
