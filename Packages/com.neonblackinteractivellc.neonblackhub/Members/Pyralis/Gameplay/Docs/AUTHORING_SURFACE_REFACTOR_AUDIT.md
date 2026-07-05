@@ -350,6 +350,8 @@ Enemy attack review note: `EnemyAttack` assets should require the animation sign
 
 Health component review note: `HealthComponent` should require faction as semantic combat identity, while max health and regeneration values are component tuning. Invalid health tuning belongs in runtime validation so PYS observes it as quality evidence rather than missing setup.
 
+Movement and detection review note: `Pawn2DMovementComponent.moveSpeed` and `EnemyDetectionModule` aggro/leash/line-of-sight settings are runtime tuning with validation evidence, not unconditional PYS required setup. `IMovementModule` is a runtime interface contract; its read-only properties describe behavior supplied by concrete modules and should not be listed as authorable required fields.
+
 ## Scene Services
 
 These are scene-authored or scene-scale surfaces. They should remain visible when they are required, not created silently to repair setup.

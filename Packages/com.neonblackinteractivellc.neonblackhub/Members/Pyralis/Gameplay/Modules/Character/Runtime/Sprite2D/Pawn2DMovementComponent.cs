@@ -12,7 +12,7 @@ namespace NeonBlack.Gameplay.Modules.Character
         CapabilityPath = "Movement/Sprite2D/Movement Component",
         Surface = AuthoringSurface.Goal,
         Summary = "Tunable 2D movement module supporting top-down and side-view modes. PlayfieldProfile owns normal movement bounds; camera-visible bounds are an explicit arcade option.",
-        RequiredFields = new[] { nameof(movementStyle), nameof(moveSpeed), nameof(groundLayer) },
+        RequiredFields = new[] { nameof(movementStyle), nameof(groundLayer) },
         PrerequisiteStableIds = new[] { "pawn.root", "playfield.profile", "input.profile" },
         RouteStage = "Pawn Prefab",
         RouteOrder = 90,

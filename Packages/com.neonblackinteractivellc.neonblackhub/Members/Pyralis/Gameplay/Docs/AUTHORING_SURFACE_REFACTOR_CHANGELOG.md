@@ -12,6 +12,21 @@ Scope rules:
 
 ## 2026-07-04
 
+### Movement And Detection Contract Accuracy
+
+Changes:
+
+- Removed `moveSpeed` from `Pawn2DMovementComponent` required PYS fields; movement speed remains covered by runtime validation.
+- Removed unconditional required PYS fields from `EnemyDetectionModule` and added runtime validation for negative ranges, leash/aggro mismatch, and missing obstacle mask when line of sight is enabled.
+- Removed required PYS fields from `IMovementModule`; it is an interface contract exposing runtime properties, not an Inspector-authored setup surface.
+- Added an audit note clarifying that movement/detection tuning should be quality evidence while concrete physics setup remains owned by Unity components and masks.
+
+Verification:
+
+- Scoped code inspection confirmed `Pawn2DMovementComponent` already reports invalid move speed through `IRuntimeValidationProvider`.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run from shell; run affected movement and enemy detection checks in the Unity Editor.
+
 ### Health Component Tuning Contract Accuracy
 
 Changes:

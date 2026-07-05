@@ -15,7 +15,6 @@ namespace NeonBlack.Gameplay.Modules.Character
         Surface = AuthoringSurface.Goal,
         Summary = "Calculates actor translation and velocity based on input and physical rules.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/movement",
-        RequiredFields = new[] { nameof(IMovementModule.MoveSpeed), nameof(IMovementModule.IsGrounded) },
         SetupSteps = new[] { "Implement interface in a movement component" },
         SuccessChecks = new[] { "Call Move and verify the character's world position changes." },
         Tags = new[] { "capability:Movement", "axiom:Dimensions2D", "axiom:Dimensions3D" }
