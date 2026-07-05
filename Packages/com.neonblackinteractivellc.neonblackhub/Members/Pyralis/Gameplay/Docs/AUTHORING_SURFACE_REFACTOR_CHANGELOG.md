@@ -12,6 +12,20 @@ Scope rules:
 
 ## 2026-07-05
 
+### Stale Refactor Doc Folding
+
+Changes:
+
+- Folded the completed Feedback plus simple Presentation opening slice into current-status language.
+- Updated the runtime wiring audit status so Phase C reflects expanded parity protection instead of only a started state.
+- Kept the old rationale as active review context rather than historical parallel truth.
+
+Verification:
+
+- Scoped stale-language search found the outdated first-phase wording and Phase C started status.
+- Scoped `git diff --check` passed for touched docs.
+- Unity Test Runner was not run because this slice is docs-only.
+
 ### Runtime Scene Search Inventory Rows
 
 Changes:

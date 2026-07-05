@@ -266,7 +266,7 @@ Acceptance:
 
 ### Phase C - Report Parity Against Current Runtime
 
-Status: parity protection started.
+Status: parity protection expanded with canonical setup rows, feature activation evidence, and inventory-only `RuntimeSceneSearch` rows.
 
 Current protected behavior:
 

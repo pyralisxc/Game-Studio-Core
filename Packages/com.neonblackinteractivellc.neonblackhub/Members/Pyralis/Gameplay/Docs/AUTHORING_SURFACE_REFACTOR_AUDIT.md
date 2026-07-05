@@ -421,11 +421,11 @@ Sample and member project content should not define the core package authoring s
 
 Audit note: public/member media should continue moving toward explicit samples, Addressables, or route-owned content packages when it is not part of the always-imported core package surface.
 
-## First Refactor Candidates
+## Opening Refactor Slice
 
-Recommended first implementation family: Feedback plus simple Presentation.
+Completed opening implementation family: Feedback plus simple Presentation.
 
-Reason:
+Why this lane was a good first slice:
 
 - It has many visible UI/presenter/binder scripts.
 - It contains several adapter/pass-through candidates.
@@ -433,7 +433,7 @@ Reason:
 - It is lower risk than locomotion, combat, networking, or RPG data.
 - It can produce concrete authoring simplification evidence before Cameron hand-authors package samples.
 
-Initial files to inspect before code changes:
+Files reviewed during the opening slice:
 
 - `Modules/Feedback/Runtime/UI/ParticipantHudTargetBinding.cs`
 - `Modules/Feedback/Runtime/UI/ParticipantHealthHudBinder.cs`
@@ -450,10 +450,10 @@ Initial files to inspect before code changes:
 - `Presentation/Visuals/SpriteFlasher.cs`
 - `Presentation/Visuals/TextFlasher.cs`
 
-Expected first code-phase outcome:
+Protected outcome:
 
 - Keep one clear feedback owner per surface.
-- Move fallback display/audio settings into profiles or prefab references where appropriate.
+- Keep fallback display/audio settings in profiles or prefab references where appropriate.
 - Keep popups as runtime output only when they are true gameplay output.
 - Replace automatic setup repair with `RequireComponent`, serialized references, or documented prefab structure where Unity can express the relationship directly.
-- Add/adjust focused tests only for data routing or behavior seams, not visual feel.
+- Add/adjust focused tests only for data routing, validation evidence, or behavior seams, not visual feel.
