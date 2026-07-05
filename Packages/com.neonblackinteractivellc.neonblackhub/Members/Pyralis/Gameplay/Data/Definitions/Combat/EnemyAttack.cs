@@ -11,7 +11,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Combat
         CapabilityPath = "Combat/Actions/Enemy Attack",
         Surface = AuthoringSurface.Goal,
         Summary = "Defines the selection criteria and execution of a specific AI attack.",
-        RequiredFields = new[] { nameof(animationSignal), nameof(hitBoxZone), nameof(attackRange), nameof(aiPriority) },
+        RequiredFields = new[] { nameof(animationSignal), nameof(hitBoxZone) },
         SetupSteps = new[] { "Assign animation signal.", "Set Range and Priority." },
         SuccessChecks = new[] { "Verify the enemy triggers this attack when within the specified range." },
         Tags = new[] { "capability:Combat", "runtime:Combat" }
@@ -23,6 +23,7 @@ namespace NeonBlack.Gameplay.Data.Definitions.Combat
         {
             if (attackRange < 0f) yield return RuntimeValidationIssue.Required("Attack Range cannot be negative.");
             if (damage < 0f) yield return RuntimeValidationIssue.Required("Damage cannot be negative.");
+            if (aiPriority < 0f) yield return RuntimeValidationIssue.Required("AI Priority cannot be negative.");
         }
 
         [Header("Animation")]

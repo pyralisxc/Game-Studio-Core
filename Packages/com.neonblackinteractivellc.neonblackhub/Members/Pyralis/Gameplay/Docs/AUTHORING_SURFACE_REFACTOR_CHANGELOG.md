@@ -12,6 +12,20 @@ Scope rules:
 
 ## 2026-07-04
 
+### Enemy Attack Tuning Contract Accuracy
+
+Changes:
+
+- Removed `attackRange` and `aiPriority` from `EnemyAttack` required PYS fields; animation signal and hitbox zone remain the durable attack-meaning requirements.
+- Added runtime validation for negative AI Priority so invalid attack-selection tuning is still reported as codebase quality evidence.
+- Added an audit note clarifying that enemy attack range, damage, priority, weighting, and timing are tuning rather than setup references.
+
+Verification:
+
+- Scoped code inspection confirmed enemy attack range already falls back from hitbox range overrides or module/profile range overrides, and `EnemyCombatProcessor` clamps negative priorities during selection.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run from shell; run affected enemy combat checks in the Unity Editor.
+
 ### Pawn Combat Tuning Contract Accuracy
 
 Changes:
