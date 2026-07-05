@@ -4,6 +4,7 @@ using NeonBlack.Gameplay.Glue.Bootstrap;
 using NeonBlack.Gameplay.Glue.Wiring.Reporting;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace NeonBlack.Gameplay.Tests.Runtime
 {
@@ -173,6 +174,41 @@ namespace NeonBlack.Gameplay.Tests.Runtime
             finally
             {
                 Object.DestroyImmediate(participant);
+                Object.DestroyImmediate(mode);
+                Object.DestroyImmediate(session);
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void Build_WithPlayerInputManagerAndMultipleAutoJoinParticipants_ReportsJoinTimingIssue()
+        {
+            GameObject root = new GameObject("Gameplay Wiring Report Test");
+            SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
+            GameModeDefinition mode = ScriptableObject.CreateInstance<GameModeDefinition>();
+            ParticipantDefinition firstParticipant = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            ParticipantDefinition secondParticipant = ScriptableObject.CreateInstance<ParticipantDefinition>();
+            try
+            {
+                root.AddComponent<GameplaySessionBootstrap>();
+                root.AddComponent<PlayerInputManager>();
+                session.defaultGameMode = mode;
+                firstParticipant.autoJoin = true;
+                secondParticipant.autoJoin = true;
+                session.defaultParticipants = new[] { firstParticipant, secondParticipant };
+
+                GameplayWiringReport report = GameplayWiringReportBuilder.Build(root, session);
+
+                Assert.That(
+                    report.Rows.Count(row =>
+                        row.Kind == GameplayWiringRowKind.TimingIssue
+                        && row.Contract == "ParticipantJoinRoute"),
+                    Is.EqualTo(1));
+            }
+            finally
+            {
+                Object.DestroyImmediate(secondParticipant);
+                Object.DestroyImmediate(firstParticipant);
                 Object.DestroyImmediate(mode);
                 Object.DestroyImmediate(session);
                 Object.DestroyImmediate(root);

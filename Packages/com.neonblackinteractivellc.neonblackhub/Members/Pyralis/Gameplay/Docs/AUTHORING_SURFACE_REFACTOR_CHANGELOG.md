@@ -21,6 +21,7 @@ Changes:
 - Protected the route-deferral behavior where camera guidance waits while session route evidence is absent.
 - Protected participant-route deferral so roster, spawn, input, camera guidance, and feature activation rows wait until the session asset has enough route evidence.
 - Protected the matching route-complete behavior so concrete missing roster, spawn, and input providers appear once the session has a default game mode and participant route.
+- Protected participant join timing evidence so PlayerInputManager with multiple auto-join participants reports one semantic `ParticipantJoinRoute` row.
 - Updated the plan, audit, and runtime wiring audit current-status sections to record this wiring-report proof slice.
 
 Verification:
