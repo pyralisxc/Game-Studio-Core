@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using NeonBlack.Gameplay.Core.Types.Animation;
 using NeonBlack.Gameplay.Core.Contracts;
@@ -11,11 +12,10 @@ namespace NeonBlack.Gameplay.Modules.Combat
         Surface = AuthoringSurface.Goal,
         Summary = "Pawn module for blocking and damage reduction.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/combat",
-        RequiredFields = new[] { nameof(blockDamageReduction), nameof(blockFrontalAngle) },
         SuccessChecks = new[] { "Hold the block button and verify damage from the front is reduced." },
         Tags = new[] { "capability:Combat", "capability:TacticsDefensive" }
     )]
-    public class PawnBlockModule : MonoBehaviour
+    public class PawnBlockModule : MonoBehaviour, IRuntimeValidationProvider
 {
         [Header("Block Settings")]
         [Range(0f, 1f)]
@@ -30,6 +30,14 @@ namespace NeonBlack.Gameplay.Modules.Combat
         public bool IsBlocking => _isBlocking;
         public float BlockDamageReduction => blockDamageReduction;
         public float BlockFrontalAngle => blockFrontalAngle;
+
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
+        {
+            if (blockDamageReduction < 0f || blockDamageReduction > 1f)
+                yield return RuntimeValidationIssue.Required("Block Damage Reduction must be between 0 and 1.");
+            if (blockFrontalAngle <= 0f || blockFrontalAngle > 180f)
+                yield return RuntimeValidationIssue.Required("Block Frontal Angle must be greater than 0 and at most 180.");
+        }
 
         private void Awake()
         {

@@ -14,12 +14,11 @@ namespace NeonBlack.Gameplay.Modules.Combat
         Surface = AuthoringSurface.Goal,
         Summary = "Manages attack tokens to prevent all enemies from attacking the player simultaneously.",
         DocumentationUrl = "https://docs.neonblack.com/pyralis/combat",
-        RequiredFields = new[] { nameof(maxMeleeTokens), nameof(maxRangedTokens) },
         SetupSteps = new[] { "Add to a scene coordinator or core services object." },
         SuccessChecks = new[] { "Verify that enemies request and return tokens when starting/finishing attacks." },
         Tags = new[] { "capability:Combat", "axiom:Realtime" }
     )]
-    public sealed class CombatFlowController : MonoBehaviour
+    public sealed class CombatFlowController : MonoBehaviour, IRuntimeValidationProvider
     {
         [Header("Attack Token Settings")]
         [SerializeField] private int maxMeleeTokens = 2;
@@ -28,6 +27,14 @@ namespace NeonBlack.Gameplay.Modules.Combat
         private readonly List<GameObject> _participants = new List<GameObject>();
         private int _availableMeleeTokens;
         private int _availableRangedTokens;
+
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
+        {
+            if (maxMeleeTokens < 0)
+                yield return RuntimeValidationIssue.Required("Max Melee Tokens cannot be negative.");
+            if (maxRangedTokens < 0)
+                yield return RuntimeValidationIssue.Required("Max Ranged Tokens cannot be negative.");
+        }
 
         private void Awake()
         {
