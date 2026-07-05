@@ -12,6 +12,19 @@ Scope rules:
 
 ## 2026-07-04
 
+### Wiring Audit Status Accuracy
+
+Changes:
+
+- Updated `RUNTIME_WIRING_AUDIT.md` so it no longer says the next code slice is to create `GameplayWiringReport` from scratch.
+- Clarified that the read-only report foundation and copy-menu path already exist, and the next wiring step is parity against current inspectors, validators, runtime warnings, and PYS exports.
+
+Verification:
+
+- Scoped code inspection confirmed `GameplayWiringReport`, `GameplayWiringReportBuilder`, `GameplayWiringReportTextFormatter`, and `Tools/NeonBlack/Gameplay/Wiring/Copy Selected Root Report` already exist.
+- Scoped `git diff --check` passed for touched docs.
+- Unity Test Runner was not run because this slice is docs-only.
+
 ### Package README Setup Guidance
 
 Changes:

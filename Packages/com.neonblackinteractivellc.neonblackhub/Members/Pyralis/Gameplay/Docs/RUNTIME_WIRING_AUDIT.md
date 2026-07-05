@@ -174,9 +174,9 @@ These are the meanings most likely to have several addresses today.
 | Respawn route | PlayerSpawner, spawn service, lives, health, scene flow, UI countdown | One `RespawnFlow` row. |
 | Settings delivery | Settings menu, screen, config, runtime services | One `SettingsDelivery` row. |
 
-## Proposed Wiring Report
+## Wiring Report
 
-The next implementation slice should be read-only.
+The initial implementation is read-only and lives under `Glue/Wiring/Reporting`, with an editor menu at `Tools/NeonBlack/Gameplay/Wiring/Copy Selected Root Report`.
 
 Current names:
 
@@ -332,10 +332,10 @@ These surfaces can be imperfect while the report is still forming:
 - arcade flow behavior
 - runtime-created transient popups, effects, and focus helpers
 
-Changing these before the wiring report exists risks local patches that preserve the old confusion.
+Changing these before the wiring report reaches parity against current runtime evidence risks local patches that preserve the old confusion.
 
 ## Final Recommendation
 
 Proceed with metamorphosis, not resurrection.
 
-The next code slice should be a tiny read-only `GameplayWiringReport` that explains current setup delivery. Once it can describe the current runtime honestly, use it to delete duplicate address paths and move decisions back to their owners.
+The next slice should prove `GameplayWiringReport` parity against current inspectors, validators, runtime warnings, and PYS exports. Once it can describe the current runtime honestly, use it to delete duplicate address paths and move decisions back to their owners.
