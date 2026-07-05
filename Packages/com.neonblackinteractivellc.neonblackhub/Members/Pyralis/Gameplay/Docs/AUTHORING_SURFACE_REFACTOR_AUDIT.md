@@ -318,6 +318,8 @@ These should remain display-focused. Refactors should move gameplay rules out of
 - `Modules/Tabletop/UI/*.cs`
 - `Modules/Feedback/Runtime/UI/*.cs`
 
+Presentation visual review note: keep `SpriteFlasher` and `TextFlasher` as separate concrete Unity targets because SpriteRenderer and TMP_Text color ownership are different authoring surfaces. They should share the profile-backed `IVisualFlashPlayer` contract and avoid mutating shared materials.
+
 ## Scene Services
 
 These are scene-authored or scene-scale surfaces. They should remain visible when they are required, not created silently to repair setup.

@@ -25,6 +25,20 @@ Verification:
 - Scoped reference search confirmed the status feedback path flows through `ActorFeedbackComponent`, `ActorFloatingFeedbackReceiver`, `ParticipantFeedbackRelay`, and `ParticipantFeedbackHudPresenter`.
 - Unity Test Runner was not run from shell; run affected feedback tests in the Unity Editor.
 
+### Text Flasher Unity-Native Cleanup
+
+Changes:
+
+- Updated `TextFlasher` to implement the same profile-backed `IVisualFlashPlayer` contract as `SpriteFlasher`.
+- Added PYS authoring metadata and an Add Component menu entry for the text flash surface.
+- Removed shared TMP material `_FaceColor` mutation; `TextFlasher` now drives only `TMP_Text.color` on assigned or auto-found text targets.
+- Classified `SpriteFlasher` and `TextFlasher` as retained separate Unity target owners in the refactor audit.
+
+Verification:
+
+- Scoped search confirmed the shared material mutation path was removed from `TextFlasher`.
+- Unity Test Runner was not run from shell; run affected presentation/feedback checks in the Unity Editor.
+
 ### Baseline Planning And Audit
 
 Commits:

@@ -1,5 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using NeonBlack.Gameplay.Data.Presentation;
+using Pys.Authoring.Contracts;
 using TMPro;
 using UnityEngine;
 
@@ -11,7 +13,23 @@ namespace NeonBlack.Gameplay.Presentation.Visuals
 /// Drives TMP_Text.color directly, which reflects alpha, works with standard SDF materials,
 /// and avoids material-instance mutation issues from driving _FaceColor directly.
 /// </summary>
-public class TextFlasher : MonoBehaviour
+[AuthoringContract(
+        Category = "V F X",
+        CapabilityPath = "Presentation/Feedback/Text Flasher",
+        Surface = AuthoringSurface.Goal,
+        Summary = "Coroutine-driven color flash effects on TMP text surfaces.",
+        DocumentationUrl = "https://docs.neonblack.com/pyralis/visuals",
+        SetupSteps = new[]
+    {
+        "Add TextFlasher to a HUD, world-space label, or text prefab.",
+        "Enable Auto Find Texts or assign TMP text targets manually.",
+        "Assign a FlashEffectProfile for common text flash effects."
+    },
+        SuccessChecks = new[] { "Assign a FlashEffectProfile and call Play() or PlayOneShot() from the owning gameplay script." },
+        Tags = new[] { "capability:VFX" }
+    )]
+[AddComponentMenu("NeonBlack/Gameplay/Visuals/Text Flasher")]
+public class TextFlasher : MonoBehaviour, IVisualFlashPlayer
 {
     [Header("Targets")]
     [SerializeField, Tooltip("TMP_Text components to flash. Leave empty and enable Auto Find to collect them automatically.")]
@@ -29,8 +47,6 @@ public class TextFlasher : MonoBehaviour
     private Color[] _originalColors;
     private bool _initialized;
     private bool _hasStarted;
-
-    private static readonly int FaceColorId = Shader.PropertyToID("_FaceColor");
 
     private void Awake() => Initialize();
 
@@ -103,12 +119,6 @@ public class TextFlasher : MonoBehaviour
 
         if (_autoFindTexts && _texts.Count == 0)
             _texts.AddRange(GetComponentsInChildren<TMP_Text>(true));
-
-        foreach (TMP_Text text in _texts)
-        {
-            if (text != null && text.fontSharedMaterial != null && text.fontSharedMaterial.HasProperty(FaceColorId))
-                text.fontSharedMaterial.SetColor(FaceColorId, Color.white);
-        }
 
         CacheOriginalColors();
     }
