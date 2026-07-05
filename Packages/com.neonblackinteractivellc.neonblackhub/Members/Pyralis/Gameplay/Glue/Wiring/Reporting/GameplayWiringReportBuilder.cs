@@ -6,10 +6,15 @@ using NeonBlack.Gameplay.Glue.Bootstrap;
 using NeonBlack.Gameplay.Glue.InputRouting;
 using NeonBlack.Gameplay.Glue.Lifetime;
 using NeonBlack.Gameplay.Glue.Participants;
+using NeonBlack.Gameplay.Glue.SceneFlow.Arcade2D;
 using NeonBlack.Gameplay.Glue.SceneServices;
 using NeonBlack.Gameplay.Glue.ServiceRegistration;
 using NeonBlack.Gameplay.Glue.Session;
 using NeonBlack.Gameplay.Glue.Spawning;
+using NeonBlack.Gameplay.Modules.Combat;
+using NeonBlack.Gameplay.Modules.Enemies;
+using NeonBlack.Gameplay.Modules.Feedback;
+using NeonBlack.Gameplay.Modules.Scoring;
 using NeonBlack.Gameplay.Presentation.Camera;
 using NeonBlack.Gameplay.Presentation.Visuals;
 using UnityEngine;
@@ -36,6 +41,7 @@ namespace NeonBlack.Gameplay.Glue.Wiring.Reporting
             AddRootEvidence(report, gameplayRoot);
             AddSessionEvidence(report, sessionDefinition);
             AddCoreServiceEvidence(report, gameplayRoot, sessionDefinition);
+            AddRuntimeSceneSearchInventoryEvidence(report);
             AddFeatureActivationEvidence(report, sessionDefinition);
             AddRuntimeServiceReceiverEvidence(report, gameplayRoot, sessionDefinition);
             AddRuntimeValidationEvidence(report, gameplayRoot, sessionDefinition);
@@ -355,6 +361,64 @@ namespace NeonBlack.Gameplay.Glue.Wiring.Reporting
                 GameplayWiringRequiredness.AutoDerived,
                 GameplayWiringSeverity.Info,
                 "Authored data or loaded scene evidence currently asks for this service family."));
+        }
+
+        private static void AddRuntimeSceneSearchInventoryEvidence(GameplayWiringReport report)
+        {
+            AddRuntimeSceneSearchInventoryRow(
+                report,
+                "CombatServices",
+                "PawnCombatBehaviour, PawnCombatBehaviour2D, or CombatFlowController",
+                CombatServiceInstaller.ContainsLoadedSceneEvidence());
+            AddRuntimeSceneSearchInventoryRow(
+                report,
+                "EnemyServices",
+                nameof(EnemyAI),
+                EnemyServiceInstaller.ContainsLoadedSceneEvidence());
+            AddRuntimeSceneSearchInventoryRow(
+                report,
+                "RpgServices",
+                "NeonBlack.Gameplay.Modules.Rpg namespace",
+                RuntimeSceneSearch.ContainsComponentInNamespace("NeonBlack.Gameplay.Modules.Rpg"));
+            AddRuntimeSceneSearchInventoryRow(
+                report,
+                "GameFlowServices",
+                nameof(ArcadeGameFlowController) + " or NeonBlack.Gameplay.Glue.SceneFlow.Arcade2D namespace",
+                RuntimeSceneSearch.ContainsComponent<ArcadeGameFlowController>()
+                || RuntimeSceneSearch.ContainsComponentInNamespace("NeonBlack.Gameplay.Glue.SceneFlow.Arcade2D"));
+            AddRuntimeSceneSearchInventoryRow(
+                report,
+                "ScoringServices",
+                "ParticipantScoreService or StillnessBonus2D",
+                ScoringServiceInstaller.ContainsLoadedSceneEvidence());
+            AddRuntimeSceneSearchInventoryRow(
+                report,
+                "FeedbackServices",
+                "ParticipantFeedbackService or NeonBlack.Gameplay.Modules.Feedback namespace",
+                FeedbackServiceInstaller.ContainsLoadedSceneEvidence());
+        }
+
+        private static void AddRuntimeSceneSearchInventoryRow(
+            GameplayWiringReport report,
+            string serviceFamily,
+            string evidenceSource,
+            bool found)
+        {
+            if (!found)
+                return;
+
+            report.Add(new GameplayWiringRow(
+                GameplayWiringRowKind.Inventory,
+                "RuntimeSceneSearch",
+                evidenceSource,
+                nameof(RuntimeFeatureServicePolicy),
+                serviceFamily,
+                "Glue.ServiceRegistration",
+                GameplayWiringScope.Feature,
+                GameplayWiringTiming.Startup,
+                GameplayWiringRequiredness.AutoDerived,
+                GameplayWiringSeverity.Info,
+                "Loaded scene search found feature evidence used by RuntimeFeatureServicePolicy. This row is inventory only; registration behavior is unchanged."));
         }
 
         private static void AddRuntimeValidationEvidence(

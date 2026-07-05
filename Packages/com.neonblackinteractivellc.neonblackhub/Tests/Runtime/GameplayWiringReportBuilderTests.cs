@@ -1,6 +1,7 @@
 using System.Linq;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Glue.Bootstrap;
+using NeonBlack.Gameplay.Glue.SceneFlow.Arcade2D;
 using NeonBlack.Gameplay.Glue.Wiring.Reporting;
 using NUnit.Framework;
 using UnityEngine;
@@ -244,6 +245,29 @@ namespace NeonBlack.Gameplay.Tests.Runtime
             finally
             {
                 DestroyObjects(participant, mode, session, root);
+            }
+        }
+
+        [Test]
+        public void Build_WithLoadedSceneArcadeEvidence_ReportsRuntimeSceneSearchInventory()
+        {
+            GameObject root = new GameObject("Gameplay Wiring Report Test");
+            try
+            {
+                root.AddComponent<ArcadeGameFlowController>();
+
+                GameplayWiringReport report = GameplayWiringReportBuilder.Build(root);
+
+                Assert.That(
+                    report.Rows.Any(row =>
+                        row.Kind == GameplayWiringRowKind.Inventory
+                        && row.Contract == "RuntimeSceneSearch"
+                        && row.Package == "GameFlowServices"),
+                    Is.True);
+            }
+            finally
+            {
+                DestroyObjects(root);
             }
         }
 

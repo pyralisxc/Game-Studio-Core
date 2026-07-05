@@ -278,6 +278,7 @@ Current protected behavior:
 - PlayerInputManager with multiple auto-join participants reports one `ParticipantJoinRoute` timing issue
 - authored combat routes report `CombatServices` feature activation evidence
 - authored scoring routes report `ScoringServices`, `GameFlowServices`, and `FeedbackServices` activation evidence
+- loaded-scene feature evidence discovered through `RuntimeSceneSearch` is listed as inventory-only report rows for combat, enemy, RPG, game-flow, scoring, and feedback service families
 
 Compare report rows with existing inspector warnings, validators, and PYS exports.
 

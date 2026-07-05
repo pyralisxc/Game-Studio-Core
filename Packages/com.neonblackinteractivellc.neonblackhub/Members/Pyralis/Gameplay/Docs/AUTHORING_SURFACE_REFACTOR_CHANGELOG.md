@@ -12,6 +12,21 @@ Scope rules:
 
 ## 2026-07-05
 
+### Runtime Scene Search Inventory Rows
+
+Changes:
+
+- Added inventory-only `GameplayWiringReport` rows for loaded-scene feature evidence discovered through `RuntimeSceneSearch`.
+- Covered combat, enemy, RPG, game-flow, scoring, and feedback service-family evidence without changing service registration behavior.
+- Added a focused wiring-report test proving loaded-scene arcade evidence appears as `RuntimeSceneSearch` inventory.
+- Updated the runtime wiring audit and authoring-surface audit to record this parity step.
+
+Verification:
+
+- Scoped code inspection confirmed `RuntimeFeatureServicePolicy` and feature installers still use the same loaded-scene evidence paths as before.
+- Scoped `git diff --check` passed for touched files.
+- Unity Test Runner was not run from shell; run `GameplayWiringReportBuilderTests` in the Unity Editor Test Runner.
+
 ### Presentation Helper Validation
 
 Changes:

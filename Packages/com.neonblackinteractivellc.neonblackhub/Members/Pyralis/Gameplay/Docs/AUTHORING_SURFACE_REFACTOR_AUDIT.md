@@ -23,6 +23,7 @@ Completed in this lane:
 - Unity batch smoke resolves packages after the corrected external PYS Authoring package path.
 - The dedicated changelog records the evidence and verification for each slice.
 - Focused wiring-report runtime tests now cover the first canonical-evidence parity behaviors: missing `SessionDefinition` setup appears once as a `MissingProvider` row; route-dependent camera guidance is deferred while session route evidence is absent; participant service and feature activation rows wait for a complete participant route; complete participant routes report concrete missing participant-service providers; PlayerInputManager plus multiple auto-join participants reports one semantic join timing issue; authored combat routes report combat feature activation; authored scoring routes report scoring, game-flow, and feedback service activation.
+- `GameplayWiringReportBuilder` now records `RuntimeSceneSearch` loaded-scene evidence as inventory-only rows before any installer or service activation behavior changes. This keeps scene search visible as evidence instead of hidden authority.
 
 Remaining review:
 
@@ -35,6 +36,7 @@ Remaining review:
 - Feedback HUD widget surfaces (`ParticipantTimedTextPanel`, `ParticipantHealthPanel`, `ParticipantHealthHudBinder`, and `ParticipantFeedbackHudPresenter`) now report missing local labels/panels as recommended validation rather than required PYS setup blockers. The Feedback capability can still exist while Unity-local widget assignment remains an Inspector/prefab concern.
 - Participant join timing now uses one shared `ParticipantJoinRoutePolicy` for both `ParticipantInputRouter` runtime deferral and `GameplayWiringReportBuilder` timing evidence, removing duplicated auto-join counting and message ownership.
 - Presentation helpers now avoid required PYS blockers for locally recoverable visual output: `BillboardFacing3D` no longer requires `target` because it falls back to its own transform, and `ActorShadowDriver` reports missing blob-shadow output as recommended presentation evidence.
+- RuntimeSceneSearch feature evidence now appears in the wiring report as inventory-only rows for combat, enemy, RPG, game-flow, scoring, and feedback service families. Registration still follows the existing `RuntimeFeatureServicePolicy` and installer paths.
 
 ## Classification Rules
 
