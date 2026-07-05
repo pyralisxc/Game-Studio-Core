@@ -145,7 +145,7 @@ Each phase has one required exit condition:
 - Read: all `*.asmdef` under `Packages/com.neonblackinteractivellc.neonblackhub`
 - Produce: `docs/superpowers/plans/2026-07-04-codebase-authoring-surface-refactor.md`
 
-- [ ] **Step 1: Confirm Unity version**
+- [x] **Step 1: Confirm Unity version**
 
 Run:
 
@@ -155,7 +155,7 @@ Get-Content -Path 'ProjectSettings/ProjectVersion.txt'
 
 Expected: `m_EditorVersion: 6000.4.0f1`.
 
-- [ ] **Step 2: Confirm PYS remains external**
+- [x] **Step 2: Confirm PYS remains external**
 
 Run:
 
@@ -165,7 +165,7 @@ Get-Content -Path 'Packages/manifest.json'
 
 Expected: `com.pys.authoring` resolves through a `file:` path outside Game Studio Core.
 
-- [ ] **Step 3: List package assemblies**
+- [x] **Step 3: List package assemblies**
 
 Run:
 
@@ -185,7 +185,7 @@ Window > General > Test Runner > EditMode and PlayMode tests for com.neonblackin
 
 Expected: current tests pass, or failures are recorded as baseline failures before refactoring starts.
 
-- [ ] **Step 5: Commit baseline plan**
+- [x] **Step 5: Commit baseline plan**
 
 Run:
 
@@ -209,7 +209,7 @@ Expected: one docs-only commit.
 - Read: `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Presentation`
 - Read: `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Networking`
 
-- [ ] **Step 1: Generate a component inventory**
+- [x] **Step 1: Generate a component inventory**
 
 Run:
 
@@ -219,7 +219,7 @@ rg --files 'Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Ga
 
 Expected: list of gameplay C# files.
 
-- [ ] **Step 2: Find visible Unity components**
+- [x] **Step 2: Find visible Unity components**
 
 Run:
 
@@ -229,7 +229,7 @@ rg -n 'class .*:.*MonoBehaviour|class .*:.*ScriptableObject|CreateAssetMenu|AddC
 
 Expected: list of all user-visible authoring surfaces.
 
-- [ ] **Step 3: Find pass-through and hidden setup pressure**
+- [x] **Step 3: Find pass-through and hidden setup pressure**
 
 Run:
 
@@ -239,7 +239,7 @@ rg -n 'AddComponent|new GameObject|FindObjectsByType|FindObjectOfType|DontDestro
 
 Expected: list of scripts that need ownership classification.
 
-- [ ] **Step 4: Write the audit categories**
+- [x] **Step 4: Write the audit categories**
 
 Create `AUTHORING_SURFACE_REFACTOR_AUDIT.md` with these sections:
 
@@ -278,7 +278,7 @@ Create `AUTHORING_SURFACE_REFACTOR_AUDIT.md` with these sections:
 
 Expected: the file exists and contains actual script names under each heading.
 
-- [ ] **Step 5: Commit audit**
+- [x] **Step 5: Commit audit**
 
 Run:
 
@@ -299,7 +299,7 @@ Expected: one docs-only commit.
 - Modify: `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/README.md`
 - Read: `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Docs/AUTHORING_SURFACE_REFACTOR_AUDIT.md`
 
-- [ ] **Step 1: Add the package-wide refactor rule to architecture**
+- [x] **Step 1: Add the package-wide refactor rule to architecture**
 
 In `ARCHITECTURE_BLUEPRINT.md`, add a concise rule near the Inspector/daily surface section:
 
@@ -309,7 +309,7 @@ Visible Unity setup should be smaller than the internal implementation. Prefer a
 
 Expected: architecture now names the visible-surface versus internal-modularity distinction.
 
-- [ ] **Step 2: Add the active cleanup lane to current state**
+- [x] **Step 2: Add the active cleanup lane to current state**
 
 In `CURRENT_STATE_AUDIT.md`, add a maintenance focus entry:
 
@@ -319,7 +319,7 @@ The active simplification lane is package-wide authoring surface reduction: fewe
 
 Expected: current state no longer frames simplification as pawn-only.
 
-- [ ] **Step 3: Update README with the refactor target**
+- [x] **Step 3: Update README with the refactor target**
 
 In `README.md`, add a short section:
 
@@ -331,7 +331,7 @@ Game Studio Core should feel simple in Unity even when its internals are modular
 
 Expected: README communicates the direction to a new developer.
 
-- [ ] **Step 4: Run docs diff check**
+- [x] **Step 4: Run docs diff check**
 
 Run:
 
@@ -341,7 +341,7 @@ git diff --check
 
 Expected: no whitespace errors.
 
-- [ ] **Step 5: Commit living doc update**
+- [x] **Step 5: Commit living doc update**
 
 Run:
 
@@ -364,7 +364,7 @@ Expected: one docs commit.
 
 Recommended first family: Feedback or Presentation. Do not start with Locomotion, Combat, RPG, or Networking because those carry more gameplay risk.
 
-- [ ] **Step 1: Select the first family from the audit**
+- [x] **Step 1: Select the first family from the audit**
 
 Use this selection rule:
 
@@ -431,7 +431,7 @@ Expected: one focused refactor commit.
 - Inspect/modify: `Packages/com.neonblackinteractivellc.neonblackhub/Members/Pyralis/Gameplay/Presentation`
 - Inspect/modify: `Packages/com.neonblackinteractivellc.neonblackhub/Samples~`
 
-- [ ] **Step 1: List runtime-created objects**
+- [x] **Step 1: List runtime-created objects**
 
 Run:
 
@@ -441,7 +441,7 @@ rg -n 'new GameObject|AddComponent<|AddComponent\\(' 'Packages/com.neonblackinte
 
 Expected: each runtime-created object is classified as gameplay output or hidden setup repair.
 
-- [ ] **Step 2: Keep valid gameplay output**
+- [x] **Step 2: Keep valid gameplay output**
 
 Allowed runtime output:
 

@@ -12,6 +12,19 @@ Scope rules:
 
 ## 2026-07-05
 
+### Refactor Plan Checklist Accuracy
+
+Changes:
+
+- Updated the implementation plan checklist so completed baseline, inventory, living-doc, first-family selection, and runtime-created object classification steps match the current evidence.
+- Left Unity Test Runner, manual Editor proof, sample authoring, and unfinished ownership consolidation unchecked.
+- Kept this as a docs-only status correction.
+
+Verification:
+
+- Cross-checked the plan checklist against the current-status section and existing changelog evidence.
+- Unity Test Runner was not run because this slice only corrects living-doc status.
+
 ### Feedback HUD Compatibility Note
 
 Changes:
