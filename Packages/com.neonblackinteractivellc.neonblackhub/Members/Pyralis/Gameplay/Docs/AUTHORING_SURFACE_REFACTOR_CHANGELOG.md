@@ -693,3 +693,20 @@ Verification:
 - Confirmed runtime validation already reports missing Animator only when no child Animator exists, and reports missing camera override only for `Billboard2_5D`.
 - Scoped `git diff --check` passed for touched files.
 - Unity Editor Test Runner proof remains manual because batch mode currently stalls on Unity Licensing Client reconnects before test discovery.
+
+### Optional Presentation Media Contracts
+
+Changes:
+
+- Removed collection audio/VFX fields from the always-required PYS fields on `CollectibleFeedback2D`.
+- Removed `hitEffectPrefab` from the always-required PYS fields on `ProjectileImpactDefinition`.
+- Removed `previewImage` from the always-required PYS fields on `LevelData`.
+- Updated setup guidance so pickup media, projectile impact VFX, and level preview artwork are explicit optional presentation outputs.
+
+Verification:
+
+- Confirmed `CollectibleFeedback2D` safely skips missing collect clips/particles and only validates mixer routing when clips are assigned.
+- Confirmed `ProjectileImpactDefinition.GetValidationIssues` requires identity and conditional hit-pause/camera-shake values, not impact effect prefabs.
+- Confirmed `LevelData.GetRuntimeValidationIssues` requires scene name and display name, not preview artwork.
+- Scoped `git diff --check` passed for touched files.
+- Unity Editor Test Runner proof remains manual because batch mode currently stalls on Unity Licensing Client reconnects before test discovery.

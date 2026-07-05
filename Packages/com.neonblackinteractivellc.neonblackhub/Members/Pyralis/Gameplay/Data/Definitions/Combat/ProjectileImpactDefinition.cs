@@ -10,8 +10,8 @@ namespace NeonBlack.Gameplay.Data.Definitions.Combat
         CapabilityPath = "Combat/Projectiles/Projectile Impact Definition",
         Surface = AuthoringSurface.Goal,
         Summary = "Controls hit/miss VFX, audio, and impact feel for projectiles.",
-        RequiredFields = new[] { nameof(impactId), nameof(hitEffectPrefab) },
-        SetupSteps = new[] { "Assign Hit/Miss effects.", "Set impact intensity." },
+        RequiredFields = new[] { nameof(impactId) },
+        SetupSteps = new[] { "Assign Hit/Miss effects only when projectile impacts should spawn VFX.", "Set impact intensity." },
         SuccessChecks = new[] { "Verify hit effects spawn at the correct location with correct audio." },
         RoleTags = new[] { "IntentRouteEssential", "CombatDefinitionRouteSupport" },
         Tags = new[] { "capability:Combat", "capability:VFX", "runtime:GunsProjectiles", "runtime:Combat" }

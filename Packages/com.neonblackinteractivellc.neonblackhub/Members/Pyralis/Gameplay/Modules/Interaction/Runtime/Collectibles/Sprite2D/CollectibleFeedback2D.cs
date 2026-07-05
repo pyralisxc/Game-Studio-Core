@@ -12,8 +12,8 @@ namespace NeonBlack.Gameplay.Modules.Interaction
 ///
 /// SETUP:
 ///   1. Attach to a dedicated "Feedback Object" GameObject in the Game scene (or the Spawners GO).
-///   2. Assign audio clips and particle systems in the Inspector.
-///   3. Create two world-space ParticleSystem GameObjects in the scene (set Stop Action = Disable):
+///   2. Optionally assign audio clips and particle systems in the Inspector.
+///   3. When using particle feedback, create world-space ParticleSystem GameObjects in the scene (set Stop Action = Disable):
 ///      - CollectFX  : sparkle / confetti burst
 ///      - DestroyFX  : small puff / smoke burst
 ///      Wire them into _collectFX and _destroyFX.
@@ -24,12 +24,11 @@ namespace NeonBlack.Gameplay.Modules.Interaction
         CapabilityPath = "Interaction/Collectibles/Feedback/Collectible Feedback2D",
         Surface = AuthoringSurface.Goal,
         Summary = "Manages audio and visual feedback (particles/sounds) for collectible actions.",
-        RequiredFields = new[] { nameof(_collectClip), nameof(_collectFX) },
         SetupSteps = new[] 
     { 
         "Attach to a Feedback Object or Spawner GameObject.",
         "Add an AudioSource on the same GameObject.",
-        "Assign collection AudioClip and ParticleSystem.",
+        "Assign collection AudioClip and ParticleSystem only when pickup collection should play audio or VFX.",
         "Optionally assign destroy AudioClip and ParticleSystem feedback.",
         "Ensure AudioSource is routed to the SFX mixer group."
     },
