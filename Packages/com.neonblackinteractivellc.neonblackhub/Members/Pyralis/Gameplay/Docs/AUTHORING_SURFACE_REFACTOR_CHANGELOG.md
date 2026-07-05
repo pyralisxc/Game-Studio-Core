@@ -12,6 +12,19 @@ Scope rules:
 
 ## 2026-07-04
 
+### Feedback Status Popup Ownership
+
+Changes:
+
+- Preserved `StatusEffectDefinition` payloads when `ActorFeedbackComponent.PublishStatusApplied(StatusEffectDefinition)` dispatches status feedback.
+- Updated `ActorFloatingFeedbackReceiver` so status popups render either the authored status effect id or the string status value.
+- Classified the Feedback HUD/popup scripts in the refactor audit as retained owners/adapters instead of open pass-through candidates.
+
+Verification:
+
+- Scoped reference search confirmed the status feedback path flows through `ActorFeedbackComponent`, `ActorFloatingFeedbackReceiver`, `ParticipantFeedbackRelay`, and `ParticipantFeedbackHudPresenter`.
+- Unity Test Runner was not run from shell; run affected feedback tests in the Unity Editor.
+
 ### Baseline Planning And Audit
 
 Commits:

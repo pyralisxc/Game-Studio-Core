@@ -95,8 +95,13 @@ namespace NeonBlack.Gameplay.Modules.Feedback
                     break;
 
                 case ActorFeedbackEventType.StatusApplied:
-                    if (showStatusPopups && feedbackEvent.StatusEffect != null)
-                        SpawnPopup(feedbackEvent.StatusEffect.effectId, statusColor);
+                    if (showStatusPopups)
+                    {
+                        string statusText = feedbackEvent.StatusEffect != null
+                            ? feedbackEvent.StatusEffect.effectId
+                            : feedbackEvent.StringValue;
+                        SpawnPopup(statusText, statusColor);
+                    }
                     break;
 
                 case ActorFeedbackEventType.Parry:

@@ -205,6 +205,22 @@ These are not confirmed deletions. They are first-pass candidates because their 
 - `Modules/Feedback/Runtime/UI/DamageNumberSpawner.cs`
 - `Modules/Feedback/Runtime/UI/DamageNumber.cs`
 
+### Feedback HUD And Popup Ownership Review
+
+Reviewed on 2026-07-04. Retain the Feedback UI split:
+
+- `ParticipantHudTargetBinding` owns participant selection only.
+- `ParticipantHealthHudBinder` owns participant health lookup and binding to panel surfaces.
+- `ParticipantHealthPanel` owns concrete TMP/Image health presentation.
+- `ParticipantTimedTextPanel` owns one reusable temporary text surface.
+- `ParticipantFeedbackHudPresenter` owns participant feedback stream subscription and routes stream messages into direct legacy labels or reusable timed text panels.
+- `ParticipantFeedbackRelay` is a valid participant-context adapter from actor feedback events into participant feedback messages.
+- `ParticipantFeedbackService` is the valid stream owner.
+- `ActorFeedbackComponent` is the actor-local publisher.
+- `ActorFloatingFeedbackReceiver`, `DamageNumberSpawner`, and `DamageNumber` are presentation owners for world-space feedback and pooled numeric output.
+
+Do not collapse these into one HUD/feedback script. The remaining simplification pressure is to keep contracts accurate, remove stale direct-label compatibility only after authored scenes no longer serialize it, and keep status/damage/heal routing behavior complete.
+
 ### Secondary Candidates
 
 - `Presentation/Visuals/TextFlasher.cs`

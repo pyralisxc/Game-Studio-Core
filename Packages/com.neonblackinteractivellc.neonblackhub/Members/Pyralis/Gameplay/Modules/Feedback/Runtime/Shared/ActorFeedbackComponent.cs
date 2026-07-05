@@ -94,10 +94,17 @@ namespace NeonBlack.Gameplay.Modules.Feedback
 
         public void PublishStatusApplied(StatusEffectDefinition effectDefinition, GameObject source = null)
         {
-            PublishStatusApplied(
-                effectDefinition != null ? effectDefinition.displayName : string.Empty,
-                effectDefinition != null ? effectDefinition.magnitude : 0f,
-                source);
+            if (feedbackProfile != null && !feedbackProfile.publishStatusEvents)
+                return;
+
+            string statusName = effectDefinition != null ? effectDefinition.displayName : string.Empty;
+            float magnitude = effectDefinition != null ? effectDefinition.magnitude : 0f;
+            Dispatch(new ActorFeedbackEvent(
+                ActorFeedbackEventType.StatusApplied,
+                floatValue: magnitude,
+                stringValue: statusName,
+                source: source,
+                statusEffect: effectDefinition));
         }
 
         public void PublishScore(int amount)
