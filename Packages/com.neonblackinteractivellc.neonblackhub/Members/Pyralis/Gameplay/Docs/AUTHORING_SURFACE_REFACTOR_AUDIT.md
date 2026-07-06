@@ -6,8 +6,9 @@ Unity version checked for this pass: `6000.4.0f1`.
 
 Inventory snapshot:
 
-- Gameplay C# files under `Members/Pyralis/Gameplay`: 573
-- Top-level distribution: Core 72, Data 160, Editor 14, Glue 40, Modules 247 runtime scripts, Networking 7, Presentation 16
+- Gameplay C# files under `Members/Pyralis/Gameplay`: 566 total, 536 runtime after excluding editor/test folders.
+- Top-level runtime distribution: Core 72, Data 160, Glue 40, Modules 241, Networking 7, Presentation 16.
+- Editor/test distribution: 30 C# files across the top-level Editor lane, module editor folders, and tests.
 - Package assemblies found: 36
 - PYS Authoring is external through `Packages/manifest.json` as `file:../../../Pys Authoring/Packages/com.pys.authoring`
 
@@ -24,6 +25,8 @@ Completed in this lane:
 - The dedicated changelog records the evidence and verification for each slice.
 - Focused wiring-report runtime tests now cover the first canonical-evidence parity behaviors: missing `SessionDefinition` setup appears once as a `MissingProvider` row; route-dependent camera guidance is deferred while session route evidence is absent; participant service and feature activation rows wait for a complete participant route; complete participant routes report concrete missing participant-service providers; PlayerInputManager plus multiple auto-join participants reports one semantic join timing issue; authored combat routes report combat feature activation; authored scoring routes report scoring, game-flow, and feedback service activation.
 - `GameplayWiringReportBuilder` now records `RuntimeSceneSearch` loaded-scene evidence as inventory-only rows before any installer or service activation behavior changes. This keeps scene search visible as evidence instead of hidden authority.
+- Pawn combat visible setup was reduced by consolidating weapon selection, block tuning/state, damage multipliers, and projectile launch defaults into `PawnCombatBehaviour`; four obsolete pawn combat helper components and their `.meta` files were removed after package and read-only `Assets` GUID scans.
+- `GameFlowHudController` now receives session-flow, gameplay-state, and score-reader contracts through the existing runtime-services handoff instead of direct VContainer injection.
 
 Remaining review:
 
@@ -48,9 +51,9 @@ This is the current package-wide cleanup map after the Feedback/HUD opening slic
 | `Data` | 160 | ScriptableObject definitions, profiles, config, and data-backed handoff contracts. | High field/profile count can become a second implementation layer if profiles collect local fallback values. | Favor focused capability profiles. Remove required PYS fields that duplicate runtime validation or sanitized tuning. Do not create a mega profile. |
 | `Glue` | 40 | Bootstrap, lifetime, participant services, feature service registration, scene flow, spawning, and wiring reports. | Largest current file is `GameplayWiringReportBuilder` at 807 lines. Glue can become a smart manager if report/build/register policies are not separated by ownership. | Continue policy extraction and report parity first. Do not move folders or delete service addresses until `RUNTIME_WIRING_AUDIT.md` parity gates are complete. |
 | `Modules/Character` | 49 | Pawn identity, movement, physical state, and pawn-facing sibling modules. | Visible pawn surfaces must stay readable, but movement internals are large enough to hide feature behavior. | Preserve current pawn surfaces. Move internal lanes into private models/state machines only when it reduces inspector-facing components or duplicated ownership. |
-| `Modules/Combat` | 58 | Health, hitboxes, weapons, pawn combat, enemy combat, projectiles, combat state, and combat UI. | High script count is expected, but direct feature coupling and component-local fallback combat payloads remain the main risk. | Keep authored combat definitions as source truth. Consolidate only duplicate hitbox/projectile/weapon adapters with reference checks and tests. |
+| `Modules/Combat` | 54 | Health, hitboxes, weapons, pawn combat, enemy combat, projectiles, combat state, and combat UI. | High script count is expected, but direct feature coupling and component-local fallback combat payloads remain the main risk. | Keep authored combat definitions as source truth. Consolidate only duplicate hitbox/projectile/weapon adapters with reference checks and tests. |
 | `Modules/Feedback` | 18 | Actor feedback publishers/receivers, participant feedback stream, HUD surfaces, and damage-number output. | Opening cleanup removed hidden HUD base glue and folded the pooled damage-number instance into its spawner. Remaining pressure is direct TMP label compatibility. | Keep concrete HUD widgets. Remove direct label compatibility only after serialized scene refs disappear. Keep `DamageNumberSpawner` as the authored sink surface. |
-| `Modules/Hazards` | 22 | Hazard profiles, runtime zones, spawners, impact data, and hazard feedback. | Several large hazard files suggest profile/application and runtime-output lanes may be mixed. | Audit `HazardSpawner`, `Hazard`, and `HazardDifficultyController` for profile-owned payloads versus scene output before moving code. |
+| `Modules/Hazards` | 20 | Hazard profiles, runtime zones, spawners, impact data, and hazard feedback. | Several large hazard files suggest profile/application and runtime-output lanes may be mixed. | Audit `HazardSpawner`, `Hazard`, and `HazardDifficultyController` for profile-owned payloads versus scene output before moving code. |
 | `Modules/Rpg` | 38 | RPG services, UI presenters, panel routers, and RPG domain runtime. | UI presenter count and file size are high; risk is one panel becoming a local game framework. | Start with panel presenter ownership tables. Extract reusable view helpers only when multiple presenters duplicate identical UI mechanics. |
 | `Modules/Input` | 5 | Input readers/adapters for participant-owned pawn control. | Low count, but `PlayerInputHandler` remains large and easy to overuse as direct setup surface. | Keep `Motor2DInputAdapter` as beginner surface. Treat `PlayerInputHandler` as lower-level implementation unless custom input routes need it. |
 | `Modules/Interaction` | 9 | Collectibles and interaction dispatch surfaces. | Moderate; likely healthy after score-sink cleanup, but generic spawning still needs sample/editor proof. | Keep collectible behavior module-owned. Avoid moving score/hazard coupling back into concrete modules. |
@@ -64,12 +67,12 @@ This is the current package-wide cleanup map after the Feedback/HUD opening slic
 
 Current metrics:
 
-- Runtime script counts by top-level section: Core 72, Data 160, Glue 40, Modules 247, Networking 7, Presentation 16.
-- Runtime script counts by largest module groups: Combat 58, Character 49, RPG 38, Hazards 22, Feedback 18, Enemies 17.
-- Largest runtime files currently include `GameplayWiringReportBuilder`, `HazardSpawner`, `CinemachineCameraRigController`, `DialogueService`, `CameraRigProfileApplier`, `ActorAnimationDriver`, and multiple RPG panel presenters.
-- Name-pattern scan found 71 manager/router/binder/presenter/adapter/relay/service/controller class declarations. These are review pressure, not automatic deletion.
-- Scene search/runtime creation scan found 65 `GetComponentsInChildren`, find, instantiate, or `new GameObject` hits across runtime package sections. Classify each as valid runtime output, setup evidence, or hidden setup repair before changing it.
-- Required-field scan still finds many contracts. Continue narrowing only when a field is identity/profile/route meaning versus optional tuning or local widget state.
+- Runtime script counts by top-level section: Core 72, Data 160, Glue 40, Modules 241, Networking 7, Presentation 16.
+- Runtime script counts by largest module groups: Combat 54, Character 49, RPG 38, Hazards 20, Feedback 18, Enemies 17.
+- Largest runtime files currently include `GameplayWiringReportBuilder`, `Hazard.PatternSequences`, `HazardSpawner`, `HazardDifficultyController`, `CinemachineCameraRigController`, `Hazard`, `DialogueService`, `ActorAnimationDriver`, and `CameraRigProfileApplier`.
+- Name-pattern scan found 82 manager/router/binder/presenter/adapter/relay/service/controller class declarations. These are review pressure, not automatic deletion.
+- Scene search/runtime creation scan found 73 `GetComponentsInChildren`, find, instantiate, or `new GameObject` hits across runtime package sections. Classify each as valid runtime output, setup evidence, or hidden setup repair before changing it.
+- Required-field scan finds 100 contract declarations. The visible sample is now mostly reaction/status/traversal profiles, score/time labels, projectile masks, camera profiles/targets, tabletop board/UI refs, combat sequences, hitbox zones, and concrete route/service setup rather than obvious optional media/profile/tuning false positives.
 
 ## Sectioned Refactor Plan
 
@@ -263,10 +266,10 @@ Primary files:
 
 Work:
 
-- [ ] Re-run the package script-count and largest-file scans and update the audit with current numbers.
-- [ ] Re-run required-field scans and document any remaining required fields as identity, definition, route, service, UI, prefab, physics, or concrete setup evidence.
-- [ ] Remove stale active-doc wording that describes deleted scripts, old PYS package layout, or superseded setup truth.
-- [ ] Keep historical detail in the changelog only; active docs must describe current behavior.
+- [x] Re-run the package script-count and largest-file scans and update the audit with current numbers.
+- [x] Re-run required-field scans and document any remaining required fields as identity, definition, route, service, UI, prefab, physics, or concrete setup evidence.
+- [x] Remove stale active-doc wording that describes deleted scripts, old PYS package layout, or superseded setup truth.
+- [x] Keep historical detail in the changelog only; active docs must describe current behavior.
 - [ ] Run `git diff --check`, Unity Test Runner when available, and a final manual PYS Authoring Window checklist.
 - [ ] Make the final codebase/docs quality commit, then push when requested.
 
