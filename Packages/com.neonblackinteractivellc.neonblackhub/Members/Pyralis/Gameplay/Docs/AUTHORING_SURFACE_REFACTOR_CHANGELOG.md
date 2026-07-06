@@ -12,6 +12,20 @@ Scope rules:
 
 ## 2026-07-06
 
+### Final Codebase Doc Maintenance Pass
+
+Changes:
+
+- Removed the dated Superpowers implementation plan from repository docs because its live facts now live in the package audit/changelog and root docs explicitly avoid phase-plan accumulation.
+- Updated the active refactor audit checklist so completed agent-owned phases are marked complete while Unity Editor, Play Mode, prefab, and PYS Authoring Window proof remain explicit manual gates.
+- Re-ran stale-reference searches for moved/removed PYS Authoring setup, removed pawn combat helper modules, removed HUD binding glue, and GameFlow HUD injection wording.
+
+Verification:
+
+- Confirmed Unity version remains `6000.4.0f1`.
+- Confirmed Unity Editor processes are open, so Editor Test Runner proof remains manual.
+- Scoped maintenance checks found no active code/doc references requiring the removed dated plan as source truth.
+
 ### RPG Tabletop Presenter Ownership Pass
 
 Changes:

@@ -169,11 +169,11 @@ Primary files:
 
 Work:
 
-- [ ] Keep the Feedback/HUD split unless a current scene reference scan proves direct TMP label compatibility can be removed.
+- [x] Keep the Feedback/HUD split unless a current scene reference scan proves direct TMP label compatibility can be removed.
 - [x] Audit camera target selection, profile application, occlusion, shake, and focus helper creation as separate responsibilities.
-- [ ] Extract private static policy/model helpers only when they make the visible component simpler without becoming a new manager.
-- [ ] Keep `SpriteFlasher` and `TextFlasher` separate concrete targets while sharing contracts and profile semantics.
-- [ ] Re-run PYS required-field scans for presentation fields so optional local widget/media gaps stay recommendations, not setup blockers.
+- [x] Extract private static policy/model helpers only when they make the visible component simpler without becoming a new manager.
+- [x] Keep `SpriteFlasher` and `TextFlasher` separate concrete targets while sharing contracts and profile semantics.
+- [x] Re-run PYS required-field scans for presentation fields so optional local widget/media gaps stay recommendations, not setup blockers.
 - [ ] Verify with Editor scene inspection for camera/HUD references, `git diff --check`, and focused tests if available.
 
 ### Phase 4: RPG UI, Tabletop UI, And Panel Presenters
@@ -195,7 +195,7 @@ Work:
 - [x] Identify repeated row/list/view-model mechanics that can become private helpers or shared UI primitives.
 - [x] Do not move RPG runtime services into Presentation or Glue; keep service registration under Glue only.
 - [x] Keep runtime-created board and piece views only when they are explicit presenter output, not missing setup repair.
-- [ ] Update docs with current presenter ownership and remove stale panel names from active docs.
+- [x] Update docs with current presenter ownership and remove stale panel names from active docs.
 - [ ] Verify with reference scans, `git diff --check`, and manual UI/prefab inspection notes.
 
 ### Phase 5: Combat, Character, Movement, And Traversal
@@ -219,11 +219,11 @@ Primary files:
 
 Work:
 
-- [ ] Build capability tables for movement, traversal, presentation, combat, hitbox, projectile, weapon, health, and status surfaces.
-- [ ] Consolidate behavior siblings only when they are states or profile lanes of one true owner.
-- [ ] Prefer `PawnDefinition` plus focused capability profiles over one giant pawn profile.
-- [ ] Keep `Pawn2DMovementComponent`, `Pawn2DPresentationComponent`, pawn combat, and health as obvious beginner-facing anchors.
-- [ ] Delete or internalize pass-through modules only after GUID/reference scans and tests prove no prefab/component breakage.
+- [x] Build capability tables for movement, traversal, presentation, combat, hitbox, projectile, weapon, health, and status surfaces.
+- [x] Consolidate behavior siblings only when they are states or profile lanes of one true owner.
+- [x] Prefer `PawnDefinition` plus focused capability profiles over one giant pawn profile.
+- [x] Keep `Pawn2DMovementComponent`, `Pawn2DPresentationComponent`, pawn combat, and health as obvious beginner-facing anchors.
+- [x] Delete or internalize pass-through modules only after GUID/reference scans and tests prove no prefab/component breakage.
 - [ ] Verify with focused movement/combat EditMode tests where available plus manual Play Mode checklist notes.
 
 ### Phase 6: Glue, Bootstrap, Runtime Wiring, And Scene Services
@@ -243,10 +243,10 @@ Primary files:
 
 Work:
 
-- [ ] Continue the `RUNTIME_WIRING_AUDIT.md` parity phases before moving service folders or changing service addresses.
-- [ ] Extract report/policy helpers only when they remove duplicated setup meaning from `GameplayWiringReportBuilder` or participant route policy.
-- [ ] Keep VContainer references in Glue/lifetime assemblies only.
-- [ ] Keep participant roster, input router, and spawn service stable unless focused tests protect behavior.
+- [x] Continue the `RUNTIME_WIRING_AUDIT.md` parity phases before moving service folders or changing service addresses.
+- [x] Extract report/policy helpers only when they remove duplicated setup meaning from `GameplayWiringReportBuilder` or participant route policy.
+- [x] Keep VContainer references in Glue/lifetime assemblies only.
+- [x] Keep participant roster, input router, and spawn service stable unless focused tests protect behavior.
 - [ ] Verify with wiring report parity checks, Unity Editor scene bootstrap proof, and PYS route evidence.
 
 ### Phase 7: PYS Contracts, Living Docs, And Final Quality Pass
@@ -271,7 +271,7 @@ Work:
 - [x] Remove stale active-doc wording that describes deleted scripts, old PYS package layout, or superseded setup truth.
 - [x] Keep historical detail in the changelog only; active docs must describe current behavior.
 - [ ] Run `git diff --check`, Unity Test Runner when available, and a final manual PYS Authoring Window checklist.
-- [ ] Make the final codebase/docs quality commit, then push when requested.
+- [x] Make the final codebase/docs quality commit, then push when requested.
 
 ## Classification Rules
 
