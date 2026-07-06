@@ -12,6 +12,23 @@ Scope rules:
 
 ## 2026-07-06
 
+### Hazard Pacing Contract Simplification
+
+Changes:
+
+- Removed `HazardSpawner._difficultyController` from the always-required PYS fields.
+- Downgraded missing Arcade 2D Hazard Pacing on `HazardSpawner` from required validation to recommended evidence because the spawner already has fallback timing.
+- Added a direct PYS authoring contract to `HazardDifficultyController` so optional authored pacing is explained by the pacing owner instead of the spawner.
+- Added mode-specific runtime validation for hazard pacing values, including Step mode step interval and Wave mode wave-entry health.
+- Added the Phase 1 hazard ownership review to the active audit, including runtime-created output classification for hazard pooling and popups.
+- Removed the stale `Hazard.PatternRunners.cs` plan reference because the private runner implementations live in `Hazard.PatternSequences.cs`.
+
+Verification:
+
+- Confirmed `HazardSpawner` uses fallback timing when no `HazardDifficultyController` is assigned.
+- Confirmed Unity version remains `6000.4.0f1`.
+- Unity Test Runner proof remains manual because Unity Editor is currently open.
+
 ### Larger Chunk Execution Plan
 
 Changes:

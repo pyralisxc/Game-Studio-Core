@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using UnityEngine.Events;
+using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Modules.Hazards
 {
@@ -14,7 +15,21 @@ namespace NeonBlack.Gameplay.Modules.Hazards
 /// Wire into ArcadeGameFlowController's difficulty controller slot.
 /// </summary>
 [AddComponentMenu("NeonBlack/Gameplay/Hazards/Arcade 2D Hazard Pacing")]
-public class HazardDifficultyController : GameplayTickBehaviour
+[AuthoringContract(
+    Category = "Combat, Session",
+    CapabilityPath = "Combat/Actions/Arcade 2D Hazard Pacing",
+    Surface = AuthoringSurface.Goal,
+    Summary = "Optional authored pacing surface for arcade 2D hazard spawn timing, hazard counts, and wave progression.",
+    SetupSteps = new[]
+    {
+        "Add Arcade 2D Hazard Pacing beside the Arcade 2D Hazard Spawner when the scene needs authored difficulty progression.",
+        "Select Linear, Exponential, Steps, or Wave mode.",
+        "Assign this component to the Arcade 2D Hazard Spawner when the spawner should use authored pacing instead of fallback timing."
+    },
+    SuccessChecks = new[] { "Start the arcade scene and verify hazard timing changes according to the selected pacing mode." },
+    Tags = new[] { "capability:Combat", "capability:Session", "axiom:Dimensions2D" }
+)]
+public class HazardDifficultyController : GameplayTickBehaviour, IRuntimeValidationProvider
 {
     // Shared structs / enums
 
@@ -207,6 +222,58 @@ public class HazardDifficultyController : GameplayTickBehaviour
 
     protected override GameplayTickDomain TickDomain => GameplayTickDomain.Hazards;
     protected override bool UsesGameplayTick => true;
+
+    public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
+    {
+        if (_initialSpawnDelay < 0f)
+            yield return RuntimeValidationIssue.Required("Initial Spawn Delay must be zero or greater.");
+
+        if (_initialSpawnInterval <= 0f)
+            yield return RuntimeValidationIssue.Required("Initial Spawn Interval must be greater than zero.");
+
+        if (_minSpawnInterval <= 0f)
+            yield return RuntimeValidationIssue.Required("Minimum Spawn Interval must be greater than zero.");
+
+        if (_minShadowDuration <= 0f)
+            yield return RuntimeValidationIssue.Required("Minimum Shadow Duration must be greater than zero.");
+
+        if (_initialMinSpawnCount > _initialMaxSpawnCount)
+            yield return RuntimeValidationIssue.Recommended("Initial Min Spawn Count is greater than Initial Max Spawn Count. Runtime clamping will keep max at least min.");
+
+        if (_mode == DifficultyMode.Steps && _stepInterval <= 0f)
+            yield return RuntimeValidationIssue.Required("Step Interval must be greater than zero when Step mode is selected.");
+
+        if (_mode != DifficultyMode.Wave)
+            yield break;
+
+        if (_waves == null || _waves.Length == 0)
+        {
+            yield return RuntimeValidationIssue.Required("Wave mode needs at least one Wave Entry.");
+            yield break;
+        }
+
+        for (int i = 0; i < _waves.Length; i++)
+        {
+            WaveEntry wave = _waves[i];
+            if (wave == null)
+            {
+                yield return RuntimeValidationIssue.Required($"Wave Entry {i} is empty.");
+                continue;
+            }
+
+            if (wave.spawnInterval <= 0f)
+                yield return RuntimeValidationIssue.Required($"Wave Entry {i} Spawn Interval must be greater than zero.");
+
+            if (wave.minDuration <= 0f || wave.maxDuration <= 0f)
+                yield return RuntimeValidationIssue.Required($"Wave Entry {i} duration values must be greater than zero.");
+
+            if (wave.minDuration > wave.maxDuration)
+                yield return RuntimeValidationIssue.Recommended($"Wave Entry {i} Min Duration is greater than Max Duration. Runtime random range may not match designer intent.");
+
+            if (wave.minSpawnCount > wave.maxSpawnCount)
+                yield return RuntimeValidationIssue.Recommended($"Wave Entry {i} Min Spawn Count is greater than Max Spawn Count. Runtime clamping will keep max at least min.");
+        }
+    }
 
     // Public properties
 

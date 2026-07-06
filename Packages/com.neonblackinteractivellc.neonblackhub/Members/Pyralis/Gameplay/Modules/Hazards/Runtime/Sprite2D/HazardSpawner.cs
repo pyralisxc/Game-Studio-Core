@@ -18,7 +18,7 @@ namespace NeonBlack.Gameplay.Modules.Hazards
         CapabilityPath = "Combat/Actions/Arcade 2D Hazard Spawner",
         Surface = AuthoringSurface.Goal,
         Summary = "Orchestrates pooling and spawning for authored arcade 2D hazard pattern prefabs.",
-        RequiredFields = new[] { nameof(_hazardEntries), nameof(_difficultyController) },
+        RequiredFields = new[] { nameof(_hazardEntries) },
         SetupSteps = new[]
         {
             "Add Arcade 2D Hazard Spawner to a scene GameObject.",
@@ -47,7 +47,7 @@ namespace NeonBlack.Gameplay.Modules.Hazards
             }
 
             if (_difficultyController == null)
-                yield return RuntimeValidationIssue.Required("Hazard Difficulty Controller is unassigned. Fallback timing will be used.");
+                yield return RuntimeValidationIssue.Recommended("Hazard Difficulty Controller is unassigned. Fallback timing will be used; assign Arcade 2D Hazard Pacing when the scene owns authored difficulty progression.");
 
             if (_gameplayStateSource == null && _gameplayStateReader == null)
                 yield return RuntimeValidationIssue.Required("Gameplay state is not assigned yet. ArcadeGameFlowController or the runtime scope normally supplies it; assign Gameplay State Source only for standalone spawner tests.");

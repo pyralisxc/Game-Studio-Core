@@ -89,8 +89,8 @@ Phase rules:
 
 Purpose: turn the current hazard and Feedback/HUD work into a stable baseline before larger edits continue.
 
-- [ ] Confirm Unity version from `ProjectSettings/ProjectVersion.txt` remains `6000.4.0f1`.
-- [ ] Record the known unrelated dirty files before editing so they are not swept into commits.
+- [x] Confirm Unity version from `ProjectSettings/ProjectVersion.txt` remains `6000.4.0f1`.
+- [x] Record the known unrelated dirty files before editing so they are not swept into commits.
 - [ ] In the Unity Editor, let the project refresh and confirm there are no compile errors after the recent hazard sequence consolidation.
 - [ ] In the PYS Authoring Window, verify the visible names for Arcade 2D Hazard Pattern, Arcade 2D Hazard Spawner, Arcade 2D Hazard Pacing, and HazardData section grouping.
 - [ ] Run available focused EditMode tests from the Unity Test Runner if the Editor is not busy; otherwise keep the residual risk explicit.
@@ -103,7 +103,6 @@ Purpose: finish the largest already-open simplification family while the context
 Primary files:
 
 - `Modules/Hazards/Runtime/Sprite2D/Hazard.cs`
-- `Modules/Hazards/Runtime/Sprite2D/Hazard.PatternRunners.cs`
 - `Modules/Hazards/Runtime/Sprite2D/Hazard.PatternSequences.cs`
 - `Modules/Hazards/Runtime/Sprite2D/HazardRuntimeReferences.cs`
 - `Modules/Hazards/Runtime/Sprite2D/HazardSpawner.cs`
@@ -115,10 +114,10 @@ Primary files:
 
 Work:
 
-- [ ] Build an ownership table for `Hazard`, `HazardSpawner`, `HazardDifficultyController`, `HazardData`, and `HazardFeedbackRuntime`.
-- [ ] Classify each `new GameObject`, `Instantiate`, object pool, feedback popup, or scene lookup as valid runtime output, setup evidence, or hidden setup repair.
+- [x] Build an ownership table for `Hazard`, `HazardSpawner`, `HazardDifficultyController`, `HazardData`, and `HazardFeedbackRuntime`.
+- [x] Classify each `new GameObject`, `Instantiate`, object pool, feedback popup, or scene lookup as valid runtime output, setup evidence, or hidden setup repair.
 - [ ] Keep `Hazard` as the serialized prefab runner and keep the internal pattern runners private unless external reuse is proven.
-- [ ] Simplify `HazardSpawner` only where pacing/profile data is mixed with scene output or duplicated validation.
+- [x] Simplify `HazardSpawner` only where pacing/profile data is mixed with scene output or duplicated validation.
 - [ ] Consider a focused `HazardPacingProfile` only if the same pacing data is repeated across `HazardSpawner` and `HazardDifficultyController`; do not create it just to reduce file length.
 - [ ] Keep `HazardData` as one serialized pattern asset unless the audit proves a split reduces Inspector load without making designers chase multiple assets for one pattern.
 - [ ] Update `AUTHORING_SURFACE_REFACTOR_CHANGELOG.md` and this audit with the final hazard classification.
@@ -592,6 +591,8 @@ Movement and detection review note: `Pawn2DMovementComponent.moveSpeed` and `Ene
 Hazard naming review note: the package has two hazard concepts. `DamageZone` and `DamageZone2D` are profile-backed damage volumes. The `Runtime/Sprite2D/Hazard*.cs` family is an arcade 2D pattern system: a `HazardData` pattern asset, a serialized `Hazard` prefab runner, a `HazardSpawner`, and a `HazardDifficultyController` pacing surface. Keep the serialized class names stable unless a prefab/scene migration is done in Unity; prefer the clearer Unity-facing names "Arcade 2D Hazard Pattern", "Arcade 2D Hazard Spawner", and "Arcade 2D Hazard Pacing". The `Hazard` component now selects an internal pattern runner for Slam, Crossing, and Bouncy execution; those runner and sequence implementations live together in `Hazard.PatternSequences.cs` so the Unity-facing `Hazard.cs` remains focused on prefab/runtime setup.
 
 HazardData review note: keep `HazardData` as the existing serialized pattern asset until a deliberate asset migration is planned. The current safe direction is clearer authoring language and custom-inspector grouping around Pattern Type, Slam Timing, Crossing Pattern, Bouncy Pattern, modifiers, collectibles, audio, and feedback. Later splits should be considered only if they reduce real Inspector load without forcing designers to chase multiple assets for one arcade hazard pattern.
+
+Hazard Phase 1 ownership review note: keep the arcade 2D hazard family split by authoring role, but stop treating fallback pacing as required setup. `Hazard` owns one prefab runner instance and serialized prefab references. `Hazard.PatternSequences.cs` owns the private Slam, Crossing, and Bouncy runner implementations. `HazardSpawner` owns scene-level pooling, weighted prefab selection, camera-bounds spawn placement, split-child spawning, and runtime service handoff. `HazardDifficultyController` owns optional authored pacing progression and now carries its own PYS contract plus mode-specific runtime validation; the spawner can use fallback timing, so missing pacing is recommended evidence rather than a required PYS blocker. `HazardData` owns one pattern asset's tuning and modifiers until a deliberate asset migration proves a split would reduce Inspector load. `HazardFeedbackRuntime` owns hazard-local flash and popup presentation. Its popup `new GameObject` output is valid runtime presentation, and the spawner's `Instantiate` calls are valid pool creation from authored prefabs. `GetComponent` lookups in this family are setup evidence or same-prefab runtime resolution, not hidden setup repair.
 
 ## Scene Services
 
