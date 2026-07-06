@@ -10,6 +10,23 @@ Scope rules:
 - Prefer clean compatibility cuts when references allow.
 - Keep PYS focused primarily on codebase quality, system health, ownership pressure, route semantics, topology, proof readiness, and cross-object setup truth.
 
+## 2026-07-06
+
+### Larger Chunk Execution Plan
+
+Changes:
+
+- Expanded the active audit's sectioned refactor plan into seven larger execution phases.
+- Kept the plan inside `AUTHORING_SURFACE_REFACTOR_AUDIT.md` so it remains part of the living audit instead of becoming a parallel side document.
+- Added phase rules for inline execution, subagent boundaries, `Assets/` protection, serialized-reference safety, verification, changelog updates, and coherent phase commits.
+- Reordered the next work around baseline proof, Hazards, Interaction/Collectibles/Scoring, Presentation/HUD, RPG/Tabletop UI, Combat/Character/Movement, Glue/Wiring, and final PYS/docs quality.
+
+Verification:
+
+- Confirmed the audit already instructs future section plans to fold into active docs instead of adding more markdown files.
+- Confirmed Unity version remains `6000.4.0f1`.
+- Unity Test Runner was not run because this slice updates docs/planning only.
+
 ## 2026-07-05
 
 ### Damage Number Runtime Surface Fold

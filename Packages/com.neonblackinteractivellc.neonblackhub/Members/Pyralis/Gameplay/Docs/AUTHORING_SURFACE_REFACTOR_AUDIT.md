@@ -73,42 +73,203 @@ Current metrics:
 
 ## Sectioned Refactor Plan
 
-Order matters. Do not chase script-count reduction before proving ownership and serialized-reference safety.
+Order matters. Do not chase script-count reduction before proving ownership and serialized-reference safety. Work in larger chunks than the opening slices, but keep each phase independently reviewable, documented, and committable.
 
-1. Feedback/HUD follow-up
-   - Keep `ParticipantHealthHudBinder`, `ParticipantHealthPanel`, `ParticipantTimedTextPanel`, `ParticipantFeedbackHudPresenter`, `ParticipantFeedbackRelay`, and `ParticipantFeedbackService`.
-   - Defer direct TMP label removal until `Members/Public/La Cucarachacha/Scenes/MainMenu.unity` no longer serializes `statusLabel`.
-   - Keep `DamageNumberSpawner` as the explicit scene-facing `IDamageNumberSink`; `DamageNumber` is now implementation code inside the spawner file.
+Default execution mode: inline agent execution in this thread. Use subagents only for bounded read-only audits, reference scans, or section classification that can be reviewed before edits. Do not use a long-running goal wrapper for this lane.
 
-2. Runtime wiring and Glue
-   - Continue `RUNTIME_WIRING_AUDIT.md` phases before moving folders.
-   - Extract small report/policy helpers only when they reduce duplicated setup meaning.
-   - Keep `GameplaySessionBootstrap`, `GameplayLifetimeScope`, `ParticipantRosterService`, `ParticipantInputRouter`, and `ParticipantSpawnService` stable unless a focused test protects the change.
+Phase rules:
 
-3. Presentation and camera
-   - Audit `CinemachineCameraRigController`, `CameraRigProfileApplier`, and `ActorAnimationDriver` for private policy/model extraction.
-   - Keep visible Unity components concrete; do not move module runtime behavior into Presentation.
-   - Treat runtime-created camera focus helpers as valid output only when they are explicit routing output, not missing camera-rig repair.
+- Keep Unity-facing setup brutally simple: fewer visible components, clearer component names, profile-owned tuning, and concrete owners.
+- Preserve serialized class names, field names, GUIDs, and `.meta` files unless a deliberate Unity migration is planned.
+- Do not touch `Assets/`; package examples, public member scenes, and authored project content are reference evidence only.
+- Do not create generic managers, mega profiles, hidden setup repair, runtime object auto-wiring, or module-to-Glue references.
+- End each phase with `git diff --check`, current-doc updates, a changelog entry, and a coherent commit. Run Unity Test Runner or manual Editor checks when Unity is available.
 
-4. Hazards
-   - Audit `HazardSpawner`, `Hazard`, `HazardDifficultyController`, `HazardData`, and hazard feedback for profile-owned payloads versus scene runtime output.
-   - Prefer moving reusable payload/tuning into profiles or data helpers over adding scene components.
-   - Preserve authored hazard prefab/scene references until GUID/reference checks prove safe deletion.
+### Phase 0: Baseline And Current Proof
 
-5. RPG UI and services
-   - Build panel-presenter ownership tables before editing.
-   - Merge or internalize only duplicated UI mechanics, not domain behavior.
-   - Keep RPG runtime services under `Modules/Rpg/Runtime`, UI under `Modules/Rpg/UI`, and service registration under Glue.
+Purpose: turn the current hazard and Feedback/HUD work into a stable baseline before larger edits continue.
 
-6. Combat and Character
-   - Leave core pawn/combat surfaces alone until Feedback, Presentation, Hazards, and RPG cleanup have reduced simpler visible noise.
-   - Later slices should target duplicate adapter/helper ownership around hitboxes, projectiles, weapon modules, and combat action state.
-   - Any movement/traversal consolidation must preserve current visible pawn component clarity and Data-owned seams.
+- [ ] Confirm Unity version from `ProjectSettings/ProjectVersion.txt` remains `6000.4.0f1`.
+- [ ] Record the known unrelated dirty files before editing so they are not swept into commits.
+- [ ] In the Unity Editor, let the project refresh and confirm there are no compile errors after the recent hazard sequence consolidation.
+- [ ] In the PYS Authoring Window, verify the visible names for Arcade 2D Hazard Pattern, Arcade 2D Hazard Spawner, Arcade 2D Hazard Pacing, and HazardData section grouping.
+- [ ] Run available focused EditMode tests from the Unity Test Runner if the Editor is not busy; otherwise keep the residual risk explicit.
+- [ ] Commit only documentation/proof updates if code is unchanged.
 
-7. Active-doc cleanup
-   - Keep `README.md`, `CURRENT_STATE_AUDIT.md`, `ARCHITECTURE_BLUEPRINT.md`, `RUNTIME_WIRING_AUDIT.md`, and this audit as the active doc set for this lane.
-   - Historical changelog entries can mention removed names as evidence, but active audit sections should not list deleted scripts as current candidates or owners.
-   - Delete or fold new side plans into these docs instead of adding more markdown files.
+### Phase 1: Hazards And Arcade Pattern Surface
+
+Purpose: finish the largest already-open simplification family while the context is hot. The target is a clearer arcade hazard authoring surface, not a class rename or asset migration.
+
+Primary files:
+
+- `Modules/Hazards/Runtime/Sprite2D/Hazard.cs`
+- `Modules/Hazards/Runtime/Sprite2D/Hazard.PatternRunners.cs`
+- `Modules/Hazards/Runtime/Sprite2D/Hazard.PatternSequences.cs`
+- `Modules/Hazards/Runtime/Sprite2D/HazardRuntimeReferences.cs`
+- `Modules/Hazards/Runtime/Sprite2D/HazardSpawner.cs`
+- `Modules/Hazards/Runtime/Sprite2D/HazardDifficultyController.cs`
+- `Modules/Hazards/Runtime/Shared/HazardFeedbackRuntime.cs`
+- `Modules/Hazards/Runtime/Shared/HazardData.cs`
+- `Modules/Hazards/Editor/HazardDataEditor.cs`
+- `Modules/Hazards/Runtime/Data/HazardImpactProfile.cs`
+
+Work:
+
+- [ ] Build an ownership table for `Hazard`, `HazardSpawner`, `HazardDifficultyController`, `HazardData`, and `HazardFeedbackRuntime`.
+- [ ] Classify each `new GameObject`, `Instantiate`, object pool, feedback popup, or scene lookup as valid runtime output, setup evidence, or hidden setup repair.
+- [ ] Keep `Hazard` as the serialized prefab runner and keep the internal pattern runners private unless external reuse is proven.
+- [ ] Simplify `HazardSpawner` only where pacing/profile data is mixed with scene output or duplicated validation.
+- [ ] Consider a focused `HazardPacingProfile` only if the same pacing data is repeated across `HazardSpawner` and `HazardDifficultyController`; do not create it just to reduce file length.
+- [ ] Keep `HazardData` as one serialized pattern asset unless the audit proves a split reduces Inspector load without making designers chase multiple assets for one pattern.
+- [ ] Update `AUTHORING_SURFACE_REFACTOR_CHANGELOG.md` and this audit with the final hazard classification.
+- [ ] Verify with `git diff --check`, reference scans for removed scripts or fields, and Unity Editor/PYS checks where available.
+
+### Phase 2: Interaction, Collectibles, And Scoring Edges
+
+Purpose: reduce small-script confusion around pickups and score handoff without collapsing collectible behavior, feedback, and scoring into one component.
+
+Primary files:
+
+- `Modules/Interaction/Runtime/Collectibles/Sprite2D/Collectible2D.cs`
+- `Modules/Interaction/Runtime/Collectibles/Sprite2D/CollectibleFeedback2D.cs`
+- `Modules/Interaction/Runtime/Collectibles/Sprite2D/CollectibleSpawner2D.cs`
+- `Modules/Interaction/Runtime/Collectibles/Rigged3D/Collectible3D.cs`
+- `Modules/Interaction/Runtime/Shared/ActorInteractionComponent.cs`
+- `Modules/Scoring/Runtime/Shared/ParticipantScoreService.cs`
+- `Modules/Scoring/Runtime/Shared/ScoreSinkComponent.cs`
+- `Data/Profiles/PickupProfile.cs`
+- `Data/Profiles/TopDownHopProfile.cs`
+
+Work:
+
+- [ ] Build an ownership table for collectible behavior, collectible feedback, spawn output, interaction dispatch, and score sinks.
+- [ ] Move duplicated fallback values into existing profiles only when the profile is already the clear owner.
+- [ ] Keep visible collectible components concrete; internalize only adapters that forward without owning collection, feedback, spawn, or scoring behavior.
+- [ ] Audit score sink naming for old route assumptions and delete stale compatibility only after reference scans prove safe.
+- [ ] Verify with focused compile/Test Runner proof where possible, `git diff --check`, and PYS route checks for pickup/score contract wording.
+
+### Phase 3: Presentation, Camera, And General HUD
+
+Purpose: keep presentation components obvious to Unity developers while extracting reusable policy that is currently buried in large visual controllers.
+
+Primary files:
+
+- `Presentation/Camera/CinemachineCameraRigController.cs`
+- `Presentation/Camera/CameraRigProfileApplier.cs`
+- `Presentation/Camera/PawnCameraTarget.cs`
+- `Presentation/Animation/ActorAnimationDriver.cs`
+- `Presentation/Visuals/ActorShadowDriver.cs`
+- `Presentation/Visuals/SpriteFlasher.cs`
+- `Presentation/Visuals/TextFlasher.cs`
+- `Presentation/HUD/GameFlow/Sprite2D/GameFlowHudController.cs`
+- `Presentation/HUD/UI/UIOrientationHandler.cs`
+- `Modules/Feedback/Runtime/UI/*.cs`
+
+Work:
+
+- [ ] Keep the Feedback/HUD split unless a current scene reference scan proves direct TMP label compatibility can be removed.
+- [ ] Audit camera target selection, profile application, occlusion, shake, and focus helper creation as separate responsibilities.
+- [ ] Extract private static policy/model helpers only when they make the visible component simpler without becoming a new manager.
+- [ ] Keep `SpriteFlasher` and `TextFlasher` separate concrete targets while sharing contracts and profile semantics.
+- [ ] Re-run PYS required-field scans for presentation fields so optional local widget/media gaps stay recommendations, not setup blockers.
+- [ ] Verify with Editor scene inspection for camera/HUD references, `git diff --check`, and focused tests if available.
+
+### Phase 4: RPG UI, Tabletop UI, And Panel Presenters
+
+Purpose: reduce panel/presenter repetition where it is truly duplicated UI mechanics, while keeping domain behavior in the RPG and Tabletop modules.
+
+Primary files:
+
+- `Modules/Rpg/Runtime/**`
+- `Modules/Rpg/UI/**`
+- `Modules/Tabletop/Runtime/**`
+- `Modules/Tabletop/UI/**`
+- `Data/Definitions/Rpg/**`
+- `Data/Definitions/Tabletop/**`
+
+Work:
+
+- [ ] Build panel-presenter tables for RPG inventory, dialogue, quest, item, and tabletop board surfaces.
+- [ ] Identify repeated row/list/view-model mechanics that can become private helpers or shared UI primitives.
+- [ ] Do not move RPG runtime services into Presentation or Glue; keep service registration under Glue only.
+- [ ] Keep runtime-created board and piece views only when they are explicit presenter output, not missing setup repair.
+- [ ] Update docs with current presenter ownership and remove stale panel names from active docs.
+- [ ] Verify with reference scans, `git diff --check`, and manual UI/prefab inspection notes.
+
+### Phase 5: Combat, Character, Movement, And Traversal
+
+Purpose: tackle the biggest script-count areas only after simpler presentation/hazard/RPG noise is reduced. This phase should improve beginner visibility without turning pawn behavior into a mega component.
+
+Primary files:
+
+- `Modules/Character/Runtime/Sprite2D/Pawn2DMovementComponent*.cs`
+- `Modules/Character/Runtime/Sprite2D/Pawn2DPresentationComponent*.cs`
+- `Modules/Character/Runtime/Rigged3D/Pawn3DPresentationComponent.cs`
+- `Modules/Character/Runtime/Shared/Components/Rigged3D/Pawn3DMovementComponent.cs`
+- `Modules/Combat/Pawn/Shared/PawnCombatBehaviour*.cs`
+- `Modules/Combat/Pawn/Sprite2D/PawnCombatBehaviour2D*.cs`
+- `Modules/Combat/Health/HealthComponent.cs`
+- `Modules/Combat/Pawn/Sprite2D/HitBox2D.cs`
+- `Modules/Combat/Projectiles/**`
+- `Data/Profiles/PawnMovementProfile.cs`
+- `Data/Profiles/PawnPresentationProfile.cs`
+- `Data/Profiles/Combat/*.cs`
+
+Work:
+
+- [ ] Build capability tables for movement, traversal, presentation, combat, hitbox, projectile, weapon, health, and status surfaces.
+- [ ] Consolidate behavior siblings only when they are states or profile lanes of one true owner.
+- [ ] Prefer `PawnDefinition` plus focused capability profiles over one giant pawn profile.
+- [ ] Keep `Pawn2DMovementComponent`, `Pawn2DPresentationComponent`, pawn combat, and health as obvious beginner-facing anchors.
+- [ ] Delete or internalize pass-through modules only after GUID/reference scans and tests prove no prefab/component breakage.
+- [ ] Verify with focused movement/combat EditMode tests where available plus manual Play Mode checklist notes.
+
+### Phase 6: Glue, Bootstrap, Runtime Wiring, And Scene Services
+
+Purpose: simplify composition and reporting last, after module ownership is clearer. This phase may reduce hidden policy duplication but must not create a broad gameplay manager.
+
+Primary files:
+
+- `Glue/Bootstrap/GameplaySessionBootstrap.cs`
+- `Glue/Bootstrap/GameplayLifetimeScope.cs`
+- `Glue/Participants/ParticipantRosterService.cs`
+- `Glue/InputRouting/ParticipantInputRouter.cs`
+- `Glue/Spawning/ParticipantSpawnService.cs`
+- `Glue/Wiring/GameplayWiringReportBuilder.cs`
+- `Glue/**`
+- `Docs/RUNTIME_WIRING_AUDIT.md`
+
+Work:
+
+- [ ] Continue the `RUNTIME_WIRING_AUDIT.md` parity phases before moving service folders or changing service addresses.
+- [ ] Extract report/policy helpers only when they remove duplicated setup meaning from `GameplayWiringReportBuilder` or participant route policy.
+- [ ] Keep VContainer references in Glue/lifetime assemblies only.
+- [ ] Keep participant roster, input router, and spawn service stable unless focused tests protect behavior.
+- [ ] Verify with wiring report parity checks, Unity Editor scene bootstrap proof, and PYS route evidence.
+
+### Phase 7: PYS Contracts, Living Docs, And Final Quality Pass
+
+Purpose: close the refactor as a codebase-quality pass, not just a pile of script edits.
+
+Primary files:
+
+- `README.md`
+- `Docs/README.md`
+- `Docs/CURRENT_STATE_AUDIT.md`
+- `Docs/ARCHITECTURE_BLUEPRINT.md`
+- `Docs/RUNTIME_WIRING_AUDIT.md`
+- `Docs/AUTHORING_SURFACE_REFACTOR_AUDIT.md`
+- `Docs/AUTHORING_SURFACE_REFACTOR_CHANGELOG.md`
+- PYS route/contract surfaces discovered during each phase
+
+Work:
+
+- [ ] Re-run the package script-count and largest-file scans and update the audit with current numbers.
+- [ ] Re-run required-field scans and document any remaining required fields as identity, definition, route, service, UI, prefab, physics, or concrete setup evidence.
+- [ ] Remove stale active-doc wording that describes deleted scripts, old PYS package layout, or superseded setup truth.
+- [ ] Keep historical detail in the changelog only; active docs must describe current behavior.
+- [ ] Run `git diff --check`, Unity Test Runner when available, and a final manual PYS Authoring Window checklist.
+- [ ] Make the final codebase/docs quality commit, then push when requested.
 
 ## Classification Rules
 
