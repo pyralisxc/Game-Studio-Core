@@ -5,7 +5,6 @@ using NeonBlack.Gameplay.Data.Profiles;
 using NeonBlack.Gameplay.Data.Participants;
 using NeonBlack.Gameplay.Data.Presentation;
 using UnityEngine;
-using VContainer;
 using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Presentation.Camera
@@ -86,14 +85,6 @@ namespace NeonBlack.Gameplay.Presentation.Camera
                     && camera.orthographic
                     && camera.orthographicSize <= CalculateRequiredOrthographicSize2D() + 0.01f;
             }
-        }
-
-        [Inject]
-        private void Construct(IParticipantRoster rosterService = null)
-        {
-            participantRoster = rosterService != null
-                ? rosterService
-                : participantRoster;
         }
 
         private void Awake()

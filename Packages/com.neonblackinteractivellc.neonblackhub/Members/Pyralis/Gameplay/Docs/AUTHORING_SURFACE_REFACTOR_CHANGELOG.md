@@ -12,6 +12,20 @@ Scope rules:
 
 ## 2026-07-06
 
+### Camera Rig Roster Handoff Ownership
+
+Changes:
+
+- Removed direct VContainer injection from `CinemachineCameraRigController`.
+- Kept participant roster handoff through the existing `SetParticipantRoster` method, which `GameplaySessionBootstrap` already calls after lifetime scope setup.
+- Added the Presentation Phase 3 ownership note to the active audit, including camera focus helper classification and the decision to keep `SpriteFlasher` and `TextFlasher` as separate concrete targets.
+
+Verification:
+
+- Confirmed `GameplaySessionBootstrap` configures the camera rig with `lifetimeScope.ParticipantRosterService`.
+- Confirmed remaining Presentation VContainer references are outside this camera-rig slice and should be handled in later focused cleanup.
+- Unity Test Runner proof remains manual because Unity Editor is currently open.
+
 ### Pickup Collector Validation Ownership
 
 Changes:
