@@ -1422,3 +1422,18 @@ Verification:
 - Confirmed no remaining code references to the removed pawn combat modules outside historical docs.
 - Confirmed `PawnCombatBehaviour` still owns `IDamageModifier`, `IActorCombatModifierReceiver`, `IActorGuardController`, and combat command handling.
 - Unity Editor Test Runner proof remains manual because Unity Editor processes are currently open.
+
+### Game Flow HUD Runtime Handoff
+
+Changes:
+
+- Extended `GameplayRuntimeServicesContext` with `IGameplaySessionFlow` and `ISessionScoreService` so HUD presentation can receive the narrow session-flow and score-reader contracts without direct VContainer injection.
+- Updated `GameplayLifetimeScope` to populate those contracts from authored scene services during the existing runtime-services handoff.
+- Updated `GameFlowHudController` to implement `IGameplayRuntimeServicesReceiver` and expose `ConfigureRuntime` instead of an `[Inject]` method.
+- Kept `CameraZone` on direct injection for now because the runtime-services context should not pull concrete camera profile switching into Core.
+
+Verification:
+
+- Confirmed `GameplayRuntimeServicesContext` has one construction site and all receivers continue to use named context properties.
+- Confirmed `GameFlowHudController` no longer imports VContainer or declares an `[Inject]` method.
+- Unity Editor Test Runner proof remains manual because Unity Editor processes are currently open.

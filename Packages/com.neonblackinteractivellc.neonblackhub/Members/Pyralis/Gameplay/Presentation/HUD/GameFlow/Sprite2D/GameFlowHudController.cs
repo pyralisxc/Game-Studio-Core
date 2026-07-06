@@ -4,7 +4,6 @@ using NeonBlack.Gameplay.Presentation.HUD.Settings;
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
-using VContainer;
 using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Presentation.HUD.GameFlow
@@ -24,13 +23,13 @@ namespace NeonBlack.Gameplay.Presentation.HUD.GameFlow
         "Add GameFlowHudController to the UI Canvas.",
         "Wire score and time TMP labels for the live HUD.",
         "Assign HUD, game-over, button, and settings references only when this controller owns those UI surfaces.",
-        "Inject session flow, gameplay state, and score services from the route lifetime scope."
+        "Let the route lifetime scope provide session flow, gameplay state, and score services through the runtime-services handoff."
     },
         SuccessChecks = new[] { "The HUD shows points and survival time when the game starts." },
         Tags = new[] { "capability:UI" }
     )]
 [DefaultExecutionOrder(-10)]
-public class GameFlowHudController : MonoBehaviour
+public class GameFlowHudController : MonoBehaviour, IGameplayRuntimeServicesReceiver
 {
     [Header("Panels")]
     [SerializeField, Tooltip("HUD panel shown while the player is alive.")]
@@ -101,7 +100,7 @@ public class GameFlowHudController : MonoBehaviour
         if (_gameplaySession != null)
             _gameplaySession.AddGameStateChangedListener(OnGameStateChanged);
         else
-            Debug.LogError("[GameFlowHudController] Gameplay Session Flow is not injected. Ensure it is registered in the LifetimeScope.", this);
+            Debug.LogError("[GameFlowHudController] Gameplay Session Flow is not configured. Ensure the route lifetime scope provides an IGameplaySessionFlow service.", this);
 
         if (_scoreService != null)
         {
@@ -125,8 +124,12 @@ public class GameFlowHudController : MonoBehaviour
         }
     }
 
-    [Inject]
-    private void Construct(
+    public void ApplyRuntimeServices(GameplayRuntimeServicesContext context)
+    {
+        ConfigureRuntime(context.SessionScoreService, context.GameplaySessionFlow, context.GameplayStateReader);
+    }
+
+    public void ConfigureRuntime(
         ISessionScoreService scoreService = null,
         IGameplaySessionFlow gameplaySession = null,
         IGameplayStateReader gameplayStateReader = null)

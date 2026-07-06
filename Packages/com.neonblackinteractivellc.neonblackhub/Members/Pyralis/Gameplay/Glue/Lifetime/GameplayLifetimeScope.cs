@@ -283,9 +283,11 @@ namespace NeonBlack.Gameplay.Glue.Lifetime
 
             GameplayRuntimeServicesContext context = new GameplayRuntimeServicesContext(
                 _sessionStateService,
+                FindServiceInHierarchy<IGameplaySessionFlow>(),
                 _cameraRigController,
                 _sessionDefinition?.defaultGameMode?.playfieldProfile,
                 FindServiceInHierarchy<IInputSettingsRegistrar>(),
+                FindServiceInHierarchy<ISessionScoreService>(),
                 FindServiceInHierarchy<ISessionScoreAwardSink>(),
                 _eventChannel);
 
