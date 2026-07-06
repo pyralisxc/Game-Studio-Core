@@ -2,7 +2,6 @@ using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using VContainer;
 using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Presentation.HUD.Settings
@@ -18,13 +17,13 @@ namespace NeonBlack.Gameplay.Presentation.HUD.Settings
         SetupSteps = new[] 
     { 
         "Place this on the settings panel that is shown from the main menu.",
-        "Inject Settings Source through the lifetime scope, or assign GameplaySettingsService or another IGameplaySettingsApplier.",
+        "Assign GameplaySettingsService, or let the gameplay runtime-services handoff provide it.",
         "Assign only the sliders, toggle, and dropdown the panel actually exposes."
     },
         SuccessChecks = new[] { "Open the settings panel and verify sliders modify volume and the resolution dropdown updates display." },
         Tags = new[] { "capability:UI", "capability:Setup" }
     )]
-public class SettingsMenu : MonoBehaviour
+public class SettingsMenu : MonoBehaviour, IGameplayRuntimeServicesReceiver
 {
     private const string KEY_FULLSCREEN = "Fullscreen";
 
@@ -52,8 +51,12 @@ public class SettingsMenu : MonoBehaviour
     private UnityEngine.Events.UnityAction<bool> _onFullscreen;
     private UnityEngine.Events.UnityAction<int> _onResolutionChanged;
 
-    [Inject]
-    private void Construct(IGameplaySettingsApplier settings = null)
+    public void ApplyRuntimeServices(GameplayRuntimeServicesContext context)
+    {
+        ConfigureRuntime(context.InputSettingsRegistrar as IGameplaySettingsApplier);
+    }
+
+    public void ConfigureRuntime(IGameplaySettingsApplier settings)
     {
         if (settings != null)
             _settings = settings;

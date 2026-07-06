@@ -598,6 +598,8 @@ Interaction Phase 2 ownership review note: keep 2D and 3D pickup collectors sepa
 
 Presentation Phase 3 ownership review note: keep `CinemachineCameraRigController` as the scene camera runtime owner for focus selection, split-screen routing, Cinemachine target assignment, playfield clamping, and 2D visible-area bounds. `CameraRigProfileApplier` remains a static profile-to-Cinemachine recipe helper rather than a visible component. `GameplaySessionBootstrap` already supplies the participant roster through `SetParticipantRoster`, so the camera rig no longer needs direct VContainer injection. The shared focus target `new GameObject` remains valid runtime camera output because it is an explicit Cinemachine follow target, not hidden setup repair. `SpriteFlasher` and `TextFlasher` remain separate concrete presentation targets because SpriteRenderer and TMP_Text color ownership differ; deeper flash routine consolidation is deferred until it can reduce code without creating an abstract visual manager.
 
+Presentation Phase 3 settings UI review note: `SettingsMenu` and `SettingsScreen` now use `IGameplayRuntimeServicesReceiver` plus explicit `ConfigureRuntime` methods for settings/state handoff, or inspector-assigned `GameplaySettingsService` references. They no longer require direct VContainer injection. Keep `GameFlowHudController` and `CameraZone` injection in place until Glue exposes a clear explicit handoff for session flow and camera-zone route context; cutting those now would make scene setup less clear, not simpler.
+
 ## Scene Services
 
 These are scene-authored or scene-scale surfaces. They should remain visible when they are required, not created silently to repair setup.

@@ -1,7 +1,6 @@
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
 using UnityEngine.UI;
-using VContainer;
 using Pys.Authoring.Contracts;
 
 namespace NeonBlack.Gameplay.Presentation.HUD.Settings
@@ -18,14 +17,14 @@ namespace NeonBlack.Gameplay.Presentation.HUD.Settings
         SetupSteps = new[] 
     { 
         "Assign Settings Page root from the same Canvas.",
-        "Inject Settings Source through the lifetime scope, or assign GameplaySettingsService.",
+        "Assign GameplaySettingsService, or let the gameplay runtime-services handoff provide it.",
         "Assign Main Menu Page and Back Button when this screen owns menu-page return navigation.",
         "Start the Settings Page inactive."
     },
         SuccessChecks = new[] { "Open settings from the menu and verify it pauses gameplay and populates sliders correctly." },
         Tags = new[] { "capability:UI", "capability:Setup" }
     )]
-public class SettingsScreen : MonoBehaviour
+public class SettingsScreen : MonoBehaviour, IGameplayRuntimeServicesReceiver
 {
     [Header("Pages")]
     [SerializeField, Tooltip("Root GameObject of the main menu content. Hidden while settings are open.")]
@@ -90,8 +89,12 @@ public class SettingsScreen : MonoBehaviour
         _swapControlsToggle?.onValueChanged.AddListener(_onSwapControls);
     }
 
-    [Inject]
-    private void Construct(IGameplaySettingsApplier settings = null, IGameplayStateReader gameplayStateReader = null)
+    public void ApplyRuntimeServices(GameplayRuntimeServicesContext context)
+    {
+        ConfigureRuntime(context.InputSettingsRegistrar as IGameplaySettingsApplier, context.GameplayStateReader);
+    }
+
+    public void ConfigureRuntime(IGameplaySettingsApplier settings, IGameplayStateReader gameplayStateReader = null)
     {
         if (settings != null)
             _settings = settings;

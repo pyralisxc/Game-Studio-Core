@@ -12,6 +12,21 @@ Scope rules:
 
 ## 2026-07-06
 
+### Settings UI Runtime Service Handoff
+
+Changes:
+
+- Removed direct VContainer injection from `SettingsMenu` and `SettingsScreen`.
+- Added `IGameplayRuntimeServicesReceiver` support plus explicit `ConfigureRuntime` methods so settings UI can receive settings/state through the package runtime-services handoff or inspector assignment.
+- Updated setup guidance to describe runtime-services handoff instead of injection.
+- Added an audit note deferring `GameFlowHudController` and `CameraZone` injection cuts until Glue exposes equally clear explicit handoffs.
+
+Verification:
+
+- Confirmed `GameplayRuntimeServicesContext.InputSettingsRegistrar` is supplied by Glue and can be used when the settings service also implements `IGameplaySettingsApplier`.
+- Scoped `git diff --check` passed for the touched files.
+- Unity Test Runner proof remains manual because Unity Editor is currently open.
+
 ### Camera Rig Roster Handoff Ownership
 
 Changes:
