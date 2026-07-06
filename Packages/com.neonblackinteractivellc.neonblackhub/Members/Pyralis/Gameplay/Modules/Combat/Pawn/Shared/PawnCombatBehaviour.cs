@@ -1,5 +1,7 @@
 using NeonBlack.Gameplay.Data.Definitions.Combat;
 using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Core.Enums;
+using NeonBlack.Gameplay.Core.Types.Animation;
 using NeonBlack.Gameplay.Data.Participants;
 using UnityEngine;
 using Pys.Authoring.Contracts;
@@ -19,14 +21,11 @@ namespace NeonBlack.Gameplay.Modules.Combat
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Modules/Combat/Pawn/Pawn Combat Behaviour")]
     [RequireComponent(typeof(PawnHitBoxModule))]
-    [RequireComponent(typeof(PawnDamageModule))]
-    [RequireComponent(typeof(PawnProjectileModule))]
-    [RequireComponent(typeof(PawnBlockModule))]
-    [RequireComponent(typeof(PawnWeaponModule))]
     public partial class PawnCombatBehaviour : GameplayTickBehaviour, IPawnCombatModule, IActorCombatMovementInfluence, IActorCombatRequestReceiver, IActorGuardController, ICombatActionStateReader, IDamageModifier, IActorCombatModifierReceiver, IRuntimeValidationProvider
     {
         private PawnCombatRuntimeReferences _runtime;
         private PawnComboProcessor _comboProcessor;
+        private readonly PawnDamageHandler _damageHandler = new PawnDamageHandler();
         private readonly CombatActionStateMachine _actionStateMachine = new CombatActionStateMachine();
 
         private float _attackTimer;
@@ -34,19 +33,19 @@ namespace NeonBlack.Gameplay.Modules.Combat
         private int _aerialAttackCount;
         private float _aerialTimer;
         private float _combatTimer;
+        private int _activeWeaponIndex;
+        private bool _isBlocking;
+        private IActorAnimationController _animationDriver;
+        private HealthComponent _health;
 
         private IActorCombatMovementState Motor => _runtime?.Motor;
         private IActorFeedbackPublisher FeedbackPublisher => _runtime?.FeedbackPublisher;
         private PawnHitBoxModule HitBoxModule => _runtime?.HitBoxModule;
-        private PawnDamageModule DamageModule => _runtime?.DamageModule;
-        private PawnProjectileModule ProjectileModule => _runtime?.ProjectileModule;
-        private PawnBlockModule BlockModule => _runtime?.BlockModule;
-        private PawnWeaponModule WeaponModule => _runtime?.WeaponModule;
 
-        public bool IsBlocking => BlockModule != null && BlockModule.IsBlocking;
+        public bool IsBlocking => _isBlocking;
         public bool IsGuarding => IsBlocking;
-        public float BlockDamageReduction => BlockModule != null ? BlockModule.BlockDamageReduction : 0.2f;
-        public float BlockFrontalAngle => BlockModule != null ? BlockModule.BlockFrontalAngle : 90f;
+        public float BlockDamageReduction => blockDamageReduction;
+        public float BlockFrontalAngle => blockFrontalAngle;
         public float AttackTimer => _attackTimer;
         public float KickTimer => _kickTimer;
         public float AttackMoveMultiplier => attackMoveMultiplier;
@@ -65,6 +64,15 @@ namespace NeonBlack.Gameplay.Modules.Combat
         {
             _runtime = PawnCombatRuntimeReferences.Capture(this);
             _comboProcessor ??= new PawnComboProcessor();
+            _animationDriver = GetComponent<IActorAnimationController>();
+            _health = GetComponent<HealthComponent>();
+
+            if (equippedWeapons != null && equippedWeapons.Length > 0)
+            {
+                _activeWeaponIndex = Mathf.Clamp(startingWeaponIndex, 0, equippedWeapons.Length - 1);
+            }
+
+            ApplyActiveWeapon();
 
             SubscribeHitBoxes();
         }
@@ -98,7 +106,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
 
             _comboProcessor.Tick(dt, comboResetTime);
             HitBoxModule?.Tick(dt);
-            BlockModule?.Tick();
+            _animationDriver?.SetBoolSignal(ActorAnimationSignal.BlockLoop, _isBlocking);
             UpdateActionState();
         }
 
@@ -121,7 +129,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
 
             if (primarySequence != null && primarySequence.actions != null && primarySequence.actions.Length > 0)
             {
-                ExecuteSequenceAction(_comboProcessor.PrimaryState, primarySequence, CombatInputType.Primary, WeaponModule.AttackWeapon, ref _attackTimer, attackCooldown);
+                ExecuteSequenceAction(_comboProcessor.PrimaryState, primarySequence, CombatInputType.Primary, attackWeapon, ref _attackTimer, attackCooldown);
             }
         }
 
@@ -137,15 +145,37 @@ namespace NeonBlack.Gameplay.Modules.Combat
 
             if (secondarySequence != null && secondarySequence.actions != null && secondarySequence.actions.Length > 0)
             {
-                ExecuteSequenceAction(_comboProcessor.SecondaryState, secondarySequence, CombatInputType.Secondary, WeaponModule.KickWeapon, ref _kickTimer, kickCooldown);
+                ExecuteSequenceAction(_comboProcessor.SecondaryState, secondarySequence, CombatInputType.Secondary, kickWeapon, ref _kickTimer, kickCooldown);
             }
         }
 
-        public void HandleBlockStart() => BlockModule?.HandleBlockStart();
-        public void HandleBlockEnd() => BlockModule?.HandleBlockEnd();
+        public void HandleBlockStart()
+        {
+            if (Motor != null && Motor.IsActing)
+                return;
+
+            _isBlocking = true;
+            _animationDriver?.TriggerSignal(ActorAnimationSignal.BlockStart);
+            _animationDriver?.SetBoolSignal(ActorAnimationSignal.BlockLoop, true);
+        }
+
+        public void HandleBlockEnd()
+        {
+            _isBlocking = false;
+            _animationDriver?.TriggerSignal(ActorAnimationSignal.BlockEnd);
+            _animationDriver?.SetBoolSignal(ActorAnimationSignal.BlockLoop, false);
+        }
+
         public void BeginGuard() => HandleBlockStart();
         public void EndGuard() => HandleBlockEnd();
-        public void CycleWeapon(int direction) => WeaponModule?.CycleWeapon(direction);
+        public void CycleWeapon(int direction)
+        {
+            if (equippedWeapons == null || equippedWeapons.Length <= 1)
+                return;
+
+            _activeWeaponIndex = (_activeWeaponIndex + direction + equippedWeapons.Length) % equippedWeapons.Length;
+            ApplyActiveWeapon();
+        }
 
         public bool TryHandleCombatCommand(in ActorCombatCommand command)
         {
@@ -183,18 +213,75 @@ namespace NeonBlack.Gameplay.Modules.Combat
 
         public bool TryModifyIncomingDamage(GameObject source, ref float incomingDamage)
         {
-            if (BlockModule == null || DamageModule == null) return false;
-            return DamageModule.TryModifyIncomingDamage(
-                source, 
-                ref incomingDamage, 
-                BlockModule.IsBlocking,
-                BlockModule.BlockDamageReduction,
-                BlockModule.BlockFrontalAngle,
+            return _damageHandler.TryModifyIncomingDamage(
+                gameObject,
+                source,
+                ref incomingDamage,
+                _isBlocking,
+                blockDamageReduction,
+                blockFrontalAngle,
                 Motor?.FacingRight ?? true);
         }
 
-        public void SetOutgoingDamageMultiplier(float multiplier) => DamageModule?.SetOutgoingDamageMultiplier(multiplier);
-        public void SetOutgoingKnockbackMultiplier(float multiplier) => DamageModule?.SetOutgoingKnockbackMultiplier(multiplier);
+        public void SetOutgoingDamageMultiplier(float multiplier) => _damageHandler.SetOutgoingDamageMultiplier(multiplier);
+        public void SetOutgoingKnockbackMultiplier(float multiplier) => _damageHandler.SetOutgoingKnockbackMultiplier(multiplier);
+
+        private WeaponData ActiveWeapon => (equippedWeapons != null && equippedWeapons.Length > _activeWeaponIndex) ? equippedWeapons[_activeWeaponIndex] : null;
+
+        private void ApplyActiveWeapon()
+        {
+            WeaponData weapon = ActiveWeapon;
+            _animationDriver?.SetRuntimeControllerOverride(weapon != null ? weapon.overrideController : null);
+        }
+
+        private void SetWeapons(WeaponData attack, WeaponData kick, WeaponData aerial)
+        {
+            attackWeapon = attack;
+            kickWeapon = kick;
+            aerialWeapon = aerial;
+            ApplyActiveWeapon();
+        }
+
+        private void FireProjectile(WeaponData weapon, bool facingRight, float damageMultiplier, float knockbackMultiplier)
+        {
+            ProjectileLauncher3D launcher = ResolveProjectileLauncher();
+            if (launcher == null)
+            {
+                Debug.LogWarning($"{nameof(PawnCombatBehaviour)} needs a {nameof(ProjectileLauncher3D)} to fire ranged weapon `{weapon.weaponName}`.", this);
+                return;
+            }
+
+            if (weapon.projectileDefinition == null)
+                return;
+
+            Vector3 spawnPos = projectileSpawnPoint != null
+                ? projectileSpawnPoint.position
+                : transform.position + Vector3.up * 1f + transform.forward * 0.5f;
+            Vector3 forward = facingRight ? Vector3.right : Vector3.left;
+            ProjectileFireRequest request = new ProjectileFireRequest(
+                weapon.projectileDefinition,
+                weapon.fireModeDefinition,
+                spawnPos,
+                forward,
+                gameObject,
+                _health != null ? _health.faction : Faction.Neutral,
+                damageMultiplier: damageMultiplier,
+                knockbackMultiplier: knockbackMultiplier);
+
+            launcher.Fire(request);
+        }
+
+        private ProjectileLauncher3D ResolveProjectileLauncher()
+        {
+            if (projectileLauncher != null)
+                return projectileLauncher;
+
+            projectileLauncher = GetComponentInParent<ProjectileLauncher3D>();
+            if (projectileLauncher == null)
+                projectileLauncher = GetComponentInChildren<ProjectileLauncher3D>();
+
+            return projectileLauncher;
+        }
 
         private void UpdateActionState()
         {

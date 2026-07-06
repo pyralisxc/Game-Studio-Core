@@ -1407,3 +1407,18 @@ Verification:
 
 - Scoped `git diff --check` passed for touched files.
 - Unity Editor Test Runner proof remains manual because Unity Editor processes are currently open.
+
+### Pawn Combat Owner Consolidation
+
+Changes:
+
+- Folded weapon selection, block state/tuning, damage multiplier handling, and projectile launch defaults into `PawnCombatBehaviour`.
+- Removed `PawnDamageModule`, `PawnProjectileModule`, `PawnBlockModule`, and `PawnWeaponModule` plus their `.meta` files after package and read-only `Assets` GUID scans found no serialized references.
+- Kept `PawnHitBoxModule` separate as the authored hitbox-zone sensor surface.
+- Narrowed `PawnCombatRuntimeReferences` to motor, combat-result receivers, feedback publisher, and hitbox-zone lookup.
+
+Verification:
+
+- Confirmed no remaining code references to the removed pawn combat modules outside historical docs.
+- Confirmed `PawnCombatBehaviour` still owns `IDamageModifier`, `IActorCombatModifierReceiver`, `IActorGuardController`, and combat command handling.
+- Unity Editor Test Runner proof remains manual because Unity Editor processes are currently open.

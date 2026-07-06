@@ -414,10 +414,7 @@ These scripts currently look like bridge surfaces. Some are valid Unity-facing a
 - `Modules/Input/Runtime/Sprite2D/PlayerInputHandler.cs`
 - `Modules/Character/Runtime/Sprite2D/InteractionInputAdapter2D.cs`
 - `Modules/Combat/Pawn/Sprite2D/GuardInputAdapter2D.cs`
-- `Modules/Combat/Pawn/Shared/PawnDamageModule.cs`
 - `Modules/Combat/Pawn/Shared/PawnHitBoxModule.cs`
-- `Modules/Combat/Pawn/Shared/PawnProjectileModule.cs`
-- `Modules/Combat/Pawn/Shared/PawnWeaponModule.cs`
 - `Modules/Feedback/Runtime/Participants/ParticipantFeedbackRelay.cs`
 - `Modules/Feedback/Runtime/UI/ParticipantHealthHudBinder.cs`
 - `Modules/Feedback/Runtime/UI/ParticipantFeedbackHudPresenter.cs`
@@ -581,6 +578,8 @@ Lifetime scope review note: `GameplayLifetimeScope` is the visible composition r
 Level session review note: `LevelSession` is a static cross-scene navigation handoff. `ChosenSceneName` and `IsRandom` are runtime state set by menu or flow code, not setup fields. PYS can describe the route contract, but it should not classify those transient properties as required authoring fields.
 
 Pawn combat review note: pawn combat authoring should require the combat definitions and hitbox/projectile surfaces that give the component meaning, not every numeric tuning value copied from `PawnCombatProfile`. Cooldowns, damage values, aerial counts, weapon indices, combat token counts, and block-angle/reduction values are profile/component tuning with runtime validation or clamping; PYS should observe invalid tuning as codebase quality evidence rather than present those values as missing setup.
+
+Pawn combat Phase 5 consolidation note: `PawnCombatBehaviour` is now the single shared pawn combat owner for combo flow, weapon data, block state/tuning, damage/knockback multipliers, and projectile launch defaults. The old `PawnDamageModule`, `PawnProjectileModule`, `PawnBlockModule`, and `PawnWeaponModule` scripts were internal lanes with no package or `Assets` GUID references, so they were cold-cut instead of kept as extra Unity-facing components. `PawnHitBoxModule` remains separate because named hitbox zones are a concrete authored sensor surface used by animation/combat timing. `PawnCombatRuntimeReferences` should stay narrow: motor/result/feedback/hitbox discovery only, not a recreated bundle of hidden sibling modules.
 
 Enemy attack review note: `EnemyAttack` assets should require the animation signal and hitbox zone that define the attack's meaning. Range, damage, priority, weighting, and timing values are AI/combat tuning; invalid values should surface through runtime validation instead of PYS required-field setup.
 

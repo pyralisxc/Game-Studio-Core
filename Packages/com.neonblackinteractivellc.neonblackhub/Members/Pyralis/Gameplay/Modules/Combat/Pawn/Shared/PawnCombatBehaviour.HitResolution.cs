@@ -11,11 +11,11 @@ namespace NeonBlack.Gameplay.Modules.Combat
         {
             if (weapon != null && (weapon.weaponType == WeaponType.Ranged || weapon.weaponType == WeaponType.Thrown) && weapon.projectileDefinition != null)
             {
-                ProjectileModule?.FireProjectile(
+                FireProjectile(
                     weapon,
                     Motor?.FacingRight ?? true,
-                    DamageModule != null ? DamageModule.DamageHandler.OutgoingDamageMultiplier : 1.0f,
-                    DamageModule != null ? DamageModule.DamageHandler.OutgoingKnockbackMultiplier : 1.0f);
+                    _damageHandler.OutgoingDamageMultiplier,
+                    _damageHandler.OutgoingKnockbackMultiplier);
                 return;
             }
 
@@ -23,12 +23,8 @@ namespace NeonBlack.Gameplay.Modules.Combat
                 ? explicitZoneName
                 : (weapon != null && !string.IsNullOrEmpty(weapon.hitBoxZone) ? weapon.hitBoxZone : defaultZoneName);
 
-            float damage = DamageModule != null
-                ? DamageModule.GetModifiedDamage(weapon != null ? weapon.damage : 10f)
-                : 10f;
-            float knockback = DamageModule != null
-                ? DamageModule.GetModifiedKnockback(weapon != null ? weapon.knockbackForce : 5f)
-                : 5f;
+            float damage = _damageHandler.GetModifiedDamage(weapon != null ? weapon.damage : 10f);
+            float knockback = _damageHandler.GetModifiedKnockback(weapon != null ? weapon.knockbackForce : 5f);
             float delay = weapon != null ? weapon.hitDelay : 0.1f;
             float duration = weapon != null ? weapon.hitDuration : 0.15f;
 

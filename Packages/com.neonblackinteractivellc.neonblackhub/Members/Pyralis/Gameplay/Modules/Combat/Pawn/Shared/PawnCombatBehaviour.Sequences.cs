@@ -14,7 +14,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
 
             if (aerialSequence != null && aerialSequence.actions != null && aerialSequence.actions.Length > 0)
             {
-                if (ExecuteSequenceAction(_comboProcessor.AerialState, aerialSequence, CombatInputType.Aerial, WeaponModule.AerialWeapon, ref _aerialTimer, attackCooldown))
+                if (ExecuteSequenceAction(_comboProcessor.AerialState, aerialSequence, CombatInputType.Aerial, aerialWeapon, ref _aerialTimer, attackCooldown))
                     _aerialAttackCount++;
                 return;
             }
@@ -29,7 +29,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
                 gameObject,
                 animationSignal: ActorAnimationSignal.AttackAerial,
                 step: _aerialAttackCount));
-            ActivateHitBoxForZone(aerialHitBoxZone, WeaponModule.AerialWeapon);
+            ActivateHitBoxForZone(aerialHitBoxZone, aerialWeapon);
         }
 
         private bool ExecuteSequenceAction(
@@ -57,7 +57,7 @@ namespace NeonBlack.Gameplay.Modules.Combat
                 UpdateActionState();
                 Motor.ResetMoveToIdle();
                 TriggerCombatAnimation(action, inputType);
-                ActivateHitBoxForZone(action.hitBoxZone, resolvedWeapon ?? defaultWeapon ?? WeaponModule.ActiveWeapon, action.hitBoxZone);
+                ActivateHitBoxForZone(action.hitBoxZone, resolvedWeapon ?? defaultWeapon ?? ActiveWeapon, action.hitBoxZone);
                 return true;
             }
 

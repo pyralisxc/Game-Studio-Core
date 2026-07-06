@@ -28,6 +28,23 @@ namespace NeonBlack.Gameplay.Modules.Combat
         [SerializeField] private CombatSequenceDefinition aerialSequence;
         [SerializeField] private string aerialHitBoxZone = "Aerial";
 
+        [Header("Weapons")]
+        [SerializeField] private WeaponData attackWeapon;
+        [SerializeField] private WeaponData kickWeapon;
+        [SerializeField] private WeaponData aerialWeapon;
+        [SerializeField] private WeaponData[] equippedWeapons;
+        [SerializeField] private int startingWeaponIndex;
+
+        [Header("Block Settings")]
+        [Range(0f, 1f)]
+        [SerializeField] private float blockDamageReduction = 0.2f;
+        [Range(10f, 180f)]
+        [SerializeField] private float blockFrontalAngle = 90f;
+
+        [Header("Projectile")]
+        [SerializeField] private Transform projectileSpawnPoint;
+        [SerializeField] private ProjectileLauncher3D projectileLauncher;
+
         public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
             if (!HasActions(primarySequence))
@@ -40,6 +57,10 @@ namespace NeonBlack.Gameplay.Modules.Combat
                 yield return RuntimeValidationIssue.Required("Attack Cooldown cannot be negative.");
             if (maxAerialAttacks < 0)
                 yield return RuntimeValidationIssue.Required("Max Aerial Attacks cannot be negative.");
+            if (blockDamageReduction < 0f || blockDamageReduction > 1f)
+                yield return RuntimeValidationIssue.Required("Block Damage Reduction must be between 0 and 1.");
+            if (blockFrontalAngle <= 0f || blockFrontalAngle > 180f)
+                yield return RuntimeValidationIssue.Required("Block Frontal Angle must be greater than 0 and at most 180.");
         }
 
         private static bool HasActions(CombatSequenceDefinition sequence)
@@ -61,8 +82,8 @@ namespace NeonBlack.Gameplay.Modules.Combat
             aerialSequence = profile.aerialSequence;
             maxAerialAttacks = profile.maxAerialAttacks;
 
-            WeaponModule?.SetWeapons(profile.attackWeapon, profile.kickWeapon, profile.aerialWeapon);
-            DamageModule?.SetOutgoingDamageMultiplier(1.0f);
+            SetWeapons(profile.attackWeapon, profile.kickWeapon, profile.aerialWeapon);
+            _damageHandler?.SetOutgoingDamageMultiplier(1.0f);
         }
     }
 }
