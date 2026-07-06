@@ -188,10 +188,10 @@ Primary files:
 
 Work:
 
-- [ ] Build panel-presenter tables for RPG inventory, dialogue, quest, item, and tabletop board surfaces.
-- [ ] Identify repeated row/list/view-model mechanics that can become private helpers or shared UI primitives.
-- [ ] Do not move RPG runtime services into Presentation or Glue; keep service registration under Glue only.
-- [ ] Keep runtime-created board and piece views only when they are explicit presenter output, not missing setup repair.
+- [x] Build panel-presenter tables for RPG inventory, dialogue, quest, item, and tabletop board surfaces.
+- [x] Identify repeated row/list/view-model mechanics that can become private helpers or shared UI primitives.
+- [x] Do not move RPG runtime services into Presentation or Glue; keep service registration under Glue only.
+- [x] Keep runtime-created board and piece views only when they are explicit presenter output, not missing setup repair.
 - [ ] Update docs with current presenter ownership and remove stale panel names from active docs.
 - [ ] Verify with reference scans, `git diff --check`, and manual UI/prefab inspection notes.
 
@@ -599,6 +599,8 @@ Interaction Phase 2 ownership review note: keep 2D and 3D pickup collectors sepa
 Presentation Phase 3 ownership review note: keep `CinemachineCameraRigController` as the scene camera runtime owner for focus selection, split-screen routing, Cinemachine target assignment, playfield clamping, and 2D visible-area bounds. `CameraRigProfileApplier` remains a static profile-to-Cinemachine recipe helper rather than a visible component. `GameplaySessionBootstrap` already supplies the participant roster through `SetParticipantRoster`, so the camera rig no longer needs direct VContainer injection. The shared focus target `new GameObject` remains valid runtime camera output because it is an explicit Cinemachine follow target, not hidden setup repair. `SpriteFlasher` and `TextFlasher` remain separate concrete presentation targets because SpriteRenderer and TMP_Text color ownership differ; deeper flash routine consolidation is deferred until it can reduce code without creating an abstract visual manager.
 
 Presentation Phase 3 settings UI review note: `SettingsMenu` and `SettingsScreen` now use `IGameplayRuntimeServicesReceiver` plus explicit `ConfigureRuntime` methods for settings/state handoff, or inspector-assigned `GameplaySettingsService` references. They no longer require direct VContainer injection. Keep `GameFlowHudController` and `CameraZone` injection in place until Glue exposes a clear explicit handoff for session flow and camera-zone route context; cutting those now would make scene setup less clear, not simpler.
+
+RPG/Tabletop Phase 4 ownership review note: keep RPG panel presenters separate by panel route for now. Dialogue, quest board, vendor, loadout, skill tree, and hub panel routing own different domain-service calls and UI lifecycles; no shared presenter base is earned yet. `RpgPanelRoutePresenter` and `RpgHubPanelRouter` are valid lightweight routing/display surfaces. `TabletopBoardGridPresenter` owns board runtime state projection, selectable space/piece view creation, and action queue handoff; its runtime-created board and piece views are explicit presenter output, not setup repair. `TabletopBoardSpaceView` and `TabletopBoardPieceView` remain small reusable view primitives. `TabletopTurnStatusPresenter` now requires only the board presenter and TMP label; seat names are display copy with defaults, not required PYS setup.
 
 ## Scene Services
 

@@ -12,6 +12,21 @@ Scope rules:
 
 ## 2026-07-06
 
+### RPG Tabletop Presenter Ownership Pass
+
+Changes:
+
+- Narrowed `TabletopTurnStatusPresenter` required PYS fields to the actual board presenter and TMP label references.
+- Added runtime validation to `TabletopTurnStatusPresenter` for missing presenter/label and blank fallback copy.
+- Recorded the RPG/Tabletop presenter ownership review in the active audit.
+- Kept RPG route presenters separate because their domain-service calls and UI lifecycles are not duplicate mechanics yet.
+
+Verification:
+
+- Confirmed `TabletopBoardGridPresenter` runtime-created board and piece views are explicit presenter output from authored board definitions.
+- Confirmed `RpgPanelRoutePresenter` and `RpgHubPanelRouter` are lightweight route/display surfaces rather than duplicate domain owners.
+- Unity Test Runner proof remains manual because Unity Editor is currently open.
+
 ### Settings UI Runtime Service Handoff
 
 Changes:

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using NeonBlack.Gameplay.Core.Contracts;
 using UnityEngine;
@@ -13,13 +14,13 @@ namespace NeonBlack.Gameplay.Modules.Tabletop
         CapabilityPath = "Tabletop/Board/Tabletop Turn Status Presenter",
         Surface = AuthoringSurface.Goal,
         Summary = "LIGHTWEIGHT UI binding that shows which tabletop seat acts next.",
-        RequiredFields = new[] { nameof(boardPresenter), nameof(label), nameof(seatZeroName), nameof(seatOneName) },
-        SetupSteps = new[] { "Add to Tabletop HUD", "Assign BoardPresenter and TMP Label" },
+        RequiredFields = new[] { nameof(boardPresenter), nameof(label) },
+        SetupSteps = new[] { "Add to Tabletop HUD", "Assign BoardPresenter and TMP Label", "Rename seat labels only when this board uses custom seat names." },
         SuccessChecks = new[] { "The HUD label correctly displays the name of the active participant's seat." },
         Tags = new[] { "capability:Tabletop" }
     )]
     [AddComponentMenu("NeonBlack/Gameplay/Tabletop/Tabletop Turn Status Presenter")]
-    public sealed class TabletopTurnStatusPresenter : MonoBehaviour
+    public sealed class TabletopTurnStatusPresenter : MonoBehaviour, IRuntimeValidationProvider
     {
         [SerializeField] private TabletopBoardGridPresenter boardPresenter;
         [SerializeField] private TextMeshProUGUI label;
@@ -28,6 +29,18 @@ namespace NeonBlack.Gameplay.Modules.Tabletop
         [SerializeField] private string fallbackFormat = "Seat {0} to move";
 
         public string CurrentText { get; private set; } = string.Empty;
+
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
+        {
+            if (boardPresenter == null)
+                yield return RuntimeValidationIssue.Required("Board Presenter is required to read tabletop turn state.");
+
+            if (label == null)
+                yield return RuntimeValidationIssue.Required("TMP Label is required to display tabletop turn status.");
+
+            if (string.IsNullOrWhiteSpace(fallbackFormat))
+                yield return RuntimeValidationIssue.Recommended("Fallback Format is empty, so unexpected seat IDs may render blank status text.");
+        }
 
         public void Configure(TabletopBoardGridPresenter presenter, TextMeshProUGUI targetLabel)
         {
