@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Core.Types.Animation;
 using NeonBlack.Gameplay.Data.Interactions;
@@ -29,7 +30,7 @@ namespace NeonBlack.Gameplay.Modules.Interaction
         Tags = new[] { "capability:Inventory", "lane:Interaction" },
         Selectable = false
     )]
-    public class ActorPickupCollector2D : GameplayTickBehaviour, IActorInteractionHandler
+    public class ActorPickupCollector2D : GameplayTickBehaviour, IActorInteractionHandler, IRuntimeValidationProvider
 {
         private const int BufferSize = 16;
         [SerializeField] private PickupProfile pickupProfile;
@@ -40,6 +41,27 @@ namespace NeonBlack.Gameplay.Modules.Interaction
         private IActorFeedbackPublisher _feedbackPublisher;
         protected override GameplayTickDomain TickDomain => GameplayTickDomain.Interaction;
         protected override bool UsesGameplayTick => true;
+
+        public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
+        {
+            if (pickupProfile == null)
+            {
+                yield return RuntimeValidationIssue.Required("Pickup Profile is required for 2D pickup collection.");
+                yield break;
+            }
+
+            foreach (RuntimeValidationIssue issue in pickupProfile.GetRuntimeValidationIssues())
+                yield return issue;
+
+            if (pickupProfile.enableInteractionCollect && pickupProfile.interactionRadius <= 0f)
+                yield return RuntimeValidationIssue.Required("Interaction Radius must be greater than zero when 2D Interaction Collect is enabled.");
+
+            if (pickupProfile.enableAutoCollect && pickupProfile.collectibleLayers.value == 0)
+                yield return RuntimeValidationIssue.Required("2D Collectible Layers is set to Nothing while Auto Collect is enabled.");
+
+            if (GetComponent<Collider2D>() == null)
+                yield return RuntimeValidationIssue.Required("Collider2D is required on the actor for 2D pickup overlap checks.");
+        }
 
         private void Awake()
         {

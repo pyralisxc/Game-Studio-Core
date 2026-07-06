@@ -21,9 +21,9 @@ namespace NeonBlack.Gameplay.Modules.Interaction
 /// </summary>
 [AuthoringContract(
         Category = "Audio, V F X",
-        CapabilityPath = "Interaction/Collectibles/Feedback/Collectible Feedback2D",
+        CapabilityPath = "Interaction/Collectibles/Feedback/Collectible Award Feedback 2D",
         Surface = AuthoringSurface.Goal,
-        Summary = "Manages audio and visual feedback (particles/sounds) for collectible actions.",
+        Summary = "Scene-authored pickup award sink that routes collectible score awards and plays optional audio or particle feedback.",
         SetupSteps = new[] 
     { 
         "Attach to a Feedback Object or Spawner GameObject.",

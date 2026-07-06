@@ -12,6 +12,21 @@ Scope rules:
 
 ## 2026-07-06
 
+### Pickup Collector Validation Ownership
+
+Changes:
+
+- Added dimension-neutral runtime validation to `PickupProfile` for the case where both pickup collection modes are disabled.
+- Added dimension-specific runtime validation to `ActorPickupCollector2D` and `ActorPickupCollector3D` for required pickup profile, actor collider, layer, and radius setup.
+- Clarified `CollectibleFeedback2D` as the scene-authored pickup award sink for score award routing plus optional audio/particle feedback.
+- Updated the active audit to keep 2D and 3D pickup collectors separate, remove the stale `ScoreSinkComponent` path, and name `ParticipantScoreService` plus `StillnessBonus2D` as the current scoring surfaces.
+
+Verification:
+
+- Confirmed `ScoreSinkComponent.cs` does not exist in the current scoring module.
+- Confirmed 2D and 3D pickup collectors use different Unity physics APIs and should remain separate concrete components.
+- Unity Test Runner proof remains manual because Unity Editor is currently open.
+
 ### Hazard Pacing Contract Simplification
 
 Changes:

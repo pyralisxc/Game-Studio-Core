@@ -21,7 +21,8 @@ namespace NeonBlack.Gameplay.Data.Profiles
     {
         public IEnumerable<RuntimeValidationIssue> GetRuntimeValidationIssues()
         {
-            yield break;
+            if (!enableAutoCollect && !enableInteractionCollect)
+                yield return RuntimeValidationIssue.Recommended("Auto Collect and Interaction Collect are both disabled, so this pickup profile will not collect pickups.");
         }
 
         public bool enableAutoCollect = true;

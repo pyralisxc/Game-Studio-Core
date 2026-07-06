@@ -135,16 +135,16 @@ Primary files:
 - `Modules/Interaction/Runtime/Collectibles/Rigged3D/Collectible3D.cs`
 - `Modules/Interaction/Runtime/Shared/ActorInteractionComponent.cs`
 - `Modules/Scoring/Runtime/Shared/ParticipantScoreService.cs`
-- `Modules/Scoring/Runtime/Shared/ScoreSinkComponent.cs`
+- `Modules/Scoring/Sprite2D/StillnessBonus2D.cs`
 - `Data/Profiles/PickupProfile.cs`
 - `Data/Profiles/TopDownHopProfile.cs`
 
 Work:
 
-- [ ] Build an ownership table for collectible behavior, collectible feedback, spawn output, interaction dispatch, and score sinks.
-- [ ] Move duplicated fallback values into existing profiles only when the profile is already the clear owner.
-- [ ] Keep visible collectible components concrete; internalize only adapters that forward without owning collection, feedback, spawn, or scoring behavior.
-- [ ] Audit score sink naming for old route assumptions and delete stale compatibility only after reference scans prove safe.
+- [x] Build an ownership table for collectible behavior, collectible feedback, spawn output, interaction dispatch, and score sinks.
+- [x] Move duplicated fallback values into existing profiles only when the profile is already the clear owner.
+- [x] Keep visible collectible components concrete; internalize only adapters that forward without owning collection, feedback, spawn, or scoring behavior.
+- [x] Audit score sink naming for old route assumptions and delete stale compatibility only after reference scans prove safe.
 - [ ] Verify with focused compile/Test Runner proof where possible, `git diff --check`, and PYS route checks for pickup/score contract wording.
 
 ### Phase 3: Presentation, Camera, And General HUD
@@ -593,6 +593,8 @@ Hazard naming review note: the package has two hazard concepts. `DamageZone` and
 HazardData review note: keep `HazardData` as the existing serialized pattern asset until a deliberate asset migration is planned. The current safe direction is clearer authoring language and custom-inspector grouping around Pattern Type, Slam Timing, Crossing Pattern, Bouncy Pattern, modifiers, collectibles, audio, and feedback. Later splits should be considered only if they reduce real Inspector load without forcing designers to chase multiple assets for one arcade hazard pattern.
 
 Hazard Phase 1 ownership review note: keep the arcade 2D hazard family split by authoring role, but stop treating fallback pacing as required setup. `Hazard` owns one prefab runner instance and serialized prefab references. `Hazard.PatternSequences.cs` owns the private Slam, Crossing, and Bouncy runner implementations. `HazardSpawner` owns scene-level pooling, weighted prefab selection, camera-bounds spawn placement, split-child spawning, and runtime service handoff. `HazardDifficultyController` owns optional authored pacing progression and now carries its own PYS contract plus mode-specific runtime validation; the spawner can use fallback timing, so missing pacing is recommended evidence rather than a required PYS blocker. `HazardData` owns one pattern asset's tuning and modifiers until a deliberate asset migration proves a split would reduce Inspector load. `HazardFeedbackRuntime` owns hazard-local flash and popup presentation. Its popup `new GameObject` output is valid runtime presentation, and the spawner's `Instantiate` calls are valid pool creation from authored prefabs. `GetComponent` lookups in this family are setup evidence or same-prefab runtime resolution, not hidden setup repair.
+
+Interaction Phase 2 ownership review note: keep 2D and 3D pickup collectors separate because they own different Unity physics surfaces (`Collider2D.Overlap` versus `Physics.OverlapSphereNonAlloc`). `PickupProfile` owns shared pickup intent and now reports only dimension-neutral profile issues; `ActorPickupCollector2D` and `ActorPickupCollector3D` own dimension-specific collider, layer, and radius validation. `Collectible2D` and `Collectible3D` remain concrete pickup behavior owners. `CollectibleSpawner2D` owns 2D pooling and spawn output. `CollectibleFeedback2D` is the scene-authored pickup award sink for score award routing plus optional audio/particle output, so its PYS contract now says "Collectible Award Feedback 2D" instead of hiding the scoring responsibility behind a feedback-only label. Current scoring sink surfaces are `ParticipantScoreService` and `StillnessBonus2D`; there is no live `ScoreSinkComponent` script in this package.
 
 ## Scene Services
 
