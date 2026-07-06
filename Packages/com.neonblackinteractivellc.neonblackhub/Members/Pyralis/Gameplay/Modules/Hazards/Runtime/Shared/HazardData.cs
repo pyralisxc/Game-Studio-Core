@@ -99,10 +99,10 @@ public class HazardData : ScriptableObject
   [Tooltip("Optional visual and popup feedback profile for activation, explosion, bounce, and aftermath moments.")]
   public HazardFeedbackProfile feedbackProfile;
 
-  // Hazard Type
+  // Pattern Type
 
-  [Header("Hazard Type")]
-  [Tooltip("Controls how this hazard moves and behaves.")]
+  [Header("Pattern Type")]
+  [Tooltip("Selects the arcade hazard pattern runner: Slam, Crossing, or Bouncy.")]
   public HazardType hazardType = HazardType.Slam;
 
   // Sprites
@@ -121,14 +121,14 @@ public class HazardData : ScriptableObject
   [Tooltip("Color of the pulsing outline during the warning phase.")]
   public Color outlineColor = Color.red;
 
-  // Timing
+  // Slam Timing
 
-  [Header("Timing")]
+  [Header("Slam Timing")]
   [Min(0f)]
-  [Tooltip("Seconds the hazard stays active after slamming. 0 = use HazardDifficultyController value.")]
+  [Tooltip("(Slam) Seconds the hazard stays active after slamming. 0 = use HazardDifficultyController value.")]
   public float slamDuration = 0.4f;
   [Min(0f)]
-  [Tooltip("Seconds to fade out after retracting. 0 = use HazardDifficultyController value.")]
+  [Tooltip("(Slam) Seconds to fade out after retracting. 0 = use HazardDifficultyController value.")]
   public float retractDuration = 0.5f;
 
   // Spawn Rotation
@@ -139,29 +139,29 @@ public class HazardData : ScriptableObject
   [Tooltip("Fixed Z rotation (degrees) when randomRotationOnSpawn is false.")]
   public float fixedSpawnRotation = 0f;
 
-  // Crossing Settings
+  // Crossing Pattern
 
-  [Header("Crossing Settings")]
-  [Tooltip("Axis of travel for crossing-style hazards.")]
+  [Header("Crossing Pattern")]
+  [Tooltip("(Crossing) Axis of travel for crossing-style hazards.")]
   public CrossingAxis crossingAxis = CrossingAxis.Horizontal;
   [Min(0.1f)]
-  [Tooltip("World units per second.")]
+  [Tooltip("(Crossing/Bouncy/Targeted Slam) World units per second.")]
   public float moveSpeed = 4f;
   [Min(0f)]
-  [Tooltip("Seconds the lane indicator is shown before the hazard moves. If HazardDifficultyController.warningFlashDuration is above 0.05s it overrides this value; set it to 0 in HazardDifficultyController to let this field drive the warning.")]
+  [Tooltip("(Crossing) Seconds the lane indicator is shown before the hazard moves. If HazardDifficultyController.warningFlashDuration is above 0.05s it overrides this value; set it to 0 in HazardDifficultyController to let this field drive the warning.")]
   public float crossingWarningDuration = 0.6f;
-  [Tooltip("Rotate the sprite to face the direction of travel.")]
+  [Tooltip("(Crossing/Bouncy) Rotate the sprite to face the direction of travel.")]
   public bool rotatesToFaceDirection = false;
   [Range(1f, 20f)]
-  [Tooltip("Speed of the outline pulse during the warning phase (cycles per second).")]
+  [Tooltip("Speed of the warning outline pulse in cycles per second.")]
   public float warningPulseRate = 4f;
   [Min(0f)]
-  [Tooltip("Pause at the spawn edge after the warning ends, before movement starts. 0 = immediate.")]
+  [Tooltip("(Crossing) Pause at the spawn edge after the warning ends, before movement starts. 0 = immediate.")]
   public float entryDelay = 0f;
-  [Tooltip("Speed multiplier curve over normalized travel progress (0 to 1). Default flat 1 = constant speed.")]
+  [Tooltip("(Crossing/Bouncy) Speed multiplier curve over normalized travel progress (0 to 1). Default flat 1 = constant speed.")]
   public AnimationCurve speedCurve = AnimationCurve.Linear(0f, 1f, 1f, 1f);
   [Min(0f)]
-  [Tooltip("Seconds to pause after travel or last bounce completes before pooling. 0 = immediate.")]
+  [Tooltip("(Crossing/Bouncy) Seconds to pause after travel or last bounce completes before pooling. 0 = immediate.")]
   public float hitLingerDuration = 0f;
 
   // Crossing Variant
@@ -191,9 +191,9 @@ public class HazardData : ScriptableObject
   [Tooltip("Full sine cycles across the travel distance. Lower values = wider, gentler waves; higher = rapid tight oscillation.")]
   public float waveFrequency = 2f;
 
-  // Bouncy Settings
+  // Bouncy Pattern
 
-  [Header("Bouncy Settings")]
+  [Header("Bouncy Pattern")]
   [Range(1, 20)]
   [Tooltip("Number of direction changes before the hazard pools.")]
   public int bounceCount = 3;
@@ -243,7 +243,7 @@ public class HazardData : ScriptableObject
   [Tooltip("Scale multiplier applied to the explosion child GameObject at detonation.")]
   public float explosionSpriteScale = 1.8f;
 
-  // Crumb Interactions
+  // Collectible Interactions
 
   [Header("Collectible Interactions")]
   [Tooltip("Remove collectibles within range while this hazard is active. For Bouncy hazards with Hit Only When Grounded enabled, collectibles are only swept in the landing windows.")]
@@ -274,12 +274,14 @@ public class HazardData : ScriptableObject
   [Tooltip("(Slam) One-shot clip played the moment the hazard slams active.")]
   public AudioClip slamImpactClip;
   [Tooltip("(Bouncy) One-shot clip played each time the hazard reflects off a wall.")]
-  public AudioClip bounceClip;  [Tooltip("(Crossing) One-shot clip played the instant the hazard launches from the edge.")]
+  public AudioClip bounceClip;
+  [Tooltip("(Crossing) One-shot clip played the instant the hazard launches from the edge.")]
   public AudioClip crossingEntryClip;
   [Tooltip("(Crossing) Looped clip played while the hazard is traveling across the screen. Stops automatically on exit.")]
   public AudioClip crossingTravelClip;
   [Tooltip("(Crossing) One-shot clip played when the hazard reaches the far edge and exits.")]
-  public AudioClip crossingExitClip;  [Tooltip("(Any with enableExplosion) One-shot clip played when the explosion activates.")]
+  public AudioClip crossingExitClip;
+  [Tooltip("(Any with enableExplosion) One-shot clip played when the explosion activates.")]
   public AudioClip explosionClip;
   [Range(0f, 1f)]
   [Tooltip("Master volume for all audio clips on this hazard type.")]

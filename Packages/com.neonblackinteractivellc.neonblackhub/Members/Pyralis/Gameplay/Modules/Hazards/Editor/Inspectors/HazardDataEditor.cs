@@ -148,7 +148,7 @@ public class HazardDataEditor : Editor
         }
 
         // ── Hazard Type ───────────────────────────────────────────────────
-        Section("Hazard Type");
+        Section("Pattern Type");
         Prop(_pType);
 
         // ── Sprites ───────────────────────────────────────────────────────
@@ -173,7 +173,7 @@ public class HazardDataEditor : Editor
         // ── Timing (Slam only) ────────────────────────────────────────────
         if (isSlam)
         {
-            Section("Timing");
+            Section("Slam Timing");
             Prop(_pSlamDur,    "Active Duration (s)", "How long the hazard stays slammed. 0 = use HazardDifficultyController.");
             Prop(_pRetractDur, "Retract (s)",         "Fade-out time after impact. 0 = use HazardDifficultyController.");
             Prop(_pPulseRate,  "Pulse Rate",          "How fast the warning outline pulses during the warning phase (cycles/sec).");
@@ -192,7 +192,7 @@ public class HazardDataEditor : Editor
         // ── Crossing Settings ─────────────────────────────────────────────
         if (isCrossing)
         {
-            Section("Crossing Settings");
+            Section("Crossing Pattern");
             _foldMovement = EditorGUILayout.Foldout(_foldMovement, "Movement", true, EditorStyles.foldoutHeader);
             if (_foldMovement)
             {
@@ -242,7 +242,7 @@ public class HazardDataEditor : Editor
         // ── Bouncy ────────────────────────────────────────────────────────
         if (isBouncy)
         {
-            Section("Bouncy Settings");
+            Section("Bouncy Pattern");
             Prop(_pSpeed,                "Speed (u/s)",       "World units per second.");
             Prop(_pSpeedCurve,           "Speed Curve",       "Evaluated each frame (x = bounce 0→1). Multiplied against base Speed.");
             Prop(_pBounceCount,          "Bounce Count",      "Number of direction changes before the hazard pools.");

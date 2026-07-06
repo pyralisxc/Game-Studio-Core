@@ -1300,3 +1300,17 @@ Verification:
 - Confirmed Slam, Crossing, and Bouncy sequence methods are present exactly once in `Hazard.PatternSequences.cs`.
 - Scoped `git diff --check` passed for touched files.
 - Unity Editor Test Runner proof remains manual because Unity Editor processes are currently open.
+
+### HazardData Authoring Surface Clarification
+
+Changes:
+
+- Renamed HazardData authoring sections from generic hazard labels to pattern-focused labels: Pattern Type, Slam Timing, Crossing Pattern, and Bouncy Pattern.
+- Clarified tooltips for fields shared across multiple pattern runners without changing serialized field names.
+- Split cramped audio field declarations so Crossing and Explosion clips have independent attributes and cleaner Inspector metadata.
+- Updated the audit to keep `HazardData` as the current serialized pattern asset until a deliberate asset migration is planned.
+
+Verification:
+
+- Scoped `git diff --check` passed for touched files.
+- Unity Editor Test Runner proof remains manual because Unity Editor processes are currently open.

@@ -430,6 +430,8 @@ Movement and detection review note: `Pawn2DMovementComponent.moveSpeed` and `Ene
 
 Hazard naming review note: the package has two hazard concepts. `DamageZone` and `DamageZone2D` are profile-backed damage volumes. The `Runtime/Sprite2D/Hazard*.cs` family is an arcade 2D pattern system: a `HazardData` pattern asset, a serialized `Hazard` prefab runner, a `HazardSpawner`, and a `HazardDifficultyController` pacing surface. Keep the serialized class names stable unless a prefab/scene migration is done in Unity; prefer the clearer Unity-facing names "Arcade 2D Hazard Pattern", "Arcade 2D Hazard Spawner", and "Arcade 2D Hazard Pacing". The `Hazard` component now selects an internal pattern runner for Slam, Crossing, and Bouncy execution; those runner and sequence implementations live together in `Hazard.PatternSequences.cs` so the Unity-facing `Hazard.cs` remains focused on prefab/runtime setup.
 
+HazardData review note: keep `HazardData` as the existing serialized pattern asset until a deliberate asset migration is planned. The current safe direction is clearer authoring language and custom-inspector grouping around Pattern Type, Slam Timing, Crossing Pattern, Bouncy Pattern, modifiers, collectibles, audio, and feedback. Later splits should be considered only if they reduce real Inspector load without forcing designers to chase multiple assets for one arcade hazard pattern.
+
 ## Scene Services
 
 These are scene-authored or scene-scale surfaces. They should remain visible when they are required, not created silently to repair setup.
