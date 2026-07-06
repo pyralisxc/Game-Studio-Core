@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
 using NeonBlack.Gameplay.Data.Participants;
@@ -134,52 +133,6 @@ public partial class Hazard : GameplayTickBehaviour, IRuntimeValidationProvider
     private float GameplayDeltaTime => _gameplayDeltaTime;
 
     private static readonly Dictionary<float, WaitForSeconds> _waitPool = new Dictionary<float, WaitForSeconds>();
-
-    private interface IHazardPatternRunner
-    {
-        IEnumerator Execute(Hazard hazard, HazardDifficultyController.HazardTiming timing);
-    }
-
-    private static readonly IHazardPatternRunner SlamPatternRunner = new SlamHazardPatternRunner();
-    private static readonly IHazardPatternRunner CrossingPatternRunner = new CrossingHazardPatternRunner();
-    private static readonly IHazardPatternRunner BouncyPatternRunner = new BouncyHazardPatternRunner();
-
-    private static IHazardPatternRunner GetPatternRunner(HazardData.HazardType hazardType)
-    {
-        switch (hazardType)
-        {
-            case HazardData.HazardType.Crossing:
-                return CrossingPatternRunner;
-            case HazardData.HazardType.Bouncy:
-                return BouncyPatternRunner;
-            default:
-                return SlamPatternRunner;
-        }
-    }
-
-    private sealed class SlamHazardPatternRunner : IHazardPatternRunner
-    {
-        public IEnumerator Execute(Hazard hazard, HazardDifficultyController.HazardTiming timing)
-        {
-            return hazard.SlamSequenceRoutine(timing);
-        }
-    }
-
-    private sealed class CrossingHazardPatternRunner : IHazardPatternRunner
-    {
-        public IEnumerator Execute(Hazard hazard, HazardDifficultyController.HazardTiming timing)
-        {
-            return hazard.CrossingSequenceRoutine(timing);
-        }
-    }
-
-    private sealed class BouncyHazardPatternRunner : IHazardPatternRunner
-    {
-        public IEnumerator Execute(Hazard hazard, HazardDifficultyController.HazardTiming timing)
-        {
-            return hazard.BouncySequenceRoutine(timing);
-        }
-    }
 
     private static WaitForSeconds GetWait(float seconds)
     {

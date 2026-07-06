@@ -1286,15 +1286,17 @@ Verification:
 - Scoped `git diff --check` passed for touched files.
 - Unity Editor Test Runner proof remains manual because Unity Editor processes are currently open.
 
-### Arcade 2D Hazard Pattern Runner Seam
+### Arcade 2D Hazard Pattern Runner Consolidation
 
 Changes:
 
 - Added internal `IHazardPatternRunner` implementations for Slam, Crossing, and Bouncy hazard patterns.
 - Replaced the `Hazard.Initialize` hazard-type switch with pattern-runner dispatch while preserving the existing serialized `Hazard` component and coroutine implementations.
-- Kept the existing partial sequence files intact for this slice so behavior remains easy to compare before a later mechanical consolidation.
+- Consolidated `Hazard.SlamSequence.cs`, `Hazard.CrossingSequence.cs`, and `Hazard.BouncySequence.cs` into `Hazard.PatternSequences.cs`.
+- Removed the old Crossing/Bouncy/Slam sequence script files and their `.meta` files after preserving the consolidated file's `.meta` identity through the rename.
 
 Verification:
 
+- Confirmed Slam, Crossing, and Bouncy sequence methods are present exactly once in `Hazard.PatternSequences.cs`.
 - Scoped `git diff --check` passed for touched files.
 - Unity Editor Test Runner proof remains manual because Unity Editor processes are currently open.
