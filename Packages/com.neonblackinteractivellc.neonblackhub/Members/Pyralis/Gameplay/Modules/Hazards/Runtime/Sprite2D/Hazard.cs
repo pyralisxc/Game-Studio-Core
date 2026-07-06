@@ -135,6 +135,52 @@ public partial class Hazard : GameplayTickBehaviour, IRuntimeValidationProvider
 
     private static readonly Dictionary<float, WaitForSeconds> _waitPool = new Dictionary<float, WaitForSeconds>();
 
+    private interface IHazardPatternRunner
+    {
+        IEnumerator Execute(Hazard hazard, HazardDifficultyController.HazardTiming timing);
+    }
+
+    private static readonly IHazardPatternRunner SlamPatternRunner = new SlamHazardPatternRunner();
+    private static readonly IHazardPatternRunner CrossingPatternRunner = new CrossingHazardPatternRunner();
+    private static readonly IHazardPatternRunner BouncyPatternRunner = new BouncyHazardPatternRunner();
+
+    private static IHazardPatternRunner GetPatternRunner(HazardData.HazardType hazardType)
+    {
+        switch (hazardType)
+        {
+            case HazardData.HazardType.Crossing:
+                return CrossingPatternRunner;
+            case HazardData.HazardType.Bouncy:
+                return BouncyPatternRunner;
+            default:
+                return SlamPatternRunner;
+        }
+    }
+
+    private sealed class SlamHazardPatternRunner : IHazardPatternRunner
+    {
+        public IEnumerator Execute(Hazard hazard, HazardDifficultyController.HazardTiming timing)
+        {
+            return hazard.SlamSequenceRoutine(timing);
+        }
+    }
+
+    private sealed class CrossingHazardPatternRunner : IHazardPatternRunner
+    {
+        public IEnumerator Execute(Hazard hazard, HazardDifficultyController.HazardTiming timing)
+        {
+            return hazard.CrossingSequenceRoutine(timing);
+        }
+    }
+
+    private sealed class BouncyHazardPatternRunner : IHazardPatternRunner
+    {
+        public IEnumerator Execute(Hazard hazard, HazardDifficultyController.HazardTiming timing)
+        {
+            return hazard.BouncySequenceRoutine(timing);
+        }
+    }
+
     private static WaitForSeconds GetWait(float seconds)
     {
         seconds = (float)System.Math.Round(seconds, 2); // Round to avoid tiny variations
@@ -296,18 +342,7 @@ public partial class Hazard : GameplayTickBehaviour, IRuntimeValidationProvider
         if (_explosionEffect != null) _explosionEffect.SetActive(false);
         if (_sequenceCoroutine != null) StopCoroutine(_sequenceCoroutine);
 
-        switch (_data.hazardType)
-        {
-            case HazardData.HazardType.Crossing:
-                _sequenceCoroutine = StartCoroutine(CrossingSequenceRoutine(timing));
-                break;
-            case HazardData.HazardType.Bouncy:
-                _sequenceCoroutine = StartCoroutine(BouncySequenceRoutine(timing));
-                break;
-            default:
-                _sequenceCoroutine = StartCoroutine(SlamSequenceRoutine(timing));
-                break;
-        }
+        _sequenceCoroutine = StartCoroutine(GetPatternRunner(_data.hazardType).Execute(this, timing));
     }
 
     public void ForceStop()

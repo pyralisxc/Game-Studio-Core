@@ -1285,3 +1285,16 @@ Verification:
 - Confirmed the `Hazard` script GUID has no committed prefab/scene references under the package, so this slice safely avoids prefab migration.
 - Scoped `git diff --check` passed for touched files.
 - Unity Editor Test Runner proof remains manual because Unity Editor processes are currently open.
+
+### Arcade 2D Hazard Pattern Runner Seam
+
+Changes:
+
+- Added internal `IHazardPatternRunner` implementations for Slam, Crossing, and Bouncy hazard patterns.
+- Replaced the `Hazard.Initialize` hazard-type switch with pattern-runner dispatch while preserving the existing serialized `Hazard` component and coroutine implementations.
+- Kept the existing partial sequence files intact for this slice so behavior remains easy to compare before a later mechanical consolidation.
+
+Verification:
+
+- Scoped `git diff --check` passed for touched files.
+- Unity Editor Test Runner proof remains manual because Unity Editor processes are currently open.
