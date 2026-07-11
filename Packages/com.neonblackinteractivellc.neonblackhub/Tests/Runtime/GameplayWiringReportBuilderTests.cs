@@ -14,11 +14,9 @@ namespace NeonBlack.Gameplay.Tests.Runtime
         [Test]
         public void Build_WithMissingSessionDefinition_UsesCanonicalMissingProviderOnly()
         {
-            GameObject root = new GameObject("Gameplay Wiring Report Test");
+            GameObject root = CreateInactiveRoot();
             try
             {
-                root.AddComponent<GameplaySessionBootstrap>();
-
                 GameplayWiringReport report = GameplayWiringReportBuilder.Build(root);
 
                 Assert.That(
@@ -44,11 +42,9 @@ namespace NeonBlack.Gameplay.Tests.Runtime
         [Test]
         public void Build_WithMissingSessionDefinition_DefersRouteDependentCameraGuidance()
         {
-            GameObject root = new GameObject("Gameplay Wiring Report Test");
+            GameObject root = CreateInactiveRoot();
             try
             {
-                root.AddComponent<GameplaySessionBootstrap>();
-
                 GameplayWiringReport report = GameplayWiringReportBuilder.Build(root);
 
                 Assert.That(
@@ -72,12 +68,10 @@ namespace NeonBlack.Gameplay.Tests.Runtime
         [Test]
         public void Build_WithIncompleteParticipantRoute_DefersParticipantServiceRequirements()
         {
-            GameObject root = new GameObject("Gameplay Wiring Report Test");
+            GameObject root = CreateInactiveRoot();
             SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
             try
             {
-                root.AddComponent<GameplaySessionBootstrap>();
-
                 GameplayWiringReport report = GameplayWiringReportBuilder.Build(root, session);
 
                 Assert.That(
@@ -114,12 +108,10 @@ namespace NeonBlack.Gameplay.Tests.Runtime
         [Test]
         public void Build_WithIncompleteParticipantRoute_DefersFeatureServiceActivation()
         {
-            GameObject root = new GameObject("Gameplay Wiring Report Test");
+            GameObject root = CreateInactiveRoot();
             SessionDefinition session = ScriptableObject.CreateInstance<SessionDefinition>();
             try
             {
-                root.AddComponent<GameplaySessionBootstrap>();
-
                 GameplayWiringReport report = GameplayWiringReportBuilder.Build(root, session);
 
                 Assert.That(
@@ -142,13 +134,11 @@ namespace NeonBlack.Gameplay.Tests.Runtime
         [Test]
         public void Build_WithCompleteParticipantRoute_ReportsMissingRequiredParticipantProviders()
         {
-            GameObject root = new GameObject("Gameplay Wiring Report Test");
+            GameObject root = CreateInactiveRoot();
             ParticipantDefinition participant = CreateParticipant();
             SessionDefinition session = CreateCompleteRoute(out GameModeDefinition mode, participant);
             try
             {
-                root.AddComponent<GameplaySessionBootstrap>();
-
                 GameplayWiringReport report = GameplayWiringReportBuilder.Build(root, session);
 
                 Assert.That(
@@ -178,13 +168,12 @@ namespace NeonBlack.Gameplay.Tests.Runtime
         [Test]
         public void Build_WithPlayerInputManagerAndMultipleAutoJoinParticipants_ReportsJoinTimingIssue()
         {
-            GameObject root = new GameObject("Gameplay Wiring Report Test");
+            GameObject root = CreateInactiveRoot();
             ParticipantDefinition firstParticipant = CreateParticipant(autoJoin: true);
             ParticipantDefinition secondParticipant = CreateParticipant(autoJoin: true);
             SessionDefinition session = CreateCompleteRoute(out GameModeDefinition mode, firstParticipant, secondParticipant);
             try
             {
-                root.AddComponent<GameplaySessionBootstrap>();
                 root.AddComponent<PlayerInputManager>();
 
                 GameplayWiringReport report = GameplayWiringReportBuilder.Build(root, session);
@@ -205,12 +194,11 @@ namespace NeonBlack.Gameplay.Tests.Runtime
         [Test]
         public void Build_WithCompleteCombatRoute_ReportsCombatFeatureActivation()
         {
-            GameObject root = new GameObject("Gameplay Wiring Report Test");
+            GameObject root = CreateInactiveRoot();
             ParticipantDefinition participant = CreateParticipant();
             SessionDefinition session = CreateCompleteRoute(out GameModeDefinition mode, participant);
             try
             {
-                root.AddComponent<GameplaySessionBootstrap>();
                 mode.enableCombat = true;
 
                 GameplayWiringReport report = GameplayWiringReportBuilder.Build(root, session);
@@ -228,12 +216,11 @@ namespace NeonBlack.Gameplay.Tests.Runtime
         [Test]
         public void Build_WithCompleteScoringRoute_ReportsScoringGameFlowAndFeedbackActivation()
         {
-            GameObject root = new GameObject("Gameplay Wiring Report Test");
+            GameObject root = CreateInactiveRoot();
             ParticipantDefinition participant = CreateParticipant();
             SessionDefinition session = CreateCompleteRoute(out GameModeDefinition mode, participant);
             try
             {
-                root.AddComponent<GameplaySessionBootstrap>();
                 mode.enableScore = true;
 
                 GameplayWiringReport report = GameplayWiringReportBuilder.Build(root, session);
@@ -251,7 +238,7 @@ namespace NeonBlack.Gameplay.Tests.Runtime
         [Test]
         public void Build_WithLoadedSceneArcadeEvidence_ReportsRuntimeSceneSearchInventory()
         {
-            GameObject root = new GameObject("Gameplay Wiring Report Test");
+            GameObject root = CreateInactiveRoot();
             try
             {
                 root.AddComponent<ArcadeGameFlowController>();
@@ -269,6 +256,14 @@ namespace NeonBlack.Gameplay.Tests.Runtime
             {
                 DestroyObjects(root);
             }
+        }
+
+        private static GameObject CreateInactiveRoot()
+        {
+            GameObject root = new GameObject("Gameplay Wiring Report Test");
+            root.SetActive(false);
+            root.AddComponent<GameplaySessionBootstrap>();
+            return root;
         }
 
         private static SessionDefinition CreateCompleteRoute(

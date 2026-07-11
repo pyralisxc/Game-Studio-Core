@@ -41,6 +41,7 @@ namespace NeonBlack.Gameplay.Tests.Runtime
         public void GameplaySessionBootstrap_ReportsGameplayOwnedRuntimeValidationIssues()
         {
             GameObject gameObject = new GameObject("Runtime Validation Bootstrap Test");
+            gameObject.SetActive(false);
             try
             {
                 GameplaySessionBootstrap bootstrap = gameObject.AddComponent<GameplaySessionBootstrap>();

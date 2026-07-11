@@ -10,6 +10,20 @@ Scope rules:
 - Prefer clean compatibility cuts when references allow.
 - Keep PYS focused primarily on codebase quality, system health, ownership pressure, route semantics, topology, proof readiness, and cross-object setup truth.
 
+## 2026-07-11
+
+### Runtime Test Hygiene Pass
+
+Changes:
+
+- Updated wiring-report and validation-metadata tests to create inactive `GameplaySessionBootstrap` roots so metadata inspection does not accidentally enter runtime bootstrap/VContainer startup.
+- Removed the source-text `RuntimeTickOwnershipTests` development guard because current test policy keeps automated coverage focused on behavior seams, data transfer, routing, validation evidence, contracts, and refactor boundaries.
+
+Verification:
+
+- Confirmed no remaining references to the removed tick-ownership test.
+- Unity Editor Test Runner proof remains manual; run the affected runtime tests in the Editor before treating the suite as fully green.
+
 ## 2026-07-06
 
 ### Final Codebase Doc Maintenance Pass
