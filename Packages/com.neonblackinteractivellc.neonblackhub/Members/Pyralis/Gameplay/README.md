@@ -2,19 +2,16 @@
 
 This folder contains the active gameplay framework for Neon Black Hub.
 
-The current source of truth is a shared gameplay stack built around:
+The current product direction is a universal gameplay construction spine:
 
-- `GameplaySessionBootstrap`
-- `GameplayLifetimeScope`
-- authored `SessionDefinition`, `ParticipantDefinition`, `PawnDefinition`, and `GameModeDefinition`
-- participant-owned pawns through `PawnRoot`
-- participant-owned input through `ParticipantDefinition.inputProfile`
-- graph-inferred participant topology for solo local, local join, networked, and hybrid routes
-- pawn camera targets through `PawnCameraTarget`
-- scene-owned Cinemachine routing through `CameraRigProfile.focusMode` and reflected camera recipe values
-- explicit pawn sibling components for physical identity
-- direct module-owned components and profiles for optional gameplay capabilities
-- PYS contract metadata on gameplay scripts that own setup meaning
+- `GameplaySessionBootstrap` and `GameplayLifetimeScope` establish the visible runtime composition root.
+- `SessionDefinition` and `GameModeDefinition` describe session intent and rule composition.
+- participants are the universal session ownership concept; seat, input, pawn, network authority, and feature-specific ownership attach to that participant rather than replacing it.
+- route-specific capabilities branch after participant/session ownership. Pawn gameplay is one branch, not the definition of gameplay.
+- character routes may add `PawnDefinition`, `PawnRoot`, participant-owned input, movement, camera, presentation, combat, traversal, and interaction.
+- tabletop, cursor/UI, RPG, strategy, card, and future non-pawn routes may use the same session/participant spine without requiring pawn, playfield, or camera setup unless their route actually needs it.
+- direct module-owned components and profiles own optional gameplay capabilities.
+- PYS contract metadata exposes gameplay-owned setup meaning without replacing Unity-native authoring.
 
 Core motto:
 
@@ -25,6 +22,16 @@ Core motto:
 - Validators witness local semantic readiness.
 - The graph compiles understanding.
 - PYS Authoring observes gameplay contract evidence from its own package lane.
+
+## Universal Product Spine
+
+The universal route is:
+
+`Composition Root -> Session -> Mode / Rule Composition -> Participants -> Route-Specific Capabilities`
+
+Do not make pawn, camera, playfield, combat, scoring, or any other feature a mandatory universal prerequisite unless every supported route truly requires it. New capabilities should compose onto the route without adding another global `enableX` switch to the platform core.
+
+`ParticipantId` is Core vocabulary. A participant is a session owner/actor independent from seat, pawn, input device, network client, or presentation. Feature-specific identity such as RPG persistence keys may exist inside that feature, but it should bridge to participant identity when representing a session participant rather than creating a competing platform-wide owner model.
 
 ## Authoring Surface Direction
 
@@ -97,6 +104,7 @@ For participant-spawned pawns, profile fields belong on `PawnDefinition`; prefab
 
 ## Recommended reading
 
+- `Docs/PRODUCT_TRUTH.md` for the authoritative product direction and architectural invariants.
 - `Docs/CURRENT_STATE_AUDIT.md` for current health, risks, Hygiene baseline, and verification posture.
 - `Docs/ARCHITECTURE_BLUEPRINT.md` for runtime ownership, folderbase, and system boundaries.
 - `Docs/AUTHORING_SURFACE_REFACTOR_AUDIT.md` and `Docs/AUTHORING_SURFACE_REFACTOR_CHANGELOG.md` while the package-wide authoring surface simplification lane is active.

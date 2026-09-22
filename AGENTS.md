@@ -10,6 +10,7 @@ NeonBlack Gameplay lives at:
 
 Before product, architecture, or package-maintenance decisions, start with the small living-doc set:
 
+- `Packages\com.neonblackinteractivellc.neonblackhub\Members\Pyralis\Gameplay\Docs\PRODUCT_TRUTH.md`
 - `Packages\com.neonblackinteractivellc.neonblackhub\Members\Pyralis\Gameplay\README.md`
 - `Packages\com.neonblackinteractivellc.neonblackhub\Members\Pyralis\Gameplay\Docs\CURRENT_STATE_AUDIT.md`
 - `Packages\com.neonblackinteractivellc.neonblackhub\Members\Pyralis\Gameplay\Docs\ARCHITECTURE_BLUEPRINT.md`
@@ -42,7 +43,8 @@ Do not use dated audits, migration notes, or old setup guides as source truth. I
 - Do not create package samples automatically for this refactor lane. Cameron will hand-author samples from the working codebase. Agents may document the desired sample shape and keep the package ready for samples, but should not generate sample scenes, prefabs, or sample assets by default.
 - Keep `GameplaySessionBootstrap`, `GameplayLifetimeScope`, participant/session services, authored definitions/profiles, PYS contracts/reflection, dependency evidence, validators, and PYS graph projections as the current source of truth.
 - Game Studio Core consumes `com.pys.authoring` as an installed external package; do not recreate or restore an embedded `Packages\com.pys.authoring` source folder in this project.
-- Do not reintroduce hidden singleton service lookups, first-player assumptions, or compatibility bridges unless preserving committed content requires it.
+- Do not reintroduce hidden singleton service lookups or first-player assumptions.
+- Legacy games are not compatibility constraints. Do not preserve bridges, serialized fields, APIs, or package structure solely for removed `Members/Public` content or other retired games.
 - Keep the runtime simple and Unity-native: explicit pawn sibling components describe what a pawn is, direct module-owned components describe optional capabilities, and `ParticipantDefinition` owns input for the participant driving the pawn.
 - Keep active docs focused on present truth and intended direction. Remove stale legacy/history commentary from setup and architecture docs unless it protects active migration, shipped compatibility, or project data; move useful history to an archive, changelog, migration note, or audit file.
 
@@ -52,7 +54,7 @@ Do not use dated audits, migration notes, or old setup guides as source truth. I
 - Keep internal code modular where it clarifies ownership: state machines, handlers, private lanes, readers, sinks, and small helpers are valid implementation details.
 - Use profiles for reusable authored variation, not as one giant storage object and not for every local field.
 - Treat pass-through scripts, duplicate fallback fields, and scripts that only bridge unclear ownership as merge/delete/refactor candidates.
-- Prefer clean compatibility cuts when references allow. Do not keep bridges for superseded paths unless serialized scenes, prefabs, package consumers, or committed user content still depend on them.
+- Prefer clean compatibility cuts. Removed legacy games and their serialized scenes/prefabs are not compatibility constraints; preserve bridges only for current core/package consumers explicitly kept in scope.
 - Keep runtime-created objects only when they are gameplay output, such as spawned pawns, projectiles, effects, popups, generated board views, or camera focus helpers. Do not create hidden setup repair objects such as missing managers, services, profiles, roots, or camera rigs.
 - Split validation by ownership: Unity-local field/component errors belong near the Inspector through `RequireComponent`, `OnValidate`, custom inspectors, or prefab structure; PYS-visible evidence should focus on codebase quality, ownership pressure, route semantics, topology, proof readiness, and cross-object setup truth.
 
