@@ -1,5 +1,6 @@
 using NeonBlack.Gameplay.Core.Actions;
 using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Core.Participants;
 using UnityEngine;
 using NeonBlack.Gameplay.Data.Tabletop;
 using Pys.Authoring.Contracts;
@@ -26,7 +27,7 @@ namespace NeonBlack.Gameplay.Modules.Tabletop.Runtime
         private BoardRuntimeState _boardState;
         private TurnRuntimeState _turnState;
         private IActionQueueService _actionQueue;
-        private object _participant;
+        private ParticipantId _participantId;
         private string _selectedPieceId;
 
         public bool ResolveQueuedMoveImmediately
@@ -43,12 +44,12 @@ namespace NeonBlack.Gameplay.Modules.Tabletop.Runtime
         public void Initialize(
             BoardRuntimeState boardState,
             IActionQueueService actionQueue,
-            object participant = null,
+            ParticipantId participantId = default,
             TurnRuntimeState turnState = null)
         {
             _boardState = boardState;
             _actionQueue = actionQueue;
-            _participant = participant;
+            _participantId = participantId;
             _turnState = turnState;
             ClearSelection();
         }
@@ -100,7 +101,7 @@ namespace NeonBlack.Gameplay.Modules.Tabletop.Runtime
             ActionExecutionContext context = new ActionExecutionContext(
                 BoardMoveActionResolver.DefaultActionId,
                 ownerObject: gameObject,
-                participant: _participant,
+                participantId: _participantId,
                 customPayload: payload);
 
             if (!_actionQueue.TryEnqueue(context, out queuedAction, out issue))
