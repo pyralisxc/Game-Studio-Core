@@ -1,4 +1,5 @@
 using UnityEngine.Events;
+using NeonBlack.Gameplay.Core.Participants;
 
 namespace NeonBlack.Gameplay.Core.Contracts
 {
@@ -9,7 +10,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
 
     public interface IParticipantScoreAwardSink
     {
-        void AddScore(int participantId, int amount);
+        void AddScore(ParticipantId participantId, int amount);
     }
 
     public interface ISessionScoreService : ISessionScoreAwardSink

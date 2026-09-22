@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Core.Participants;
 using NeonBlack.Gameplay.Data.Participants;
 using UnityEngine;
 using UnityEngine.Events;
@@ -44,7 +45,7 @@ namespace NeonBlack.Gameplay.Modules.Scoring
         public const string HighScoreTimeKey     = "HighScore_Time";
         public const string HighScoreBestTimeKey = "HighScore_BestTime";
         // Per-participant scores.
-        private readonly Dictionary<int, int> _scores = new Dictionary<int, int>();
+        private readonly Dictionary<ParticipantId, int> _scores = new Dictionary<ParticipantId, int>();
         // Session-level tracking.
         private int   _pointsCollected;
         private float _survivalTime;
@@ -184,12 +185,12 @@ namespace NeonBlack.Gameplay.Modules.Scoring
             if (participant == null)
                 return;
 
-            AddScore(participant.Id.Value, amount);
+            AddScore(participant.Id, amount);
         }
 
-        public void AddScore(int participantId, int amount)
+        public void AddScore(ParticipantId participantId, int amount)
         {
-            if (participantId <= 0 || amount <= 0)
+            if (!participantId.IsValid || amount <= 0)
                 return;
 
             _scores.TryGetValue(participantId, out int current);
@@ -202,7 +203,7 @@ namespace NeonBlack.Gameplay.Modules.Scoring
             if (participant == null)
                 return 0;
 
-            return _scores.TryGetValue(participant.Id.Value, out int score) ? score : 0;
+            return _scores.TryGetValue(participant.Id, out int score) ? score : 0;
         }
     }
 }

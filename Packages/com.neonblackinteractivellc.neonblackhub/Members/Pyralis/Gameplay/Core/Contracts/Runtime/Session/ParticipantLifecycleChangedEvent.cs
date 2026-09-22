@@ -1,9 +1,11 @@
+using NeonBlack.Gameplay.Core.Participants;
+
 namespace NeonBlack.Gameplay.Core.Contracts
 {
     public readonly struct ParticipantLifecycleChangedEvent : IGameplayEvent
     {
         public ParticipantLifecycleChangedEvent(
-            int participantId,
+            ParticipantId participantId,
             int seatIndex,
             ParticipantLifecycleState previousState,
             ParticipantLifecycleState currentState)
@@ -14,7 +16,7 @@ namespace NeonBlack.Gameplay.Core.Contracts
             CurrentState = currentState;
         }
 
-        public int ParticipantId { get; }
+        public ParticipantId ParticipantId { get; }
         public int SeatIndex { get; }
         public ParticipantLifecycleState PreviousState { get; }
         public ParticipantLifecycleState CurrentState { get; }

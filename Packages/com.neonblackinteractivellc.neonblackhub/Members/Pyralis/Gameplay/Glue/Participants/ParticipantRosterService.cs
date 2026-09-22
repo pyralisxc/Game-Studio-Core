@@ -4,6 +4,7 @@ using NeonBlack.Gameplay.Data.Participants;
 using NeonBlack.Gameplay.Data.Definitions;
 using NeonBlack.Gameplay.Core.Contracts.Networking;
 using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Core.Participants;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using VContainer;
@@ -343,7 +344,7 @@ namespace NeonBlack.Gameplay.Glue.Participants
                 return;
 
             _eventChannel.Publish(new ParticipantLifecycleChangedEvent(
-                participant.Id.Value,
+                participant.Id,
                 participant.SeatIndex,
                 previousState,
                 currentState));

@@ -1,5 +1,6 @@
 using System;
 using NeonBlack.Gameplay.Data.Definitions;
+using NeonBlack.Gameplay.Core.Participants;
 using UnityEngine;
 using UnityEngine.InputSystem;
 

@@ -1,5 +1,6 @@
 using NeonBlack.Gameplay.Data.Participants;
 using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Core.Participants;
 using UnityEngine;
 using Pys.Authoring.Contracts;
 
@@ -158,7 +159,7 @@ public partial class CollectibleFeedback2D : MonoBehaviour, IPickupAwardSink, IG
                 && ParticipantQueryUtility.TryResolveParticipant(payload.Collector, out ParticipantHandle participant))
             {
                 IParticipantScoreAwardSink participantScoreAwardSink = ResolveParticipantScoreAwardSink();
-                participantScoreAwardSink?.AddScore(participant.Id.Value, payload.ScoreValue);
+                participantScoreAwardSink?.AddScore(participant.Id, payload.ScoreValue);
             }
         }
 

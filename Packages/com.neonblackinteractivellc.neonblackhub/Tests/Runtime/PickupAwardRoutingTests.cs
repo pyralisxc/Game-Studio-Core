@@ -1,4 +1,5 @@
 using NeonBlack.Gameplay.Core.Contracts;
+using NeonBlack.Gameplay.Core.Participants;
 using NeonBlack.Gameplay.Modules.Interaction;
 using NUnit.Framework;
 using System.Linq;
@@ -45,7 +46,7 @@ namespace NeonBlack.Gameplay.Tests.Runtime
                 Points += amount;
             }
 
-            public void AddScore(int participantId, int amount)
+            public void AddScore(ParticipantId participantId, int amount)
             {
                 ParticipantPoints += amount;
             }

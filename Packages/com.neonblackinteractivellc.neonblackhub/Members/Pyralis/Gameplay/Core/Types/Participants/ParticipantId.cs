@@ -1,19 +1,21 @@
 using System;
 
-namespace NeonBlack.Gameplay.Data.Participants
+namespace NeonBlack.Gameplay.Core.Participants
 {
     /// <summary>
-    /// Stable runtime identifier for a participant seat.
+    /// Stable runtime identifier for a session participant, independent from seat, pawn, input, or network ownership.
     /// </summary>
     [Serializable]
     public struct ParticipantId : IEquatable<ParticipantId>
     {
         public int Value;
+
         public ParticipantId(int value)
         {
             Value = value;
         }
 
+        public bool IsValid => Value > 0;
         public bool Equals(ParticipantId other) => Value == other.Value;
         public override bool Equals(object obj) => obj is ParticipantId other && Equals(other);
         public override int GetHashCode() => Value;
