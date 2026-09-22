@@ -2,6 +2,32 @@
 
 This is the short current-truth audit for Game Studio Core. It should stay concise enough that a new agent can read it before touching gameplay or authoring code.
 
+## 2026-09-22 Refactor Transition
+
+`PRODUCT_TRUTH.md` now owns durable product direction. The remainder of this audit describes the current implementation and migration pressure; when an older implementation statement conflicts with Product Truth, Product Truth wins.
+
+Completed on `preview` in the opening refactor tranche:
+
+- removed the entire retired `Members/Public` game-content subtree; those games impose no compatibility requirements on core
+- removed tracked Plastic workspace state, Codex remote attachments, and `*.private.*` workspace copies, with `.gitignore` hardened against their return
+- established `Composition Root -> Session -> Mode / Rule Composition -> Participants -> Route-Specific Capabilities` as the universal product spine
+- promoted `ParticipantId` from Data into Core vocabulary and converted shared scoring/lifecycle seams to typed participant identity
+- removed the shared action system's `object Participant` escape hatch in favor of typed `ParticipantId`
+- stopped `GameModeDefinition` from treating camera and playfield profiles as universal required authoring fields
+- stopped `PawnDefinition` from declaring input, playfield, and camera as unconditional prerequisites; those dependencies now belong to the selected pawn/components route
+
+Known transitional architecture that still needs the next hard cuts:
+
+- `RuntimeFeatureServicePolicy` still contains the fixed combat/enemy/RPG/game-flow/scoring/feedback service-family switchboard
+- `RuntimeFeatureServicePolicy.ResolveWithLoadedSceneEvidence()` still lets loaded-scene inventory influence runtime service activation even though the target architecture makes scene search evidence-only
+- `GameModeDefinition` still contains fixed `enableCombat`, `enablePickups`, `enableHazards`, `enableScore`, and `enableRespawn` switches
+- tabletop turn ownership still uses seat integers and has not yet been bridged to the session participant roster
+- RPG persistence still uses feature-owned `RpgOwnerKey`; it should remain feature-local while gaining a typed bridge when that owner represents a session participant
+- legacy validation methods that round-trip through `List<string>` remain to be converged on canonical `RuntimeValidationIssue`
+- the runtime wiring report exists, but wiring truth is not yet the sole activation/delivery authority
+
+The next behavior-affecting refactor should replace the fixed feature-activation switchboard with owner-declared typed capability evidence before `RuntimeSceneSearch` is fully demoted from activation authority. Do not simply remove scene-evidence activation first, because RPG and other currently discovered service families still depend on it.
+
 ## Current Architecture State
 
 NeonBlack Gameplay is built around one runtime path and one reflective authoring spine:
